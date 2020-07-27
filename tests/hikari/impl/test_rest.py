@@ -1432,6 +1432,10 @@ class TestRESTClientImplAsync:
         with pytest.raises(ValueError):
             await rest_client.execute_webhook(StubModel(123), "token", attachment=object(), attachments=object())
 
+    async def test_execute_webhook_when_embed_and_embeds_given(self, rest_client):
+        with pytest.raises(ValueError):
+            await rest_client.execute_webhook(StubModel(123), "token", embed=object(), embeds=object())
+
     async def test_fetch_gateway_url(self, rest_client):
         expected_route = routes.GET_GATEWAY.compile()
         rest_client._request = mock.AsyncMock(return_value={"url": "wss://some.url"})
