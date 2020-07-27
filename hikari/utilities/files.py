@@ -20,25 +20,30 @@
 from __future__ import annotations
 
 __all__ = [
+    "ensure_path",
+    "ensure_resource",
+    "unwrap_bytes",
     "Pathish",
     "Rawish",
     "Resourceish",
+    "LazyByteIteratorish",
     "AsyncReader",
-    "ByteReader",
-    "FileReader",
-    "WebReader",
     "AsyncReaderContextManager",
     "Resource",
-    "Bytes",
     "File",
+    "FileReader",
     "WebResource",
     "URL",
+    "WebReader",
+    "Bytes",
+    "IteratorReader",
 ]
 
 import abc
 import asyncio
 import base64
 import concurrent.futures
+import inspect
 import io
 import logging
 import mimetypes
@@ -51,6 +56,7 @@ import urllib.request
 import aiohttp.client
 import attr
 
+from hikari.utilities import aio
 from hikari.utilities import date
 from hikari.utilities import net
 
@@ -70,7 +76,8 @@ This may be one of:
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
 """
 
-RawishTypes = (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)
+RAWISH_TYPES = (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)
+
 Rawish = typing.Union[bytes, bytearray, memoryview, io.BytesIO, io.StringIO]
 """Type hint representing valid raw data types.
 
@@ -81,6 +88,38 @@ This may be one of:
 - `memoryview`
 - `io.BytesIO`
 - `io.StringIO` (assuming UTF-8 encoding).
+"""
+
+LazyByteIteratorish = typing.Union[
+    typing.AsyncIterator[bytes],
+    typing.AsyncIterable[bytes],
+    typing.Iterator[bytes],
+    typing.Iterable[bytes],
+    typing.AsyncIterator[str],
+    typing.AsyncIterable[str],
+    typing.Iterator[str],
+    typing.Iterable[str],
+    typing.AsyncGenerator[bytes, typing.Any],
+    typing.Generator[bytes, typing.Any, typing.Any],
+    typing.AsyncGenerator[str, typing.Any],
+    typing.Generator[str, typing.Any, typing.Any],
+    asyncio.StreamReader,
+    aiohttp.StreamReader,
+]
+"""Type hint representing an iterator/iterable of bytes.
+
+This may be one of:
+
+- `typing.AsyncIterator[bytes]`
+- `typing.AsyncIterable[bytes]`
+- `typing.Iterator[bytes]`
+- `typing.Iterable[bytes]`
+- `typing.AsyncIterator[str]` (assuming UTF-8 encoding).
+- `typing.AsyncIterable[str]` (assuming UTF-8 encoding).
+- `typing.Iterator[str]` (assuming UTF-8 encoding).
+- `typing.Iterable[str]` (assuming UTF-8 encoding).
+- `asyncio.StreamReader`
+- `aiohttp.StreamReader`
 """
 
 Resourceish = typing.Union["Resource", Pathish, Rawish]
@@ -102,6 +141,20 @@ This may be one of:
 def ensure_path(pathish: Pathish) -> pathlib.Path:
     """Convert a path-like object to a `pathlib.Path` instance."""
     return pathlib.Path(pathish)
+
+
+def unwrap_bytes(data: Rawish) -> bytes:
+    """Convert a byte-like object to bytes."""
+    if isinstance(data, bytearray):
+        data = bytes(data)
+    elif isinstance(data, memoryview):
+        data = data.tobytes()
+    elif isinstance(data, io.StringIO):
+        data = bytes(data.read(), "utf-8")
+    elif isinstance(data, io.BytesIO):
+        data = data.read()
+
+    return data
 
 
 @typing.overload
@@ -129,8 +182,10 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
     Resource or builtins.None
         The resource to use, or `builtins.None` if `builtins.None` was input.
     """
-    if isinstance(url_or_resource, (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)):
-        return Bytes(url_or_resource)
+    if isinstance(url_or_resource, RAWISH_TYPES):
+        data = unwrap_bytes(url_or_resource)
+        filename = generate_filename_from_details(mimetype=None, extension=None, data=data)
+        return Bytes(url_or_resource, filename)
 
     if isinstance(url_or_resource, Resource):
         return url_or_resource
@@ -318,16 +373,105 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
 ReaderImplT = typing.TypeVar("ReaderImplT", bound=AsyncReader)
 
 
-@attr.s(auto_attribs=True, slots=True)
-class ByteReader(AsyncReader):
-    """Asynchronous file reader that operates on in-memory data."""
+class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
+    """Context manager that returns a reader."""
 
-    data: bytes
-    """The data that will be yielded in chunks."""
+    __slots__: typing.Sequence[str] = ()
 
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        for i in range(0, len(self.data), _MAGIC):
-            yield self.data[i : i + _MAGIC]  # noqa: E203
+    @abc.abstractmethod
+    async def __aenter__(self) -> ReaderImplT:
+        ...
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
+
+@typing.final
+class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
+    __slots__: typing.Sequence[str] = ("impl",)
+
+    def __init__(self, impl: ReaderImplT) -> None:
+        self.impl = impl
+
+    async def __aenter__(self) -> ReaderImplT:
+        return self.impl
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        pass
+
+
+class Resource(typing.Generic[ReaderImplT], abc.ABC):
+    """Base for any uploadable or downloadable representation of information.
+
+    These representations can be streamed using bit inception for performance,
+    which may result in significant decrease in memory usage for larger
+    resources.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def url(self) -> str:
+        """URL of the resource."""
+
+    @property
+    @abc.abstractmethod
+    def filename(self) -> str:
+        """Filename of the resource."""
+
+    @abc.abstractmethod
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[ReaderImplT]:
+        """Produce a stream of data for the resource.
+
+        Parameters
+        ----------
+        executor : concurrent.futures.Executor or builtins.None
+            The executor to run in for blocking operations.
+            If `builtins.None`, then the default executor is used for the
+            current event loop.
+        head_only : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, then the
+            implementation may only retrieve HEAD information if supported.
+            This currently only has any effect for web requests.
+
+        Returns
+        -------
+        AsyncReaderContextManager[AsyncReader]
+            An async iterable of bytes to stream.
+        """
+
+    def __str__(self) -> str:
+        return self.url
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(url={self.url!r}, filename={self.filename!r})"
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, Resource):
+            return self.url == other.url
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.__class__, self.url))
+
+
+###################
+# WEBSITE STREAMS #
+###################
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -369,136 +513,6 @@ class WebReader(AsyncReader):
             while not self.stream.at_eof():
                 chunk, _ = await self.stream.readchunk()
                 yield chunk
-
-
-@attr.s(auto_attribs=True, slots=True)
-class FileReader(AsyncReader, abc.ABC):
-    """Abstract base for a file reader object.
-
-    Various implementations have to exist in order to cater for situations
-    where we cannot pass IO objects around (e.g. ProcessPoolExecutors, since
-    they pickle things).
-    """
-
-    executor: typing.Optional[concurrent.futures.Executor]
-    """The associated `concurrent.futures.Executor` to use for blocking IO."""
-
-    path: pathlib.Path = attr.ib(converter=ensure_path)
-    """The path to the resource to read."""
-
-
-@attr.s(auto_attribs=True, slots=True)
-class ThreadedFileReader(FileReader):
-    """Asynchronous file reader that reads a resource from local storage.
-
-    This implementation works with pools that exist in the same interpreter
-    instance as the caller, namely thread pool executors, where objects
-    do not need to be pickled to be communicated.
-    """
-
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        loop = asyncio.get_running_loop()
-
-        path = self.path
-        if isinstance(path, pathlib.Path):
-            path = await loop.run_in_executor(self.executor, self._expand, self.path)
-
-        fp = await loop.run_in_executor(self.executor, self._open, path)
-
-        try:
-            while True:
-                chunk = await loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
-                yield chunk
-                if len(chunk) < _MAGIC:
-                    break
-
-        finally:
-            await loop.run_in_executor(self.executor, self._close, fp)
-
-    @staticmethod
-    def _expand(path: pathlib.Path) -> pathlib.Path:
-        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
-        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
-        return path.expanduser().resolve()
-
-    @staticmethod
-    @typing.final
-    def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
-        return fp.read(n)
-
-    @staticmethod
-    def _open(path: Pathish) -> typing.IO[bytes]:
-        return open(path, "rb")
-
-    @staticmethod
-    def _close(fp: typing.IO[bytes]) -> None:
-        fp.close()
-
-
-@attr.s(auto_attribs=True, slots=False)
-class MultiprocessingFileReader(FileReader):
-    """Asynchronous file reader that reads a resource from local storage.
-
-    This implementation works with pools that exist in a different interpreter
-    instance to the caller. Currently this only includes ProcessPoolExecutors
-    and custom implementations where objects have to be pickled to be used
-    by the pool.
-    """
-
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        yield await asyncio.get_running_loop().run_in_executor(self.executor, self._read_all)
-
-    def __getstate__(self) -> typing.Dict[str, typing.Any]:
-        return {"path": self.path, "filename": self.filename}
-
-    def __setstate__(self, state: typing.Dict[str, typing.Any]) -> None:
-        self.path = state["path"]
-        self.filename = state["filename"]
-        self.executor = None
-        self.mimetype = None
-
-    def _read_all(self) -> bytes:
-        # noinspection PyTypeChecker
-        with open(self.path, "rb") as fp:
-            return fp.read()
-
-
-class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
-    """Context manager that returns a reader."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    async def __aenter__(self) -> ReaderImplT:
-        ...
-
-    @abc.abstractmethod
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        ...
-
-
-@typing.final
-class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
-    __slots__: typing.Sequence[str] = ("impl",)
-
-    def __init__(self, impl: ReaderImplT) -> None:
-        self.impl = impl
-
-    async def __aenter__(self) -> ReaderImplT:
-        return self.impl
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        pass
 
 
 @typing.final
@@ -561,205 +575,6 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
     ) -> None:
         await self._client_response_ctx.__aexit__(exc_type, exc, exc_tb)
         await self._client_session.close()
-
-
-class Resource(typing.Generic[ReaderImplT], abc.ABC):
-    """Base for any uploadable or downloadable representation of information.
-
-    These representations can be streamed using bit inception for performance,
-    which may result in significant decrease in memory usage for larger
-    resources.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def url(self) -> str:
-        """URL of the resource."""
-
-    @property
-    @abc.abstractmethod
-    def filename(self) -> str:
-        """Filename of the resource."""
-
-    @abc.abstractmethod
-    def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
-    ) -> AsyncReaderContextManager[ReaderImplT]:
-        """Produce a stream of data for the resource.
-
-        Parameters
-        ----------
-        executor : concurrent.futures.Executor or builtins.None
-            The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
-            current event loop.
-        head_only : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then the
-            implementation may only retrieve HEAD information if supported.
-            This currently only has any effect for web requests.
-
-        Returns
-        -------
-        AsyncReaderContextManager[AsyncReader]
-            An async iterable of bytes to stream.
-        """
-
-    def __str__(self) -> str:
-        return self.url
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}(url={self.url!r}, filename={self.filename!r})"
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, Resource):
-            return self.url == other.url
-        return False
-
-    def __hash__(self) -> int:
-        return hash((self.__class__, self.url))
-
-
-class Bytes(Resource[ByteReader]):
-    """Representation of in-memory data to upload.
-
-    Parameters
-    ----------
-    data : builtins.bytes
-        The raw data.
-    mimetype : builtins.str or builtins.None
-        The mimetype, or `builtins.None` if you do not wish to specify this.
-    filename : builtins.str or builtins.None
-        The filename to use, or `builtins.None` if one should be generated as
-        needed.
-    extension : builtins.str or builtins.None
-        The file extension to use, or `builtins.None` if one should be
-        determined manually as needed.
-
-    !!! note
-        You only need to provide one of `mimetype`, `filename`, or `extension`.
-        The other information will be determined using Python's `mimetypes`
-        module.
-
-        If none of these three are provided, then a crude guess may be
-        made successfully for specific image types. If no file format
-        information can be calculated, then the resource will fail during
-        uploading.
-    """
-
-    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "extension")
-
-    data: bytes
-    """The raw data to upload."""
-
-    mimetype: typing.Optional[str]
-    """The provided mimetype, if specified. Otherwise `builtins.None`."""
-
-    extension: typing.Optional[str]
-    """The provided file extension, if specified. Otherwise `builtins.None`."""
-
-    def __init__(
-        self,
-        data: Rawish,
-        /,
-        mimetype: typing.Optional[str] = None,
-        filename: typing.Optional[str] = None,
-        extension: typing.Optional[str] = None,
-    ) -> None:
-        if isinstance(data, bytearray):
-            data = bytes(data)
-        elif isinstance(data, memoryview):
-            data = data.tobytes()
-        elif isinstance(data, io.StringIO):
-            data = bytes(data.read(), "utf-8")
-        elif isinstance(data, io.BytesIO):
-            data = data.read()
-
-        self.data = data
-
-        if filename is None:
-            filename = generate_filename_from_details(mimetype=mimetype, extension=extension, data=data)
-        elif mimetype is None:
-            mimetype = guess_mimetype_from_filename(filename)
-
-        if extension is None and mimetype is not None:
-            extension = guess_file_extension(mimetype)
-
-        if mimetype is None:
-            # TODO: should I just default to application/octet-stream here?
-            if extension is None:
-                extension = ".txt"
-            mimetype = "text/plain"
-
-        self._filename = filename
-        self.mimetype = mimetype
-        self.extension = extension
-
-    @property
-    def url(self) -> str:
-        return f"attachment://{self.filename}"
-
-    @property
-    def filename(self) -> str:
-        return self._filename
-
-    def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
-    ) -> AsyncReaderContextManager[ByteReader]:
-        """Start streaming the content in chunks.
-
-        Parameters
-        ----------
-        executor : concurrent.futures.Executor or builtins.None
-            Not used. Provided only to match the underlying interface.
-        head_only : builtins.bool
-            Not used. Provided only to match the underlying interface.
-
-        Returns
-        -------
-        AsyncReaderContextManager[ByteReader]
-            An async context manager that when entered, produces the
-            data stream.
-        """
-        return _NoOpAsyncReaderContextManagerImpl(ByteReader(self.filename, self.mimetype, self.data))
-
-    @staticmethod
-    def from_data_uri(data_uri: str) -> Bytes:
-        """Parse a given data URI.
-
-        Parameters
-        ----------
-        data_uri : builtins.str
-            The data URI to parse.
-
-        Returns
-        -------
-        Bytes
-            The parsed data URI as a `Bytes` object.
-
-        Raises
-        ------
-        builtins.ValueError
-            If the parsed argument is not a data URI.
-        """
-        if not data_uri.startswith("data:"):
-            raise ValueError("Invalid data URI passed")
-
-        # This won't block for a data URI; if it was a URL, it would block, so
-        # we guard against this with the check above.
-        try:
-            with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
-                # TODO: make this smarter by using regex or something to get the mimetype.
-                # We can't always "just parse" the whole uri using regex, as extra
-                # params like encoding can be included, e.g.
-                # data:text/plain;charset=utf-8;base64,aGVsbG8gPDM=
-                mimetype = data_uri.split(";", 1)[0][5:]
-                data = response.read()
-        except Exception as ex:
-            raise ValueError("Failed to decode data URI") from ex
-
-        return Bytes(data, mimetype=mimetype)
 
 
 class WebResource(Resource[WebReader], abc.ABC):
@@ -883,6 +698,103 @@ class URL(WebResource):
         return os.path.basename(url.path)
 
 
+########################################
+# ON-DISK FILESYSTEM RESOURCE READERS. #
+########################################
+
+
+@attr.s(auto_attribs=True, slots=True)
+class FileReader(AsyncReader, abc.ABC):
+    """Abstract base for a file reader object.
+
+    Various implementations have to exist in order to cater for situations
+    where we cannot pass IO objects around (e.g. ProcessPoolExecutors, since
+    they pickle things).
+    """
+
+    executor: typing.Optional[concurrent.futures.Executor]
+    """The associated `concurrent.futures.Executor` to use for blocking IO."""
+
+    path: pathlib.Path = attr.ib(converter=ensure_path)
+    """The path to the resource to read."""
+
+
+@attr.s(auto_attribs=True, slots=True)
+class ThreadedFileReader(FileReader):
+    """Asynchronous file reader that reads a resource from local storage.
+
+    This implementation works with pools that exist in the same interpreter
+    instance as the caller, namely thread pool executors, where objects
+    do not need to be pickled to be communicated.
+    """
+
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        loop = asyncio.get_running_loop()
+
+        path = self.path
+        if isinstance(path, pathlib.Path):
+            path = await loop.run_in_executor(self.executor, self._expand, self.path)
+
+        fp = await loop.run_in_executor(self.executor, self._open, path)
+
+        try:
+            while True:
+                chunk = await loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
+                yield chunk
+                if len(chunk) < _MAGIC:
+                    break
+
+        finally:
+            await loop.run_in_executor(self.executor, self._close, fp)
+
+    @staticmethod
+    def _expand(path: pathlib.Path) -> pathlib.Path:
+        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
+        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
+        return path.expanduser().resolve()
+
+    @staticmethod
+    @typing.final
+    def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
+        return fp.read(n)
+
+    @staticmethod
+    def _open(path: Pathish) -> typing.IO[bytes]:
+        return open(path, "rb")
+
+    @staticmethod
+    def _close(fp: typing.IO[bytes]) -> None:
+        fp.close()
+
+
+@attr.s(auto_attribs=True, slots=False)
+class MultiprocessingFileReader(FileReader):
+    """Asynchronous file reader that reads a resource from local storage.
+
+    This implementation works with pools that exist in a different interpreter
+    instance to the caller. Currently this only includes ProcessPoolExecutors
+    and custom implementations where objects have to be pickled to be used
+    by the pool.
+    """
+
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        yield await asyncio.get_running_loop().run_in_executor(self.executor, self._read_all)
+
+    def __getstate__(self) -> typing.Dict[str, typing.Any]:
+        return {"path": self.path, "filename": self.filename}
+
+    def __setstate__(self, state: typing.Dict[str, typing.Any]) -> None:
+        self.path = state["path"]
+        self.filename = state["filename"]
+        self.executor = None
+        self.mimetype = None
+
+    def _read_all(self) -> bytes:
+        # noinspection PyTypeChecker
+        with open(self.path, "rb") as fp:
+            return fp.read()
+
+
 class File(Resource[FileReader]):
     """A resource that exists on the local machine's storage to be uploaded.
 
@@ -952,3 +864,193 @@ class File(Resource[FileReader]):
         impl = ThreadedFileReader if is_threaded else MultiprocessingFileReader
         # noinspection PyArgumentList
         return _NoOpAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))
+
+
+########################################################################
+# RAW BYTE, ASYNC ITERATOR, ASYNC ITERABLE, ITERATOR, ITERABLE READERS #
+########################################################################
+
+
+@attr.s(auto_attribs=True, slots=True)
+class IteratorReader(AsyncReader):
+    """Asynchronous file reader that operates on in-memory data."""
+
+    data: typing.Union[bytes, LazyByteIteratorish]
+    """The data that will be yielded in chunks."""
+
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        buff = bytearray()
+        iterator = self._wrap_iter()
+
+        while True:
+            try:
+                while len(buff) < _MAGIC:
+                    chunk = await iterator.__anext__()
+                    buff.extend(chunk)
+                yield bytes(buff)
+                buff.clear()
+            except StopAsyncIteration:
+                break
+
+        if buff:
+            yield bytes(buff)
+
+    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        if isinstance(self.data, bytes):
+            for i in range(0, len(self.data), _MAGIC):
+                yield self.data[i : i + _MAGIC]  # noqa: E203
+
+        elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
+            try:
+                while True:
+                    yield self._assert_bytes(await self.data.__anext__())  # type: ignore[union-attr]
+            except StopAsyncIteration:
+                pass
+
+        elif isinstance(self.data, typing.Iterator):
+            try:
+                while True:
+                    yield self._assert_bytes(next(self.data))
+            except StopIteration:
+                pass
+
+        elif inspect.isgenerator(self.data):
+            try:
+                while True:
+                    yield self._assert_bytes(self.data.send(None))  # type: ignore[union-attr]
+            except StopIteration:
+                pass
+
+        elif aio.is_async_iterable(self.data):
+            async for chunk in self.data:  # type: ignore[union-attr]
+                yield self._assert_bytes(chunk)
+
+        elif isinstance(self.data, typing.Iterable):
+            for chunk in self.data:
+                yield self._assert_bytes(chunk)
+
+        else:
+            # Will always fail.
+            self._assert_bytes(self.data)
+
+    @staticmethod
+    def _assert_bytes(data: typing.Any) -> bytes:
+        if isinstance(data, str):
+            return bytes(data, "utf-8")
+
+        if not isinstance(data, bytes):
+            raise TypeError(f"Expected bytes but received {type(data).__name__}")
+        return data
+
+
+class Bytes(Resource[IteratorReader]):
+    """Representation of in-memory data to upload.
+
+    Parameters
+    ----------
+    data : Rawish or LazyByteIteratorish
+        The raw data.
+    filename : builtins.str
+        The filename to use.
+    mimetype : builtins.str or builtins.None
+        The mimetype, or `builtins.None` if you do not wish to specify this.
+        If not provided, then this will be generated from the file extension
+        of the filename instead.
+    """
+
+    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype")
+
+    data: typing.Union[bytes, LazyByteIteratorish]
+    """The raw data/provider of raw data to upload."""
+
+    mimetype: typing.Optional[str]
+    """The provided mimetype, if specified. Otherwise `builtins.None`."""
+
+    def __init__(
+        self, data: typing.Union[Rawish, LazyByteIteratorish], filename: str, /, mimetype: typing.Optional[str] = None,
+    ) -> None:
+        if isinstance(data, RAWISH_TYPES):
+            data = unwrap_bytes(data)
+
+        self.data = data
+
+        if mimetype is None:
+            mimetype = guess_mimetype_from_filename(filename)
+
+        if mimetype is None:
+            # TODO: should I just default to application/octet-stream here?
+            mimetype = "text/plain"
+
+        self._filename = filename
+        self.mimetype = mimetype
+
+    @property
+    def url(self) -> str:
+        return f"attachment://{self.filename}"
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+    ) -> AsyncReaderContextManager[IteratorReader]:
+        """Start streaming the content in chunks.
+
+        Parameters
+        ----------
+        executor : concurrent.futures.Executor or builtins.None
+            Not used. Provided only to match the underlying interface.
+        head_only : builtins.bool
+            Not used. Provided only to match the underlying interface.
+
+        Returns
+        -------
+        AsyncReaderContextManager[IteratorReader]
+            An async context manager that when entered, produces the
+            data stream.
+        """
+        return _NoOpAsyncReaderContextManagerImpl(IteratorReader(self.filename, self.mimetype, self.data))
+
+    @staticmethod
+    def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:
+        """Parse a given data URI.
+
+        Parameters
+        ----------
+        data_uri : builtins.str
+            The data URI to parse.
+        filename : builtins.str or builtins.None
+            Filename to use. If this is not provided, then this is generated
+            instead.
+
+        Returns
+        -------
+        Bytes
+            The parsed data URI as a `Bytes` object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the parsed argument is not a data URI.
+        """
+        if not data_uri.startswith("data:"):
+            raise ValueError("Invalid data URI passed")
+
+        # This won't block for a data URI; if it was a URL, it would block, so
+        # we guard against this with the check above.
+        try:
+            with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
+                # TODO: make this smarter by using regex or something to get the mimetype.
+                # We can't always "just parse" the whole uri using regex, as extra
+                # params like encoding can be included, e.g.
+                # data:text/plain;charset=utf-8;base64,aGVsbG8gPDM=
+                mimetype = data_uri.split(";", 1)[0][5:]
+                data = response.read()
+        except Exception as ex:
+            raise ValueError("Failed to decode data URI") from ex
+
+        if filename is None:
+            filename = generate_filename_from_details(mimetype=mimetype, data=data)
+
+        return Bytes(data, filename, mimetype=mimetype)
