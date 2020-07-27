@@ -1295,10 +1295,11 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         token: str,
-        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -1313,6 +1314,25 @@ class RESTClientImpl(rest_api.IRESTClient):
     ) -> messages_.Message:
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+
+        if not undefined.count(embed, embeds):
+            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+
+        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+            # Syntatic sugar, common mistake to accidentally send an embed
+            # as the content, so lets detect this and fix it for the user.
+            embed = content
+            content = undefined.UNDEFINED
+
+        elif undefined.count(attachment, attachments) == 2 and isinstance(
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+        ):
+            # Syntatic sugar, common mistake to accidentally send an attachment
+            # as the content, so lets detect this and fix it for the user. This
+            # will still then work with normal implicit embed attachments as
+            # we work this out later.
+            attachment = content
+            content = undefined.UNDEFINED
 
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
@@ -1332,7 +1352,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        body.put("content", text, conversion=str)
+        body.put("content", content, conversion=str)
         body.put("embeds", serialized_embeds)
         body.put("username", username)
         body.put("avatar_url", avatar_url)
@@ -1657,28 +1677,36 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        # TODO: gather these futures simultaneously for a 3x speedup...
+        tasks: typing.List[asyncio.Task[str]] = []
 
         if icon is None:
             body.put("icon", None)
         elif icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._app.executor) as stream:
-                body.put("icon", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("icon", future.result()))
+                tasks.append(task)
 
         if splash is None:
             body.put("splash", None)
         elif splash is not undefined.UNDEFINED:
             splash_resource = files.ensure_resource(splash)
             async with splash_resource.stream(executor=self._app.executor) as stream:
-                body.put("splash", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("splash", future.result()))
+                tasks.append(task)
 
         if banner is None:
             body.put("banner", None)
         elif banner is not undefined.UNDEFINED:
             banner_resource = files.ensure_resource(banner)
             async with banner_resource.stream(executor=self._app.executor) as stream:
-                body.put("banner", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("banner", future.result()))
+                tasks.append(task)
+
+        await asyncio.gather(*tasks)
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)

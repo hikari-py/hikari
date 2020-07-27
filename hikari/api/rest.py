@@ -771,8 +771,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
             The channel to create the message in.
         content : hikari.utilities.undefined.UndefinedOr[typing.Any]
-            If specified, the message contents. If `UNDEFINED`, then nothing
-            will be sent in the content. Any other value here will be cast to a
+            If specified, the message contents. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
             `builtins.str`.
 
             If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
@@ -1222,10 +1223,11 @@ class IRESTClient(component.IComponent, abc.ABC):
         self,
         webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         token: str,
-        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,

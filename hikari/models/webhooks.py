@@ -134,7 +134,7 @@ class Webhook(snowflake.Unique):
 
     async def execute(
         self,
-        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -154,8 +154,19 @@ class Webhook(snowflake.Unique):
 
         Parameters
         ----------
-        text : hikari.utilities.undefined.UndefinedOr[builtins.str]
-            If specified, the message content to send with the message.
+        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+            If specified, the message contents. If
+            `hikari.utilities.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
         username : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the username to override the webhook's username
             for this request.
@@ -221,7 +232,7 @@ class Webhook(snowflake.Unique):
         return await self.app.rest.execute_webhook(
             webhook=self.id,
             token=self.token,
-            text=text,
+            content=content,
             username=username,
             avatar_url=avatar_url,
             tts=tts,

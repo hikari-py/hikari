@@ -310,6 +310,10 @@ class BotAppImpl(bot.IBotApp):
         return self._http_settings
 
     @property
+    def intents(self) -> typing.Optional[intents_.Intent]:
+        return self._intents
+
+    @property
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 

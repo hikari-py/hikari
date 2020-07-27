@@ -32,6 +32,8 @@ from hikari.api import voice
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.models import intents as intents_
+
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
     """Base for bot applications.
@@ -69,7 +71,21 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         Returns
         -------
         datetime.timedelta or builtins.None
-            The average heartbeat latency of all started shards, or `builtins.None`.
+            The average heartbeat latency of all started shards, or
+            `builtins.None`.
+        """
+
+    @property
+    @abc.abstractmethod
+    def intents(self) -> typing.Optional[intents_.Intent]:
+        """Return the intents registered for the application.
+
+        If no intents are in use, `builtins.None` is returned instead.
+
+        Returns
+        -------
+        hikari.models.intents.Intent or builtins.None
+            The intents registered on this application.
         """
 
     @property
