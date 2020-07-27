@@ -962,7 +962,16 @@ class IRESTClient(component.IComponent, abc.ABC):
         !!! note
             There is currently no documented way to clear attachments or edit
             attachments from a previously sent message on Discord's API. To
-            do this, `delete` the message and re-send it.
+            do this, `delete` the message and re-send it. This also applies
+            to embed attachments.
+
+        !!! warning
+            If you specify one of `mentions_everyone`, `user_mentions`, or
+            `role_mentions`, then all others will default to `builtins.False`,
+            even if they were enabled previously.
+
+            This is a limitation of Discord's design. If in doubt, specify all three of
+            them each time.
 
         !!! warning
             If the message was not sent by your user, the only parameter
@@ -1335,7 +1344,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_emojis(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Set[emojis.KnownCustomEmoji]:
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         ...
 
     @abc.abstractmethod
@@ -1411,9 +1420,15 @@ class IRESTClient(component.IComponent, abc.ABC):
         owner: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        system_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
-        rules_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
-        public_updates_channel: undefined.UndefinedNoneOr[channels.GuildTextChannel] = undefined.UNDEFINED,
+        system_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        rules_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        public_updates_channel: undefined.UndefinedNoneOr[
+            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+        ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Guild:
@@ -1472,7 +1487,6 @@ class IRESTClient(component.IComponent, abc.ABC):
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
@@ -1490,7 +1504,6 @@ class IRESTClient(component.IComponent, abc.ABC):
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,

@@ -233,10 +233,10 @@ class GuildVerificationLevel(enum.IntEnum):
     """Must have been registered on Discord for more than 5 minutes."""
 
     HIGH = 3
-    """(╯°□°）╯︵ ┻━┻ - must be a member of the guild for longer than 10 minutes."""
+    """Must also be a member of the guild for longer than 10 minutes."""
 
     VERY_HIGH = 4
-    """┻━┻ミヽ(ಠ益ಠ)ﾉ彡┻━┻ - must have a verified phone number."""
+    """Must have a verified phone number."""
 
     def __str__(self) -> str:
         return self.name
