@@ -1295,10 +1295,11 @@ class RESTClientImpl(rest_api.IRESTClient):
         self,
         webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         token: str,
-        text: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -1313,6 +1314,25 @@ class RESTClientImpl(rest_api.IRESTClient):
     ) -> messages_.Message:
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+
+        if not undefined.count(embed, embeds):
+            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+
+        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+            # Syntatic sugar, common mistake to accidentally send an embed
+            # as the content, so lets detect this and fix it for the user.
+            embed = content
+            content = undefined.UNDEFINED
+
+        elif undefined.count(attachment, attachments) == 2 and isinstance(
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+        ):
+            # Syntatic sugar, common mistake to accidentally send an attachment
+            # as the content, so lets detect this and fix it for the user. This
+            # will still then work with normal implicit embed attachments as
+            # we work this out later.
+            attachment = content
+            content = undefined.UNDEFINED
 
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
@@ -1332,7 +1352,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions))
-        body.put("content", text, conversion=str)
+        body.put("content", content, conversion=str)
         body.put("embeds", serialized_embeds)
         body.put("username", username)
         body.put("avatar_url", avatar_url)
