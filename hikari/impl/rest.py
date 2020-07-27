@@ -1657,28 +1657,36 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        # TODO: gather these futures simultaneously for a 3x speedup...
+        tasks: typing.List[asyncio.Task[str]] = []
 
         if icon is None:
             body.put("icon", None)
         elif icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._app.executor) as stream:
-                body.put("icon", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("icon", future.result()))
+                tasks.append(task)
 
         if splash is None:
             body.put("splash", None)
         elif splash is not undefined.UNDEFINED:
             splash_resource = files.ensure_resource(splash)
             async with splash_resource.stream(executor=self._app.executor) as stream:
-                body.put("splash", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("splash", future.result()))
+                tasks.append(task)
 
         if banner is None:
             body.put("banner", None)
         elif banner is not undefined.UNDEFINED:
             banner_resource = files.ensure_resource(banner)
             async with banner_resource.stream(executor=self._app.executor) as stream:
-                body.put("banner", await stream.data_uri())
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("banner", future.result()))
+                tasks.append(task)
+
+        await asyncio.gather(*tasks)
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
