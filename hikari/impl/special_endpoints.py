@@ -481,7 +481,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         raw_response = await self._request_call(compiled_route=self._route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
 
-        if not response["entries"]:
+        if not response["audit_log_entries"]:
             raise StopAsyncIteration
 
         log = self._app.entity_factory.deserialize_audit_log(response)

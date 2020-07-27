@@ -21,10 +21,9 @@ from __future__ import annotations
 __all__: typing.List[str] = ["Flag"]
 
 import enum
-import math
 import inspect
+import math
 import typing
-
 
 FlagT = typing.TypeVar("FlagT", bound="Flag")
 

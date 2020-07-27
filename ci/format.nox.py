@@ -23,8 +23,7 @@ import time
 
 from ci import nox
 
-
-BLACK_PATHS = [
+REFORMATING_PATHS = [
     "hikari",
     "tests",
     "scripts",
@@ -70,7 +69,7 @@ FILE_EXTS = (
 )
 
 LINE_ENDING_PATHS = {
-    *BLACK_PATHS,
+    *REFORMATING_PATHS,
     *(f for f in os.listdir(".") if os.path.isfile(f) and f.endswith(FILE_EXTS)),
     "pages",
     "docs",
@@ -78,13 +77,18 @@ LINE_ENDING_PATHS = {
 }
 
 
-@nox.session(default=True, reuse_venv=True)
+@nox.session(reuse_venv=True)
 def reformat_code(session: nox.Session) -> None:
-    """Remove trailing whitespace in source, then run black code formatter."""
+    """Remove trailing whitespace in source, run isort and then run black code formatter."""
     remove_trailing_whitespaces()
 
+    # Isort
+    session.install("isort")
+    session.run("isort", *REFORMATING_PATHS)
+
+    # Black
     session.install("black")
-    session.run("black", *BLACK_PATHS)
+    session.run("black", "--target-version", "py38", *REFORMATING_PATHS)
 
 
 def remove_trailing_whitespaces() -> None:

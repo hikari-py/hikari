@@ -20,7 +20,6 @@ import shutil
 
 from ci import nox
 
-
 TRASH = [
     ".nox",
     "build",
