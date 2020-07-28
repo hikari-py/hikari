@@ -111,6 +111,44 @@ class GatewayShardImpl(shard.IGatewayShard):
         the shard will support partial updates.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_activity",
+        "_app",
+        "_backoff",
+        "_compression",
+        "_connected_at",
+        "_data_format",
+        "_debug",
+        "_handshake_event",
+        "_heartbeat_interval",
+        "_heartbeat_latency",
+        "_http_settings",
+        "_idle_since",
+        "_intents",
+        "_is_afk",
+        "_large_threshold",
+        "_last_heartbeat_sent",
+        "_last_message_received",
+        "_last_run_started_at",
+        "_logger",
+        "_proxy_settings",
+        "_ratelimiter",
+        "_request_close_event",
+        "_seq",
+        "_session_id",
+        "_session_started_at",
+        "_shard_id",
+        "_shard_count",
+        "_status",
+        "_token",
+        "_user_id",
+        "_version",
+        "_ws",
+        "_zlib",
+        "_zombied",
+        "url",
+    )
+
     @enum.unique
     class _CloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
@@ -162,7 +200,7 @@ class GatewayShardImpl(shard.IGatewayShard):
     class _SocketClosed(RuntimeError):
         __slots__: typing.Sequence[str] = ()
 
-    @attr.s(auto_attribs=True, slots=True)
+    @attr.s(auto_attribs=True, auto_exc=True, slots=True)
     class _InvalidSession(RuntimeError):
         can_resume: bool = False
 
