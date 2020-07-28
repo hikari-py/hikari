@@ -38,7 +38,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import audit_logs
     from hikari.models import channels
     from hikari.models import colors
-    from hikari.models import colours
     from hikari.models import embeds as embeds_
     from hikari.models import emojis
     from hikari.models import gateway
@@ -58,7 +57,7 @@ if typing.TYPE_CHECKING:
 class IConnectorFactory(abc.ABC):
     """Provider of a connector."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def close(self) -> None:
@@ -95,6 +94,8 @@ class IRESTApp(app.IApp, abc.ABC):
 
 class IRESTAppContextManager(IRESTApp):
     """An IRESTApp that may behave as a context manager."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def __aenter__(self) -> IRESTAppContextManager:
@@ -168,7 +169,7 @@ class IRESTAppFactory(abc.ABC):
 class IRESTClient(component.IComponent, abc.ABC):
     """Interface for functionality that a REST API implementation provides."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def close(self) -> None:
@@ -1647,8 +1648,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1671,8 +1672,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,

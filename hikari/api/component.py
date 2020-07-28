@@ -51,6 +51,6 @@ class IComponent(abc.ABC):
 
         Returns
         -------
-        hikari.api.rest_app.IRESTApp
+        hikari.api.rest.IRESTApp
             The application implementation that owns this component.
         """

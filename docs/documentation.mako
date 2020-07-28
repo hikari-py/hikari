@@ -95,7 +95,7 @@
 
     QUAL_ABC = "<abbr title='An abstract base class which may have abstract methods and abstract properties.'>abstract</abbr>"
     QUAL_ABSTRACT = "<abbr title='An abstract method or property that must be overridden in a derived class.'>abstract</abbr>"
-    QUAL_ASYNC_DEF = "<abbr title='A function that returns a coroutine and must be awaited.'>async</abbr>"
+    QUAL_ASYNC_DEF = "<abbr title='A function that returns a coroutine and must be awaited.'>async def</abbr>"
     QUAL_CLASS = "<abbr title='A standard Python type.'>class</abbr>"
     QUAL_DATACLASS = "<abbr title='A standard Python type that represents some form of information or entity.'>dataclass</abbr>"
     QUAL_CACHED_PROPERTY = "<abbr title='A Python property that caches any result for subsequent re-use.'>cached property</abbr>"
@@ -292,7 +292,7 @@
         show_object = False
         if with_prefixes:
             if isinstance(dobj, pdoc.Function):
-                qual = dobj.funcdef()
+                qual = QUAL_ASYNC_DEF if dobj._is_async else QUAL_DEF
 
                 if not simple_names:
                     if getattr(dobj.obj, "__isabstractmethod__", False):
@@ -480,24 +480,25 @@
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
 
         value = None
-        try:
-            obj = getattr(v.cls.obj, v.name)
+        if v.cls is not None:
+            try:
+                obj = getattr(v.cls.obj, v.name)
 
-            simple_bases = (
-                bytes, int, bool, str, float, complex, list, set, frozenset, dict, tuple, type(None),
-                enum.Enum, typing.Container
-            )
+                simple_bases = (
+                    bytes, int, bool, str, float, complex, list, set, frozenset, dict, tuple, type(None),
+                    enum.Enum, typing.Container
+                )
 
-            if isinstance(obj, simple_bases):
-                value = str(obj)
+                if isinstance(obj, simple_bases):
+                    value = str(obj)
 
-                # Combined enum tidyup
-                if value.count("|") > 3 and isinstance(obj, enum.Enum):
-                    start = "\n\N{EM SPACE}\N{EM SPACE}\N{EM SPACE}"
-                    value = f"({start}   " + f"{start} | ".join(value.split(" | ")) + "\n)"
+                    # Combined enum tidyup
+                    if value.count("|") > 3 and isinstance(obj, enum.Enum):
+                        start = "\n\N{EM SPACE}\N{EM SPACE}\N{EM SPACE}"
+                        value = f"({start}   " + f"{start} | ".join(value.split(" | ")) + "\n)"
 
-        except Exception as ex:
-            print(v.name, type(ex).__name__, ex)
+            except Exception as ex:
+                print(v.name, type(ex).__name__, ex)
 
         if value:
             return_type += f" = {value}"
@@ -523,23 +524,24 @@
     <%
         params = f.params(annotate=show_type_annotations, link=link)
         return_type = get_annotation(f.return_annotation, '->')
+        qual = QUAL_ASYNC_DEF if f._is_async else QUAL_DEF
 
-        example_str = f.funcdef() + f.name + "(" + ", ".join(params) + ")" + return_type
+        example_str = qual + f.name + "(" + ", ".join(params) + ")" + return_type
 
         if params and params[0] in ("self", "mcs", "mcls", "metacls"):
             params = params[1:]
 
         if len(params) > 4 or len(params) > 0 and len(example_str) > 70:
             representation = "\n".join((
-                f.funcdef() + " " + f.name + "(",
+                qual + " " + f.name + "(",
                 *(f"    {p}," for p in params),
                 ")" + return_type + ": ..."
             ))
 
         elif params:
-            representation = f"{f.funcdef()} {f.name}({', '.join(params)}){return_type}: ..."
+            representation = f"{qual} {f.name}({', '.join(params)}){return_type}: ..."
         else:
-            representation = f"{f.funcdef()} {f.name}(){return_type}: ..."
+            representation = f"{qual} {f.name}(){return_type}: ..."
 
         if f.module.name != f.obj.__module__:
             try:
@@ -627,10 +629,11 @@
             )
     %>
     <dt>
-        <%
-            prefix = "<small class='text-muted'>reference to </small>" if redirect else ""
-        %>
-        <h4>${prefix}${link(c, with_prefixes=True, simple_names=True)}</h4>
+        % if redirect:
+            <h4 id="${c.refname}"><small class='text-muted'>reference to </small>${link(c, with_prefixes=True, simple_names=True)}</h4>
+        % else:
+            <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
+        % endif
     </dt>
     <dd>
         % if redirect:

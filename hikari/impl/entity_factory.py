@@ -76,6 +76,14 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_app",
+        "_audit_log_entry_converters",
+        "_audit_log_event_mapping",
+        "_dm_channel_type_mapping",
+        "_guild_channel_type_mapping",
+    )
+
     def __init__(self, app: rest_app.IRESTApp) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
@@ -1859,7 +1867,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         message_delete_bulk.app = self._app
         message_delete_bulk.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete_bulk.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
-        message_delete_bulk.message_ids = {snowflake.Snowflake(message_id) for message_id in payload["ids"]}
+        message_delete_bulk.message_ids = [snowflake.Snowflake(message_id) for message_id in payload["ids"]]
         return message_delete_bulk
 
     @staticmethod

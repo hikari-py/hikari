@@ -74,7 +74,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import colors
-    from hikari.models import colours
     from hikari.models import gateway
     from hikari.models import invites
     from hikari.models import messages as messages_
@@ -146,6 +145,16 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         The API version to use. This is interpolated into the default `url`
         to create the full URL. Currently this only supports `6` or `7`.
     """
+
+    __slots__: typing.Sequence[str] = (
+        "_cache",
+        "_debug",
+        "_entity_factory",
+        "_executor",
+        "_http_settings",
+        "_proxy_settings",
+        "_rest",
+    )
 
     def __init__(
         self,
@@ -277,6 +286,18 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
+
+    __slots__: typing.Sequence[str] = (
+        "_connector_factory",
+        "_connector_owner",
+        "_debug",
+        "_event_loop",
+        "_executor",
+        "_http_settings",
+        "_proxy_settings",
+        "_url",
+        "_version",
+    )
 
     def __init__(
         self,
@@ -416,7 +437,6 @@ class RESTClientImpl(rest_api.IRESTClient):
         "version",
         "_app",
         "_client_session",
-        "_connector",
         "_connector_factory",
         "_connector_owner",
         "_debug",
@@ -2029,8 +2049,8 @@ class RESTClientImpl(rest_api.IRESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -2067,8 +2087,8 @@ class RESTClientImpl(rest_api.IRESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,

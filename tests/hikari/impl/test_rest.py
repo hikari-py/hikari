@@ -96,7 +96,7 @@ class TestBasicLazyCachedTCPConnectorFactoryAsync:
 
 @pytest.fixture
 def rest_app():
-    return rest.RESTAppImpl(
+    return hikari_test_helpers.unslot_class(rest.RESTAppImpl)(
         connector_factory=mock.Mock(),
         debug=True,
         executor=mock.Mock(),
@@ -170,7 +170,7 @@ class TestRESTAppImplAsync:
 
 @pytest.fixture
 def rest_factory():
-    return rest.RESTAppFactoryImpl(
+    return hikari_test_helpers.unslot_class(rest.RESTAppFactoryImpl)(
         connector_factory=mock.Mock(),
         connector_owner=False,
         debug=True,
