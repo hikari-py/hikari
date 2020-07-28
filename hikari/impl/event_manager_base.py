@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventFactoryComponentBase"]
+__all__: typing.Final[typing.List[str]] = ["EventManagerComponentBase"]
 
 import asyncio
 import logging
@@ -57,7 +57,7 @@ def _default_predicate(_: event_dispatcher.EventT_inv) -> bool:
     return True
 
 
-class EventFactoryComponentBase(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
+class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`

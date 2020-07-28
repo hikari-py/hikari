@@ -46,9 +46,9 @@ from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
 from hikari.impl import stateful_cache as cache_impl
-from hikari.impl import stateful_event_factory
+from hikari.impl import stateful_event_manager
 from hikari.impl import stateless_cache as stateless_cache_impl
-from hikari.impl import stateless_event_factory
+from hikari.impl import stateless_event_manager
 from hikari.impl import voice
 from hikari.models import intents as intents_
 from hikari.models import presences
@@ -63,7 +63,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base_events
-    from hikari.impl import event_factory_base
+    from hikari.impl import event_manager_base
     from hikari.models import gateway as gateway_models
     from hikari.models import users
 
@@ -249,14 +249,14 @@ class BotAppImpl(bot.IBotApp):
         if banner_package is not None:
             self._dump_banner(banner_package)
 
-        self._event_factory: event_factory_base.EventFactoryComponentBase
+        self._event_factory: event_manager_base.EventManagerComponentBase
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
-            self._event_factory = stateless_event_factory.StatelessEventFactoryImpl(app=self, intents=intents)
+            self._event_factory = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
-            self._event_factory = stateful_event_factory.StatefulEventFactoryImpl(app=self, intents=intents)
+            self._event_factory = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug

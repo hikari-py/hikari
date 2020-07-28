@@ -19,12 +19,12 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatefulEventFactoryImpl"]
+__all__: typing.Final[typing.List[str]] = ["StatefulEventManagerImpl"]
 
 import typing
 
 from hikari.events import other as other_events
-from hikari.impl import event_factory_base
+from hikari.impl import event_manager_base
 from hikari.models import guilds
 
 if typing.TYPE_CHECKING:
@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-class StatefulEventFactoryImpl(event_factory_base.EventFactoryComponentBase):
+class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     """Provides event handling logic for Discord events."""
 
     async def on_connected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
