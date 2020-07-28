@@ -32,6 +32,8 @@ if typing.TYPE_CHECKING:
 class InMemoryCacheComponentImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
+    __slots__: typing.Sequence[str] = ("_app",)
+
     def __init__(self, app: rest_app.IRESTApp) -> None:
         self._app = app
 

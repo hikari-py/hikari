@@ -57,7 +57,7 @@ if typing.TYPE_CHECKING:
 class IConnectorFactory(abc.ABC):
     """Provider of a connector."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def close(self) -> None:
@@ -94,6 +94,8 @@ class IRESTApp(app.IApp, abc.ABC):
 
 class IRESTAppContextManager(IRESTApp):
     """An IRESTApp that may behave as a context manager."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def __aenter__(self) -> IRESTAppContextManager:
@@ -167,7 +169,7 @@ class IRESTAppFactory(abc.ABC):
 class IRESTClient(component.IComponent, abc.ABC):
     """Interface for functionality that a REST API implementation provides."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     async def close(self) -> None:

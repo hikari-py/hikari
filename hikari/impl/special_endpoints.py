@@ -456,6 +456,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
 class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     """Iterator implementation for an audit log."""
 
+    __slots__: typing.Sequence[str] = ("_app", "_action_type", "_request_call", "_route", "_first_id", "_user")
+
     def __init__(
         self,
         app: rest.IRESTApp,

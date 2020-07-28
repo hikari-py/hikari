@@ -48,7 +48,7 @@ class TypingIndicator(abc.ABC):
     the typing indicator repeatedly until the context finishes.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     def __await__(self) -> typing.Generator[None, typing.Any, None]:
