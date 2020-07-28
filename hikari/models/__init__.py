@@ -17,11 +17,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Data classes representing Discord entities."""
 
-from __future__ import annotations
-
-# noinspection PyUnresolvedReferences
-import typing
-
 from hikari.models import applications
 from hikari.models import audit_logs
 from hikari.models import channels
@@ -57,7 +52,7 @@ from hikari.models.users import *
 from hikari.models.voices import *
 from hikari.models.webhooks import *
 
-__all__: typing.Final[typing.List[str]] = (
+__all__ = (
     applications.__all__
     + audit_logs.__all__
     + channels.__all__

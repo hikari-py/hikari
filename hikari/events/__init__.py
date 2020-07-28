@@ -17,11 +17,6 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 """Application and entities that are used to describe Discord gateway events."""
 
-from __future__ import annotations
-
-# noinspection PyUnresolvedReferences
-import typing
-
 from hikari.events import base
 from hikari.events import channel
 from hikari.events import guild
@@ -35,6 +30,4 @@ from hikari.events.message import *
 from hikari.events.other import *
 from hikari.events.voice import *
 
-__all__: typing.Final[typing.List[str]] = (
-    ["Event"] + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__
-)
+__all__ = ["Event"] + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__
