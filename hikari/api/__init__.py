@@ -21,9 +21,5 @@ These are provided to uncouple specific implementation details from each
 implementation, thus allowing custom solutions to be engineered such as bots
 relying on a distributed event bus or cache.
 """
-from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
-
-# noinspection PyUnresolvedReferences
-import typing
+__all__ = []  # type: ignore[var-annotated]
