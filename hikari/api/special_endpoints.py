@@ -117,6 +117,11 @@ class GuildBuilder:
         The first role must always be the `@everyone` role.
 
     !!! note
+        If you call `add_role`, the default roles provided by discord will
+        be created. This also applies to the `add_` functions for
+        text channels/voice channels/categories.
+
+    !!! note
         Functions that return a `hikari.utilities.snowflake.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
@@ -204,8 +209,8 @@ class GuildBuilder:
         name: str,
         /,
         *,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
@@ -213,19 +218,17 @@ class GuildBuilder:
     ) -> snowflake.Snowflake:
         """Create a role.
 
-        !!! note
-            The first role you create must always be the `@everyone` role, and
-            must have that name. This role will ignore the `hoisted`, `color`,
-            `colour`, `mentionable` and `position` parameters.
+        !!! warning
+            The first role you create must always be the `@everyone` role.
 
         Parameters
         ----------
         name : builtins.str
             The role name.
-        color : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Color]
+        color : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Colorish]
             The colour of the role to use. If unspecified, then the default
             colour is used instead.
-        colour : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Color]
+        colour : hikari.utilities.undefined.UndefinedOr[hikari.models.colors.Colorish]
             Alias for the `color` parameter for non-american users.
         hoisted : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the role will show up in the user sidebar in a separate
@@ -258,7 +261,9 @@ class GuildBuilder:
         builtins.ValueError
             If you are defining the first role, but did not name it `@everyone`.
         builtins.TypeError
-            If you specify both `color` and `colour` together.
+            If you specify both `color` and `colour` together or if you try to
+            specify `color`, `colour`, `hoisted`, `mentionable` or `position` for
+            the `@everyone` role.
         """
 
     @abc.abstractmethod
@@ -271,7 +276,6 @@ class GuildBuilder:
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a category channel.
 
@@ -284,9 +288,6 @@ class GuildBuilder:
         permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.models.channels.PermissionOverwrite]]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the channel is marked as NSFW and only users
-            over 18 years of age should be given access.
 
         Returns
         -------
@@ -359,7 +360,6 @@ class GuildBuilder:
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a voice channel.
@@ -373,9 +373,6 @@ class GuildBuilder:
         permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.models.channels.PermissionOverwrite]]
             If defined, a collection of one or more
             `hikari.models.channels.PermissionOverwrite` objects.
-        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the channel is marked as NSFW and only users
-            over 18 years of age should be given access.
         parent_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             If defined, should be a snowflake ID of a category channel
             that was made with this builder. If provided, this channel will
