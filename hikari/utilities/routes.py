@@ -31,7 +31,6 @@ import attr
 from hikari.utilities import data_binding
 from hikari.utilities import files
 
-DEFAULT_MAJOR_PARAMS: typing.Final[typing.Set[str]] = {"channel", "guild", "webhook"}
 HASH_SEPARATOR: typing.Final[str] = ";"
 
 

@@ -116,8 +116,8 @@ class MessageDeleteBulkEvent(base_events.Event):
     This will be `builtins.None` if these messages were bulk deleted in a DM channel.
     """
 
-    message_ids: typing.Set[snowflake.Snowflake] = attr.ib(repr=False)
-    """A collection of the IDs of the messages that were deleted."""
+    message_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=False)
+    """A sequence of the IDs of the messages that were deleted."""
 
 
 class MessageReactionEvent(base_events.Event):

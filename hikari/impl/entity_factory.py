@@ -1859,7 +1859,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         message_delete_bulk.app = self._app
         message_delete_bulk.channel_id = snowflake.Snowflake(payload["channel_id"])
         message_delete_bulk.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
-        message_delete_bulk.message_ids = {snowflake.Snowflake(message_id) for message_id in payload["ids"]}
+        message_delete_bulk.message_ids = [snowflake.Snowflake(message_id) for message_id in payload["ids"]]
         return message_delete_bulk
 
     @staticmethod

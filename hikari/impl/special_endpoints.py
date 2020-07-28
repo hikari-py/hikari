@@ -31,6 +31,7 @@ import typing
 import attr
 
 from hikari.api import special_endpoints
+from hikari.models import channels
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -45,7 +46,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest
     from hikari.models import applications
     from hikari.models import audit_logs
-    from hikari.models import channels
     from hikari.models import colors
     from hikari.models import guilds
     from hikari.models import messages
@@ -134,8 +134,8 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         route = routes.POST_GUILDS.compile()
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", self.name)
-        payload.put_array("roles", self._roles)
-        payload.put_array("channels", self._channels)
+        payload.put_array("roles", self._roles if self._roles else undefined.UNDEFINED)
+        payload.put_array("channels", self._channels if self._channels else undefined.UNDEFINED)
         payload.put("region", self.region)
         payload.put("verification_level", self.verification_level)
         payload.put("default_message_notifications", self.default_message_notifications)
@@ -148,7 +148,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)
 
-        raw_response = await self._request_call(route, body=payload)
+        raw_response = await self._request_call(route, json=payload)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._app.entity_factory.deserialize_guild(response)
 
@@ -157,18 +157,23 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         name: str,
         /,
         *,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
-        if len(self._roles) == 0 and name != "@everyone":
-            raise ValueError("First role must always be the @everyone role")
-
         if not undefined.count(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
+
+        if len(self._roles) == 0:
+            if name != "@everyone":
+                raise ValueError("First role must always be the '@everyone' role")
+            if undefined.count(color, colour, hoisted, mentionable, position) != 5:
+                raise ValueError(
+                    "Cannot pass 'color', 'colour', 'hoisted', 'mentionable' nor 'position' to the '@everyone' role."
+                )
 
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
@@ -256,7 +261,6 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         snowflake_id = self._new_snowflake()
@@ -266,7 +270,6 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put("type", channels.ChannelType.GUILD_VOICE)
         payload.put("bitrate", bitrate)
         payload.put("position", position)
-        payload.put("nsfw", nsfw)
         payload.put("user_limit", user_limit)
         payload.put_snowflake("parent_id", parent_id)
 
