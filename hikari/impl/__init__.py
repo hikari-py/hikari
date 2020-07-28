@@ -23,9 +23,4 @@ performance or structural requirements, you will want to use these
 implementations.
 """
 
-from __future__ import annotations
-
-__all__: typing.Final[typing.List[str]] = []
-
-# noinspection PyUnresolvedReferences
-import typing
+__all__ = []  # type: ignore[var-annotated]

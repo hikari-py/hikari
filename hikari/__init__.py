@@ -19,14 +19,9 @@
 
 To get started, you will want to initialize an instance of `Bot`
 (an alias for `hikari.impl.bot.BotAppImpl`) for writing a bot, or `REST` (an
-alias for `hikari.impl.rest.app.RESTAppFactoryImpl`) if you only need to use
+alias for `hikari.impl.rest.RESTAppFactoryImpl`) if you only need to use
 the REST API.
 """
-
-from __future__ import annotations
-
-# noinspection PyUnresolvedReferences
-import typing
 
 # We need these imported explicitly for the __all__ to be visible due to
 # Python's weird import visibility system.
@@ -50,35 +45,19 @@ from hikari.events import *
 from hikari.impl.bot import BotAppImpl as Bot
 from hikari.impl.rest import RESTAppFactoryImpl as REST
 from hikari.models import *
-from hikari.utilities import files as _files
-from hikari.utilities import iterators as _iterators
-from hikari.utilities import snowflake as _snowflake
-from hikari.utilities import spel as _spel
-from hikari.utilities import undefined as _undefined
-from hikari.utilities.files import *
-from hikari.utilities.iterators import *
-from hikari.utilities.snowflake import *
-from hikari.utilities.spel import *
-from hikari.utilities.undefined import *
+from hikari.utilities.files import File
+from hikari.utilities.snowflake import Snowflake
+from hikari.utilities.snowflake import Unique
+from hikari.utilities.undefined import UNDEFINED
 
 _presorted_all = (
-    config.__all__
-    + events.__all__
-    + errors.__all__
-    + models.__all__
-    + _files.__all__
-    + _iterators.__all__
-    + _snowflake.__all__
-    + _spel.__all__
-    + _undefined.__all__
+    ["File", "Snowflake", "Unique", "UNDEFINED"] + config.__all__ + events.__all__ + errors.__all__ + models.__all__
 )
 
-__all__: typing.Final[typing.List[str]] = [
-    # This may seem a bit dirty, but I have added an edge case to the documentation
-    # logic to *ignore* the sorting member rules for the root `hikari` module
-    # (this file) specifically. This way, we can force `Bot` and `RESTClientFactory`
-    # to the top of the list.
-    "Bot",
-    "REST",
-    *sorted(_presorted_all),
-]
+# This may seem a bit dirty, but I have added an edge case to the documentation
+# logic to *ignore* the sorting member rules for the root `hikari` module
+# (this file) specifically. This way, we can force `Bot` and `RESTClientFactory`
+# to the top of the list.
+__all__ = ["Bot", "REST", *sorted(_presorted_all)]
+
+del _presorted_all
