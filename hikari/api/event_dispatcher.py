@@ -120,8 +120,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -164,8 +164,8 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Listen: `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -227,7 +227,7 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
+        Has listener: `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
         """
 
     @abc.abstractmethod
@@ -252,7 +252,7 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.get_listeners`
+        Get listeners: `hikari.api.event_dispatcher.IEventDispatcherBase.get_listeners`
         """
 
     @abc.abstractmethod
@@ -281,10 +281,10 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.unsubscribe`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Dispatch: `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
+        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        Unsubscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.unsubscribe`
+        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
         """
 
     @abc.abstractmethod
@@ -328,9 +328,9 @@ class IEventDispatcherBase(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
+        Listen: `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
+        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
+        Dispatch: `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
         """
 
 
@@ -341,6 +341,8 @@ class IEventDispatcherComponent(IEventDispatcherBase, abc.ABC):
     expected to invoke one or more corresponding event listeners where
     appropriate.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
 
 class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
@@ -375,7 +377,7 @@ class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def event_dispatcher(self) -> IEventDispatcherComponent:
+    def event_dispatcher(self) -> IEventDispatcherBase:
         """Event dispatcher and subscription manager.
 
         This stores every event you subscribe to in your application, and

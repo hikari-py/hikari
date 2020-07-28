@@ -375,7 +375,7 @@ class PartialUser(snowflake.Unique):
             raise LookupError("Unknown discriminator for PartialUser")
 
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, discriminator=self.discriminator % 5, file_format="png",
+            constants.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png",
         )
 
 

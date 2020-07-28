@@ -67,7 +67,7 @@ class IGatewayShard(component.IComponent, abc.ABC):
     Each instance should represent a single shard.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

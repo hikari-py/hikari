@@ -175,6 +175,38 @@ class BotAppImpl(bot.IBotApp):
         If sharding information is provided, but is unfeasible or invalid.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_cache",
+        "_connector_factory",
+        "_debug",
+        "_entity_factory",
+        "_event_manager",
+        "_executor",
+        "_global_ratelimit",
+        "_http_settings",
+        "_initial_activity",
+        "_initial_idle_since",
+        "_initial_is_afk",
+        "_initial_status",
+        "_intents",
+        "_large_threshold",
+        "_max_concurrency",
+        "_proxy_settings",
+        "_request_close_event",
+        "_rest",
+        "_shard_count",
+        "_shard_gather_task",
+        "_shard_ids",
+        "_shards",
+        "_started_at_monotonic",
+        "_started_at_timestamp",
+        "_tasks",
+        "_token",
+        "_version",
+        "_voice",
+        "_start_count",
+    )
+
     def __init__(
         self,
         *,

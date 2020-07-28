@@ -50,7 +50,7 @@ class IEventConsumerComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.gateway.IGatewayShard
+        shard : hikari.api.shard.IGatewayShard
             The gateway shard that emitted the event.
         event_name : builtins.str
             The event name.

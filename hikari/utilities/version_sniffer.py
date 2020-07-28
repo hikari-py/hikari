@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+@attr.s(auto_attribs=True, kw_only=True, slots=True)
 class VersionInfo:
     """PyPI release info."""
 

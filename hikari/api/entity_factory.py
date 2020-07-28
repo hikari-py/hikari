@@ -511,7 +511,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.emojis.UnicodeEmoji or hikari.models.emoji.CustomEmoji
+        hikari.models.emojis.UnicodeEmoji or hikari.models.emojis.CustomEmoji
             The deserialized custom or unicode emoji object.
         """
 
@@ -1426,7 +1426,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.gateway.IGatewayShard
+        shard : hikari.api.shard.IGatewayShard
             The shard that was ready.
         payload : hikari.utilities.data_binding.JSONObject
             The dict payload to parse.

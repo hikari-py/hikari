@@ -3146,7 +3146,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_message_delete_bulk_event(self, entity_factory_impl, mock_app, message_delete_bulk_payload):
         message_delete_bulk = entity_factory_impl.deserialize_message_delete_bulk_event(message_delete_bulk_payload)
         assert message_delete_bulk.app is mock_app
-        assert message_delete_bulk.message_ids == {123123, 9349299}
+        assert message_delete_bulk.message_ids == [123123, 9349299]
         assert message_delete_bulk.channel_id == 92392929
         assert message_delete_bulk.guild_id == 92929292
         assert isinstance(message_delete_bulk, message_events.MessageDeleteBulkEvent)

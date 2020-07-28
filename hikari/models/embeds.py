@@ -22,6 +22,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "Embed",
     "EmbedResource",
+    "EmbedResourceWithProxy",
     "EmbedVideo",
     "EmbedImage",
     "EmbedProvider",
