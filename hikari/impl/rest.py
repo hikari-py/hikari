@@ -74,7 +74,6 @@ if typing.TYPE_CHECKING:
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import colors
-    from hikari.models import colours
     from hikari.models import gateway
     from hikari.models import invites
     from hikari.models import messages as messages_
@@ -2029,8 +2028,8 @@ class RESTClientImpl(rest_api.IRESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -2067,8 +2066,8 @@ class RESTClientImpl(rest_api.IRESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Color] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colours.Colour] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
