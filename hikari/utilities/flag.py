@@ -70,6 +70,8 @@ class Flag(enum.IntFlag):
     ```
     """
 
+    __slots__: typing.Sequence[str] = ()
+
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         doc = inspect.getdoc(cls) or ""
 

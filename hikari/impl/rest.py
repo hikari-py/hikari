@@ -146,6 +146,16 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         to create the full URL. Currently this only supports `6` or `7`.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_cache",
+        "_debug",
+        "_entity_factory",
+        "_executor",
+        "_http_settings",
+        "_proxy_settings",
+        "_rest",
+    )
+
     def __init__(
         self,
         *,
@@ -276,6 +286,18 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
+
+    __slots__: typing.Sequence[str] = (
+        "_connector_factory",
+        "_connector_owner",
+        "_debug",
+        "_event_loop",
+        "_executor",
+        "_http_settings",
+        "_proxy_settings",
+        "_url",
+        "_version",
+    )
 
     def __init__(
         self,
@@ -415,7 +437,6 @@ class RESTClientImpl(rest_api.IRESTClient):
         "version",
         "_app",
         "_client_session",
-        "_connector",
         "_connector_factory",
         "_connector_owner",
         "_debug",

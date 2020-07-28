@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
 class IVoiceApp(app.IApp, abc.ABC):
     """Voice application mixin."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -50,7 +50,7 @@ _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="IVoiceConnection"
 class IVoiceComponent(component.IComponent, abc.ABC):
     """Interface for a voice system implementation."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -130,7 +130,7 @@ class IVoiceConnection(abc.ABC):
     for example.
     """
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     if typing.TYPE_CHECKING:
         _T = typing.TypeVar("_T")
