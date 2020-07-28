@@ -52,7 +52,7 @@ def client_session():
 
 @pytest.fixture()
 def client(http_settings, proxy_settings):
-    return shard.GatewayShardImpl(
+    return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
         url="wss://gateway.discord.gg",
         token="lol",
         app=mock.MagicMock(),
@@ -130,7 +130,7 @@ class TestStart:
     @pytest.mark.parametrize("shard_id", [0, 1, 2])
     @hikari_test_helpers.timeout()
     async def test_starts_task(self, event_loop, shard_id, http_settings=http_settings, proxy_settings=proxy_settings):
-        g = shard.GatewayShardImpl(
+        g = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
             app=mock.MagicMock(),
@@ -448,7 +448,7 @@ class TestRunOnceShielded:
 @pytest.mark.asyncio
 class TestRunOnce:
     @pytest.fixture
-    def client(self, http_settings=http_settings, proxy_settings=proxy_settings):
+    def client(self, http_settings, proxy_settings):
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",

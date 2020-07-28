@@ -76,6 +76,14 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     This will convert objects to/from JSON compatible representations.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_app",
+        "_audit_log_entry_converters",
+        "_audit_log_event_mapping",
+        "_dm_channel_type_mapping",
+        "_guild_channel_type_mapping",
+    )
+
     def __init__(self, app: rest_app.IRESTApp) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {

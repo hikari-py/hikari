@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
 class IApp(abc.ABC):
     """The core interface for a Hikari application."""
 
-    __slots__ = ()
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

@@ -342,6 +342,8 @@ class IEventDispatcherComponent(IEventDispatcherBase, abc.ABC):
     appropriate.
     """
 
+    __slots__: typing.Sequence[str] = ()
+
 
 class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
     """Application specialization that supports dispatching of events.
