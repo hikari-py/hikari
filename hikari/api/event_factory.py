@@ -15,7 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+"""Component that provides the ability to generate event models."""
+
 from __future__ import annotations
+
+__all__: typing.Final[typing.List[str]] = ["IEventFactoryComponent"]
 
 import abc
 import datetime

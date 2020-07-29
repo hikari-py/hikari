@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "ShardEvent",
     "ShardStateEvent",
     "ShardConnectedEvent",
@@ -97,6 +97,24 @@ class ShardReadyEvent(ShardStateEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<docstring inherited from ShardEvent>>.
 
+    actual_gateway_version: int = attr.ib(repr=True)
+    """Actual gateway version being used.
+
+    Returns
+    -------
+    builtins.int
+        The actual gateway version we are actively using for this protocol.
+    """
+
+    session_id: str = attr.ib(repr=True)
+    """ID for this session.
+
+    Returns
+    -------
+    builtins.str
+        The session ID for this gateway session.
+    """
+
     my_user: users.OwnUser = attr.ib(repr=True)
     """User for the current bot account this connection is authenticated with.
 
@@ -106,16 +124,16 @@ class ShardReadyEvent(ShardStateEvent):
         This bot's user.
     """
 
-    unavailable_guilds: typing.Mapping[snowflake.Snowflake, guilds.UnavailableGuild] = attr.ib(repr=False)
-    """Mapping of the guilds this bot is currently in.
+    unavailable_guilds: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=False)
+    """Sequence of the IDs for all guilds this bot is currently in.
 
     All guilds will start off "unavailable" and should become available after
     a few seconds of connecting one-by-one.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.UnavailableGuild]
-        This bot's user.
+    typing.Sequence[hikari.utilities.snowflake.Snowflake]
+        All guild IDs that the bot is in for this shard.
     """
 
 
@@ -127,7 +145,7 @@ class ShardResumedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True)
 class MemberChunkEvent(ShardEvent):
     """Used to represent the response to Guild Request Members."""
 

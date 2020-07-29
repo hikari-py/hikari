@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "ReactionEvent",
     "GuildReactionEvent",
     "PrivateReactionEvent",
@@ -49,6 +49,7 @@ from hikari.models import intents
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.models import emojis
+    from hikari.models import guilds
     from hikari.utilities import snowflake
 
 
@@ -195,11 +196,14 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    user_id: snowflake.Snowflake = attr.ib()
-    # <<inherited docstring from ReactionAddEvent>>.
+    member: guilds.Member = attr.ib()
+    """Member that added the reaction.
 
-    guild_id: snowflake.Snowflake = attr.ib()
-    # <<inherited docstring from GuildReactionEvent>>.
+    Returns
+    -------
+    hikari.models.guilds.Member
+        The member which added this reaction.
+    """
 
     channel_id: snowflake.Snowflake = attr.ib()
     # <<inherited docstring from ReactionEvent>>.
@@ -209,6 +213,16 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
 
     emoji: emojis.Emoji = attr.ib()
     # <<inherited docstring from ReactionAddEvent>>.
+
+    @property
+    def guild_id(self) -> snowflake.Snowflake:
+        # <<inherited docstring from GuildReactionEvent>>.
+        return self.member.guild_id
+
+    @property
+    def user_id(self) -> snowflake.Snowflake:
+        # <<inherited docstring from ReactionAddEvent>>.
+        return self.member.user.id
 
 
 @attr.s(kw_only=True, slots=True)
