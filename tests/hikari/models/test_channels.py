@@ -29,7 +29,7 @@ from tests.hikari import hikari_test_helpers
 
 def test_ChannelType_str_operator():
     channel_type = channels.ChannelType(1)
-    assert str(channel_type) == "DM"
+    assert str(channel_type) == "PRIVATE_TEXT"
 
 
 def test_PermissionOverwriteType_str_operator():

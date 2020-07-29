@@ -1489,7 +1489,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_snowflake("recipient_id", user)
         raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_dm_channel(response)
+        return self._app.entity_factory.deserialize_private_text_channel(response)
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()

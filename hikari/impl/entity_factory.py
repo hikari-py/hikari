@@ -130,8 +130,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._dm_channel_type_mapping = {
-            channel_models.ChannelType.DM: self.deserialize_dm_channel,
-            channel_models.ChannelType.GROUP_DM: self.deserialize_group_dm_channel,
+            channel_models.ChannelType.PRIVATE_TEXT: self.deserialize_private_text_channel,
+            channel_models.ChannelType.PRIVATE_GROUP_TEXT: self.deserialize_private_group_text_channel,
         }
         self._guild_channel_type_mapping = {
             channel_models.ChannelType.GUILD_CATEGORY: self.deserialize_guild_category,
@@ -422,41 +422,41 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         self._set_partial_channel_attributes(payload, partial_channel)
         return partial_channel
 
-    def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
-        dm_channel = channel_models.PrivateTextChannel()
-        self._set_partial_channel_attributes(payload, dm_channel)
+    def deserialize_private_text_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
+        channel = channel_models.PrivateTextChannel()
+        self._set_partial_channel_attributes(payload, channel)
 
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflake.Snowflake(last_message_id)
-        dm_channel.last_message_id = last_message_id
+        channel.last_message_id = last_message_id
 
-        dm_channel.recipient = self.deserialize_user(payload["recipients"][0])
-        return dm_channel
+        channel.recipient = self.deserialize_user(payload["recipients"][0])
+        return channel
 
-    def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.GroupPrivateTextChannel:
-        group_dm_channel = channel_models.GroupPrivateTextChannel()
-        self._set_partial_channel_attributes(payload, group_dm_channel)
+    def deserialize_private_group_text_channel(
+        self, payload: data_binding.JSONObject
+    ) -> channel_models.GroupPrivateTextChannel:
+        channel = channel_models.GroupPrivateTextChannel()
+        self._set_partial_channel_attributes(payload, channel)
 
         if (last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflake.Snowflake(last_message_id)
-        group_dm_channel.last_message_id = last_message_id
+        channel.last_message_id = last_message_id
 
-        group_dm_channel.owner_id = snowflake.Snowflake(payload["owner_id"])
-        group_dm_channel.icon_hash = payload["icon"]
+        channel.owner_id = snowflake.Snowflake(payload["owner_id"])
+        channel.icon_hash = payload["icon"]
 
         if (nicks := payload.get("nicks")) is not None:
             nicknames = {snowflake.Snowflake(entry["id"]): entry["nick"] for entry in nicks}
         else:
             nicknames = {}
-        group_dm_channel.nicknames = nicknames
+        channel.nicknames = nicknames
 
-        group_dm_channel.application_id = (
-            snowflake.Snowflake(payload["application_id"]) if "application_id" in payload else None
-        )
-        group_dm_channel.recipients = {
+        channel.application_id = snowflake.Snowflake(payload["application_id"]) if "application_id" in payload else None
+        channel.recipients = {
             snowflake.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]
         }
-        return group_dm_channel
+        return channel
 
     def _set_guild_channel_attributes(
         self,
