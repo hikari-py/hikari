@@ -1,5 +1,5 @@
 # Summary
-<!-- Small sumary of the feature request -->
+<!-- Small summary of the merge request -->
 
 # Problem
 <!-- What problem will this feature solve, if any -->
