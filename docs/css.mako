@@ -1,3 +1,8 @@
+* {
+    scrollbar-color: #202324 #454a4d;
+    scroll-behavior: smooth;
+}
+
 img#logo {
     border-radius: 15px;
     width: 30px;
@@ -7,6 +12,11 @@ img#logo {
 
 small.smaller {
     font-size: 0.75em;
+}
+
+body {
+    background-color: #181A1B;
+    color: #C9C5C0;
 }
 
 h1 {
@@ -37,7 +47,7 @@ h4 {
 a.sidebar-nav-pill,
 a.sidebar-nav-pill:active,
 a.sidebar-nav-pill:hover {
-    color: #444;
+    color: #BDB7AF;
 }
 
 .module-source > details > pre {
@@ -49,15 +59,23 @@ a.sidebar-nav-pill:hover {
 }
 
 a {
-    color: #e83e8c;
+    color: #DE4F91;
+}
+
+a:hover {
+    color: #64B1F2;
+}
+
+.jumbotron {
+    background-color: #232627;
 }
 
 .breadcrumb-item.inactive > a {
-    color: #a626a4 !important;
+    color: #d264d0 !important;
 }
 
 .breadcrumb-item.active > a {
-    color: #e83e8c !important;
+    color: #de4f91 !important;
 }
 
 .breadcrumb-item+.breadcrumb-item::before {
@@ -66,6 +84,7 @@ a {
 
 .module-breadcrumb {
     padding-left: 0 !important;
+    background-color: #232627;
 }
 
 ul.nested {
@@ -116,19 +135,20 @@ dl.root {
 }
 
 code {
-    color: #a626a4;
+    color: #DB61D9;
 }
 
+## Check this to change it 
 code .active {
     color: #e83e8c;
 }
 
 code a {
-    color: #e83e8c;
+    color: #E94A93;
 }
 
 a.dotted:hover, abbr:hover {
-    text-decoration: underline #6c757d dotted !important;
+    text-decoration: underline #9E9689 dotted !important;
 }
 
 a.dotted, abbr {
@@ -164,4 +184,48 @@ a.dotted, abbr {
 
 .gsc-control-cse .gsc-control-cse-en {
     margin-top: 0 !important;
+}
+
+.bg-dark {
+    background-color: #2C2F31 !important;
+}
+
+.text-muted {
+    color: #9E9689 !important;
+}
+
+.alert-primary {
+    color: #7CC3FF;
+    background-color: #262A2B;
+    border-color: #003B7B;
+}
+
+.alert-secondary {
+    color: #C2BCB4;
+    background-color: #282B2C;
+    border-color: #3B4042;
+}
+
+.alert-success {
+    color: #99E6AB;
+    background-color: #1A3E29;
+    border-color: #255A32;
+}
+
+.alert-info {
+    color: #8EE3F1;
+    background-color: #143B43;
+    border-color: #1E5961;
+}
+
+.alert-warning {
+    color: #FBD770;
+    background-color: #513E00;
+    border-color: #7B5C00;
+}
+
+.alert-danger {
+    color: rgb(225, 134, 143);
+    background-color: rgb(67, 12, 17);
+    border-color: rgb(104, 18, 27);
 }
