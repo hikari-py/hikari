@@ -41,11 +41,16 @@ if typing.TYPE_CHECKING:
 
 
 class TypingIndicator(abc.ABC):
-    """Result type of `hiarki.net.rest.trigger_typing`.
+    """Result type of `hikari.api.rest.IRESTClient.trigger_typing`.
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
+
+    !!! note
+        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        You should only ever need to use instances of this class that are
+        produced by that API.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -70,7 +75,7 @@ class TypingIndicator(abc.ABC):
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True)
 class GuildBuilder:
-    """A helper class used to construct a prototype for a guild.
+    """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
