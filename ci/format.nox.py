@@ -50,6 +50,8 @@ FILE_EXTS = (
     ".js",
     ".json",
     ".toml",
+    ".ini",
+    ".cfg",
     ".css",
     ".md",
     ".dockerfile",

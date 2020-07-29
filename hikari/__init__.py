@@ -46,13 +46,28 @@ from hikari.impl.bot import BotAppImpl as Bot
 from hikari.impl.rest import RESTAppFactoryImpl as REST
 from hikari.models import *
 from hikari.utilities.files import File
+from hikari.utilities.snowflake import SearchableSnowflakeish
+from hikari.utilities.snowflake import SearchableSnowflakeishOr
 from hikari.utilities.snowflake import Snowflake
+from hikari.utilities.snowflake import Snowflakeish
+from hikari.utilities.snowflake import SnowflakeishOr
 from hikari.utilities.snowflake import Unique
 from hikari.utilities.undefined import UNDEFINED
 
-_presorted_all = (
-    ["File", "Snowflake", "Unique", "UNDEFINED"] + config.__all__ + events.__all__ + errors.__all__ + models.__all__
-)
+_presorted_all = [
+    "File",
+    "Snowflake",
+    "Snowflakeish",
+    "SnowflakeishOr",
+    "SearchableSnowflakeish",
+    "SearchableSnowflakeishOr",
+    "Unique",
+    "UNDEFINED",
+    *config.__all__,
+    *events.__all__,
+    *errors.__all__,
+    *models.__all__,
+]
 
 # This may seem a bit dirty, but I have added an edge case to the documentation
 # logic to *ignore* the sorting member rules for the root `hikari` module
