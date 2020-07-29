@@ -708,13 +708,13 @@ class TestUpdatePresence:
         status = presences.Status.DO_NOT_DISTURB
 
         result = object()
-        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
 
         await client.update_presence(
             idle_since=idle_since, afk=afk, activity=activity, status=status,
         )
 
-        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
             idle_since=idle_since, afk=afk, activity=activity, status=status,
         )
 
@@ -745,13 +745,13 @@ class TestUpdatePresence:
         client._is_afk = client_afk
         client._status = client_status
 
-        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
 
         await client.update_presence(
             idle_since=idle_since, afk=afk, status=status, activity=activity,
         )
 
-        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
             idle_since=idle_since if idle_since is not undefined.UNDEFINED else client_idle_since,
             afk=afk if afk is not undefined.UNDEFINED else client_afk,
             activity=activity if activity is not undefined.UNDEFINED else client_activity,
@@ -766,7 +766,7 @@ class TestUpdatePresence:
         client._is_afk = undefined.UNDEFINED
         client._status = undefined.UNDEFINED
 
-        client._app.entity_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
 
         await client.update_presence(
             idle_since=undefined.UNDEFINED,
@@ -775,7 +775,7 @@ class TestUpdatePresence:
             activity=undefined.UNDEFINED,
         )
 
-        client._app.entity_factory.serialize_gateway_presence.assert_called_once_with(
+        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
             idle_since=None, afk=False, activity=None, status=presences.Status.ONLINE,
         )
 
@@ -803,11 +803,11 @@ class TestUpdateVoiceState:
     @pytest.mark.parametrize("self_mute", [True, False])
     async def test_invoked(self, client, channel, self_deaf, self_mute):
         await client.update_voice_state("69696", channel, self_deaf=self_deaf, self_mute=self_mute)
-        client._app.entity_factory.serialize_gateway_voice_state_update("69696", channel)
+        client._app.event_factory.serialize_gateway_voice_state_update("69696", channel)
 
     async def test_serialized_result_sent_on_websocket(self, client):
         payload = mock.MagicMock()
-        client._app.entity_factory.serialize_gateway_voice_state_update = mock.MagicMock(return_value=payload)
+        client._app.event_factory.serialize_gateway_voice_state_update = mock.MagicMock(return_value=payload)
 
         await client.update_voice_state("6969420", "12345")
 

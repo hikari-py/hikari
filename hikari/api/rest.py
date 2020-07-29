@@ -196,8 +196,8 @@ class IRESTClient(component.IComponent, abc.ABC):
             channel you request for.
 
             This means that you may get one of
-            `hikari.models.channels.DMChannel`,
-            `hikari.models.channels.GroupDMChannel`,
+            `hikari.models.channels.PrivateTextChannel`,
+            `hikari.models.channels.GroupPrivateTextChannel`,
             `hikari.models.channels.GuildTextChannel`,
             `hikari.models.channels.GuildVoiceChannel`,
             `hikari.models.channels.GuildStoreChannel`,
@@ -1291,7 +1291,9 @@ class IRESTClient(component.IComponent, abc.ABC):
 
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
-    async def create_dm_channel(self, user: snowflake.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
+    async def create_dm_channel(
+        self, user: snowflake.SnowflakeishOr[users.PartialUser], /
+    ) -> channels.PrivateTextChannel:
         ...
 
     # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO

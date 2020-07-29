@@ -1544,11 +1544,11 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_MY_CHANNELS.compile()
         expected_json = {"recipient_id": "123"}
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
-        rest_client._app.entity_factory.deserialize_dm_channel = mock.Mock(return_value=dm_channel)
+        rest_client._app.entity_factory.deserialize_private_text_channel = mock.Mock(return_value=dm_channel)
 
         assert await rest_client.create_dm_channel(StubModel(123)) == dm_channel
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
-        rest_client._app.entity_factory.deserialize_dm_channel.assert_called_once_with({"id": "123"})
+        rest_client._app.entity_factory.deserialize_private_text_channel.assert_called_once_with({"id": "123"})
 
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)
