@@ -133,7 +133,7 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
 
         if "guild_id" in payload:
             guild_id = snowflake.Snowflake(payload["guild_id"])
-            member = self.app.entity_factory.deserialize_member(payload["member"])
+            member = self.app.entity_factory.deserialize_member(payload["member"], guild_id=guild_id)
             return typing_events.GuildTypingEvent(
                 shard=shard,
                 channel_id=channel_id,
