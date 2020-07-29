@@ -158,28 +158,32 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
     return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
 
 
-def unix_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
+def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a `datetime.datetime` object.
-
-    Parameters
-    ----------
-    epoch : builtins.int
-        Number of milliseconds since `1/1/1970 00:00:00 UTC`.
-
-    Returns
-    -------
-    datetime.datetime
-        Number of seconds since `1/1/1970 00:00:00 UTC`.
 
     !!! note
         If an epoch that's outside the range of what this system can handle,
         this will return `datetime.datetime.max` if the timestamp is positive,
         or `datetime.datetime.min` otherwise.
+
+    Parameters
+    ----------
+    epoch : builtins.int or builtins.float
+        Number of seconds/milliseconds since `1/1/1970 00:00:00 UTC`.
+    is_millis : builtins.bool
+        `builtins.True` by default, indicates the input timestamp is measured in
+        milliseconds rather than seconds
+
+    Returns
+    -------
+    datetime.datetime
+        Number of seconds since `1/1/1970 00:00:00 UTC`.
     """
     # Datetime seems to raise an OSError when you try to convert an out of range timestamp on Windows and a ValueError
     # if you try on a UNIX system so we want to catch both.
     try:
-        return datetime.datetime.fromtimestamp(epoch / 1000, datetime.timezone.utc)
+        epoch /= (is_millis * 1_000) or 1
+        return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
             return datetime.datetime.max

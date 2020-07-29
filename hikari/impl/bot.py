@@ -37,8 +37,9 @@ from hikari import config
 from hikari import errors
 from hikari.api import bot
 from hikari.api import shard as gateway_shard
-from hikari.events import other as other_events
+from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager
 from hikari.impl import in_memory_cache as cache_impl
 from hikari.impl import rate_limits
@@ -57,7 +58,7 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import cache as cache_
     from hikari.api import event_dispatcher as event_dispatcher_
-    from hikari.events import base as base_events
+    from hikari.events import base_events
     from hikari.models import gateway as gateway_models
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
@@ -129,7 +130,7 @@ class BotAppImpl(bot.IBotApp):
         The version of the HTTP API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
-    shard_ids : typing.Set[builtins.int] or builtins.None
+    shard_ids : typing.AbstractSet[builtins.int] or builtins.None
         A set of every shard ID that should be created and started on startup.
         If left to `builtins.None` along with `shard_count`, then auto-sharding
         is used instead, which is the default.
@@ -181,6 +182,7 @@ class BotAppImpl(bot.IBotApp):
         "_debug",
         "_entity_factory",
         "_event_manager",
+        "_event_factory",
         "_executor",
         "_global_ratelimit",
         "_http_settings",
@@ -225,7 +227,7 @@ class BotAppImpl(bot.IBotApp):
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_version: int = 6,
         rest_url: typing.Optional[str] = None,
-        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
         stateless: bool = True,
         token: str,
@@ -250,6 +252,7 @@ class BotAppImpl(bot.IBotApp):
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
+        self._event_factory = event_factory_impl.EventFactoryComponentImpl(app=self)
         self._event_manager = event_manager.EventManagerComponentImpl(app=self, intents_=intents)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
@@ -277,7 +280,7 @@ class BotAppImpl(bot.IBotApp):
         )
         self._shard_count: int = shard_count if shard_count is not None else 0
         self._shard_gather_task: typing.Optional[asyncio.Task[None]] = None
-        self._shard_ids: typing.Set[int] = set() if shard_ids is None else shard_ids
+        self._shard_ids: typing.AbstractSet[int] = set() if shard_ids is None else shard_ids
         self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
@@ -285,7 +288,8 @@ class BotAppImpl(bot.IBotApp):
         self._token = token
         self._version = gateway_version
         self._voice = voice.VoiceComponentImpl(self, self._event_manager)
-        self._start_count: int = 0  # This should always be last so that we dont get an extra error when failed to initialize
+        # This should always be last so that we don't get an extra error when failed to initialize
+        self._start_count: int = 0
 
     def __del__(self) -> None:
         # If something goes wrong while initializing the bot, `_start_count` might not be there.
@@ -314,6 +318,10 @@ class BotAppImpl(bot.IBotApp):
     @property
     def event_dispatcher(self) -> event_manager.EventManagerComponentImpl:
         return self._event_manager
+
+    @property
+    def event_factory(self) -> event_factory_impl.EventFactoryComponentImpl:
+        return self._event_factory
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -404,7 +412,7 @@ class BotAppImpl(bot.IBotApp):
 
         self._request_close_event.clear()
 
-        await self.dispatch(other_events.StartingEvent())
+        await self.dispatch(lifetime_events.StartingEvent(app=self))
 
         start_time = date.monotonic()
 
@@ -456,7 +464,7 @@ class BotAppImpl(bot.IBotApp):
             if len(self._shard_ids) > 1:
                 _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
 
-            await self.dispatch(other_events.StartedEvent())
+            await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     def listen(
         self, event_type: typing.Optional[typing.Type[event_dispatcher_.EventT_co]] = None,
@@ -518,11 +526,11 @@ class BotAppImpl(bot.IBotApp):
             _LOGGER.info("stopping %s shard(s)", len(self._tasks))
 
             try:
-                await self.dispatch(other_events.StoppingEvent())
+                await self.dispatch(lifetime_events.StoppingEvent(app=self))
                 await self._abort()
             finally:
                 self._tasks.clear()
-                await self.dispatch(other_events.StoppedEvent())
+                await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
     async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
         return await self.rest.fetch_gateway_bot()

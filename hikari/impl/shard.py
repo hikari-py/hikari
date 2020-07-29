@@ -401,7 +401,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         if activity is undefined.UNDEFINED:
             activity = self._activity if self._activity is not undefined.UNDEFINED else None
 
-        presence = self._app.entity_factory.serialize_gateway_presence(
+        presence = self._app.event_factory.serialize_gateway_presence(
             idle_since=idle_since, afk=afk, status=status, activity=activity
         )
 
@@ -423,7 +423,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        payload = self._app.entity_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
+        payload = self._app.event_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
 
     async def _run(self) -> None:
@@ -631,7 +631,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
                 # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._app.entity_factory.serialize_gateway_presence(
+                payload["d"]["presence"] = self._app.event_factory.serialize_gateway_presence(
                     idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
                     afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
                     status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
@@ -719,12 +719,12 @@ class GatewayShardImpl(shard.IGatewayShard):
             else:
                 self._logger.debug("ignoring unrecognised opcode %s", op)
 
-    async def _expect_opcode(self, opcode: _Opcode) -> typing.Mapping[str, typing.Any]:
+    async def _expect_opcode(self, opcode: _Opcode) -> data_binding.JSONObject:
         message = await self._receive_json()
         op = message["op"]
 
         if op == opcode:
-            return message["d"]  # type: ignore[no-any-return]
+            return typing.cast("data_binding.JSONObject", message["d"])
 
         error_message = f"Unexpected opcode {op} received, expected {opcode}"
         await self._close_ws(self._CloseCode.RFC_6455_PROTOCOL_ERROR, error_message)

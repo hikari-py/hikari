@@ -29,7 +29,7 @@ from tests.hikari import hikari_test_helpers
 
 def test_ChannelType_str_operator():
     channel_type = channels.ChannelType(1)
-    assert str(channel_type) == "DM"
+    assert str(channel_type) == "PRIVATE_TEXT"
 
 
 def test_PermissionOverwriteType_str_operator():
@@ -51,22 +51,22 @@ def test_PartialChannel_str_operator_when_name_is_None():
 
 
 def test_DMChannel_str_operator():
-    channel = channels.DMChannel()
+    channel = channels.PrivateTextChannel()
     user = users.UserImpl()
     user.discriminator = "0420"
     user.username = "snoop"
     channel.recipient = user
-    assert str(channel) == "DMChannel with: snoop#0420"
+    assert str(channel) == "PrivateTextChannel with: snoop#0420"
 
 
 def test_GroupDMChannel_str_operator():
-    channel = channels.GroupDMChannel()
+    channel = channels.GroupPrivateTextChannel()
     channel.name = "super cool group dm"
     assert str(channel) == "super cool group dm"
 
 
 def test_GroupDMChannel_str_operator_when_name_is_None():
-    channel = channels.GroupDMChannel()
+    channel = channels.GroupPrivateTextChannel()
     channel.name = None
     user, other_user = users.UserImpl(), users.UserImpl()
     user.discriminator = "0420"
@@ -74,7 +74,7 @@ def test_GroupDMChannel_str_operator_when_name_is_None():
     other_user.discriminator = "6969"
     other_user.username = "nice"
     channel.recipients = {1: user, 2: other_user}
-    assert str(channel) == "GroupDMChannel with: snoop#0420, nice#6969"
+    assert str(channel) == "GroupPrivateTextChannel with: snoop#0420, nice#6969"
 
 
 def test_PermissionOverwrite_unset():
@@ -142,7 +142,7 @@ async def test_TextChannel_history():
 
 
 def test_GroupDMChannel_icon():
-    channel = hikari_test_helpers.unslot_class(channels.GroupDMChannel)()
+    channel = hikari_test_helpers.unslot_class(channels.GroupPrivateTextChannel)()
     channel.format_icon = mock.Mock(return_value="icon")
 
     assert channel.icon == "icon"
@@ -150,7 +150,7 @@ def test_GroupDMChannel_icon():
 
 
 def test_GroupDMChannel_format_icon():
-    channel = channels.GroupDMChannel()
+    channel = channels.GroupPrivateTextChannel()
     channel.id = 123
     channel.icon_hash = "456abc"
 
@@ -160,7 +160,7 @@ def test_GroupDMChannel_format_icon():
 
 
 def test_GroupDMChannel_format_icon_without_optionals():
-    channel = channels.GroupDMChannel()
+    channel = channels.GroupPrivateTextChannel()
     channel.id = 123
     channel.icon_hash = "456abc"
 
@@ -168,7 +168,7 @@ def test_GroupDMChannel_format_icon_without_optionals():
 
 
 def test_GroupDMChannel_format_icon_when_hash_is_None():
-    channel = channels.GroupDMChannel()
+    channel = channels.GroupPrivateTextChannel()
     channel.icon_hash = None
 
     assert channel.format_icon() is None

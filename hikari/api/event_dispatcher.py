@@ -28,11 +28,13 @@ import abc
 import asyncio
 import typing
 
-if typing.TYPE_CHECKING:
-    from hikari.events import base
+from hikari.api import rest
 
-    EventT_co = typing.TypeVar("EventT_co", bound=base.Event, covariant=True)
-    EventT_inv = typing.TypeVar("EventT_inv", bound=base.Event)
+if typing.TYPE_CHECKING:
+    from hikari.events import base_events
+
+    EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
+    EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
     PredicateT = typing.Callable[[EventT_co], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
     AsyncCallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
 
@@ -181,7 +183,7 @@ class IEventDispatcherBase(abc.ABC):
         event_type : typing.Type[T]
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
-            `EventT` must derive from `hikari.events.base.Event`.
+            `T` must derive from `hikari.events.base.Event`.
         callback
             The callback to unsubscribe.
 
@@ -345,7 +347,7 @@ class IEventDispatcherComponent(IEventDispatcherBase, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
 
-class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
+class IEventDispatcherApp(IEventDispatcherBase, rest.IRESTApp, abc.ABC):
     """Application specialization that supports dispatching of events.
 
     These events are expected to be instances of
@@ -371,6 +373,9 @@ class IEventDispatcherApp(IEventDispatcherBase, abc.ABC):
     >>> @bot.event_dispatcher.listen(hikari.MessageCreateEvent)
     >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
     ```
+
+    This app type must derive from `hikari.api.rest.IRESTApp`, since almost
+    all event and model types will have REST functionality built-in.
     """
 
     __slots__: typing.Sequence[str] = ()
