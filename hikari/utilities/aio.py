@@ -25,6 +25,7 @@ import asyncio
 import inspect
 import typing
 
+T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
 
 
