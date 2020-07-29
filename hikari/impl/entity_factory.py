@@ -181,8 +181,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         own_guild.app = self._app
         self._set_partial_guild_attributes(payload, own_guild)
         own_guild.is_owner = bool(payload["owner"])
+        raw_permissions = int(payload["permissions_new"])
         # noinspection PyArgumentList
-        own_guild.my_permissions = permission_models.Permission(payload["permissions"])
+        own_guild.my_permissions = permission_models.Permission(raw_permissions)
         return own_guild
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
@@ -395,14 +396,23 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         permission_overwrite = channel_models.PermissionOverwrite(
             id=snowflake.Snowflake(payload["id"]), type=channel_models.PermissionOverwriteType(payload["type"]),
         )
+        allow_raw = int(payload["allow_new"])
+        deny_raw = int(payload["deny_new"])
         # noinspection PyArgumentList
-        permission_overwrite.allow = permission_models.Permission(payload["allow"])
+        permission_overwrite.allow = permission_models.Permission(allow_raw)
         # noinspection PyArgumentList
-        permission_overwrite.deny = permission_models.Permission(payload["deny"])
+        permission_overwrite.deny = permission_models.Permission(deny_raw)
         return permission_overwrite
 
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
-        return {"id": str(overwrite.id), "type": overwrite.type, "allow": overwrite.allow, "deny": overwrite.deny}
+        # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
+        # allow and deny can be strings instead now.
+        return {
+            "id": str(overwrite.id),
+            "type": overwrite.type,
+            "allow": str(int(overwrite.allow)),
+            "deny": str(int(overwrite.deny)),
+        }
 
     def _set_partial_channel_attributes(
         self, payload: data_binding.JSONObject, channel: channel_models.PartialChannel
@@ -900,8 +910,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_role.color = color_models.Color(payload["color"])
         guild_role.is_hoisted = payload["hoist"]
         guild_role.position = int(payload["position"])
+
+        # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
+        raw_permissions = int(payload["permissions_new"])
         # noinspection PyArgumentList
-        guild_role.permissions = permission_models.Permission(payload["permissions"])
+        guild_role.permissions = permission_models.Permission(raw_permissions)
         guild_role.is_managed = payload["managed"]
         guild_role.is_mentionable = payload["mentionable"]
         return guild_role
@@ -996,9 +1009,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.owner_id = snowflake.Snowflake(payload["owner_id"])
         # noinspection PyArgumentList
 
-        guild.my_permissions = (
-            permission_models.Permission(payload["permissions"]) if "permissions" in payload else None
-        )
+        if "permissions_new" in payload:
+            raw_permissions = int(payload["permissions_new"])
+            guild.my_permissions = permission_models.Permission(raw_permissions)
+        else:
+            guild.my_permissions = None
 
         guild.region = payload["region"]
 
