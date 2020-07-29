@@ -1113,11 +1113,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if "presences" in payload:
             for presence_payload in payload["presences"]:
                 presence = self.deserialize_member_presence(presence_payload)
-                presences[presence.id] = presence
+                presences[presence.user_id] = presence
 
         if "voice_states" in payload:
             for voice_state_payload in payload["voice_states"]:
-                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id)
+                member = members[snowflake.Snowflake(voice_state_payload["user_id"])]
+                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
                 voice_states[voice_state.user_id] = voice_state
 
         roles = {
@@ -1438,7 +1439,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ) -> presence_models.MemberPresence:
         guild_member_presence = presence_models.MemberPresence()
         guild_member_presence.app = self._app
-        guild_member_presence.id = snowflake.Snowflake(payload["user"]["id"])
+        guild_member_presence.user_id = snowflake.Snowflake(payload["user"]["id"])
         guild_member_presence.role_ids = (
             [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
         )
@@ -1599,6 +1600,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         voice_state = voice_models.VoiceState()
         voice_state.app = self._app
@@ -1609,7 +1611,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         voice_state.channel_id = channel_id
 
         voice_state.user_id = snowflake.Snowflake(payload["user_id"])
-        voice_state.member = self.deserialize_member(payload["member"], guild_id=voice_state.guild_id)
+
+        if member is undefined.UNDEFINED:
+            voice_state.member = self.deserialize_member(payload["member"], guild_id=voice_state.guild_id)
+        else:
+            voice_state.member = member
+
         voice_state.session_id = payload["session_id"]
         voice_state.is_guild_deafened = payload["deaf"]
         voice_state.is_guild_muted = payload["mute"]

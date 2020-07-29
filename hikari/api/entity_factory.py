@@ -866,6 +866,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
@@ -876,10 +877,15 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
+        member : hikari.utilities.undefined.UndefinedOr[hikari.models.guilds.Member]
+            The object of the member this voice state belongs to. If this is
+            specified then this will be prioritised over `"member"` in the
+            payload.
 
         !!! note
-            `guild_id` currently only covers the guild create event where
-            `"guild_id"` isn't included in the returned payloads.
+            `guild_id` and `member` currently only covers the guild create event
+            where `"guild_id"` and `"member"` aren't included in the returned
+            voice state payloads.
 
         Returns
         -------

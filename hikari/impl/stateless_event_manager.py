@@ -37,6 +37,8 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 class StatelessEventManagerImpl(event_manager_base.EventManagerComponentBase):
     """Provides event handling logic for Discord events without a cache."""
 
+    __slots__: typing.Sequence[str] = ()
+
     async def on_connected(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
         """Handle connection events.
 

@@ -532,13 +532,13 @@ class TestStatefulCacheComponentImpl:
 
     @pytest.mark.asyncio
     async def test_get_members_view_for_unknown_guild_record(self, cache_impl):
-        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        members_mapping = cache_impl.get_members_view_for_guild(snowflake.Snowflake(42334))
         assert members_mapping == {}
 
     @pytest.mark.asyncio
     async def test_get_members_view_for_unknown_member_cache(self, cache_impl):
         cache_impl._guild_entries = {snowflake.Snowflake(42334): stateful_cache._GuildRecord()}
-        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        members_mapping = cache_impl.get_members_view_for_guild(snowflake.Snowflake(42334))
         assert members_mapping == {}
 
     @pytest.mark.asyncio
@@ -576,7 +576,7 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(53224): mock_user_data_2,
         }
         cache_impl._build_user = mock.MagicMock(side_effect=[mock_user_1, mock_user_2])
-        members_mapping = cache_impl.get_members_view(snowflake.Snowflake(42334))
+        members_mapping = cache_impl.get_members_view_for_guild(snowflake.Snowflake(42334))
         assert 3214321 in members_mapping
         current_member = members_mapping[snowflake.Snowflake(3214321)]
         assert current_member.user == mock_user_1
@@ -946,7 +946,7 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(56234): mock.MagicMock(stateful_cache._UserData),
         }
         cache_impl._guild_entries = {snowflake.Snowflake(54123123): record}
-        voice_state_mapping = cache_impl.clear_voice_states(snowflake.Snowflake(54123123))
+        voice_state_mapping = cache_impl.clear_voice_states_for_guild(snowflake.Snowflake(54123123))
         cache_impl._delete_guild_record_if_empty.assert_called_once_with(snowflake.Snowflake(54123123))
         assert 7512312 in voice_state_mapping
         current_voice_state = voice_state_mapping[snowflake.Snowflake(7512312)]

@@ -1098,27 +1098,27 @@ class GatewayGuild(Guild):
 
     @property
     def roles(self) -> typing.Mapping[snowflake.Snowflake, Role]:
-        return self.app.cache.get_roles_view(self.id)
+        return self.app.cache.get_roles_view_for_guild(self.id)
 
     @property
     def emojis(self) -> typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji]:
-        return self.app.cache.get_emojis_view(self.id)
+        return self.app.cache.get_emojis_view_for_guild(self.id)
 
     @property
     def members(self) -> typing.Mapping[snowflake.Snowflake, Member]:
-        return self.app.cache.get_members_view(self.id)
+        return self.app.cache.get_members_view_for_guild(self.id)
 
     @property
     def channels(self) -> typing.Mapping[snowflake.Snowflake, channels_.GuildChannel]:
-        return self.app.cache.get_guild_channels_view(self.id)
+        return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
     @property
     def presences(self) -> typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]:
-        return self.app.cache.get_presences_view(self.id)
+        return self.app.cache.get_presences_view_for_guild(self.id)
 
     @property
     def voice_states(self) -> typing.Mapping[snowflake.Snowflake, voices_.VoiceState]:
-        return self.app.cache.get_voice_state_view(self.id)
+        return self.app.cache.get_voice_states_view_for_guild(self.id)
 
     def get_role(self, role: snowflake.SnowflakeishOr[Role]) -> typing.Optional[Role]:
         return self.app.cache.get_role(snowflake.Snowflake(role))

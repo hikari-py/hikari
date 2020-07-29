@@ -1865,8 +1865,12 @@ class TestEntityFactoryImpl:
             115590097100865541: entity_factory_impl.deserialize_member_presence(member_presence_payload)
         }
         assert guild_definition.voice_states == {
-            80351110224678912: entity_factory_impl.deserialize_voice_state(
-                voice_state_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            115590097100865541: entity_factory_impl.deserialize_voice_state(
+                voice_state_payload,
+                guild_id=snowflake.Snowflake(265828729970753537),
+                member=entity_factory_impl.deserialize_member(
+                    member_payload, guild_id=snowflake.Snowflake(265828729970753537),
+                ),
             )
         }
 
@@ -2383,7 +2387,7 @@ class TestEntityFactoryImpl:
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
-        assert presence.id == 115590097100865541
+        assert presence.user_id == 115590097100865541
         assert presence.role_ids == [49494949]
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DO_NOT_DISTURB
@@ -2702,7 +2706,7 @@ class TestEntityFactoryImpl:
         return {
             "guild_id": "929292929292992",
             "channel_id": "157733188964188161",
-            "user_id": "80351110224678912",
+            "user_id": "115590097100865541",
             "member": member_payload,
             "session_id": "90326bd25d71d39b9ef95b299e3872ff",
             "deaf": True,
@@ -2721,7 +2725,7 @@ class TestEntityFactoryImpl:
         assert voice_state.app is mock_app
         assert voice_state.guild_id == 929292929292992
         assert voice_state.channel_id == 157733188964188161
-        assert voice_state.user_id == 80351110224678912
+        assert voice_state.user_id == 115590097100865541
         assert voice_state.member == entity_factory_impl.deserialize_member(
             member_payload, guild_id=snowflake.Snowflake(929292929292992)
         )
