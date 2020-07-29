@@ -15,19 +15,48 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Application and entities that are used to describe Discord gateway events."""
+"""Events that can be fired by Hikari's gateway implementation."""
 
-from hikari.events import base
-from hikari.events import channel
-from hikari.events import guild
-from hikari.events import message
-from hikari.events import other
-from hikari.events import voice
-from hikari.events.base import Event
-from hikari.events.channel import *
-from hikari.events.guild import *
-from hikari.events.message import *
-from hikari.events.other import *
-from hikari.events.voice import *
+from __future__ import annotations
 
-__all__ = ["Event"] + channel.__all__ + guild.__all__ + message.__all__ + other.__all__ + voice.__all__
+import typing
+
+from hikari.events import base_events
+from hikari.events import channel_events
+from hikari.events import guild_events
+from hikari.events import lifetime_events
+from hikari.events import member_events
+from hikari.events import message_events
+from hikari.events import reaction_events
+from hikari.events import role_events
+from hikari.events import shard_events
+from hikari.events import typing_events
+from hikari.events import user_events
+from hikari.events import voice_events
+from hikari.events.base_events import *
+from hikari.events.channel_events import *
+from hikari.events.guild_events import *
+from hikari.events.lifetime_events import *
+from hikari.events.member_events import *
+from hikari.events.message_events import *
+from hikari.events.reaction_events import *
+from hikari.events.role_events import *
+from hikari.events.shard_events import *
+from hikari.events.typing_events import *
+from hikari.events.user_events import *
+from hikari.events.voice_events import *
+
+__all__: typing.List[str] = (
+    base_events.__all__
+    + channel_events.__all__
+    + guild_events.__all__
+    + lifetime_events.__all__
+    + member_events.__all__
+    + message_events.__all__
+    + reaction_events.__all__
+    + role_events.__all__
+    + shard_events.__all__
+    + typing_events.__all__
+    + user_events.__all__
+    + voice_events.__all__
+)

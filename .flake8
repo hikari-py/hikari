@@ -18,11 +18,12 @@ ignore =
 # F403:  cannot detect unused vars if we use starred import
 # FS003: f-string missing prefix.
 per-file-ignores =
-    hikari/__init__.py:          F401,F403
-    hikari/events/__init__.py:   F401,F403
-    hikari/models/__init__.py:   F401,F403
-    hikari/utilities/routes.py:  FS003
-    hikari/utilities/date.py:    FS003
+    hikari/__init__.py:              F401,F403
+    hikari/events/__init__.py:       F401,F403
+    hikari/events/new/__init__.py:   F401,F403
+    hikari/models/__init__.py:       F401,F403
+    hikari/utilities/routes.py:      FS003
+    hikari/utilities/date.py:        FS003
 
 max-complexity = 20
 # TODO reset to 100 again if possible.

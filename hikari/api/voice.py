@@ -18,14 +18,14 @@
 """Interfaces used to describe voice client implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IVoiceComponent", "IVoiceConnection"]
+__all__: typing.Final[typing.List[str]] = ["IVoiceApp", "IVoiceComponent", "IVoiceConnection"]
 
 import abc
 import typing
 
 from hikari.api import app
 from hikari.api import component
-from hikari.events import voice
+from hikari.events import voice_events
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
@@ -225,5 +225,5 @@ class IVoiceConnection(abc.ABC):
         """Wait for the process to halt before continuing."""
 
     @abc.abstractmethod
-    async def notify(self, event: voice.VoiceEvent) -> None:
+    async def notify(self, event: voice_events.VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
