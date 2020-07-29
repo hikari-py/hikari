@@ -1206,41 +1206,33 @@ class TestRESTClientImplAsync:
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
-        stub_coroutine_request1 = mock.Mock()
-        stub_coroutine_request2 = mock.Mock()
         expected_route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=123)
         expected_json1 = {"messages": [str(i) for i in range(100)]}
         expected_json2 = {"messages": [str(i) for i in range(100, 200)]}
 
-        rest_client._request = mock.Mock(side_effect=[stub_coroutine_request1, stub_coroutine_request2])
+        rest_client._request = mock.AsyncMock()
 
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()) as gather:
-            await rest_client.delete_messages(StubModel(123), *messages)
+        await rest_client.delete_messages(StubModel(123), *messages)
 
-        assert rest_client._request.call_count == 2
-        rest_client._request.assert_has_calls(
-            [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
-        )
-        gather.assert_awaited_once_with(stub_coroutine_request1, stub_coroutine_request2)
+        assert rest_client._request.await_args_list == [
+            mock.call(expected_route, json=expected_json1),
+            mock.call(expected_route, json=expected_json2),
+        ]
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
         messages = [StubModel(i) for i in range(101)]
         message = messages[-1]
-        stub_coroutine_delete_message = mock.Mock()
-        stub_coroutine_request = mock.Mock()
-        expected_route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=123)
         expected_json = {"messages": [str(i) for i in range(100)]}
 
-        rest_client.delete_message = mock.Mock(return_value=stub_coroutine_delete_message)
-        rest_client._request = mock.Mock(return_value=stub_coroutine_request)
+        rest_client._request = mock.AsyncMock()
 
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()) as gather:
-            await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages)
 
-        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
-        rest_client.delete_message.assert_called_once_with(channel, message)
-        gather.assert_awaited_once_with(stub_coroutine_request, stub_coroutine_delete_message)
+        assert rest_client._request.await_args_list == [
+            mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
+            mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+        ]
 
     async def test_add_reaction(self, rest_client):
         expected_route = routes.PUT_MY_REACTION.compile(emoji="rooYay:123", channel=123, message=456)

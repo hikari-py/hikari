@@ -31,6 +31,7 @@ __all__: typing.Final[typing.List[str]] = [
 ]
 
 import asyncio
+import collections
 import contextlib
 import datetime
 import http
@@ -1104,23 +1105,38 @@ class RESTClientImpl(rest_api.IRESTClient):
         *messages: snowflake.SnowflakeishOr[messages_.Message],
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
-        coroutines: typing.List[typing.Coroutine[typing.Any, typing.Any, typing.Any]] = []
 
-        while messages:
+        pending: typing.Deque[snowflake.SnowflakeishOr[messages_.Message]] = collections.deque(messages)
+        deleted: typing.Deque[snowflake.SnowflakeishOr[messages_.Message]] = collections.deque()
+
+        while pending:
             # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,
             # if the user wants 101 messages deleted, we will post 100 messages in bulk delete
             # and then the last message in a normal delete.
-            if len(messages) == 1:
-                coroutines.append(self.delete_message(channel, *messages))
-                messages = messages[1:]
-            else:
-                chunk = messages[:100]
-                body = data_binding.JSONObjectBuilder()
-                body.put_snowflake_array("messages", chunk)
-                coroutines.append(self._request(route, json=body))
-                messages = messages[100:]
-
-        await asyncio.gather(*coroutines)
+            # Along with this, the bucket size for v6 and v7 seems to be a bit restrictive. As of
+            # 30th July 2020, this endpoint returned the following headers when being ratelimited:
+            #       x-ratelimit-bucket         b05c0d8c2ab83895085006a8eae073a3
+            #       x-ratelimit-limit          1
+            #       x-ratelimit-remaining      0
+            #       x-ratelimit-reset          1596033974.096
+            #       x-ratelimit-reset-after    3.000
+            # This kind of defeats the point of asynchronously gathering any of these
+            # in the first place really. To save clogging up the event loop
+            # (albeit at a cost of maybe a couple-dozen milliseconds per call),
+            # I am just gonna invoke these sequentially instead.
+            try:
+                if len(pending) == 1:
+                    message = pending.popleft()
+                    await self.delete_message(channel, message)
+                    deleted.append(message)
+                else:
+                    body = data_binding.JSONObjectBuilder()
+                    chunk = [pending.popleft() for _ in range(min(100, len(pending)))]
+                    body.put_snowflake_array("messages", chunk)
+                    await self._request(route, json=body)
+                    deleted += chunk
+            except Exception as ex:
+                raise errors.BulkDeleteError(deleted, pending) from ex
 
     # Custom emoji mentions are in the format of <:name:id> for static emoji, or
     # <a:name:id> for animated emoji.
