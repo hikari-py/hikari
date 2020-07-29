@@ -137,7 +137,7 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
 
 
 def is_no_recursive_throw_event(obj: typing.Union[T, typing.Type[T]]) -> bool:
-    """Return True if this event is marked as `no_catch`."""
+    """Return True if this event is marked as `___norecursivethrow___`."""
     return typing.cast(bool, getattr(obj, NO_RECURSIVE_THROW_ATTR, False))
 
 
