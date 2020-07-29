@@ -169,7 +169,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
+    def deserialize_private_text_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
         """Parse a raw payload from Discord into a DM channel object.
 
         Parameters
@@ -184,7 +184,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_group_dm_channel(self, payload: data_binding.JSONObject) -> channel_models.GroupPrivateTextChannel:
+    def deserialize_private_group_text_channel(
+        self, payload: data_binding.JSONObject
+    ) -> channel_models.GroupPrivateTextChannel:
         """Parse a raw payload from Discord into a group DM channel object.
 
         Parameters

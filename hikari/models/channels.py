@@ -67,13 +67,13 @@ class ChannelType(enum.IntEnum):
     GUILD_TEXT = 0
     """A text channel in a guild."""
 
-    DM = 1
+    PRIVATE_TEXT = 1
     """A direct channel between two users."""
 
     GUILD_VOICE = 2
     """A voice channel in a guild."""
 
-    GROUP_DM = 3
+    PRIVATE_GROUP_TEXT = 3
     """A direct channel between multiple users."""
 
     GUILD_CATEGORY = 4
