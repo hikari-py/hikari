@@ -1045,7 +1045,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         !!! note
             This API endpoint will only be able to delete 100 messages
             at a time. For anything more than this, multiple requests will
-            be queued asynchronously and then awaited in bulk.
+            be executed one-after-the-other, since the rate limits for this
+            endpoint do not favour more than one request per bucket.
 
             If one message is left over from chunking per 100 messages, or
             only one message is passed to this coroutine function, then the
@@ -1053,22 +1054,29 @@ class IRESTClient(component.IComponent, abc.ABC):
             of this is that the `delete_message` endpoint is ratelimited
             by a different bucket with different usage rates.
 
+        !!! warning
+            This endpoint is not atomic. If an error occurs midway through
+            a bulk delete, you will **not** be able to revert any changes made
+            up to this point.
+
+        !!! warning
+            Specifying any messages more than 14 days old will cause the call
+            to fail, potentially with partial completion.
+
         Parameters
         ----------
-        channel
-        *messages
+        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+            The text channel, or text channel ID to delete messages from.
+        *messages : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+            One or more messages
 
         Raises
         ------
-        hikari.errors.Unauthorized
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
-            If you lack the permissions to manage messages, and the message is
-            not composed by your associated user.
-        hikari.errors.NotFound
-            If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
-            If an internal error occurs on Discord while handling the request.
+        hikari.errors.BulkDeleteError
+            An error containing the messages successfully deleted, and the
+            messages that were not removed. The
+            `builtins.BaseException.__cause__` of the exception will be the
+            original error that terminated this process.
         """
 
     @abc.abstractmethod
