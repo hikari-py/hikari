@@ -64,6 +64,13 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
+    __slots__ = (
+        "_app",
+        "_intents",
+        "_listeners",
+        "_waiters",
+    )
+
     def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intent]) -> None:
         self._app = app
         self._intents = intents
