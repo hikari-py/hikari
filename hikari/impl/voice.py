@@ -222,7 +222,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
             )
 
     async def _on_voice_event(self, event: voice_events.VoiceEvent) -> None:
-        if event.guild_id is not None and event.guild_id in self._connections:
+        if event.guild_id in self._connections:
             connection = self._connections[event.guild_id]
             _LOGGER.debug("notifying voice connection %s in guild %s of event %s", connection, event.guild_id, event)
             await connection.notify(event)

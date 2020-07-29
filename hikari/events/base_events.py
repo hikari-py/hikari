@@ -18,7 +18,7 @@
 """Base types and functions for events in Hikari."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Final[typing.List[str]] = [
     "Event",
     "ExceptionEvent",
     "is_no_recursive_throw_event",
@@ -141,9 +141,13 @@ def is_no_recursive_throw_event(obj: typing.Union[T, typing.Type[T]]) -> bool:
     return typing.cast(bool, getattr(obj, NO_RECURSIVE_THROW_ATTR, False))
 
 
+FailedEventT = typing.TypeVar("FailedEventT", bound=Event)
+FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, typing.Any, None]]
+
+
 @no_recursive_throw()
 @attr.s(kw_only=True, slots=True)
-class ExceptionEvent(Event):
+class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
     !!! note
@@ -178,7 +182,7 @@ class ExceptionEvent(Event):
         Exception that was raised in the event handler.
     """
 
-    failed_event: Event = attr.ib()
+    failed_event: FailedEventT = attr.ib()
     """Event instance that caused the exception.
 
     Returns
@@ -191,10 +195,10 @@ class ExceptionEvent(Event):
     # defined in class scope, and thus thinks referring to it will make it a bound method.
     # To get around this, we make this attribute hidden and make a property that casts it
     # for us to remove this effect. This functionally changes nothing but it helps MyPy.
-    _failed_callback: typing.Callable[[Event], typing.Coroutine[typing.Any, typing.Any, None]] = attr.ib()
+    _failed_callback: FailedCallbackT = attr.ib()
 
     @property
-    def failed_callback(self) -> typing.Callable[[Event], typing.Coroutine[typing.Any, typing.Any, None]]:
+    def failed_callback(self) -> FailedCallbackT:
         """Event callback that threw an exception.
 
         Returns
