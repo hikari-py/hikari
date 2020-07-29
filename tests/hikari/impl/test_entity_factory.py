@@ -136,6 +136,7 @@ class TestEntityFactoryImpl:
             "icon": "d4a983885dsaa7691ce8bcaaf945a",
             "owner": False,
             "permissions": 2147483647,
+            "permissions_new": "2147483647",
             "features": ["DISCOVERABLE", "FORCE_RELAY"],
         }
 
@@ -156,6 +157,7 @@ class TestEntityFactoryImpl:
                 "icon": None,
                 "owner": False,
                 "permissions": 2147483647,
+                "permissions_new": "2147483647",
                 "features": ["DISCOVERABLE", "FORCE_RELAY"],
             }
         )
@@ -279,16 +281,16 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_audit_log_overwrites(self, entity_factory_impl):
         test_overwrite_payloads = [
-            {"id": "24", "type": "role", "allow": 21, "deny": 0},
-            {"id": "48", "type": "role", "deny": 42, "allow": 0},
+            {"id": "24", "type": "role", "allow": 21, "deny": 0, "allow_new": "21", "deny_new": "0"},
+            {"id": "48", "type": "role", "deny": 42, "allow": 0, "allow_new": "0", "deny_new": "42"},
         ]
         overwrites = entity_factory_impl._deserialize_audit_log_overwrites(test_overwrite_payloads)
         assert overwrites == {
             24: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "24", "type": "role", "allow": 21, "deny": 0}
+                {"id": "24", "type": "role", "allow_new": "21", "deny_new": "0"}
             ),
             48: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "48", "type": "role", "deny": 42, "allow": 0}
+                {"id": "48", "type": "role", "deny_new": "42", "allow_new": "0"}
             ),
         }
 
@@ -412,7 +414,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def permission_overwrite_payload(self):
-        return {"id": "4242", "type": "member", "allow": 65, "deny": 49152}
+        return {"id": "4242", "type": "member", "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
 
     def test_deserialize_permission_overwrite(self, entity_factory_impl, permission_overwrite_payload):
         overwrite = entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
@@ -424,7 +426,7 @@ class TestEntityFactoryImpl:
     def test_serialize_permission_overwrite(self, entity_factory_impl):
         overwrite = channel_models.PermissionOverwrite(id=123123, type="member", allow=42, deny=62)
         payload = entity_factory_impl.serialize_permission_overwrite(overwrite)
-        assert payload == {"id": "123123", "type": "member", "allow": 42, "deny": 62}
+        assert payload == {"id": "123123", "type": "member", "allow": "42", "deny": "62"}
 
     @pytest.fixture()
     def partial_channel_payload(self):
@@ -1344,7 +1346,8 @@ class TestEntityFactoryImpl:
             "color": 3_447_003,
             "hoist": True,
             "position": 0,
-            "permissions": 66_321_471,
+            "permissions": 66321471,
+            "permissions_new": "66321471",
             "managed": False,
             "mentionable": False,
         }
@@ -1557,7 +1560,8 @@ class TestEntityFactoryImpl:
             "mfa_level": 1,
             "name": "L33t guild",
             "owner_id": "6969696",
-            "permissions": 66_321_471,
+            "permissions": 66321471,
+            "permissions_new": "66321471",
             "preferred_locale": "en-GB",
             "premium_subscription_count": 1,
             "premium_tier": 2,
