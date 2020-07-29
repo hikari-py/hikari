@@ -34,11 +34,15 @@ __all__: typing.Final[typing.List[str]] = [
     "ClientHTTPErrorResponse",
     "ServerHTTPErrorResponse",
     "IntentWarning",
+    "BulkDeleteError",
     "VoiceError",
 ]
 
 import http
 import typing
+
+from hikari.models import messages
+from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
@@ -395,6 +399,44 @@ class IntentWarning(HikariWarning):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+
+class BulkDeleteError(HikariError):
+    """Exception raised when a bulk delete fails midway through a call.
+
+    This will contain the list of message items that failed to be deleted,
+    and will have a cause containing the initial exception.
+
+    Parameters
+    ----------
+    messages_deleted : typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]]
+        Any message objects that were deleted before an exception occurred.
+    messages_skipped : typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]]
+        Any message objects that were skipped due to an exception.
+    """
+
+    __slots__: typing.Sequence[str] = ("messages_deleted", "messages_skipped")
+
+    def __init__(
+        self,
+        messages_deleted: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]],
+        messages_skipped: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]],
+    ) -> None:
+        self.messages_deleted = messages_deleted
+        self.messages_skipped = messages_skipped
+
+    @property
+    def percentage_completion(self) -> float:
+        """Return the percentage completion of the bulk delete before it failed.
+
+        Returns
+        -------
+        builtins.float
+            A percentage completion between 0 and 100 inclusive.
+        """
+        deleted = len(self.messages_deleted)
+        total = deleted + len(self.messages_skipped)
+        return 100 * len(self.messages_deleted) / total
 
 
 class VoiceError(HikariError):
