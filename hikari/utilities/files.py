@@ -45,7 +45,6 @@ import base64
 import concurrent.futures
 import inspect
 import io
-import logging
 import mimetypes
 import os
 import pathlib
@@ -63,7 +62,6 @@ from hikari.utilities import net
 if typing.TYPE_CHECKING:
     import types
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 _MAGIC: typing.Final[int] = 50 * 1024
 
 

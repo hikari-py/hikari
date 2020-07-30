@@ -354,10 +354,10 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
     ) -> reaction_events.ReactionAddEvent:
         channel_id = snowflake.Snowflake(payload["channel_id"])
         message_id = snowflake.Snowflake(payload["message_id"])
-        guild_id = snowflake.Snowflake(payload["guild_id"])
         emoji = self.app.entity_factory.deserialize_emoji(payload["emoji"])
 
         if "member" in payload:
+            guild_id = snowflake.Snowflake(payload["guild_id"])
             member = self.app.entity_factory.deserialize_member(payload["member"], guild_id=guild_id)
             return reaction_events.GuildReactionAddEvent(
                 shard=shard, member=member, channel_id=channel_id, message_id=message_id, emoji=emoji,
