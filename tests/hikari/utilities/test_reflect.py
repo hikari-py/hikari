@@ -109,22 +109,3 @@ class TestResolveSignature:
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
-
-
-class Class:
-    pass
-
-
-@pytest.mark.parametrize(
-    ["args", "expected_name"],
-    [
-        ([Class], __name__),
-        ([Class()], __name__),
-        ([Class, "Foooo", "bar", "123"], f"{__name__}.Foooo.bar.123"),
-        ([Class(), "qux", "QUx", "940"], f"{__name__}.qux.QUx.940"),
-        (["test"], "test"),
-        (["test", "testing"], "test.testing"),
-    ],
-)
-def test_get_logger(args, expected_name):
-    assert reflect.get_logger(*args).name == expected_name

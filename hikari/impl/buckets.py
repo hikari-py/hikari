@@ -219,7 +219,7 @@ from hikari.utilities import routes
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.impl.http")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
