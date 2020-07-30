@@ -22,11 +22,9 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "resolve_signature",
     "EMPTY",
-    "get_logger",
 ]
 
 import inspect
-import logging
 import typing
 
 EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
@@ -69,29 +67,3 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
         return_annotation = None
 
     return signature.replace(parameters=params, return_annotation=return_annotation)
-
-
-def get_logger(obj: typing.Any, *additional_args: str) -> logging.Logger:
-    """Get an appropriately named logger for the given class or object.
-
-    Parameters
-    ----------
-    obj : typing.Any
-        A `builtins.type` or instance of a type to make a logger in the name
-        of.
-    *additional_args : builtins.str
-        Additional tokens to append onto the logger name, separated by `.`.
-        This is useful in some places to append info such as shard ID to each
-        logger to enable shard-specific logging, for example.
-
-    Returns
-    -------
-    logging.Logger
-        The logger to use.
-    """
-    if isinstance(obj, str):
-        str_obj = obj
-    else:
-        str_obj = (obj if isinstance(obj, type) else type(obj)).__module__
-
-    return logging.getLogger(".".join((str_obj, *additional_args)))
