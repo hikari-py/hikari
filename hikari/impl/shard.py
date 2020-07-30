@@ -473,10 +473,11 @@ class GatewayShardImpl(shard.IGatewayShard):
 
         except self._InvalidSession as ex:
             if ex.can_resume:
-                self._logger.warning("invalid session, so will attempt to resume session %s", self._session_id)
+                self._logger.warning("invalid session, so will attempt to resume session %s now", self._session_id)
                 await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+                self._backoff.reset()
             else:
-                self._logger.warning("invalid session, so will attempt to reconnect with new session")
+                self._logger.warning("invalid session, so will attempt to reconnect with new session in a few seconds")
                 await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self._session_id = None
@@ -653,7 +654,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                         time_since_message,
                         time_since_heartbeat_sent,
                     )
-                    self._zombied = True
+                    await self._close_zombie()
                     return
 
                 self._logger.debug(
@@ -670,6 +671,35 @@ class GatewayShardImpl(shard.IGatewayShard):
         except asyncio.CancelledError:
             # This happens if the poll task has stopped. It isn't a problem we need to report.
             pass
+
+    async def _close_zombie(self) -> None:
+        # https://gitlab.com/nekokatt/hikari/-/issues/462
+        #
+        # aiohttp has a little "race condition" where it will try to wait for the close frame to be
+        # sent before it physically proceeds to close the aiohttp.ClientResponse. This is a bit
+        # annoying for us, since when we are zombied, this frame will probably never be able to be
+        # sent (if the network went down). However, to feed a socket closure message into the
+        # message receive loop, we need to make this call.
+        #
+        # Thus, the best solution here is to make a task to perform this call in the background,
+        # and await for a short amount of time to let it feed the close message before it proceeds.
+        # After this, we manually close the internal aiohttp ClientResponse to force that close frame
+        # to fail to send immediately, before proceeding to await the original close task from then
+        # on.
+        #
+        # Probably should file a bug report at some point... if I remember.
+        self._zombied = True
+        close_task = asyncio.create_task(
+            self._close_ws(code=self._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout")
+        )
+        await asyncio.sleep(0.1)
+        # noinspection PyProtectedMember
+        self._ws._response.close()  # type: ignore[union-attr]
+        try:
+            await close_task
+        finally:
+            # Discard any exception, I don't care, as this is broken anyway.
+            return
 
     async def _poll_events(self) -> None:
         while not self._request_close_event.is_set():
