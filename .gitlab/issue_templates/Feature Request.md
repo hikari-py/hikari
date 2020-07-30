@@ -1,5 +1,5 @@
 ### Summary
-<!-- Small summary of the feture -->
+<!-- Small summary of the feature -->
 
 ### Problem
 <!-- What problem will this feature solve, if any -->
