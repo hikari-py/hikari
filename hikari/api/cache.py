@@ -559,6 +559,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
+    def clear_presences_for_user(
+        self, user_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
+        ...
+
+    @abc.abstractmethod
     def delete_presence(
         self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
     ) -> typing.Optional[presences.MemberPresence]:

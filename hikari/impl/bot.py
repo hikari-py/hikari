@@ -249,14 +249,14 @@ class BotAppImpl(bot.IBotApp):
         if banner_package is not None:
             self._dump_banner(banner_package)
 
-        self._event_factory: event_manager_base.EventManagerComponentBase
+        self._event_manager: event_manager_base.EventManagerComponentBase
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
-            self._event_factory = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
+            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
-            self._event_factory = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
+            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
@@ -295,7 +295,7 @@ class BotAppImpl(bot.IBotApp):
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._version = gateway_version
-        self._voice = voice.VoiceComponentImpl(self, self._event_factory)
+        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
         # This should always be last so that we don't get an extra error when failed to initialize
         self._start_count: int = 0
 
@@ -321,11 +321,11 @@ class BotAppImpl(bot.IBotApp):
 
     @property
     def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
-        return self._event_factory
+        return self._event_manager
 
     @property
     def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
-        return self._event_factory
+        return self._event_manager
 
     @property
     def event_factory(self) -> event_factory_impl.EventFactoryComponentImpl:
