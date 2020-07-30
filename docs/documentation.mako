@@ -466,8 +466,8 @@
 <%def name="show_var(v, is_nested=False)">
     <%
         return_type = get_annotation(v.type_annotation)
+        parent = v.cls.obj if v.cls is not None else v.module.obj
         if return_type == "":
-            parent = v.cls.obj if v.cls is not None else v.module.obj
 
             if hasattr(parent, "mro"):
                 for cls in parent.mro():
@@ -503,9 +503,14 @@
         if value:
             return_type += f" = {value}"
 
+        if hasattr(parent, "mro"):
+            name = f"{parent.__module__}.{parent.__qualname__}.{v.name}"
+        else:
+            name = f"{parent.__name__}.{v.qualname}"
+
         project_inventory.objects.append(
             sphobjinv.DataObjStr(
-                name = f"{v.module.name}.{v.qualname}",
+                name = name,
                 domain = "py",
                 role = "var",
                 uri = v.url(),
@@ -555,7 +560,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = f"{f.module.name}.{f.qualname}",
+                    name = f.obj.__module__ + "." + f.obj.__qualname__,
                     domain = "py",
                     role = "func",
                     uri = f.url(),
@@ -619,7 +624,7 @@
         if not redirect:
             project_inventory.objects.append(
                 sphobjinv.DataObjStr(
-                    name = f"{c.module.name}.{c.qualname}",
+                    name = c.obj.__module__ + "." + c.obj.__qualname__,
                     domain = "py",
                     role = "class",
                     uri = c.url(),
