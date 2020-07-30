@@ -32,7 +32,7 @@
 
     link_prefix = ""
 
-    hljs_style = "tomorrow-night-eighties"
+    hljs_style = "atom-one-dark"
 
     if "dev" in _version.LooseVersion(_hikari.__version__).version:
         search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
