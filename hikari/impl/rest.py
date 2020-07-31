@@ -42,6 +42,7 @@ import re
 import typing
 
 import aiohttp
+import attr
 
 from hikari import config
 from hikari import errors
@@ -457,9 +458,9 @@ class RESTClientImpl(rest_api.IRESTClient):
     version: int
     """API version in-use."""
 
-    @typing.final
+    @attr.s(auto_exc=True, slots=True, repr=False)
     class _RetryRequest(RuntimeError):
-        __slots__: typing.Sequence[str] = ()
+        ...
 
     def __init__(
         self,
@@ -736,7 +737,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             raise self._RetryRequest
 
-        raise errors.RateLimited(str(response.real_url), compiled_route, response.headers, body, body_retry_after)
+        raise errors.RateLimited(
+            url=str(response.real_url),
+            route=compiled_route,
+            headers=response.headers,
+            raw_body=body,
+            retry_after=body_retry_after,
+        )
 
     @staticmethod
     @typing.final
