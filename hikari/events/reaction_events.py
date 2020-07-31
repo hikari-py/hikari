@@ -141,7 +141,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def user_id(self) -> snowflake.Snowflake:
-        """ID of the user that removed this reaction.
+        """User ID for the user that added this reaction initially.
 
         Returns
         -------
