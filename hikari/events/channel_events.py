@@ -35,9 +35,9 @@ __all__: typing.Final[typing.List[str]] = [
     "ChannelDeleteEvent",
     "GuildChannelDeleteEvent",
     "PrivateChannelDeleteEvent",
-    "ChannelPinsUpdateEvent",
-    "GuildChannelPinsUpdateEvent",
-    "PrivateChannelPinsUpdateEvent",
+    "PinsUpdateEvent",
+    "GuildPinsUpdateEvent",
+    "PrivatePinsUpdateEvent",
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",
@@ -314,7 +314,7 @@ class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
 
 # TODO: find out what private message intents are needed.
 @attr.s(kw_only=True, slots=True)
-class ChannelPinsUpdateEvent(ChannelEvent, abc.ABC):
+class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
 
     @property
@@ -335,7 +335,7 @@ class ChannelPinsUpdateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(kw_only=True, slots=True)
-class GuildChannelPinsUpdateEvent(ChannelPinsUpdateEvent, GuildChannelEvent):
+class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
@@ -353,7 +353,7 @@ class GuildChannelPinsUpdateEvent(ChannelPinsUpdateEvent, GuildChannelEvent):
 
 # TODO: This isn't documented as having an intent, is this right? The guild version requires GUILDS intent.
 @attr.s(kw_only=True, slots=True)
-class PrivateChannelPinsUpdateEvent(ChannelPinsUpdateEvent, PrivateChannelEvent):
+class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
