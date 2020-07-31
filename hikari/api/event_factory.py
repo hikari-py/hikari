@@ -127,7 +127,7 @@ class IEventFactoryComponent(component.IComponent):
     @abc.abstractmethod
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelPinsUpdateEvent:
+    ) -> channel_events.PinsUpdateEvent:
         """Parse a raw payload from Discord into a channel pins update event object.
 
         Parameters
@@ -139,7 +139,7 @@ class IEventFactoryComponent(component.IComponent):
 
         Returns
         -------
-        hikari.events.channel_events.ChannelPinsUpdateEvent
+        hikari.events.channel_events.PinsUpdateEvent
             The parsed channel pins update event object.
         """
 
