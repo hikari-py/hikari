@@ -66,22 +66,24 @@ class IEventDispatcherBase(abc.ABC):
         ```py
         import attr
 
-        from hikari.events.base import Event
+        from hikari.events.base_events import Event
         from hikari.models.users import User
         from hikari.utilities.snowflake import Snowflake
 
-        @attr.s(auto_attribs=True)
+        @attr.s()
         class EveryoneMentionedEvent(Event):
-            author: User
+            app: IEventDispatcherApp = attr.ib()
+
+            author: User = attr.ib()
             '''The user who mentioned everyone.'''
 
-            content: str
+            content: str = attr.ib()
             '''The message that was sent.'''
 
-            message_id: Snowflake
+            message_id: Snowflake = attr.ib()
             '''The message ID.'''
 
-            channel_id: Snowflake
+            channel_id: Snowflake = attr.ib()
             '''The channel ID.'''
         ```
 

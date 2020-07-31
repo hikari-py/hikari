@@ -35,14 +35,14 @@ from hikari.utilities import constants
 from hikari.utilities import data_binding
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True, repr=False)
+@attr.s(slots=True, kw_only=True, repr=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
 
-    username: str
+    username: str = attr.ib()
     """Username for the header."""
 
-    password: str
+    password: str = attr.ib()
     """Password for the header."""
 
     @property
@@ -58,20 +58,20 @@ class BasicAuthHeader:
     __repr__ = __str__
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(slots=True, kw_only=True)
 class ProxySettings:
     """The proxy settings to use."""
 
-    auth: typing.Optional[typing.Any] = None
+    auth: typing.Optional[typing.Any] = attr.ib(default=None)
     """An object that when cast to a string, yields the proxy auth header."""
 
-    headers: typing.Optional[data_binding.Headers] = None
+    headers: typing.Optional[data_binding.Headers] = attr.ib(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Optional[str] = None
+    url: typing.Optional[str] = attr.ib(default=None)
     """The URL of the proxy to use."""
 
-    trust_env: bool = False
+    trust_env: bool = attr.ib(default=False)
     """If `builtins.True`, and no proxy info is given, then `HTTP_PROXY` and
     `HTTPS_PROXY` will be used from the environment variables if present.
 
@@ -83,7 +83,14 @@ class ProxySettings:
 
     @property
     def all_headers(self) -> typing.Optional[data_binding.Headers]:
-        """Get all proxy headers."""
+        """Return all proxy headers.
+
+        Returns
+        -------
+        hikari.utilities.data_binding.Headers or builtins.None
+            Any headers that are set, or `builtins.None` if no headers are to
+            be sent with any request.
+        """
         if self.headers is None:
             if self.auth is None:
                 return None
@@ -94,37 +101,37 @@ class ProxySettings:
         return {**self.headers, constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(slots=True, kw_only=True)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = None
+    acquire_and_connect: typing.Optional[float] = attr.ib(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition."""
 
-    request_socket_connect: typing.Optional[float] = None
+    request_socket_connect: typing.Optional[float] = attr.ib(default=None)
     """Timeout for connecting a socket."""
 
-    request_socket_read: typing.Optional[float] = None
+    request_socket_read: typing.Optional[float] = attr.ib(default=None)
     """Timeout for reading a socket."""
 
-    total: typing.Optional[float] = 60.0
+    total: typing.Optional[float] = attr.ib(default=30.0)
     """Total timeout for entire request.
 
-    Defaults to one minute.
+    Defaults to 30 seconds.
     """
 
 
-@attr.s(slots=True, kw_only=True, auto_attribs=True)
+@attr.s(slots=True, kw_only=True)
 class HTTPSettings:
     """Settings to control the HTTP client."""
 
-    allow_redirects: bool = False
+    allow_redirects: bool = attr.ib(default=False)
     """If `builtins.True`, allow following redirects from `3xx` HTTP responses.
 
     Generally you do not want to enable this unless you have a good reason to.
     """
 
-    max_redirects: int = 10
+    max_redirects: int = attr.ib(default=10)
     """The maximum number of redirects to allow.
 
     If `allow_redirects` is `builtins.False`, then this is ignored.
@@ -133,7 +140,7 @@ class HTTPSettings:
     timeouts: HTTPTimeoutSettings = attr.ib(factory=HTTPTimeoutSettings)
     """Settings to control HTTP request timeouts."""
 
-    verify_ssl: bool = True
+    verify_ssl: bool = attr.ib(default=True)
     """If `builtins.True`, then responses with invalid SSL certificates will be
     rejected. Generally you want to keep this enabled unless you have a
     problem with SSL and you know exactly what you are doing by disabling

@@ -73,7 +73,7 @@ class TypingIndicator(abc.ABC):
         ...
 
 
-@attr.s(auto_attribs=True, kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True)
 class GuildBuilder:
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
@@ -147,31 +147,35 @@ class GuildBuilder:
     ```
     """
 
-    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = undefined.UNDEFINED
+    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.ib(
+        default=undefined.UNDEFINED
+    )
     """Default message notification level that can be overwritten.
 
     If not overridden, this will use the Discord default level.
     """
 
-    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = undefined.UNDEFINED
+    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.ib(
+        default=undefined.UNDEFINED
+    )
     """Explicit content filter level that can be overwritten.
 
     If not overridden, this will use the Discord default level.
     """
 
-    icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED
+    icon: undefined.UndefinedOr[files.Resourceish] = attr.ib(default=undefined.UNDEFINED)
     """Guild icon to use that can be overwritten.
 
     If not overridden, the guild will not have an icon.
     """
 
-    region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED
+    region: undefined.UndefinedOr[voices.VoiceRegionish] = attr.ib(default=undefined.UNDEFINED)
     """Guild voice channel region to use that can be overwritten.
 
     If not overridden, the guild will use the default voice region for Discord.
     """
 
-    verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = undefined.UNDEFINED
+    verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = attr.ib(default=undefined.UNDEFINED)
     """Verification level required to join the guild that can be overwritten.
 
     If not overridden, the guild will use the default verification level for
@@ -181,7 +185,13 @@ class GuildBuilder:
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        """Guild name."""
+        """Name of the guild to create.
+
+        Returns
+        -------
+        builtins.str
+            The guild name.
+        """
 
     @abc.abstractmethod
     async def create(self) -> guilds.Guild:
