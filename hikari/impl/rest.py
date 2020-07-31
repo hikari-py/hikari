@@ -438,6 +438,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         "version",
         "_app",
         "_client_session",
+        "_closed_event",
         "_connector_factory",
         "_connector_owner",
         "_debug",
@@ -481,6 +482,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         self._app = app
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
+        self._closed_event = asyncio.Event()
         self._connector_factory = connector_factory
         self._connector_owner = connector_owner
         self._debug = debug
@@ -513,10 +515,12 @@ class RESTClientImpl(rest_api.IRESTClient):
             await self._client_session.close()
         self.global_rate_limit.close()
         self.buckets.close()
+        self._closed_event.set()
 
     @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         if self._client_session is None:
+            self._closed_event.clear()
             self._client_session = aiohttp.ClientSession(
                 # Should not need a lock, since we don't technically await anything.
                 connector=self._connector_factory.acquire(),
@@ -530,6 +534,9 @@ class RESTClientImpl(rest_api.IRESTClient):
                 ),
                 trust_env=self._proxy_settings.trust_env,
             )
+
+        elif self._client_session.closed:
+            raise errors.HTTPClientClosedError
 
         return self._client_session
 
@@ -634,7 +641,7 @@ class RESTClientImpl(rest_api.IRESTClient):
                         return data_binding.load_json(await response.read())
 
                     real_url = str(response.real_url)
-                    raise errors.HTTPError(real_url, f"Expected JSON response but received {response.content_type}")
+                    raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
 
                 await self._handle_error_response(response)
 
@@ -891,7 +898,9 @@ class RESTClientImpl(rest_api.IRESTClient):
     def trigger_typing(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
     ) -> special_endpoints.TypingIndicator:
-        return special_endpoints.TypingIndicator(request_call=self._request, channel=channel)
+        return special_endpoints.TypingIndicator(
+            request_call=self._request, channel=channel, rest_closed_event=self._closed_event
+        )
 
     async def fetch_pins(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
