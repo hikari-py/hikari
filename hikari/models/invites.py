@@ -265,7 +265,7 @@ class InviteWithMetadata(Invite):
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
-    max_uses: typing.Optional[int] = attr.attrib(eq=False, hash=False, repr=True)
+    max_uses: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
     If set to `builtins.None` then this is unlimited.
@@ -273,16 +273,16 @@ class InviteWithMetadata(Invite):
 
     # TODO: can we use a non-None value to represent infinity here somehow, or
     # make a timedelta that is infinite for comparisons?
-    max_age: typing.Optional[datetime.timedelta] = attr.attrib(eq=False, hash=False, repr=False)
+    max_age: typing.Optional[datetime.timedelta] = attr.ib(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
     If set to `builtins.None` then this is unlimited.
     """
 
-    is_temporary: bool = attr.attrib(eq=False, hash=False, repr=True)
+    is_temporary: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether this invite grants temporary membership."""
 
-    created_at: datetime.datetime = attr.attrib(eq=False, hash=False, repr=False)
+    created_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=False)
     """When this invite was created."""
 
     @property
