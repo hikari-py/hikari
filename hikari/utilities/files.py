@@ -339,7 +339,7 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
     return f"data:{mimetype};base64,{b64}"
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """Protocol for reading a resource asynchronously using bit inception.
 
@@ -347,10 +347,10 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     detail is left to each implementation of this class to define.
     """
 
-    filename: str
+    filename: str = attr.ib()
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str]
+    mimetype: typing.Optional[str] = attr.ib()
     """The mimetype of the resource. May be `builtins.None` if not known."""
 
     async def data_uri(self) -> str:
@@ -390,12 +390,10 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         ...
 
 
+@attr.s(slots=True)
 @typing.final
 class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
-    __slots__: typing.Sequence[str] = ("impl",)
-
-    def __init__(self, impl: ReaderImplT) -> None:
-        self.impl = impl
+    impl: ReaderImplT = attr.ib()
 
     async def __aenter__(self) -> ReaderImplT:
         return self.impl
@@ -472,29 +470,29 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 ###################
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class WebReader(AsyncReader):
     """Asynchronous reader to use to read data from a web resource."""
 
-    stream: aiohttp.StreamReader
+    stream: aiohttp.StreamReader = attr.ib()
     """The `aiohttp.StreamReader` to read the content from."""
 
-    url: str
+    url: str = attr.ib()
     """The URL being read from."""
 
-    status: int
+    status: int = attr.ib()
     """The initial HTTP response status."""
 
-    reason: str
+    reason: str = attr.ib()
     """The HTTP response status reason."""
 
-    charset: typing.Optional[str]
+    charset: typing.Optional[str] = attr.ib()
     """Optional character set information, if known."""
 
-    size: typing.Optional[int]
+    size: typing.Optional[int] = attr.ib()
     """The size of the resource, if known."""
 
-    head_only: bool
+    head_only: bool = attr.ib()
     """If `builtins.True`, then only the HEAD was requested.
 
     In this case, neither `__aiter__` nor `read` would return anything other
@@ -701,7 +699,7 @@ class URL(WebResource):
 ########################################
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class FileReader(AsyncReader, abc.ABC):
     """Abstract base for a file reader object.
 
@@ -710,14 +708,14 @@ class FileReader(AsyncReader, abc.ABC):
     they pickle things).
     """
 
-    executor: typing.Optional[concurrent.futures.Executor]
+    executor: typing.Optional[concurrent.futures.Executor] = attr.ib()
     """The associated `concurrent.futures.Executor` to use for blocking IO."""
 
     path: pathlib.Path = attr.ib(converter=ensure_path)
     """The path to the resource to read."""
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class ThreadedFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -765,7 +763,7 @@ class ThreadedFileReader(FileReader):
         fp.close()
 
 
-@attr.s(auto_attribs=True, slots=False)
+@attr.s(slots=False)  # Do not slot (pickle)
 class MultiprocessingFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -869,11 +867,11 @@ class File(Resource[FileReader]):
 ########################################################################
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 
-    data: typing.Union[bytes, LazyByteIteratorish]
+    data: typing.Union[bytes, LazyByteIteratorish] = attr.ib()
     """The data that will be yielded in chunks."""
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
