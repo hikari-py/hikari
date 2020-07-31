@@ -196,17 +196,17 @@ class GatewayShardImpl(shard.IGatewayShard):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
-    @attr.s(slots=True)
+    @attr.s(slots=True, repr=False)
     @typing.final
     class _Reconnect(RuntimeError):
         pass
 
-    @attr.s(slots=True)
+    @attr.s(slots=True, repr=False)
     @typing.final
     class _SocketClosed(RuntimeError):
         pass
 
-    @attr.s(auto_exc=True, slots=True)
+    @attr.s(auto_exc=True, slots=True, repr=False)
     @typing.final
     class _InvalidSession(RuntimeError):
         can_resume: bool = attr.ib(default=False)
