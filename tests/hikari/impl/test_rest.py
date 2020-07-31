@@ -404,6 +404,7 @@ class TestRESTClientImpl:
 
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = client_session_stub.ClientSessionStub()
+        client_session_stub.closed = False
         connector_mock = mock.Mock()
         rest_client._connector_factory.acquire = mock.Mock(return_value=connector_mock)
         rest_client._http_settings.timeouts.total = 10
@@ -415,7 +416,7 @@ class TestRESTClientImpl:
 
         with mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock) as client_session:
             assert rest_client._acquire_client_session() is client_session_mock
-            rest_client._client_session is client_session_mock
+            assert rest_client._client_session is client_session_mock
             client_session.assert_called_once_with(
                 connector=connector_mock,
                 connector_owner=False,
@@ -424,11 +425,20 @@ class TestRESTClientImpl:
                 trust_env=False,
             )
 
-    def test__acquire_client_session_when_not_None(self, rest_client):
+    def test__acquire_client_session_when_not_None_and_open(self, rest_client):
         client_session_mock = mock.Mock()
+        client_session_mock.closed = False
         rest_client._client_session = client_session_mock
 
         assert rest_client._acquire_client_session() is client_session_mock
+
+    def test__acquire_client_session_when_not_None_and_closed(self, rest_client):
+        client_session_mock = mock.Mock()
+        client_session_mock.closed = True
+        rest_client._client_session = client_session_mock
+
+        with pytest.raises(errors.HTTPClientClosedError):
+            assert rest_client._acquire_client_session() is client_session_mock
 
     @pytest.mark.parametrize(
         ["function_input", "expected_output"],
@@ -485,7 +495,9 @@ class TestRESTClientImpl:
         with mock.patch.object(special_endpoints, "TypingIndicator", return_value=stub_iterator) as typing_indicator:
             assert rest_client.trigger_typing(channel) == stub_iterator
 
-            typing_indicator.assert_called_once_with(request_call=rest_client._request, channel=channel)
+            typing_indicator.assert_called_once_with(
+                request_call=rest_client._request, channel=channel, rest_closed_event=rest_client._closed_event
+            )
 
     @pytest.mark.parametrize(
         "before",
