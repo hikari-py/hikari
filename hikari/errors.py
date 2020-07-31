@@ -30,6 +30,7 @@ __all__: typing.Final[typing.List[str]] = [
     "Forbidden",
     "BadRequest",
     "HTTPError",
+    "HTTPClientClosedError",
     "HTTPErrorResponse",
     "ClientHTTPErrorResponse",
     "ServerHTTPErrorResponse",
@@ -41,6 +42,8 @@ __all__: typing.Final[typing.List[str]] = [
 import http
 import typing
 
+import attr
+
 from hikari.models import messages
 from hikari.utilities import snowflake
 
@@ -49,6 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import routes
 
 
+@attr.s(auto_exc=True, slots=True, repr=False, init=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
 
@@ -58,12 +62,8 @@ class HikariError(RuntimeError):
         You should never initialize this exception directly.
     """
 
-    __slots__: typing.Sequence[str] = ()
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({str(self)!r})"
-
-
+@attr.s(auto_exc=True, slots=True, repr=False, init=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.
 
@@ -73,135 +73,94 @@ class HikariWarning(RuntimeWarning):
         You should never initialize this warning directly.
     """
 
-    __slots__: typing.Sequence[str] = ()
 
-
+@attr.s(auto_exc=True, slots=True, repr=False)
 class GatewayError(HikariError):
-    """A base exception type for anything that can be thrown by the Gateway.
+    """A base exception type for anything that can be thrown by the Gateway."""
 
-    Parameters
-    ----------
-    reason : str
-        A string explaining the issue.
-    """
-
-    __slots__: typing.Sequence[str] = ("reason",)
-
-    reason: str
+    reason: str = attr.ib()
     """A string to explain the issue."""
-
-    def __init__(self, reason: str) -> None:
-        super().__init__()
-        self.reason = reason
 
     def __str__(self) -> str:
         return self.reason
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class GatewayClientClosedError(GatewayError):
-    """An exception raised when you programmatically shut down the bot.
+    """An exception raised when you programmatically shut down the bot."""
 
-    Parameters
-    ----------
-    reason : builtins.str
-        A string explaining the issue.
-    """
+    reason: str = attr.ib(default="The gateway client has been closed")
+    """A string to explain the issue."""
 
-    __slots__: typing.Sequence[str] = ()
-
-    def __init__(self, reason: str = "The gateway client has been closed") -> None:
-        super().__init__(reason)
+    def __str__(self) -> str:
+        return self.reason
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class GatewayServerClosedConnectionError(GatewayError):
-    """An exception raised when the server closes the connection.
+    """An exception raised when the server closes the connection."""
 
-    Parameters
-    ----------
-    reason : builtins.str or builtins.None
-        A string explaining the issue.
-    code : builtins.int or builtins.None
-        The close code.
-    can_reconnect : builtins.bool
-        If `builtins.True`, a reconnect will occur after this is raised rather
-        than it being propagated to the caller. If `builtins.False`, this will
-        be raised.
+    code: typing.Optional[int] = attr.ib(default=None)
+    """The close code."""
+
+    can_reconnect: bool = attr.ib(default=False)
+    """Whether we can try to reconnect.
+
+    If `builtins.True`, it will try to reconnect after this is raised rather
+    than it being propagated to the caller. If `builtins.False`, this will
+    be raised.
     """
-
-    __slots__: typing.Sequence[str] = ("code", "can_reconnect")
-
-    def __init__(self, reason: str, code: typing.Optional[int] = None, can_reconnect: bool = False) -> None:
-        self.code = code
-        self.can_reconnect = can_reconnect
-        super().__init__(reason)
 
     def __str__(self) -> str:
         return f"Server closed connection with code {self.code} ({self.reason})"
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class HTTPError(HikariError):
-    """Base exception raised if an HTTP error occurs while making a request.
+    """Base exception raised if an HTTP error occurs while making a request."""
 
-    Parameters
-    ----------
-    message : builtins.str
-        The error message.
-    url : builtins.str
-        The URL that produced this error.
-    """
-
-    __slots__: typing.Sequence[str] = ("message", "url")
-
-    message: str
+    message: str = attr.ib()
     """The error message."""
 
-    url: str
-    """The URL that produced this error message."""
 
-    def __init__(self, url: str, message: str) -> None:
-        super().__init__()
-        self.message = message
-        self.url = url
+@attr.s(auto_exc=True, slots=True, repr=False)
+class HTTPClientClosedError(HTTPError):
+    """Exception raised if an `aiohttp.ClientSession` was closed.
 
-
-class HTTPErrorResponse(HTTPError):
-    """Base exception for an erroneous HTTP response.
-
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    status : builtins.int or http.HTTPStatus
-        The HTTP status code of the response that caused this error.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
+    This fires when using a closed `aiohttp.ClientSession` to make a
+    request.
     """
 
-    __slots__: typing.Sequence[str] = ("status", "headers", "raw_body")
+    message: str = attr.ib(default="The client session has been closed, no HTTP requests can occur.", init=False)
+    """The error message."""
 
-    status: typing.Union[int, http.HTTPStatus]
+
+_message_default_factory = attr.Factory(
+    lambda self: f"{self.status}: {self.raw_body}" if self.reason is None else self.reason, takes_self=True
+)
+
+
+@attr.s(auto_exc=True, slots=True, repr=False)
+class HTTPErrorResponse(HTTPError):
+    """Base exception for an erroneous HTTP response."""
+
+    url: str = attr.ib()
+    """The URL that produced this error message."""
+
+    status: typing.Union[int, http.HTTPStatus] = attr.ib()
     """The HTTP status code for the response."""
 
-    headers: data_binding.Headers
+    headers: data_binding.Headers = attr.ib()
     """The headers received in the error response."""
 
-    raw_body: typing.Any
+    raw_body: typing.Any = attr.ib()
     """The response body."""
 
-    def __init__(
-        self,
-        url: str,
-        status: typing.Union[int, http.HTTPStatus],
-        headers: data_binding.Headers,
-        raw_body: typing.Any,
-        reason: typing.Optional[str] = None,
-    ) -> None:
-        super().__init__(url, f"{status}: {raw_body}" if reason is None else reason)
-        self.status = status
-        self.headers = headers
-        self.raw_body = raw_body
+    reason: typing.Optional[str] = attr.ib(default=None)
+    """The error reason. If `builtins.None`, will generate one automatically."""
+
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
     def __str__(self) -> str:
         try:
@@ -220,6 +179,7 @@ class HTTPErrorResponse(HTTPError):
         return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''} for {self.url}"
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class ClientHTTPErrorResponse(HTTPErrorResponse):
     """Base exception for an erroneous HTTP response that is a client error.
 
@@ -227,95 +187,57 @@ class ClientHTTPErrorResponse(HTTPErrorResponse):
     errors when encountered.
     """
 
-    __slots__: typing.Sequence[str] = ()
 
-
+@attr.s(auto_exc=True, slots=True, repr=False)
 class BadRequest(ClientHTTPErrorResponse):
-    """Raised when you send an invalid request somehow.
+    """Raised when you send an invalid request somehow."""
 
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
-    """
+    status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.BAD_REQUEST, init=False)
+    """The HTTP status code for the response."""
 
-    __slots__: typing.Sequence[str] = ()
-
-    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
-        status = http.HTTPStatus.BAD_REQUEST
-        super().__init__(url, status, headers, raw_body)
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class Unauthorized(ClientHTTPErrorResponse):
-    """Raised when you are not authorized to access a specific resource.
+    """Raised when you are not authorized to access a specific resource."""
 
-    This generally means you did not provide a token, or the token is invalid.
+    status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.UNAUTHORIZED, init=False)
+    """The HTTP status code for the response."""
 
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
-        status = http.HTTPStatus.UNAUTHORIZED
-        super().__init__(url, status, headers, raw_body)
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class Forbidden(ClientHTTPErrorResponse):
     """Raised when you are not allowed to access a specific resource.
 
     This means you lack the permissions to do something, either because of
     permissions set in a guild, or because your application is not whitelisted
-    to use a specific _endpoint.
-
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
+    to use a specific endpoint.
     """
 
-    __slots__: typing.Sequence[str] = ()
+    status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.FORBIDDEN, init=False)
+    """The HTTP status code for the response."""
 
-    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
-        status = http.HTTPStatus.FORBIDDEN
-        super().__init__(url, status, headers, raw_body)
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class NotFound(ClientHTTPErrorResponse):
-    """Raised when something is not found.
+    """Raised when something is not found."""
 
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
-    """
+    status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.NOT_FOUND, init=False)
+    """The HTTP status code for the response."""
 
-    __slots__: typing.Sequence[str] = ()
-
-    def __init__(self, url: str, headers: data_binding.Headers, raw_body: typing.AnyStr) -> None:
-        status = http.HTTPStatus.NOT_FOUND
-        super().__init__(url, status, headers, raw_body)
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class RateLimited(ClientHTTPErrorResponse):
     """Raised when a non-global ratelimit that cannot be handled occurs.
 
@@ -343,45 +265,29 @@ class RateLimited(ClientHTTPErrorResponse):
         If you receive this regularly, please file a bug report, or contact
         Discord with the relevant debug information that can be obtained by
         enabling debug logs and enabling the debug mode on the HTTP components.
-
-    Parameters
-    ----------
-    url : builtins.str
-        The URL that produced the error message.
-    route : hikari.utilities.routes.CompiledRoute
-        The route that produced this error.
-    headers : hikari.utilities.data_binding.Headers
-        Any headers that were given in the response.
-    raw_body : typing.Any
-        The body that was received.
-    retry_after : builtins.float
-        How many seconds to wait before you can reuse the route with the
-        specific request.
     """
 
-    __slots__: typing.Sequence[str] = ()
+    route: routes.CompiledRoute = attr.ib()
+    """The route that produced this error."""
 
-    def __init__(
-        self,
-        url: str,
-        route: routes.CompiledRoute,
-        headers: data_binding.Headers,
-        raw_body: typing.Any,
-        retry_after: float,
-    ) -> None:
-        self.retry_after = retry_after
-        self.route = route
+    retry_after: float = attr.ib()
+    """How many seconds to wait before you can reuse the route with the specific request."""
 
-        status = http.HTTPStatus.TOO_MANY_REQUESTS
-        super().__init__(
-            url,
-            status,
-            headers,
-            raw_body,
-            f"You are being rate-limited for {self.retry_after:,} seconds on route {route}. Please slow down!",
-        )
+    status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.TOO_MANY_REQUESTS, init=False)
+    """The HTTP status code for the response."""
+
+    reason: str = attr.ib(init=False)
+    """The error reason."""
+
+    @reason.default
+    def _(self) -> str:
+        return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
+
+    message: str = attr.ib(default=_message_default_factory, init=False)
+    """The error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class ServerHTTPErrorResponse(HTTPErrorResponse):
     """Base exception for an erroneous HTTP response that is a server error.
 
@@ -389,41 +295,28 @@ class ServerHTTPErrorResponse(HTTPErrorResponse):
     errors when encountered. If you get one of these, it isn't your fault!
     """
 
-    __slots__: typing.Sequence[str] = ()
 
-
+@attr.s(auto_exc=True, slots=True, repr=False, init=False)
 class IntentWarning(HikariWarning):
     """Warning raised when subscribing to an event that cannot be fired.
 
     This is caused by your application missing certain intents.
     """
 
-    __slots__: typing.Sequence[str] = ()
 
-
+@attr.s(auto_exc=True, slots=True, repr=False)
 class BulkDeleteError(HikariError):
     """Exception raised when a bulk delete fails midway through a call.
 
     This will contain the list of message items that failed to be deleted,
     and will have a cause containing the initial exception.
-
-    Parameters
-    ----------
-    messages_deleted : typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]]
-        Any message objects that were deleted before an exception occurred.
-    messages_skipped : typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]]
-        Any message objects that were skipped due to an exception.
     """
 
-    __slots__: typing.Sequence[str] = ("messages_deleted", "messages_skipped")
+    messages_deleted: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]] = attr.ib()
+    """Any message objects that were deleted before an exception occurred."""
 
-    def __init__(
-        self,
-        messages_deleted: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]],
-        messages_skipped: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]],
-    ) -> None:
-        self.messages_deleted = messages_deleted
-        self.messages_skipped = messages_skipped
+    messages_skipped: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]] = attr.ib()
+    """Any message objects that were skipped due to an exception."""
 
     @property
     def percentage_completion(self) -> float:
@@ -439,5 +332,6 @@ class BulkDeleteError(HikariError):
         return 100 * len(self.messages_deleted) / total
 
 
+@attr.s(auto_exc=True, slots=True, repr=False, init=False)
 class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""

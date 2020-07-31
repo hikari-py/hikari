@@ -30,6 +30,7 @@ import typing
 
 import attr
 
+from hikari import errors
 from hikari.api import special_endpoints
 from hikari.models import channels
 from hikari.utilities import data_binding
@@ -67,7 +68,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         produced by that API.
     """
 
-    __slots__: typing.Sequence[str] = ("_channel", "_request_call", "_task")
+    __slots__: typing.Sequence[str] = ("_route", "_request_call", "_task", "_rest_close_event", "_task_name")
 
     def __init__(
         self,
@@ -75,19 +76,21 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
         channel: typing.Union[channels.TextChannel, snowflake.SnowflakeishOr],
+        rest_closed_event: asyncio.Event,
     ) -> None:
-        self._channel = channel
+        self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
         self._request_call = request_call
+        self._task_name = f"repeatedly trigger typing in {channel}"
         self._task: typing.Optional[asyncio.Task[None]] = None
+        self._rest_close_event = rest_closed_event
 
-    def __await__(self) -> typing.Generator[None, typing.Any, None]:
-        route = routes.POST_CHANNEL_TYPING.compile(channel=self._channel)
-        yield from self._request_call(route).__await__()
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        return self._request_call(self._route).__await__()
 
     async def __aenter__(self) -> None:
         if self._task is not None:
             raise TypeError("cannot enter a typing indicator context more than once.")
-        self._task = asyncio.create_task(self._keep_typing(), name=f"repeatedly trigger typing in {self._channel}")
+        self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
     async def __aexit__(
         self,
@@ -102,15 +105,18 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             self._task = NotImplemented
 
     async def _keep_typing(self) -> None:
-        with contextlib.suppress(asyncio.CancelledError):
-            while True:
+        # Cancelled error will occur when the context manager is requested to
+        # stop.
+        with contextlib.suppress(asyncio.CancelledError, errors.HTTPClientClosedError):
+            # If the REST API closes while typing, just stop.
+            while not self._rest_close_event.is_set():
                 # Use slightly less than 10s to ensure latency does not
                 # cause the typing indicator to stop showing for a split
                 # second if the request is slow to execute.
-                await asyncio.gather(self, asyncio.sleep(9))
+                await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
-@attr.s(auto_attribs=True, kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
@@ -185,16 +191,16 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _app: rest.IRESTApp
-    _name: str
+    _app: rest.IRESTApp = attr.ib()
+    _name: str = attr.ib()
 
     # Optional args that we kept hidden.
-    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
-    _counter: int = 0
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
+    _counter: int = attr.ib(default=0, init=False)
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ]
-    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
+    ] = attr.ib()
+    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
 
     @property
     def name(self) -> str:

@@ -33,20 +33,20 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-@attr.s(auto_attribs=True, kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True)
 class VersionInfo:
     """PyPI release info."""
 
-    this: distutils_version.LooseVersion
+    this: distutils_version.LooseVersion = attr.ib()
     """This version."""
 
-    latest_compatible: distutils_version.LooseVersion
+    latest_compatible: distutils_version.LooseVersion = attr.ib()
     """Latest compatible version with no breaking API changes."""
 
-    latest: distutils_version.LooseVersion
+    latest: distutils_version.LooseVersion = attr.ib()
     """Latest version. May contain breaking API changes."""
 
-    is_official: bool = _about.__is_official_distributed_release__
+    is_official: bool = attr.ib(default=_about.__is_official_distributed_release__)
     """True if this library version is a valid PyPI release.
 
     This will be False for non-release versions (e.g. cloned from version
