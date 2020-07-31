@@ -54,12 +54,12 @@ class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 
     guild: guild_models.GatewayGuild
-    channels: typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]
-    members: typing.Mapping[snowflake.Snowflake, guild_models.Member]
-    presences: typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]
+    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]]
+    members: typing.Optional[typing.Mapping[snowflake.Snowflake, guild_models.Member]]
+    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]]
     roles: typing.Mapping[snowflake.Snowflake, guild_models.Role]
     emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji]
-    voice_states: typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]
+    voice_states: typing.Optional[typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]]
 
 
 class IEntityFactoryComponent(component.IComponent, abc.ABC):

@@ -462,12 +462,12 @@ class InviteCreateEvent(InviteEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    invite: invites.Invite = attr.ib()
+    invite: invites.InviteWithMetadata = attr.ib()
     """Invite that was created.
 
     Returns
     -------
-    hikari.models.invites.Invite
+    hikari.models.invites.InviteWithMetaData
         The created invite object.
     """
 

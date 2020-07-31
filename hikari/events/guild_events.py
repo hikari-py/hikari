@@ -45,10 +45,12 @@ from hikari.models import intents
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
+    from hikari.models import channels as channels_
     from hikari.models import emojis as emojis_
     from hikari.models import guilds
-    from hikari.models import presences
+    from hikari.models import presences as presences_
     from hikari.models import users
+    from hikari.models import voices
     from hikari.utilities import snowflake
 
 
@@ -94,13 +96,67 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    guild: guilds.Guild = attr.ib()
+    guild: guilds.GatewayGuild = attr.ib()
     """Guild that just became available.
 
     Returns
     -------
     hikari.models.guilds.Guild
         The guild that relates to this event.
+    """
+
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
+    """Mapping of snowflakes to the emojis in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+        The emojis in the guild.
+    """
+
+    roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
+    """Mapping of snowflakes to the roles in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        The roles in the guild.
+    """
+
+    channels: typing.Mapping[snowflake.Snowflake, channels_.GuildChannel] = attr.ib(repr=False)
+    """Mapping of snowflakes to the channels in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+        The channels in the guild.
+    """
+
+    members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
+    """Mapping of snowflakes to the members in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+        The members in the guild.
+    """
+
+    presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    """Mapping of snowflakes to the presences for the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
+        The member presences in the guild.
+    """
+
+    voice_states: typing.Mapping[snowflake.Snowflake, voices.VoiceState] = attr.ib(repr=False)
+    """Mapping of snowflakes to the voice states active in this guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
+        The voice states active in the guild.
     """
 
     @property
@@ -144,13 +200,31 @@ class GuildUpdateEvent(GuildEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    guild: guilds.Guild = attr.ib()
+    guild: guilds.GatewayGuild = attr.ib()
     """Guild that was just updated.
 
     Returns
     -------
     hikari.models.guilds.Guild
         The guild that relates to this event.
+    """
+
+    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
+    """Mapping of snowflakes to the emojis in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+        The emojis in the guild.
+    """
+
+    roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
+    """Mapping of snowflakes to the roles in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        The roles in the guild.
     """
 
     @property
@@ -270,7 +344,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    presence: presences.MemberPresence = attr.ib()
+    presence: presences_.MemberPresence = attr.ib()
     """Member presence.
 
     Returns
