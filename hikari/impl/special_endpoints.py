@@ -110,7 +110,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 await asyncio.gather(self, asyncio.sleep(9))
 
 
-@attr.s(auto_attribs=True, kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
@@ -185,16 +185,16 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _app: rest.IRESTApp
-    _name: str
+    _app: rest.IRESTApp = attr.ib()
+    _name: str = attr.ib()
 
     # Optional args that we kept hidden.
-    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
-    _counter: int = 0
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
+    _counter: int = attr.ib(default=0, init=False)
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ]
-    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list)
+    ] = attr.ib()
+    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
 
     @property
     def name(self) -> str:
