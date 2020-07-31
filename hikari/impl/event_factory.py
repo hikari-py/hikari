@@ -95,7 +95,7 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
 
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelPinsUpdateEvent:
+    ) -> channel_events.PinsUpdateEvent:
         channel_id = snowflake.Snowflake(payload["channel_id"])
 
         # Turns out this _can_ be None or not present. Only set it if it is actually available.
@@ -105,14 +105,14 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
             last_pin_timestamp = None
 
         if "guild_id" in payload:
-            return channel_events.GuildChannelPinsUpdateEvent(
+            return channel_events.GuildPinsUpdateEvent(
                 shard=shard,
                 channel_id=channel_id,
                 guild_id=snowflake.Snowflake(payload["guild_id"]),
                 last_pin_timestamp=last_pin_timestamp,
             )
 
-        return channel_events.PrivateChannelPinsUpdateEvent(
+        return channel_events.PrivatePinsUpdateEvent(
             shard=shard, channel_id=channel_id, last_pin_timestamp=last_pin_timestamp
         )
 

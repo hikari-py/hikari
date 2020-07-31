@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import typing
 
-from hikari.events import base_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import lifetime_events
@@ -33,7 +32,8 @@ from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
-from hikari.events.base_events import *
+from hikari.events.base_events import Event
+from hikari.events.base_events import ExceptionEvent
 from hikari.events.channel_events import *
 from hikari.events.guild_events import *
 from hikari.events.lifetime_events import *
@@ -47,7 +47,7 @@ from hikari.events.user_events import *
 from hikari.events.voice_events import *
 
 __all__: typing.List[str] = (
-    base_events.__all__
+    ["Event", "ExceptionEvent"]
     + channel_events.__all__
     + guild_events.__all__
     + lifetime_events.__all__

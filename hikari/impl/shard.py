@@ -150,6 +150,7 @@ class GatewayShardImpl(shard.IGatewayShard):
     )
 
     @enum.unique
+    @typing.final
     class _CloseCode(enum.IntEnum):
         RFC_6455_NORMAL_CLOSURE = 1000
         RFC_6455_GOING_AWAY = 1001
@@ -181,6 +182,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         DISALLOWED_INTENT = 4014
 
     @enum.unique
+    @typing.final
     class _Opcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
@@ -194,15 +196,20 @@ class GatewayShardImpl(shard.IGatewayShard):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
+    @attr.s(slots=True, repr=False)
+    @typing.final
     class _Reconnect(RuntimeError):
-        __slots__: typing.Sequence[str] = ()
+        pass
 
+    @attr.s(slots=True, repr=False)
+    @typing.final
     class _SocketClosed(RuntimeError):
-        __slots__: typing.Sequence[str] = ()
+        pass
 
-    @attr.s(auto_attribs=True, auto_exc=True, slots=True)
+    @attr.s(auto_exc=True, slots=True, repr=False)
+    @typing.final
     class _InvalidSession(RuntimeError):
-        can_resume: bool = False
+        can_resume: bool = attr.ib(default=False)
 
     _RESTART_RATELIMIT_WINDOW: typing.Final[typing.ClassVar[float]] = 30.0
     """If the shard restarts more than once within this period of time, then

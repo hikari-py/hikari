@@ -52,15 +52,11 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, slots=True)
-@base_events.requires_intents(intents.Intent.GUILDS)
-class GuildVisibilityEvent(shard_events.ShardEvent, abc.ABC):
-    """Event base for any event that changes the visibility of a guild.
-
-    This includes when a guild becomes available after an outage, when a
-    guild becomes available on startup, when a guild becomes unavailable due
-    to an outage, when the user is kicked/banned/leaves a guild, or when
-    the user joins a new guild.
-    """
+@base_events.requires_intents(
+    intents.Intent.GUILDS, intents.Intent.GUILD_BANS, intents.Intent.GUILD_EMOJIS, intents.Intent.GUILD_PRESENCES
+)
+class GuildEvent(shard_events.ShardEvent, abc.ABC):
+    """Event base for any guild-bound event."""
 
     @property
     @abc.abstractmethod
@@ -72,6 +68,18 @@ class GuildVisibilityEvent(shard_events.ShardEvent, abc.ABC):
         hikari.utilities.snowflake.Snowflake
             The ID of the guild that relates to this event.
         """
+
+
+@attr.s(kw_only=True, slots=True)
+@base_events.requires_intents(intents.Intent.GUILDS)
+class GuildVisibilityEvent(GuildEvent):
+    """Event base for any event that changes the visibility of a guild.
+
+    This includes when a guild becomes available after an outage, when a
+    guild becomes available on startup, when a guild becomes unavailable due
+    to an outage, when the user is kicked/banned/leaves a guild, or when
+    the user joins a new guild.
+    """
 
 
 @attr.s(kw_only=True, slots=True)
@@ -129,7 +137,7 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
 
 @attr.s(kw_only=True, slots=True)
 @base_events.requires_intents(intents.Intent.GUILDS)
-class GuildUpdateEvent(shard_events.ShardEvent):
+class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
@@ -152,19 +160,8 @@ class GuildUpdateEvent(shard_events.ShardEvent):
 
 @attr.s(kw_only=True, slots=True)
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
-class BanEvent(shard_events.ShardEvent, abc.ABC):
+class BanEvent(GuildEvent):
     """Event base for any guild ban or unban."""
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.utilities.snowflake.Snowflake
-            The ID of the guild that relates to this event.
-        """
 
     @property
     @abc.abstractmethod
@@ -210,20 +207,14 @@ class BanDeleteEvent(BanEvent):
 
 @attr.s(kw_only=True, slots=True)
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
-class EmojisUpdateEvent(shard_events.ShardEvent):
+class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
-    """ID of the guild that this event relates to.
-
-    Returns
-    -------
-    hikari.utilities.snowflake.Snowflake
-        The ID of the guild that relates to this event.
-    """
+    # <<inherited docstring from GuildEvent>>.
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
     """Sequence of all emojis in this guild.
@@ -237,7 +228,7 @@ class EmojisUpdateEvent(shard_events.ShardEvent):
 
 @attr.s(kw_only=True, slots=True)
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
-class IntegrationsUpdateEvent(shard_events.ShardEvent):
+class IntegrationsUpdateEvent(GuildEvent):
     """Event that is fired when the integrations in a guild are changed.
 
     This may occur when integrations are created, updated, or deleted.
@@ -256,13 +247,7 @@ class IntegrationsUpdateEvent(shard_events.ShardEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
-    """ID of the guild that this event relates to.
-
-    Returns
-    -------
-    hikari.utilities.snowflake.Snowflake
-        The ID of the guild that relates to this event.
-    """
+    # <<inherited docstring from ShardEvent>>.
 
 
 @attr.s(kw_only=True, slots=True)
@@ -322,12 +307,5 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     @property
     def guild_id(self) -> snowflake.Snowflake:
-        """Guild ID that the presence was updated in.
-
-        Returns
-        -------
-        hikari.utilities.snowflake.Snowflake
-            ID of the guild the event occurred in.
-        """
-        # Should always be present in this event.
-        return typing.cast("snowflake.Snowflake", self.presence.guild_id)
+        # <<inherited docstring from GuildEvent>>.
+        return typing.cast("snowflake.Snowflake", self.presence.guild_id)  # Should always be present in this event.

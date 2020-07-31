@@ -100,6 +100,9 @@ class GuildFeature(str, enum.Enum):
     COMMERCE = "COMMERCE"
     """Guild has access to use commerce features (i.e. create store channels)."""
 
+    COMMUNITY = "COMMUNITY"
+    """Guild has community features enabled."""
+
     DISCOVERABLE = "DISCOVERABLE"
     """Guild is able to be discovered in the directory."""
 

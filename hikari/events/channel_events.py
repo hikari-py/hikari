@@ -35,9 +35,9 @@ __all__: typing.Final[typing.List[str]] = [
     "ChannelDeleteEvent",
     "GuildChannelDeleteEvent",
     "PrivateChannelDeleteEvent",
-    "ChannelPinsUpdateEvent",
-    "GuildChannelPinsUpdateEvent",
-    "PrivateChannelPinsUpdateEvent",
+    "PinsUpdateEvent",
+    "GuildPinsUpdateEvent",
+    "PrivatePinsUpdateEvent",
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",
@@ -58,12 +58,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.models import channels
     from hikari.models import invites
+    from hikari.models import webhooks
     from hikari.utilities import snowflake
 
 
-@base_events.requires_intents(
-    intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES,
-)
+@base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
@@ -78,6 +77,22 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         hikari.utilities.snowflake.Snowflake
             The ID of the channel this event relates to.
         """
+
+    async def fetch_channel(self) -> channels.PartialChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        !!! note
+            For `ChannelDeleteEvent`-derived events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.models.channels.PartialChannel
+            A derivative of `hikari.models.channels.PartialChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+        return await self.app.rest.fetch_channel(self.channel_id)
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
@@ -96,10 +111,20 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             The ID of the guild that relates to this event.
         """
 
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.GuildChannel:
+            ...
+
 
 @attr.s(kw_only=True, slots=True)
 class PrivateChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
+
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.PrivateChannel:
+            ...
 
 
 @base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
@@ -259,6 +284,11 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
+    if typing.TYPE_CHECKING:
+        # Channel will never be found.
+        async def fetch_channel(self) -> typing.NoReturn:
+            ...
+
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(kw_only=True, slots=True)
@@ -287,6 +317,11 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
 
+    if typing.TYPE_CHECKING:
+        # Channel will never be found.
+        async def fetch_channel(self) -> typing.NoReturn:
+            ...
+
 
 # TODO: can this actually ever get fired?
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
@@ -311,10 +346,15 @@ class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
+    if typing.TYPE_CHECKING:
+        # Channel will never be found.
+        async def fetch_channel(self) -> typing.NoReturn:
+            ...
+
 
 # TODO: find out what private message intents are needed.
 @attr.s(kw_only=True, slots=True)
-class ChannelPinsUpdateEvent(ChannelEvent, abc.ABC):
+class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
 
     @property
@@ -332,10 +372,15 @@ class ChannelPinsUpdateEvent(ChannelEvent, abc.ABC):
             or `builtins.None` if no pins are available.
         """
 
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.TextChannel:
+            ...
+
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(kw_only=True, slots=True)
-class GuildChannelPinsUpdateEvent(ChannelPinsUpdateEvent, GuildChannelEvent):
+class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
@@ -350,10 +395,15 @@ class GuildChannelPinsUpdateEvent(ChannelPinsUpdateEvent, GuildChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.GuildTextChannel:
+            ...
+
 
 # TODO: This isn't documented as having an intent, is this right? The guild version requires GUILDS intent.
 @attr.s(kw_only=True, slots=True)
-class PrivateChannelPinsUpdateEvent(ChannelPinsUpdateEvent, PrivateChannelEvent):
+class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
     shard: gateway_shard.IGatewayShard = attr.ib()
@@ -364,6 +414,11 @@ class PrivateChannelPinsUpdateEvent(ChannelPinsUpdateEvent, PrivateChannelEvent)
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
+
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.PrivateTextChannel:
+            ...
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
@@ -381,6 +436,21 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
         builtins.str
             The invite code.
         """
+
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.GuildTextChannel:
+            ...
+
+    async def fetch_invite(self) -> invites.Invite:
+        """Perform an API call to retrieve an up-to-date image of this invite.
+
+        Returns
+        -------
+        hikari.models.invites.Invite
+            The invite.
+        """
+        return await self.app.rest.fetch_invite(self.code)
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
@@ -434,6 +504,11 @@ class InviteDeleteEvent(InviteEvent):
     code: str = attr.ib()
     # <<inherited docstring from InviteEvent>>.
 
+    if typing.TYPE_CHECKING:
+        # Invite will never be found.
+        async def fetch_invite(self) -> typing.NoReturn:
+            ...
+
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
 @attr.s(kw_only=True, slots=True)
@@ -454,3 +529,28 @@ class WebhookUpdateEvent(GuildChannelEvent):
 
     guild_id: snowflake.Snowflake = attr.ib()
     # <<inherited docstring from GuildChannelEvent>>.
+
+    async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.Webhook]:
+        """Perform an API call to fetch the webhooks for this channel.
+
+        Returns
+        -------
+        typing.Sequence[hikari.models.webhooks.Webhook]
+            The webhooks in this channel.
+        """
+        return await self.app.rest.fetch_channel_webhooks(self.channel_id)
+
+    async def fetch_guild_webhooks(self) -> typing.Sequence[webhooks.Webhook]:
+        """Perform an API call to fetch the webhooks for this guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.models.webhooks.Webhook]
+            The webhooks in this guild.
+        """
+        return await self.app.rest.fetch_guild_webhooks(self.guild_id)
+
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.GuildTextChannel:
+            ...
