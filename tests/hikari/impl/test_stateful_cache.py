@@ -43,8 +43,8 @@ class TestStatefulCacheComponentImpl:
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheComponentImpl:
         return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheComponentImpl)(app=app_impl, intents=None)
 
-    def test__build_dm_channel_with_cached_user(self, cache_impl):
-        dm_data = stateful_cache._DMChannelData(
+    def test__build_private_text_channel_with_cached_user(self, cache_impl):
+        channel_data = stateful_cache._PrivateTextChannelData(
             id=snowflake.Snowflake(5642134),
             name=None,
             last_message_id=snowflake.Snowflake(65345),
@@ -54,17 +54,17 @@ class TestStatefulCacheComponentImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._build_user = mock.MagicMock(return_value=mock_user)
         cache_impl._user_entries = {snowflake.Snowflake(2342344): mock_user_data}
-        dm_channel = cache_impl._build_dm_channel(dm_data)
+        channel = cache_impl._build_private_text_channel(channel_data)
         cache_impl._build_user.assert_called_once_with(mock_user_data)
-        assert dm_channel.app is cache_impl.app
-        assert dm_channel.id == snowflake.Snowflake(5642134)
-        assert dm_channel.name is None
-        assert dm_channel.type is channels.ChannelType.DM
-        assert dm_channel.last_message_id == snowflake.Snowflake(65345)
-        assert dm_channel.recipient is mock_user
+        assert channel.app is cache_impl.app
+        assert channel.id == snowflake.Snowflake(5642134)
+        assert channel.name is None
+        assert channel.type is channels.ChannelType.PRIVATE_TEXT
+        assert channel.last_message_id == snowflake.Snowflake(65345)
+        assert channel.recipient is mock_user
 
-    def test__build_dm_channel_with_passed_through_user(self, cache_impl):
-        dm_data = stateful_cache._DMChannelData(
+    def test__build_private_text_channel_with_passed_through_user(self, cache_impl):
+        channel_data = stateful_cache._PrivateTextChannelData(
             id=snowflake.Snowflake(5642134),
             name=None,
             last_message_id=snowflake.Snowflake(65345),
@@ -74,20 +74,22 @@ class TestStatefulCacheComponentImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._build_user = mock.MagicMock(return_value=mock_user)
         cache_impl._user_entries = {}
-        dm_channel = cache_impl._build_dm_channel(dm_data, cached_users={snowflake.Snowflake(2342344): mock_user_data})
+        channel_channel = cache_impl._build_private_text_channel(
+            channel_data, cached_users={snowflake.Snowflake(2342344): mock_user_data}
+        )
         cache_impl._build_user.assert_called_once_with(mock_user_data)
-        assert dm_channel.recipient is mock_user
+        assert channel_channel.recipient is mock_user
 
-    def test_clear_dm_channels(self, cache_impl):
-        mock_dm_data_1 = mock.MagicMock(stateful_cache._DMChannelData)
-        mock_dm_data_2 = mock.MagicMock(stateful_cache._DMChannelData)
+    def test_clear_private_text_channels(self, cache_impl):
+        mock_channel_data_1 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
+        mock_channel_data_2 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
         mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
         mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
-        mock_dm_1 = mock.MagicMock(users.User)
-        mock_dm_2 = mock.MagicMock(users.User)
-        cache_impl._dm_channel_entries = {
-            snowflake.Snowflake(978655): mock_dm_data_1,
-            snowflake.Snowflake(2342344): mock_dm_data_2,
+        mock_channel_1 = mock.MagicMock(channels.PrivateTextChannel)
+        mock_channel_2 = mock.MagicMock(channels.PrivateTextChannel)
+        cache_impl._private_text_channel_entries = {
+            snowflake.Snowflake(978655): mock_channel_data_1,
+            snowflake.Snowflake(2342344): mock_channel_data_2,
         }
         cache_impl._user_entries = {
             snowflake.Snowflake(2342344): mock_user_data_1,
@@ -96,68 +98,70 @@ class TestStatefulCacheComponentImpl:
         }
         cache_impl._increment_user_ref_count = mock.MagicMock()
         cache_impl._garbage_collect_user = mock.MagicMock()
-        cache_impl._build_dm_channel = mock.MagicMock(side_effect=[mock_dm_1, mock_dm_2])
-        assert cache_impl.clear_dm_channels() == {
-            snowflake.Snowflake(978655): mock_dm_1,
-            snowflake.Snowflake(2342344): mock_dm_2,
+        cache_impl._build_private_text_channel = mock.MagicMock(side_effect=[mock_channel_1, mock_channel_2])
+        assert cache_impl.clear_private_text_channels() == {
+            snowflake.Snowflake(978655): mock_channel_1,
+            snowflake.Snowflake(2342344): mock_channel_2,
         }
         cache_impl._garbage_collect_user.assert_has_calls(
             [mock.call(snowflake.Snowflake(978655), decrement=1), mock.call(snowflake.Snowflake(2342344), decrement=1)]
         )
-        assert cache_impl._dm_channel_entries == {}
-        cache_impl._build_dm_channel.assert_has_calls(
+        assert cache_impl._private_text_channel_entries == {}
+        cache_impl._build_private_text_channel.assert_has_calls(
             [
                 mock.call(
-                    mock_dm_data_1,
+                    mock_channel_data_1,
                     {snowflake.Snowflake(2342344): mock_user_data_1, snowflake.Snowflake(978655): mock_user_data_2,},
                 ),
                 mock.call(
-                    mock_dm_data_2,
+                    mock_channel_data_2,
                     {snowflake.Snowflake(2342344): mock_user_data_1, snowflake.Snowflake(978655): mock_user_data_2,},
                 ),
             ]
         )
 
-    def test_clear_dm_channels_when_no_dm_channels_cached(self, cache_impl):
-        assert cache_impl.clear_dm_channels() == {}
+    def test_clear_private_text_channels_when_no_channels_cached(self, cache_impl):
+        assert cache_impl.clear_private_text_channels() == {}
 
-    def test_delete_dm_channel_for_known_dm_channel(self, cache_impl):
-        mock_dm_data = mock.MagicMock(stateful_cache._DMChannelData, recipient_id=snowflake.Snowflake(7345234))
-        mock_dm = mock.MagicMock(channels.DMChannel)
-        mock_other_dm_data = mock.MagicMock(stateful_cache._DMChannelData)
-        cache_impl._dm_channel_entries = {
-            snowflake.Snowflake(7345234): mock_dm_data,
-            snowflake.Snowflake(531234): mock_other_dm_data,
+    def test_delete_private_text_channel_for_known_channel(self, cache_impl):
+        mock_channel_data = mock.MagicMock(
+            stateful_cache._PrivateTextChannelData, recipient_id=snowflake.Snowflake(7345234)
+        )
+        mock_channel = mock.MagicMock(channels.PrivateTextChannel)
+        mock_other_channel_data = mock.MagicMock(stateful_cache._PrivateTextChannelData)
+        cache_impl._private_text_channel_entries = {
+            snowflake.Snowflake(7345234): mock_channel_data,
+            snowflake.Snowflake(531234): mock_other_channel_data,
         }
         cache_impl._garbage_collect_user = mock.MagicMock()
-        cache_impl._build_dm_channel = mock.MagicMock(return_value=mock_dm)
-        assert cache_impl.delete_dm_channel(snowflake.Snowflake(7345234)) is mock_dm
-        cache_impl._build_dm_channel.assert_called_once_with(mock_dm_data)
+        cache_impl._build_private_text_channel = mock.MagicMock(return_value=mock_channel)
+        assert cache_impl.delete_private_text_channel(snowflake.Snowflake(7345234)) is mock_channel
+        cache_impl._build_private_text_channel.assert_called_once_with(mock_channel_data)
         cache_impl._garbage_collect_user.assert_called_once_with(snowflake.Snowflake(7345234), decrement=1)
-        assert cache_impl._dm_channel_entries == {snowflake.Snowflake(531234): mock_other_dm_data}
+        assert cache_impl._private_text_channel_entries == {snowflake.Snowflake(531234): mock_other_channel_data}
 
-    def test_delete_dm_channel_for_unknown_dm_channel(self, cache_impl):
-        assert cache_impl.delete_dm_channel(snowflake.Snowflake(564234123)) is None
+    def test_delete_private_text_channel_for_unknown_channel_channel(self, cache_impl):
+        assert cache_impl.delete_private_text_channel(snowflake.Snowflake(564234123)) is None
 
-    def test_get_dm_channel_for_known_dm_channel(self, cache_impl):
-        mock_dm_data = mock.MagicMock(stateful_cache._DMChannelData)
-        mock_dm = mock.MagicMock(channels.DMChannel)
-        cache_impl._dm_channel_entries = {
-            snowflake.Snowflake(65234123): mock_dm_data,
-            snowflake.Snowflake(5123): mock.MagicMock(stateful_cache._DMChannelData),
+    def test_get_private_text_channel_for_known_channel(self, cache_impl):
+        mock_channel_data = mock.MagicMock(stateful_cache._PrivateTextChannelData)
+        mock_channel = mock.MagicMock(channels.PrivateTextChannel)
+        cache_impl._private_text_channel_entries = {
+            snowflake.Snowflake(65234123): mock_channel_data,
+            snowflake.Snowflake(5123): mock.MagicMock(stateful_cache._PrivateTextChannelData),
         }
-        cache_impl._build_dm_channel = mock.MagicMock(return_value=mock_dm)
-        assert cache_impl.get_dm_channel(snowflake.Snowflake(65234123)) is mock_dm
-        cache_impl._build_dm_channel.assert_called_once_with(mock_dm_data)
+        cache_impl._build_private_text_channel = mock.MagicMock(return_value=mock_channel)
+        assert cache_impl.get_private_text_channel(snowflake.Snowflake(65234123)) is mock_channel
+        cache_impl._build_private_text_channel.assert_called_once_with(mock_channel_data)
 
-    def test_get_dm_channel_for_unknown_dm_channel(self, cache_impl):
-        assert cache_impl.get_dm_channel(snowflake.Snowflake(561243)) is None
+    def test_get_private_text_channel_for_unknown_channel(self, cache_impl):
+        assert cache_impl.get_private_text_channel(snowflake.Snowflake(561243)) is None
 
-    def test_get_dm_channel_view(self, cache_impl):
-        mock_dm_data_1 = mock.MagicMock(stateful_cache._DMChannelData,)
-        mock_dm_data_2 = mock.MagicMock(stateful_cache._DMChannelData)
-        mock_dm_1 = mock.MagicMock(channels.DMChannel)
-        mock_dm_2 = mock.MagicMock(channels.DMChannel)
+    def test_get_private_text_channel_view(self, cache_impl):
+        mock_channel_data_1 = mock.MagicMock(stateful_cache._PrivateTextChannelData,)
+        mock_channel_data_2 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
+        mock_channel_1 = mock.MagicMock(channels.PrivateTextChannel)
+        mock_channel_2 = mock.MagicMock(channels.PrivateTextChannel)
         mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
         mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
         cache_impl._user_entries = {
@@ -165,47 +169,47 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(6764556): mock.MagicMock(stateful_cache._UserData),
             snowflake.Snowflake(65656): mock_user_data_2,
         }
-        cache_impl._build_dm_channel = mock.MagicMock(side_effect=[mock_dm_1, mock_dm_2])
-        cache_impl._dm_channel_entries = {
-            snowflake.Snowflake(54213): mock_dm_data_1,
-            snowflake.Snowflake(65656): mock_dm_data_2,
+        cache_impl._build_private_text_channel = mock.MagicMock(side_effect=[mock_channel_1, mock_channel_2])
+        cache_impl._private_text_channel_entries = {
+            snowflake.Snowflake(54213): mock_channel_data_1,
+            snowflake.Snowflake(65656): mock_channel_data_2,
         }
-        assert cache_impl.get_dm_channels_view() == {
-            snowflake.Snowflake(54213): mock_dm_1,
-            snowflake.Snowflake(65656): mock_dm_2,
+        assert cache_impl.get_private_text_channels_view() == {
+            snowflake.Snowflake(54213): mock_channel_1,
+            snowflake.Snowflake(65656): mock_channel_2,
         }
-        cache_impl._build_dm_channel.assert_has_calls(
+        cache_impl._build_private_text_channel.assert_has_calls(
             [
                 mock.call(
-                    mock_dm_data_1,
+                    mock_channel_data_1,
                     {snowflake.Snowflake(54213): mock_user_data_1, snowflake.Snowflake(65656): mock_user_data_2,},
                 ),
                 mock.call(
-                    mock_dm_data_2,
+                    mock_channel_data_2,
                     {snowflake.Snowflake(54213): mock_user_data_1, snowflake.Snowflake(65656): mock_user_data_2,},
                 ),
             ]
         )
 
-    def test_get_dm_channel_view_when_no_dm_channels_cached(self, cache_impl):
-        assert cache_impl.get_dm_channels_view() == {}
+    def test_get_private_text_channel_view_when_no_channels_cached(self, cache_impl):
+        assert cache_impl.get_private_text_channels_view() == {}
 
-    def test_set_dm_channel(self, cache_impl):
+    def test_set_private_text_channel(self, cache_impl):
         mock_recipient = mock.MagicMock(users.User, id=snowflake.Snowflake(7652341234))
-        dm_channel = channels.DMChannel()
-        dm_channel.id = snowflake.Snowflake(23123)
-        dm_channel.app = cache_impl.app
-        dm_channel.name = None
-        dm_channel.type = channels.ChannelType.DM
-        dm_channel.recipient = mock_recipient
-        dm_channel.last_message_id = snowflake.Snowflake(5432134234)
+        channel = channels.PrivateTextChannel()
+        channel.id = snowflake.Snowflake(23123)
+        channel.app = cache_impl.app
+        channel.name = None
+        channel.type = channels.ChannelType.PRIVATE_TEXT
+        channel.recipient = mock_recipient
+        channel.last_message_id = snowflake.Snowflake(5432134234)
         cache_impl.set_user = mock.MagicMock()
         cache_impl._increment_user_ref_count = mock.MagicMock()
-        cache_impl.set_dm_channel(dm_channel)
+        cache_impl.set_private_text_channel(channel)
         cache_impl.set_user.assert_called_once_with(mock_recipient)
         cache_impl._increment_user_ref_count.assert_called_once_with(7652341234)
-        assert 7652341234 in cache_impl._dm_channel_entries
-        channel_data = cache_impl._dm_channel_entries[snowflake.Snowflake(7652341234)]
+        assert 7652341234 in cache_impl._private_text_channel_entries
+        channel_data = cache_impl._private_text_channel_entries[snowflake.Snowflake(7652341234)]
         assert channel_data.id == 23123
         assert not hasattr(channel_data, "app")
         assert channel_data.name is None
@@ -214,29 +218,34 @@ class TestStatefulCacheComponentImpl:
         assert channel_data.recipient_id == 7652341234
         assert channel_data.last_message_id == 5432134234
 
-    def test_set_dm_channel_doesnt_increment_user_ref_for_pre_cached_dm_channel(self, cache_impl):
+    def test_set_private_text_channel_doesnt_increment_user_ref_for_pre_cached_channel(self, cache_impl):
         mock_recipient = mock.MagicMock(users.User, id=snowflake.Snowflake(7652341234))
-        dm_channel = mock.MagicMock(channels.DMChannel, recipient=mock_recipient)
+        channel = mock.MagicMock(channels.PrivateTextChannel, recipient=mock_recipient)
         cache_impl.set_user = mock.MagicMock()
         cache_impl._increment_user_ref_count = mock.MagicMock()
-        cache_impl._dm_channel_entries = {
-            snowflake.Snowflake(7652341234): mock.MagicMock(stateful_cache._DMChannelData)
+        cache_impl._private_text_channel_entries = {
+            snowflake.Snowflake(7652341234): mock.MagicMock(stateful_cache._PrivateTextChannelData)
         }
-        cache_impl.set_dm_channel(dm_channel)
+        cache_impl.set_private_text_channel(channel)
         cache_impl.set_user.assert_called_once_with(mock_recipient)
         cache_impl._increment_user_ref_count.assert_not_called()
 
-    def test_update_dm_channel(self, cache_impl):
-        mock_old_cached_dm = mock.MagicMock(channels.DMChannel)
-        mock_new_cached_dm = mock.MagicMock(channels.DMChannel)
-        mock_dm_channel = mock.MagicMock(
-            channels.DMChannel, recipient=mock.MagicMock(users.User, id=snowflake.Snowflake(53123123))
+    def test_update_private_text_channel(self, cache_impl):
+        mock_old_cached_channel = mock.MagicMock(channels.PrivateTextChannel)
+        mock_new_cached_channel = mock.MagicMock(channels.PrivateTextChannel)
+        mock_channel = mock.MagicMock(
+            channels.PrivateTextChannel, recipient=mock.MagicMock(users.User, id=snowflake.Snowflake(53123123))
         )
-        cache_impl.get_dm_channel = mock.MagicMock(side_effect=[mock_old_cached_dm, mock_new_cached_dm])
-        cache_impl.set_dm_channel = mock.MagicMock()
-        assert cache_impl.update_dm_channel(mock_dm_channel) == (mock_old_cached_dm, mock_new_cached_dm)
-        cache_impl.set_dm_channel.assert_called_once_with(mock_dm_channel)
-        cache_impl.get_dm_channel.assert_has_calls([mock.call(53123123), mock.call(53123123)])
+        cache_impl.get_private_text_channel = mock.MagicMock(
+            side_effect=[mock_old_cached_channel, mock_new_cached_channel]
+        )
+        cache_impl.set_private_text_channel = mock.MagicMock()
+        assert cache_impl.update_private_text_channel(mock_channel) == (
+            mock_old_cached_channel,
+            mock_new_cached_channel,
+        )
+        cache_impl.set_private_text_channel.assert_called_once_with(mock_channel)
+        cache_impl.get_private_text_channel.assert_has_calls([mock.call(53123123), mock.call(53123123)])
 
     def test__build_emoji(self, cache_impl):
         emoji_data = stateful_cache._KnownCustomEmojiData(

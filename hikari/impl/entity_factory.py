@@ -1093,33 +1093,53 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
         guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
 
-        channels = {}
-        members = {}
-        presences = {}
-        voice_states = {}
-
+        members: typing.Union[typing.MutableMapping[snowflake.Snowflake, guild_models.Member], None]
         if "members" in payload:
+            members = {}
+
             for member_payload in payload["members"]:
                 member = self.deserialize_member(member_payload, guild_id=guild.id)
                 members[member.user.id] = member
 
+        else:
+            members = None
+
+        channels: typing.Union[typing.MutableMapping[snowflake.Snowflake, channel_models.GuildChannel], None]
         if "channels" in payload:
+            channels = {}
+
             for channel_payload in payload["channels"]:
                 channel = typing.cast(
                     "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild.id)
                 )
                 channels[channel.id] = channel
 
+        else:
+            channels = None
+
+        presences: typing.Union[typing.MutableMapping[snowflake.Snowflake, presence_models.MemberPresence], None]
         if "presences" in payload:
+            presences = {}
+
             for presence_payload in payload["presences"]:
                 presence = self.deserialize_member_presence(presence_payload)
                 presences[presence.user_id] = presence
 
+        else:
+            presences = None
+
+        voice_states: typing.Union[typing.MutableMapping[snowflake.Snowflake, voice_models.VoiceState], None]
         if "voice_states" in payload:
+            voice_states = {}
+            assert members is not None  # noqa: S101 - Use of assert detected.
+
             for voice_state_payload in payload["voice_states"]:
                 member = members[snowflake.Snowflake(voice_state_payload["user_id"])]
                 voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
                 voice_states[voice_state.user_id] = voice_state
+
+        else:
+            voice_states = None
 
         roles = {
             snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]

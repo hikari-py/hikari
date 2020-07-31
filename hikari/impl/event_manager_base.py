@@ -29,15 +29,15 @@ import warnings
 from hikari import errors
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
-from hikari.events import base as base_events
-from hikari.events import other as other_events
+from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.models import intents as intents_
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari.api import bot
     from hikari.api import shard as gateway_shard
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
@@ -71,7 +71,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
         "_waiters",
     )
 
-    def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intent]) -> None:
+    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intent]) -> None:
         self._app = app
         self._intents = intents
         self._listeners: ListenerMapT = {}
@@ -79,7 +79,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
     @property
     @typing.final
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> bot.IBotApp:
         return self._app
 
     async def consume_raw_event(
@@ -303,8 +303,16 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
             # Skip the first frame in logs, we don't care for it.
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
-            if base_events.is_no_catch_event(event):
+            if base_events.is_no_recursive_throw_event(event):
                 _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
             else:
                 _LOGGER.error("an exception occurred handling an event", exc_info=trio)
-                await self.dispatch(other_events.ExceptionEvent(exception=ex, event=event, callback=callback))
+                await self.dispatch(
+                    base_events.ExceptionEvent(
+                        app=self.app,
+                        shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
+                        exception=ex,
+                        failed_event=event,
+                        failed_callback=callback,
+                    )
+                )

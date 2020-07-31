@@ -269,7 +269,7 @@ class _BaseData(abc.ABC, typing.Generic[_ValueT]):
 
 
 @attr.s(auto_attribs=True, kw_only=True, slots=True, repr=False, hash=False)
-class _DMChannelData(_BaseData[channels.DMChannel]):
+class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
     id: snowflake.Snowflake
     name: typing.Optional[str]
     last_message_id: typing.Optional[snowflake.Snowflake]
@@ -279,15 +279,15 @@ class _DMChannelData(_BaseData[channels.DMChannel]):
     def get_fields(cls) -> typing.Collection[str]:
         return "id", "name", "last_message_id"
 
-    def build_entity(self, target: channels.DMChannel) -> channels.DMChannel:
+    def build_entity(self, target: channels.PrivateTextChannel) -> channels.PrivateTextChannel:
         super().build_entity(target)
-        target.type = channels.ChannelType.DM
+        target.type = channels.ChannelType.PRIVATE_TEXT
         return target
 
     @classmethod
     def build_from_entity(
-        cls: typing.Type[_DMChannelData], entity: channels.DMChannel, **kwargs: typing.Any
-    ) -> _DMChannelData:
+        cls: typing.Type[_PrivateTextChannelData], entity: channels.PrivateTextChannel, **kwargs: typing.Any
+    ) -> _PrivateTextChannelData:
         return super().build_from_entity(entity, **kwargs, recipient_id=entity.recipient.id)
 
 
@@ -351,6 +351,8 @@ class _MemberData(_BaseData[guilds.Member]):
     premium_since: undefined.UndefinedNoneOr[datetime.datetime]
     is_deaf: undefined.UndefinedOr[bool]
     is_mute: undefined.UndefinedOr[bool]
+    # meta-attribute
+    # can_delete: bool  # TODO: this
 
     @classmethod
     def get_fields(cls) -> typing.Collection[str]:
@@ -435,12 +437,12 @@ class _VoiceStateData(_BaseData[voices.VoiceState]):
         )
 
 
-class _DMTimeBasedMRUDict(typing.MutableMapping[snowflake.Snowflake, _DMChannelData]):
+class _PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflake.Snowflake, _PrivateTextChannelData]):
     __slots__ = ("_data", "_expiry")
 
     def __init__(
         self,
-        source: typing.Union[typing.Mapping[snowflake.Snowflake, _DMChannelData], None] = None,
+        source: typing.Union[typing.Mapping[snowflake.Snowflake, _PrivateTextChannelData], None] = None,
         /,
         *,
         expiry: datetime.timedelta,
@@ -448,13 +450,13 @@ class _DMTimeBasedMRUDict(typing.MutableMapping[snowflake.Snowflake, _DMChannelD
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 
-        self._data: typing.Dict[snowflake.Snowflake, _DMChannelData] = dict(source or ())
+        self._data: typing.Dict[snowflake.Snowflake, _PrivateTextChannelData] = dict(source or ())
         self._expiry = expiry
 
     def _garbage_collect(self) -> None:
         current_time = date.utc_datetime()
-        for channel_id, dm_channel in tuple(self._data.items()):
-            if dm_channel.last_message_id and current_time - dm_channel.last_message_id.created_at < self._expiry:
+        for channel_id, channel in tuple(self._data.items()):
+            if channel.last_message_id and current_time - channel.last_message_id.created_at < self._expiry:
                 break
 
             del self._data[channel_id]
@@ -463,7 +465,7 @@ class _DMTimeBasedMRUDict(typing.MutableMapping[snowflake.Snowflake, _DMChannelD
         del self._data[sf]
         self._garbage_collect()
 
-    def __getitem__(self, sf: snowflake.Snowflake) -> _DMChannelData:
+    def __getitem__(self, sf: snowflake.Snowflake) -> _PrivateTextChannelData:
         return self._data[sf]
 
     def __iter__(self) -> typing.Iterator[snowflake.Snowflake]:
@@ -472,7 +474,7 @@ class _DMTimeBasedMRUDict(typing.MutableMapping[snowflake.Snowflake, _DMChannelD
     def __len__(self) -> int:
         return len(self._data)
 
-    def __setitem__(self, sf: snowflake.Snowflake, value: _DMChannelData) -> None:
+    def __setitem__(self, sf: snowflake.Snowflake, value: _PrivateTextChannelData) -> None:
         self._garbage_collect()
         #  Seeing as we rely on insertion order in _garbage_collect, we have to make sure that each item is added to
         #  the end of the dict.
@@ -496,7 +498,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
     __slots__: typing.Sequence[str] = (
         "_app",
-        "_dm_channel_entries",
+        "_private_text_channel_entries",
         "_emoji_entries",
         "_guild_channel_entries",
         "_guild_entries",
@@ -509,9 +511,9 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
     def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intent]) -> None:
         self._me: typing.Optional[users.OwnUser] = None
-        self._dm_channel_entries: typing.MutableMapping[snowflake.Snowflake, _DMChannelData] = _DMTimeBasedMRUDict(
-            expiry=datetime.timedelta(minutes=5)
-        )
+        self._private_text_channel_entries: typing.MutableMapping[
+            snowflake.Snowflake, _PrivateTextChannelData
+        ] = _PrivateTextChannelMRUMutableMapping(expiry=datetime.timedelta(minutes=5))
         self._emoji_entries: typing.MutableMapping[snowflake.Snowflake, _KnownCustomEmojiData] = {}
         self._guild_channel_entries: typing.MutableMapping[snowflake.Snowflake, channels.GuildChannel] = {}
         self._guild_entries: typing.MutableMapping[snowflake.Snowflake, _GuildRecord] = {}
@@ -534,12 +536,12 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def _is_intent_enabled(self, intents: intents_.Intent, /) -> bool:
         return self._intents is None or (self._intents & intents) == intents
 
-    def _build_dm_channel(
+    def _build_private_text_channel(
         self,
-        channel_data: _DMChannelData,
+        channel_data: _PrivateTextChannelData,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _UserData]] = None,
-    ) -> channels.DMChannel:
-        channel = channel_data.build_entity(channels.DMChannel())
+    ) -> channels.PrivateTextChannel:
+        channel = channel_data.build_entity(channels.PrivateTextChannel())
         channel.app = self._app
 
         if cached_users:
@@ -549,60 +551,63 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         return channel
 
-    def clear_dm_channels(self) -> cache.ICacheView[snowflake.Snowflake, channels.DMChannel]:
-        if not self._dm_channel_entries:
+    def clear_private_text_channels(self) -> cache.ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        if not self._private_text_channel_entries:
             return _EmptyCacheView()
 
-        cached_dm_channels = self._dm_channel_entries
-        self._dm_channel_entries = {}
+        cached_channels = self._private_text_channel_entries
+        self._private_text_channel_entries = {}
         cached_users = {}
 
-        for user_id in cached_dm_channels.keys():
+        for user_id in cached_channels.keys():
             cached_users[user_id] = self._user_entries[user_id]
             self._garbage_collect_user(user_id, decrement=1)
 
         return _StatefulCacheMappingView(
-            cached_dm_channels, builder=lambda channel: self._build_dm_channel(channel, cached_users)
+            cached_channels, builder=lambda channel: self._build_private_text_channel(channel, cached_users)
         )
 
-    def delete_dm_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        channel_data = self._dm_channel_entries.pop(user_id, None)
+    def delete_private_text_channel(
+        self, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[channels.PrivateTextChannel]:
+        channel_data = self._private_text_channel_entries.pop(user_id, None)
         if channel_data is None:
             return None
 
-        channel = self._build_dm_channel(channel_data)
+        channel = self._build_private_text_channel(channel_data)
         self._garbage_collect_user(user_id, decrement=1)
         return channel
 
-    def get_dm_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        if user_id in self._dm_channel_entries:
-            return self._build_dm_channel(self._dm_channel_entries[user_id])
+    def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
+        if user_id in self._private_text_channel_entries:
+            return self._build_private_text_channel(self._private_text_channel_entries[user_id])
 
         return None
 
-    def get_dm_channels_view(self) -> cache.ICacheView[snowflake.Snowflake, channels.DMChannel]:
-        if not self._dm_channel_entries:
+    def get_private_text_channels_view(self) -> cache.ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        if not self._private_text_channel_entries:
             return _EmptyCacheView()
 
-        cached_users = {sf: user for sf, user in self._user_entries.items() if sf in self._dm_channel_entries}
+        cached_users = {sf: user for sf, user in self._user_entries.items() if sf in self._private_text_channel_entries}
         return _StatefulCacheMappingView(
-            dict(self._dm_channel_entries), builder=lambda channel: self._build_dm_channel(channel, cached_users)
+            dict(self._private_text_channel_entries),
+            builder=lambda channel: self._build_private_text_channel(channel, cached_users),
         )
 
-    def set_dm_channel(self, channel: channels.DMChannel, /) -> None:
+    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
         self.set_user(channel.recipient)
 
-        if channel.recipient.id not in self._dm_channel_entries:
+        if channel.recipient.id not in self._private_text_channel_entries:
             self._increment_user_ref_count(channel.recipient.id)
 
-        self._dm_channel_entries[channel.recipient.id] = _DMChannelData.build_from_entity(channel)
+        self._private_text_channel_entries[channel.recipient.id] = _PrivateTextChannelData.build_from_entity(channel)
 
-    def update_dm_channel(
-        self, channel: channels.DMChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
-        cached_dm_channel = self.get_dm_channel(channel.recipient.id)
-        self.set_dm_channel(channel)
-        return cached_dm_channel, self.get_dm_channel(channel.recipient.id)
+    def update_private_text_channel(
+        self, channel: channels.PrivateTextChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
+        cached_channel = self.get_private_text_channel(channel.recipient.id)
+        self.set_private_text_channel(channel)
+        return cached_channel, self.get_private_text_channel(channel.recipient.id)
 
     def _build_emoji(
         self,
@@ -1423,7 +1428,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
             voice_state.member = self._build_member(cached_members[voice_state.user_id], cached_users=cached_users)
         else:
             guild_record = self._guild_entries[voice_state.guild_id]
-            assert guild_record.members is not None  # noqa S101
+            assert guild_record.members is not None  # noqa: S101 - Use of assert detected.
             member_data = guild_record.members[voice_state.user_id]
             voice_state.member = self._build_member(member_data, cached_users=cached_users)
 
@@ -1449,7 +1454,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         if guild_record is None or guild_record.voice_states is None:
             return _EmptyCacheView()
 
-        assert guild_record.members is not None  # noqa S101
+        assert guild_record.members is not None  # noqa: S101 - Use of assert detected.
         cached_members = {}
         cached_users = {}
         cached_voice_states = {}
@@ -1481,7 +1486,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         if guild_record is None or guild_record.voice_states is None:
             return _EmptyCacheView()
 
-        assert guild_record.members is not None  # noqa S101
+        assert guild_record.members is not None  # noqa: S101 - Use of assert detected.
         cached_voice_states = guild_record.voice_states
         guild_record.voice_states = None
         cached_members = {}

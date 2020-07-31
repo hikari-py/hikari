@@ -77,87 +77,90 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """Get the app this cache is bound by."""
 
     @abc.abstractmethod
-    def clear_dm_channels(self) -> ICacheView[snowflake.Snowflake, channels.DMChannel]:
-        """Remove all the DM channel objects from the cache.
+    def clear_private_text_channels(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        """Remove all the private text channel channel objects from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.DMChannel]
-            The cache view of the DM channel objects that were removed from the
-            cache.
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
+            The cache view of the private text channel objects that were removed
+            from the cache.
         """
 
     @abc.abstractmethod
-    def delete_dm_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        """Remove a DM channel object from the cache.
+    def delete_private_text_channel(
+        self, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[channels.PrivateTextChannel]:
+        """Remove a private text channel channel object from the cache.
 
         Parameters
         ----------
         user_id : hikari.utilities.snowflake.Snowflake
-            The ID of the user that the DM channel to remove from the cache is
-            with.
+            The ID of the user that the private text channel channel to remove
+            from the cache it with.
 
         Returns
         -------
-        hikari.models.channels.DMChannel or builtins.None
-            The object of the DM channel that was removed from the cache if
-            found, else `builtins.None`
+        hikari.models.channels.PrivateTextChannel or builtins.None
+            The object of the private text channel that was removed from the
+            cache if found, else `builtins.None`
         """
 
     @abc.abstractmethod
-    def get_dm_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        """Get a DM channel object from the cache.
+    def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
+        """Get a private text channel object from the cache.
 
         Parameters
         ----------
         user_id : hikari.utilities.snowflake.Snowflake
-            The ID of the user that the DM channel to get from the cache is with.
+            The ID of the user that the private text channel to get from the
+            cache is with.
 
         Returns
         -------
-        hikari.models.channels.DMChannel or builtins.None
-            The object of the DM channel that was found in the cache or
-            `builtins.None`.
+        hikari.models.channels.PrivateTextChannel or builtins.None
+            The object of the private text channel that was found in the cache
+            or `builtins.None`.
         """
 
     @abc.abstractmethod
-    def get_dm_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.DMChannel]:
-        """Get a view of the DM channel objects in the cache.
+    def get_private_text_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        """Get a view of the private text channel objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.DMChannel]
-            The view of the DM channel objects in the cache.
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
+            The view of the private text channel objects in the cache.
         """
 
     @abc.abstractmethod
-    def set_dm_channel(self, channel: channels.DMChannel, /) -> None:
-        """Add a DM channel object to the cache.
+    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
+        """Add a private text channel object to the cache.
 
         Parameters
         ----------
-        channel : hikari.models.channels.DMChannel
-            The object of the DM channel to add to the cache.
+        channel : hikari.models.channels.PrivateTextChannel
+            The object of the private text channel to add to the cache.
         """
 
     @abc.abstractmethod
-    def update_dm_channel(
-        self, channel: channels.DMChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
-        """Update a DM Channel object in the cache.
+    def update_private_text_channel(
+        self, channel: channels.PrivateTextChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
+        """Update a private text Channel object in the cache.
 
         Parameters
         ----------
-        channel : hikari.models.channels.DMChannel
-            The object of the channel to update in the cache.
+        channel : hikari.models.channels.PrivateTextChannel
+            The object of the private text channel to update in the cache.
 
         Returns
         -------
-        typing.Tuple[hikari.models.channels.DMChannel or builtins.None, hikari.models.channels.DMChannel or builtins.None]
-            A tuple of the old cached DM channel if found (else `builtins.None`)
-            and the new cached DM channel if it could be cached (else
-            `builtins.None`).
-        """
+        typing.Tuple[hikari.models.channels.PrivateTextChannel or builtins.None, hikari.models.channels.PrivateTextChannel or builtins.None]
+            A tuple of the old cached private text channel if found
+            (else `builtins.None`) and the new cached private text channel if it
+            could be cached (else `builtins.None`).
+        """  # noqa E501: - Line too long
 
     @abc.abstractmethod
     def clear_emojis(self) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
@@ -646,8 +649,8 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         !!! note
             This will skip users that are being referenced by other entries
-            within the cache; member entries and DM channel entries will keep a
-            user alive within the cache.
+            within the cache; member entries and private text channel entries
+            will keep a user alive within the cache.
 
         Returns
         -------
@@ -666,8 +669,8 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         !!! note
             You cannot delete a user object while it's being referenced by other
-            entries within the cache; member entries and DM channel entries
-            will keep a user alive within the cache.
+            entries within the cache; member entries and private text channel
+            entries will keep a user alive within the cache.
 
         Returns
         -------

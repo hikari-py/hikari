@@ -39,7 +39,7 @@ __all__: typing.Final[typing.List[str]] = [
     "MissingIntentError",
     "UnavailableGuildError",
     "BulkDeleteError",
-    "VoiceError"
+    "VoiceError",
 ]
 
 import http

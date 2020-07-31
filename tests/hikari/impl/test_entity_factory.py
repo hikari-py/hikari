@@ -1916,10 +1916,10 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None
-        assert guild_definition.channels == {}
-        assert guild_definition.members == {}
-        assert guild_definition.presences == {}
-        assert guild_definition.voice_states == {}
+        assert guild_definition.channels is None
+        assert guild_definition.members is None
+        assert guild_definition.presences is None
+        assert guild_definition.voice_states is None
 
     def test_deserialize_gateway_guild_with_null_fields(self, entity_factory_impl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
