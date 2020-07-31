@@ -30,6 +30,7 @@ __all__: typing.Final[typing.List[str]] = [
     "Forbidden",
     "BadRequest",
     "HTTPError",
+    "HTTPClientClosedError",
     "HTTPErrorResponse",
     "ClientHTTPErrorResponse",
     "ServerHTTPErrorResponse",
@@ -146,22 +147,29 @@ class HTTPError(HikariError):
     ----------
     message : builtins.str
         The error message.
-    url : builtins.str
-        The URL that produced this error.
     """
 
-    __slots__: typing.Sequence[str] = ("message", "url")
+    __slots__: typing.Sequence[str] = ("message",)
 
     message: str
     """The error message."""
 
-    url: str
-    """The URL that produced this error message."""
-
-    def __init__(self, url: str, message: str) -> None:
+    def __init__(self, message: str) -> None:
         super().__init__()
         self.message = message
-        self.url = url
+
+
+class HTTPClientClosedError(HTTPError):
+    """Exception raised if an `aiohttp.ClientSession` was closed.
+
+    This fires when using a closed `aiohttp.ClientSession` to make a
+    request.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    def __init__(self) -> None:
+        super().__init__("The client session has been closed, no HTTP requests can occur.")
 
 
 class HTTPErrorResponse(HTTPError):
@@ -179,7 +187,10 @@ class HTTPErrorResponse(HTTPError):
         The body that was received.
     """
 
-    __slots__: typing.Sequence[str] = ("status", "headers", "raw_body")
+    __slots__: typing.Sequence[str] = ("url", "status", "headers", "raw_body")
+
+    url: str
+    """The URL that produced this error message."""
 
     status: typing.Union[int, http.HTTPStatus]
     """The HTTP status code for the response."""
@@ -198,7 +209,8 @@ class HTTPErrorResponse(HTTPError):
         raw_body: typing.Any,
         reason: typing.Optional[str] = None,
     ) -> None:
-        super().__init__(url, f"{status}: {raw_body}" if reason is None else reason)
+        super().__init__(f"{status}: {raw_body}" if reason is None else reason)
+        self.url = url
         self.status = status
         self.headers = headers
         self.raw_body = raw_body

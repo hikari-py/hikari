@@ -666,7 +666,7 @@ class BotAppImpl(bot.IBotApp):
             await self.start()
             await self.join()
         finally:
-            await self.close()
+            await asyncio.shield(self.close())
 
     @staticmethod
     def _map_signal_handlers(
