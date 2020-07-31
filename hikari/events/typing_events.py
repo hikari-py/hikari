@@ -37,7 +37,9 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.api import shard as gateway_shard
+    from hikari.models import channels
     from hikari.models import guilds
+    from hikari.models import users
     from hikari.utilities import snowflake
 
 
@@ -78,6 +80,26 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
             UTC timestamp of when the user started typing.
         """
 
+    async def fetch_channel(self) -> channels.TextChannel:
+        """Perform an API call to fetch an up-to-date image of this channel.
+
+        Returns
+        -------
+        hikari.models.channels.TextChannel
+            The channel.
+        """
+        return typing.cast("channels.TextChannel", await self.app.rest.fetch_channel(self.channel_id))
+
+    async def fetch_user(self) -> users.User:
+        """Perform an API call to fetch an up-to-date image of this user.
+
+        Returns
+        -------
+        hikari.models.users.user
+            The user.
+        """
+        return await self.app.rest.fetch_user(self.user_id)
+
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING)
 @attr.s(kw_only=True, slots=True)
@@ -114,6 +136,41 @@ class GuildTypingEvent(TypingEvent):
         Member of the user who triggered this typing event.
     """
 
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.GuildTextChannel:
+            ...
+
+    async def fetch_member(self) -> guilds.Member:
+        """Perform an API call to fetch an up-to-date image of this guild.
+
+        Returns
+        -------
+        hikari.models.guilds.Member
+            The member.
+        """
+        return await self.app.rest.fetch_member(self.guild_id, self.user_id)
+
+    async def fetch_guild(self) -> guilds.Guild:
+        """Perform an API call to fetch an up-to-date image of this guild.
+
+        Returns
+        -------
+        hikari.models.guilds.Guild
+            The guild.
+        """
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    async def fetch_guild_preview(self) -> guilds.GuildPreview:
+        """Perform an API call to fetch an up-to-date preview of this guild.
+
+        Returns
+        -------
+        hikari.models.guilds.GuildPreview
+            The guild.
+        """
+        return await self.app.rest.fetch_guild_preview(self.guild_id)
+
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True)
@@ -131,3 +188,8 @@ class PrivateTypingEvent(TypingEvent):
 
     timestamp: datetime.datetime = attr.ib(repr=False)
     # <<inherited docstring from TypingEvent>>.
+
+    if typing.TYPE_CHECKING:
+
+        async def fetch_channel(self) -> channels.PrivateTextChannel:
+            ...

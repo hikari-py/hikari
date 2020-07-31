@@ -39,9 +39,10 @@ __all__: typing.Final[typing.List[str]] = [
     "VoiceError",
 ]
 
-import attr
 import http
 import typing
+
+import attr
 
 from hikari.models import messages
 from hikari.utilities import snowflake
