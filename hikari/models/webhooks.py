@@ -61,7 +61,7 @@ class WebhookType(enum.IntEnum):
 class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
 
-    This is an _endpoint that can have messages sent to it using standard
+    This is an endpoint that can have messages sent to it using standard
     HTTP requests, which enables external services that are not bots to
     send informational messages to specific channels.
     """
