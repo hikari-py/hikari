@@ -271,7 +271,7 @@ class MemberPresence:
     """The ID of the user this presence belongs to."""
 
     role_ids: typing.Optional[typing.Sequence[snowflake.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
-    """The ids of the user's current roles in the guild this presence belongs to.
+    """The IDs of the user's current roles in the guild this presence belongs to.
 
     !!! info
         If this is `builtins.None` then this information wasn't provided and is unknown.

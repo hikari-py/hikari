@@ -52,7 +52,7 @@ from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
-    from hikari.models import intents
+    from hikari.models import intents as intents_
     from hikari.utilities import data_binding
     from hikari.utilities import routes
 
@@ -153,8 +153,12 @@ class HTTPErrorResponse(HTTPError):
     """The URL that produced this error message."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
+
+    url: str = attr.ib()
+    """The URL that produced this error message."""
 
     status: typing.Union[int, http.HTTPStatus] = attr.ib()
     """The HTTP status code for the response."""
@@ -346,37 +350,24 @@ class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class MissingIntentError(HikariError):
     """Error raised when you try to perform an action without an intent.
 
     This is usually raised when querying the cache for something that is
     unavailable due to certain intents being disabled.
-
-    Parameters
-    ----------
-    intent : hikari.models.intents.Intent
-        The combination of intents that are missing.
     """
 
-    __slots__: typing.Sequence[str] = ("intents",)
-
-    def __init__(self, intent: intents.Intent) -> None:
-        self.intents = intent
+    intents: intents_.Intent = attr.ib()
+    """The combination of intents that are missing."""
 
     def __str__(self) -> str:
         return f"You are missing intents: {self.intents}"
 
 
+@attr.s(auto_exc=True, slots=True, repr=False)
 class UnavailableGuildError(HikariError):
-    """Raised when a guild is unavailable due to an outage.
+    """Raised when a guild is unavailable due to an outage."""
 
-    Parameters
-    ----------
-    guild : hikari.models.guilds.Guild or `builtins.None`
-        The guild that is unavailable, or `builtins.None` if not yet known.
-    """
-
-    __slots__: typing.Sequence[str] = ("guild",)
-
-    def __init__(self, guild: typing.Optional[guilds.GatewayGuild]) -> None:
-        self.guild = guild
+    guild: typing.Optional[guilds.GatewayGuild] = attr.ib()
+    """The guild that is unavailable, or `builtins.None` if not yet known."""

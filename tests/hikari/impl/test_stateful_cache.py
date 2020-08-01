@@ -72,7 +72,7 @@ class TestStatefulCacheComponentImpl:
         channel_channel = cache_impl._build_private_text_channel(
             channel_data, cached_users={snowflake.Snowflake(2342344): mock_user}
         )
-        assert channel_channel.recipient is mock_user
+        assert channel_channel.recipient == mock_user
 
     def test_clear_private_text_channels(self, cache_impl):
         mock_channel_data_1 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
@@ -281,7 +281,7 @@ class TestStatefulCacheComponentImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {}
         emoji = cache_impl._build_emoji(emoji_data, cached_users={snowflake.Snowflake(56234232): mock_user})
-        assert emoji.user is mock_user
+        assert emoji.user == mock_user
 
     def test__build_emoji_with_no_user(self, cache_impl):
         emoji_data = stateful_cache._KnownCustomEmojiData(
@@ -301,9 +301,13 @@ class TestStatefulCacheComponentImpl:
         assert emoji.user is None
 
     def test_clear_emojis(self, cache_impl):
-        mock_emoji_data_1 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123123))
-        mock_emoji_data_2 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123))
-        mock_emoji_data_3 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=None)
+        mock_emoji_data_1 = mock.MagicMock(
+            stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123123), ref_count=0
+        )
+        mock_emoji_data_2 = mock.MagicMock(
+            stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123), ref_count=0
+        )
+        mock_emoji_data_3 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=None, ref_count=0)
         mock_emoji_1 = mock.MagicMock(emojis.Emoji)
         mock_emoji_2 = mock.MagicMock(emojis.Emoji)
         mock_emoji_3 = mock.MagicMock(emojis.Emoji)
@@ -346,9 +350,13 @@ class TestStatefulCacheComponentImpl:
         )
 
     def test_clear_emojis_for_guild(self, cache_impl):
-        mock_emoji_data_1 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123123))
-        mock_emoji_data_2 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123))
-        mock_emoji_data_3 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=None)
+        mock_emoji_data_1 = mock.MagicMock(
+            stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123123), ref_count=0
+        )
+        mock_emoji_data_2 = mock.MagicMock(
+            stateful_cache._KnownCustomEmojiData, user_id=snowflake.Snowflake(123), ref_count=0
+        )
+        mock_emoji_data_3 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=None, ref_count=0)
         mock_other_emoji_data = mock.MagicMock(stateful_cache._KnownCustomEmojiData)
         emoji_ids = stateful_cache._IDTable()
         emoji_ids.add_all([snowflake.Snowflake(43123123), snowflake.Snowflake(87643523), snowflake.Snowflake(6873451)])
@@ -885,8 +893,8 @@ class TestStatefulCacheComponentImpl:
         invite = cache_impl._build_invite(
             invite_data, {snowflake.Snowflake(123123): mock_inviter, snowflake.Snowflake(9543453): mock_target_user},
         )
-        assert invite.inviter is mock_inviter
-        assert invite.target_user is mock_target_user
+        assert invite.inviter == mock_inviter
+        assert invite.target_user == mock_target_user
 
     def test_clear_invites(self, cache_impl):
         mock_invite_data_1 = mock.MagicMock(
@@ -1460,7 +1468,7 @@ class TestStatefulCacheComponentImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {}
         member = cache_impl._build_member(member_data, cached_users={snowflake.Snowflake(512312354): mock_user})
-        assert member.user is mock_user
+        assert member.user == mock_user
 
     def test_clear_members(self, cache_impl):
         mock_view_1 = mock.MagicMock(cache.ICacheView)
@@ -1687,10 +1695,6 @@ class TestStatefulCacheComponentImpl:
         ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_presences_for_user(self, cache_impl):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
     def test_delete_presence(self, cache_impl):
         ...
 
@@ -1704,10 +1708,6 @@ class TestStatefulCacheComponentImpl:
 
     @pytest.mark.skip(reason="TODO")
     def test_get_presences_view_for_guild(self, cache_impl):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
-    def test_get_presences_view_for_user(self, cache_impl):
         ...
 
     @pytest.mark.skip(reason="TODO")
