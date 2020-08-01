@@ -241,14 +241,14 @@ class Invite(InviteCode):
     """The approximate amount of presences in this invite's guild.
 
     This is only present when `with_counts` is passed as `builtins.True` to the GET
-    Invites _endpoint.
+    Invites endpoint.
     """
 
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of members in this invite's guild.
 
     This is only present when `with_counts` is passed as `builtins.True` to the GET
-    Invites _endpoint.
+    Invites endpoint.
     """
 
     def __str__(self) -> str:

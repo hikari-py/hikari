@@ -312,7 +312,7 @@ class TextChannel(PartialChannel, abc.ABC):
 
         !!! warning
             You are expected to make a connection to the gateway and identify
-            once before being able to use this _endpoint for a bot.
+            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.id,
@@ -375,7 +375,7 @@ class TextChannel(PartialChannel, abc.ABC):
             If an internal error occurs on Discord while handling the request.
 
         !!! note
-            The exceptions on this _endpoint (other than `builtins.TypeError`) will only
+            The exceptions on this endpoint (other than `builtins.TypeError`) will only
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
