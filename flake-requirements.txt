@@ -13,7 +13,6 @@ flake8-coding~=1.3.2                    # coding magic-comment detectiong
 flake8-comprehensions~=3.2.3            # comprehension checks
 flake8-deprecated~=1.3                  # deprecated call checks
 flake8-docstrings~=1.5.0                # pydocstyle support
-flake8-eradicate~=0.4.0                 # find commented out code
 flake8-executable~=2.0.3                # shebangs
 flake8-fixme~=1.1.1                     # "fix me" counter
 flake8-functions~=0.0.4                 # function linting
