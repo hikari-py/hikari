@@ -553,7 +553,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         no_auth: bool = False,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
-        # Make a ratelimit-protected HTTP request to a JSON _endpoint and expect some form
+        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response. If an error occurs, the response body is returned in the
         # raised exception as a bytes object. This is done since the differences between
         # the V6 and V7 API error messages are not documented properly, and there are
@@ -1004,7 +1004,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if not isinstance(attachments, typing.Collection):
+        if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
             raise ValueError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"

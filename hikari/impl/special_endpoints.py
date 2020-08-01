@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Special _endpoint implementations.
+"""Special endpoint implementations.
 
 You should never need to make any of these objects manually.
 """
