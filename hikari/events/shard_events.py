@@ -157,7 +157,7 @@ class MemberChunkEvent(ShardEvent):
     # <<docstring inherited from ShardEvent>>.
 
     members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
-    """Mapping of snowflake IDs to the objects of the members in this chunk.
+    """Mapping of user IDs to the objects of the members in this chunk.
 
     Returns
     -------
@@ -186,7 +186,7 @@ class MemberChunkEvent(ShardEvent):
     not_found: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=True)
     """Sequence of the snowflakes that were not found while making this request.
 
-    This is only applicable when user ids are specified while making the
+    This is only applicable when user IDs are specified while making the
     member request the chunk is associated with.
 
     Returns
@@ -196,7 +196,7 @@ class MemberChunkEvent(ShardEvent):
     """
 
     presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
-    """Mapping of snowflakes to found member presence objects.
+    """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `presences` isn't passed as
     `True` while requesting the member chunks.

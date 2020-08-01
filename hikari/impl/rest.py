@@ -91,7 +91,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
     """Lazy cached TCP connector factory."""
 
-    __slots__ = ("connector", "connector_kwargs")
+    __slots__: typing.Sequence[str] = ("connector", "connector_kwargs")
 
     def __init__(self, **kwargs: typing.Any) -> None:
         self.connector: typing.Optional[aiohttp.TCPConnector] = None

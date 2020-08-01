@@ -49,17 +49,52 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(slots=True)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 
-    guild: guild_models.GatewayGuild
-    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]]
-    members: typing.Optional[typing.Mapping[snowflake.Snowflake, guild_models.Member]]
-    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]]
-    roles: typing.Mapping[snowflake.Snowflake, guild_models.Role]
-    emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji]
-    voice_states: typing.Optional[typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]]
+    guild: guild_models.GatewayGuild = attr.ib()
+    """The object of the guild the definition is for."""
+
+    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]] = attr.ib()
+    """A mapping of channel IDs to the channels that belong to the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+    """
+
+    members: typing.Optional[typing.Mapping[snowflake.Snowflake, guild_models.Member]] = attr.ib()
+    """A mapping of user IDs to the members that belong to the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+
+    !!! note
+        This may be a partial mapping of members in the guild.
+    """
+
+    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]] = attr.ib()
+    """A mapping of user IDs to the presences that are active in the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+
+    !!! note
+        This may be a partial mapping of presences active in the guild.
+    """
+
+    roles: typing.Mapping[snowflake.Snowflake, guild_models.Role] = attr.ib()
+    """A mapping of role IDs to the roles that belong to the guild."""
+
+    emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji] = attr.ib()
+    """A mapping of emoji IDs to the emojis that belong to the guild."""
+
+    voice_states: typing.Optional[typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]] = attr.ib()
+    """A mapping of user IDs to the voice states that are active in the guild.
+
+    !!! note
+        This may be a partial mapping of voice states active in the guild.
+    """
 
 
 class IEntityFactoryComponent(component.IComponent, abc.ABC):

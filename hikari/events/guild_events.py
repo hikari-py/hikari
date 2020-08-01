@@ -91,6 +91,11 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
 
     This will occur on startup, after outages, and if the bot joins a new guild.
+
+    !!! note
+        Some fields like `members` and `presences` are included here but not on
+        the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
+        event models.
     """
 
     shard: gateway_shard.IGatewayShard = attr.ib()
@@ -106,7 +111,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
-    """Mapping of snowflakes to the emojis in the guild.
+    """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
     -------
@@ -115,7 +120,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
-    """Mapping of snowflakes to the roles in the guild.
+    """Mapping of role IDs to the roles in the guild.
 
     Returns
     -------
@@ -124,7 +129,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     channels: typing.Mapping[snowflake.Snowflake, channels_.GuildChannel] = attr.ib(repr=False)
-    """Mapping of snowflakes to the channels in the guild.
+    """Mapping of channel IDs to the channels in the guild.
 
     Returns
     -------
@@ -133,7 +138,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
-    """Mapping of snowflakes to the members in the guild.
+    """Mapping of user IDs to the members in the guild.
 
     Returns
     -------
@@ -142,7 +147,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
-    """Mapping of snowflakes to the presences for the guild.
+    """Mapping of user IDs to the presences for the guild.
 
     Returns
     -------
@@ -151,7 +156,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     voice_states: typing.Mapping[snowflake.Snowflake, voices.VoiceState] = attr.ib(repr=False)
-    """Mapping of snowflakes to the voice states active in this guild.
+    """Mapping of user IDs to the voice states active in this guild.
 
     Returns
     -------
@@ -210,7 +215,7 @@ class GuildUpdateEvent(GuildEvent):
     """
 
     emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
-    """Mapping of snowflakes to the emojis in the guild.
+    """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
     -------
@@ -219,7 +224,7 @@ class GuildUpdateEvent(GuildEvent):
     """
 
     roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
-    """Mapping of snowflakes to the roles in the guild.
+    """Mapping of role IDs to the roles in the guild.
 
     Returns
     -------
