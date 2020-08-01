@@ -800,7 +800,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
             that were found from the cache.
         """  # noqa E501: - Line too long
 
-    @abc.abstractmethod  # TODO: will be empty if none found.
+    @abc.abstractmethod  # TODO: Return None if no entities are found for cache view stuff?
     def get_members_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
     ) -> ICacheView[snowflake.Snowflake, guilds.Member]:
