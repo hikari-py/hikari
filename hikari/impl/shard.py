@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3str, boundscheck=False
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
