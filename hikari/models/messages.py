@@ -625,7 +625,7 @@ class PartialMessage(snowflake.Unique):
 
         !!! warning
             You are expected to make a connection to the gateway and identify
-            once before being able to use this _endpoint for a bot.
+            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
