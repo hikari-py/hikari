@@ -207,7 +207,7 @@ class RichActivity(Activity):
     state: typing.Optional[str] = attr.ib(repr=False)
     """The current status of this activity's target, if set."""
 
-    emoji: typing.Union[None, emojis_.Emoji] = attr.ib(repr=False)
+    emoji: typing.Optional[emojis_.Emoji] = attr.ib(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
 
     party: typing.Optional[ActivityParty] = attr.ib(repr=False)
@@ -277,12 +277,8 @@ class MemberPresence:
         If this is `builtins.None` then this information wasn't provided and is unknown.
     """
 
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=True, hash=True, repr=True)
-    """The ID of the guild this presence belongs to.
-
-    This will be `builtins.None` when received in an array of members attached to a guild
-    object (e.g on Guild Create).
-    """
+    guild_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of the guild this presence belongs to."""
 
     visible_status: Status = attr.ib(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""

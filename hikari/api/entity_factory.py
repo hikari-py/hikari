@@ -808,18 +808,37 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ###################
 
     @abc.abstractmethod
-    def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presence_models.MemberPresence:
+    def deserialize_member_presence(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+    ) -> presence_models.MemberPresence:
         """Parse a raw payload from Discord into a member presence object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
+            The ID of the guild the presence belongs to. If this is specified
+            then it is prioritised over `guild_id` in the payload.
+
+        !!! note
+            `guild_id` currently only accounts for the Guild Create gateway
+            event where `"guild_id"` isn't included in the attached presence
+            payloads.
 
         Returns
         -------
         hikari.models.presences.MemberPresence
             The deserialized member presence object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
+            `"guild_id"` isn't present in the passed payload.
         """
 
     ###############

@@ -13,6 +13,7 @@ ignore =
     T101,      # TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
     W503,      # line break before binary operator.
     W504,      # line break before binary operator (again, I guess).
+    S101,      # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
 
 # F401:  unused import.
 # F403:  cannot detect unused vars if we use starred import

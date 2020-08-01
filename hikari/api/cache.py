@@ -429,7 +429,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         typing.Tuple[hikari.models.users.OwnUser or builtins.None, hikari.models.users.OwnUser or builtins.None]
             A tuple of the old cached own user object if found (else
             `builtins.None`) and the new cached own user object if it could be
-            cached else `builtins.None`.
+            cached, else `builtins.None`.
         """
 
     @abc.abstractmethod
@@ -588,12 +588,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_presences_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
-        ...
-
-    @abc.abstractmethod
-    def get_presences_view_for_user(
-        self, user_id: snowflake.Snowflake, /
     ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
         ...
 

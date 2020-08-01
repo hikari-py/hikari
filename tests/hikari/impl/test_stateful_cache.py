@@ -50,18 +50,15 @@ class TestStatefulCacheComponentImpl:
             last_message_id=snowflake.Snowflake(65345),
             recipient_id=snowflake.Snowflake(2342344),
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
-        cache_impl._user_entries = {snowflake.Snowflake(2342344): mock_user_data}
+        cache_impl._user_entries = {snowflake.Snowflake(2342344): stateful_cache._GenericRefWrapper(object=mock_user)}
         channel = cache_impl._build_private_text_channel(channel_data)
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
         assert channel.app is cache_impl.app
         assert channel.id == snowflake.Snowflake(5642134)
         assert channel.name is None
         assert channel.type is channels.ChannelType.PRIVATE_TEXT
         assert channel.last_message_id == snowflake.Snowflake(65345)
-        assert channel.recipient is mock_user
+        assert channel.recipient == mock_user
 
     def test__build_private_text_channel_with_passed_through_user(self, cache_impl):
         channel_data = stateful_cache._PrivateTextChannelData(
@@ -70,21 +67,18 @@ class TestStatefulCacheComponentImpl:
             last_message_id=snowflake.Snowflake(65345),
             recipient_id=snowflake.Snowflake(2342344),
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
         cache_impl._user_entries = {}
         channel_channel = cache_impl._build_private_text_channel(
-            channel_data, cached_users={snowflake.Snowflake(2342344): mock_user_data}
+            channel_data, cached_users={snowflake.Snowflake(2342344): mock_user}
         )
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
         assert channel_channel.recipient is mock_user
 
     def test_clear_private_text_channels(self, cache_impl):
         mock_channel_data_1 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
         mock_channel_data_2 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         mock_channel_1 = mock.MagicMock(channels.PrivateTextChannel)
         mock_channel_2 = mock.MagicMock(channels.PrivateTextChannel)
         cache_impl._private_text_channel_entries = {
@@ -92,9 +86,9 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(2342344): mock_channel_data_2,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(2342344): mock_user_data_1,
-            snowflake.Snowflake(653451234): mock.MagicMock(users.User),
-            snowflake.Snowflake(978655): mock_user_data_2,
+            snowflake.Snowflake(2342344): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(653451234): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(978655): stateful_cache._GenericRefWrapper(object=mock_user_2),
         }
         cache_impl._increment_user_ref_count = mock.MagicMock()
         cache_impl._garbage_collect_user = mock.MagicMock()
@@ -111,11 +105,11 @@ class TestStatefulCacheComponentImpl:
             [
                 mock.call(
                     mock_channel_data_1,
-                    {snowflake.Snowflake(2342344): mock_user_data_1, snowflake.Snowflake(978655): mock_user_data_2,},
+                    {snowflake.Snowflake(2342344): mock_user_1, snowflake.Snowflake(978655): mock_user_2,},
                 ),
                 mock.call(
                     mock_channel_data_2,
-                    {snowflake.Snowflake(2342344): mock_user_data_1, snowflake.Snowflake(978655): mock_user_data_2,},
+                    {snowflake.Snowflake(2342344): mock_user_1, snowflake.Snowflake(978655): mock_user_2,},
                 ),
             ]
         )
@@ -162,12 +156,12 @@ class TestStatefulCacheComponentImpl:
         mock_channel_data_2 = mock.MagicMock(stateful_cache._PrivateTextChannelData)
         mock_channel_1 = mock.MagicMock(channels.PrivateTextChannel)
         mock_channel_2 = mock.MagicMock(channels.PrivateTextChannel)
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(54213): mock_user_data_1,
-            snowflake.Snowflake(6764556): mock.MagicMock(stateful_cache._UserData),
-            snowflake.Snowflake(65656): mock_user_data_2,
+            snowflake.Snowflake(54213): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(6764556): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(65656): stateful_cache._GenericRefWrapper(object=mock_user_2),
         }
         cache_impl._build_private_text_channel = mock.MagicMock(side_effect=[mock_channel_1, mock_channel_2])
         cache_impl._private_text_channel_entries = {
@@ -182,11 +176,11 @@ class TestStatefulCacheComponentImpl:
             [
                 mock.call(
                     mock_channel_data_1,
-                    {snowflake.Snowflake(54213): mock_user_data_1, snowflake.Snowflake(65656): mock_user_data_2,},
+                    {snowflake.Snowflake(54213): mock_user_1, snowflake.Snowflake(65656): mock_user_2,},
                 ),
                 mock.call(
                     mock_channel_data_2,
-                    {snowflake.Snowflake(54213): mock_user_data_1, snowflake.Snowflake(65656): mock_user_data_2,},
+                    {snowflake.Snowflake(54213): mock_user_1, snowflake.Snowflake(65656): mock_user_2,},
                 ),
             ]
         )
@@ -259,17 +253,14 @@ class TestStatefulCacheComponentImpl:
             is_managed=False,
             is_available=True,
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_user = mock.MagicMock(users.User)
-        cache_impl._user_entries = {snowflake.Snowflake(56234232): mock_user_data}
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
+        cache_impl._user_entries = {snowflake.Snowflake(56234232): stateful_cache._GenericRefWrapper(object=mock_user)}
         emoji = cache_impl._build_emoji(emoji_data)
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
         assert emoji.app is cache_impl.app
         assert emoji.id == snowflake.Snowflake(1233534234)
         assert emoji.name == "OKOKOKOKOK"
         assert emoji.guild_id == snowflake.Snowflake(65234123)
-        assert emoji.user is mock_user
+        assert emoji.user == mock_user
         assert emoji.is_animated is True
         assert emoji.is_colons_required is False
         assert emoji.is_managed is False
@@ -287,12 +278,9 @@ class TestStatefulCacheComponentImpl:
             is_managed=False,
             is_available=True,
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {}
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
-        emoji = cache_impl._build_emoji(emoji_data, cached_users={snowflake.Snowflake(56234232): mock_user_data})
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
+        emoji = cache_impl._build_emoji(emoji_data, cached_users={snowflake.Snowflake(56234232): mock_user})
         assert emoji.user is mock_user
 
     def test__build_emoji_with_no_user(self, cache_impl):
@@ -319,17 +307,17 @@ class TestStatefulCacheComponentImpl:
         mock_emoji_1 = mock.MagicMock(emojis.Emoji)
         mock_emoji_2 = mock.MagicMock(emojis.Emoji)
         mock_emoji_3 = mock.MagicMock(emojis.Emoji)
-        mock_user_data_1 = mock.MagicMock(users.User)
-        mock_user_data_2 = mock.MagicMock(users.User)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         cache_impl._emoji_entries = {
             snowflake.Snowflake(43123123): mock_emoji_data_1,
             snowflake.Snowflake(87643523): mock_emoji_data_2,
             snowflake.Snowflake(6873451): mock_emoji_data_3,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(123123): mock_user_data_1,
-            snowflake.Snowflake(123): mock_user_data_2,
-            snowflake.Snowflake(99999): mock.MagicMock(users.User),
+            snowflake.Snowflake(123123): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(123): stateful_cache._GenericRefWrapper(object=mock_user_2),
+            snowflake.Snowflake(99999): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._build_emoji = mock.MagicMock(side_effect=[mock_emoji_1, mock_emoji_2, mock_emoji_3])
         cache_impl._garbage_collect_user = mock.MagicMock()
@@ -344,24 +332,15 @@ class TestStatefulCacheComponentImpl:
             [
                 mock.call(
                     mock_emoji_data_1,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
                 mock.call(
                     mock_emoji_data_2,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
                 mock.call(
                     mock_emoji_data_3,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
             ]
         )
@@ -376,8 +355,8 @@ class TestStatefulCacheComponentImpl:
         mock_emoji_1 = mock.MagicMock(emojis.Emoji)
         mock_emoji_2 = mock.MagicMock(emojis.Emoji)
         mock_emoji_3 = mock.MagicMock(emojis.Emoji)
-        mock_user_data_1 = mock.MagicMock(users.User)
-        mock_user_data_2 = mock.MagicMock(users.User)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         cache_impl._emoji_entries = {
             snowflake.Snowflake(6873451): mock_emoji_data_1,
             snowflake.Snowflake(43123123): mock_emoji_data_2,
@@ -385,9 +364,9 @@ class TestStatefulCacheComponentImpl:
             snowflake.Snowflake(111): mock_other_emoji_data,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(123123): mock_user_data_1,
-            snowflake.Snowflake(123): mock_user_data_2,
-            snowflake.Snowflake(99999): mock.MagicMock(users.User),
+            snowflake.Snowflake(123123): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(123): stateful_cache._GenericRefWrapper(object=mock_user_2),
+            snowflake.Snowflake(99999): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(432123123): stateful_cache._GuildRecord(emojis=emoji_ids),
@@ -410,24 +389,15 @@ class TestStatefulCacheComponentImpl:
             [
                 mock.call(
                     mock_emoji_data_1,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
                 mock.call(
                     mock_emoji_data_2,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
                 mock.call(
                     mock_emoji_data_3,
-                    cached_users={
-                        snowflake.Snowflake(123123): mock_user_data_1,
-                        snowflake.Snowflake(123): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(123123): mock_user_1, snowflake.Snowflake(123): mock_user_2,},
                 ),
             ]
         )
@@ -528,14 +498,14 @@ class TestStatefulCacheComponentImpl:
         mock_emoji_data_2 = mock.MagicMock(stateful_cache._KnownCustomEmojiData, user_id=None)
         mock_emoji_1 = mock.MagicMock(emojis.KnownCustomEmoji)
         mock_emoji_2 = mock.MagicMock(emojis.KnownCustomEmoji)
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_user = mock.MagicMock(users.User)
         cache_impl._emoji_entries = {
             snowflake.Snowflake(123123123): mock_emoji_data_1,
             snowflake.Snowflake(43156234): mock_emoji_data_2,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(564123): mock.MagicMock(stateful_cache._UserData),
-            snowflake.Snowflake(43123): mock_user_data,
+            snowflake.Snowflake(564123): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(43123): stateful_cache._GenericRefWrapper(object=mock_user),
         }
         cache_impl._build_emoji = mock.MagicMock(side_effect=[mock_emoji_1, mock_emoji_2])
         assert cache_impl.get_emojis_view() == {
@@ -544,8 +514,8 @@ class TestStatefulCacheComponentImpl:
         }
         cache_impl._build_emoji.assert_has_calls(
             [
-                mock.call(mock_emoji_data_1, cached_users={snowflake.Snowflake(43123): mock_user_data}),
-                mock.call(mock_emoji_data_2, cached_users={snowflake.Snowflake(43123): mock_user_data}),
+                mock.call(mock_emoji_data_1, cached_users={snowflake.Snowflake(43123): mock_user}),
+                mock.call(mock_emoji_data_2, cached_users={snowflake.Snowflake(43123): mock_user}),
             ]
         )
 
@@ -556,15 +526,15 @@ class TestStatefulCacheComponentImpl:
         mock_emoji_2 = mock.MagicMock(emojis.KnownCustomEmoji)
         emoji_ids = stateful_cache._IDTable()
         emoji_ids.add_all([snowflake.Snowflake(65123), snowflake.Snowflake(43156234)])
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_user = mock.MagicMock(users.User)
         cache_impl._emoji_entries = {
             snowflake.Snowflake(65123): mock_emoji_data_1,
             snowflake.Snowflake(942123): mock.MagicMock(stateful_cache._KnownCustomEmojiData),
             snowflake.Snowflake(43156234): mock_emoji_data_2,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(564123): mock.MagicMock(stateful_cache._UserData),
-            snowflake.Snowflake(32124123): mock_user_data,
+            snowflake.Snowflake(564123): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(32124123): stateful_cache._GenericRefWrapper(object=mock_user),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(99999): mock.MagicMock(stateful_cache._GuildRecord),
@@ -577,8 +547,8 @@ class TestStatefulCacheComponentImpl:
         }
         cache_impl._build_emoji.assert_has_calls(
             [
-                mock.call(mock_emoji_data_1, cached_users={snowflake.Snowflake(32124123): mock_user_data}),
-                mock.call(mock_emoji_data_2, cached_users={snowflake.Snowflake(32124123): mock_user_data}),
+                mock.call(mock_emoji_data_1, cached_users={snowflake.Snowflake(32124123): mock_user}),
+                mock.call(mock_emoji_data_2, cached_users={snowflake.Snowflake(32124123): mock_user}),
             ]
         )
 
@@ -871,25 +841,22 @@ class TestStatefulCacheComponentImpl:
             is_temporary=True,
             created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc),
         )
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
         mock_inviter = mock.MagicMock(users.User)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_target_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(123123): mock_inviter_data,
-            snowflake.Snowflake(9999): mock.MagicMock(stateful_cache._UserData),
-            snowflake.Snowflake(9543453): mock_target_user_data,
+            snowflake.Snowflake(123123): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(9999): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(9543453): stateful_cache._GenericRefWrapper(object=mock_target_user),
         }
-        cache_impl._build_user = mock.MagicMock(side_effect=[mock_inviter, mock_target_user])
         invite = cache_impl._build_invite(invite_data)
-        cache_impl._build_user.assert_has_calls([mock.call(mock_inviter_data), mock.call(mock_target_user_data)])
         assert invite.app is cache_impl.app
         assert invite.code == "okokok"
         assert invite.guild is None
         assert invite.guild_id == snowflake.Snowflake(965234)
         assert invite.channel is None
         assert invite.channel_id == snowflake.Snowflake(87345234)
-        assert invite.inviter is mock_inviter
+        assert invite.inviter == mock_inviter
+        assert invite.target_user == mock_target_user
         assert invite.target_user_type is invites.TargetUserType.STREAM
         assert invite.approximate_presence_count is None
         assert invite.approximate_member_count is None
@@ -913,16 +880,11 @@ class TestStatefulCacheComponentImpl:
             is_temporary=True,
             created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc),
         )
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
         mock_inviter = mock.MagicMock(users.User)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_target_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(side_effect=[mock_inviter, mock_target_user])
         invite = cache_impl._build_invite(
-            invite_data,
-            {snowflake.Snowflake(123123): mock_inviter_data, snowflake.Snowflake(9543453): mock_target_user_data},
+            invite_data, {snowflake.Snowflake(123123): mock_inviter, snowflake.Snowflake(9543453): mock_target_user},
         )
-        cache_impl._build_user.assert_has_calls([mock.call(mock_inviter_data), mock.call(mock_target_user_data)])
         assert invite.inviter is mock_inviter
         assert invite.target_user is mock_target_user
 
@@ -935,16 +897,16 @@ class TestStatefulCacheComponentImpl:
         mock_invite_data_2 = mock.MagicMock(stateful_cache._InviteData, target_user_id=None, inviter_id=None,)
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
+        mock_target_user = mock.MagicMock(users.User)
+        mock_inviter = mock.MagicMock(users.User)
         cache_impl._invite_entries = {
             "hiBye": mock_invite_data_1,
             "Lblalbla": mock_invite_data_2,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(5341231): mock_target_user_data,
-            snowflake.Snowflake(12354123): mock_inviter_data,
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(5341231): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(12354123): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._build_invite = mock.MagicMock(side_effect=[mock_invite_1, mock_invite_2])
         assert cache_impl.clear_invites() == {
@@ -957,15 +919,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
             ]
@@ -981,17 +943,17 @@ class TestStatefulCacheComponentImpl:
         mock_other_invite_data = mock.MagicMock(stateful_cache._InviteData)
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
+        mock_target_user = mock.MagicMock(users.User)
+        mock_inviter = mock.MagicMock(users.User)
         cache_impl._invite_entries = {
             "oeoeoeoeooe": mock_invite_data_1,
             "owowowowoowowow": mock_invite_data_2,
             "oeoeoeoeoeoeoe": mock_other_invite_data,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(5341231): mock_target_user_data,
-            snowflake.Snowflake(12354123): mock_inviter_data,
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(5341231): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(12354123): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1008,15 +970,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
             ]
@@ -1026,9 +988,6 @@ class TestStatefulCacheComponentImpl:
         mock_other_invite_data = mock.MagicMock(stateful_cache._InviteData)
         cache_impl._invite_entries = {
             "oeoeoeoeoeoeoe": mock_other_invite_data,
-        }
-        cache_impl._user_entries = {
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1043,9 +1002,6 @@ class TestStatefulCacheComponentImpl:
         mock_other_invite_data = mock.MagicMock(stateful_cache._InviteData)
         cache_impl._invite_entries = {
             "oeoeoeoeoeoeoe": mock_other_invite_data,
-        }
-        cache_impl._user_entries = {
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1069,8 +1025,8 @@ class TestStatefulCacheComponentImpl:
         mock_other_invite_data_2 = mock.MagicMock(stateful_cache._InviteData)
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
+        mock_target_user = mock.MagicMock(users.User)
+        mock_inviter = mock.MagicMock(users.User)
         cache_impl._invite_entries = {
             "oeoeoeoeooe": mock_invite_data_1,
             "owowowowoowowow": mock_invite_data_2,
@@ -1078,9 +1034,9 @@ class TestStatefulCacheComponentImpl:
             "oeo": mock_other_invite_data_2,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(5341231): mock_target_user_data,
-            snowflake.Snowflake(12354123): mock_inviter_data,
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(5341231): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(12354123): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1104,15 +1060,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(5341231): mock_target_user_data,
-                        snowflake.Snowflake(12354123): mock_inviter_data,
+                        snowflake.Snowflake(5341231): mock_target_user,
+                        snowflake.Snowflake(12354123): mock_inviter,
                     },
                 ),
             ]
@@ -1124,7 +1080,7 @@ class TestStatefulCacheComponentImpl:
             "oeoeoeoeoeoeoe": mock_other_invite_data,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1141,7 +1097,7 @@ class TestStatefulCacheComponentImpl:
             "oeoeoeoeoeoeoe": mock_other_invite_data,
         }
         cache_impl._user_entries = {
-            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(65345352): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(54123): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1244,12 +1200,12 @@ class TestStatefulCacheComponentImpl:
         mock_invite_data_2 = mock.MagicMock(stateful_cache._InviteData, inviter_id=None, target_user_id=None)
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_inviter = mock.MagicMock(users.User)
+        mock_target_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(987): mock_inviter_data,
-            snowflake.Snowflake(34123): mock_target_user_data,
-            snowflake.Snowflake(6599): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(987): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(34123): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(6599): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._invite_entries = {"okok": mock_invite_data_1, "blamblam": mock_invite_data_2}
         cache_impl._build_invite = mock.MagicMock(side_effect=[mock_invite_1, mock_invite_2])
@@ -1259,15 +1215,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(987): mock_inviter_data,
-                        snowflake.Snowflake(34123): mock_target_user_data,
+                        snowflake.Snowflake(987): mock_inviter,
+                        snowflake.Snowflake(34123): mock_target_user,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(987): mock_inviter_data,
-                        snowflake.Snowflake(34123): mock_target_user_data,
+                        snowflake.Snowflake(987): mock_inviter,
+                        snowflake.Snowflake(34123): mock_target_user,
                     },
                 ),
             ]
@@ -1280,12 +1236,12 @@ class TestStatefulCacheComponentImpl:
         mock_invite_data_2 = mock.MagicMock(stateful_cache._InviteData, inviter_id=None, target_user_id=None)
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_inviter = mock.MagicMock(users.User)
+        mock_target_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(987): mock_inviter_data,
-            snowflake.Snowflake(34123): mock_target_user_data,
-            snowflake.Snowflake(6599): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(987): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(34123): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(6599): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._invite_entries = {
             "okok": mock_invite_data_1,
@@ -1306,15 +1262,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(987): mock_inviter_data,
-                        snowflake.Snowflake(34123): mock_target_user_data,
+                        snowflake.Snowflake(987): mock_inviter,
+                        snowflake.Snowflake(34123): mock_target_user,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(987): mock_inviter_data,
-                        snowflake.Snowflake(34123): mock_target_user_data,
+                        snowflake.Snowflake(987): mock_inviter,
+                        snowflake.Snowflake(34123): mock_target_user,
                     },
                 ),
             ]
@@ -1356,18 +1312,18 @@ class TestStatefulCacheComponentImpl:
         )
         mock_invite_1 = mock.MagicMock(invites.InviteWithMetadata)
         mock_invite_2 = mock.MagicMock(invites.InviteWithMetadata)
-        mock_inviter_data = mock.MagicMock(stateful_cache._UserData)
-        mock_target_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_inviter = mock.MagicMock(users.User)
+        mock_target_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(4312365): mock_inviter_data,
-            snowflake.Snowflake(65643213): mock_target_user_data,
-            snowflake.Snowflake(999875673): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(4312365): stateful_cache._GenericRefWrapper(object=mock_inviter),
+            snowflake.Snowflake(65643213): stateful_cache._GenericRefWrapper(object=mock_target_user),
+            snowflake.Snowflake(999875673): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._invite_entries = {
             "blamBang": mock_invite_data_1,
             "bingBong": mock_invite_data_2,
-            "Pop": mock.MagicMock(stateful_cache._UserData, channel_id=snowflake.Snowflake(94934923)),
-            "Fam": mock.MagicMock(stateful_cache._UserData, channel_id=snowflake.Snowflake(2123)),
+            "Pop": mock.MagicMock(stateful_cache._InviteData, channel_id=snowflake.Snowflake(94934923)),
+            "Fam": mock.MagicMock(stateful_cache._InviteData, channel_id=snowflake.Snowflake(2123)),
         }
         cache_impl._guild_entries = {
             snowflake.Snowflake(31423): mock.MagicMock(stateful_cache._GuildRecord),
@@ -1383,15 +1339,15 @@ class TestStatefulCacheComponentImpl:
                 mock.call(
                     mock_invite_data_1,
                     cached_users={
-                        snowflake.Snowflake(4312365): mock_inviter_data,
-                        snowflake.Snowflake(65643213): mock_target_user_data,
+                        snowflake.Snowflake(4312365): mock_inviter,
+                        snowflake.Snowflake(65643213): mock_target_user,
                     },
                 ),
                 mock.call(
                     mock_invite_data_2,
                     cached_users={
-                        snowflake.Snowflake(4312365): mock_inviter_data,
-                        snowflake.Snowflake(65643213): mock_target_user_data,
+                        snowflake.Snowflake(4312365): mock_inviter,
+                        snowflake.Snowflake(65643213): mock_target_user,
                     },
                 ),
             ]
@@ -1478,13 +1434,10 @@ class TestStatefulCacheComponentImpl:
             is_deaf=False,
             is_mute=True,
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
-        cache_impl._user_entries = {snowflake.Snowflake(512312354): mock_user_data}
         mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
+        cache_impl._user_entries = {snowflake.Snowflake(512312354): stateful_cache._GenericRefWrapper(object=mock_user)}
         member = cache_impl._build_member(member_data)
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
-        assert member.user is mock_user
+        assert member.user == mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
         assert member.role_ids == (snowflake.Snowflake(65234), snowflake.Snowflake(654234123))
@@ -1504,12 +1457,9 @@ class TestStatefulCacheComponentImpl:
             is_deaf=False,
             is_mute=True,
         )
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
-        cache_impl._user_entries = {}
         mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
-        member = cache_impl._build_member(member_data, cached_users={snowflake.Snowflake(512312354): mock_user_data})
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
+        cache_impl._user_entries = {}
+        member = cache_impl._build_member(member_data, cached_users={snowflake.Snowflake(512312354): mock_user})
         assert member.user is mock_user
 
     def test_clear_members(self, cache_impl):
@@ -1637,16 +1587,16 @@ class TestStatefulCacheComponentImpl:
         mock_member_data_2 = mock.MagicMock(stateful_cache._MemberData)
         mock_member_1 = mock.MagicMock(guilds.Member)
         mock_member_2 = mock.MagicMock(guilds.Member)
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         guild_record = stateful_cache._GuildRecord(
             members={snowflake.Snowflake(3214321): mock_member_data_1, snowflake.Snowflake(53224): mock_member_data_2}
         )
         cache_impl._guild_entries = {snowflake.Snowflake(42334): guild_record}
         cache_impl._user_entries = {
-            snowflake.Snowflake(3214321): mock_user_data_1,
-            snowflake.Snowflake(53224): mock_user_data_2,
-            snowflake.Snowflake(87345): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(3214321): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(53224): stateful_cache._GenericRefWrapper(object=mock_user_2),
+            snowflake.Snowflake(87345): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._build_member = mock.MagicMock(side_effect=[mock_member_1, mock_member_2])
         assert cache_impl.get_members_view_for_guild(snowflake.Snowflake(42334)) == {
@@ -1657,17 +1607,11 @@ class TestStatefulCacheComponentImpl:
             [
                 mock.call(
                     mock_member_data_1,
-                    cached_users={
-                        snowflake.Snowflake(3214321): mock_user_data_1,
-                        snowflake.Snowflake(53224): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(3214321): mock_user_1, snowflake.Snowflake(53224): mock_user_2,},
                 ),
                 mock.call(
                     mock_member_data_2,
-                    cached_users={
-                        snowflake.Snowflake(3214321): mock_user_data_1,
-                        snowflake.Snowflake(53224): mock_user_data_2,
-                    },
+                    cached_users={snowflake.Snowflake(3214321): mock_user_1, snowflake.Snowflake(53224): mock_user_2,},
                 ),
             ]
         )
@@ -1806,177 +1750,104 @@ class TestStatefulCacheComponentImpl:
     def test_update_role(self, cache_impl):
         ...
 
-    def test__build_user(self, cache_impl):
-        user_data = stateful_cache._UserData(
-            id=snowflake.Snowflake(53422132),
-            discriminator="4312",
-            username="NAMEMEMEM",
-            avatar_hash="mkldf421",
-            is_bot=True,
-            is_system=False,
-            flags=users.UserFlag(4),
-            ref_count=0,
-        )
-        cache_impl._user_entries = {
-            snowflake.Snowflake(53422132): user_data,
-            snowflake.Snowflake(7654433245): mock.MagicMock(stateful_cache._UserData),
-        }
-        user = cache_impl._build_user(user_data)
-        assert user.app is cache_impl.app
-        assert user.id == snowflake.Snowflake(53422132)
-        assert user.discriminator == "4312"
-        assert user.username == "NAMEMEMEM"
-        assert user.avatar_hash == "mkldf421"
-        assert user.is_bot is True
-        assert user.is_system is False
-        assert user.flags == users.UserFlag(4)
-
     def test_clear_users_for_cached_users(self, cache_impl):
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData, ref_count=0)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData, ref_count=0)
         mock_user_1 = mock.MagicMock(users.User)
         mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(53422132): mock_user_data_1,
-            snowflake.Snowflake(7654433245): mock_user_data_2,
+            snowflake.Snowflake(53422132): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(7654433245): stateful_cache._GenericRefWrapper(object=mock_user_2),
         }
-        cache_impl._build_user = mock.MagicMock(side_effect=[mock_user_1, mock_user_2])
         assert cache_impl.clear_users() == {
             snowflake.Snowflake(53422132): mock_user_1,
             snowflake.Snowflake(7654433245): mock_user_2,
         }
         assert cache_impl._user_entries == {}
-        cache_impl._build_user.assert_has_calls([mock.call(mock_user_data_1), mock.call(mock_user_data_2)])
 
     def test_clear_users_ignores_hard_referenced_users(self, cache_impl):
-        user_data = stateful_cache._UserData(
-            id=snowflake.Snowflake(53422132),
-            discriminator="4312",
-            username="NAMEMEMEM",
-            avatar_hash="mkldf421",
-            is_bot=True,
-            is_system=False,
-            flags=users.UserFlag(4),
-            ref_count=2,
-        )
-        cache_impl._user_entries = {snowflake.Snowflake(53422132): user_data}
+        wrapped_user = stateful_cache._GenericRefWrapper(object=mock.MagicMock(users.User), ref_count=2)
+        cache_impl._user_entries = {snowflake.Snowflake(53422132): wrapped_user}
         assert cache_impl.clear_users() == {}
-        assert cache_impl._user_entries == {snowflake.Snowflake(53422132): user_data}
+        assert cache_impl._user_entries == {snowflake.Snowflake(53422132): wrapped_user}
 
     def test_clear_users_for_empty_user_cache(self, cache_impl):
         assert cache_impl.clear_users() == {}
         assert cache_impl._user_entries == {}
 
     def test_delete_user_for_known_unreferenced_user(self, cache_impl):
-        mock_user_data = mock.MagicMock(stateful_cache._UserData, ref_count=0)
-        mock_other_user_data = mock.MagicMock(stateful_cache._UserData)
-        cache_impl._user_entries = {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock_other_user_data,
-        }
         mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
+        mock_wrapped_other_user = stateful_cache._GenericRefWrapper(object=mock.MagicMock(users.User))
+        cache_impl._user_entries = {
+            snowflake.Snowflake(21231234): stateful_cache._GenericRefWrapper(object=mock_user),
+            snowflake.Snowflake(645234): mock_wrapped_other_user,
+        }
         assert cache_impl.delete_user(snowflake.Snowflake(21231234)) is mock_user
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
-        assert cache_impl._user_entries == {snowflake.Snowflake(645234): mock_other_user_data}
+        assert cache_impl._user_entries == {snowflake.Snowflake(645234): mock_wrapped_other_user}
 
     def test_delete_user_for_referenced_user(self, cache_impl):
-        mock_user_data = mock.MagicMock(stateful_cache._UserData, ref_count=42)
-        mock_other_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_wrapped_user = mock.MagicMock(stateful_cache._GenericRefWrapper, ref_count=2)
+        mock_other_wrapped_user = mock.MagicMock(stateful_cache._GenericRefWrapper)
         cache_impl._user_entries = {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock_other_user_data,
+            snowflake.Snowflake(21231234): mock_wrapped_user,
+            snowflake.Snowflake(645234): mock_other_wrapped_user,
         }
-        mock_user = mock.MagicMock(users.User)
-        cache_impl._build_user = mock.MagicMock(return_value=mock_user)
         assert cache_impl.delete_user(snowflake.Snowflake(21231234)) is None
         assert cache_impl._user_entries == {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock_other_user_data,
+            snowflake.Snowflake(21231234): mock_wrapped_user,
+            snowflake.Snowflake(645234): mock_other_wrapped_user,
         }
 
     def test_delete_user_for_unknown_user(self, cache_impl):
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
-        mock_other_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_wrapped_user = mock.MagicMock(stateful_cache._GenericRefWrapper)
         cache_impl._user_entries = {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock_other_user_data,
+            snowflake.Snowflake(21231234): mock_wrapped_user,
         }
         assert cache_impl.delete_user(snowflake.Snowflake(75423423)) is None
         assert cache_impl._user_entries == {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock_other_user_data,
+            snowflake.Snowflake(21231234): mock_wrapped_user,
         }
 
     def test_get_user_for_known_user(self, cache_impl):
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(21231234): mock_user_data,
-            snowflake.Snowflake(645234): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(21231234): stateful_cache._GenericRefWrapper(object=mock_user),
+            snowflake.Snowflake(645234): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._build_user = mock.MagicMock(return_value=mock_user)
-        assert cache_impl.get_user(snowflake.Snowflake(21231234)) is mock_user
-        cache_impl._build_user.assert_called_once_with(mock_user_data)
+        assert cache_impl.get_user(snowflake.Snowflake(21231234)) == mock_user
 
     def test_get_users_view_for_filled_user_cache(self, cache_impl):
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
         mock_user_1 = mock.MagicMock(users.User)
         mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(54123): mock_user_data_1,
-            snowflake.Snowflake(76345): mock_user_data_2,
+            snowflake.Snowflake(54123): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(76345): stateful_cache._GenericRefWrapper(object=mock_user_2),
         }
-        cache_impl._build_user = mock.MagicMock(side_effect=[mock_user_1, mock_user_2])
         assert cache_impl.get_users_view() == {
             snowflake.Snowflake(54123): mock_user_1,
             snowflake.Snowflake(76345): mock_user_2,
         }
-        cache_impl._build_user.assert_has_calls([mock.call(mock_user_data_1), mock.call(mock_user_data_2)])
 
     def test_get_users_view_for_empty_user_cache(self, cache_impl):
         assert cache_impl.get_users_view() == {}
 
     def test_set_user(self, cache_impl):
-        mock_user = users.UserImpl()
-        mock_user.app = cache_impl.app
-        mock_user.id = snowflake.Snowflake(6451234123)
-        mock_user.discriminator = "4123"
-        mock_user.username = "A USER"
-        mock_user.avatar_hash = "rkeoiw98324ui23ju"
-        mock_user.is_bot = True
-        mock_user.is_system = False
-        mock_user.flags = users.UserFlag(7)
-        cache_impl._user_entries = {snowflake.Snowflake(542143): mock.MagicMock(stateful_cache._UserData)}
+        mock_user = mock.MagicMock(users.User, id=snowflake.Snowflake(6451234123))
+        cache_impl._user_entries = {snowflake.Snowflake(542143): mock.MagicMock(stateful_cache._GenericRefWrapper)}
         assert cache_impl.set_user(mock_user) is None
         assert 6451234123 in cache_impl._user_entries
-        user_data = cache_impl._user_entries[snowflake.Snowflake(6451234123)]
-        assert user_data.id == snowflake.Snowflake(6451234123)
-        assert user_data.discriminator == "4123"
-        assert user_data.username == "A USER"
-        assert user_data.avatar_hash == "rkeoiw98324ui23ju"
-        assert user_data.is_bot is True
-        assert user_data.is_system is False
-        assert user_data.flags == 7
-        assert user_data.ref_count == 0
-        assert not hasattr(user_data, "app")
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object == mock_user
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].ref_count == 0
 
-    def test_test_set_user_carries_over_ref_count(self, cache_impl):
-        mock_user_data = mock.MagicMock(stateful_cache._UserData, id=snowflake.Snowflake(4312353), ref_count=0)
+    def test_set_user_carries_over_ref_count(self, cache_impl):
+        mock_user = mock.MagicMock(users.User, id=snowflake.Snowflake(6451234123))
         cache_impl._user_entries = {
-            snowflake.Snowflake(4312353): mock.MagicMock(stateful_cache._UserData, ref_count=42)
+            snowflake.Snowflake(542143): mock.MagicMock(stateful_cache._GenericRefWrapper),
+            snowflake.Snowflake(6451234123): mock.MagicMock(stateful_cache._GenericRefWrapper, ref_count=42),
         }
-        mock_user = mock.MagicMock(users.User, id=snowflake.Snowflake(4312353))
-        with mock.patch.object(
-            stateful_cache._UserData, "build_from_entity", return_value=mock_user_data
-        ) as patched_builder:
-            assert cache_impl.set_user(mock_user) is None
-            patched_builder.assert_called_once_with(mock_user)
-
-        assert 4312353 in cache_impl._user_entries
-        assert cache_impl._user_entries[snowflake.Snowflake(4312353)] is mock_user_data
-        assert cache_impl._user_entries[snowflake.Snowflake(4312353)].ref_count == 42
+        assert cache_impl.set_user(mock_user) is None
+        assert 6451234123 in cache_impl._user_entries
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object == mock_user
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].ref_count == 42
 
     def test_update_user(self, cache_impl):
         mock_old_cached_user = mock.MagicMock(users.User)
@@ -2043,7 +1914,7 @@ class TestStatefulCacheComponentImpl:
         )
         mock_member_data = mock.MagicMock(stateful_cache._MemberData)
         mock_member = mock.MagicMock(guilds.Member)
-        mock_user_data = mock.MagicMock(stateful_cache._UserData)
+        mock_user = mock.MagicMock(users.User)
         cache_impl._build_member = mock.MagicMock(return_value=mock_member)
         current_voice_state = cache_impl._build_voice_state(
             voice_state_data,
@@ -2051,10 +1922,10 @@ class TestStatefulCacheComponentImpl:
                 snowflake.Snowflake(7512312): mock_member_data,
                 snowflake.Snowflake(63123): mock.MagicMock(stateful_cache._MemberData),
             },
-            cached_users={snowflake.Snowflake(7512312): mock_user_data},
+            cached_users={snowflake.Snowflake(7512312): mock_user},
         )
         cache_impl._build_member.assert_called_once_with(
-            mock_member_data, cached_users={snowflake.Snowflake(7512312): mock_user_data}
+            mock_member_data, cached_users={snowflake.Snowflake(7512312): mock_user}
         )
         assert current_voice_state.app is cache_impl.app
         assert current_voice_state.channel_id == snowflake.Snowflake(4651234123)
@@ -2096,12 +1967,12 @@ class TestStatefulCacheComponentImpl:
             },
         )
         cache_impl._delete_guild_record_if_empty = mock.MagicMock()
-        mock_user_data_1 = mock.MagicMock(stateful_cache._UserData)
-        mock_user_data_2 = mock.MagicMock(stateful_cache._UserData)
+        mock_user_1 = mock.MagicMock(users.User)
+        mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = {
-            snowflake.Snowflake(7512312): mock_user_data_1,
-            snowflake.Snowflake(43123123): mock_user_data_2,
-            snowflake.Snowflake(56234): mock.MagicMock(stateful_cache._UserData),
+            snowflake.Snowflake(7512312): stateful_cache._GenericRefWrapper(object=mock_user_1),
+            snowflake.Snowflake(43123123): stateful_cache._GenericRefWrapper(object=mock_user_2),
+            snowflake.Snowflake(56234): mock.MagicMock(stateful_cache._GenericRefWrapper),
         }
         cache_impl._guild_entries = {snowflake.Snowflake(54123123): record}
         cache_impl._build_voice_state = mock.MagicMock(side_effect=[mock_voice_state_1, mock_voice_state_2])
@@ -2119,8 +1990,8 @@ class TestStatefulCacheComponentImpl:
                         snowflake.Snowflake(43123123): mock_member_data_2,
                     },
                     cached_users={
-                        snowflake.Snowflake(7512312): mock_user_data_1,
-                        snowflake.Snowflake(43123123): mock_user_data_2,
+                        snowflake.Snowflake(7512312): mock_user_1,
+                        snowflake.Snowflake(43123123): mock_user_2,
                     },
                 ),
                 mock.call(
@@ -2130,8 +2001,8 @@ class TestStatefulCacheComponentImpl:
                         snowflake.Snowflake(43123123): mock_member_data_2,
                     },
                     cached_users={
-                        snowflake.Snowflake(7512312): mock_user_data_1,
-                        snowflake.Snowflake(43123123): mock_user_data_2,
+                        snowflake.Snowflake(7512312): mock_user_1,
+                        snowflake.Snowflake(43123123): mock_user_2,
                     },
                 ),
             ]

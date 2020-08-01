@@ -176,10 +176,10 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
         guild_information = self.app.entity_factory.deserialize_gateway_guild(payload)
-        assert guild_information.channels is not None  # noqa: S101 - Use of assert detected.
-        assert guild_information.members is not None  # noqa: S101 - Use of assert detected.
-        assert guild_information.presences is not None  # noqa: S101 - Use of assert detected.
-        assert guild_information.voice_states is not None  # noqa: S101 - Use of assert detected.
+        assert guild_information.channels is not None
+        assert guild_information.members is not None
+        assert guild_information.presences is not None
+        assert guild_information.voice_states is not None
         return guild_events.GuildAvailableEvent(
             shard=shard,
             guild=guild_information.guild,
@@ -486,7 +486,9 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
 
         if (presence_payloads := payload.get("presences")) is not None:
             presences = {
-                snowflake.Snowflake(p["user"]["id"]): self.app.entity_factory.deserialize_member_presence(p)
+                snowflake.Snowflake(p["user"]["id"]): self.app.entity_factory.deserialize_member_presence(
+                    p, guild_id=guild_id
+                )
                 for p in presence_payloads
             }
         else:

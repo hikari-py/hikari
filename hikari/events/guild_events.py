@@ -382,5 +382,11 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     @property
     def guild_id(self) -> snowflake.Snowflake:
-        # <<inherited docstring from GuildEvent>>.
-        return typing.cast("snowflake.Snowflake", self.presence.guild_id)  # Should always be present in this event.
+        """Guild ID that the presence was updated in.
+
+        Returns
+        -------
+        hikari.utilities.snowflake.Snowflake
+            ID of the guild the event occurred in.
+        """
+        return self.presence.guild_id

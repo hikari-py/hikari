@@ -1862,7 +1862,9 @@ class TestEntityFactoryImpl:
             ),
         }
         assert guild_definition.presences == {
-            115590097100865541: entity_factory_impl.deserialize_member_presence(member_presence_payload)
+            115590097100865541: entity_factory_impl.deserialize_member_presence(
+                member_presence_payload, guild_id=snowflake.Snowflake(265828729970753537)
+            )
         }
         assert guild_definition.voice_states == {
             115590097100865541: entity_factory_impl.deserialize_voice_state(
@@ -2468,12 +2470,13 @@ class TestEntityFactoryImpl:
             {
                 "user": {"id": "42"},
                 "game": presence_activity_payload,
-                "guild_id": "44004040",
                 "status": "dnd",
                 "activities": [],
                 "client_status": {},
-            }
+            },
+            guild_id=snowflake.Snowflake(9654234123),
         )
+        assert presence.guild_id == snowflake.Snowflake(9654234123)
         assert presence.premium_since is None
         assert presence.nickname is None
         assert presence.role_ids is None

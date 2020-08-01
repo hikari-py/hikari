@@ -1122,7 +1122,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             presences = {}
 
             for presence_payload in payload["presences"]:
-                presence = self.deserialize_member_presence(presence_payload)
+                presence = self.deserialize_member_presence(presence_payload, guild_id=guild.id)
                 presences[presence.user_id] = presence
 
         else:
@@ -1131,7 +1131,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         voice_states: typing.Union[typing.MutableMapping[snowflake.Snowflake, voice_models.VoiceState], None]
         if "voice_states" in payload:
             voice_states = {}
-            assert members is not None  # noqa: S101 - Use of assert detected.
+            assert members is not None
 
             for voice_state_payload in payload["voice_states"]:
                 member = members[snowflake.Snowflake(voice_state_payload["user_id"])]
@@ -1454,18 +1454,23 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001
-        self, payload: data_binding.JSONObject
+    def deserialize_member_presence(  # noqa: CFQ001  # TODO: what's CFQ001?
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        guild_member_presence = presence_models.MemberPresence()
-        guild_member_presence.app = self._app
-        guild_member_presence.user_id = snowflake.Snowflake(payload["user"]["id"])
-        guild_member_presence.role_ids = (
+        presence = presence_models.MemberPresence()
+        presence.app = self._app
+        presence.user_id = snowflake.Snowflake(payload["user"]["id"])
+        presence.role_ids = (
             [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
         )
-        guild_member_presence.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
+        presence.guild_id = (
+            guild_id if guild_id is not undefined.UNDEFINED else snowflake.Snowflake(payload["guild_id"])
+        )
         # noinspection PyArgumentList
-        guild_member_presence.visible_status = presence_models.Status(payload["status"])
+        presence.visible_status = presence_models.Status(payload["status"])
 
         activities = []
         for activity_payload in payload["activities"]:
@@ -1540,7 +1545,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 presence_models.ActivityFlag(activity_payload["flags"]) if "flags" in activity_payload else None
             )
             activities.append(activity)
-        guild_member_presence.activities = activities
+        presence.activities = activities
 
         client_status_payload = payload["client_status"]
         client_status = presence_models.ClientStatus()
@@ -1562,17 +1567,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             if "web" in client_status_payload
             else presence_models.Status.OFFLINE
         )
-        guild_member_presence.client_status = client_status
+        presence.client_status = client_status
 
         # TODO: do we want to differentiate between undefined and null here?
         premium_since = payload.get("premium_since")
-        guild_member_presence.premium_since = (
+        presence.premium_since = (
             date.iso8601_datetime_string_to_datetime(premium_since) if premium_since is not None else None
         )
 
         # TODO: do we want to differentiate between undefined and null here?
-        guild_member_presence.nickname = payload.get("nick")
-        return guild_member_presence
+        presence.nickname = payload.get("nick")
+        return presence
 
     ###############
     # USER MODELS #
