@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -129,9 +130,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         for role in event.roles.values():
             self.app.cache.set_role(role)
 
-        self.app.cache.clear_members_for_guild(
-            event.guild.id
-        )  # TODO: do we really want to invalidate these all after an outage.
+        # TODO: do we really want to invalidate these all after an outage.
+        self.app.cache.clear_members_for_guild(event.guild.id)
         for member in event.members.values():
             self.app.cache.set_member(member)
 

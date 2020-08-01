@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -86,8 +87,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerComponentBase):
 
     async def on_guild_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        event = self.app.event_factory.deserialize_guild_create_event(shard, payload)
-        await self.dispatch(event)
+        await self.dispatch(self.app.event_factory.deserialize_guild_create_event(shard, payload))
 
     async def on_guild_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""

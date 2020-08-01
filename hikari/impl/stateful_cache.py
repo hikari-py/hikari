@@ -751,7 +751,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
             emoji_ids = tuple(self._emoji_entries.keys())
         else:
             guild_record = self._guild_entries.get(guild_id)
-            if guild_record is None or guild_record.emojis is None:  # TODO: explicit is vs implicit bool
+            if guild_record is None or guild_record.emojis is None:  # TODO: explicit is vs implicit bool consistency
                 return _EmptyCacheView()
 
             emoji_ids = guild_record.emojis
@@ -762,7 +762,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         cached_users = {}
 
         for emoji_id in emoji_ids:
-            emoji_data = self._emoji_entries.pop(emoji_id)  # TODO: investigate bug with emojis update here.
+            emoji_data = self._emoji_entries.pop(emoji_id)
             if emoji_data.ref_count > 0:
                 continue
 
@@ -780,7 +780,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         result = self._clear_emojis()
 
         for guild_id, guild_record in tuple(self._guild_entries.items()):
-            if guild_record.emojis is not None:  # TODO: test coverage for this.
+            if guild_record.emojis is not None:  # TODO: add test coverage for this.
                 guild_record.emojis = None
                 self._delete_guild_record_if_empty(guild_id)
 
@@ -857,7 +857,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self._emoji_entries[emoji.id] = _KnownCustomEmojiData.build_from_entity(emoji)
         guild_container = self._get_or_create_guild_record(emoji.guild_id)
 
-        if guild_container.emojis is None:  # TODO: test cases when it isn't None?
+        if guild_container.emojis is None:  # TODO: add test cases when it isn't None?
             guild_container.emojis = _IDTable()
 
         guild_container.emojis.add(emoji.id)
@@ -920,7 +920,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def get_guilds_view(self) -> cache.ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
         results = {
             sf: guild_record.guild for sf, guild_record in self._guild_entries.items() if guild_record.guild
-        }  # TODO: include unavailable guilds here?
+        }  # TODO: do we want to include unavailable guilds here or hide them?
         return _StatefulCacheMappingView(results) if results else _EmptyCacheView()
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
@@ -1152,7 +1152,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
                 guild_record.invites.remove(code)
 
                 if not guild_record.invites:
-                    guild_record.invites = None  # TODO: test when this is set to None lol
+                    guild_record.invites = None  # TODO: test when this is set to None
                     self._delete_guild_record_if_empty(invite.guild_id)
 
         return invite
@@ -1678,7 +1678,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         return view
 
     def delete_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
-        role = self._role_entries.pop(role_id, None)  # TODO: this honestly feels jank, redo soon
+        role = self._role_entries.pop(role_id, None)  # TODO: this honestly feels jank, should we redo this?
         if role is None:
             return None
 
