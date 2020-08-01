@@ -26,8 +26,7 @@ import typing
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.models import channels
-
-# from hikari.models import presences
+from hikari.models import presences
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
@@ -118,10 +117,10 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_guild_create_event(shard, payload)
         self.app.cache.update_guild(event.guild)
 
-        # self.app.cache.clear_guild_channels(event.guild.id)
-        # for channel in event.channels.values():
-        #     self.app.cache.set_guild_channel(channel)
-        #
+        self.app.cache.clear_guild_channels_for_guild(event.guild.id)
+        for channel in event.channels.values():
+            self.app.cache.set_guild_channel(channel)
+
         self.app.cache.clear_emojis_for_guild(event.guild.id)
         for emoji in event.emojis.values():
             self.app.cache.set_emoji(emoji)
@@ -136,9 +135,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         for member in event.members.values():
             self.app.cache.set_member(member)
 
-        # self.app.cache.clear_presences(event.guild.id)
-        # for presence in event.presences.values():
-        #     self.app.cache.set_presence(presence)
+        self.app.cache.clear_presences_for_guild(event.guild.id)
+        for presence in event.presences.values():
+            self.app.cache.set_presence(presence)
 
         for voice_state in event.voice_states.values():
             self.app.cache.set_voice_state(voice_state)
@@ -320,14 +319,12 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         """See https://discord.com/developers/docs/topics/gateway#presence-update for more info."""
         event = self.app.event_factory.deserialize_presence_update_event(shard, payload)
 
-        # if event.presence.visible_status is presences.Status.OFFLINE:
-        #     self.app.cache.delete_presence(event.presence.guild_id, event.presence.user_id)
-        # else:
-        #     self.app.cache.update_presence(event.presence)
-        #
-        # if event.partial_user is not None:
-        #     self.app.cache.update_user(event.partial_user)
+        if event.presence.visible_status is presences.Status.OFFLINE:
+            self.app.cache.delete_presence(event.presence.guild_id, event.presence.user_id)
+        else:
+            self.app.cache.update_presence(event.presence)
 
+        # TODO: update user here when partial_user is set self.app.cache.update_user(event.partial_user)
         await self.dispatch(event)
 
     async def on_typing_start(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
