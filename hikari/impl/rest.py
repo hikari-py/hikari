@@ -172,7 +172,7 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         url: typing.Optional[str],
         version: int,
     ) -> None:
-        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl()
+        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl(self)
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
         self._executor = executor

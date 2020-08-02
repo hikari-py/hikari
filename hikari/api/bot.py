@@ -92,6 +92,22 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
     @property
     @abc.abstractmethod
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
+
+        Returns
+        -------
+        hikari.models.users.OwnUser or builtins.None
+            The bot user, if known, otherwise `builtins.None`.
+        """
+
+    @property
+    @abc.abstractmethod
     def started_at(self) -> typing.Optional[datetime.datetime]:
         """Return the timestamp when the bot was started.
 
@@ -156,19 +172,4 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         -------
         datetime.timedelta
             The number of seconds the application has been running.
-        """
-
-    @property
-    @abc.abstractmethod
-    def me(self) -> typing.Optional[users.OwnUser]:
-        """Return the bot user, if known.
-
-        You can assume this is set once the `READY` event has been fired. Before
-        this, expect this to potentially be `builtins.None`.
-
-        Returns
-        -------
-        hikari.models.users.OwnUser or builtins.None
-            The bot user, or `builtins.None` if the application is not yet
-            `READY`.
         """
