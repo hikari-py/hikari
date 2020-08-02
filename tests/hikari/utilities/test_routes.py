@@ -257,7 +257,7 @@ class TestCDNRoute:
     def test_compile_to_file_calls_compile(self, format, size):
         with mock.patch.object(files, "URL", autospec=files.URL):
             route = hikari_test_helpers.unslot_class(routes.CDNRoute)("/hello/world", {"png", "jpg"}, sizable=True)
-            route.compile = mock.create_autospec(route.compile)
+            route.compile = mock.Mock(spec_set=route.compile)
             route.compile_to_file("https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb")
             route.compile.assert_called_once_with(
                 "https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb"
@@ -270,7 +270,7 @@ class TestCDNRoute:
             route = hikari_test_helpers.unslot_class(routes.CDNRoute)(
                 "/hello/world/{nya}/{boop}", {"png", "jpg"}, sizable=True
             )
-            route.compile = mock.create_autospec(route.compile, return_value=resultant_url_str)
+            route.compile = mock.Mock(spec_set=route.compile, return_value=resultant_url_str)
             result = route.compile_to_file("https://blep.com", file_format="png", size=64, boop="oyy lumo", nya="weeb")
 
         URL.assert_called_once_with(resultant_url_str)
