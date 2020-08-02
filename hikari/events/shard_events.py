@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -45,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardEvent(base_events.Event, abc.ABC):
     """Base class for any event that was shard-specific."""
 
@@ -66,7 +67,7 @@ class ShardEvent(base_events.Event, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardStateEvent(ShardEvent, abc.ABC):
     """Base class for any event concerning the state/connectivity of a shard.
 
@@ -74,7 +75,7 @@ class ShardStateEvent(ShardEvent, abc.ABC):
     """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
@@ -82,7 +83,7 @@ class ShardConnectedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
@@ -90,7 +91,7 @@ class ShardDisconnectedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
@@ -137,7 +138,7 @@ class ShardReadyEvent(ShardStateEvent):
     """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
@@ -145,7 +146,7 @@ class ShardResumedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent):
     """Used to represent the response to Guild Request Members."""
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -102,7 +103,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
@@ -173,7 +174,7 @@ class GuildTypingEvent(TypingEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 

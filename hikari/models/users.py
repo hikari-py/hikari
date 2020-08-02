@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -104,13 +105,12 @@ class PremiumType(enum.IntEnum):
         return self.name
 
 
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class User(snowflake.Unique, abc.ABC):
     """Interface for any user-like object.
 
     This does not include partial users, as they may not be fully formed.
     """
-
-    __slots__ = ()
 
     @property
     @abc.abstractmethod
@@ -223,7 +223,7 @@ class User(snowflake.Unique, abc.ABC):
         """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PartialUser(snowflake.Unique):
     """Represents partial information about a user.
 
@@ -379,7 +379,7 @@ class PartialUser(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class UserImpl(PartialUser, User):
     """Concrete implementation of user information."""
 
@@ -406,7 +406,7 @@ class UserImpl(PartialUser, User):
     """The public flags for this user."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 

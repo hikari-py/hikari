@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -51,7 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(
     intents.Intent.GUILDS, intents.Intent.GUILD_BANS, intents.Intent.GUILD_EMOJIS, intents.Intent.GUILD_PRESENCES
 )
@@ -70,7 +71,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class GuildVisibilityEvent(GuildEvent):
     """Event base for any event that changes the visibility of a guild.
@@ -82,7 +83,7 @@ class GuildVisibilityEvent(GuildEvent):
     """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
@@ -108,7 +109,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         return self.guild.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class GuildLeaveEvent(GuildVisibilityEvent):
     """Event fired when the bot is banned/kicked/leaves a guild.
@@ -123,7 +124,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     # <<inherited docstring from GuildEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class GuildUnavailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes unavailable because of an outage."""
@@ -135,7 +136,7 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
     # <<inherited docstring from GuildEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
@@ -158,7 +159,7 @@ class GuildUpdateEvent(GuildEvent):
         return self.guild.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 class BanEvent(GuildEvent):
     """Event base for any guild ban or unban."""
@@ -175,7 +176,7 @@ class BanEvent(GuildEvent):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
@@ -190,7 +191,7 @@ class BanCreateEvent(BanEvent):
     # <<inherited docstring from BanEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_BANS)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
@@ -205,7 +206,7 @@ class BanDeleteEvent(BanEvent):
     # <<inherited docstring from BanEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
 class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
@@ -226,7 +227,7 @@ class EmojisUpdateEvent(GuildEvent):
     """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
 class IntegrationsUpdateEvent(GuildEvent):
     """Event that is fired when the integrations in a guild are changed.
@@ -250,7 +251,7 @@ class IntegrationsUpdateEvent(GuildEvent):
     # <<inherited docstring from ShardEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
 class PresenceUpdateEvent(shard_events.ShardEvent):
     """Event fired when a user in a guild updates their presence in a guild.

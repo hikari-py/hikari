@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -33,7 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VersionInfo:
     """PyPI release info."""
 

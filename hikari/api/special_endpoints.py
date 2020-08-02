@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -73,7 +74,7 @@ class TypingIndicator(abc.ABC):
         ...
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder:
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 

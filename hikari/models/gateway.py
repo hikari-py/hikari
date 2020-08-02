@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -31,7 +32,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
@@ -71,7 +72,7 @@ class SessionStartLimit:
         return self._created_at + self.reset_after
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 

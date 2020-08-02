@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -150,7 +151,7 @@ class MessageActivityType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Attachment(snowflake.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -185,7 +186,7 @@ class Attachment(snowflake.Unique, files.WebResource):
         return self.filename
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -202,7 +203,7 @@ class Reaction:
         return str(self.emoji)
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -213,7 +214,7 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MessageCrosspost:
     """Represents information about a cross-posted message.
 
@@ -247,7 +248,7 @@ class MessageCrosspost:
     """
 
 
-@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False)
+@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflake.Unique):
     """A message representation containing partially populated information.
 
@@ -624,7 +625,7 @@ class PartialMessage(snowflake.Unique):
 
         !!! warning
             You are expected to make a connection to the gateway and identify
-            once before being able to use this _endpoint for a bot.
+            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
             channel=self.channel_id,
@@ -799,7 +800,7 @@ class PartialMessage(snowflake.Unique):
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 

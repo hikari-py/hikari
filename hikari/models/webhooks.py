@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -56,11 +57,11 @@ class WebhookType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
 
-    This is an _endpoint that can have messages sent to it using standard
+    This is an endpoint that can have messages sent to it using standard
     HTTP requests, which enables external services that are not bots to
     send informational messages to specific channels.
     """

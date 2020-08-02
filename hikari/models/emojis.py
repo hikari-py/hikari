@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -37,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
@@ -73,7 +74,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
 
-@attr.s(hash=True, init=False, kw_only=True, slots=True, eq=False)
+@attr.s(hash=True, init=False, kw_only=True, slots=True, eq=False, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -198,7 +199,7 @@ class UnicodeEmoji(Emoji):
         return unicode_emoji
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class CustomEmoji(snowflake.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -271,7 +272,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -194,11 +195,11 @@ class ConnectionVisibility(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
-    Returned by the `GET Current User Connections` _endpoint.
+    Returned by the `GET Current User Connections` endpoint.
     """
 
     id: str = attr.ib(eq=True, hash=True, repr=True)
@@ -233,7 +234,7 @@ class OwnConnection:
     """The visibility of the connection."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -258,7 +259,7 @@ class TeamMembershipState(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class TeamMember:
     """Represents a member of a Team."""
 
@@ -285,7 +286,7 @@ class TeamMember:
         return str(self.user)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
@@ -359,7 +360,7 @@ class Team(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 

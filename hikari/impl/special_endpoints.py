@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -15,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Special _endpoint implementations.
+"""Special endpoint implementations.
 
 You should never need to make any of these objects manually.
 """
@@ -116,7 +117,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
