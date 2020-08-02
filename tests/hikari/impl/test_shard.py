@@ -189,7 +189,7 @@ class TestClose:
 
     async def test_when_already_closed_does_nothing(self, client):
         client._request_close_event = mock.MagicMock(asyncio.Event)
-        client._request_close_event.is_set = mock.MagicMock(return_value=True)
+        client._request_close_event.is_set = mock.Mock(return_value=True)
 
         await client.close()
 
@@ -199,7 +199,7 @@ class TestClose:
     async def test_close_sets_request_close_event(self, client, is_alive):
         client.__dict__["_is_alive"] = is_alive
         client._request_close_event = mock.MagicMock(asyncio.Event)
-        client._request_close_event.is_set = mock.MagicMock(return_value=False)
+        client._request_close_event.is_set = mock.Mock(return_value=False)
 
         await client.close()
 
@@ -209,7 +209,7 @@ class TestClose:
     async def test_websocket_closed_if_not_None(self, client, is_alive):
         client.__dict__["_is_alive"] = is_alive
         client._request_close_event = mock.MagicMock(asyncio.Event)
-        client._request_close_event.is_set = mock.MagicMock(return_value=False)
+        client._request_close_event.is_set = mock.Mock(return_value=False)
         client._close_ws = mock.AsyncMock()
         client._ws = mock.Mock()
 
@@ -221,7 +221,7 @@ class TestClose:
     async def test_websocket_not_closed_if_None(self, client, is_alive):
         client.__dict__["_is_alive"] = is_alive
         client._request_close_event = mock.MagicMock(asyncio.Event)
-        client._request_close_event.is_set = mock.MagicMock(return_value=False)
+        client._request_close_event.is_set = mock.Mock(return_value=False)
         client._close_ws = mock.AsyncMock()
         client._ws = None
 
@@ -259,7 +259,7 @@ class TestRun:
     async def test_sets_handshake_event_on_finish(self, client):
         client._request_close_event = mock.MagicMock(asyncio.Event)
         client._handshake_event = mock.MagicMock(asyncio.Event)
-        client._request_close_event.is_set = mock.MagicMock(return_value=True)
+        client._request_close_event.is_set = mock.Mock(return_value=True)
         client._run_once = mock.AsyncMock()
 
         with pytest.raises(errors.GatewayClientClosedError):
@@ -316,7 +316,7 @@ class TestRunOnceShielded:
     async def test_socket_closed_resets_backoff(
         self, client, zombied, request_close, expect_backoff_called, client_session
     ):
-        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+        client._request_close_event.is_set = mock.Mock(return_value=request_close)
 
         def run_once():
             client._zombied = zombied
@@ -342,7 +342,7 @@ class TestRunOnceShielded:
     @pytest.mark.parametrize("request_close", [True, False])
     @hikari_test_helpers.timeout()
     async def test_socket_closed_is_restartable_if_no_closure_request(self, client, request_close, client_session):
-        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+        client._request_close_event.is_set = mock.Mock(return_value=request_close)
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._SocketClosed())
         assert await client._run_once_shielded(client_session) is not request_close
 
@@ -420,7 +420,7 @@ class TestRunOnceShielded:
     async def test_socket_closed_resets_backoff(
         self, client, zombied, request_close, expect_backoff_called, client_session
     ):
-        client._request_close_event.is_set = mock.MagicMock(return_value=request_close)
+        client._request_close_event.is_set = mock.Mock(return_value=request_close)
 
         def run_once(_):
             client._zombied = zombied
@@ -485,7 +485,7 @@ class TestRunOnce:
     async def test_backoff_and_waits_if_restarted_too_quickly(self, client, client_session):
         client._RESTART_RATELIMIT_WINDOW = 30
         client._last_run_started_at = 40
-        client._backoff.__next__ = mock.MagicMock(return_value=24.37)
+        client._backoff.__next__ = mock.Mock(return_value=24.37)
 
         # We mock create_task, so this will never be awaited if not.
         client._heartbeat_keepalive = mock.Mock()
@@ -506,7 +506,7 @@ class TestRunOnce:
     async def test_closing_bot_during_backoff_immediately_interrupts_it(self, client, client_session):
         client._RESTART_RATELIMIT_WINDOW = 30
         client._last_run_started_at = 40
-        client._backoff.__next__ = mock.MagicMock(return_value=24.37)
+        client._backoff.__next__ = mock.Mock(return_value=24.37)
         client._request_close_event = asyncio.Event()
 
         # use 60s since it is outside the 30s backoff window.
@@ -535,7 +535,7 @@ class TestRunOnce:
     async def test_backoff_does_not_trigger_if_not_restarting_in_small_window(self, client, client_session):
         with mock.patch.object(hikari_date, "monotonic", return_value=60):
             client._last_run_started_at = 40
-            client._backoff.__next__ = mock.MagicMock(
+            client._backoff.__next__ = mock.Mock(
                 side_effect=AssertionError(
                     "backoff was incremented, but this is not expected to occur in this test case scenario!"
                 )
@@ -672,7 +672,7 @@ class TestRunOnce:
         client._dispatch.assert_any_call("DISCONNECTED", {})
 
     async def test_no_dispatch_disconnect_if_not_connected(self, client, client_session):
-        client_session.ws_connect = mock.MagicMock(side_effect=RuntimeError)
+        client_session.ws_connect = mock.Mock(side_effect=RuntimeError)
         with pytest.raises(RuntimeError):
             await client._run_once(client_session)
         client._dispatch.assert_not_called()
@@ -708,7 +708,7 @@ class TestUpdatePresence:
         status = presences.Status.DO_NOT_DISTURB
 
         result = object()
-        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
 
         await client.update_presence(
             idle_since=idle_since, afk=afk, activity=activity, status=status,
@@ -745,7 +745,7 @@ class TestUpdatePresence:
         client._is_afk = client_afk
         client._status = client_status
 
-        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
 
         await client.update_presence(
             idle_since=idle_since, afk=afk, status=status, activity=activity,
@@ -766,7 +766,7 @@ class TestUpdatePresence:
         client._is_afk = undefined.UNDEFINED
         client._status = undefined.UNDEFINED
 
-        client._app.event_factory.serialize_gateway_presence = mock.MagicMock(return_value=result)
+        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
 
         await client.update_presence(
             idle_since=undefined.UNDEFINED,
@@ -807,7 +807,7 @@ class TestUpdateVoiceState:
 
     async def test_serialized_result_sent_on_websocket(self, client):
         payload = mock.Mock()
-        client._app.event_factory.serialize_gateway_voice_state_update = mock.MagicMock(return_value=payload)
+        client._app.event_factory.serialize_gateway_voice_state_update = mock.Mock(return_value=payload)
 
         await client.update_voice_state("6969420", "12345")
 
