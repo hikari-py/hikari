@@ -1323,7 +1323,7 @@ class TestEntityFactoryImpl:
         assert member.is_mute is undefined.UNDEFINED
 
     def test_deserialize_member_with_passed_through_user_object_and_guild_id(self, entity_factory_impl):
-        mock_user = mock.MagicMock(user_models.UserImpl)
+        mock_user = mock.Mock(user_models.UserImpl)
         member = entity_factory_impl.deserialize_member(
             {
                 "nick": "foobarbaz",

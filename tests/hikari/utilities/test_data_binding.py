@@ -157,7 +157,7 @@ class TestJSONObjectBuilder:
         r2 = mock.Mock()
         r3 = mock.Mock()
 
-        convert = mock.MagicMock(side_effect=[r1, r2, r3])
+        convert = mock.Mock(side_effect=[r1, r2, r3])
         builder = data_binding.JSONObjectBuilder()
         builder.put_array("www", [object(), object(), object()], conversion=convert)
         assert builder == {"www": [r1, r2, r3]}
@@ -237,7 +237,7 @@ class TestCastJSONArray:
         r1 = mock.Mock()
         r2 = mock.Mock()
         r3 = mock.Mock()
-        cast = mock.MagicMock(side_effect=[r1, r2, r3])
+        cast = mock.Mock(side_effect=[r1, r2, r3])
 
         arr = ["foo", "bar", "baz"]
 
