@@ -459,7 +459,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     version: int
     """API version in-use."""
 
-    @attr.s(auto_exc=True, slots=True, repr=False)
+    @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
         ...
 

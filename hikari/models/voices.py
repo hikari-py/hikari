@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
@@ -79,7 +79,7 @@ class VoiceState:
     """The string ID of this voice state's session."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""
 

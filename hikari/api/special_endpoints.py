@@ -74,7 +74,7 @@ class TypingIndicator(abc.ABC):
         ...
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder:
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
