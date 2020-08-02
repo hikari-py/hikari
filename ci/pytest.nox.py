@@ -52,7 +52,28 @@ def pytest(session: nox.Session) -> None:
         "-r", "requirements.txt", "-r", "dev-requirements.txt",
     )
     shutil.rmtree(".coverage", ignore_errors=True)
-    session.run("python", "-m", "pytest", *FLAGS)
+    session.run("python", "-m", "pytest", *FLAGS, *session.posargs)
+
+
+@nox.session(reuse_venv=True)
+def pytest_profile(session: nox.Session) -> None:
+    """Run pytest with a profiler enabled to debug test times."""
+    session.posargs.append("--profile")
+    session.posargs.append("--durations=0")
+    pytest(session)
+    print("Generating profiling reports in `prof' directory.")
+
+    import pstats
+
+    with open("prof/results-by-tottime.txt", "w") as fp:
+        stats = pstats.Stats("prof/combined.prof", stream=fp)
+        stats.sort_stats("tottime")
+        stats.print_stats()
+
+    with open("prof/results-by-ncalls.txt", "w") as fp:
+        stats = pstats.Stats("prof/combined.prof", stream=fp)
+        stats.sort_stats("calls")
+        stats.print_stats()
 
 
 @nox.session(reuse_venv=True)
