@@ -69,61 +69,61 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-# Modified from
-# https://github.com/django/django/blob/master/django/core/management/color.py
+def _determine_palette() -> typing.Mapping[str, str]:  # pragma: no cover
+    # Modified from
+    # https://github.com/django/django/blob/master/django/core/management/color.py
+    _plat = sys.platform
+    _supports_color = False
 
-_plat = sys.platform
-_supports_color = False
+    # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+    _is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
-# isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-_is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+    if _plat != "Pocket PC":
+        if _plat == "win32":
+            _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+            _supports_color |= "ANSICON" in os.environ
+            _supports_color &= _is_a_tty
+        else:
+            _supports_color = _is_a_tty
 
-if _plat != "Pocket PC":
-    if _plat == "win32":
-        _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-        _supports_color |= "ANSICON" in os.environ
-        _supports_color &= _is_a_tty
-    else:
-        _supports_color = _is_a_tty
+        _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
 
-    _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+    _palette_base: typing.Mapping[str, str] = types.MappingProxyType(
+        {
+            "default": "\033[0m",
+            "bright": "\033[1m",
+            "underline": "\033[4m",
+            "invert": "\033[7m",
+            "red": "\033[31m",
+            "green": "\033[32m",
+            "yellow": "\033[33m",
+            "blue": "\033[34m",
+            "magenta": "\033[35m",
+            "cyan": "\033[36m",
+            "white": "\033[37m",
+            "bright_red": "\033[91m",
+            "bright_green": "\033[92m",
+            "bright_yellow": "\033[93m",
+            "bright_blue": "\033[94m",
+            "bright_magenta": "\033[95m",
+            "bright_cyan": "\033[96m",
+            "bright_white": "\033[97m",
+            "framed": "\033[51m",
+            "dim": "\033[2m",
+        }
+    )
 
-_palette_base: typing.Mapping[str, str] = types.MappingProxyType(
-    {
-        "default": "\033[0m",
-        "bright": "\033[1m",
-        "underline": "\033[4m",
-        "invert": "\033[7m",
-        "red": "\033[31m",
-        "green": "\033[32m",
-        "yellow": "\033[33m",
-        "blue": "\033[34m",
-        "magenta": "\033[35m",
-        "cyan": "\033[36m",
-        "white": "\033[37m",
-        "bright_red": "\033[91m",
-        "bright_green": "\033[92m",
-        "bright_yellow": "\033[93m",
-        "bright_blue": "\033[94m",
-        "bright_magenta": "\033[95m",
-        "bright_cyan": "\033[96m",
-        "bright_white": "\033[97m",
-        "framed": "\033[51m",
-        "dim": "\033[2m",
-    }
-)
+    if not _supports_color:
+        _palette_base = types.MappingProxyType({k: "" for k in _palette_base})
 
-if not _supports_color:
-    _palette_base = types.MappingProxyType({k: "" for k in _palette_base})
+    return _palette_base
 
 
-_PALETTE: typing.Final[typing.Mapping[str, str]] = _palette_base
+_PALETTE: typing.Final[typing.Mapping[str, str]] = _determine_palette()
 _LOGGING_FORMAT: typing.Final[str] = (
     "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS002, FS003
     "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS002, FS003
 ).format(**_PALETTE)
-
-del _plat, _supports_color, _is_a_tty, _palette_base
 
 
 class BotAppImpl(bot.IBotApp):
