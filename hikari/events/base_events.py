@@ -227,4 +227,4 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         If an exception is thrown this time, it will need to be manually
         caught in-code, or will be discarded.
         """
-        await self.failed_callback(self.failed_event)
+        await self._failed_callback(self.failed_event)
