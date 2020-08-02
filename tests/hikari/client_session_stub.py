@@ -49,24 +49,24 @@ class ClientSessionStub:
     def __init__(self) -> None:
         self.close = mock.AsyncMock()
         self.closed = mock.PropertyMock()
-        self.connector = mock.create_autospec(aiohttp.BaseConnector)
-        self.cookie_jar = mock.create_autospec(aiohttp.CookieJar)
+        self.connector = mock.Mock(spec_set=aiohttp.BaseConnector)
+        self.cookie_jar = mock.Mock(spec_set=aiohttp.CookieJar)
         self.version = aiohttp.HttpVersion11
 
-        self.response_stub = mock.create_autospec(aiohttp.ClientResponse)
-        self.websocket_stub = mock.create_autospec(aiohttp.ClientWebSocketResponse)
+        self.response_stub = mock.Mock(spec_set=aiohttp.ClientResponse)
+        self.websocket_stub = mock.Mock(spec_set=aiohttp.ClientWebSocketResponse)
 
         self.request_context_stub = RequestContextStub(lambda: self.response_stub)
         self.ws_connect_stub = RequestContextStub(lambda: self.websocket_stub)
 
-        self.request = mock.MagicMock(wraps=lambda *args, **kwargs: self.request_context_stub)
-        self.ws_connect = mock.MagicMock(wraps=lambda *args, **kwargs: self.ws_connect_stub)
+        self.request = mock.Mock(wraps=lambda *args, **kwargs: self.request_context_stub)
+        self.ws_connect = mock.Mock(wraps=lambda *args, **kwargs: self.ws_connect_stub)
 
         for method in "get put patch post delete head options".split():
             self._make_method(method)
 
     def _make_method(self, method) -> None:
-        shim = mock.MagicMock(wraps=lambda *a, **k: self.request(method, *a, **k))
+        shim = mock.Mock(wraps=lambda *a, **k: self.request(method, *a, **k))
         setattr(self, method, shim)
 
     @property

@@ -35,12 +35,12 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def http_settings():
-    return mock.create_autospec(spec=config.HTTPSettings, spec_set=True)
+    return mock.Mock(spec_set=config.HTTPSettings)
 
 
 @pytest.fixture()
 def proxy_settings():
-    return mock.create_autospec(spec=config.ProxySettings, spec_set=True)
+    return mock.Mock(spec_set=config.ProxySettings)
 
 
 @pytest.fixture()
@@ -658,7 +658,7 @@ class TestRunOnce:
         client._heartbeat_keepalive = mock.Mock()
         client._poll_events = mock.AsyncMock(side_effect=Exception)
 
-        task = mock.create_autospec(asyncio.Task)
+        task = mock.Mock(spec_set=asyncio.Task)
 
         with mock.patch.object(asyncio, "create_task", return_value=task):
             with pytest.raises(Exception):
@@ -819,7 +819,8 @@ class TestUpdateVoiceState:
 @pytest.mark.asyncio
 class TestCloseWs:
     async def test_when_connected(self, client):
-        client._ws = mock.create_autospec(aiohttp.ClientWebSocketResponse, spec_set=True)
+        client._ws = mock.Mock(spec_set=aiohttp.ClientWebSocketResponse)
+        client._ws.close = mock.AsyncMock()
 
         await client._close_ws(6969420, "you got yeeted")
 
