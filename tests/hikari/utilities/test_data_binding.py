@@ -49,14 +49,14 @@ class TestStringMapBuilder:
         assert dict(mapping) == {}
 
     def test_put_general_value_casts_to_str(self):
-        m = mock.MagicMock()
+        m = mock.Mock()
         mapping = data_binding.StringMapBuilder()
         mapping.put("foo", m)
         assert dict(mapping) == {"foo": m.__str__()}
 
     def test_duplicate_puts_stores_values_as_sequence(self):
-        m1 = mock.MagicMock()
-        m2 = mock.MagicMock()
+        m1 = mock.Mock()
+        m2 = mock.Mock()
         mapping = data_binding.StringMapBuilder()
         mapping.put("foo", m1)
         mapping.put("foo", m2)
@@ -92,7 +92,7 @@ class TestStringMapBuilder:
 
     def test_put_with_conversion_passes_raw_input_to_converter(self):
         mapping = data_binding.StringMapBuilder()
-        convert = mock.MagicMock()
+        convert = mock.Mock()
 
         expect = object()
         mapping.put("yaskjgakljglak", expect, conversion=convert)
@@ -120,21 +120,21 @@ class TestJSONObjectBuilder:
         assert builder == {}
 
     def test_put_defined(self):
-        m = mock.MagicMock()
+        m = mock.Mock()
         builder = data_binding.JSONObjectBuilder()
         builder.put("bar", m)
         assert builder == {"bar": m}
 
     def test_put_with_conversion_uses_conversion_result(self):
-        m = mock.MagicMock()
-        convert = mock.MagicMock()
+        m = mock.Mock()
+        convert = mock.Mock()
         builder = data_binding.JSONObjectBuilder()
         builder.put("rawr", m, conversion=convert)
         assert builder == {"rawr": convert()}
 
     def test_put_with_conversion_passes_raw_input_to_converter(self):
-        m = mock.MagicMock()
-        convert = mock.MagicMock()
+        m = mock.Mock()
+        convert = mock.Mock()
         builder = data_binding.JSONObjectBuilder()
         builder.put("bar", m, conversion=convert)
         convert.assert_called_once_with(m)
@@ -145,17 +145,17 @@ class TestJSONObjectBuilder:
         assert builder == {}
 
     def test__put_array_defined(self):
-        m1 = mock.MagicMock()
-        m2 = mock.MagicMock()
-        m3 = mock.MagicMock()
+        m1 = mock.Mock()
+        m2 = mock.Mock()
+        m3 = mock.Mock()
         builder = data_binding.JSONObjectBuilder()
         builder.put_array("ttt", [m1, m2, m3])
         assert builder == {"ttt": [m1, m2, m3]}
 
     def test_put_array_with_conversion_uses_conversion_result(self):
-        r1 = mock.MagicMock()
-        r2 = mock.MagicMock()
-        r3 = mock.MagicMock()
+        r1 = mock.Mock()
+        r2 = mock.Mock()
+        r3 = mock.Mock()
 
         convert = mock.MagicMock(side_effect=[r1, r2, r3])
         builder = data_binding.JSONObjectBuilder()
@@ -163,11 +163,11 @@ class TestJSONObjectBuilder:
         assert builder == {"www": [r1, r2, r3]}
 
     def test_put_array_with_conversion_passes_raw_input_to_converter(self):
-        m1 = mock.MagicMock()
-        m2 = mock.MagicMock()
-        m3 = mock.MagicMock()
+        m1 = mock.Mock()
+        m2 = mock.Mock()
+        m3 = mock.Mock()
 
-        convert = mock.MagicMock()
+        convert = mock.Mock()
         builder = data_binding.JSONObjectBuilder()
         builder.put_array("xxx", [m1, m2, m3], conversion=convert)
         assert convert.call_args_list[0] == mock.call(m1)
@@ -224,7 +224,7 @@ class TestJSONObjectBuilder:
 
 class TestCastJSONArray:
     def test_cast_is_invoked_with_each_item(self):
-        cast = mock.MagicMock()
+        cast = mock.Mock()
         arr = ["foo", "bar", "baz"]
 
         data_binding.cast_json_array(arr, cast)
@@ -234,9 +234,9 @@ class TestCastJSONArray:
         assert cast.call_args_list[2] == mock.call("baz")
 
     def test_cast_result_is_used_for_each_item(self):
-        r1 = mock.MagicMock()
-        r2 = mock.MagicMock()
-        r3 = mock.MagicMock()
+        r1 = mock.Mock()
+        r2 = mock.Mock()
+        r3 = mock.Mock()
         cast = mock.MagicMock(side_effect=[r1, r2, r3])
 
         arr = ["foo", "bar", "baz"]
@@ -244,7 +244,7 @@ class TestCastJSONArray:
         assert data_binding.cast_json_array(arr, cast) == [r1, r2, r3]
 
     def test_passes_kwargs_for_every_cast(self):
-        cast = mock.MagicMock()
+        cast = mock.Mock()
         arr = ["foo", "bar", "baz"]
 
         data_binding.cast_json_array(arr, cast, foo=42, bar="OK")

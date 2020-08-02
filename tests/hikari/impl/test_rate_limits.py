@@ -32,7 +32,7 @@ from tests.hikari import hikari_test_helpers
 class TestBaseRateLimiter:
     def test_context_management(self):
         class MockedBaseRateLimiter(rate_limits.BaseRateLimiter):
-            close = mock.MagicMock()
+            close = mock.Mock()
             acquire = NotImplemented
 
         with MockedBaseRateLimiter() as m:
@@ -182,7 +182,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=False)
 
@@ -193,7 +193,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=False)
 
@@ -203,7 +203,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_no_drip_if_rate_limited(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = False
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
 
@@ -213,7 +213,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.throttle = mock.AsyncMock()
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
@@ -230,7 +230,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter, event_loop):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = event_loop.create_future()
         old_task = ratelimiter.throttle_task
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
@@ -240,7 +240,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=False)
 
@@ -251,7 +251,7 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
-        ratelimiter.drip = mock.MagicMock()
+        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.MagicMock(return_value=True)
 

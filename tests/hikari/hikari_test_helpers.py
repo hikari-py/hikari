@@ -76,7 +76,7 @@ def mock_methods_on(obj, except_=(), also_mock=()):
             if asyncio.iscoroutinefunction(method):
                 _mock = mock.AsyncMock()
             else:
-                _mock = mock.MagicMock()
+                _mock = mock.Mock()
 
             copy_.__dict__[name] = _mock
 
@@ -84,7 +84,7 @@ def mock_methods_on(obj, except_=(), also_mock=()):
         owner, _, attr = ("copy_." + expr).rpartition(".")
         # sue me.
         owner = eval(owner)
-        setattr(owner, attr, mock.MagicMock())
+        setattr(owner, attr, mock.Mock())
 
     assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
 

@@ -55,7 +55,7 @@ def client(http_settings, proxy_settings):
     return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
         url="wss://gateway.discord.gg",
         token="lol",
-        app=mock.MagicMock(),
+        app=mock.Mock(),
         http_settings=http_settings,
         proxy_settings=proxy_settings,
     )
@@ -73,8 +73,8 @@ class TestInit:
     )
     def test_url_is_correct_json(self, v, compression, expect, http_settings, proxy_settings):
         g = shard.GatewayShardImpl(
-            app=mock.MagicMock(),
-            token=mock.MagicMock(),
+            app=mock.Mock(),
+            token=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             url="wss://gaytewhuy.discord.meh",
@@ -91,10 +91,10 @@ class TestInit:
 
         with pytest.raises(NotImplementedError):
             shard.GatewayShardImpl(
-                app=mock.MagicMock(),
+                app=mock.Mock(),
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
-                token=mock.MagicMock(),
+                token=mock.Mock(),
                 url="wss://erlpack-is-broken-lol.discord.meh",
                 version=v,
                 data_format="etf",
@@ -104,7 +104,7 @@ class TestInit:
 
 class TestAppProperty:
     def test_returns_app(self, http_settings, proxy_settings):
-        app = mock.MagicMock()
+        app = mock.Mock()
         g = shard.GatewayShardImpl(
             url="wss://gateway.discord.gg",
             token="lol",
@@ -133,7 +133,7 @@ class TestStart:
         g = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=shard_id,
@@ -141,7 +141,7 @@ class TestStart:
         )
 
         g._handshake_event = mock.MagicMock(asyncio.Event)
-        g._run = mock.MagicMock()
+        g._run = mock.Mock()
 
         future = event_loop.create_future()
         future.set_result(None)
@@ -153,7 +153,7 @@ class TestStart:
 
     @hikari_test_helpers.timeout()
     async def test_waits_for_ready(self, client):
-        client._handshake_event = mock.MagicMock()
+        client._handshake_event = mock.Mock()
         client._handshake_event.wait = mock.AsyncMock()
         client._run = mock.AsyncMock()
 
@@ -162,7 +162,7 @@ class TestStart:
 
     @hikari_test_helpers.timeout()
     async def test_exception_is_raised_immediately(self, client):
-        client._handshake_event = mock.MagicMock()
+        client._handshake_event = mock.Mock()
         client._handshake_event.wait = mock.AsyncMock()
         client._run = mock.AsyncMock(side_effect=RuntimeError)
 
@@ -182,7 +182,7 @@ class TestClose:
         return GatewayStub(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
         )
@@ -211,7 +211,7 @@ class TestClose:
         client._request_close_event = mock.MagicMock(asyncio.Event)
         client._request_close_event.is_set = mock.MagicMock(return_value=False)
         client._close_ws = mock.AsyncMock()
-        client._ws = mock.MagicMock()
+        client._ws = mock.Mock()
 
         await client.close()
 
@@ -275,7 +275,7 @@ class TestRunOnceShielded:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             shard_id=3,
             shard_count=17,
             http_settings=http_settings,
@@ -452,7 +452,7 @@ class TestRunOnce:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             shard_id=3,
             shard_count=17,
             http_settings=http_settings,
@@ -488,7 +488,7 @@ class TestRunOnce:
         client._backoff.__next__ = mock.MagicMock(return_value=24.37)
 
         # We mock create_task, so this will never be awaited if not.
-        client._heartbeat_keepalive = mock.MagicMock()
+        client._heartbeat_keepalive = mock.Mock()
 
         stack = contextlib.ExitStack()
         wait_for = stack.enter_context(mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError))
@@ -542,7 +542,7 @@ class TestRunOnce:
             )
 
             # We mock create_task, so this will never be awaited if not.
-            client._heartbeat_keepalive = mock.MagicMock()
+            client._heartbeat_keepalive = mock.Mock()
 
             stack = contextlib.ExitStack()
             stack.enter_context(mock.patch.object(asyncio, "wait_for"))
@@ -627,7 +627,7 @@ class TestRunOnce:
         class Error(Exception):
             pass
 
-        client._heartbeat_keepalive = mock.MagicMock()
+        client._heartbeat_keepalive = mock.Mock()
 
         client._handshake = mock.AsyncMock(side_effect=Error)
 
@@ -640,7 +640,7 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_heartbeat_is_started(self, client, client_session):
-        client._heartbeat_keepalive = mock.MagicMock()
+        client._heartbeat_keepalive = mock.Mock()
 
         with mock.patch.object(asyncio, "create_task") as create_task:
             await client._run_once(client_session)
@@ -655,7 +655,7 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_heartbeat_is_stopped_when_poll_events_stops(self, client, client_session):
-        client._heartbeat_keepalive = mock.MagicMock()
+        client._heartbeat_keepalive = mock.Mock()
         client._poll_events = mock.AsyncMock(side_effect=Exception)
 
         task = mock.create_autospec(asyncio.Task)
@@ -689,7 +689,7 @@ class TestUpdatePresence:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=3,
@@ -735,10 +735,10 @@ class TestUpdatePresence:
     @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
     async def test_update_presence_ignores_undefined(self, client, idle_since, afk, status, activity):
         result = object()
-        client_activity = mock.MagicMock()
-        client_idle_since = mock.MagicMock()
-        client_afk = mock.MagicMock()
-        client_status = mock.MagicMock()
+        client_activity = mock.Mock()
+        client_idle_since = mock.Mock()
+        client_afk = mock.Mock()
+        client_status = mock.Mock()
 
         client._activity = client_activity
         client._idle_since = client_idle_since
@@ -787,7 +787,7 @@ class TestUpdateVoiceState:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.MagicMock(),
+            app=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=3,
@@ -806,7 +806,7 @@ class TestUpdateVoiceState:
         client._app.event_factory.serialize_gateway_voice_state_update("69696", channel)
 
     async def test_serialized_result_sent_on_websocket(self, client):
-        payload = mock.MagicMock()
+        payload = mock.Mock()
         client._app.event_factory.serialize_gateway_voice_state_update = mock.MagicMock(return_value=payload)
 
         await client.update_voice_state("6969420", "12345")

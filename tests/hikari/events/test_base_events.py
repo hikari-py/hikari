@@ -23,14 +23,14 @@ from hikari.models import intents
 
 @base_events.requires_intents(intents.Intent.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class FooEvent(base_events.Event):
+class DummyGuildEVent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
 @base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class BarEvent(base_events.Event):
+class DummyPresenceEvent(base_events.Event):
     pass
 
 
@@ -41,33 +41,33 @@ class ErrorEvent(base_events.Event):
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class FooInheritedEvent(FooEvent):
+class DummyGuildDerivedEvent(DummyGuildEVent):
     pass
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class BarInheritedEvent(BarEvent):
+class DummyPresenceDerivedEvent(DummyPresenceEvent):
     pass
 
 
 def test_is_no_recursive_throw_event_marked():
-    assert base_events.is_no_recursive_throw_event(BarEvent)
+    assert base_events.is_no_recursive_throw_event(DummyPresenceEvent)
     assert base_events.is_no_recursive_throw_event(ErrorEvent)
-    assert not base_events.is_no_recursive_throw_event(FooEvent)
-    assert not base_events.is_no_recursive_throw_event(FooInheritedEvent)
+    assert not base_events.is_no_recursive_throw_event(DummyGuildEVent)
+    assert not base_events.is_no_recursive_throw_event(DummyGuildDerivedEvent)
 
 
 def test_requires_intents():
-    assert list(base_events.get_required_intents_for(FooEvent)) == [intents.Intent.GUILDS]
-    assert list(base_events.get_required_intents_for(BarEvent)) == [intents.Intent.GUILD_PRESENCES]
+    assert list(base_events.get_required_intents_for(DummyGuildEVent)) == [intents.Intent.GUILDS]
+    assert list(base_events.get_required_intents_for(DummyPresenceEvent)) == [intents.Intent.GUILD_PRESENCES]
     assert list(base_events.get_required_intents_for(ErrorEvent)) == []
 
 
 def test_inherited_requires_intents():
-    assert list(base_events.get_required_intents_for(BarInheritedEvent)) == [intents.Intent.GUILD_PRESENCES]
-    assert list(base_events.get_required_intents_for(FooInheritedEvent)) == [intents.Intent.GUILDS]
+    assert list(base_events.get_required_intents_for(DummyPresenceDerivedEvent)) == [intents.Intent.GUILD_PRESENCES]
+    assert list(base_events.get_required_intents_for(DummyGuildDerivedEvent)) == [intents.Intent.GUILDS]
 
 
 def test_inherited_is_no_recursive_throw_event():
-    assert base_events.is_no_recursive_throw_event(BarInheritedEvent)
-    assert not base_events.is_no_recursive_throw_event(FooInheritedEvent)
+    assert base_events.is_no_recursive_throw_event(DummyPresenceDerivedEvent)
+    assert not base_events.is_no_recursive_throw_event(DummyGuildDerivedEvent)
