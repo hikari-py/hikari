@@ -276,7 +276,6 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio
-    @hikari_test_helpers.retry(5)
     @hikari_test_helpers.timeout(10)
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
         # Schedule concurrently but do not break our timeout.

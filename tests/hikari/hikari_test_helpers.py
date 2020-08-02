@@ -22,8 +22,6 @@ import copy
 import functools
 import inspect
 import os
-import re
-import warnings
 
 import async_timeout
 import mock
@@ -108,57 +106,6 @@ def unslot_class(klass):
     return _unslotted_classes[klass]
 
 
-def mock_patch(what, *args, **kwargs):
-    # If something refers to a strong reference, e.g. aiofiles.open is just a reference to aiofile.threadpool.open,
-    # you will need to pass a string to patch it...
-    if isinstance(what, str):
-        fqn = what
-    else:
-        fqn = fqn1(what)
-
-    return mock.patch(fqn, *args, **kwargs)
-
-
-def todo_implement(fn=...):
-    def decorator(fn):
-        return pytest.mark.xfail(reason="Code for test case not yet implemented.")(fn)
-
-    return fn is ... and decorator or decorator(fn)
-
-
-class AssertWarns:
-    def __init__(self, *, pattern=r".*", category=Warning):
-        self.pattern = pattern
-        self.category = category
-
-    def __enter__(self):
-        self.old_warning = warnings.warn_explicit
-        self.mocked_warning = mock.MagicMock(warnings.warn)
-        self.context = mock.patch("warnings.warn", new=self.mocked_warning)
-        self.context.__enter__()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.context.__exit__(exc_type, exc_val, exc_tb)
-
-        calls = []
-        for call_args, call_kwargs in self.mocked_warning.call_args_list:
-            message, category = call_args[:2]
-            calls.append((message, category))
-            if re.search(self.pattern, message, re.I) and issubclass(category, self.category):
-                self.matched = (message, category)
-                return
-
-        assert False, (
-            f"No warning with message pattern /{self.pattern}/ig and category subclassing {self.category} "
-            f"was found. There were {len(calls)} other warnings invoked in this time:\n"
-            + "\n".join(f"Category: {c}, Message: {m}" for m, c in calls)
-        )
-
-    def matched_message_contains(self, pattern):
-        assert re.search(pattern, self.matched[0], re.I), f"/{pattern}/ig does not match message {self.matched[0]!r}"
-
-
 def retry(max_retries):
     def decorator(func):
         assert asyncio.iscoroutinefunction(func), "retry only supports coroutine functions currently"
@@ -221,14 +168,6 @@ def has_sem_open_impl():
 
 def skip_if_no_sem_open(test):
     return pytest.mark.skipif(not has_sem_open_impl(), reason="Your platform lacks a sem_open implementation")(test)
-
-
-def set_private_attr(owner, name, value):
-    setattr(owner, f"_{type(owner).__name__}__{name}", value)
-
-
-def get_private_attr(owner, name, **kwargs):
-    return getattr(owner, f"_{type(owner).__name__}__{name}", **kwargs)
 
 
 async def idle():
