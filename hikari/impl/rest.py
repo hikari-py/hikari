@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -458,7 +459,7 @@ class RESTClientImpl(rest_api.IRESTClient):
     version: int
     """API version in-use."""
 
-    @attr.s(auto_exc=True, slots=True, repr=False)
+    @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
         ...
 
@@ -552,7 +553,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         no_auth: bool = False,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
-        # Make a ratelimit-protected HTTP request to a JSON _endpoint and expect some form
+        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response. If an error occurs, the response body is returned in the
         # raised exception as a bytes object. This is done since the differences between
         # the V6 and V7 API error messages are not documented properly, and there are
@@ -1003,6 +1004,12 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
+        if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
+            raise ValueError(
+                "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
+                "use 'attachment' (singular) instead?"
+            )
+
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
         if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
@@ -1370,6 +1377,18 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
+        if isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+            raise TypeError(
+                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "use 'embed' (singular) instead?"
+            )
+
+        if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
+            raise TypeError(
+                "You passed a non collection to 'attachments', but this expects a collection. Maybe you meant to "
+                "use 'attachment' (singular) instead?"
+            )
+
         if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
             # Syntatic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
@@ -1394,10 +1413,10 @@ class RESTClientImpl(rest_api.IRESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        serialized_embeds = []
+        serialized_embeds: typing.List[embeds_.Embed] = []
 
         if embeds is not undefined.UNDEFINED:
-            for embed in embeds:
+            for embed in embeds:  # type: ignore[unreachable]
                 embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
                 final_attachments.extend(embed_attachments)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -40,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     """Base for any voice-related event."""
 
@@ -57,7 +58,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):
     """Event fired when a user changes their voice state.
 
@@ -85,7 +86,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
         return self.state.guild_id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VoiceServerUpdateEvent(VoiceEvent):
     """Event fired when a voice server is changed.
 

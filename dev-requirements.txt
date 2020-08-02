@@ -1,10 +1,19 @@
-async-timeout~=3.0.1
-coverage~=5.2
+# Pipelines.
 nox==2020.5.24
+
+# Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is.
 mock~=4.0.2
-pytest==5.4.3
+
+# Py.test stuff.
+pytest==6.0.1
 pytest-asyncio==0.14.0
 pytest-cov==2.10.0
+pytest-profiling==1.7.0
 pytest-testdox==1.2.1
-virtualenv==20.0.27
-isort==5.1.4
+
+# Coverage testing.
+coverage~=5.2.1
+
+# Other stuff
+async-timeout~=3.0.1  # Used for timeouts in some test cases.
+isort==5.2.2

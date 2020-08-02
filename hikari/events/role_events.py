@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -40,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that involves guild roles."""
@@ -68,7 +69,7 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
@@ -96,7 +97,7 @@ class RoleCreateEvent(RoleEvent):
         return self.role.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
@@ -124,7 +125,7 @@ class RoleUpdateEvent(RoleEvent):
         return self.role.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""

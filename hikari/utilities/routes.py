@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -36,7 +37,7 @@ HASH_SEPARATOR: typing.Final[str] = ";"
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
-@attr.s(init=True, slots=True, hash=True)
+@attr.s(init=True, slots=True, hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -98,7 +99,7 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-@attr.s(hash=True, init=False, slots=True)
+@attr.s(hash=True, init=False, slots=True, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -167,7 +168,7 @@ def _cdn_valid_formats_converter(values: typing.Set[str]) -> typing.FrozenSet[st
     return frozenset(v.lower() for v in values)
 
 
-@attr.s(hash=True, init=True, slots=True)
+@attr.s(hash=True, init=True, slots=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""

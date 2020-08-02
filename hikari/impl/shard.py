@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -196,17 +197,17 @@ class GatewayShardImpl(shard.IGatewayShard):
         HELLO = 10
         HEARTBEAT_ACK = 11
 
-    @attr.s(slots=True, repr=False)
+    @attr.s(slots=True, repr=False, weakref_slot=False)
     @typing.final
     class _Reconnect(RuntimeError):
         pass
 
-    @attr.s(slots=True, repr=False)
+    @attr.s(slots=True, repr=False, weakref_slot=False)
     @typing.final
     class _SocketClosed(RuntimeError):
         pass
 
-    @attr.s(auto_exc=True, slots=True, repr=False)
+    @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
     @typing.final
     class _InvalidSession(RuntimeError):
         can_resume: bool = attr.ib(default=False)

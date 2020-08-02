@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -557,7 +558,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If an internal error occurs on Discord while handling the request.
 
         !!! note
-            The exceptions on this _endpoint will only be raised once the result
+            The exceptions on this endpoint will only be raised once the result
             is awaited or interacted with. Invoking this function itself will
             not raise any of the above types.
         """
@@ -704,7 +705,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If an internal error occurs on Discord while handling the request.
 
         !!! note
-            The exceptions on this _endpoint (other than `builtins.TypeError`) will only
+            The exceptions on this endpoint (other than `builtins.TypeError`) will only
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
@@ -873,7 +874,7 @@ class IRESTClient(component.IComponent, abc.ABC):
 
         !!! warning
             You are expected to make a connection to the gateway and identify
-            once before being able to use this _endpoint for a bot.
+            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
@@ -1716,7 +1717,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         days : hikari.utilities.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
         include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole][
-            If provided, the role(s) to include. By default, this _endpoint will
+            If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
             the count.
@@ -1765,7 +1766,7 @@ class IRESTClient(component.IComponent, abc.ABC):
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
         include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole]]]
-            If provided, the role(s) to include. By default, this _endpoint will
+            If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
             the count.

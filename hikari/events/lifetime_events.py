@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -36,7 +37,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_consumer
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
@@ -64,7 +65,7 @@ class StartingEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
@@ -86,7 +87,7 @@ class StartedEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
 
@@ -116,7 +117,7 @@ class StoppingEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 

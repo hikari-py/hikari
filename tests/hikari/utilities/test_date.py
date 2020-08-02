@@ -144,7 +144,7 @@ def test_utc_datetime():
         timezone = datetime.timezone
 
         class datetime:
-            now = mock.MagicMock(return_value=current_datetime)
+            now = mock.Mock(return_value=current_datetime)
 
     with mock.patch.object(date_, "datetime", datetime_module):
         result = date_.utc_datetime()
@@ -162,7 +162,7 @@ def test_local_datetime():
         timezone = datetime.timezone
 
         class datetime:
-            now = mock.MagicMock(return_value=current_datetime)
+            now = mock.Mock(return_value=current_datetime)
 
     with mock.patch.object(date_, "datetime", datetime_module):
         result = date_.local_datetime()

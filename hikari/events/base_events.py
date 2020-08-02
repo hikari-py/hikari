@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -47,7 +48,7 @@ REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class Event(abc.ABC):
     """Base event type that all Hikari events should subclass."""
 
@@ -146,7 +147,7 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 
 @no_recursive_throw()
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 

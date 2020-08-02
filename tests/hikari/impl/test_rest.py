@@ -57,7 +57,7 @@ def connector_factory():
 
 class TestBasicLazyCachedTCPConnectorFactory:
     def test_acquire_when_connector_is_None(self, connector_factory):
-        connector_mock = mock.Mock()
+        connector_mock = object()
         connector_factory.connector = None
         connector_factory.connector_kwargs = {"test": 123}
 
@@ -67,9 +67,8 @@ class TestBasicLazyCachedTCPConnectorFactory:
         tcp_connector.assert_called_once_with(test=123)
 
     def test_acquire_when_connector_is_not_None(self, connector_factory):
-        connector_mock = mock.Mock()
+        connector_mock = object()
         connector_factory.connector = connector_mock
-
         assert connector_factory.acquire() is connector_mock
 
 
@@ -77,7 +76,6 @@ class TestBasicLazyCachedTCPConnectorFactory:
 class TestBasicLazyCachedTCPConnectorFactoryAsync:
     async def test_close_when_connector_is_None(self, connector_factory):
         connector_factory.connector = None
-
         await connector_factory.close()
 
     async def test_close_when_connector_is_not_None(self, connector_factory):
@@ -99,9 +97,9 @@ def rest_app():
     return hikari_test_helpers.unslot_class(rest.RESTAppImpl)(
         connector_factory=mock.Mock(),
         debug=True,
-        executor=mock.Mock(),
-        http_settings=mock.Mock(spec=config.HTTPSettings),
-        proxy_settings=mock.Mock(spec=config.ProxySettings),
+        executor=None,
+        http_settings=mock.Mock(spec_set=config.HTTPSettings),
+        proxy_settings=mock.Mock(spec_set=config.ProxySettings),
         token="some_token",
         token_type="tYpe",
         url="https://some.url",
@@ -111,7 +109,7 @@ def rest_app():
 
 class TestRESTAppImpl:
     def test_cache_property(self, rest_app):
-        mock_cache = mock.Mock()
+        mock_cache = object()
         rest_app._cache = mock_cache
         assert rest_app.cache is mock_cache
 
@@ -120,27 +118,27 @@ class TestRESTAppImpl:
         assert rest_app.debug is True
 
     def test_executor_property(self, rest_app):
-        mock_executor = mock.Mock()
+        mock_executor = object()
         rest_app._executor = mock_executor
         assert rest_app.executor is mock_executor
 
     def test_entity_factory_property(self, rest_app):
-        mock_entity_factory = mock.Mock()
+        mock_entity_factory = object()
         rest_app._entity_factory = mock_entity_factory
         assert rest_app.entity_factory is mock_entity_factory
 
     def test_http_settings_property(self, rest_app):
-        mock_http_settings = mock.Mock()
+        mock_http_settings = object()
         rest_app._http_settings = mock_http_settings
         assert rest_app.http_settings is mock_http_settings
 
     def test_entity_proxy_settings(self, rest_app):
-        mock_proxy_settings = mock.Mock()
+        mock_proxy_settings = object()
         rest_app._proxy_settings = mock_proxy_settings
         assert rest_app.proxy_settings is mock_proxy_settings
 
     def test_entity_rest(self, rest_app):
-        mock_rest = mock.Mock()
+        mock_rest = object()
         rest_app._rest = mock_rest
         assert rest_app.rest is mock_rest
 
@@ -188,12 +186,12 @@ class TestRESTAppFactoryImpl:
         assert rest_factory.debug is True
 
     def test_http_settings_property(self, rest_factory):
-        mock_http_settings = mock.Mock()
+        mock_http_settings = object()
         rest_factory._http_settings = mock_http_settings
         assert rest_factory.http_settings is mock_http_settings
 
     def test_entity_proxy_settings(self, rest_factory):
-        mock_proxy_settings = mock.Mock()
+        mock_proxy_settings = object()
         rest_factory._proxy_settings = mock_proxy_settings
         assert rest_factory.proxy_settings is mock_proxy_settings
 
@@ -259,9 +257,14 @@ def stub_app():
     return mock.Mock(spec=rest_api.IRESTApp, entity_factory=mock.Mock())
 
 
+@pytest.fixture(scope="module")
+def rest_client_class():
+    return hikari_test_helpers.unslot_class(rest.RESTClientImpl)
+
+
 @pytest.fixture
-def rest_client(stub_app):
-    obj = hikari_test_helpers.unslot_class(rest.RESTClientImpl)(
+def rest_client(stub_app, rest_client_class):
+    obj = rest_client_class(
         app=stub_app,
         connector_factory=mock.Mock(),
         connector_owner=False,
@@ -403,7 +406,7 @@ class TestRESTClientImpl:
         assert rest_client.app is app_mock
 
     def test__acquire_client_session_when_None(self, rest_client):
-        client_session_mock = client_session_stub.ClientSessionStub()
+        client_session_mock = object()
         client_session_stub.closed = False
         connector_mock = mock.Mock()
         rest_client._connector_factory.acquire = mock.Mock(return_value=connector_mock)
