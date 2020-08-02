@@ -340,7 +340,7 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
     return f"data:{mimetype};base64,{b64}"
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """Protocol for reading a resource asynchronously using bit inception.
 
@@ -391,7 +391,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         ...
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 @typing.final
 class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
     impl: ReaderImplT = attr.ib()
@@ -471,7 +471,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 ###################
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class WebReader(AsyncReader):
     """Asynchronous reader to use to read data from a web resource."""
 
@@ -700,7 +700,7 @@ class URL(WebResource):
 ########################################
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class FileReader(AsyncReader, abc.ABC):
     """Abstract base for a file reader object.
 
@@ -716,7 +716,7 @@ class FileReader(AsyncReader, abc.ABC):
     """The path to the resource to read."""
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class ThreadedFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -764,7 +764,7 @@ class ThreadedFileReader(FileReader):
         fp.close()
 
 
-@attr.s(slots=False)  # Do not slot (pickle)
+@attr.s(slots=False, weakref_slot=False)  # Do not slot (pickle)
 class MultiprocessingFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -868,7 +868,7 @@ class File(Resource[FileReader]):
 ########################################################################
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 

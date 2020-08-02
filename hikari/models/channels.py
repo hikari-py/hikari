@@ -105,7 +105,7 @@ class PermissionOverwriteType(str, enum.Enum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PermissionOverwrite(snowflake.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
@@ -157,7 +157,7 @@ class PermissionOverwrite(snowflake.Unique):
         return permissions.Permission(~(self.allow | self.deny))
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -383,7 +383,7 @@ class TextChannel(PartialChannel, abc.ABC):
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
@@ -396,7 +396,7 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PrivateTextChannel(PrivateChannel, TextChannel):
     """Represents a private text channel that is between you and another user."""
 
@@ -415,7 +415,7 @@ class PrivateTextChannel(PrivateChannel, TextChannel):
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GroupPrivateTextChannel(PrivateChannel):
     """Represents a group private channel.
 
@@ -485,7 +485,7 @@ class GroupPrivateTextChannel(PrivateChannel):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
@@ -538,7 +538,7 @@ class GuildChannel(PartialChannel):
         return None
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
     """Represents a guild category channel.
 
@@ -547,7 +547,7 @@ class GuildCategory(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
@@ -582,7 +582,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, slots=True, kw_only=True)
+@attr.s(eq=True, hash=True, init=False, slots=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
@@ -606,7 +606,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel.
 
@@ -616,7 +616,7 @@ class GuildStoreChannel(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 

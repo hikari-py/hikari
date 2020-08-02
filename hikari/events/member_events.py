@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 class MemberEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any events that concern guild members."""
@@ -81,7 +81,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         return self.user.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
@@ -109,7 +109,7 @@ class MemberCreateEvent(MemberEvent):
         return self.member.user
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 class MemberUpdateEvent(MemberEvent):
     """Event that is fired when a member is updated in a guild.
@@ -140,7 +140,7 @@ class MemberUpdateEvent(MemberEvent):
         return self.member.user
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MEMBERS)
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""

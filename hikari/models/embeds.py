@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
 
-@attr.s(eq=True, slots=True, kw_only=True)
+@attr.s(eq=True, slots=True, kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource):
     """A base type for any resource provided in an embed.
 
@@ -86,7 +86,7 @@ class EmbedResource(files.Resource):
         return self.resource.stream(executor=executor, head_only=head_only)
 
 
-@attr.s(eq=True, slots=True, kw_only=True)
+@attr.s(eq=True, slots=True, kw_only=True, weakref_slot=False)
 class EmbedResourceWithProxy(EmbedResource):
     """Resource with a corresponding proxied element."""
 
@@ -100,7 +100,7 @@ class EmbedResourceWithProxy(EmbedResource):
     """
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedFooter:
     """Represents an embed footer."""
 
@@ -113,7 +113,7 @@ class EmbedFooter:
     """The URL of the footer icon, or `builtins.None` if not present."""
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
@@ -136,7 +136,7 @@ class EmbedImage(EmbedResourceWithProxy):
     """
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedVideo(EmbedResource):
     """Represents an embed video.
 
@@ -156,7 +156,7 @@ class EmbedVideo(EmbedResource):
     """The width of the video."""
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 
@@ -177,7 +177,7 @@ class EmbedProvider:
     """The URL of the provider."""
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedAuthor:
     """Represents an author of an embed."""
 
@@ -194,7 +194,7 @@ class EmbedAuthor:
     """The author's icon, or `builtins.None` if not present."""
 
 
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedField:
     """Represents a field in a embed."""
 

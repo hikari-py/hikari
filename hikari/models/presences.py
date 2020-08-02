@@ -85,7 +85,7 @@ class ActivityType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
@@ -96,7 +96,7 @@ class ActivityTimestamps:
     """When this activity's session will end, if applicable."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
@@ -110,7 +110,7 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
@@ -127,7 +127,7 @@ class ActivityAssets:
     """The text that'll appear when hovering over the small image, if set."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
@@ -169,7 +169,7 @@ class ActivityFlag(flag.Flag):
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
-@attr.s(eq=True, hash=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
@@ -186,7 +186,7 @@ class Activity:
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
@@ -246,7 +246,7 @@ class Status(str, enum.Enum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
@@ -260,7 +260,7 @@ class ClientStatus:
     """The status of the target user's web session."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
