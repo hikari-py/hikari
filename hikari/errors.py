@@ -153,7 +153,7 @@ class HTTPErrorResponse(HTTPError):
     """The URL that produced this error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
 
@@ -350,7 +350,7 @@ class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class MissingIntentError(HikariError):
     """Error raised when you try to perform an action without an intent.
 
@@ -365,7 +365,7 @@ class MissingIntentError(HikariError):
         return f"You are missing intents: {self.intents}"
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class UnavailableGuildError(HikariError):
     """Raised when a guild is unavailable due to an outage."""
 

@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, weakref_slot=False)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 
