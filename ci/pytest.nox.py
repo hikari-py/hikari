@@ -59,6 +59,7 @@ def pytest(session: nox.Session) -> None:
 def pytest_profile(session: nox.Session) -> None:
     """Run pytest with a profiler enabled to debug test times."""
     session.posargs.append("--profile")
+    session.posargs.append("--durations=0")
     pytest(session)
     print("Generating profiling reports in `prof' directory.")
 
