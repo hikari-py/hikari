@@ -37,7 +37,7 @@ import pytest
 # good way to advance the state of an asyncio coroutine without manually
 # iterating it, which I consider to be far more evil and will vary in results
 # if unrelated changes are made in the same function.
-REASONABLE_SLEEP_TIME = 0.5
+REASONABLE_SLEEP_TIME = 0.05
 
 # How long to reasonably expect something to take if it is considered instant.
 REASONABLE_QUICK_RESPONSE_TIME = 0.05
