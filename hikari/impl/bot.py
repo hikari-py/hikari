@@ -31,6 +31,7 @@ import reprlib
 import signal
 import sys
 import time
+import types
 import typing
 import warnings
 
@@ -63,10 +64,66 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
-    from hikari.models import gateway as gateway_models
     from hikari.models import users
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+
+
+# Modified from
+# https://github.com/django/django/blob/master/django/core/management/color.py
+
+_plat = sys.platform
+_supports_color = False
+
+# isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+_is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+if _plat != "Pocket PC":
+    if _plat == "win32":
+        _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+        _supports_color |= "ANSICON" in os.environ
+        _supports_color &= _is_a_tty
+    else:
+        _supports_color = _is_a_tty
+
+    _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+
+_palette_base: typing.Mapping[str, str] = types.MappingProxyType(
+    {
+        "default": "\033[0m",
+        "bright": "\033[1m",
+        "underline": "\033[4m",
+        "invert": "\033[7m",
+        "red": "\033[31m",
+        "green": "\033[32m",
+        "yellow": "\033[33m",
+        "blue": "\033[34m",
+        "magenta": "\033[35m",
+        "cyan": "\033[36m",
+        "white": "\033[37m",
+        "bright_red": "\033[91m",
+        "bright_green": "\033[92m",
+        "bright_yellow": "\033[93m",
+        "bright_blue": "\033[94m",
+        "bright_magenta": "\033[95m",
+        "bright_cyan": "\033[96m",
+        "bright_white": "\033[97m",
+        "framed": "\033[51m",
+        "dim": "\033[2m",
+    }
+)
+
+if not _supports_color:
+    _palette_base = types.MappingProxyType({k: "" for k in _palette_base})
+
+
+_PALETTE: typing.Final[typing.Mapping[str, str]] = _palette_base
+_LOGGING_FORMAT: typing.Final[str] = (
+    "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS002, FS003
+    "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS002, FS003
+).format(**_PALETTE)
+
+del _plat, _supports_color, _is_a_tty, _palette_base
 
 
 class BotAppImpl(bot.IBotApp):
@@ -242,15 +299,16 @@ class BotAppImpl(bot.IBotApp):
 
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
-            logging.basicConfig(format=self._determine_default_logging_format())
+            logging.basicConfig(format=_LOGGING_FORMAT)
             logging.root.setLevel(logging_level)
 
         if banner_package is not None:
             self._dump_banner(banner_package)
 
         self._event_manager: event_manager_base.EventManagerComponentBase
+        self._cache: cache_.ICacheComponent
         if stateless:
-            self._cache = stateless_cache_impl.StatelessCacheImpl()
+            self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
             self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
@@ -301,6 +359,7 @@ class BotAppImpl(bot.IBotApp):
     def __del__(self) -> None:
         # If something goes wrong while initializing the bot, `_start_count` might not be there.
         if hasattr(self, "_start_count") and self._start_count == 0:
+            # TODO: may remove this as it causes issues with tests. Provisionally implemented only.
             warnings.warn(
                 "Looks like your bot never started. Make sure you called bot.run() after you set the bot object up.",
                 category=errors.HikariWarning,
@@ -543,9 +602,6 @@ class BotAppImpl(bot.IBotApp):
                 self._tasks.clear()
                 await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
-    async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
-        return await self.rest.fetch_gateway_bot()
-
     def run(self) -> None:
         loop = asyncio.get_event_loop()
 
@@ -588,7 +644,9 @@ class BotAppImpl(bot.IBotApp):
         )
 
     async def _init(self) -> None:
-        gw_recs = await self.fetch_sharding_settings()
+        gw_recs, bot_user = await asyncio.gather(self.rest.fetch_gateway_bot(), self.rest.fetch_my_user())
+
+        self._cache.set_me(bot_user)
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
         self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
@@ -691,7 +749,8 @@ class BotAppImpl(bot.IBotApp):
                 with contextlib.suppress(NotImplementedError):
                     mapping_function(interrupt, *args)
 
-    def _dump_banner(self, banner_package: str) -> None:
+    @staticmethod
+    def _dump_banner(banner_package: str) -> None:
         import platform
         import string
         from importlib import resources
@@ -722,7 +781,7 @@ class BotAppImpl(bot.IBotApp):
             "platform_architecture": " ".join(platform.architecture()),
         }
 
-        args.update(self._determine_console_colour_palette())
+        args.update(**_PALETTE)
 
         with resources.open_text(banner_package, "banner.txt") as banner_fp:
             banner = string.Template(banner_fp.read()).safe_substitute(args)
@@ -730,65 +789,7 @@ class BotAppImpl(bot.IBotApp):
         sys.stdout.write(banner + "\n")
         sys.stdout.flush()
         # Give the TTY time to flush properly.
-        time.sleep(0.2)
-
-    def _determine_default_logging_format(self) -> str:
-        format_str = (
-            "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS003 f-string missing prefix
-            "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS003
-        )
-
-        return format_str.format(**self._determine_console_colour_palette())
-
-    @staticmethod
-    def _determine_console_colour_palette() -> typing.Dict[str, str]:
-        # Modified from
-        # https://github.com/django/django/blob/master/django/core/management/color.py
-
-        plat = sys.platform
-        supports_color = False
-
-        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-
-        if plat != "Pocket PC":
-            if plat == "win32":
-                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-                supports_color |= "ANSICON" in os.environ
-                supports_color &= is_a_tty
-            else:
-                supports_color = is_a_tty
-
-            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-        palette = {
-            "default": "\033[0m",
-            "bright": "\033[1m",
-            "underline": "\033[4m",
-            "invert": "\033[7m",
-            "red": "\033[31m",
-            "green": "\033[32m",
-            "yellow": "\033[33m",
-            "blue": "\033[34m",
-            "magenta": "\033[35m",
-            "cyan": "\033[36m",
-            "white": "\033[37m",
-            "bright_red": "\033[91m",
-            "bright_green": "\033[92m",
-            "bright_yellow": "\033[93m",
-            "bright_blue": "\033[94m",
-            "bright_magenta": "\033[95m",
-            "bright_cyan": "\033[96m",
-            "bright_white": "\033[97m",
-            "framed": "\033[51m",
-            "dim": "\033[2m",
-        }
-
-        if not supports_color:
-            for key in list(palette.keys()):
-                palette[key] = ""
-
-        return palette
+        time.sleep(0.05)
 
     @staticmethod
     async def _check_for_updates() -> None:
