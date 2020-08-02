@@ -19,7 +19,9 @@ import asyncio
 import contextlib
 import logging
 import math
+import queue
 import statistics
+import threading
 import time
 
 import mock
@@ -275,16 +277,36 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio
     @hikari_test_helpers.retry(5)
+    @hikari_test_helpers.timeout(10)
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
-        limit = 5
-        period = 3
-        total_requests = period * limit * 2
+        # Schedule concurrently but do not break our timeout.
+        await event_loop.run_in_executor(None, self._run_test_throttle_logic)
+
+    def _run_test_throttle_logic(self):
+        threads = [threading.Thread(target=self._run_test_throttle_logic_on_this_thread,) for _ in range(20)]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+    def _run_test_throttle_logic_on_this_thread(self):
+        event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(event_loop)
+        try:
+            event_loop.run_until_complete(self._run_test_throttle_logic_on_loop(event_loop))
+        finally:
+            event_loop.close()
+
+    @staticmethod
+    async def _run_test_throttle_logic_on_loop(event_loop):
+        limit = 2
+        period = 1.5
+        total_requests = int(period * limit * 2)
         max_distance_within_window = 0.05
         completion_times = []
         logger = logging.getLogger(__name__)
-
-        asyncio.set_event_loop(event_loop)
-        assert asyncio.get_event_loop().is_running(), "something has gone terribly wrong"
 
         def create_task(i):
             logger.info("making task %s", i)
