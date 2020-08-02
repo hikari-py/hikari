@@ -90,9 +90,9 @@ async def test_TextChannel_send():
     channel.id = 123
     channel.app = mock.Mock()
     channel.app.rest.create_message = mock.AsyncMock()
-    mock_attachment = mock.Mock()
-    mock_embed = mock.Mock()
-    mock_attachments = [mock.Mock(), mock.Mock(), mock.Mock()]
+    mock_attachment = object()
+    mock_embed = object()
+    mock_attachments = [object(), object(), object()]
 
     await channel.send(
         content="test content",
