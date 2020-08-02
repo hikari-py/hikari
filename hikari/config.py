@@ -36,7 +36,7 @@ from hikari.utilities import constants
 from hikari.utilities import data_binding
 
 
-@attr.s(slots=True, kw_only=True, repr=False)
+@attr.s(slots=True, kw_only=True, repr=False, weakref_slot=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
 
@@ -59,7 +59,7 @@ class BasicAuthHeader:
     __repr__ = __str__
 
 
-@attr.s(slots=True, kw_only=True)
+@attr.s(slots=True, kw_only=True, weakref_slot=False)
 class ProxySettings:
     """The proxy settings to use."""
 
@@ -102,7 +102,7 @@ class ProxySettings:
         return {**self.headers, constants.PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
-@attr.s(slots=True, kw_only=True)
+@attr.s(slots=True, kw_only=True, weakref_slot=False)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
@@ -122,7 +122,7 @@ class HTTPTimeoutSettings:
     """
 
 
-@attr.s(slots=True, kw_only=True)
+@attr.s(slots=True, kw_only=True, weakref_slot=False)
 class HTTPSettings:
     """Settings to control the HTTP client."""
 

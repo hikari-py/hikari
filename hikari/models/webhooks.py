@@ -57,7 +57,7 @@ class WebhookType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
 

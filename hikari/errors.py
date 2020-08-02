@@ -53,7 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import routes
 
 
-@attr.s(auto_exc=True, slots=True, repr=False, init=False)
+@attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
 
@@ -64,7 +64,7 @@ class HikariError(RuntimeError):
     """
 
 
-@attr.s(auto_exc=True, slots=True, repr=False, init=False)
+@attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.
 
@@ -75,7 +75,7 @@ class HikariWarning(RuntimeWarning):
     """
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayError(HikariError):
     """A base exception type for anything that can be thrown by the Gateway."""
 
@@ -86,7 +86,7 @@ class GatewayError(HikariError):
         return self.reason
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayClientClosedError(GatewayError):
     """An exception raised when you programmatically shut down the bot."""
 
@@ -97,7 +97,7 @@ class GatewayClientClosedError(GatewayError):
         return self.reason
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
@@ -116,7 +116,7 @@ class GatewayServerClosedConnectionError(GatewayError):
         return f"Server closed connection with code {self.code} ({self.reason})"
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPError(HikariError):
     """Base exception raised if an HTTP error occurs while making a request."""
 
@@ -124,7 +124,7 @@ class HTTPError(HikariError):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPClientClosedError(HTTPError):
     """Exception raised if an `aiohttp.ClientSession` was closed.
 
@@ -141,7 +141,7 @@ _message_default_factory = attr.Factory(
 )
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPErrorResponse(HTTPError):
     """Base exception for an erroneous HTTP response."""
 
@@ -180,7 +180,7 @@ class HTTPErrorResponse(HTTPError):
         return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''} for {self.url}"
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class ClientHTTPErrorResponse(HTTPErrorResponse):
     """Base exception for an erroneous HTTP response that is a client error.
 
@@ -189,7 +189,7 @@ class ClientHTTPErrorResponse(HTTPErrorResponse):
     """
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class BadRequest(ClientHTTPErrorResponse):
     """Raised when you send an invalid request somehow."""
 
@@ -200,7 +200,7 @@ class BadRequest(ClientHTTPErrorResponse):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class Unauthorized(ClientHTTPErrorResponse):
     """Raised when you are not authorized to access a specific resource."""
 
@@ -211,7 +211,7 @@ class Unauthorized(ClientHTTPErrorResponse):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class Forbidden(ClientHTTPErrorResponse):
     """Raised when you are not allowed to access a specific resource.
 
@@ -227,7 +227,7 @@ class Forbidden(ClientHTTPErrorResponse):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class NotFound(ClientHTTPErrorResponse):
     """Raised when something is not found."""
 
@@ -238,7 +238,7 @@ class NotFound(ClientHTTPErrorResponse):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class RateLimited(ClientHTTPErrorResponse):
     """Raised when a non-global ratelimit that cannot be handled occurs.
 
@@ -288,7 +288,7 @@ class RateLimited(ClientHTTPErrorResponse):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class ServerHTTPErrorResponse(HTTPErrorResponse):
     """Base exception for an erroneous HTTP response that is a server error.
 
@@ -297,7 +297,7 @@ class ServerHTTPErrorResponse(HTTPErrorResponse):
     """
 
 
-@attr.s(auto_exc=True, slots=True, repr=False, init=False)
+@attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class IntentWarning(HikariWarning):
     """Warning raised when subscribing to an event that cannot be fired.
 
@@ -305,7 +305,7 @@ class IntentWarning(HikariWarning):
     """
 
 
-@attr.s(auto_exc=True, slots=True, repr=False)
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class BulkDeleteError(HikariError):
     """Exception raised when a bulk delete fails midway through a call.
 
@@ -333,6 +333,6 @@ class BulkDeleteError(HikariError):
         return 100 * len(self.messages_deleted) / total
 
 
-@attr.s(auto_exc=True, slots=True, repr=False, init=False)
+@attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
