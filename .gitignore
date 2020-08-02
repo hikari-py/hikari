@@ -50,3 +50,6 @@ credentials.env
 
 # Mypy Cache
 .mypy_cache/
+
+# Profiling in pytest
+prof/
