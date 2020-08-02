@@ -52,7 +52,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_app
 
-_DataT = typing.TypeVar("_DataT", bound="_BaseData")
+_DataT = typing.TypeVar("_DataT", bound="_BaseData[typing.Any]")
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
 _ValueT = typing.TypeVar("_ValueT")
@@ -168,7 +168,7 @@ class _EmptyCacheView(cache.ICacheView[typing.Any, typing.Any]):
         return iterators.FlatLazyIterator(())
 
 
-@attr.s(slots=True, repr=False, hash=False)
+@attr.s(slots=True, repr=False, hash=False, weakref_slot=False)
 class _GuildRecord:
     is_available: typing.Optional[bool] = attr.ib(default=None)
     guild: typing.Optional[guilds.GatewayGuild] = attr.ib(default=None)
@@ -197,7 +197,7 @@ class _GuildRecord:
         return any(getattr(self, attribute) for attribute in self._FIELDS_TO_CHECK)
 
 
-@attr.s(slots=True, repr=False, hash=False, init=False)
+@attr.s(slots=True, repr=False, hash=False, init=False, weakref_slot=False)
 class _BaseData(abc.ABC, typing.Generic[_ValueT]):
     """A data class used for storing entities in a more primitive form.
 
@@ -272,7 +272,7 @@ class _BaseData(abc.ABC, typing.Generic[_ValueT]):
         return data
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
     id: snowflake.Snowflake = attr.ib()
     name: typing.Optional[str] = attr.ib()
@@ -295,7 +295,7 @@ class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
         return super().build_from_entity(entity, **kwargs, recipient_id=entity.recipient.id)
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _InviteData(_BaseData[invites.InviteWithMetadata]):
     code: str = attr.ib()
     guild_id: typing.Optional[snowflake.Snowflake] = attr.ib()  # TODO: This shouldn't ever be none here
@@ -345,7 +345,7 @@ class _InviteData(_BaseData[invites.InviteWithMetadata]):
         )
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _MemberData(_BaseData[guilds.Member]):
     id: snowflake.Snowflake = attr.ib()
     guild_id: snowflake.Snowflake = attr.ib()
@@ -367,7 +367,7 @@ class _MemberData(_BaseData[guilds.Member]):
         return super().build_from_entity(entity, **kwargs, id=entity.user.id, role_ids=tuple(entity.role_ids))
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
     id: snowflake.Snowflake = attr.ib()
     name: typing.Optional[str] = attr.ib()  # TODO: Shouldn't ever be None here
@@ -394,7 +394,7 @@ class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
         )
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _RichActivityData(_BaseData[presences.RichActivity]):
     created_at: datetime.datetime = attr.ib()
     timestamps: presences.ActivityTimestamps = attr.ib()
@@ -446,7 +446,7 @@ class _RichActivityData(_BaseData[presences.RichActivity]):
         return target
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _MemberPresenceData(_BaseData[presences.MemberPresence]):
     user_id: snowflake.Snowflake = attr.ib()
     role_ids: typing.Optional[typing.Tuple[snowflake.Snowflake, ...]] = attr.ib()
@@ -482,7 +482,7 @@ class _MemberPresenceData(_BaseData[presences.MemberPresence]):
         return target
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _VoiceStateData(_BaseData[voices.VoiceState]):
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     guild_id: snowflake.Snowflake = attr.ib()
@@ -513,7 +513,7 @@ class _VoiceStateData(_BaseData[voices.VoiceState]):
         )
 
 
-@attr.s(kw_only=True, slots=True, repr=False, hash=False)
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _GenericRefWrapper(typing.Generic[_ValueT]):
     object: _ValueT = attr.ib()
     ref_count: int = attr.ib(default=0)
@@ -762,10 +762,11 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         cached_users = {}
 
         for emoji_id in emoji_ids:
-            emoji_data = self._emoji_entries.pop(emoji_id)
+            emoji_data = self._emoji_entries[emoji_id]
             if emoji_data.ref_count > 0:
-                continue
+                continue  # TODO: how to handle emoji ref counting when the emoji should keep itself alive?
 
+            del self._emoji_entries[emoji_id]
             cached_emojis[emoji_id] = emoji_data
 
             if emoji_data.user_id is not None:
@@ -913,7 +914,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
             if guild_record.guild and not guild_record.is_available:
                 raise errors.UnavailableGuildError(guild_record.guild) from None
 
-            return guild_record.guild
+            return copy.copy(guild_record.guild)
 
         return None
 

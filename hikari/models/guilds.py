@@ -1028,6 +1028,7 @@ class Guild(PartialGuild):
         )
 
 
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
@@ -1074,7 +1075,7 @@ class RESTGuild(Guild):
         return self._emojis.get(snowflake.Snowflake(emoji))
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 

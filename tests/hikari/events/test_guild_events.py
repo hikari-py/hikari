@@ -27,7 +27,16 @@ from hikari.models import presences
 class TestGuildAvailableEvent:
     @pytest.fixture
     def event(self):
-        return guild_events.GuildAvailableEvent(shard=object(), guild=mock.Mock(guilds.Guild))
+        return guild_events.GuildAvailableEvent(
+            shard=object(),
+            guild=mock.Mock(guilds.Guild),
+            emojis={},
+            roles={},
+            channels={},
+            members={},
+            presences={},
+            voice_states={},
+        )
 
     def test_guild_id_property(self, event):
         event.guild.id = 123
@@ -37,7 +46,7 @@ class TestGuildAvailableEvent:
 class TestGuildUpdateEvent:
     @pytest.fixture
     def event(self):
-        return guild_events.GuildUpdateEvent(shard=object(), guild=mock.Mock(guilds.Guild))
+        return guild_events.GuildUpdateEvent(shard=object(), guild=mock.Mock(guilds.Guild), emojis={}, roles={})
 
     def test_guild_id_property(self, event):
         event.guild.id = 123
