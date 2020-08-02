@@ -99,8 +99,13 @@ def fqn2(module, item_identifier):
     return module.__name__ + "." + item_identifier
 
 
+_unslotted_classes = {}
+
+
 def unslot_class(klass):
-    return type(klass.__name__ + "Unslotted", (klass,), {})
+    if klass not in _unslotted_classes:
+        _unslotted_classes[klass] = type(klass.__name__ + "Unslotted", (klass,), {})
+    return _unslotted_classes[klass]
 
 
 def mock_patch(what, *args, **kwargs):
