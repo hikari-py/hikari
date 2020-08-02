@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 import attr
+import mock
+import pytest
 
 from hikari.events import base_events
 from hikari.models import intents
@@ -71,3 +73,36 @@ def test_inherited_requires_intents():
 def test_inherited_is_no_recursive_throw_event():
     assert base_events.is_no_recursive_throw_event(DummyPresenceDerivedEvent)
     assert not base_events.is_no_recursive_throw_event(DummyGuildDerivedEvent)
+
+
+class TestExceptionEvent:
+    @pytest.fixture(scope="class")  # we don't modify this so make it once.
+    def error(self):
+        # Raise and catch to fill in the traceback attribute.
+        try:
+            raise RuntimeError("blah")
+        except RuntimeError as ex:
+            return ex
+
+    @pytest.fixture
+    def event(self, error):
+        return base_events.ExceptionEvent(
+            app=object(),
+            shard=object(),
+            exception=error,
+            failed_event=mock.Mock(base_events.Event),
+            failed_callback=mock.AsyncMock(),
+        )
+
+    def test_failed_callback_property(self, event):
+        stub_callback = object()
+        event._failed_callback = stub_callback
+        assert event.failed_callback is stub_callback
+
+    def test_exc_info_property(self, event, error):
+        assert event.exc_info == (type(error), error, error.__traceback__)
+
+    @pytest.mark.asyncio
+    async def test_retry(self, event):
+        await event.retry()
+        event._failed_callback.assert_awaited_once_with(event.failed_event)

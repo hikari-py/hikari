@@ -188,8 +188,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
             The ID of the author that triggered this event concerns.
         """
         # Looks like `author` is always present in this event variant.
-        # TODO: verify that this is definitely present always.
-        return typing.cast(users.PartialUser, self.message.author).id
+        return typing.cast("users.PartialUser", self.message.author).id
 
     @property
     def channel_id(self) -> snowflake.Snowflake:
