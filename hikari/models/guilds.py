@@ -246,7 +246,7 @@ class GuildVerificationLevel(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild embed."""
 
@@ -260,7 +260,7 @@ class GuildWidget:
     """Whether this embed is enabled."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
@@ -393,7 +393,7 @@ class Member(users.User):
         return str(self.user)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
@@ -412,7 +412,7 @@ class PartialRole(snowflake.Unique):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound Role object."""
 
@@ -468,7 +468,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
     """Kick the subscriber."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
@@ -482,7 +482,7 @@ class IntegrationAccount:
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PartialIntegration(snowflake.Unique):
     """A partial representation of an integration, found in audit logs."""
 
@@ -504,7 +504,7 @@ class PartialIntegration(snowflake.Unique):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
@@ -539,7 +539,7 @@ class Integration(PartialIntegration):
     """The datetime of when this integration's subscribers were last synced."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildMemberBan:
     """Used to represent guild bans."""
 
@@ -550,7 +550,7 @@ class GuildMemberBan:
     """The object of the user this ban targets."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 @typing.final
 class UnavailableGuild(snowflake.Unique):
     """An unavailable guild object, received during gateway events such as READY.
@@ -574,7 +574,7 @@ class UnavailableGuild(snowflake.Unique):
         return True
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
@@ -656,7 +656,7 @@ class PartialGuild(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.PUBLIC` feature."""
 
@@ -747,7 +747,7 @@ class GuildPreview(PartialGuild):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class Guild(PartialGuild):
     """A representation of a guild on Discord.
 

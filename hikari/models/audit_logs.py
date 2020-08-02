@@ -122,7 +122,7 @@ class AuditLogChangeKey(str, enum.Enum):
     __repr__ = __str__
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
@@ -181,12 +181,12 @@ class AuditLogEventType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -206,7 +206,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """The name of the role this overwrite targets, if it targets a role."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -220,7 +220,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The ID of the message that's being pinned or unpinned."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Extra information attached to guild prune log entries."""
 
@@ -231,7 +231,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """The number of members who were removed by this prune."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the message bulk delete audit entry."""
 
@@ -239,7 +239,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """The amount of messages that were deleted."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Extra information attached to the message delete audit entry."""
 
@@ -247,7 +247,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """The guild text based channel where these message(s) were deleted."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the voice chat member disconnect entry."""
 
@@ -255,7 +255,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """The amount of members who were disconnected from voice in this entry."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
@@ -281,7 +281,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         self.__dict__.update(payload)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True)
+@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
 
@@ -313,7 +313,7 @@ class AuditLogEntry(snowflake.Unique):
 
 
 # TODO: make this support looking like a list of entries...
-@attr.s(eq=True, hash=False, init=False, kw_only=True, repr=False, slots=True)
+@attr.s(eq=True, hash=False, init=False, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class AuditLog:
     """Represents a guilds audit log."""
 

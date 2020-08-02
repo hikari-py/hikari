@@ -117,7 +117,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 

@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class ReactionEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any message reaction event."""
@@ -82,7 +82,7 @@ class ReactionEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
 class GuildReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in guild messages."""
@@ -99,13 +99,13 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in private messages."""
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class ReactionAddEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction that is added to a message."""
@@ -134,7 +134,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     """Event base for any single reaction that is removed from a message."""
@@ -164,13 +164,13 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteAllEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed from a message."""
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed for one emoji."""
@@ -189,7 +189,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
 class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
@@ -226,7 +226,7 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
         return self.member.user.id
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a guild message."""
@@ -250,7 +250,7 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a guild message's reactions."""
@@ -271,7 +271,7 @@ class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a guild message's reactions are removed."""
@@ -289,7 +289,7 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
     # <<inherited docstring from ReactionEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
@@ -310,7 +310,7 @@ class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
     # <<inherited docstring from ReactionAddEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
@@ -331,7 +331,7 @@ class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
@@ -349,7 +349,7 @@ class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiE
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteAllEvent(PrivateReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""

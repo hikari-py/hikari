@@ -64,7 +64,7 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
 
@@ -97,7 +97,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in guilds."""
 
@@ -118,7 +118,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             ...
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
 
@@ -129,7 +129,7 @@ class PrivateChannelEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelCreateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being created."""
 
@@ -151,7 +151,7 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
@@ -174,7 +174,7 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
     """Event fired when a private channel is created."""
 
@@ -192,7 +192,7 @@ class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being updated."""
 
@@ -214,7 +214,7 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
@@ -242,7 +242,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
     """Event fired when a private channel is edited."""
 
@@ -265,7 +265,7 @@ class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being deleted."""
 
@@ -292,7 +292,7 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
@@ -326,7 +326,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 # TODO: can this actually ever get fired?
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
     """Event fired when a private channel is deleted."""
 
@@ -354,7 +354,7 @@ class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
 
 
 # TODO: find out what private message intents are needed.
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
 
@@ -380,7 +380,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
@@ -403,7 +403,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 
 
 # TODO: This isn't documented as having an intent, is this right? The guild version requires GUILDS intent.
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
@@ -423,7 +423,7 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteEvent(GuildChannelEvent, abc.ABC):
     """Base event type for guild invite updates."""
 
@@ -455,7 +455,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
@@ -489,7 +489,7 @@ class InviteCreateEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
@@ -512,7 +512,7 @@ class InviteDeleteEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):
     """Event fired when a webhook is created/updated/deleted in a channel.
 

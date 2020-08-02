@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VersionInfo:
     """PyPI release info."""
 
