@@ -356,6 +356,7 @@ class _MemberData(_BaseData[guilds.Member]):
     is_deaf: undefined.UndefinedOr[bool] = attr.ib()
     is_mute: undefined.UndefinedOr[bool] = attr.ib()
     # meta-attribute
+    has_been_deleted: bool = attr.ib(default=False)
     ref_count: int = attr.ib(default=0)
 
     @classmethod
@@ -379,6 +380,7 @@ class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
     is_managed: bool = attr.ib()
     is_available: bool = attr.ib()
     # meta-attributes
+    has_been_deleted: bool = attr.ib(default=False)  # We need test coverage for this systm
     ref_count: int = attr.ib(default=0)
 
     @classmethod
@@ -566,15 +568,6 @@ class _PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflake.Snowf
         self._data[sf] = value
 
 
-def _set_fields_if_defined(target: _ValueT, source: typing.Any, *, blacklist: typing.Tuple[str, ...] = ()) -> _ValueT:
-    for field in attr.fields(type(source)):
-        value = getattr(source, field.name, undefined.UNDEFINED)
-        if value is not undefined.UNDEFINED and hasattr(target, field.name) and field.name not in blacklist:
-            setattr(target, field.name, value)
-
-    return target
-
-
 def _copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     channel = copy.copy(channel)
     channel.permission_overwrites = {
@@ -736,12 +729,16 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         emoji_data = self._emoji_entries.get(emoji_id)
 
         if emoji_data is None:
-            return
+            return None
 
         emoji_data.ref_count -= decrement
 
-        if emoji_data.ref_count == 0:
+        if self._can_delete_emoji(emoji_data):
             del self._emoji_entries[emoji_id]
+
+    @staticmethod
+    def _can_delete_emoji(emoji: _KnownCustomEmojiData) -> bool:
+        return emoji.has_been_deleted is True and emoji.ref_count < 1
 
     def _clear_emojis(
         self, guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
@@ -763,8 +760,9 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         for emoji_id in emoji_ids:
             emoji_data = self._emoji_entries[emoji_id]
-            if emoji_data.ref_count > 0:
-                continue  # TODO: how to handle emoji ref counting when the emoji should keep itself alive?
+            emoji_data.has_been_deleted = True
+            if not self._can_delete_emoji(emoji_data):
+                continue
 
             del self._emoji_entries[emoji_id]
             cached_emojis[emoji_id] = emoji_data
@@ -795,6 +793,10 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def delete_emoji(self, emoji_id: snowflake.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if emoji_data is None:
+            return None
+
+        emoji_data.has_been_deleted = True
+        if not self._can_delete_emoji(emoji_data):
             return None
 
         emoji = self._build_emoji(emoji_data)
@@ -1294,9 +1296,26 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         return member
 
-    @staticmethod
-    def _can_remove_member(guild_record: _GuildRecord, user_id: snowflake.Snowflake) -> bool:
-        return bool(not guild_record.voice_states or user_id not in guild_record.voice_states)
+    def _can_remove_member(self, member: _MemberData) -> bool:
+        if member.has_been_deleted is False:
+            return False
+
+        guild_record = self._guild_entries[member.guild_id]
+        return bool(not guild_record.voice_states or member.id not in guild_record.voice_states)
+
+    def _garbage_collect_member(self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake) -> None:
+        guild_record = self._guild_entries.get(guild_id)
+        if guild_record is None or guild_record.members is None or user_id not in guild_record.members:
+            return
+
+        member_data = guild_record.members[user_id]
+        if not self._can_remove_member(member_data):
+            return
+
+        del guild_record.members[user_id]
+        if not guild_record.members:
+            guild_record.members = None
+            self._delete_guild_record_if_empty(guild_id)
 
     def clear_members(
         self,
@@ -1320,8 +1339,9 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         cached_members = {}
         cached_users = {}
 
-        for user_id in tuple(guild_record.members.keys()):
-            if not self._can_remove_member(guild_record, user_id):
+        for user_id, member_data in tuple(guild_record.members.items()):
+            member_data.has_been_deleted = True
+            if not self._can_remove_member(member_data):
                 continue
 
             cached_members[user_id] = guild_record.members.pop(user_id)
@@ -1330,8 +1350,8 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         if not guild_record.members:
             guild_record.members = None
+            self._delete_guild_record_if_empty(guild_id)
 
-        self._delete_guild_record_if_empty(guild_id)
         return _StatefulCacheMappingView(
             cached_members, builder=lambda member: self._build_member(member, cached_users=cached_users)
         )
@@ -1340,20 +1360,21 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
     ) -> typing.Optional[guilds.Member]:
         guild_record = self._guild_entries.get(guild_id)
-        if guild_record is None or not self._can_remove_member(guild_record, user_id):
+        if guild_record is None or guild_record.members is None:
             return None
 
-        member = guild_record.members.pop(user_id, None) if guild_record.members else None
-        if member is None:
+        member_data = guild_record.members.get(user_id)
+        if member_data is None or not self._can_remove_member(member_data):
             return None
 
-        built_member = self._build_member(member)
+        member = self._build_member(member_data)
+        del guild_record.members[user_id]
         if not guild_record.members:
             guild_record.members = None
+            self._delete_guild_record_if_empty(guild_id)
 
-        self._delete_guild_record_if_empty(guild_id)
         self._garbage_collect_user(user_id, decrement=1)
-        return built_member
+        return member
 
     def get_member(
         self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
@@ -1452,16 +1473,11 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     ) -> None:
         emoji = self._unknown_emoji_entries.get(emoji_id_or_name)  # TODO: use this style for all gc methods
         if emoji is None:
-            return
+            return None
 
         emoji.ref_count -= decrement
         if emoji.ref_count == 0:
             del self._unknown_emoji_entries[emoji_id_or_name]
-
-    def _increment_unknown_emoji_id(
-        self, emoji_id_or_name: typing.Union[snowflake.Snowflake, str], increment: int = 1
-    ) -> None:
-        self._unknown_emoji_entries[emoji_id_or_name].ref_count += increment
 
     def clear_presences(
         self,
@@ -1498,16 +1514,17 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
                     continue
 
                 if isinstance(emoji_identifier, snowflake.Snowflake) and emoji_identifier in self._emoji_entries:
-                    emoji_data = self._emoji_entries[emoji_identifier]
+                    known_emoji_data = self._emoji_entries[emoji_identifier]
 
-                    if emoji_data.user_id is not None:
-                        cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id].object
+                    if known_emoji_data.user_id is not None:
+                        cached_users[known_emoji_data.user_id] = self._user_entries[known_emoji_data.user_id].object
 
-                    cached_emojis[emoji_identifier] = emoji_data
+                    cached_emojis[emoji_identifier] = known_emoji_data
                     self._garbage_collect_emoji(emoji_identifier, decrement=-1)
 
-                elif emoji_identifier not in cached_emojis:
+                else:
                     cached_emojis[emoji_identifier] = self._unknown_emoji_entries[emoji_identifier].object
+                    self._garbage_collect_unknown_emoji(emoji_identifier, decrement=1)
 
         return _StatefulCacheMappingView(
             cached_presences,
@@ -1837,8 +1854,8 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
 
         if not guild_record.voice_states:
             guild_record.voice_states = None
+            self._delete_guild_record_if_empty(guild_id)
 
-        self._delete_guild_record_if_empty(guild_id)
         return _StatefulCacheMappingView(
             cached_voice_states,
             builder=lambda voice_state: self._build_voice_state(
@@ -1863,6 +1880,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         for user_id in cached_voice_states.keys():
             cached_members[user_id] = guild_record.members[user_id]
             cached_users[user_id] = self._user_entries[user_id].object
+            self._garbage_collect_member(guild_id, user_id)
 
         self._delete_guild_record_if_empty(guild_id)
         return _StatefulCacheMappingView(
@@ -1872,7 +1890,6 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
             ),
         )
 
-    # TODO: this needs also delete the relevant member object if the member cache is disabled
     def delete_voice_state(
         self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
     ) -> typing.Optional[voices.VoiceState]:
@@ -1887,8 +1904,10 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         if not guild_record.voice_states:
             guild_record.voice_states = None
 
+        voice_state = self._build_voice_state(voice_state_data)
+        self._garbage_collect_member(voice_state.guild_id, voice_state.user_id)
         self._delete_guild_record_if_empty(guild_id)
-        return self._build_voice_state(voice_state_data)
+        return voice_state
 
     def get_voice_state(
         self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
@@ -1967,6 +1986,8 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
             guild_record.voice_states = {}
 
         self.set_member(voice_state.member)
+        assert guild_record.members  # TOOD: account for this method not setting the member in some cases later on
+        guild_record.members[voice_state.member.id].has_been_deleted = True
         guild_record.voice_states[voice_state.user_id] = _VoiceStateData.build_from_entity(voice_state)
 
     def update_voice_state(

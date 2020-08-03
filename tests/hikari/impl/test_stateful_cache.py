@@ -438,6 +438,7 @@ class TestStatefulCacheComponentImpl:
             stateful_cache._KnownCustomEmojiData,
             user_id=snowflake.Snowflake(54123),
             guild_id=snowflake.Snowflake(123333),
+            ref_count=0,
         )
         mock_other_emoji_data = mock.Mock(stateful_cache._KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
@@ -458,7 +459,7 @@ class TestStatefulCacheComponentImpl:
 
     def test_delete_emoji_without_user(self, cache_impl):
         mock_emoji_data = mock.Mock(
-            stateful_cache._KnownCustomEmojiData, user_id=None, guild_id=snowflake.Snowflake(123333),
+            stateful_cache._KnownCustomEmojiData, ref_count=0, user_id=None, guild_id=snowflake.Snowflake(123333),
         )
         mock_other_emoji_data = mock.Mock(stateful_cache._KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
@@ -1497,7 +1498,7 @@ class TestStatefulCacheComponentImpl:
 
     def test_delete_member_for_known_member(self, cache_impl):
         mock_member = mock.Mock(guilds.Member)
-        mock_member_data = mock.Mock(stateful_cache._MemberData)
+        mock_member_data = mock.Mock(stateful_cache._MemberData, guild_id=snowflake.Snowflake(42123))
         cache_impl._guild_entries = {
             snowflake.Snowflake(42123): stateful_cache._GuildRecord(
                 members={snowflake.Snowflake(67876): mock_member_data}
@@ -1507,6 +1508,7 @@ class TestStatefulCacheComponentImpl:
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_member = mock.Mock(return_value=mock_member)
         assert cache_impl.delete_member(snowflake.Snowflake(42123), snowflake.Snowflake(67876)) is mock_member
+        assert cache_impl._guild_entries[snowflake.Snowflake(42123)].members is None
         cache_impl._build_member.assert_called_once_with(mock_member_data)
         cache_impl._garbage_collect_user.assert_called_once_with(snowflake.Snowflake(67876), decrement=1)
         cache_impl._delete_guild_record_if_empty.assert_called_once_with(snowflake.Snowflake(42123))
@@ -1514,7 +1516,11 @@ class TestStatefulCacheComponentImpl:
     def test_delete_member_for_known_hard_referenced_member(self, cache_impl):
         cache_impl._guild_entries = {
             snowflake.Snowflake(42123): stateful_cache._GuildRecord(
-                members={snowflake.Snowflake(67876): mock.Mock(stateful_cache._MemberData)},
+                members={
+                    snowflake.Snowflake(67876): mock.Mock(
+                        stateful_cache._MemberData, id=snowflake.Snowflake(67876), guild_id=snowflake.Snowflake(42123)
+                    )
+                },
                 voice_states={snowflake.Snowflake(67876): mock.Mock(voices.VoiceState)},
             )
         }
@@ -1945,8 +1951,12 @@ class TestStatefulCacheComponentImpl:
         mock_voice_state_data_2 = mock.Mock(stateful_cache._VoiceStateData)
         mock_voice_state_1 = mock.Mock(voices.VoiceState)
         mock_voice_state_2 = mock.Mock(voices.VoiceState)
-        mock_member_data_1 = mock.Mock(stateful_cache._MemberData)
-        mock_member_data_2 = mock.Mock(stateful_cache._MemberData)
+        mock_member_data_1 = mock.Mock(
+            stateful_cache._MemberData, guild_id=snowflake.Snowflake(54123123), id=snowflake.Snowflake(7512312)
+        )
+        mock_member_data_2 = mock.Mock(
+            stateful_cache._MemberData, guild_id=snowflake.Snowflake(54123123), id=snowflake.Snowflake(43123123)
+        )
         record = stateful_cache._GuildRecord(
             voice_states={
                 snowflake.Snowflake(7512312): mock_voice_state_data_1,
