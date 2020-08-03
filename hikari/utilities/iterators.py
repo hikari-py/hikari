@@ -73,7 +73,7 @@ class All(typing.Generic[ValueT]):
         this sense, they are invoked in-order.
 
     !!! warning
-        You shouldn't generally need to use this outside of extending the
+        You should not generally need to use this outside of extending the
         iterators API in this library!
 
     Operators

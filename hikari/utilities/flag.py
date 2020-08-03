@@ -134,7 +134,7 @@ class Flag(enum.IntFlag):
             if not member.value:
                 continue
 
-            # If it isn't a combined value, and it is contained in the bitfield:
+            # If it is not a combined value, and it is contained in the bitfield:
             if math.log2(member.value).is_integer() and member & self:
                 members.append(member)
 

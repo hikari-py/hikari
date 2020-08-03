@@ -475,7 +475,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             snowflake.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
         }  # TODO: while snowflakes are guaranteed to be unique within their own resource, there is no guarantee for
-        # across between resources (user and role in this case); while in practice we won't get overlap there is a
+        # across between resources (user and role in this case); while in practice we will not get overlap there is a
         # chance that this may happen in the future, would it be more sensible to use a Sequence here?
         guild_channel.is_nsfw = payload.get("nsfw")
 

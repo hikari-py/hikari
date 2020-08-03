@@ -210,7 +210,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
             The ID of the emoji to remove from the cache.
 
         !!! note
-            This won't delete emojis that are being kept alive by a reference
+            This will not delete emojis that are being kept alive by a reference
             on a presence entry.
 
         Returns

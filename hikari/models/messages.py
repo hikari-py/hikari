@@ -225,7 +225,7 @@ class MessageCrosspost:
     app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    # TODO: get clarification on this! If it can't happen, this should subclass PartialMessage too.
+    # TODO: get clarification on this! If it cannot happen, this should subclass PartialMessage too.
     id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the message.
 

@@ -200,7 +200,7 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
         try:
             return Bytes.from_data_uri(url_or_resource)
         except ValueError:
-            # If we can't parse it, maybe it is some malformed file?
+            # If we cannot parse it, maybe it is some malformed file?
             pass
 
     path = pathlib.Path(url_or_resource)
@@ -1034,12 +1034,12 @@ class Bytes(Resource[IteratorReader]):
         if not data_uri.startswith("data:"):
             raise ValueError("Invalid data URI passed")
 
-        # This won't block for a data URI; if it was a URL, it would block, so
+        # This will not block for a data URI; if it was a URL, it would block, so
         # we guard against this with the check above.
         try:
             with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
                 # TODO: make this smarter by using regex or something to get the mimetype.
-                # We can't always "just parse" the whole uri using regex, as extra
+                # We cannot always "just parse" the whole uri using regex, as extra
                 # params like encoding can be included, e.g.
                 # data:text/plain;charset=utf-8;base64,aGVsbG8gPDM=
                 mimetype = data_uri.split(";", 1)[0][5:]

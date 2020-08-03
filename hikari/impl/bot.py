@@ -616,7 +616,7 @@ class BotAppImpl(bot.IBotApp):
             if self._debug:
                 raise
             else:
-                # The user won't care where this gets raised from, unless we are
+                # The user will not care where this gets raised from, unless we are
                 # debugging. It just causes a lot of confusing spam.
                 raise ex.with_traceback(None)  # noqa: R100 raise in except handler without from
         finally:

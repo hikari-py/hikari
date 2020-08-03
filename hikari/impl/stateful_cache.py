@@ -298,7 +298,7 @@ class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _InviteData(_BaseData[invites.InviteWithMetadata]):
     code: str = attr.ib()
-    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib()  # TODO: This shouldn't ever be none here
+    guild_id: typing.Optional[snowflake.Snowflake] = attr.ib()  # TODO: This should not ever be none here
     channel_id: snowflake.Snowflake = attr.ib()
     inviter_id: typing.Optional[
         snowflake.Snowflake
@@ -371,8 +371,8 @@ class _MemberData(_BaseData[guilds.Member]):
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
     id: snowflake.Snowflake = attr.ib()
-    name: typing.Optional[str] = attr.ib()  # TODO: Shouldn't ever be None here
-    is_animated: typing.Optional[bool] = attr.ib()  # TODO: Shouldn't ever be None here
+    name: typing.Optional[str] = attr.ib()  # TODO: should not ever be None here
+    is_animated: typing.Optional[bool] = attr.ib()  # TODO: should not ever be None here
     guild_id: snowflake.Snowflake = attr.ib()
     role_ids: typing.Tuple[snowflake.Snowflake, ...] = attr.ib()
     user_id: typing.Optional[snowflake.Snowflake] = attr.ib()
@@ -860,7 +860,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self._emoji_entries[emoji.id] = _KnownCustomEmojiData.build_from_entity(emoji)
         guild_container = self._get_or_create_guild_record(emoji.guild_id)
 
-        if guild_container.emojis is None:  # TODO: add test cases when it isn't None?
+        if guild_container.emojis is None:  # TODO: add test cases when it is not None?
             guild_container.emojis = _IDTable()
 
         guild_container.emojis.add(emoji.id)
@@ -1422,7 +1422,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self.set_user(member.user)
         member_data = _MemberData.build_from_entity(member)
 
-        if guild_record.members is None:  # TODO: test when this isn't None
+        if guild_record.members is None:  # TODO: test when this is not None
             guild_record.members = {}
 
         if member.user.id not in guild_record.members:
@@ -1729,7 +1729,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
         self._role_entries[role.id] = role
         guild_record = self._get_or_create_guild_record(role.guild_id)
 
-        if guild_record.roles is None:  # TODO: test when this isn't None
+        if guild_record.roles is None:  # TODO: test when this is not None
             guild_record.roles = _IDTable()
 
         guild_record.roles.add(role.id)
@@ -1982,7 +1982,7 @@ class StatefulCacheComponentImpl(cache.ICacheComponent):
     def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
         guild_record = self._get_or_create_guild_record(voice_state.guild_id)
 
-        if guild_record.voice_states is None:  # TODO: test when this isn't None
+        if guild_record.voice_states is None:  # TODO: test when this is not None
             guild_record.voice_states = {}
 
         self.set_member(voice_state.member)
