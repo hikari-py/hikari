@@ -37,23 +37,23 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     raw_body = await response.read()
 
     if response.status == http.HTTPStatus.BAD_REQUEST:
-        return errors.BadRequest(real_url, response.headers, raw_body)
+        return errors.BadRequestError(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.UNAUTHORIZED:
-        return errors.Unauthorized(real_url, response.headers, raw_body)
+        return errors.UnauthorizedError(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.FORBIDDEN:
-        return errors.Forbidden(real_url, response.headers, raw_body)
+        return errors.ForbiddenError(real_url, response.headers, raw_body)
     if response.status == http.HTTPStatus.NOT_FOUND:
-        return errors.NotFound(real_url, response.headers, raw_body)
+        return errors.NotFoundError(real_url, response.headers, raw_body)
 
     # noinspection PyArgumentList
     status = http.HTTPStatus(response.status)
 
     cls: typing.Type[errors.HikariError]
     if 400 <= status < 500:
-        cls = errors.ClientHTTPErrorResponse
+        cls = errors.ClientHTTPResponseError
     elif 500 <= status < 600:
-        cls = errors.ServerHTTPErrorResponse
+        cls = errors.InternalServerError
     else:
-        cls = errors.HTTPErrorResponse
+        cls = errors.HTTPResponseError
 
     return cls(real_url, status, response.headers, raw_body)

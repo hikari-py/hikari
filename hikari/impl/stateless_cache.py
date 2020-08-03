@@ -23,64 +23,384 @@ bots where desired.
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
+__all__: typing.Final[typing.List[str]] = ["StatelessCacheImpl"]
 
-import functools
-import inspect
 import typing
 
-from hikari import errors
 from hikari.api import cache
+from hikari.api import rest
+
+if typing.TYPE_CHECKING:
+    from hikari.models import channels
+    from hikari.models import emojis
+    from hikari.models import guilds
+    from hikari.models import invites
+    from hikari.models import presences
+    from hikari.models import users
+    from hikari.models import voices
+    from hikari.utilities import snowflake
 
 
-def _fail(*_: typing.Any, **__: typing.Any) -> typing.NoReturn:
-    raise errors.HikariError(
-        "This component has not got a cache enabled, and is stateless. "
-        "Operations relying on a cache will always fail."
-    )
+@typing.final
+class StatelessCacheImpl(cache.ICacheComponent):
+    """Stateless cache.
 
+    A stateless cache implementation that implements dummy operations for
+    each of the required attributes of a functional cache implementation.
+    Any descriptors will always return `builtins.NotImplemented`, and any
+    methods will always raise `hikari.errors.HikariError` when being invoked.
 
-# Generate a stub from the implementation dynamically. This way it is one less
-# thing to keep up to date in the future.
-@typing.no_type_check
-def _generate():
-    namespace = {
-        "__doc__": (
-            "A stateless cache implementation that implements dummy operations for "
-            "each of the required attributes of a functional cache implementation. "
-            "Any descriptors will always return `builtins.NotImplemented`, and any methods "
-            "will always raise `hikari.errors.HikariError` when being invoked."
-        ),
-        "__init__": lambda *_, **__: None,
-        "__init_subclass__": staticmethod(lambda *args, **kwargs: _fail(*args, **kwargs)),
-        "__slots__": (),
-        "__module__": __name__,
-    }
+    The only state that _is_ stored will be the bot user, as this is generally
+    useful information to always know about, and is required for some
+    functionality such as voice support.
+    """
 
-    for name, member in inspect.getmembers(cache.ICacheComponent):
-        if name in namespace:
-            # Skip stuff we already have defined above.
-            continue
+    __slots__: typing.Sequence[str] = ("_app", "_me")
 
-        if inspect.isabstract(member):
-            namespace[name] = NotImplemented
+    def __init__(self, app: rest.IRESTApp) -> None:
+        self._app = app
+        self._me: typing.Optional[users.OwnUser] = None
 
-        if getattr(member, "__isabstractmethod__", False) is True:
-            # If we were to inspect an instance of the class, it would invoke the properties to
-            # get their value. Thus, it is not considered a safe thing to do to have them raise
-            # exceptions on invocation.
-            if hasattr(member, "__get__"):
-                doc = getattr(member, "__doc__", None)
-                new_member = property(lambda self: NotImplemented, _fail, lambda self: NotImplemented, doc)
-            else:
-                new_member = functools.wraps(member)(_fail)
+    @property
+    def app(self) -> rest.IRESTApp:
+        return self._app
 
-            namespace[name] = new_member
+    def get_me(self) -> typing.Optional[users.OwnUser]:
+        return self._me
 
-    return typing.final(type("StatelessCacheImpl", (cache.ICacheComponent,), namespace))
+    def set_me(self, user: users.OwnUser, /) -> None:
+        self._me = user
 
+    @staticmethod
+    def _no_cache() -> NotImplementedError:
+        return NotImplementedError("This application is stateless, cache operations are not implemented.")
 
-# noinspection PyTypeChecker
-StatelessCacheImpl: typing.Final[typing.Type[cache.ICacheComponent]] = _generate()
+    def clear_private_text_channels(self) -> cache.ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        raise self._no_cache()
 
-del _generate
+    def delete_private_text_channel(
+        self, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[channels.PrivateTextChannel]:
+        raise self._no_cache()
+
+    def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
+        raise self._no_cache()
+
+    def get_private_text_channels_view(self) -> cache.ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        raise self._no_cache()
+
+    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
+        raise self._no_cache()
+
+    def update_private_text_channel(
+        self, channel: channels.PrivateTextChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
+        raise self._no_cache()
+
+    def clear_emojis(self) -> cache.ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def clear_emojis_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def delete_emoji(self, emoji_id: snowflake.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def get_emoji(self, emoji_id: snowflake.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def get_emojis_view(self) -> cache.ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def get_emojis_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        raise self._no_cache()
+
+    def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
+        raise self._no_cache()
+
+    def update_emoji(
+        self, emoji: emojis.KnownCustomEmoji, /
+    ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+        raise self._no_cache()
+
+    def clear_guilds(self) -> cache.ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
+        raise self._no_cache()
+
+    def delete_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        raise self._no_cache()
+
+    def get_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        raise self._no_cache()
+
+    def get_guilds_view(self) -> cache.ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
+        raise self._no_cache()
+
+    def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
+        raise self._no_cache()
+
+    def set_guild_availability(self, guild_id: snowflake.Snowflake, is_available: bool, /) -> None:
+        raise self._no_cache()
+
+    def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflake.Snowflake], /) -> None:
+        raise self._no_cache()
+
+    def update_guild(
+        self, guild: guilds.GatewayGuild, /
+    ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+        raise self._no_cache()
+
+    def clear_guild_channels(self) -> cache.ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        raise self._no_cache()
+
+    def clear_guild_channels_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        raise self._no_cache()
+
+    def delete_guild_channel(self, channel_id: snowflake.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
+        raise self._no_cache()
+
+    def get_guild_channel(self, channel_id: snowflake.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
+        raise self._no_cache()
+
+    def get_guild_channels_view(self) -> cache.ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        raise self._no_cache()
+
+    def get_guild_channels_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        raise self._no_cache()
+
+    def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
+        raise self._no_cache()
+
+    def update_guild_channel(
+        self, channel: channels.GuildChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
+        raise self._no_cache()
+
+    def clear_invites(self) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def clear_invites_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def clear_invites_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def delete_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def get_invites_view(self) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def get_invites_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def get_invites_view_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[str, invites.InviteWithMetadata]:
+        raise self._no_cache()
+
+    def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
+        raise self._no_cache()
+
+    def update_invite(
+        self, invite: invites.InviteWithMetadata, /
+    ) -> typing.Tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+        raise self._no_cache()
+
+    def delete_me(self) -> typing.Optional[users.OwnUser]:
+        raise self._no_cache()
+
+    def update_me(
+        self, user: users.OwnUser, /
+    ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+        raise self._no_cache()
+
+    def clear_members(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, guilds.Member]]:
+        raise self._no_cache()
+
+    def clear_members_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, guilds.Member]:
+        raise self._no_cache()
+
+    def delete_member(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[guilds.Member]:
+        raise self._no_cache()
+
+    def get_member(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[guilds.Member]:
+        raise self._no_cache()
+
+    def get_members_view(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, guilds.Member]]:
+        raise self._no_cache()
+
+    def get_members_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, guilds.Member]:
+        raise self._no_cache()
+
+    def set_member(self, member: guilds.Member, /) -> None:
+        raise self._no_cache()
+
+    def update_member(
+        self, member: guilds.Member, /
+    ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+        raise self._no_cache()
+
+    def clear_presences(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
+        raise self._no_cache()
+
+    def clear_presences_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, presences.MemberPresence]:
+        raise self._no_cache()
+
+    def delete_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[presences.MemberPresence]:
+        raise self._no_cache()
+
+    def get_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[presences.MemberPresence]:
+        raise self._no_cache()
+
+    def get_presences_view(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
+        raise self._no_cache()
+
+    def get_presences_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, presences.MemberPresence]:
+        raise self._no_cache()
+
+    def set_presence(self, presence: presences.MemberPresence, /) -> None:
+        raise self._no_cache()
+
+    def update_presence(
+        self, presence: presences.MemberPresence, /
+    ) -> typing.Tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+        raise self._no_cache()
+
+    def clear_roles(self) -> cache.ICacheView[snowflake.Snowflake, guilds.Role]:
+        raise self._no_cache()
+
+    def clear_roles_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, guilds.Role]:
+        raise self._no_cache()
+
+    def delete_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
+        raise self._no_cache()
+
+    def get_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
+        raise self._no_cache()
+
+    def get_roles_view(self) -> cache.ICacheView[snowflake.Snowflake, guilds.Role]:
+        raise self._no_cache()
+
+    def get_roles_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, guilds.Role]:
+        raise self._no_cache()
+
+    def set_role(self, role: guilds.Role, /) -> None:
+        raise self._no_cache()
+
+    def update_role(
+        self, role: guilds.Role, /
+    ) -> typing.Tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+        raise self._no_cache()
+
+    def clear_users(self) -> cache.ICacheView[snowflake.Snowflake, users.User]:
+        raise self._no_cache()
+
+    def delete_user(self, user_id: snowflake.Snowflake, /) -> typing.Optional[users.User]:
+        raise self._no_cache()
+
+    def get_user(self, user_id: snowflake.Snowflake, /) -> typing.Optional[users.User]:
+        raise self._no_cache()
+
+    def get_users_view(self) -> cache.ICacheView[snowflake.Snowflake, users.User]:
+        raise self._no_cache()
+
+    def set_user(self, user: users.User, /) -> None:
+        raise self._no_cache()
+
+    def update_user(
+        self, user: users.User, /
+    ) -> typing.Tuple[typing.Optional[users.User], typing.Optional[users.User]]:
+        raise self._no_cache()
+
+    def clear_voice_states(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, voices.VoiceState]]:
+        raise self._no_cache()
+
+    def clear_voice_states_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        raise self._no_cache()
+
+    def clear_voice_states_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake
+    ) -> cache.ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        raise self._no_cache()
+
+    def delete_voice_state(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[voices.VoiceState]:
+        raise self._no_cache()
+
+    def get_voice_state(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[voices.VoiceState]:
+        raise self._no_cache()
+
+    def get_voice_states_view(
+        self,
+    ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, voices.VoiceState]]:
+        raise self._no_cache()
+
+    def get_voice_states_view_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        raise self._no_cache()
+
+    def get_voice_states_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> cache.ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        raise self._no_cache()
+
+    def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
+        raise self._no_cache()
+
+    def update_voice_state(
+        self, voice_state: voices.VoiceState, /
+    ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+        raise self._no_cache()

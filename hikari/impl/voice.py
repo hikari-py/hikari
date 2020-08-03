@@ -54,7 +54,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
     voice channels with.
     """
 
-    __slots__ = ("_app", "_connections", "_dispatcher")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
 
     def __init__(self, app: bot.IBotApp, dispatcher: event_dispatcher.IEventDispatcherComponent) -> None:
         self._app = app
@@ -89,7 +89,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         voice_connection_type: typing.Type[_VoiceConnectionT],
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
-        guild_id = snowflake.Snowflake(int(guild))
+        guild_id = snowflake.Snowflake(guild)
         # TODO: this and the same logic in channels.py and guilds.py logic should go in a file somewhere
         shard_id = (guild_id >> 22) % self._app.shard_count
 
@@ -158,7 +158,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
         try:
             voice_connection = await voice_connection_type.initialize(
-                channel_id=snowflake.Snowflake(int(channel)),
+                channel_id=snowflake.Snowflake(channel),
                 debug=self._app.debug,
                 endpoint=server_event.endpoint,
                 guild_id=guild_id,

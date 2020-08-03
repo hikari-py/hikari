@@ -23,19 +23,21 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "HikariError",
     "HikariWarning",
+    "NotFoundError",
+    "UnauthorizedError",
+    "ForbiddenError",
+    "BadRequestError",
+    "HTTPError",
+    "HTTPResponseError",
+    "HTTPClientClosedError",
+    "ClientHTTPResponseError",
+    "InternalServerError",
     "GatewayServerClosedConnectionError",
     "GatewayClientClosedError",
     "GatewayError",
-    "NotFound",
-    "Unauthorized",
-    "Forbidden",
-    "BadRequest",
-    "HTTPError",
-    "HTTPClientClosedError",
-    "HTTPErrorResponse",
-    "ClientHTTPErrorResponse",
-    "ServerHTTPErrorResponse",
-    "IntentWarning",
+    "MissingIntentWarning",
+    "MissingIntentError",
+    "UnavailableGuildError",
     "BulkDeleteError",
     "VoiceError",
 ]
@@ -49,6 +51,8 @@ from hikari.models import messages
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
+    from hikari.models import guilds
+    from hikari.models import intents as intents_
     from hikari.utilities import data_binding
     from hikari.utilities import routes
 
@@ -148,6 +152,14 @@ class HTTPErrorResponse(HTTPError):
     url: str = attr.ib()
     """The URL that produced this error message."""
 
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class HTTPResponseError(HTTPError):
+    """Base exception for an erroneous HTTP response."""
+
+    url: str = attr.ib()
+    """The URL that produced this error message."""
+
     status: typing.Union[int, http.HTTPStatus] = attr.ib()
     """The HTTP status code for the response."""
 
@@ -181,7 +193,7 @@ class HTTPErrorResponse(HTTPError):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class ClientHTTPErrorResponse(HTTPErrorResponse):
+class ClientHTTPResponseError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a client error.
 
     All exceptions derived from this base should be treated as 4xx client
@@ -190,7 +202,7 @@ class ClientHTTPErrorResponse(HTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class BadRequest(ClientHTTPErrorResponse):
+class BadRequestError(ClientHTTPResponseError):
     """Raised when you send an invalid request somehow."""
 
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.BAD_REQUEST, init=False)
@@ -201,7 +213,7 @@ class BadRequest(ClientHTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class Unauthorized(ClientHTTPErrorResponse):
+class UnauthorizedError(ClientHTTPResponseError):
     """Raised when you are not authorized to access a specific resource."""
 
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.UNAUTHORIZED, init=False)
@@ -212,7 +224,7 @@ class Unauthorized(ClientHTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class Forbidden(ClientHTTPErrorResponse):
+class ForbiddenError(ClientHTTPResponseError):
     """Raised when you are not allowed to access a specific resource.
 
     This means you lack the permissions to do something, either because of
@@ -228,7 +240,7 @@ class Forbidden(ClientHTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class NotFound(ClientHTTPErrorResponse):
+class NotFoundError(ClientHTTPResponseError):
     """Raised when something is not found."""
 
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.NOT_FOUND, init=False)
@@ -239,7 +251,7 @@ class NotFound(ClientHTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class RateLimited(ClientHTTPErrorResponse):
+class RateLimitedError(ClientHTTPResponseError):
     """Raised when a non-global ratelimit that cannot be handled occurs.
 
     This should only ever occur for specific routes that have additional
@@ -289,16 +301,16 @@ class RateLimited(ClientHTTPErrorResponse):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class ServerHTTPErrorResponse(HTTPErrorResponse):
+class InternalServerError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a server error.
 
     All exceptions derived from this base should be treated as 5xx server
-    errors when encountered. If you get one of these, it isn't your fault!
+    errors when encountered. If you get one of these, it is not your fault!
     """
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
-class IntentWarning(HikariWarning):
+class MissingIntentWarning(HikariWarning):
     """Warning raised when subscribing to an event that cannot be fired.
 
     This is caused by your application missing certain intents.
@@ -336,3 +348,26 @@ class BulkDeleteError(HikariError):
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
+
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class MissingIntentError(HikariError):
+    """Error raised when you try to perform an action without an intent.
+
+    This is usually raised when querying the cache for something that is
+    unavailable due to certain intents being disabled.
+    """
+
+    intents: intents_.Intent = attr.ib()
+    """The combination of intents that are missing."""
+
+    def __str__(self) -> str:
+        return f"You are missing intents: {self.intents}"
+
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class UnavailableGuildError(HikariError):
+    """Raised when a guild is unavailable due to an outage."""
+
+    guild: typing.Optional[guilds.GatewayGuild] = attr.ib()
+    """The guild that is unavailable, or `builtins.None` if not yet known."""
