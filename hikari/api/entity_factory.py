@@ -941,9 +941,10 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
             payload.
 
         !!! note
-            `guild_id` and `member` currently only covers the guild create event
-            where `"guild_id"` and `"member"` aren't included in the returned
-            voice state payloads.
+            At the time of writing, `GUILD_CREATE` events are the only known
+            place where neither `guild_id` nor `member` will be keys on the
+            payload. In this case, you will need to provide the former
+            parameters explicitly.
 
         Returns
         -------
@@ -956,6 +957,9 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.
+
+            This will also be raised if no `member` data was passed in any
+            acceptable place.
         """
 
     @abc.abstractmethod
