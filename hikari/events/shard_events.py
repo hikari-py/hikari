@@ -198,7 +198,7 @@ class MemberChunkEvent(ShardEvent):
     presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
     """Mapping of user IDs to found member presence objects.
 
-    This will be empty if no presences are found or `presences` isn't passed as
+    This will be empty if no presences are found or `presences` is not passed as
     `True` while requesting the member chunks.
 
     Returns

@@ -530,7 +530,7 @@ class Integration(PartialIntegration):
     expire_behavior: IntegrationExpireBehaviour = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
-    This won't be enacted until after `GuildIntegration.expire_grace_period`
+    This will not be enacted until after `GuildIntegration.expire_grace_period`
     passes.
     """
 
@@ -810,7 +810,7 @@ class Guild(PartialGuild):
     widget_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
-    If this information is unavailable or this isn't enabled for the guild then
+    If this information is unavailable or this is not enabled for the guild then
     this will be `builtins.None`.
     """
 

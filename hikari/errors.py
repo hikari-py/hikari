@@ -305,7 +305,7 @@ class InternalServerError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a server error.
 
     All exceptions derived from this base should be treated as 5xx server
-    errors when encountered. If you get one of these, it isn't your fault!
+    errors when encountered. If you get one of these, it is not your fault!
     """
 
 
