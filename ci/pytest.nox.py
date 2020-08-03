@@ -48,9 +48,7 @@ FLAGS = [
 @nox.session(reuse_venv=True)
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage."""
-    session.install(
-        "-r", "requirements.txt", "-r", "dev-requirements.txt",
-    )
+    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
     shutil.rmtree(".coverage", ignore_errors=True)
     session.run("python", "-m", "pytest", *FLAGS, *session.posargs)
 
@@ -74,6 +72,26 @@ def pytest_profile(session: nox.Session) -> None:
         stats = pstats.Stats("prof/combined.prof", stream=fp)
         stats.sort_stats("calls")
         stats.print_stats()
+
+
+@nox.session(reuse_venv=True)
+def mutpy(session: nox.Session) -> None:
+    """Run mutation tests on a given module and test suite.
+
+    This randomly mutates the module undergoing testing to make it invalid
+    by altering parts of the code. It will then attempt to run the tests to
+    verify that they now fail.
+    """
+    if len(session.posargs) != 2:
+        print("Please provide two arguments:")
+        print("  1. the module to mutate")
+        print("  2. the test suite for this module")
+        print()
+        print("e.g.     nox -s mutpy -- foo test_foo")
+        exit(1)
+
+    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    session.run("mut.py", "--target", session.posargs[0], "--unit-test", session.posargs[1], "-m")
 
 
 @nox.session(reuse_venv=True)
