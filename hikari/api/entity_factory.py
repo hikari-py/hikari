@@ -874,8 +874,10 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` is not present in the passed payload.
+            If `guild_id` is not an attribute of the `payload` dict, and no
+            guild ID was passed for the `guild_id` parameter.
+
+            If this is raised, no guild ID info was provided anywhere.
         """
 
     ###############
