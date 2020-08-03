@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
     "LazyIterator",
+    "FlatLazyIterator",
     "All",
     "AttrComparator",
     "BufferedLazyIterator",
@@ -72,7 +73,7 @@ class All(typing.Generic[ValueT]):
         this sense, they are invoked in-order.
 
     !!! warning
-        You shouldn't generally need to use this outside of extending the
+        You should not generally need to use this outside of extending the
         iterators API in this library!
 
     Operators
@@ -706,6 +707,30 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
         self._complete()
 
 
+class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    """A lazy iterator that has all items in-memory and ready.
+
+    This can be iterated across as a normal iterator, or as an async iterator.
+    """
+
+    __slots__: typing.Sequence[str] = ("_iter",)
+
+    def __init__(self, values: typing.Union[typing.Iterator[ValueT], typing.Iterable[ValueT]]) -> None:
+        self._iter = iter(values) if isinstance(values, typing.Iterable) else values
+
+    def __iter__(self) -> FlatLazyIterator:
+        return self
+
+    def __next__(self) -> ValueT:
+        return next(self._iter)
+
+    async def __anext__(self) -> ValueT:
+        try:
+            return next(self._iter)
+        except StopIteration:
+            self._complete()
+
+
 class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):
     __slots__: typing.Sequence[str] = ("_i", "_iterator")
 
@@ -820,7 +845,7 @@ class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
 
 class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[AnotherValueT]):
-    __slots__ = ("_iterator", "_flattener", "_result_iterator")
+    __slots__: typing.Sequence[str] = ("_iterator", "_flattener", "_result_iterator")
 
     def __init__(
         self,

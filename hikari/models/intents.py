@@ -292,7 +292,7 @@ class Intent(flag.Flag):
 
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
     # EnumMeta which means if I make methods to generate these, then stuff
-    # won't be documented by pdoc. Alas, my dream of being smart with
+    # will not be documented by pdoc. Alas, my dream of being smart with
     # operator.or_ and functools.reduce has been destroyed.
 
     ALL_GUILDS = (

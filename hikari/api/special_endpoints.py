@@ -195,7 +195,7 @@ class GuildBuilder:
         """
 
     @abc.abstractmethod
-    async def create(self) -> guilds.Guild:
+    async def create(self) -> guilds.RESTGuild:
         """Send the request to Discord to create the guild.
 
         The application user will be added to this guild as soon as it is
@@ -204,7 +204,7 @@ class GuildBuilder:
 
         Returns
         -------
-        hikari.models.guilds.Guild
+        hikari.models.guilds.RESTGuild
             The created guild.
 
         Raises
