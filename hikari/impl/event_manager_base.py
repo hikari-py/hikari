@@ -219,50 +219,6 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
         return decorator
 
-    async def wait_for(
-        self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
-        /,
-        timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
-    ) -> event_dispatcher.EventT_co:
-
-        if predicate is None:
-            predicate = _default_predicate
-
-        future: asyncio.Future[event_dispatcher.EventT_co] = asyncio.get_event_loop().create_future()
-
-        if event_type not in self._waiters:
-            self._waiters[event_type] = set()
-
-        self._waiters[event_type].add((predicate, future))
-
-        return await asyncio.wait_for(future, timeout=timeout) if timeout is not None else await future
-
-    async def _test_waiter(
-        self,
-        cls: typing.Type[event_dispatcher.EventT_inv],
-        event: event_dispatcher.EventT_inv,
-        predicate: event_dispatcher.PredicateT[event_dispatcher.EventT_inv],
-        future: asyncio.Future[event_dispatcher.EventT_inv],
-    ) -> None:
-        try:
-            result = predicate(event)
-            if asyncio.iscoroutine(result):
-                result = await result  # type: ignore
-
-            if not result:
-                return
-
-        except Exception as ex:
-            future.set_exception(ex)
-        else:
-            future.set_result(event)
-
-        self._waiters[cls].remove((predicate, future))
-        if not self._waiters[cls]:
-            del self._waiters[cls]
-
     def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
@@ -283,9 +239,28 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
             if cls in self._waiters:
                 for predicate, future in self._waiters[cls]:
                     # noinspection PyTypeChecker
-                    tasks.append(self._test_waiter(cls, event, predicate, future))
+                    tasks.append(self._test_waiter(event, predicate, future))
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
+
+    @staticmethod
+    async def _test_waiter(
+        event: event_dispatcher.EventT_inv,
+        predicate: event_dispatcher.PredicateT[event_dispatcher.EventT_inv],
+        future: asyncio.Future[event_dispatcher.EventT_inv],
+    ) -> None:
+        try:
+            result = predicate(event)
+            if asyncio.iscoroutine(result):
+                result = await result  # type: ignore
+
+            if not result:
+                return
+
+        except Exception as ex:
+            future.set_exception(ex)
+        else:
+            future.set_result(event)
 
     async def _invoke_callback(
         self, callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
@@ -312,3 +287,37 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                         failed_callback=callback,
                     )
                 )
+
+    async def wait_for(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
+    ) -> event_dispatcher.EventT_co:
+
+        if predicate is None:
+            predicate = _default_predicate
+
+        future: asyncio.Future[event_dispatcher.EventT_co] = asyncio.get_event_loop().create_future()
+
+        try:
+            waiter_set = self._waiters[event_type]
+        except KeyError:
+            waiter_set = set()
+            self._waiters[event_type] = waiter_set
+
+        pair = (predicate, future)
+
+        waiter_set.add(pair)
+
+        try:
+            if timeout is not None:
+                return await asyncio.wait_for(future, timeout=timeout)
+            else:
+                return await future
+
+        finally:
+            waiter_set.remove(pair)
+            if not waiter_set:
+                del self._waiters[event_type]
