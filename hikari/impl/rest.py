@@ -1337,7 +1337,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.SnowflakeishOr],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1377,7 +1377,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -1413,10 +1413,10 @@ class RESTClientImpl(rest_api.IRESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        serialized_embeds: typing.List[embeds_.Embed] = []
+        serialized_embeds: data_binding.JSONArray = []
 
         if embeds is not undefined.UNDEFINED:
-            for embed in embeds:  # type: ignore[unreachable]
+            for embed in embeds:
                 embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
                 final_attachments.extend(embed_attachments)

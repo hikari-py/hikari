@@ -1222,7 +1222,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.SnowflakeishOr],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:

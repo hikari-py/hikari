@@ -1451,9 +1451,8 @@ class StatefulCacheImpl(cache.ICacheComponent):
             identifier = activity_data.emoji_id_or_name
             if identifier is None:
                 activity.emoji = None
-                continue
 
-            if cached_emojis:
+            elif cached_emojis:
                 emoji = cached_emojis[identifier]
                 if isinstance(emoji, _KnownCustomEmojiData):
                     activity.emoji = self._build_emoji(emoji, cached_users=cached_users)
@@ -1461,10 +1460,10 @@ class StatefulCacheImpl(cache.ICacheComponent):
                     activity.emoji = copy.copy(emoji)
 
             elif isinstance(identifier, snowflake.Snowflake) and identifier in self._emoji_entries:
-                if identifier in self._emoji_entries:
-                    activity.emoji = self._build_emoji(self._emoji_entries[identifier], cached_users=cached_users)
+                activity.emoji = self._build_emoji(self._emoji_entries[identifier], cached_users=cached_users)
 
-            activity.emoji = copy.copy(self._unknown_emoji_entries[identifier].object)
+            else:
+                activity.emoji = copy.copy(self._unknown_emoji_entries[identifier].object)
 
         return presence
 
@@ -1638,7 +1637,7 @@ class StatefulCacheImpl(cache.ICacheComponent):
             if not emoji:
                 continue
 
-            if isinstance(emoji, emojis.CustomEmoji) and emoji in self._emoji_entries:
+            if isinstance(emoji, emojis.CustomEmoji) and emoji.id in self._emoji_entries:
                 self._increment_emoji_ref_count(emoji.id)
             else:
                 emoji_identifier: typing.Union[snowflake.Snowflake, str]

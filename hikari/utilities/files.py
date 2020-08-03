@@ -162,11 +162,11 @@ def ensure_resource(url_or_resource: None, /) -> None:
 
 
 @typing.overload
-def ensure_resource(url_or_resource: Resourceish, /) -> Resource:
+def ensure_resource(url_or_resource: Resourceish, /) -> Resource[ReaderImplT_co]:
     """Given a non null value, parse a resource from it.."""
 
 
-def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource]:
+def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource[ReaderImplT_co]]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
@@ -370,6 +370,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
 
 
 ReaderImplT = typing.TypeVar("ReaderImplT", bound=AsyncReader)
+ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound=AsyncReader, covariant=True)
 
 
 class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
@@ -520,7 +521,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
-        self._client_response_ctx: typing.AsyncContextManager = NotImplemented
+        self._client_response_ctx: typing.AsyncContextManager[aiohttp.client.ClientResponse] = NotImplemented
 
     async def __aenter__(self) -> WebReader:
         client_session = aiohttp.ClientSession()
