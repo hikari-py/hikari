@@ -82,7 +82,7 @@ def mutpy(session: nox.Session) -> None:
     by altering parts of the code. It will then attempt to run the tests to
     verify that they now fail.
     """
-    if len(session.posargs) != 2:
+    if len(session.posargs) < 2:
         print("Please provide two arguments:")
         print("  1. the module to mutate")
         print("  2. the test suite for this module")
@@ -91,7 +91,19 @@ def mutpy(session: nox.Session) -> None:
         exit(1)
 
     session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
-    session.run("mut.py", "--target", session.posargs[0], "--unit-test", session.posargs[1], "-m")
+    session.run(
+        "mut.py",
+        "--target",
+        session.posargs[0],
+        "--unit-test",
+        session.posargs[1],
+        "--runner",
+        "pytest",
+        "-c",
+        "--disable-operator",
+        "SCI",  # SCI is buggy for some reason.
+        *session.posargs[2:],
+    )
 
 
 @nox.session(reuse_venv=True)
