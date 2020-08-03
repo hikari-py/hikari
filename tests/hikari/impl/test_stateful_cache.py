@@ -34,14 +34,14 @@ from hikari.utilities import snowflake
 from tests.hikari import hikari_test_helpers
 
 
-class TestStatefulCacheComponentImpl:
+class TestStatefulCacheImpl:
     @pytest.fixture()
     def app_impl(self):
         return mock.Mock(rest_app.IApp)
 
     @pytest.fixture()
-    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheComponentImpl:
-        return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheComponentImpl)(app=app_impl, intents=None)
+    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
+        return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheImpl)(app=app_impl, intents=None)
 
     def test__build_private_text_channel_with_cached_user(self, cache_impl):
         channel_data = stateful_cache._PrivateTextChannelData(
