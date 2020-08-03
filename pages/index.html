@@ -47,7 +47,7 @@
             <span class="blu">   888   888   888   888 `88b.  d8(  888   888      888   </span>  <span class="bwh">  CPython 3.8.5  </span>
             <span class="pur">  o888o o888o o888o o888o o888o `Y888""8o d888b    o888o  </span>  <span class="whi">  compiled with GCC 10.1.0 (default May 17 2020 18:15:42)  </span>
             <span class="gra"> ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  </span>  <span class="whi">  glibc 2.31 on Linux 64bit ELF  </span>
-            <span class="gra">                                        v2.0.0     </span>
+            <span class="gra">                                               v2.0.0     </span>
 
             <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,476</span><span class="gre">               hikari:</span><span class="cya"> single-sharded configuration -- you have started 29/1000 sessions prior to connecting (resets at 16/07/20 11:38:05 BST)</span>
             <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,779</span><span class="gre">     hikari.gateway.0:</span><span class="cya"> received HELLO, heartbeat interval is 41.25s</span>
@@ -62,49 +62,58 @@
             import asyncio
             import functools
             import os
-
+            
             import hikari
-
+            
             bot = hikari.Bot(token=os.environ["BOT_TOKEN"])
-
+            
+            
             def command(name):
                 def decorator(fn):
                     @functools.wraps(fn)
                     async def wrapper(event):
                         if not event.message.author.is_bot and event.message.content.startswith(name):
                             await fn(event)
+            
                     return wrapper
+            
                 return decorator
-
+            
+            
             @bot.listen()
             @command("hk.ping")
-            async def ping(message: hikari.MessageCreateEvent) -> None:
+            async def ping(event: hikari.MessageCreateEvent) -> None:
                 await event.message.reply("Pong!")
-
-            @bot.event()
+            
+            
+            @bot.listen()
             @command("hk.add")
             async def add_numbers(event: hikari.MessageCreateEvent) -> None:
-                await event.message.reply("Please enter the first number")
-
                 def is_number_check(e):
-                    return event.message.author == e.message.author and e.message.content.isdigit()
-
+                    return (
+                        event.message.author == e.message.author
+                        and event.message.channel_id == e.message.channel_id
+                        and e.message.content.isdigit()
+                    )
+            
                 try:
-                    e1 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
-                    await event.reply("Please enter the second number")
-                    e2 = await bot.wait_for(MessageCreateEvent, predicate=is_number_check, timeout=30)
-
+                    await event.message.reply("Please enter the first number")
+                    e1 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
+                    await event.message.reply("Please enter the second number")
+                    e2 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
+            
                 except asyncio.TimeoutError:
                     await event.message.reply("You took too long...")
-
+            
                 else:
                     val1 = int(e1.message.content)
                     val2 = int(e2.message.content)
-
-                    embed = hikari.Embed(title="Result!", description=f"{val1} + {val2}" color="#3f3")
-
+            
+                    embed = hikari.Embed(title="Result!", description=f"{val1} + {val2} = {val1 + val2}", color="#3f3")
+            
                     await event.message.reply(embed=embed)
-
+            
+            
             bot.run()
             </code>
         </pre>
