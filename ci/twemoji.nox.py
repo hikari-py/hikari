@@ -18,8 +18,8 @@
 from ci import nox
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".")
+    session.install("-e", ".", "requests")
     session.run("python", "scripts/test_twemoji_mapping.py")
