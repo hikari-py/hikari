@@ -8,11 +8,15 @@ mock~=4.0.2
 pytest==6.0.1
 pytest-asyncio==0.14.0
 pytest-cov==2.10.0
+pytest-randomly==3.4.1
 pytest-profiling==1.7.0
 pytest-testdox==1.2.1
 
 # Coverage testing.
 coverage~=5.2.1
+
+# Mutation testing
+MutPy==0.6.1
 
 # Other stuff
 async-timeout~=3.0.1  # Used for timeouts in some test cases.

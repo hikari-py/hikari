@@ -402,7 +402,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             ...
 
 
-# TODO: This isn't documented as having an intent, is this right? The guild version requires GUILDS intent.
+# TODO: This is not documented as having an intent, is this right? The guild version requires GUILDS intent.
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
@@ -462,12 +462,12 @@ class InviteCreateEvent(InviteEvent):
     shard: gateway_shard.IGatewayShard = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
-    invite: invites.Invite = attr.ib()
+    invite: invites.InviteWithMetadata = attr.ib()
     """Invite that was created.
 
     Returns
     -------
-    hikari.models.invites.Invite
+    hikari.models.invites.InviteWithMetaData
         The created invite object.
     """
 

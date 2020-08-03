@@ -24,6 +24,8 @@ __all__: typing.Final[typing.List[str]] = ["IEntityFactoryComponent"]
 import abc
 import typing
 
+import attr
+
 from hikari.api import component
 from hikari.utilities import undefined
 
@@ -47,6 +49,54 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+@attr.s(slots=True, weakref_slot=False)
+class GatewayGuildDefinition:
+    """A structure for handling entities within guild create and update events."""
+
+    guild: guild_models.GatewayGuild = attr.ib()
+    """Object of the guild the definition is for."""
+
+    channels: typing.Optional[typing.Mapping[snowflake.Snowflake, channel_models.GuildChannel]] = attr.ib()
+    """Mapping of channel IDs to the channels that belong to the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+    """
+
+    members: typing.Optional[typing.Mapping[snowflake.Snowflake, guild_models.Member]] = attr.ib()
+    """Mapping of user IDs to the members that belong to the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+
+    !!! note
+        This may be a partial mapping of members in the guild.
+    """
+
+    presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]] = attr.ib()
+    """Mapping of user IDs to the presences that are active in the guild.
+
+    Will be `builtins.None` when returned by guild update gateway events rather
+    than create.
+
+    !!! note
+        This may be a partial mapping of presences active in the guild.
+    """
+
+    roles: typing.Mapping[snowflake.Snowflake, guild_models.Role] = attr.ib()
+    """Mapping of role IDs to the roles that belong to the guild."""
+
+    emojis: typing.Mapping[snowflake.Snowflake, emoji_models.KnownCustomEmoji] = attr.ib()
+    """Mapping of emoji IDs to the emojis that belong to the guild."""
+
+    voice_states: typing.Optional[typing.Mapping[snowflake.Snowflake, voice_models.VoiceState]] = attr.ib()
+    """Mapping of user IDs to the voice states that are active in the guild.
+
+    !!! note
+        This may be a partial mapping of voice states active in the guild.
+    """
+
+
 class IEntityFactoryComponent(component.IComponent, abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
@@ -68,7 +118,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.applications.OwnConnection
-            The deserialized own connection object.
+            The deserialized "own connection" object.
         """
 
     @abc.abstractmethod
@@ -83,7 +133,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.applications.OwnGuild
-            The deserialized own guild object.
+            The deserialized "own guild" object.
         """
 
     @abc.abstractmethod
@@ -151,7 +201,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.utilities.data_binding.JSONObject
-            The serialized representation.
+            The serialized representation of the permission overwrite.
         """
 
     @abc.abstractmethod
@@ -166,7 +216,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The deserialized partial channel object.
+            The deserialized "partial channel" object.
         """
 
     @abc.abstractmethod
@@ -198,7 +248,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.channels.GroupPrivateTextChannel
-            The deserialized group DM channel object.
+            The deserialized group private text channel object.
         """
 
     @abc.abstractmethod
@@ -220,18 +270,18 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
         hikari.models.channels.GuildCategory
-            The deserialized partial channel object.
+            The deserialized guild category object.
 
         Raises
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -253,7 +303,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -264,7 +314,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -286,7 +336,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -297,7 +347,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -319,7 +369,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -330,7 +380,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -352,7 +402,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is npt included in the channel's payload.
 
         Returns
         -------
@@ -363,7 +413,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -386,7 +436,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` isn't included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -397,7 +447,8 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload of a guild channel.
+            `"guild_id"` is not present in the passed payload of a guild
+            channel.
         """
 
     ################
@@ -490,7 +541,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         Returns
         -------
         hikari.models.emojis.KnownCustomEmoji
-            The deserialized known custom emoji object.
+            The deserialized "known custom emoji" object.
         """
 
     @abc.abstractmethod
@@ -571,7 +622,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             `guild_id` covers cases such as the GUILD_CREATE gateway event and
-            GET Guild Member where `"guild_id"` isn't included in the returned
+            GET Guild Member where `"guild_id"` is not included in the returned
             payload.
 
         Returns
@@ -583,7 +634,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -653,21 +704,6 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guild_models.UnavailableGuild:
-        """Parse a raw payload from Discord into a unavailable guild object.
-
-        Parameters
-        ----------
-        payload : hikari.utilities.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.models.guilds.UnavailableGuild
-            The deserialized unavailable guild object.
-        """
-
-    @abc.abstractmethod
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         """Parse a raw payload from Discord into a guild preview object.
 
@@ -683,7 +719,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild(self, payload: data_binding.JSONObject) -> guild_models.Guild:
+    def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters
@@ -693,8 +729,32 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Guild
+        hikari.models.guilds.RESTGuild
             The deserialized guild object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
+        """Parse a raw payload from Discord into a guild object.
+
+        Parameters
+        ----------
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        typing.Tuple[hikari.models.guilds.Guild ...]
+            The deserialized guild object and the internal collections as
+            maps of `hikari.utilities.snowflake.Snowflake` mapping to
+            `hikari.models.channels.GuildChannel`,
+            `hikari.models.guilds.Member`,
+            `hikari.models.presences.MemberPresence`,
+            `hikari.models.guilds.Role`, and
+            `hikari.models.emojis.KnownCustomEmoji`. This is provided in
+            several components to allow separate caching and linking
+            between entities in various relational cache implementations
+            internally.
         """
 
     #################
@@ -784,18 +844,40 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ###################
 
     @abc.abstractmethod
-    def deserialize_member_presence(self, payload: data_binding.JSONObject) -> presence_models.MemberPresence:
+    def deserialize_member_presence(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+    ) -> presence_models.MemberPresence:
         """Parse a raw payload from Discord into a member presence object.
 
         Parameters
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
+            The ID of the guild the presence belongs to. If this is specified
+            then it is prioritised over `guild_id` in the payload.
+
+        !!! note
+            At the time of writing, the only place where `guild_id` will be
+            mandatory is when parsing presences sent in a `GUILD_CREATE` event
+            from Discord, since the `guild_id` attribute in the payload will
+            have been omitted for redundancy.
 
         Returns
         -------
         hikari.models.presences.MemberPresence
             The deserialized member presence object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is not an attribute of the `payload` dict, and no
+            guild ID was passed for the `guild_id` parameter.
+
+            If this is raised, no guild ID info was provided anywhere.
         """
 
     ###############
@@ -842,6 +924,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
@@ -852,10 +935,16 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         guild_id : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.Snowflake]
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
+        member : hikari.utilities.undefined.UndefinedOr[hikari.models.guilds.Member]
+            The object of the member this voice state belongs to. If this is
+            specified then this will be prioritised over `"member"` in the
+            payload.
 
         !!! note
-            `guild_id` currently only covers the guild create event where
-            `"guild_id"` isn't included in the returned payloads.
+            At the time of writing, `GUILD_CREATE` events are the only known
+            place where neither `guild_id` nor `member` will be keys on the
+            payload. In this case, you will need to provide the former
+            parameters explicitly.
 
         Returns
         -------
@@ -866,8 +955,11 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
         ------
         KeyError
             If `guild_id` is left as `hikari.utilities.undefined.UNDEFINED` when
-            `"guild_id"` isn't present in the passed payload for the payload of
+            `"guild_id"` is not present in the passed payload for the payload of
             the voice state.
+
+            This will also be raised if no `member` data was passed in any
+            acceptable place.
         """
 
     @abc.abstractmethod

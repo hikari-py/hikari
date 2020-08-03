@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright © Nekoka.tt 2019-2020
 #
 # This file is part of Hikari.
@@ -16,29 +15,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Basic implementation of a cache for general bots and gateway apps."""
 
-from __future__ import annotations
+import mock
+import pytest
 
-__all__: typing.Final[typing.List[str]] = ["InMemoryCacheComponentImpl"]
-
-import typing
-
-from hikari.api import cache
-
-if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+from hikari.api import shard
+from hikari.events import shard_events
 
 
-class InMemoryCacheComponentImpl(cache.ICacheComponent):
-    """In-memory cache implementation."""
+class TestShardEvent:
+    @pytest.fixture
+    def event(self):
+        class ShardEventImpl(shard_events.ShardEvent):
+            shard = mock.Mock(shard.IGatewayShard)
 
-    __slots__: typing.Sequence[str] = ("_app",)
+        return ShardEventImpl()
 
-    def __init__(self, app: rest_app.IRESTApp) -> None:
-        self._app = app
-
-    @property
-    @typing.final
-    def app(self) -> rest_app.IRESTApp:
-        return self._app
+    def test_app_property(self, event):
+        stub_app = object()
+        event.shard.app = stub_app
+        assert event.app is stub_app

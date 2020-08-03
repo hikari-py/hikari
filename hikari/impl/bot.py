@@ -31,6 +31,7 @@ import reprlib
 import signal
 import sys
 import time
+import types
 import typing
 import warnings
 
@@ -41,12 +42,13 @@ from hikari.api import shard as gateway_shard
 from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
-from hikari.impl import event_manager
-from hikari.impl import in_memory_cache as cache_impl
 from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
+from hikari.impl import stateful_cache as cache_impl
+from hikari.impl import stateful_event_manager
 from hikari.impl import stateless_cache as stateless_cache_impl
+from hikari.impl import stateless_event_manager
 from hikari.impl import voice
 from hikari.models import intents as intents_
 from hikari.models import presences
@@ -58,11 +60,70 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
+    from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.events import base_events
-    from hikari.models import gateway as gateway_models
+    from hikari.impl import event_manager_base
+    from hikari.models import users
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+
+
+def _determine_palette() -> typing.Mapping[str, str]:  # pragma: no cover
+    # Modified from
+    # https://github.com/django/django/blob/master/django/core/management/color.py
+    _plat = sys.platform
+    _supports_color = False
+
+    # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+    _is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+    if _plat != "Pocket PC":
+        if _plat == "win32":
+            _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+            _supports_color |= "ANSICON" in os.environ
+            _supports_color &= _is_a_tty
+        else:
+            _supports_color = _is_a_tty
+
+        _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+
+    _palette_base: typing.Mapping[str, str] = types.MappingProxyType(
+        {
+            "default": "\033[0m",
+            "bright": "\033[1m",
+            "underline": "\033[4m",
+            "invert": "\033[7m",
+            "red": "\033[31m",
+            "green": "\033[32m",
+            "yellow": "\033[33m",
+            "blue": "\033[34m",
+            "magenta": "\033[35m",
+            "cyan": "\033[36m",
+            "white": "\033[37m",
+            "bright_red": "\033[91m",
+            "bright_green": "\033[92m",
+            "bright_yellow": "\033[93m",
+            "bright_blue": "\033[94m",
+            "bright_magenta": "\033[95m",
+            "bright_cyan": "\033[96m",
+            "bright_white": "\033[97m",
+            "framed": "\033[51m",
+            "dim": "\033[2m",
+        }
+    )
+
+    if not _supports_color:
+        _palette_base = types.MappingProxyType({k: "" for k in _palette_base})
+
+    return _palette_base
+
+
+_PALETTE: typing.Final[typing.Mapping[str, str]] = _determine_palette()
+_LOGGING_FORMAT: typing.Final[str] = (
+    "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS002, FS003
+    "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS002, FS003
+).format(**_PALETTE)
 
 
 class BotAppImpl(bot.IBotApp):
@@ -238,23 +299,26 @@ class BotAppImpl(bot.IBotApp):
 
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
-            logging.basicConfig(format=self._determine_default_logging_format())
+            logging.basicConfig(format=_LOGGING_FORMAT)
             logging.root.setLevel(logging_level)
 
         if banner_package is not None:
             self._dump_banner(banner_package)
 
+        self._event_manager: event_manager_base.EventManagerComponentBase
+        self._cache: cache_.ICacheComponent
         if stateless:
-            self._cache = stateless_cache_impl.StatelessCacheImpl()
+            self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
+            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.InMemoryCacheComponentImpl(app=self)
+            self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
+            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
         self._event_factory = event_factory_impl.EventFactoryComponentImpl(app=self)
-        self._event_manager = event_manager.EventManagerComponentImpl(app=self, intents_=intents)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -295,6 +359,7 @@ class BotAppImpl(bot.IBotApp):
     def __del__(self) -> None:
         # If something goes wrong while initializing the bot, `_start_count` might not be there.
         if hasattr(self, "_start_count") and self._start_count == 0:
+            # TODO: may remove this as it causes issues with tests. Provisionally implemented only.
             warnings.warn(
                 "Looks like your bot never started. Make sure you called bot.run() after you set the bot object up.",
                 category=errors.HikariWarning,
@@ -313,11 +378,11 @@ class BotAppImpl(bot.IBotApp):
         return self._entity_factory
 
     @property
-    def event_consumer(self) -> event_manager.EventManagerComponentImpl:
+    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
         return self._event_manager
 
     @property
-    def event_dispatcher(self) -> event_manager.EventManagerComponentImpl:
+    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
         return self._event_manager
 
     @property
@@ -353,6 +418,10 @@ class BotAppImpl(bot.IBotApp):
     @property
     def intents(self) -> typing.Optional[intents_.Intent]:
         return self._intents
+
+    @property
+    def me(self) -> typing.Optional[users.OwnUser]:
+        return self._cache.get_me()
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
@@ -533,9 +602,6 @@ class BotAppImpl(bot.IBotApp):
                 self._tasks.clear()
                 await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
-    async def fetch_sharding_settings(self) -> gateway_models.GatewayBot:
-        return await self.rest.fetch_gateway_bot()
-
     def run(self) -> None:
         loop = asyncio.get_event_loop()
 
@@ -550,7 +616,7 @@ class BotAppImpl(bot.IBotApp):
             if self._debug:
                 raise
             else:
-                # The user won't care where this gets raised from, unless we are
+                # The user will not care where this gets raised from, unless we are
                 # debugging. It just causes a lot of confusing spam.
                 raise ex.with_traceback(None)  # noqa: R100 raise in except handler without from
         finally:
@@ -578,7 +644,9 @@ class BotAppImpl(bot.IBotApp):
         )
 
     async def _init(self) -> None:
-        gw_recs = await self.fetch_sharding_settings()
+        gw_recs, bot_user = await asyncio.gather(self.rest.fetch_gateway_bot(), self.rest.fetch_my_user())
+
+        self._cache.set_me(bot_user)
 
         self._shard_count = self._shard_count if self._shard_count else gw_recs.shard_count
         self._shard_ids = self._shard_ids if self._shard_ids else set(range(self._shard_count))
@@ -681,7 +749,8 @@ class BotAppImpl(bot.IBotApp):
                 with contextlib.suppress(NotImplementedError):
                     mapping_function(interrupt, *args)
 
-    def _dump_banner(self, banner_package: str) -> None:
+    @staticmethod
+    def _dump_banner(banner_package: str) -> None:
         import platform
         import string
         from importlib import resources
@@ -712,7 +781,7 @@ class BotAppImpl(bot.IBotApp):
             "platform_architecture": " ".join(platform.architecture()),
         }
 
-        args.update(self._determine_console_colour_palette())
+        args.update(**_PALETTE)
 
         with resources.open_text(banner_package, "banner.txt") as banner_fp:
             banner = string.Template(banner_fp.read()).safe_substitute(args)
@@ -720,65 +789,7 @@ class BotAppImpl(bot.IBotApp):
         sys.stdout.write(banner + "\n")
         sys.stdout.flush()
         # Give the TTY time to flush properly.
-        time.sleep(0.2)
-
-    def _determine_default_logging_format(self) -> str:
-        format_str = (
-            "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS003 f-string missing prefix
-            "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS003
-        )
-
-        return format_str.format(**self._determine_console_colour_palette())
-
-    @staticmethod
-    def _determine_console_colour_palette() -> typing.Dict[str, str]:
-        # Modified from
-        # https://github.com/django/django/blob/master/django/core/management/color.py
-
-        plat = sys.platform
-        supports_color = False
-
-        # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-        is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-
-        if plat != "Pocket PC":
-            if plat == "win32":
-                supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-                supports_color |= "ANSICON" in os.environ
-                supports_color &= is_a_tty
-            else:
-                supports_color = is_a_tty
-
-            supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-        palette = {
-            "default": "\033[0m",
-            "bright": "\033[1m",
-            "underline": "\033[4m",
-            "invert": "\033[7m",
-            "red": "\033[31m",
-            "green": "\033[32m",
-            "yellow": "\033[33m",
-            "blue": "\033[34m",
-            "magenta": "\033[35m",
-            "cyan": "\033[36m",
-            "white": "\033[37m",
-            "bright_red": "\033[91m",
-            "bright_green": "\033[92m",
-            "bright_yellow": "\033[93m",
-            "bright_blue": "\033[94m",
-            "bright_magenta": "\033[95m",
-            "bright_cyan": "\033[96m",
-            "bright_white": "\033[97m",
-            "framed": "\033[51m",
-            "dim": "\033[2m",
-        }
-
-        if not supports_color:
-            for key in list(palette.keys()):
-                palette[key] = ""
-
-        return palette
+        time.sleep(0.05)
 
     @staticmethod
     async def _check_for_updates() -> None:

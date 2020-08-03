@@ -468,14 +468,14 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     ) -> None:
         self._set_partial_channel_attributes(payload, guild_channel)
         guild_channel.guild_id = (
-            snowflake.Snowflake(payload["guild_id"]) if guild_id is undefined.UNDEFINED else guild_id
+            guild_id if guild_id is not undefined.UNDEFINED else snowflake.Snowflake(payload["guild_id"])
         )
         guild_channel.position = int(payload["position"])
         guild_channel.permission_overwrites = {
             snowflake.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
         }  # TODO: while snowflakes are guaranteed to be unique within their own resource, there is no guarantee for
-        # across between resources (user and role in this case); while in practice we won't get overlap there is a
+        # across between resources (user and role in this case); while in practice we will not get overlap there is a
         # chance that this may happen in the future, would it be more sensible to use a Sequence here?
         guild_channel.is_nsfw = payload.get("nsfw")
 
@@ -995,8 +995,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild_preview.description = payload["description"]
         return guild_preview
 
-    def deserialize_guild(self, payload: data_binding.JSONObject) -> guild_models.Guild:  # noqa: CFQ001
-        guild = guild_models.Guild()
+    def _set_guild_attributes(self, payload: data_binding.JSONObject, guild: guild_models.Guild) -> None:
         self._set_partial_guild_attributes(payload, guild)
         guild.app = self._app
         guild.splash_hash = payload["splash"]
@@ -1004,22 +1003,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         guild.owner_id = snowflake.Snowflake(payload["owner_id"])
         # noinspection PyArgumentList
 
-        if "permissions_new" in payload:
-            raw_permissions = int(payload["permissions_new"])
-            guild.my_permissions = permission_models.Permission(raw_permissions)
-        else:
-            guild.my_permissions = None
-
         guild.region = payload["region"]
 
         afk_channel_id = payload["afk_channel_id"]
         guild.afk_channel_id = snowflake.Snowflake(afk_channel_id) if afk_channel_id is not None else None
 
         guild.afk_timeout = datetime.timedelta(seconds=payload["afk_timeout"])
-        guild.is_embed_enabled = payload.get("embed_enabled", False)
-
-        embed_channel_id = payload.get("embed_channel_id")
-        guild.embed_channel_id = snowflake.Snowflake(embed_channel_id) if embed_channel_id is not None else None
 
         # noinspection PyArgumentList
         guild.verification_level = guild_models.GuildVerificationLevel(payload["verification_level"])
@@ -1029,21 +1018,11 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         )
         # noinspection PyArgumentList
         guild.explicit_content_filter = guild_models.GuildExplicitContentFilterLevel(payload["explicit_content_filter"])
-        guild.roles = {
-            snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
-        }
-        guild.emojis = {
-            snowflake.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
-            for emoji in payload["emojis"]
-        }
-        # noinspection PyArgumentList
+
         guild.mfa_level = guild_models.GuildMFALevel(payload["mfa_level"])
 
         application_id = payload["application_id"]
         guild.application_id = snowflake.Snowflake(application_id) if application_id is not None else None
-
-        guild.is_unavailable = payload["unavailable"] if "unavailable" in payload else None
-        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
 
         widget_channel_id = payload.get("widget_channel_id")
         guild.widget_channel_id = snowflake.Snowflake(widget_channel_id) if widget_channel_id is not None else None
@@ -1051,37 +1030,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         system_channel_id = payload["system_channel_id"]
         guild.system_channel_id = snowflake.Snowflake(system_channel_id) if system_channel_id is not None else None
 
+        guild.is_widget_enabled = payload["widget_enabled"] if "widget_enabled" in payload else None
         # noinspection PyArgumentList
         guild.system_channel_flags = guild_models.GuildSystemChannelFlag(payload["system_channel_flags"])
 
         rules_channel_id = payload["rules_channel_id"]
         guild.rules_channel_id = snowflake.Snowflake(rules_channel_id) if rules_channel_id is not None else None
-
-        guild.joined_at = (
-            date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
-        )
-        guild.is_large = payload["large"] if "large" in payload else None
-        guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
-
-        guild.members = {}
-        if "members" in payload:
-            for member_payload in payload["members"]:
-                member = self.deserialize_member(member_payload, guild_id=guild.id)
-                guild.members[member.user.id] = member
-
-        guild.channels = {}
-        if "channels" in payload:
-            for channel_payload in payload["channels"]:
-                channel = typing.cast(
-                    "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild.id)
-                )
-                guild.channels[channel.id] = channel
-
-        guild.presences = {}
-        if "presences" in payload:
-            for presence_payload in payload["presences"]:
-                presence = self.deserialize_member_presence(presence_payload)
-                guild.presences[presence.user_id] = presence
 
         max_presences = payload.get("max_presences")
         guild.max_presences = int(max_presences) if max_presences is not None else None
@@ -1105,13 +1059,97 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             snowflake.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
         )
 
+    def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
+        guild = guild_models.RESTGuild()
+        self._set_guild_attributes(payload, guild)
+
         guild.approximate_member_count = (
             int(payload["approximate_member_count"]) if "approximate_member_count" in payload else None
         )
         guild.approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
+
+        guild._roles = {
+            snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
+        }
+        guild._emojis = {
+            snowflake.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
+            for emoji in payload["emojis"]
+        }
+
         return guild
+
+    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
+        guild = guild_models.GatewayGuild()
+        self._set_guild_attributes(payload, guild)
+
+        guild.my_permissions = (
+            permission_models.Permission(payload["permissions"]) if "permissions" in payload else None
+        )
+        guild.is_large = payload["large"] if "large" in payload else None
+        guild.joined_at = (
+            date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
+        )
+        guild.member_count = int(payload["member_count"]) if "member_count" in payload else None
+
+        members: typing.Union[typing.MutableMapping[snowflake.Snowflake, guild_models.Member], None]
+        if "members" in payload:
+            members = {}
+
+            for member_payload in payload["members"]:
+                member = self.deserialize_member(member_payload, guild_id=guild.id)
+                members[member.user.id] = member
+
+        else:
+            members = None
+
+        channels: typing.Union[typing.MutableMapping[snowflake.Snowflake, channel_models.GuildChannel], None]
+        if "channels" in payload:
+            channels = {}
+
+            for channel_payload in payload["channels"]:
+                channel = typing.cast(
+                    "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild.id)
+                )
+                channels[channel.id] = channel
+
+        else:
+            channels = None
+
+        presences: typing.Union[typing.MutableMapping[snowflake.Snowflake, presence_models.MemberPresence], None]
+        if "presences" in payload:
+            presences = {}
+
+            for presence_payload in payload["presences"]:
+                presence = self.deserialize_member_presence(presence_payload, guild_id=guild.id)
+                presences[presence.user_id] = presence
+
+        else:
+            presences = None
+
+        voice_states: typing.Union[typing.MutableMapping[snowflake.Snowflake, voice_models.VoiceState], None]
+        if "voice_states" in payload:
+            voice_states = {}
+            assert members is not None
+
+            for voice_state_payload in payload["voice_states"]:
+                member = members[snowflake.Snowflake(voice_state_payload["user_id"])]
+                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
+                voice_states[voice_state.user_id] = voice_state
+
+        else:
+            voice_states = None
+
+        roles = {
+            snowflake.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id) for role in payload["roles"]
+        }
+        emojis = {
+            snowflake.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
+            for emoji in payload["emojis"]
+        }
+
+        return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis, voice_states)
 
     #################
     # INVITE MODELS #
@@ -1416,18 +1454,23 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001
-        self, payload: data_binding.JSONObject
+    def deserialize_member_presence(  # noqa: CFQ001  # TODO: what's CFQ001?
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        guild_member_presence = presence_models.MemberPresence()
-        guild_member_presence.app = self._app
-        guild_member_presence.user_id = snowflake.Snowflake(payload["user"]["id"])
-        guild_member_presence.role_ids = (
+        presence = presence_models.MemberPresence()
+        presence.app = self._app
+        presence.user_id = snowflake.Snowflake(payload["user"]["id"])
+        presence.role_ids = (
             [snowflake.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
         )
-        guild_member_presence.guild_id = snowflake.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
+        presence.guild_id = (
+            guild_id if guild_id is not undefined.UNDEFINED else snowflake.Snowflake(payload["guild_id"])
+        )
         # noinspection PyArgumentList
-        guild_member_presence.visible_status = presence_models.Status(payload["status"])
+        presence.visible_status = presence_models.Status(payload["status"])
 
         activities = []
         for activity_payload in payload["activities"]:
@@ -1502,7 +1545,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
                 presence_models.ActivityFlag(activity_payload["flags"]) if "flags" in activity_payload else None
             )
             activities.append(activity)
-        guild_member_presence.activities = activities
+        presence.activities = activities
 
         client_status_payload = payload["client_status"]
         client_status = presence_models.ClientStatus()
@@ -1524,17 +1567,17 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             if "web" in client_status_payload
             else presence_models.Status.OFFLINE
         )
-        guild_member_presence.client_status = client_status
+        presence.client_status = client_status
 
         # TODO: do we want to differentiate between undefined and null here?
         premium_since = payload.get("premium_since")
-        guild_member_presence.premium_since = (
+        presence.premium_since = (
             date.iso8601_datetime_string_to_datetime(premium_since) if premium_since is not None else None
         )
 
         # TODO: do we want to differentiate between undefined and null here?
-        guild_member_presence.nickname = payload.get("nick")
-        return guild_member_presence
+        presence.nickname = payload.get("nick")
+        return presence
 
     ###############
     # USER MODELS #
@@ -1582,6 +1625,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED,
     ) -> voice_models.VoiceState:
         voice_state = voice_models.VoiceState()
         voice_state.app = self._app
@@ -1592,7 +1636,12 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         voice_state.channel_id = channel_id
 
         voice_state.user_id = snowflake.Snowflake(payload["user_id"])
-        voice_state.member = self.deserialize_member(payload["member"], guild_id=voice_state.guild_id)
+
+        if member is undefined.UNDEFINED:
+            voice_state.member = self.deserialize_member(payload["member"], guild_id=voice_state.guild_id)
+        else:
+            voice_state.member = member
+
         voice_state.session_id = payload["session_id"]
         voice_state.is_guild_deafened = payload["deaf"]
         voice_state.is_guild_muted = payload["mute"]
