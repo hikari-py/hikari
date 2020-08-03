@@ -312,7 +312,7 @@ class BotAppImpl(bot.IBotApp):
             self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
+            self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
             self._event_manager = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()

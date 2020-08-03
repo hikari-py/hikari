@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatefulCacheComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["StatefulCacheImpl"]
 
 import abc
 import array
@@ -582,7 +582,7 @@ class _GuildChannelCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflak
         return _copy_guild_channel(value)
 
 
-class StatefulCacheComponentImpl(cache.ICacheComponent):
+class StatefulCacheImpl(cache.ICacheComponent):
     """In-memory cache implementation."""
 
     __slots__: typing.Sequence[str] = (
