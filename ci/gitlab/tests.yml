@@ -93,6 +93,7 @@ test:twemoji-mapping:
         - hikari/models/emojis.py
         - hikari/utilities/files.py
         - ci/twemoji.nox.py
+        - scripts/test_twemoji_mapping.py
   script:
     - apt-get install -qy git gcc g++ make
     - pip install nox
