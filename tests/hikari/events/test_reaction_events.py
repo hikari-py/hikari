@@ -15,11 +15,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-from ci import nox
+
+import mock
+import pytest
+
+from hikari.events import reaction_events
+from hikari.models import guilds
 
 
-@nox.session(reuse_venv=True)
-def twemoji_test(session: nox.Session):
-    """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".", "requests")
-    session.run("python", "scripts/test_twemoji_mapping.py")
+class TestGuildReactionAddEvent:
+    @pytest.fixture
+    def event(self):
+        return reaction_events.GuildReactionAddEvent(
+            shard=object(), member=mock.MagicMock(guilds.Member), channel_id=123, message_id=456, emoji="👌"
+        )
+
+    def test_guild_id_property(self, event):
+        event.member.guild_id = 123
+        assert event.guild_id == 123
+
+    def test_user_id_property(self, event):
+        event.member.user.id = 123
+        assert event.user_id == 123

@@ -373,7 +373,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         await asyncio.wait([run_task, handshake_future], return_when=asyncio.FIRST_COMPLETED)  # type: ignore
 
         # Ensure we propogate a startup error without joining the run task first.
-        # We shouldn't need to kill the handshake event, that should be done for us.
+        # We should not need to kill the handshake event, that should be done for us.
         if run_task.done() and (exception := run_task.exception()) is not None:
             raise exception
 
@@ -567,7 +567,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             verify_ssl=self._http_settings.verify_ssl,
             # Discord can send massive messages that lead us to being disconnected
             # without this. It is a bit shit that there is no guarantee of the size
-            # of these messages, but there isn't much we can do about this one.
+            # of these messages, but there is not much we can do about this one.
             max_msg_size=0,
         )
 
@@ -677,7 +677,7 @@ class GatewayShardImpl(shard.IGatewayShard):
                     pass
 
         except asyncio.CancelledError:
-            # This happens if the poll task has stopped. It isn't a problem we need to report.
+            # This happens if the poll task has stopped. It is not a problem we need to report.
             pass
 
     async def _close_zombie(self) -> None:
@@ -856,7 +856,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         )
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
-        # Prevent logging these payloads if logging isn't enabled. This aids performance a little.
+        # Prevent logging these payloads if logging is not enabled. This aids performance a little.
         if not self._logger.isEnabledFor(logging.DEBUG):
             return
 

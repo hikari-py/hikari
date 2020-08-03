@@ -48,7 +48,7 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     """
     future = asyncio.get_event_loop().create_future()
     future.set_result(result)
-    # MyPy pretends this type hint is valid when it isn't. Probably should be
+    # MyPy pretends this type hint is valid when it is not. Probably should be
     # in the standard lib but whatever.
     return typing.cast("asyncio.Future[typing.Optional[T_inv]]", future)
 

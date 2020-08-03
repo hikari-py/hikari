@@ -931,7 +931,7 @@ class TestRESTClientImplAsync:
                 return "this is not json :)"
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.HTTPErrorResponse):
+        with pytest.raises(errors.HTTPResponseError):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client):
@@ -964,7 +964,7 @@ class TestRESTClientImplAsync:
                 return {"retry_after": "2"}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.RateLimited):
+        with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
@@ -1709,11 +1709,11 @@ class TestRESTClientImplAsync:
         expected_route = routes.GET_GUILD.compile(guild=123)
         expected_query = {"with_counts": "true"}
         rest_client._request = mock.AsyncMock(return_value={"id": "1234"})
-        rest_client._app.entity_factory.deserialize_guild = mock.Mock(return_value=guild)
+        rest_client._app.entity_factory.deserialize_rest_guild = mock.Mock(return_value=guild)
 
         assert await rest_client.fetch_guild(StubModel(123)) == guild
         rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
-        rest_client._app.entity_factory.deserialize_guild.assert_called_once_with({"id": "1234"})
+        rest_client._app.entity_factory.deserialize_rest_guild.assert_called_once_with({"id": "1234"})
 
     async def test_fetch_guild_preview(self, rest_client):
         guild_preview = StubModel(1234)

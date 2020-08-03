@@ -13,10 +13,12 @@ ignore =
     T101,      # TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
     W503,      # line break before binary operator.
     W504,      # line break before binary operator (again, I guess).
+    S101,      # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
 
 # F401:  unused import.
 # F403:  cannot detect unused vars if we use starred import
 # FS003: f-string missing prefix.
+# R102: unnecessary parenthesis on raised exception (raises false positives in places)
 per-file-ignores =
     hikari/__init__.py:              F401,F403
     hikari/events/__init__.py:       F401,F403
@@ -24,6 +26,7 @@ per-file-ignores =
     hikari/models/__init__.py:       F401,F403
     hikari/utilities/routes.py:      FS003
     hikari/utilities/date.py:        FS003
+    hikari/impl/stateless_cache.py:  R102
 
 max-complexity = 20
 # TODO reset to 100 again if possible.

@@ -302,7 +302,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             If the bucket is marked as `RESTBucket.is_unknown`, then this will
             not do anything. `Unknown` buckets have infinite rate limits.
         """
-        # We don't drip unknown buckets: we can't rate limit them as we don't know their real bucket hash or
+        # We don't drip unknown buckets: we cannot rate limit them as we don't know their real bucket hash or
         # the current rate limit values Discord put on them...
         if not self.is_unknown:
             self.remaining -= 1
@@ -466,7 +466,7 @@ class RESTBucketManager:
         for full_hash, bucket in bucket_pairs:
             if bucket.is_empty and bucket.reset_at + expire_after < now:
                 # If it is still running a throttle and is in memory, it will remain in memory
-                # but we won't know about it.
+                # but we will not know about it.
                 buckets_to_purge.append(full_hash)
 
             if bucket.reset_at >= now:

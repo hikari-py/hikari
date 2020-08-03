@@ -91,7 +91,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
     """Lazy cached TCP connector factory."""
 
-    __slots__ = ("connector", "connector_kwargs")
+    __slots__: typing.Sequence[str] = ("connector", "connector_kwargs")
 
     def __init__(self, **kwargs: typing.Any) -> None:
         self.connector: typing.Optional[aiohttp.TCPConnector] = None
@@ -172,7 +172,7 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         url: typing.Optional[str],
         version: int,
     ) -> None:
-        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl()
+        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl(self)
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
         self._executor = executor
@@ -688,7 +688,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
-            raise errors.HTTPErrorResponse(
+            raise errors.HTTPResponseError(
                 str(response.real_url),
                 http.HTTPStatus.TOO_MANY_REQUESTS,
                 response.headers,
@@ -722,7 +722,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         # more...
 
         # I realise remaining should never be less than zero, but quite frankly, I don't
-        # trust that voodoo type stuff won't ever occur with that value from them...
+        # trust that voodoo type stuff will not ever occur with that value from them...
         if remaining <= 0:
             # We can retry and we will then abide by the updated bucket ratelimits.
             _LOGGER.debug(
@@ -738,7 +738,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             raise self._RetryRequest
 
-        raise errors.RateLimited(
+        raise errors.RateLimitedError(
             url=str(response.real_url),
             route=compiled_route,
             headers=response.headers,
@@ -1690,13 +1690,13 @@ class RESTClientImpl(rest_api.IRESTClient):
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints.GuildBuilder(app=self._app, request_call=self._request, name=name)
 
-    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Guild:
+    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         route = routes.GET_GUILD.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
         raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild(response)
+        return self._app.entity_factory.deserialize_rest_guild(response)
 
     async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
@@ -1734,7 +1734,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.Guild:
+    ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1783,7 +1783,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild(response)
+        return self._app.entity_factory.deserialize_rest_guild(response)
 
     async def delete_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
@@ -2081,7 +2081,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         return self._app.entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         raw_response = await self._request(route)

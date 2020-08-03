@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari.models import intents as intents_
+    from hikari.models import users
 
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
@@ -87,6 +88,22 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         -------
         hikari.models.intents.Intent or builtins.None
             The intents registered on this application.
+        """
+
+    @property
+    @abc.abstractmethod
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
+
+        Returns
+        -------
+        hikari.models.users.OwnUser or builtins.None
+            The bot user, if known, otherwise `builtins.None`.
         """
 
     @property

@@ -27,13 +27,13 @@ from hikari.utilities import net
 @pytest.mark.parametrize(
     ("status_", "expected_return"),
     [
-        (http.HTTPStatus.BAD_REQUEST, errors.BadRequest),
-        (http.HTTPStatus.UNAUTHORIZED, errors.Unauthorized),
-        (http.HTTPStatus.FORBIDDEN, errors.Forbidden),
-        (http.HTTPStatus.NOT_FOUND, errors.NotFound),
-        (http.HTTPStatus.PAYMENT_REQUIRED, errors.ClientHTTPErrorResponse),
-        (http.HTTPStatus.SERVICE_UNAVAILABLE, errors.ServerHTTPErrorResponse),
-        (http.HTTPStatus.PERMANENT_REDIRECT, errors.HTTPErrorResponse),
+        (http.HTTPStatus.BAD_REQUEST, errors.BadRequestError),
+        (http.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
+        (http.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
+        (http.HTTPStatus.NOT_FOUND, errors.NotFoundError),
+        (http.HTTPStatus.PAYMENT_REQUIRED, errors.ClientHTTPResponseError),
+        (http.HTTPStatus.SERVICE_UNAVAILABLE, errors.InternalServerError),
+        (http.HTTPStatus.PERMANENT_REDIRECT, errors.HTTPResponseError),
     ],
 )
 @pytest.mark.asyncio

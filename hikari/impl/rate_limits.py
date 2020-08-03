@@ -91,7 +91,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
-    """The throttling task, or `builtins.None` if it isn't running."""
+    """The throttling task, or `builtins.None` if it is not running."""
 
     queue: typing.Final[typing.List[asyncio.Future[typing.Any]]]
     """The queue of any futures under a rate limit."""
@@ -231,7 +231,7 @@ class ManualRateLimiter(BurstRateLimiter):
             in the queue.
 
         !!! note
-            You shouldn't need to invoke this directly. Call
+            You should not need to invoke this directly. Call
             `ManualRateLimiter.throttle` instead.
 
             When the `ManualRateLimiter.unlock_later` coroutine function
