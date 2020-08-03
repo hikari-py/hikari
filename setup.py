@@ -77,7 +77,8 @@ setuptools.setup(
     test_suite="tests",
     zip_safe=False,
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
         "Natural Language :: English",
