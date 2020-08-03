@@ -861,9 +861,10 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
             then it is prioritised over `guild_id` in the payload.
 
         !!! note
-            `guild_id` currently only accounts for the Guild Create gateway
-            event where `"guild_id"` is not included in the attached presence
-            payloads.
+            At the time of writing, the only place where `guild_id` will be
+            mandatory is when parsing presences sent in a `GUILD_CREATE` event
+            from Discord, since the `guild_id` attribute in the payload will
+            have been omitted for redundancy.
 
         Returns
         -------
