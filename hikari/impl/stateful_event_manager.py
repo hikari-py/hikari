@@ -168,8 +168,15 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
 
         else:
             event = self.app.event_factory.deserialize_guild_leave_event(shard, payload)
+            #  TODO: this doesn't work in all intent scenarios
             self.app.cache.delete_guild(event.guild_id)
-            # TODO Remove other entities here?
+            self.app.cache.clear_voice_states_for_guild(event.guild_id)
+            self.app.cache.clear_invites_for_guild(event.guild_id)
+            self.app.cache.clear_members_for_guild(event.guild_id)
+            self.app.cache.clear_presences_for_guild(event.guild_id)
+            self.app.cache.clear_guild_channels_for_guild(event.guild_id)
+            self.app.cache.clear_emojis_for_guild(event.guild_id)
+            self.app.cache.clear_roles_for_guild(event.guild_id)
 
         await self.dispatch(event)
 
