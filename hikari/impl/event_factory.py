@@ -552,8 +552,8 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
 
     def serialize_gateway_voice_state_update(
         self,
-        guild: typing.Union[guild_models.Guild, snowflake.SnowflakeishOr],
-        channel: typing.Union[channel_models.GuildVoiceChannel, snowflake.SnowflakeishOr, None],
+        guild: snowflake.SnowflakeishOr[guild_models.PartialGuild],
+        channel: typing.Optional[snowflake.SnowflakeishOr[channel_models.GuildVoiceChannel]],
         self_mute: bool,
         self_deaf: bool,
     ) -> data_binding.JSONObject:

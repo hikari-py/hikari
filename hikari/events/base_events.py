@@ -195,10 +195,10 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     # defined in class scope, and thus thinks referring to it will make it a bound method.
     # To get around this, we make this attribute hidden and make a property that casts it
     # for us to remove this effect. This functionally changes nothing but it helps MyPy.
-    _failed_callback: FailedCallbackT = attr.ib()
+    _failed_callback: FailedCallbackT[FailedEventT] = attr.ib()
 
     @property
-    def failed_callback(self) -> FailedCallbackT:
+    def failed_callback(self) -> FailedCallbackT[FailedEventT]:
         """Event callback that threw an exception.
 
         Returns
