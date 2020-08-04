@@ -292,29 +292,27 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
         presence = self.app.entity_factory.deserialize_member_presence(payload)
 
         user_payload = payload["user"]
-        user: typing.Optional[user_models.PartialUser]
+        user: typing.Optional[user_models.PartialUser] = None
         # Here we're told that the only guaranteed field is "id", so if we only get 1 field in the user payload then
         # then we've only got an ID and there's no reason to form a user object.
         if len(user_payload) > 1:
             # PartialUser
-            user = user_models.PartialUser()
-            user.app = self._app
-            user.id = snowflake.Snowflake(user_payload["id"])
-            user.discriminator = (
-                user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
+            discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
+            flags: undefined.UndefinedOr[user_models.UserFlag] = undefined.UNDEFINED
+            if "public_flags" in user_payload:
+                flags = user_models.UserFlag(user_payload["public_flags"])
+
+            user = user_models.PartialUser(
+                app=self._app,
+                id=snowflake.Snowflake(user_payload["id"]),
+                discriminator=discriminator,
+                username=user_payload.get("username", undefined.UNDEFINED),
+                avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
+                is_bot=user_payload.get("bot", undefined.UNDEFINED),
+                is_system=user_payload.get("system", undefined.UNDEFINED),
+                flags=flags,
             )
-            user.username = user_payload.get("username", undefined.UNDEFINED)
-            user.avatar_hash = user_payload.get("avatar", undefined.UNDEFINED)
-            user.is_bot = user_payload.get("bot", undefined.UNDEFINED)
-            user.is_system = user_payload.get("system", undefined.UNDEFINED)
             # noinspection PyArgumentList
-            user.flags = (
-                user_models.UserFlag(user_payload["public_flags"])
-                if "public_flags" in user_payload
-                else undefined.UNDEFINED
-            )
-        else:
-            user = None
 
         return guild_events.PresenceUpdateEvent(shard=shard, presence=presence, user=user)
 

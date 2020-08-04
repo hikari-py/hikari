@@ -78,11 +78,11 @@ class InviteCode(abc.ABC):
         """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -95,7 +95,7 @@ class VanityURL(InviteCode):
         return f"https://discord.gg/{self.code}"
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
@@ -195,11 +195,11 @@ class InviteGuild(guilds.PartialGuild):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -255,7 +255,7 @@ class Invite(InviteCode):
         return f"https://discord.gg/{self.code}"
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class InviteWithMetadata(Invite):
     """Extends the base `Invite` object with metadata.
 

@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import invites
 
@@ -25,12 +26,10 @@ def test_TargetUserType_str_operator():
 
 
 def test_VanityURL_str_operator():
-    url = invites.VanityURL()
-    url.code = "hikari"
-    assert str(url) == "https://discord.gg/hikari"
+    mock_url = mock.Mock(invites.VanityURL, code="hikari")
+    assert invites.VanityURL.__str__(mock_url) == "https://discord.gg/hikari"
 
 
 def test_Invite_str_operator():
-    invite = invites.Invite()
-    invite.code = "abcdef"
-    assert str(invite) == "https://discord.gg/abcdef"
+    mock_invite = mock.Mock(invites.Invite, code="abcdef")
+    assert invites.Invite.__str__(mock_invite) == "https://discord.gg/abcdef"
