@@ -22,6 +22,7 @@ import copy
 import functools
 import inspect
 import os
+import typing
 
 import async_timeout
 import mock
@@ -101,9 +102,44 @@ _unslotted_classes = {}
 
 
 def unslot_class(klass):
+    """Get a modified version of a class without slots."""
     if klass not in _unslotted_classes:
         _unslotted_classes[klass] = type(klass.__name__ + "Unslotted", (klass,), {})
     return _unslotted_classes[klass]
+
+
+_stubbed_classes = {}
+
+
+def _stub_init(self, kwargs: typing.Mapping[str, typing.Any]):
+    for attr, value in kwargs.items():
+        setattr(self, attr, value)
+
+
+def stub_class(klass, **kwargs: typing.Any):
+    """Get an instance of a class with only attributes provided in the passed kwargs set."""
+    if klass not in _stubbed_classes:
+        namespace = {"__init__": _stub_init}
+
+        if hasattr(klass, "__slots__"):
+            namespace["__slots__"] = ()
+
+        new_klass = type("Stub" + klass.__name__, (klass,), namespace)
+    else:
+        new_klass = _stubbed_classes[klass]
+
+    return new_klass(kwargs)
+
+
+def mock_class_namespace(klass, *, init: bool = True, slots: typing.Optional[bool] = None, **namespace: typing.Any):
+    """Get a version of a class with the provided namespace fields set as class attributes."""
+    if slots or slots is None and hasattr(klass, "__slots__"):
+        namespace["__slots__"] = ()
+
+    if init is False:
+        namespace["__init__"] = lambda _: None
+
+    return type("Mock" + klass.__name__, (klass,), namespace)
 
 
 def retry(max_retries):

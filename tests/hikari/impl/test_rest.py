@@ -1017,7 +1017,7 @@ class TestRESTClientImplAsync:
         rest_client._app.entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
         rest_client._request = mock.AsyncMock(return_value={"payload"})
         rest_client._app.entity_factory.serialize_permission_overwrite = mock.Mock(
-            return_value={"type": "member", "allow": 1024, "deny": 8192}
+            return_value={"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}
         )
         expected_json = {
             "name": "new name",
@@ -1028,31 +1028,31 @@ class TestRESTClientImplAsync:
             "user_limit": 100,
             "rate_limit_per_user": 30,
             "parent_id": "1234",
-            "permission_overwrites": [{"type": "member", "allow": 1024, "deny": 8192}],
+            "permission_overwrites": [{"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}],
         }
 
-        assert (
-            await rest_client.edit_channel(
-                StubModel(123),
-                name="new name",
-                position=1,
-                topic="new topic",
-                nsfw=True,
-                bitrate=10,
-                user_limit=100,
-                rate_limit_per_user=30,
-                permission_overwrites=[
-                    channels.PermissionOverwrite(
-                        type=channels.PermissionOverwriteType.MEMBER,
-                        allow=permissions.Permission.VIEW_CHANNEL,
-                        deny=permissions.Permission.MANAGE_MESSAGES,
-                    )
-                ],
-                parent_category=StubModel(1234),
-                reason="some reason :)",
-            )
-            == mock_object
+        result = await rest_client.edit_channel(
+            StubModel(123),
+            name="new name",
+            position=1,
+            topic="new topic",
+            nsfw=True,
+            bitrate=10,
+            user_limit=100,
+            rate_limit_per_user=30,
+            permission_overwrites=[
+                channels.PermissionOverwrite(
+                    type=channels.PermissionOverwriteType.MEMBER,
+                    allow=permissions.Permission.VIEW_CHANNEL,
+                    deny=permissions.Permission.MANAGE_MESSAGES,
+                    id=1235431,
+                )
+            ],
+            parent_category=StubModel(1234),
+            reason="some reason :)",
         )
+
+        assert result == mock_object
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="some reason :)")
         rest_client._app.entity_factory.deserialize_channel.assert_called_once_with({"payload"})
 

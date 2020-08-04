@@ -221,9 +221,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     # TODO: document when this is None, or fix it to not be optional?

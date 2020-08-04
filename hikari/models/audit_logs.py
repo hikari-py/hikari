@@ -195,9 +195,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     entries.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     type: channels.PermissionOverwriteType = attr.ib(repr=True)
@@ -289,9 +287,7 @@ class AuditLogEntry(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)

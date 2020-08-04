@@ -197,7 +197,7 @@ class _GuildRecord:
         return any(getattr(self, attribute) for attribute in self._FIELDS_TO_CHECK)
 
 
-@attr.s(slots=True, repr=False, hash=False, init=False, weakref_slot=False)
+@attr.s(slots=True, repr=False, hash=False, init=True, weakref_slot=False)
 class _BaseData(abc.ABC, typing.Generic[_ValueT]):
     """A data class used for storing entities in a more primitive form.
 

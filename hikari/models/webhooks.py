@@ -69,9 +69,7 @@ class Webhook(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     type: WebhookType = attr.ib(eq=False, hash=False, repr=True)

@@ -23,17 +23,14 @@ from hikari.models import gateway
 
 def test_SessionStartLimit_used_property():
     obj = gateway.SessionStartLimit(
-        total=100, remaining=2, reset_after=datetime.timedelta(seconds=1), max_concurrency=1
+        total=100, remaining=12, reset_after=datetime.timedelta(seconds=1), max_concurrency=1
     )
-    obj.total = 100
-    obj.remaining = 12
-
     assert obj.used == 88
 
 
 def test_SessionStartLimit_reset_at_property():
     obj = gateway.SessionStartLimit(
-        total=100, remaining=2, reset_after=datetime.timedelta(hours=1, days=10), max_concurrency=1
+        total=100, remaining=2, reset_after=datetime.timedelta(hours=1, days=10), max_concurrency=1,
     )
     obj._created_at = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
 

@@ -159,9 +159,7 @@ class Attachment(snowflake.Unique, files.WebResource):
     by passing it as an attached file when creating a message, etc.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     url: str = attr.ib(repr=True)
@@ -266,9 +264,7 @@ class PartialMessage(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
