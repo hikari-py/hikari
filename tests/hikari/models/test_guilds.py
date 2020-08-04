@@ -55,6 +55,24 @@ def test_GuildVerificationLevel_str_operator():
     assert str(level) == "NONE"
 
 
+def test_Member_display_name_property_when_nickname_set():
+    member = guilds.Member()
+    user = users.UserImpl()
+    user.username = "davfsa"
+    member.user = user
+    member.nickname = "davb"
+    assert member.display_name == "davb"
+
+
+def test_Member_display_name_property_when_nickname_not_set():
+    member = guilds.Member()
+    user = users.UserImpl()
+    user.username = "davfsa"
+    member.user = user
+    member.nickname = None
+    assert member.display_name == "davfsa"
+
+
 def test_Member_str_operator():
     member = guilds.Member()
     user = users.UserImpl()

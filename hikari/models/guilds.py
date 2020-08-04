@@ -372,6 +372,25 @@ class Member(users.User):
         return self.user.default_avatar
 
     @property
+    def display_name(self) -> str:
+        """Return the member's display name.
+
+        If the member has a nickname, this will return that nickname.
+        Otherwise, it will return the username instead.
+
+        Returns
+        -------
+        builtins.str
+            The member display name.
+
+        See Also
+        --------
+        Nickname: `Member.nickname`
+        Username: `Member.username`
+        """
+        return self.nickname if isinstance(self.nickname, str) else self.username
+
+    @property
     def mention(self) -> str:
         """Return a raw mention string for the given member.
 
