@@ -133,7 +133,7 @@ class PermissionOverwrite(snowflake.Unique):
     """
 
     id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True,
     )
     """The ID of this entity."""
 
@@ -168,9 +168,7 @@ class PartialChannel(snowflake.Unique):
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)

@@ -236,9 +236,7 @@ class PartialUser(snowflake.Unique):
     present.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this user."""
 
     app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)

@@ -726,7 +726,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         video: typing.Optional[embed_models.EmbedVideo[files.AsyncReader]] = None
         if video_payload := payload.get("video"):
-            video: typing.Optional[embed_models.EmbedVideo] = embed_models.EmbedVideo(
+            video = embed_models.EmbedVideo(
                 resource=files.ensure_resource(video_payload.get("url")),
                 height=video_payload.get("height"),
                 width=video_payload.get("width"),
@@ -741,7 +741,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         if author_payload := payload.get("author"):
             icon = None
             if "icon_url" in author_payload:
-                icon: typing.Optional[embed_models.EmbedResourceWithProxy] = embed_models.EmbedResourceWithProxy(
+                icon = embed_models.EmbedResourceWithProxy(
                     resource=files.ensure_resource(author_payload.get("icon_url")),
                     proxy_resource=files.ensure_resource(author_payload.get("proxy_icon_url")),
                 )

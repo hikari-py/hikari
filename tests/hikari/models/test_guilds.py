@@ -19,6 +19,7 @@ import mock
 
 from hikari.models import guilds
 from hikari.models import users
+from tests.hikari import hikari_test_helpers
 
 
 def test_GuildExplicitContentFilterLevel_str_operator():
@@ -57,20 +58,12 @@ def test_GuildVerificationLevel_str_operator():
 
 
 def test_Member_display_name_property_when_nickname_set():
-    member = guilds.Member()
-    user = users.UserImpl()
-    user.username = "davfsa"
-    member.user = user
-    member.nickname = "davb"
+    member = hikari_test_helpers.stub_class(guilds.Member, user=object(), nickname="davb")
     assert member.display_name == "davb"
 
 
 def test_Member_display_name_property_when_nickname_not_set():
-    member = guilds.Member()
-    user = users.UserImpl()
-    user.username = "davfsa"
-    member.user = user
-    member.nickname = None
+    member = hikari_test_helpers.stub_class(guilds.Member, user=mock.Mock(users.User, username="davfsa"), nickname=None)
     assert member.display_name == "davfsa"
 
 

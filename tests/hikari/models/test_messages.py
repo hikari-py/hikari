@@ -15,10 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-import pytest
-
 from hikari.models import emojis
 from hikari.models import messages
+from tests.hikari import hikari_test_helpers
 
 
 def test_MessageType_str_operator():
@@ -38,7 +37,7 @@ def test_MessageActivityType_str_operator():
 
 def test_Attachment_str_operator():
     attachment = messages.Attachment(
-        filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
+        id=123, filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
     )
     assert str(attachment) == "super_cool_file.cool"
 
@@ -48,22 +47,11 @@ def test_Reaction_str_operator():
     assert str(reaction) == "\N{OK HAND SIGN}"
 
 
-class StubMessage(messages.Message):
-    def __init__(self):
-        ...
-
-
 class TestMessage:
     def test_link_property_when_guild_is_not_none(self):
-        mock_message = StubMessage()
-        mock_message.id = 23432
-        mock_message.channel_id = 562134
-        mock_message.guild_id = 54123
+        mock_message = hikari_test_helpers.stub_class(messages.Message, id=23432, channel_id=562134, guild_id=54123)
         assert mock_message.link == "https://discord.com/channels/54123/562134/23432"
 
     def test_link_property_when_guild_is_none(self):
-        mock_message = StubMessage()
-        mock_message.id = 33333
-        mock_message.guild_id = None
-        mock_message.channel_id = 65234
+        mock_message = hikari_test_helpers.stub_class(messages.Message, id=33333, guild_id=None, channel_id=65234)
         assert mock_message.link == "https://discord.com/channels/@me/65234/33333"

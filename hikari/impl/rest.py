@@ -1376,7 +1376,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if embeds is not undefined.UNDEFINED and isinstance(embeds, typing.Collection):
+        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"

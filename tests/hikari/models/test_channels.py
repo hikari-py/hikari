@@ -58,11 +58,7 @@ def test_DMChannel_str_operator():
 
 
 def test_DMChannel_shard_id():
-    class StubPrivateChannel(channels.PrivateTextChannel):
-        def __init__(self):
-            ...
-
-    assert StubPrivateChannel().shard_id == 0
+    assert hikari_test_helpers.stub_class(channels.PrivateTextChannel).shard_id == 0
 
 
 def test_GroupDMChannel_str_operator():
@@ -82,7 +78,7 @@ def test_GroupDMChannel_str_operator_when_name_is_None():
 
 
 def test_PermissionOverwrite_unset():
-    overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER)
+    overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=1234321)
     overwrite.allow = permissions.Permission.CREATE_INSTANT_INVITE
     overwrite.deny = permissions.Permission.CHANGE_NICKNAME
     assert overwrite.unset == permissions.Permission(-67108866)
@@ -146,13 +142,9 @@ async def test_TextChannel_history():
 
 
 def test_GroupDMChannel_icon():
-    class StubGroupPrivateTextChannel(channels.GroupPrivateTextChannel):
-        def __init__(self):
-            pass
-
-    channel = StubGroupPrivateTextChannel()
-    channel.format_icon = mock.Mock(return_value="icon")
-
+    channel = hikari_test_helpers.mock_class_namespace(
+        channels.GroupPrivateTextChannel, init=False, format_icon=mock.Mock(return_value="icon")
+    )()
     assert channel.icon == "icon"
     channel.format_icon.assert_called_once()
 
@@ -176,29 +168,17 @@ def test_GroupDMChannel_format_icon_when_hash_is_None():
     assert channels.GroupPrivateTextChannel.format_icon(mock_channel) is None
 
 
-class StubGuildChannel(channels.GuildChannel):
-    def __init__(self):
-        pass
-
-
 def test_GuildChannel_shard_id_property_when_guild_id_is_None():
-    channel = StubGuildChannel()
-    channel.guild_id = None
-
+    channel = hikari_test_helpers.stub_class(channels.GuildChannel, guild_id=None)
     assert channel.shard_id is None
 
 
 @pytest.mark.parametrize("error", (TypeError, AttributeError, NameError))
 def test_GuildChannel_shard_id_property_when_guild_id_error_raised(error):
-    channel = StubGuildChannel()
-    channel.guild_id = mock.Mock(side_effect=error)
-
+    channel = hikari_test_helpers.stub_class(channels.GuildChannel, guild_id=mock.Mock(side_effect=error))
     assert channel.shard_id is None
 
 
 def test_GuildChannel_shard_id_property_when_guild_id_is_not_None():
-    channel = StubGuildChannel()
-    channel.guild_id = 123456789
-    channel.app = mock.Mock(shard_count=3)
-
+    channel = hikari_test_helpers.stub_class(channels.GuildChannel, guild_id=123456789, app=mock.Mock(shard_count=3))
     assert channel.shard_id == 2

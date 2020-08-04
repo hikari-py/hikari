@@ -32,7 +32,6 @@ def test_Webhook_str_operator():
 
 
 def test_Webhook_str_operator_when_name_is_None():
-    mock_webhook = mock.Mock(webhooks.Webhook)
+    mock_webhook = mock.Mock(webhooks.Webhook, id=987654321)
     mock_webhook.name = None
-    mock_webhook.id = 987654321
     assert webhooks.Webhook.__str__(mock_webhook) == "Unnamed webhook ID 987654321"
