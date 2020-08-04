@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import pytest
 
 from hikari.models import emojis
 from hikari.models import messages
@@ -36,30 +37,33 @@ def test_MessageActivityType_str_operator():
 
 
 def test_Attachment_str_operator():
-    attachment = messages.Attachment()
-    attachment.filename = "super_cool_file.cool"
+    attachment = messages.Attachment(
+        filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
+    )
     assert str(attachment) == "super_cool_file.cool"
 
 
 def test_Reaction_str_operator():
-    reaction = messages.Reaction()
-    emoji = emojis.UnicodeEmoji()
-    emoji.name = "\N{OK HAND SIGN}"
-    reaction.emoji = emoji
+    reaction = messages.Reaction(emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"), count=42, is_me=True)
     assert str(reaction) == "\N{OK HAND SIGN}"
 
 
-def test_Message_link_property_when_guild_is_not_None():
-    message = messages.Message()
-    message.id = 123
-    message.guild_id = 456
-    message.channel_id = 890
-    assert message.link == "https://discord.com/channels/456/890/123"
+class StubMessage(messages.Message):
+    def __init__(self):
+        ...
 
 
-def test_Message_link_property_when_guild_is_None():
-    message = messages.Message()
-    message.id = 123
-    message.guild_id = None
-    message.channel_id = 890
-    assert message.link == "https://discord.com/channels/@me/890/123"
+class TestMessage:
+    def test_link_property_when_guild_is_not_none(self):
+        mock_message = StubMessage()
+        mock_message.id = 23432
+        mock_message.channel_id = 562134
+        mock_message.guild_id = 54123
+        assert mock_message.link == "https://discord.com/channels/54123/562134/23432"
+
+    def test_link_property_when_guild_is_none(self):
+        mock_message = StubMessage()
+        mock_message.id = 33333
+        mock_message.guild_id = None
+        mock_message.channel_id = 65234
+        assert mock_message.link == "https://discord.com/channels/@me/65234/33333"

@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import webhooks
 
@@ -25,13 +26,13 @@ def test_WebhookType_str_operator():
 
 
 def test_Webhook_str_operator():
-    webhook = webhooks.Webhook()
-    webhook.name = "not a webhook"
-    assert str(webhook) == "not a webhook"
+    mock_webhook = mock.Mock(webhooks.Webhook)
+    mock_webhook.name = "not a webhook"
+    assert webhooks.Webhook.__str__(mock_webhook) == "not a webhook"
 
 
 def test_Webhook_str_operator_when_name_is_None():
-    webhook = webhooks.Webhook()
-    webhook.name = None
-    webhook.id = 987654321
-    assert str(webhook) == "Unnamed webhook ID 987654321"
+    mock_webhook = mock.Mock(webhooks.Webhook)
+    mock_webhook.name = None
+    mock_webhook.id = 987654321
+    assert webhooks.Webhook.__str__(mock_webhook) == "Unnamed webhook ID 987654321"

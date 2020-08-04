@@ -38,43 +38,47 @@ def test_PermissionOverwriteType_str_operator():
 
 
 def test_PartialChannel_str_operator():
-    channel = channels.PartialChannel()
-    channel.name = "foo"
-    assert str(channel) == "foo"
+    mock_channel = mock.Mock(channels.PartialChannel)
+    mock_channel.name = "foo"
+    assert channels.PartialChannel.__str__(mock_channel) == "foo"
 
 
 def test_PartialChannel_str_operator_when_name_is_None():
-    channel = channels.PartialChannel()
-    channel.id = 1234567
-    channel.name = None
-    assert str(channel) == "Unnamed PartialChannel ID 1234567"
+    mock_channel = mock.Mock(channels.PartialChannel, id=1234567)
+    mock_channel.name = None
+    assert channels.PartialChannel.__str__(mock_channel) == "Unnamed PartialChannel ID 1234567"
 
 
 def test_DMChannel_str_operator():
-    channel = channels.PrivateTextChannel()
-    user = users.UserImpl()
-    user.discriminator = "0420"
-    user.username = "snoop"
-    channel.recipient = user
-    assert str(channel) == "PrivateTextChannel with: snoop#0420"
+    mock_user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="snoop#0420"))
+    mock_user.discriminator = "0420"
+    mock_user.username = "snoop"
+    mock_channel = mock.Mock(channels.PrivateTextChannel, recipient=mock_user)
+    assert channels.PrivateTextChannel.__str__(mock_channel) == "PrivateTextChannel with: snoop#0420"
+
+
+def test_DMChannel_shard_id():
+    class StubPrivateChannel(channels.PrivateTextChannel):
+        def __init__(self):
+            ...
+
+    assert StubPrivateChannel().shard_id == 0
 
 
 def test_GroupDMChannel_str_operator():
-    channel = channels.GroupPrivateTextChannel()
-    channel.name = "super cool group dm"
-    assert str(channel) == "super cool group dm"
+    mock_channel = mock.Mock(channels.GroupPrivateTextChannel)
+    mock_channel.name = "super cool group dm"
+    assert channels.GroupPrivateTextChannel.__str__(mock_channel) == "super cool group dm"
 
 
 def test_GroupDMChannel_str_operator_when_name_is_None():
-    channel = channels.GroupPrivateTextChannel()
-    channel.name = None
-    user, other_user = users.UserImpl(), users.UserImpl()
-    user.discriminator = "0420"
-    user.username = "snoop"
-    other_user.discriminator = "6969"
-    other_user.username = "nice"
-    channel.recipients = {1: user, 2: other_user}
-    assert str(channel) == "GroupPrivateTextChannel with: snoop#0420, nice#6969"
+    user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="snoop#0420"))
+    other_user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="nice#6969"))
+    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, recipients={1: user, 2: other_user})
+    mock_channel.name = None
+    assert (
+        channels.GroupPrivateTextChannel.__str__(mock_channel) == "GroupPrivateTextChannel with: snoop#0420, nice#6969"
+    )
 
 
 def test_PermissionOverwrite_unset():
@@ -86,15 +90,15 @@ def test_PermissionOverwrite_unset():
 
 @pytest.mark.asyncio
 async def test_TextChannel_send():
-    channel = channels.TextChannel()
-    channel.id = 123
-    channel.app = mock.Mock()
-    channel.app.rest.create_message = mock.AsyncMock()
+    app = mock.Mock()
+    app.rest.create_message = mock.AsyncMock()
+    mock_channel = mock.Mock(channels.TextChannel, id=123, app=app)
     mock_attachment = object()
     mock_embed = object()
     mock_attachments = [object(), object(), object()]
 
-    await channel.send(
+    await channels.TextChannel.send(
+        mock_channel,
         content="test content",
         nonce="abc123",
         tts=True,
@@ -106,7 +110,7 @@ async def test_TextChannel_send():
         role_mentions=[789, 567],
     )
 
-    channel.app.rest.create_message.assert_called_once_with(
+    mock_channel.app.rest.create_message.assert_called_once_with(
         channel=123,
         content="test content",
         nonce="abc123",
@@ -122,18 +126,18 @@ async def test_TextChannel_send():
 
 @pytest.mark.asyncio
 async def test_TextChannel_history():
-    channel = channels.TextChannel()
-    channel.id = 123
-    channel.app = mock.Mock()
-    channel.app.rest.fetch_messages = mock.AsyncMock()
+    app = mock.Mock()
+    app.rest.fetch_messages = mock.AsyncMock()
+    mock_channel = mock.Mock(channels.TextChannel, id=123, app=app)
 
-    await channel.history(
+    await channels.TextChannel.history(
+        mock_channel,
         before=datetime.datetime(2020, 4, 1, 1, 0, 0),
         after=datetime.datetime(2020, 4, 1, 0, 0, 0),
         around=datetime.datetime(2020, 4, 1, 0, 30, 0),
     )
 
-    channel.app.rest.fetch_messages.assert_called_once_with(
+    mock_channel.app.rest.fetch_messages.assert_called_once_with(
         123,
         before=datetime.datetime(2020, 4, 1, 1, 0, 0),
         after=datetime.datetime(2020, 4, 1, 0, 0, 0),
@@ -142,7 +146,11 @@ async def test_TextChannel_history():
 
 
 def test_GroupDMChannel_icon():
-    channel = hikari_test_helpers.unslot_class(channels.GroupPrivateTextChannel)()
+    class StubGroupPrivateTextChannel(channels.GroupPrivateTextChannel):
+        def __init__(self):
+            pass
+
+    channel = StubGroupPrivateTextChannel()
     channel.format_icon = mock.Mock(return_value="icon")
 
     assert channel.icon == "icon"
@@ -150,32 +158,31 @@ def test_GroupDMChannel_icon():
 
 
 def test_GroupDMChannel_format_icon():
-    channel = channels.GroupPrivateTextChannel()
-    channel.id = 123
-    channel.icon_hash = "456abc"
-
-    assert channel.format_icon(format="jpeg", size=16) == files.URL(
+    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, id=123, icon_hash="456abc")
+    assert channels.GroupPrivateTextChannel.format_icon(mock_channel, format="jpeg", size=16) == files.URL(
         "https://cdn.discordapp.com/channel-icons/123/456abc.jpeg?size=16"
     )
 
 
 def test_GroupDMChannel_format_icon_without_optionals():
-    channel = channels.GroupPrivateTextChannel()
-    channel.id = 123
-    channel.icon_hash = "456abc"
-
-    assert channel.format_icon() == files.URL("https://cdn.discordapp.com/channel-icons/123/456abc.png?size=4096")
+    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, id=123, icon_hash="456abc")
+    assert channels.GroupPrivateTextChannel.format_icon(mock_channel) == files.URL(
+        "https://cdn.discordapp.com/channel-icons/123/456abc.png?size=4096"
+    )
 
 
 def test_GroupDMChannel_format_icon_when_hash_is_None():
-    channel = channels.GroupPrivateTextChannel()
-    channel.icon_hash = None
+    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, icon_hash=None)
+    assert channels.GroupPrivateTextChannel.format_icon(mock_channel) is None
 
-    assert channel.format_icon() is None
+
+class StubGuildChannel(channels.GuildChannel):
+    def __init__(self):
+        pass
 
 
 def test_GuildChannel_shard_id_property_when_guild_id_is_None():
-    channel = channels.GuildChannel()
+    channel = StubGuildChannel()
     channel.guild_id = None
 
     assert channel.shard_id is None
@@ -183,14 +190,14 @@ def test_GuildChannel_shard_id_property_when_guild_id_is_None():
 
 @pytest.mark.parametrize("error", (TypeError, AttributeError, NameError))
 def test_GuildChannel_shard_id_property_when_guild_id_error_raised(error):
-    channel = channels.GuildChannel()
+    channel = StubGuildChannel()
     channel.guild_id = mock.Mock(side_effect=error)
 
     assert channel.shard_id is None
 
 
 def test_GuildChannel_shard_id_property_when_guild_id_is_not_None():
-    channel = channels.GuildChannel()
+    channel = StubGuildChannel()
     channel.guild_id = 123456789
     channel.app = mock.Mock(shard_count=3)
 

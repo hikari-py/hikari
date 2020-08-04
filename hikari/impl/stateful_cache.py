@@ -224,22 +224,26 @@ class _BaseData(abc.ABC, typing.Generic[_ValueT]):
             A collection of the names of fields to handle.
         """
 
-    def build_entity(self, target: _ValueT) -> _ValueT:
+    def build_entity(self, target: typing.Type[_ValueT], **kwargs: typing.Any) -> _ValueT:
         """Build an entity object from this data object.
 
         Parameters
         ----------
         target
-            The pre-initialised entity object to add attributes to.
+            The class of the entity object to add attributes to.
+        kwargs
+            Extra fields to pass on to the entity's initialiser. These will take
+            priority over fields on the builder.
 
         Returns
         -------
         The initialised entity object.
         """
         for field in self.get_fields():
-            setattr(target, field, getattr(self, field))
+            if field not in kwargs:
+                kwargs[field] = getattr(self, field)
 
-        return target
+        return target(**kwargs)  # type: ignore[call-arg]
 
     @classmethod
     def build_from_entity(cls: typing.Type[_DataT], entity: _ValueT, **kwargs: typing.Any) -> _DataT:
@@ -283,10 +287,10 @@ class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
     def get_fields(cls) -> typing.Collection[str]:
         return "id", "name", "last_message_id"
 
-    def build_entity(self, target: channels.PrivateTextChannel) -> channels.PrivateTextChannel:
-        super().build_entity(target)
-        target.type = channels.ChannelType.PRIVATE_TEXT
-        return target
+    def build_entity(
+        self, target: typing.Type[channels.PrivateTextChannel], **kwargs: typing.Any
+    ) -> channels.PrivateTextChannel:
+        return super().build_entity(target, type=channels.ChannelType.PRIVATE_TEXT, **kwargs)
 
     @classmethod
     def build_from_entity(
@@ -325,13 +329,12 @@ class _InviteData(_BaseData[invites.InviteWithMetadata]):
             "created_at",
         )
 
-    def build_entity(self, target: invites.InviteWithMetadata) -> invites.InviteWithMetadata:
-        super().build_entity(target)
-        target.approximate_member_count = None
-        target.approximate_presence_count = None
-        target.channel = None
-        target.guild = None
-        return target
+    def build_entity(
+        self, target: typing.Type[invites.InviteWithMetadata], **kwargs: typing.Any
+    ) -> invites.InviteWithMetadata:
+        return super().build_entity(
+            target, approximate_member_count=None, approximate_presence_count=None, channel=None, guild=None, **kwargs,
+        )
 
     @classmethod
     def build_from_entity(
@@ -398,6 +401,9 @@ class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
 
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _RichActivityData(_BaseData[presences.RichActivity]):
+    name: str = attr.ib()
+    url: str = attr.ib()
+    type: presences.ActivityType = attr.ib()
     created_at: datetime.datetime = attr.ib()
     timestamps: presences.ActivityTimestamps = attr.ib()
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib()
@@ -412,7 +418,7 @@ class _RichActivityData(_BaseData[presences.RichActivity]):
 
     @classmethod
     def get_fields(cls) -> typing.Collection[str]:
-        return "created_at", "application_id", "details", "state", "is_instance", "flags"
+        return "name", "url", "type", "created_at", "application_id", "details", "state", "is_instance", "flags"
 
     @classmethod
     def build_from_entity(
@@ -439,13 +445,15 @@ class _RichActivityData(_BaseData[presences.RichActivity]):
             secrets=secrets,
         )
 
-    def build_entity(self, target: presences.RichActivity) -> presences.RichActivity:
-        super().build_entity(target)
-        target.timestamps = copy.copy(self.timestamps)
-        target.party = copy.copy(self.party)
-        target.assets = copy.copy(self.assets)
-        target.secrets = copy.copy(self.secrets)
-        return target
+    def build_entity(self, target: typing.Type[presences.RichActivity], **kwargs: typing.Any) -> presences.RichActivity:
+        return super().build_entity(
+            target,
+            timestamps=copy.copy(self.timestamps),
+            party=copy.copy(self.party),
+            assets=copy.copy(self.assets),
+            secrets=copy.copy(self.secrets),
+            **kwargs,
+        )
 
 
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
@@ -474,14 +482,17 @@ class _MemberPresenceData(_BaseData[presences.MemberPresence]):
             client_status=copy.copy(entity.client_status),
         )
 
-    def build_entity(self, target: presences.MemberPresence) -> presences.MemberPresence:
-        super().build_entity(target)
-        target.activities = [
-            activity.build_entity(presences.RichActivity(name="", url=None, type=presences.ActivityType.CUSTOM))
-            for activity in self.activities
+    def build_entity(
+        self, target: typing.Type[presences.MemberPresence], **kwargs: typing.Any,
+    ) -> presences.MemberPresence:
+        presence_kwargs = kwargs.pop("presence_kwargs")
+        activities = [
+            activity.build_entity(presences.RichActivity, **kwargs_)
+            for activity, kwargs_ in zip(self.activities, presence_kwargs)
         ]
-        target.client_status = copy.copy(self.client_status)
-        return target
+        return super().build_entity(
+            target, activities=activities, client_status=copy.copy(self.client_status), **kwargs
+        )
 
 
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
@@ -635,15 +646,12 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         channel_data: _PrivateTextChannelData,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> channels.PrivateTextChannel:
-        channel = channel_data.build_entity(channels.PrivateTextChannel())
-        channel.app = self._app
-
         if cached_users:
-            channel.recipient = copy.copy(cached_users[channel_data.recipient_id])
+            recipient = copy.copy(cached_users[channel_data.recipient_id])
         else:
-            channel.recipient = copy.copy(self._user_entries[channel_data.recipient_id].object)
+            recipient = copy.copy(self._user_entries[channel_data.recipient_id].object)
 
-        return channel
+        return channel_data.build_entity(channels.PrivateTextChannel, app=self._app, recipient=recipient)
 
     def clear_private_text_channels(self) -> cache.ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
         if not self._private_text_channel_entries:
@@ -710,17 +718,15 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         emoji_data: _KnownCustomEmojiData,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> emojis.KnownCustomEmoji:
-        emoji = emoji_data.build_entity(emojis.KnownCustomEmoji())
-        emoji.app = self._app
-
+        user: typing.Optional[users.User]
         if cached_users is not None and emoji_data.user_id is not None:
-            emoji.user = copy.copy(cached_users[emoji_data.user_id])
+            user = copy.copy(cached_users[emoji_data.user_id])
         elif emoji_data.user_id is not None:
-            emoji.user = copy.copy(self._user_entries[emoji_data.user_id].object)
+            user = copy.copy(self._user_entries[emoji_data.user_id].object)
         else:
-            emoji.user = None
+            user = None
 
-        return emoji
+        return emoji_data.build_entity(emojis.KnownCustomEmoji, app=self._app, user=user)
 
     def _increment_emoji_ref_count(self, emoji_id: snowflake.Snowflake, increment: int = 1) -> None:
         self._emoji_entries[emoji_id].ref_count += increment
@@ -1039,24 +1045,25 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         invite_data: _InviteData,
         cached_users: undefined.UndefinedOr[typing.Mapping[snowflake.Snowflake, users.User]] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
-        invite = invite_data.build_entity(invites.InviteWithMetadata())
-        invite.app = self._app
-
+        inviter: typing.Optional[users.User]
         if cached_users is not undefined.UNDEFINED and invite_data.inviter_id is not None:
-            invite.inviter = copy.copy(cached_users[invite_data.inviter_id])
+            inviter = copy.copy(cached_users[invite_data.inviter_id])
         elif invite_data.inviter_id is not None:
-            invite.inviter = copy.copy(self._user_entries[invite_data.inviter_id].object)
+            inviter = copy.copy(self._user_entries[invite_data.inviter_id].object)
         else:
-            invite.inviter = None
+            inviter = None
 
+        target_user: typing.Optional[users.User]
         if cached_users is not undefined.UNDEFINED and invite_data.target_user_id is not None:
-            invite.target_user = copy.copy(cached_users[invite_data.target_user_id])
+            target_user = copy.copy(cached_users[invite_data.target_user_id])
         elif invite_data.target_user_id is not None:
-            invite.target_user = copy.copy(self._user_entries[invite_data.target_user_id].object)
+            target_user = copy.copy(self._user_entries[invite_data.target_user_id].object)
         else:
-            invite.target_user = None
+            target_user = None
 
-        return invite
+        return invite_data.build_entity(
+            invites.InviteWithMetadata, app=self._app, inviter=inviter, target_user=target_user
+        )
 
     def _clear_invites(
         self, guild_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
@@ -1287,14 +1294,12 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         member_data: _MemberData,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> guilds.Member:
-        member = member_data.build_entity(guilds.Member())
-
         if cached_users is None:
-            member.user = copy.copy(self._user_entries[member_data.id].object)
+            user = copy.copy(self._user_entries[member_data.id].object)
         else:
-            member.user = copy.copy(cached_users[member_data.id])
+            user = copy.copy(cached_users[member_data.id])
 
-        return member
+        return member_data.build_entity(guilds.Member, user=user)
 
     def _can_remove_member(self, member: _MemberData) -> bool:
         if member.has_been_deleted is False:
@@ -1445,27 +1450,31 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         ] = None,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> presences.MemberPresence:
-        presence = presence_data.build_entity(presences.MemberPresence())
-
-        for activity, activity_data in zip(presence.activities, presence_data.activities):
+        presence_kwargs: typing.MutableSequence[typing.Mapping[str, typing.Optional[emojis.Emoji]]] = []
+        for activity_data in presence_data.activities:
             identifier = activity_data.emoji_id_or_name
             if identifier is None:
-                activity.emoji = None
+                presence_kwargs.append({"emoji": None})
 
             elif cached_emojis:
                 emoji = cached_emojis[identifier]
                 if isinstance(emoji, _KnownCustomEmojiData):
-                    activity.emoji = self._build_emoji(emoji, cached_users=cached_users)
+                    presence_kwargs.append({"emoji": self._build_emoji(emoji, cached_users=cached_users)})
                 else:
-                    activity.emoji = copy.copy(emoji)
+                    presence_kwargs.append({"emoji": copy.copy(emoji)})
+
+                continue
 
             elif isinstance(identifier, snowflake.Snowflake) and identifier in self._emoji_entries:
-                activity.emoji = self._build_emoji(self._emoji_entries[identifier], cached_users=cached_users)
+                presence_kwargs.append(
+                    {"emoji": self._build_emoji(self._emoji_entries[identifier], cached_users=cached_users)}
+                )
+                continue
 
             else:
-                activity.emoji = copy.copy(self._unknown_emoji_entries[identifier].object)
+                presence_kwargs.append({"emoji": copy.copy(self._unknown_emoji_entries[identifier].object)})
 
-        return presence
+        return presence_data.build_entity(presences.MemberPresence, app=self._app, presence_kwargs=presence_kwargs)
 
     def _garbage_collect_unknown_emoji(
         self, emoji_id_or_name: typing.Union[snowflake.Snowflake, str], decrement: int = 0
@@ -1805,18 +1814,15 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_members: typing.Optional[typing.Mapping[snowflake.Snowflake, _MemberData]] = None,
         cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
     ) -> voices.VoiceState:
-        voice_state = voice_data.build_entity(voices.VoiceState())
-        voice_state.app = self._app
-
         if cached_members:
-            voice_state.member = self._build_member(cached_members[voice_state.user_id], cached_users=cached_users)
+            member = self._build_member(cached_members[voice_data.user_id], cached_users=cached_users)
         else:
-            guild_record = self._guild_entries[voice_state.guild_id]
+            guild_record = self._guild_entries[voice_data.guild_id]
             assert guild_record.members is not None
-            member_data = guild_record.members[voice_state.user_id]
-            voice_state.member = self._build_member(member_data, cached_users=cached_users)
+            member_data = guild_record.members[voice_data.user_id]
+            member = self._build_member(member_data, cached_users=cached_users)
 
-        return voice_state
+        return voice_data.build_entity(voices.VoiceState, app=self._app, member=member)
 
     def clear_voice_states(
         self,
