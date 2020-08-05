@@ -66,6 +66,10 @@ if typing.TYPE_CHECKING:
 _MAGIC: typing.Final[int] = 50 * 1024
 
 
+ReaderImplT = typing.TypeVar("ReaderImplT", bound="AsyncReader")
+ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound="AsyncReader", covariant=True)
+
+
 Pathish = typing.Union["os.PathLike[str]", str]
 """Type hint representing a literal file or path.
 
@@ -156,17 +160,7 @@ def unwrap_bytes(data: Rawish) -> bytes:
     return data
 
 
-@typing.overload
-def ensure_resource(url_or_resource: None, /) -> None:
-    """Given None, return None."""
-
-
-@typing.overload
-def ensure_resource(url_or_resource: Resourceish, /) -> Resource[ReaderImplT_co]:
-    """Given a non null value, parse a resource from it.."""
-
-
-def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource[ReaderImplT_co]]:
+def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource[AsyncReader]]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
@@ -184,7 +178,7 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
     if isinstance(url_or_resource, RAWISH_TYPES):
         data = unwrap_bytes(url_or_resource)
         filename = generate_filename_from_details(mimetype=None, extension=None, data=data)
-        return Bytes(url_or_resource, filename)
+        return typing.cast("Resource[AsyncReader]", Bytes(url_or_resource, filename))
 
     if isinstance(url_or_resource, Resource):
         return url_or_resource
@@ -195,16 +189,16 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
     url_or_resource = str(url_or_resource)
 
     if url_or_resource.startswith(("https://", "http://")):
-        return URL(url_or_resource)
+        return typing.cast("Resource[AsyncReader]", URL(url_or_resource))
     if url_or_resource.startswith("data:"):
         try:
-            return Bytes.from_data_uri(url_or_resource)
+            return typing.cast("Resource[AsyncReader]", Bytes.from_data_uri(url_or_resource))
         except ValueError:
             # If we cannot parse it, maybe it is some malformed file?
             pass
 
     path = pathlib.Path(url_or_resource)
-    return File(path, path.name)
+    return typing.cast("Resource[AsyncReader]", File(path, path.name))
 
 
 def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
@@ -367,10 +361,6 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         async for chunk in self:
             buff.extend(chunk)
         return buff
-
-
-ReaderImplT = typing.TypeVar("ReaderImplT", bound=AsyncReader)
-ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound=AsyncReader, covariant=True)
 
 
 class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
