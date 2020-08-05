@@ -18,6 +18,7 @@
 import asyncio
 import contextlib
 import datetime
+import logging
 
 import aiohttp.client_reqrep
 import mock
@@ -27,6 +28,9 @@ from hikari import config
 from hikari import errors
 from hikari.impl import shard
 from hikari.models import presences
+from hikari.models import intents
+from hikari.utilities import snowflake
+from hikari.utilities import constants
 from hikari.utilities import date as hikari_date
 from hikari.utilities import undefined
 from tests.hikari import client_session_stub
@@ -123,6 +127,20 @@ class TestIsAliveProperty:
     def test_not_is_alive(self, client):
         client._connected_at = None
         assert not client.is_alive
+
+
+@pytest.mark.asyncio
+class TestGetUserID:
+    async def test_when__user_id_is_None(self, client):
+        client._handshake_event = mock.Mock(wait=mock.AsyncMock())
+        client._user_id = None
+        with pytest.raises(RuntimeError):
+            assert await client.get_user_id()
+
+    async def test_when__user_id_is_not_None(self, client):
+        client._handshake_event = mock.Mock(wait=mock.AsyncMock())
+        client._user_id = 123
+        assert await client.get_user_id() == 123
 
 
 @pytest.mark.asyncio
@@ -835,5 +853,540 @@ class TestCloseWs:
 
 @pytest.mark.asyncio
 class TestHandshake:
-    # TODO: this
-    ...
+    async def test__handshake_when__session_id_is_not_None(self, client):
+        client._expect_opcode = mock.AsyncMock()
+        client._session_id = 123
+        client._token = "token"
+        client._seq = 456
+        client._send_json = mock.AsyncMock()
+
+        await client._handshake()
+
+        expected_json = {"op": client._Opcode.RESUME, "d": {"token": "token", "seq": 456, "session_id": 123}}
+        client._send_json.assert_awaited_once_with(expected_json)
+
+    async def test__handshake_when__session_id_is_None_and_no_intents_and_no_activity(self, client):
+        client._expect_opcode = mock.AsyncMock()
+        client._session_id = None
+        client._token = "token"
+        client._intents = None
+        client._large_threshold = 123
+        client._activity = undefined.UNDEFINED
+        client._status = undefined.UNDEFINED
+        client._idle_since = undefined.UNDEFINED
+        client._is_afk = undefined.UNDEFINED
+        client._shard_id = 0
+        client._shard_count = 1
+        client._send_json = mock.AsyncMock()
+
+        await client._handshake()
+
+        expected_json = {
+            "op": client._Opcode.IDENTIFY,
+            "d": {
+                "token": "token",
+                "compress": False,
+                "large_threshold": 123,
+                "properties": {
+                    "$os": constants.SYSTEM_TYPE,
+                    "$browser": constants.AIOHTTP_VERSION,
+                    "$device": constants.LIBRARY_VERSION,
+                },
+                "shard": [0, 1],
+            },
+        }
+        client._send_json.assert_awaited_once_with(expected_json)
+
+    async def test__handshake_when__session_id_is_None_and_intents(self, client):
+        client._expect_opcode = mock.AsyncMock()
+        client._session_id = None
+        client._token = "token"
+        client._intents = intents.Intent.ALL
+        client._large_threshold = 123
+        client._activity = undefined.UNDEFINED
+        client._status = undefined.UNDEFINED
+        client._idle_since = undefined.UNDEFINED
+        client._is_afk = undefined.UNDEFINED
+        client._shard_id = 0
+        client._shard_count = 1
+        client._send_json = mock.AsyncMock()
+
+        await client._handshake()
+
+        expected_json = {
+            "op": client._Opcode.IDENTIFY,
+            "d": {
+                "token": "token",
+                "compress": False,
+                "large_threshold": 123,
+                "properties": {
+                    "$os": constants.SYSTEM_TYPE,
+                    "$browser": constants.AIOHTTP_VERSION,
+                    "$device": constants.LIBRARY_VERSION,
+                },
+                "shard": [0, 1],
+                "intents": intents.Intent.ALL,
+            },
+        }
+        client._send_json.assert_awaited_once_with(expected_json)
+
+    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
+    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
+    @pytest.mark.parametrize(
+        "status",
+        [presences.Status.DO_NOT_DISTURB, presences.Status.IDLE, presences.Status.ONLINE, presences.Status.OFFLINE],
+    )
+    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
+    async def test__handshake_when__session_id_is_None_and_activity(self, client, idle_since, afk, status, activity):
+        client._expect_opcode = mock.AsyncMock()
+        client._session_id = None
+        client._token = "token"
+        client._intents = None
+        client._large_threshold = 123
+        client._activity = activity
+        client._status = status
+        client._idle_since = idle_since
+        client._is_afk = afk
+        client._shard_id = 0
+        client._shard_count = 1
+        client._send_json = mock.AsyncMock()
+        client._app = mock.Mock()
+        client._app.event_factory.serialize_gateway_presence = mock.Mock(
+            return_value={
+                "idle_since": idle_since if idle_since is not undefined.UNDEFINED else None,
+                "afk": afk if afk is not undefined.UNDEFINED else False,
+                "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
+                "activity": activity if activity is not undefined.UNDEFINED else None,
+            }
+        )
+
+        await client._handshake()
+
+        expected_json = {
+            "op": client._Opcode.IDENTIFY,
+            "d": {
+                "token": "token",
+                "compress": False,
+                "large_threshold": 123,
+                "properties": {
+                    "$os": constants.SYSTEM_TYPE,
+                    "$browser": constants.AIOHTTP_VERSION,
+                    "$device": constants.LIBRARY_VERSION,
+                },
+                "shard": [0, 1],
+                "presence": {
+                    "idle_since": idle_since if idle_since is not undefined.UNDEFINED else None,
+                    "afk": afk if afk is not undefined.UNDEFINED else False,
+                    "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
+                    "activity": activity if activity is not undefined.UNDEFINED else None,
+                },
+            },
+        }
+        client._send_json.assert_awaited_once_with(expected_json)
+        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
+            idle_since=idle_since if idle_since is not undefined.UNDEFINED else None,
+            afk=afk if afk is not undefined.UNDEFINED else False,
+            status=status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
+            activity=activity if activity is not undefined.UNDEFINED else None,
+        )
+
+
+@pytest.mark.asyncio
+class TestHeartbeatKeepalive:
+    @hikari_test_helpers.timeout()
+    async def test_when_not_zombie(self, client):
+        client._last_message_received = 5
+        client._heartbeat_interval = 5
+        client._last_heartbeat_sent = 2
+        client._seq = 123
+        client._close_zombie = mock.AsyncMock()
+        client._send_json = mock.AsyncMock()
+        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=False))
+
+        with mock.patch.object(hikari_date, "monotonic", side_effect=[10, 10, asyncio.CancelledError]):
+            with mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError):
+                await client._heartbeat_keepalive()
+
+        client._close_zombie.assert_not_called()
+        client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT, "d": 123})
+        assert client._last_heartbeat_sent == 10
+
+    @hikari_test_helpers.timeout()
+    async def test_when_zombie(self, client):
+        client._last_message_received = 1
+        client._heartbeat_interval = 5
+        client._last_heartbeat_sent = 2
+        client._close_zombie = mock.AsyncMock()
+        client._send_json = mock.AsyncMock()
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=10):
+            await client._heartbeat_keepalive()
+
+        client._close_zombie.assert_awaited_once_with()
+        client._send_json.assert_not_called()
+
+    @hikari_test_helpers.timeout()
+    async def test_when_request_close_event_set(self, client):
+        client._close_zombie = mock.AsyncMock()
+        client._send_json = mock.AsyncMock()
+        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=True))
+
+        await client._heartbeat_keepalive()
+
+        client._close_zombie.assert_not_called()
+        client._send_json.assert_not_called()
+
+
+@pytest.mark.asyncio
+class TestCloseZombie:
+    async def test_close_zombie(self, client):
+        class AsyncMock:
+            def __init__(self):
+                self.await_count = 0
+
+            def __await__(self):
+                self.await_count += 1
+
+        client._close_ws = mock.Mock()
+        client._ws = mock.Mock()
+        client._zombied = False
+        mock_task = AsyncMock()
+
+        with mock.patch.object(asyncio, "create_task", return_value=mock_task) as create_task:
+            with mock.patch.object(asyncio, "sleep") as sleep:
+                await client._close_zombie()
+
+        assert client._zombied is True
+        client._close_ws.assert_called_once_with(
+            code=client._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout"
+        )
+        create_task.assert_called_once_with(client._close_ws())
+        assert mock_task.await_count == 1
+        sleep.assert_awaited_once_with(0.1)
+
+
+@pytest.mark.asyncio
+class TestPollEvents:
+    @pytest.fixture
+    def exit_error(self):
+        class ExitError(BaseException):
+            ...
+
+        return ExitError
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_DISPATCH_and_event_is_READY(self, client, exit_error):
+        data_payload = {"session_id": 123, "user": {"id": 456, "username": "hikari", "discriminator": "0001"}}
+        payload = {
+            "op": client._Opcode.DISPATCH,
+            "d": data_payload,
+            "t": "READY",
+            "s": 101,
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+        client._dispatch = mock.Mock()
+        timestamp = datetime.datetime.now()
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=timestamp):
+            with pytest.raises(exit_error):
+                await client._poll_events()
+
+        client._dispatch.assert_called_once_with("READY", data_payload)
+        assert client._handshake_event.is_set()
+        assert client._session_id == 123
+        assert client._seq == 101
+        assert client._user_id == snowflake.Snowflake(456)
+        assert client._session_started_at == timestamp
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_DISPATCH_and_event_is_RESUME(self, client, exit_error):
+        payload = {
+            "op": client._Opcode.DISPATCH,
+            "d": "some data",
+            "t": "RESUME",
+            "s": 101,
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+        client._dispatch = mock.Mock()
+
+        with pytest.raises(exit_error):
+            await client._poll_events()
+
+        client._dispatch.assert_called_once_with("RESUME", "some data")
+        assert client._handshake_event.is_set()
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_DISPATCH_and_event_is_not_handled(self, client, exit_error):
+        payload = {
+            "op": client._Opcode.DISPATCH,
+            "d": "some data",
+            "t": "UNKNOWN",
+            "s": 101,
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+        client._dispatch = mock.Mock()
+
+        with pytest.raises(exit_error):
+            await client._poll_events()
+
+        client._dispatch.assert_called_once_with("UNKNOWN", "some data")
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_HEARTBEAT(self, client, exit_error):
+        payload = {
+            "op": client._Opcode.HEARTBEAT,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+        client._send_json = mock.AsyncMock()
+
+        with pytest.raises(exit_error):
+            await client._poll_events()
+
+        client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT_ACK})
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_HEARTBEAT_ACK(self, client, exit_error):
+        payload = {
+            "op": client._Opcode.HEARTBEAT_ACK,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+        client._last_heartbeat_sent = 5
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=13):
+            with pytest.raises(exit_error):
+                await client._poll_events()
+
+        assert client._heartbeat_latency == 8
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_RECONNECT(self, client):
+        payload = {
+            "op": client._Opcode.RECONNECT,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(return_value=payload)
+
+        with pytest.raises(client._Reconnect):
+            await client._poll_events()
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_INVALID_SESSION(self, client):
+        payload = {
+            "op": client._Opcode.INVALID_SESSION,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(return_value=payload)
+
+        with pytest.raises(client._InvalidSession):
+            await client._poll_events()
+
+    @hikari_test_helpers.timeout()
+    async def test_when_opcode_is_unknown(self, client, exit_error):
+        payload = {
+            "op": 101,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
+
+        with pytest.raises(exit_error):
+            await client._poll_events()
+
+    @hikari_test_helpers.timeout()
+    async def test_when_request_close_event_is_set(self, client, exit_error):
+        client._request_close_event.set()
+
+        await client._poll_events()
+
+
+@pytest.mark.asyncio()
+class TestExpectOpcode:
+    async def test_when_correct_opcode_received(self, client):
+        payload = {
+            "op": client._Opcode.HEARTBEAT,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(return_value=payload)
+
+        assert await client._expect_opcode(client._Opcode.HEARTBEAT) == "some data"
+
+    async def test_when_incorrect_opcode_received(self, client):
+        payload = {
+            "op": client._Opcode.HEARTBEAT_ACK,
+            "d": "some data",
+        }
+        client._receive_json = mock.AsyncMock(return_value=payload)
+        client._close_ws = mock.AsyncMock()
+
+        with pytest.raises(errors.GatewayError):
+            await client._expect_opcode(client._Opcode.HEARTBEAT)
+
+        client._close_ws.assert_awaited_once_with(
+            client._CloseCode.RFC_6455_PROTOCOL_ERROR,
+            f"Unexpected opcode {client._Opcode.HEARTBEAT_ACK} received, expected {client._Opcode.HEARTBEAT}",
+        )
+
+
+class StubResponse:
+    extra = None
+
+    def __init__(self, type, data):
+        self.type = type
+        self.data = data
+
+    def __repr__(self):
+        return f"Stub Reponse (type:{self.type})"
+
+
+@pytest.mark.asyncio
+class TestReceiveJson:
+    async def test_when_type_is_BINARY(self, client):
+        client._receive_raw = mock.AsyncMock(return_value=StubResponse(aiohttp.WSMsgType.BINARY, "some data"))
+        client._receive_zlib_message = mock.AsyncMock(return_value=(4, '{"op": 1, "t": "some t"}'))
+
+        assert await client._receive_json() == {"op": 1, "t": "some t"}
+
+        client._receive_zlib_message.assert_awaited_once_with("some data")
+
+    async def test_when_type_is_TEXT(self, client):
+        client._receive_raw = mock.AsyncMock(
+            return_value=StubResponse(aiohttp.WSMsgType.TEXT, '{"op": 1, "t": "some t"}')
+        )
+
+        assert await client._receive_json() == {"op": 1, "t": "some t"}
+
+    async def test_when_type_is_UNKNOWN(self, client):
+        client._receive_raw = mock.AsyncMock(return_value=StubResponse("some type", "some data"))
+        with pytest.raises(TypeError):
+            await client._receive_json()
+
+
+@pytest.mark.asyncio
+class TestReceiveZlibMessage:
+    async def test_receive_zlib_message(self, client):
+        client._receive_raw = mock.AsyncMock(
+            side_effect=[
+                StubResponse(aiohttp.WSMsgType.BINARY, 0),
+                StubResponse(aiohttp.WSMsgType.BINARY, 255),
+                StubResponse(aiohttp.WSMsgType.BINARY, 255),
+            ]
+        )
+        mock_decompress_return = mock.Mock(decode=mock.Mock(return_value=b"final data"))
+        client._zlib = mock.Mock()
+        client._zlib.decompress = mock.Mock(return_value=mock_decompress_return)
+
+        assert await client._receive_zlib_message(b"\x00") == (4, b"final data")
+        client._zlib.decompress.assert_called_once_with(bytearray(b"\x00\x00\xff\xff"))
+        mock_decompress_return.decode.assert_called_once_with("utf-8")
+
+    async def test_when_next_received_is_not_BINARY(self, client):
+        client._receive_raw = mock.AsyncMock(return_value=StubResponse(aiohttp.WSMsgType.TEXT, 0))
+
+        with pytest.raises(errors.GatewayError):
+            await client._receive_zlib_message(b"\x00")
+
+
+@pytest.mark.asyncio
+class TestReceiveRaw:
+    async def test_receive_raw(self, client):
+        message = StubResponse(aiohttp.WSMsgType.TEXT, "some text")
+        client._ws = mock.Mock(receive=mock.AsyncMock(return_value=message))
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=123):
+            assert await client._receive_raw() == message
+
+        assert client._last_message_received == 123
+
+    @pytest.mark.parametrize(
+        ("received", "expected_error"),
+        [
+            (StubResponse(aiohttp.WSMsgType.CLOSE, 0), errors.GatewayServerClosedConnectionError),
+            (StubResponse(aiohttp.WSMsgType.CLOSING, 0), "_SocketClosed"),
+            (StubResponse(aiohttp.WSMsgType.CLOSED, 0), "_SocketClosed"),
+            (StubResponse(aiohttp.WSMsgType.ERROR, 0), errors.GatewayError),
+        ],
+    )
+    async def test_handling_types(self, client, received, expected_error):
+        if isinstance(expected_error, str):
+            expected_error = getattr(client, expected_error)
+
+        client._ws = mock.Mock()
+        client._ws.receive = mock.AsyncMock(return_value=received)
+        client._ws.exception = mock.Mock(return_value=RuntimeError)
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=123):
+            with pytest.raises(expected_error):
+                await client._receive_raw()
+
+        assert client._last_message_received == 123
+
+
+@pytest.mark.asyncio
+class TestSendJson:
+    async def test_send_json(self, client):
+        client._ratelimiter = mock.Mock(acquire=mock.AsyncMock())
+        client._ws = mock.Mock(send_str=mock.AsyncMock())
+
+        await client._send_json({"some": "payload"})
+
+        client._ratelimiter.acquire.assert_awaited_once_with()
+        client._ws.send_str.assert_awaited_once_with('{"some": "payload"}')
+
+
+class TestDispatch:
+    def test_dispatch(self, client):
+        mock_task = object()
+        mock_coroutine = object()
+        client._app = mock.Mock()
+        client._app.event_consumer.consume_raw_event = mock.Mock(return_value=mock_coroutine)
+        client._shard_id = 123
+
+        with mock.patch.object(asyncio, "create_task", return_value=mock_task) as create_task:
+            assert client._dispatch("MESSAGE_CREATE", {"some": "payload"}) == mock_task
+
+        client._app.event_consumer.consume_raw_event.assert_called_once_with(
+            client, "MESSAGE_CREATE", {"some": "payload"}
+        )
+        create_task.assert_called_once_with(mock_coroutine, name="gateway shard 123 dispatch MESSAGE_CREATE")
+
+
+class TestLogDebugPayload:
+    def test_when_logging_debug_disabled(self, client):
+        client._logger.isEnabledFor = mock.Mock(return_value=False)
+        client._logger.debug = mock.Mock()
+
+        client._log_debug_payload({"some": "payload"}, "some message", "args")
+
+        client._logger.debug.assert_not_called()
+
+    def test_when_debug(self, client):
+        client._logger.isEnabledFor = mock.Mock(return_value=True)
+        client._logger.debug = mock.Mock()
+        client._debug = True
+        client._session_id = 123
+        client._seq = 456
+
+        client._log_debug_payload({"some": "payload"}, "some message %s", "args")
+
+        client._logger.debug.assert_called_once_with(
+            "some message %s [seq:%s, session:%s, size:%s] with raw payload: %s",
+            "args",
+            456,
+            123,
+            1,
+            {"some": "payload"},
+        )
+
+    def test_when_not_debug(self, client):
+        client._logger.isEnabledFor = mock.Mock(return_value=True)
+        client._logger.debug = mock.Mock()
+        client._debug = False
+        client._session_id = 123
+        client._seq = 456
+
+        client._log_debug_payload({"some": "payload"}, "some message %s", "args")
+
+        client._logger.debug.assert_called_once_with(
+            "some message %s [seq:%s, session:%s, size:%s]", "args", 456, 123, 1
+        )
