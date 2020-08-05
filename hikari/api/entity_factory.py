@@ -473,7 +473,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def serialize_embed(
         self, embed: embed_models.Embed
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters

@@ -588,7 +588,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         fields: typing.Optional[typing.MutableSequence[embed_models.EmbedField]] = None
 
         if image_payload := payload.get("image"):
-            image: typing.Optional[embed_models.EmbedImage] = embed_models.EmbedImage(
+            image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = embed_models.EmbedImage(
                 resource=files.ensure_resource(image_payload.get("url")),
                 proxy_resource=files.ensure_resource(image_payload.get("proxy_url")),
                 height=image_payload.get("height"),
@@ -598,7 +598,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             image = None
 
         if thumbnail_payload := payload.get("thumbnail"):
-            thumbnail: typing.Optional[embed_models.EmbedImage] = embed_models.EmbedImage(
+            thumbnail: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = embed_models.EmbedImage(
                 resource=files.ensure_resource(thumbnail_payload.get("url")),
                 proxy_resource=files.ensure_resource(thumbnail_payload.get("proxy_url")),
                 height=thumbnail_payload.get("height"),
@@ -608,7 +608,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             thumbnail = None
 
         if video_payload := payload.get("video"):
-            video: typing.Optional[embed_models.EmbedVideo] = embed_models.EmbedVideo(
+            video: typing.Optional[embed_models.EmbedVideo[files.AsyncReader]] = embed_models.EmbedVideo(
                 resource=files.ensure_resource(video_payload.get("url")),
                 height=video_payload.get("height"),
                 width=video_payload.get("width"),
@@ -625,7 +625,9 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         if author_payload := payload.get("author"):
             if "icon_url" in author_payload:
-                icon: typing.Optional[embed_models.EmbedResourceWithProxy] = embed_models.EmbedResourceWithProxy(
+                icon: typing.Optional[
+                    embed_models.EmbedResourceWithProxy[files.AsyncReader]
+                ] = embed_models.EmbedResourceWithProxy(
                     resource=files.ensure_resource(author_payload.get("icon_url")),
                     proxy_resource=files.ensure_resource(author_payload.get("proxy_icon_url")),
                 )
@@ -678,10 +680,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def serialize_embed(  # noqa: C901
         self, embed: embed_models.Embed,
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
 
         payload: data_binding.JSONObject = {}
-        uploads: typing.List[files.Resource] = []
+        uploads: typing.List[files.Resource[files.AsyncReader]] = []
 
         if embed.title is not None:
             payload["title"] = embed.title

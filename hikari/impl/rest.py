@@ -1034,7 +1034,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        final_attachments: typing.List[files.Resource] = []
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
 
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
@@ -1407,7 +1407,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
-        final_attachments: typing.List[files.Resource] = []
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
         if attachments is not undefined.UNDEFINED:
