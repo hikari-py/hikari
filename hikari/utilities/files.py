@@ -125,7 +125,7 @@ This may be one of:
 - `aiohttp.StreamReader`
 """
 
-Resourceish = typing.Union["Resource", Pathish, Rawish]
+Resourceish = typing.Union["Resource[AsyncReader]", Pathish, Rawish]
 """Type hint representing a file or path to a file/URL/data URI.
 
 This may be one of:
@@ -160,14 +160,13 @@ def unwrap_bytes(data: Rawish) -> bytes:
     return data
 
 
-def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource[AsyncReader]]:
+def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
     ----------
     url_or_resource : Resourceish
-        The item to convert. If the item is `builtins.None`, then
-        `builtins.None` is returned. Likewise if a `Resource` is passed, it is
+        The item to convert. Ff a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
@@ -182,9 +181,6 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
 
     if isinstance(url_or_resource, Resource):
         return url_or_resource
-
-    if url_or_resource is None:
-        return None
 
     url_or_resource = str(url_or_resource)
 
