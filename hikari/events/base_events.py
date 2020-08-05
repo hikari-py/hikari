@@ -122,14 +122,13 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
         setattr(cls, NO_RECURSIVE_THROW_ATTR, True)
         doc = inspect.getdoc(cls) or ""
         doc += inspect.cleandoc(
-            """\n\n
-            !!! warning
-                Any exceptions raised by handlers for this event will be dumped to the
-                application logger and silently discarded, preventing recursive loops
-                produced by faulty exception event handling. Thus, it is imperative
-                that you ensure any exceptions are explicitly caught within handlers
-                for this event if they may occur.
-        """
+            "\n\n\n"
+            "!!! warning\n"
+            "   Any exceptions raised by handlers for this event will be dumped to the\n"
+            "   application logger and silently discarded, preventing recursive loops\n"
+            "   produced by faulty exception event handling. Thus, it is imperative\n"
+            "   that you ensure any exceptions are explicitly caught within handlers\n"
+            "   for this event if they may occur.\n"
         )
         cls.__doc__ = doc
         return cls
