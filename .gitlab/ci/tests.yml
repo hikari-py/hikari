@@ -84,7 +84,6 @@ test:3.9rc:
     - .test
 
 test:twemoji-mapping:
-  allow_failure: true
   extends: .cpython
   interruptible: true
   rules:
