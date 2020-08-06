@@ -115,7 +115,7 @@ class TestRESTAppImpl:
 
     def test_debug_property(self, rest_app):
         rest_app._debug = True
-        assert rest_app.debug is True
+        assert rest_app.is_debug_enabled is True
 
     def test_executor_property(self, rest_app):
         mock_executor = object()
@@ -183,7 +183,7 @@ def rest_factory():
 class TestRESTAppFactoryImpl:
     def test_debug_property(self, rest_factory):
         rest_factory._debug = True
-        assert rest_factory.debug is True
+        assert rest_factory.is_debug_enabled is True
 
     def test_http_settings_property(self, rest_factory):
         mock_http_settings = object()

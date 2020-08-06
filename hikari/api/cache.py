@@ -19,7 +19,7 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ICacheView", "ICacheComponent"]
+__all__: typing.Final[typing.List[str]] = ["ICacheView", "ICacheComponent", "IMutableCacheComponent"]
 
 import abc
 import typing
@@ -77,6 +77,463 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """Get the app this cache is bound by."""
 
     @abc.abstractmethod
+    def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
+        """Get a private text channel object from the cache.
+
+        Parameters
+        ----------
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user that the private text channel to get from the
+            cache is with.
+
+        Returns
+        -------
+        hikari.models.channels.PrivateTextChannel or builtins.None
+            The object of the private text channel that was found in the cache
+            or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_private_text_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+        """Get a view of the private text channel objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
+            The view of the user IDs to private text channel objects in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_emoji(self, emoji_id: snowflake.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        """Get a known custom emoji from the cache.
+
+        Parameters
+        ----------
+        emoji_id : hikari.utilities.snowflake.Snowflake
+            The ID of the emoji to get from the cache.
+
+        Returns
+        -------
+        hikari.models.emojis.KnownCustomEmoji or builtins.None
+            The object of the emoji that was found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_emojis_view(self) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        """Get a view of the known custom emoji objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emoji.KnownCustomEmoji]
+            A view of emoji IDs to objects of the known custom emojis found in
+            the cache.
+        """
+
+    @abc.abstractmethod
+    def get_emojis_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+        """Get a view of the known custom emojis cached for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached emoji objects for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+            A view of emoji IDs to objects of emojis found in the cache for the
+            specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        """Get a guild object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get from the cache.
+
+        Returns
+        -------
+        hikari.models.guilds.GatewayGuild or builtins.None
+            The object of the guild if found, else None.
+        """
+
+    @abc.abstractmethod
+    def get_guilds_view(self) -> ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
+        """Get a view of the guild objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
+            A view of guild IDs to the guild objects found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_guild_channel(self, channel_id: snowflake.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
+        """Get a guild channel from the cache.
+
+        Parameters
+        ----------
+        channel_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild channel to get from the cache.
+
+        Returns
+        -------
+        hikari.models.channels.GuildChannel or builtins.None
+            The object of the guild channel that was found in the cache or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_guild_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        """Get a view of the guild channels in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+            A view of channel IDs to objects of the guild channels found in the
+            cache.
+        """
+
+    @abc.abstractmethod
+    def get_guild_channels_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+        """Get a view of the guild channels in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+            A view of channel IDs to objects of the guild channels found in the
+            cache for the specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+        """Get an invite object from the cache.
+
+        Parameters
+        ----------
+        code : str
+            The string code of the invite to get from the cache.
+
+        Returns
+        -------
+        hikari.models.invites.InvteWithMetadata or builtins.None
+            The object of the invite that was found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_invites_view(self) -> ICacheView[str, invites.InviteWithMetadata]:
+        """Get a view of the invite objects in the cache.
+
+        Returns
+        -------
+        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+            A view of string codes to objects of the invites that were found in
+            the cache.
+        """
+
+    @abc.abstractmethod
+    def get_invites_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[str, invites.InviteWithMetadata]:
+        """Get a view of the invite objects in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get invite objects for.
+
+        Returns
+        -------
+        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+            A view of string code to objects of the invites that were found in
+            the cache for the specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_invites_view_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /,
+    ) -> ICacheView[str, invites.InviteWithMetadata]:
+        """Get a view of the invite objects in the cache for a specified channel.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get invite objects for.
+        channel_id : hikari.utilities.snowflake.Snowflake
+            The ID of the channel to get invite objects for.
+
+        Returns
+        -------
+        ICacheView[str, invites.InviteWithMetadata]
+            A view of string codes to objects of the invites there were found in
+            the cache for the specified channel.
+        """
+
+    @abc.abstractmethod
+    def get_me(self) -> typing.Optional[users.OwnUser]:
+        """Get the own user object from the cache.
+
+        Returns
+        -------
+        hikari.models.users.OwnUser or builtins.None
+            The own user object that was found in the cache, else `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_member(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[guilds.Member]:
+        """Get a member object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+        user_id : hikari.utilities.snowflake.Snowflake
+
+        Returns
+        -------
+        hikari.models.guilds.Member or builtins.None
+            The object of the member found in the cache, else `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_members_view(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
+        """Get a view of all the members objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
+            A view of guild IDs to views of user IDs to objects of the members
+            that were found from the cache.
+        """  # noqa E501: - Line too long
+
+    @abc.abstractmethod  # TODO: Return None if no entities are found for cache view stuff?
+    def get_members_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, guilds.Member]:
+        """Get a view of the members cached for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached member view for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+            The view of user IDs to the members cached for the specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_presence(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[presences.MemberPresence]:
+        """Get a presence object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get a presence for.
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user to get a presence for.
+
+        Returns
+        -------
+        hikari.models.presences.MemberPresence or builtins.None
+            The object of the presence that was found in the cache or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_presences_view(
+        self,
+    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
+        """Get a view of all the presence objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake]]
+            A view of guild IDs to views of user IDs to objects of the presences
+            found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_presences_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
+        """Get a view of the presence objects in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached presence objects for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
+            A view of user IDs to objects of the presence found in the cache
+            for the specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
+        """Get a role object from the cache.
+
+        Parameters
+        ----------
+        role_id : hikari.utilities.snowflake.Snowflake
+            The ID of the role to get from the cache.
+
+        Returns
+        -------
+        hikari.models.guilds.Role or builtins.None
+            The object of the role found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_roles_view(self) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+        """Get a view of all the role objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+            A view of role IDs to objects of the roles found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_roles_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+        """Get a view of the roles in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached roles for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+            A view of role IDs to objects of the roles that were found in the
+            cache for the specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_user(self, user_id: snowflake.Snowflake, /) -> typing.Optional[users.User]:
+        """Get a user object from the cache.
+
+        Parameters
+        ----------
+        user_id : hikari.utilities.snowflake.Snowflake
+            The ID of the user to get from the cache.
+
+        Returns
+        -------
+        hikari.models.users.User or builtins.None
+            The object of the user that was found in the cache else `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_users_view(self) -> ICacheView[snowflake.Snowflake, users.User]:
+        """Get a view of the user objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
+            The view of user IDs to the users found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_voice_state(
+        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
+    ) -> typing.Optional[voices.VoiceState]:
+        """Get a voice state object from the cache.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get a voice state for.
+        user_id :hikari.utilities.snowflake.Snowflake
+            The ID of the user to get a voice state for.
+
+        Returns
+        -------
+        hikari.models.voices.VoiceState or builtins.None
+            The object of the voice state that was found in the cache, or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_voice_states_view(
+        self,
+    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, voices.VoiceState]]:
+        """Get a view of all the voice state objects in the cache.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]]
+            A view of guild IDs to views of user IDs to objects of the voice
+            states that were found in the cache,
+        """  # noqa E501: - Line too long
+
+    @abc.abstractmethod
+    def get_voice_states_view_for_channel(
+        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        """Get a view of the voice states cached for a specific channel.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached voice states for.
+        channel_id : hikari.utilities.snowflake.Snowflake
+            The ID of the channel to get the cached voice states for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
+            A view of user IDs to objects of the voice states found cached for
+            the specified channel.
+        """
+
+    @abc.abstractmethod
+    def get_voice_states_view_for_guild(
+        self, guild_id: snowflake.Snowflake, /
+    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+        """Get a view of the voice states cached for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.utilities.snowflake.Snowflake
+            The ID of the guild to get the cached voice states for.
+
+        Returns
+        -------
+        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
+            A view of user IDs to objects of the voice states found cached for
+            the specified guild.
+        """
+
+
+class IMutableCacheComponent(ICacheComponent, abc.ABC):
+    """Cache that exposes read-only operations as well as mutation operations.
+
+    This is only exposed to internal components. There is no guarantee the
+    user-facing cache will provide these methods or not.
+    """
+
+    @abc.abstractmethod
     def clear_private_text_channels(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
         """Remove all the private text channel channel objects from the cache.
 
@@ -104,33 +561,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.channels.PrivateTextChannel or builtins.None
             The object of the private text channel that was removed from the
             cache if found, else `builtins.None`
-        """
-
-    @abc.abstractmethod
-    def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
-        """Get a private text channel object from the cache.
-
-        Parameters
-        ----------
-        user_id : hikari.utilities.snowflake.Snowflake
-            The ID of the user that the private text channel to get from the
-            cache is with.
-
-        Returns
-        -------
-        hikari.models.channels.PrivateTextChannel or builtins.None
-            The object of the private text channel that was found in the cache
-            or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_private_text_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
-        """Get a view of the private text channel objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
-            The view of the user IDs to private text channel objects in the cache.
         """
 
     @abc.abstractmethod
@@ -221,50 +651,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_emoji(self, emoji_id: snowflake.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
-        """Get a known custom emoji from the cache.
-
-        Parameters
-        ----------
-        emoji_id : hikari.utilities.snowflake.Snowflake
-            The ID of the emoji to get from the cache.
-
-        Returns
-        -------
-        hikari.models.emojis.KnownCustomEmoji or builtins.None
-            The object of the emoji that was found in the cache or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_emojis_view(self) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
-        """Get a view of the known custom emoji objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emoji.KnownCustomEmoji]
-            A view of emoji IDs to objects of the known custom emojis found in
-            the cache.
-        """
-
-    @abc.abstractmethod
-    def get_emojis_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
-        """Get a view of the known custom emojis cached for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached emoji objects for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
-            A view of emoji IDs to objects of emojis found in the cache for the
-            specified guild.
-        """
-
-    @abc.abstractmethod
     def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
         """Add a known custom emoji to the cache.
 
@@ -318,31 +704,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.guilds.GatewayGuild or builtins.None
             The object of the guild that was removed from the cache, will be
             `builtins.None` if not found.
-        """
-
-    @abc.abstractmethod
-    def get_guild(self, guild_id: snowflake.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
-        """Get a guild object from the cache.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get from the cache.
-
-        Returns
-        -------
-        hikari.models.guilds.GatewayGuild or builtins.None
-            The object of the guild if found, else None.
-        """
-
-    @abc.abstractmethod
-    def get_guilds_view(self) -> ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
-        """Get a view of the guild objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
-            A view of guild IDs to the guild objects found in the cache.
         """
 
     @abc.abstractmethod
@@ -433,50 +794,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.channels.GuildChannel or builtins.None
             The object of the guild channel that was removed from the cache if
             found, else `builtins.None`.ww
-        """
-
-    @abc.abstractmethod
-    def get_guild_channel(self, channel_id: snowflake.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
-        """Get a guild channel from the cache.
-
-        Parameters
-        ----------
-        channel_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild channel to get from the cache.
-
-        Returns
-        -------
-        hikari.models.channels.GuildChannel or builtins.None
-            The object of the guild channel that was found in the cache or
-            `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_guild_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
-        """Get a view of the guild channels in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
-            A view of channel IDs to objects of the guild channels found in the
-            cache.
-        """
-
-    @abc.abstractmethod
-    def get_guild_channels_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
-        """Get a view of the guild channels in the cache for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
-            A view of channel IDs to objects of the guild channels found in the
-            cache for the specified guild.
         """
 
     @abc.abstractmethod
@@ -572,70 +889,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
-        """Get an invite object from the cache.
-
-        Parameters
-        ----------
-        code : str
-            The string code of the invite to get from the cache.
-
-        Returns
-        -------
-        hikari.models.invites.InvteWithMetadata or builtins.None
-            The object of the invite that was found in the cache or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_invites_view(self) -> ICacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache.
-
-        Returns
-        -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
-            A view of string codes to objects of the invites that were found in
-            the cache.
-        """
-
-    @abc.abstractmethod
-    def get_invites_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get invite objects for.
-
-        Returns
-        -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
-            A view of string code to objects of the invites that were found in
-            the cache for the specified guild.
-        """
-
-    @abc.abstractmethod
-    def get_invites_view_for_channel(
-        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /,
-    ) -> ICacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache for a specified channel.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get invite objects for.
-        channel_id : hikari.utilities.snowflake.Snowflake
-            The ID of the channel to get invite objects for.
-
-        Returns
-        -------
-        ICacheView[str, invites.InviteWithMetadata]
-            A view of string codes to objects of the invites there were found in
-            the cache for the specified channel.
-        """
-
-    @abc.abstractmethod
     def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
         """Add an invite object to the cache.
 
@@ -673,16 +926,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.users.OwnUser or builtins.None
             The own user object that was removed from the cache if found,
             else `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_me(self) -> typing.Optional[users.OwnUser]:
-        """Get the own user object from the cache.
-
-        Returns
-        -------
-        hikari.models.users.OwnUser or builtins.None
-            The own user object that was found in the cache, else `builtins.None`.
         """
 
     @abc.abstractmethod
@@ -773,51 +1016,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_member(
-        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
-    ) -> typing.Optional[guilds.Member]:
-        """Get a member object from the cache.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-        user_id : hikari.utilities.snowflake.Snowflake
-
-        Returns
-        -------
-        hikari.models.guilds.Member or builtins.None
-            The object of the member found in the cache, else `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_members_view(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
-        """Get a view of all the members objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
-            A view of guild IDs to views of user IDs to objects of the members
-            that were found from the cache.
-        """  # noqa E501: - Line too long
-
-    @abc.abstractmethod  # TODO: Return None if no entities are found for cache view stuff?
-    def get_members_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, guilds.Member]:
-        """Get a view of the members cached for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached member view for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
-            The view of user IDs to the members cached for the specified guild.
-        """
-
-    @abc.abstractmethod
     def set_member(self, member: guilds.Member, /) -> None:
         """Add a member object to the cache.
 
@@ -898,57 +1096,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_presence(
-        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
-    ) -> typing.Optional[presences.MemberPresence]:
-        """Get a presence object from the cache.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get a presence for.
-        user_id : hikari.utilities.snowflake.Snowflake
-            The ID of the user to get a presence for.
-
-        Returns
-        -------
-        hikari.models.presences.MemberPresence or builtins.None
-            The object of the presence that was found in the cache or
-            `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_presences_view(
-        self,
-    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
-        """Get a view of all the presence objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake]]
-            A view of guild IDs to views of user IDs to objects of the presences
-            found in the cache.
-        """
-
-    @abc.abstractmethod
-    def get_presences_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
-        """Get a view of the presence objects in the cache for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached presence objects for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-            A view of user IDs to objects of the presence found in the cache
-            for the specified guild.
-        """
-
-    @abc.abstractmethod
     def set_presence(self, presence: presences.MemberPresence, /) -> None:
         """Add a presence object to the cache.
 
@@ -1021,49 +1168,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
-        """Get a role object from the cache.
-
-        Parameters
-        ----------
-        role_id : hikari.utilities.snowflake.Snowflake
-            The ID of the role to get from the cache.
-
-        Returns
-        -------
-        hikari.models.guilds.Role or builtins.None
-            The object of the role found in the cache or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_roles_view(self) -> ICacheView[snowflake.Snowflake, guilds.Role]:
-        """Get a view of all the role objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
-            A view of role IDs to objects of the roles found in the cache.
-        """
-
-    @abc.abstractmethod
-    def get_roles_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, guilds.Role]:
-        """Get a view of the roles in the cache for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached roles for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
-            A view of role IDs to objects of the roles that were found in the
-            cache for the specified guild.
-        """
-
-    @abc.abstractmethod
     def set_role(self, role: guilds.Role, /) -> None:
         """Add a role object to the cache.
 
@@ -1127,31 +1231,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.users.User or builtins.None
             The object of the user that was removed from the cache if found,
             else `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_user(self, user_id: snowflake.Snowflake, /) -> typing.Optional[users.User]:
-        """Get a user object from the cache.
-
-        Parameters
-        ----------
-        user_id : hikari.utilities.snowflake.Snowflake
-            The ID of the user to get from the cache.
-
-        Returns
-        -------
-        hikari.models.users.User or builtins.None
-            The object of the user that was found in the cache else `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_users_view(self) -> ICacheView[snowflake.Snowflake, users.User]:
-        """Get a view of the user objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
-            The view of user IDs to the users found in the cache.
         """
 
     @abc.abstractmethod
@@ -1249,77 +1328,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
         hikari.models.voices.VoiceState or builtins.None
             The object of the voice state that was removed from the cache if
             found, else `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_voice_state(
-        self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake, /
-    ) -> typing.Optional[voices.VoiceState]:
-        """Get a voice state object from the cache.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get a voice state for.
-        user_id :hikari.utilities.snowflake.Snowflake
-            The ID of the user to get a voice state for.
-
-        Returns
-        -------
-        hikari.models.voices.VoiceState or builtins.None
-            The object of the voice state that was found in the cache, or
-            `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_voice_states_view(
-        self,
-    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, voices.VoiceState]]:
-        """Get a view of all the voice state objects in the cache.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]]
-            A view of guild IDs to views of user IDs to objects of the voice
-            states that were found in the cache,
-        """  # noqa E501: - Line too long
-
-    @abc.abstractmethod
-    def get_voice_states_view_for_channel(
-        self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
-        """Get a view of the voice states cached for a specific channel.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached voice states for.
-        channel_id : hikari.utilities.snowflake.Snowflake
-            The ID of the channel to get the cached voice states for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
-            A view of user IDs to objects of the voice states found cached for
-            the specified channel.
-        """
-
-    @abc.abstractmethod
-    def get_voice_states_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
-        """Get a view of the voice states cached for a specific guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to get the cached voice states for.
-
-        Returns
-        -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
-            A view of user IDs to objects of the voice states found cached for
-            the specified guild.
         """
 
     @abc.abstractmethod

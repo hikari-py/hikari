@@ -50,20 +50,6 @@ class IApp(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def debug(self) -> bool:
-        """Debug status for the application.
-
-        Returns
-        -------
-        builtins.bool
-            `builtins.True` if the application is running in a debugging mode,
-            or `builtins.False` if it is not.
-
-            Generally this will be `builtins.False`.
-        """
-
-    @property
-    @abc.abstractmethod
     def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
         """Entity creator and updater facility.
 
@@ -90,6 +76,20 @@ class IApp(abc.ABC):
     @abc.abstractmethod
     def http_settings(self) -> config.HTTPSettings:
         """HTTP-specific settings."""
+
+    @property
+    @abc.abstractmethod
+    def is_debug_enabled(self) -> bool:
+        """Debug status for the application.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if the application is running in a debugging mode,
+            or `builtins.False` if it is not.
+
+            Generally this will be `builtins.False`.
+        """
 
     @property
     @abc.abstractmethod

@@ -159,7 +159,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
         try:
             voice_connection = await voice_connection_type.initialize(
                 channel_id=snowflake.Snowflake(channel),
-                debug=self._app.debug,
+                debug=self._app.is_debug_enabled,
                 endpoint=server_event.endpoint,
                 guild_id=guild_id,
                 on_close=self._on_connection_close,

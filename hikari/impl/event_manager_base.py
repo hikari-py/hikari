@@ -39,6 +39,7 @@ from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
     from hikari.api import bot
+    from hikari.api import cache
     from hikari.api import shard as gateway_shard
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
@@ -67,13 +68,16 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_mutable_cache", "_waiters")
 
-    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intent]) -> None:
+    def __init__(
+        self, app: bot.IBotApp, mutable_cache: cache.IMutableCacheComponent, intents: typing.Optional[intents_.Intent],
+    ) -> None:
         self._app = app
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
+        self._mutable_cache = mutable_cache
 
     @property
     @typing.final
