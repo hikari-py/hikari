@@ -195,7 +195,7 @@ class ConnectionVisibility(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
@@ -234,7 +234,7 @@ class OwnConnection:
     """The visibility of the connection."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -259,11 +259,11 @@ class TeamMembershipState(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
@@ -279,23 +279,21 @@ class TeamMember:
     team_id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.UserImpl = attr.ib(eq=True, hash=True, repr=True)
+    user: users.User = attr.ib(eq=True, hash=True, repr=True)
     """The user representation of this team member."""
 
     def __str__(self) -> str:
         return str(self.user)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
@@ -360,15 +358,15 @@ class Team(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+        eq=True, hash=True, repr=True,
     )
     """The ID of this entity."""
 
@@ -391,7 +389,7 @@ class Application(snowflake.Unique):
     Will be `builtins.None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[users.UserImpl] = attr.ib(eq=False, hash=False, repr=True)
+    owner: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=True)
     """The application's owner.
 
     This should always be `builtins.None` in application objects retrieved outside

@@ -885,7 +885,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ###############
 
     @abc.abstractmethod
-    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.UserImpl:
+    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
         """Parse a raw payload from Discord into a user object.
 
         Parameters
@@ -895,7 +895,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.UserImpl
+        hikari.models.users.User
             The deserialized user object.
         """
 

@@ -841,7 +841,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if target_type is undefined.UNDEFINED:
-            if isinstance(target, users.UserImpl):
+            if isinstance(target, users.PartialUser):
                 target_type = channels.PermissionOverwriteType.MEMBER
             elif isinstance(target, guilds.Role):
                 target_type = channels.PermissionOverwriteType.ROLE
@@ -886,7 +886,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.UserImpl]] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -1239,7 +1239,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         channel: snowflake.SnowflakeishOr[channels.TextChannel],
         message: snowflake.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
-    ) -> iterators.LazyIterator[users.UserImpl]:
+    ) -> iterators.LazyIterator[users.User]:
         return special_endpoints.ReactorIterator(
             app=self._app,
             request_call=self._request,
@@ -1376,7 +1376,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if embeds is not undefined.UNDEFINED and isinstance(embeds, typing.Collection):
+        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -1581,7 +1581,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
-    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.UserImpl:
+    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)

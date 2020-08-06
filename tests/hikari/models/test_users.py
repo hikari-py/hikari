@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import users
 
@@ -30,7 +31,5 @@ def test_PremiumType_str_operator():
 
 
 def test_PartialUser_str_operator():
-    user = users.PartialUser()
-    user.username = "thomm.o"
-    user.discriminator = "8637"
-    assert str(user) == "thomm.o#8637"
+    mock_user = mock.Mock(users.PartialUser, username="thomm.o", discriminator="8637")
+    assert users.PartialUser.__str__(mock_user) == "thomm.o#8637"

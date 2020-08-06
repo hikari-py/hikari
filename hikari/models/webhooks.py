@@ -57,7 +57,7 @@ class WebhookType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
 
@@ -66,12 +66,10 @@ class Webhook(snowflake.Unique):
     send informational messages to specific channels.
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
@@ -83,7 +81,7 @@ class Webhook(snowflake.Unique):
     channel_id: snowflake.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.UserImpl] = attr.ib(eq=False, hash=False, repr=True)
+    author: typing.Optional[users_.User] = attr.ib(eq=False, hash=False, repr=True)
     """The user that created the webhook
 
     !!! info
