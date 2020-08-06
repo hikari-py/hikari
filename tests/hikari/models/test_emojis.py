@@ -15,24 +15,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import emojis
 
 
 def test_UnicodeEmoji_str_operator():
-    emoji = emojis.UnicodeEmoji()
-    emoji.name = "\N{OK HAND SIGN}"
-    assert str(emoji) == "\N{OK HAND SIGN}"
+    mock_emoji = mock.Mock(emojis.UnicodeEmoji)
+    mock_emoji.name = "\N{OK HAND SIGN}"
+    assert emojis.UnicodeEmoji.__str__(mock_emoji) == "\N{OK HAND SIGN}"
 
 
 def test_CustomEmoji_str_operator():
-    emoji = emojis.CustomEmoji()
-    emoji.name = "peepoSad"
-    assert str(emoji) == "peepoSad"
+    mock_emoji = mock.Mock(emojis.CustomEmoji, emojis.CustomEmoji)
+    mock_emoji.name = "peepoSad"
+    assert emojis.CustomEmoji.__str__(mock_emoji) == "peepoSad"
 
 
 def test_CustomEmoji_str_operator_when_name_is_None():
-    emoji = emojis.CustomEmoji()
-    emoji.name = None
-    emoji.id = 42069
-    assert str(emoji) == "Unnamed emoji ID 42069"
+    mock_emoji = mock.Mock(emojis.CustomEmoji, emojis.CustomEmoji, id=42069)
+    mock_emoji.name = None
+    assert emojis.CustomEmoji.__str__(mock_emoji) == "Unnamed emoji ID 42069"

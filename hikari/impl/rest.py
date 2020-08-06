@@ -201,7 +201,7 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         return self._cache
 
     @property
-    def debug(self) -> bool:
+    def is_debug_enabled(self) -> bool:
         return self._debug
 
     @property
@@ -283,9 +283,8 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
-
-    !!! warning
-        You must only use one event loop with each instance of this object.
+        -
+        ```````````````````````
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
@@ -332,12 +331,12 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         self._version = version
 
     @property
-    def debug(self) -> bool:
-        return self._debug
-
-    @property
     def http_settings(self) -> config.HTTPSettings:
         return self._http_settings
+
+    @property
+    def is_debug_enabled(self) -> bool:
+        return self._debug
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
@@ -842,7 +841,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if target_type is undefined.UNDEFINED:
-            if isinstance(target, users.UserImpl):
+            if isinstance(target, users.PartialUser):
                 target_type = channels.PermissionOverwriteType.MEMBER
             elif isinstance(target, guilds.Role):
                 target_type = channels.PermissionOverwriteType.ROLE
@@ -887,7 +886,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.UserImpl]] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -1034,7 +1033,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put("nonce", nonce)
         body.put("tts", tts)
 
-        final_attachments: typing.List[files.Resource] = []
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
 
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
@@ -1240,7 +1239,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         channel: snowflake.SnowflakeishOr[channels.TextChannel],
         message: snowflake.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
-    ) -> iterators.LazyIterator[users.UserImpl]:
+    ) -> iterators.LazyIterator[users.User]:
         return special_endpoints.ReactorIterator(
             app=self._app,
             request_call=self._request,
@@ -1337,7 +1336,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.SnowflakeishOr],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1377,7 +1376,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -1407,16 +1406,16 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
-        final_attachments: typing.List[files.Resource] = []
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        serialized_embeds: typing.List[embeds_.Embed] = []
+        serialized_embeds: data_binding.JSONArray = []
 
         if embeds is not undefined.UNDEFINED:
-            for embed in embeds:  # type: ignore[unreachable]
+            for embed in embeds:
                 embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
                 final_attachments.extend(embed_attachments)
@@ -1582,7 +1581,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
 
-    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.UserImpl:
+    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)

@@ -253,11 +253,11 @@ class GuildVerificationLevel(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild embed."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -267,7 +267,7 @@ class GuildWidget:
     """Whether this embed is enabled."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
@@ -372,6 +372,25 @@ class Member(users.User):
         return self.user.default_avatar
 
     @property
+    def display_name(self) -> str:
+        """Return the member's display name.
+
+        If the member has a nickname, this will return that nickname.
+        Otherwise, it will return the username instead.
+
+        Returns
+        -------
+        builtins.str
+            The member display name.
+
+        See Also
+        --------
+        Nickname: `Member.nickname`
+        Username: `Member.username`
+        """
+        return self.nickname if isinstance(self.nickname, str) else self.username
+
+    @property
     def mention(self) -> str:
         """Return a raw mention string for the given member.
 
@@ -400,16 +419,14 @@ class Member(users.User):
         return str(self.user)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -419,7 +436,7 @@ class PartialRole(snowflake.Unique):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound Role object."""
 
@@ -475,7 +492,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
     """Kick the subscriber."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
@@ -489,13 +506,11 @@ class IntegrationAccount:
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialIntegration(snowflake.Unique):
     """A partial representation of an integration, found in audit logs."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -511,7 +526,7 @@ class PartialIntegration(snowflake.Unique):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
@@ -539,25 +554,25 @@ class Integration(PartialIntegration):
     `GuildIntegration.expire_behavior` is enacted out on them
     """
 
-    user: users.UserImpl = attr.ib(eq=False, hash=False, repr=False)
+    user: users.User = attr.ib(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
 
-    last_synced_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=False)
+    last_synced_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this integration's subscribers were last synced."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildMemberBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attr.ib(repr=True)
     """The reason for this ban, will be `builtins.None` if no reason was given."""
 
-    user: users.UserImpl = attr.ib(repr=True)
+    user: users.User = attr.ib(repr=True)
     """The object of the user this ban targets."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 @typing.final
 class UnavailableGuild(snowflake.Unique):
     """An unavailable guild object, received during gateway events such as READY.
@@ -566,9 +581,7 @@ class UnavailableGuild(snowflake.Unique):
     be outdated if that is the case.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     # Ignore docstring not starting in an imperative mood
@@ -581,16 +594,14 @@ class UnavailableGuild(snowflake.Unique):
         return True
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
@@ -663,7 +674,7 @@ class PartialGuild(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.PUBLIC` feature."""
 
@@ -754,7 +765,7 @@ class GuildPreview(PartialGuild):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
@@ -1028,7 +1039,7 @@ class Guild(PartialGuild):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
@@ -1075,7 +1086,7 @@ class RESTGuild(Guild):
         return self._emojis.get(snowflake.Snowflake(emoji))
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 

@@ -122,14 +122,13 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
         setattr(cls, NO_RECURSIVE_THROW_ATTR, True)
         doc = inspect.getdoc(cls) or ""
         doc += inspect.cleandoc(
-            """\n\n
-            !!! warning
-                Any exceptions raised by handlers for this event will be dumped to the
-                application logger and silently discarded, preventing recursive loops
-                produced by faulty exception event handling. Thus, it is imperative
-                that you ensure any exceptions are explicitly caught within handlers
-                for this event if they may occur.
-        """
+            "\n\n\n"
+            "!!! warning\n"
+            "   Any exceptions raised by handlers for this event will be dumped to the\n"
+            "   application logger and silently discarded, preventing recursive loops\n"
+            "   produced by faulty exception event handling. Thus, it is imperative\n"
+            "   that you ensure any exceptions are explicitly caught within handlers\n"
+            "   for this event if they may occur.\n"
         )
         cls.__doc__ = doc
         return cls
@@ -196,10 +195,10 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     # defined in class scope, and thus thinks referring to it will make it a bound method.
     # To get around this, we make this attribute hidden and make a property that casts it
     # for us to remove this effect. This functionally changes nothing but it helps MyPy.
-    _failed_callback: FailedCallbackT = attr.ib()
+    _failed_callback: FailedCallbackT[FailedEventT] = attr.ib()
 
     @property
-    def failed_callback(self) -> FailedCallbackT:
+    def failed_callback(self) -> FailedCallbackT[FailedEventT]:
         """Event callback that threw an exception.
 
         Returns

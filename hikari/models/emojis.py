@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari.models import users
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
@@ -74,7 +74,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
 
-@attr.s(hash=True, init=False, kw_only=True, slots=True, eq=False, weakref_slot=False)
+@attr.s(hash=True, init=True, kw_only=False, slots=True, eq=False, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -178,28 +178,22 @@ class UnicodeEmoji(Emoji):
     @typing.final
     def from_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
-        unicode_emoji = cls()
-        unicode_emoji.name = "".join(map(chr, (codepoint, *codepoints)))
-        return unicode_emoji
+        return cls(name="".join(map(chr, (codepoint, *codepoints))))
 
     @classmethod
     @typing.final
     def from_emoji(cls, emoji: str) -> UnicodeEmoji:
         """Create a unicode emoji from a raw emoji."""
-        unicode_emoji = cls()
-        cls.name = emoji
-        return unicode_emoji
+        return cls(name=emoji)
 
     @classmethod
     @typing.final
     def from_unicode_escape(cls, escape: str) -> UnicodeEmoji:
         """Create a unicode emoji from a unicode escape string."""
-        unicode_emoji = cls()
-        unicode_emoji.name = str(escape.encode("utf-8"), "unicode_escape")
-        return unicode_emoji
+        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class CustomEmoji(snowflake.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -224,12 +218,10 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False, init=True)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, init=True)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     # TODO: document when this is None, or fix it to not be optional?
@@ -272,7 +264,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 

@@ -66,6 +66,10 @@ if typing.TYPE_CHECKING:
 _MAGIC: typing.Final[int] = 50 * 1024
 
 
+ReaderImplT = typing.TypeVar("ReaderImplT", bound="AsyncReader")
+ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound="AsyncReader", covariant=True)
+
+
 Pathish = typing.Union["os.PathLike[str]", str]
 """Type hint representing a literal file or path.
 
@@ -121,7 +125,7 @@ This may be one of:
 - `aiohttp.StreamReader`
 """
 
-Resourceish = typing.Union["Resource", Pathish, Rawish]
+Resourceish = typing.Union["Resource[AsyncReader]", Pathish, Rawish]
 """Type hint representing a file or path to a file/URL/data URI.
 
 This may be one of:
@@ -156,24 +160,13 @@ def unwrap_bytes(data: Rawish) -> bytes:
     return data
 
 
-@typing.overload
-def ensure_resource(url_or_resource: None, /) -> None:
-    """Given None, return None."""
-
-
-@typing.overload
-def ensure_resource(url_or_resource: Resourceish, /) -> Resource:
-    """Given a non null value, parse a resource from it.."""
-
-
-def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.Optional[Resource]:
+def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     """Given a resource or string, convert it to a valid resource as needed.
 
     Parameters
     ----------
     url_or_resource : Resourceish
-        The item to convert. If the item is `builtins.None`, then
-        `builtins.None` is returned. Likewise if a `Resource` is passed, it is
+        The item to convert. Ff a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
@@ -184,27 +177,24 @@ def ensure_resource(url_or_resource: typing.Optional[Resourceish], /) -> typing.
     if isinstance(url_or_resource, RAWISH_TYPES):
         data = unwrap_bytes(url_or_resource)
         filename = generate_filename_from_details(mimetype=None, extension=None, data=data)
-        return Bytes(url_or_resource, filename)
+        return typing.cast("Resource[AsyncReader]", Bytes(url_or_resource, filename))
 
     if isinstance(url_or_resource, Resource):
         return url_or_resource
 
-    if url_or_resource is None:
-        return None
-
     url_or_resource = str(url_or_resource)
 
     if url_or_resource.startswith(("https://", "http://")):
-        return URL(url_or_resource)
+        return typing.cast("Resource[AsyncReader]", URL(url_or_resource))
     if url_or_resource.startswith("data:"):
         try:
-            return Bytes.from_data_uri(url_or_resource)
+            return typing.cast("Resource[AsyncReader]", Bytes.from_data_uri(url_or_resource))
         except ValueError:
             # If we cannot parse it, maybe it is some malformed file?
             pass
 
     path = pathlib.Path(url_or_resource)
-    return File(path, path.name)
+    return typing.cast("Resource[AsyncReader]", File(path, path.name))
 
 
 def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
@@ -369,9 +359,6 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         return buff
 
 
-ReaderImplT = typing.TypeVar("ReaderImplT", bound=AsyncReader)
-
-
 class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
     """Context manager that returns a reader."""
 
@@ -520,7 +507,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
-        self._client_response_ctx: typing.AsyncContextManager = NotImplemented
+        self._client_response_ctx: typing.AsyncContextManager[aiohttp.client.ClientResponse] = NotImplemented
 
     async def __aenter__(self) -> WebReader:
         client_session = aiohttp.ClientSession()

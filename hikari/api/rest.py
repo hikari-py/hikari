@@ -462,7 +462,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.UserImpl]] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -1171,7 +1171,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel: snowflake.SnowflakeishOr[channels.TextChannel],
         message: snowflake.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
-    ) -> iterators.LazyIterator[users.UserImpl]:
+    ) -> iterators.LazyIterator[users.User]:
         ...
 
     @abc.abstractmethod
@@ -1222,7 +1222,7 @@ class IRESTClient(component.IComponent, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook(
         self,
-        webhook: typing.Union[webhooks.Webhook, snowflake.SnowflakeishOr],
+        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1332,7 +1332,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.UserImpl:
+    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.User:
         ...
 
     def fetch_audit_log(

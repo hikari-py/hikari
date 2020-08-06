@@ -17,6 +17,7 @@
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
 
 from hikari.models import audit_logs
+from hikari.utilities import snowflake
 
 
 def test_AuditLogChangeKey_str_operator():
@@ -29,15 +30,76 @@ def test_AuditLogEventType_str_operator():
     assert str(event_type) == "INTEGRATION_CREATE"
 
 
-def test_AuditLog_itter():
-    entry = audit_logs.AuditLogEntry()
-    entry.id = 1
-    entry2 = audit_logs.AuditLogEntry()
-    entry2.id = 2
-    entry3 = audit_logs.AuditLogEntry()
-    entry3.id = 3
-    audit_log = audit_logs.AuditLog()
-    audit_log.entries = {1: entry, 2: entry2, 3: entry3}
+class TestAuditLog:
+    def test_iter(self):
+        entry_1 = object()
+        entry_2 = object()
+        entry_3 = object()
+        audit_log = audit_logs.AuditLog(
+            entries={
+                snowflake.Snowflake(432123): entry_1,
+                snowflake.Snowflake(432654): entry_2,
+                snowflake.Snowflake(432888): entry_3,
+            },
+            integrations={},
+            users={},
+            webhooks={},
+        )
+        assert list(audit_log) == [entry_1, entry_2, entry_3]
 
-    assert len(audit_log) == 3
-    assert [*audit_log] == [entry, entry2, entry3]
+    def test_get_item_with_index(self):
+        entry = object()
+        entry_2 = object()
+        audit_log = audit_logs.AuditLog(
+            entries={
+                snowflake.Snowflake(432123): object(),
+                snowflake.Snowflake(432654): entry,
+                snowflake.Snowflake(432888): object(),
+                snowflake.Snowflake(677777): object(),
+                snowflake.Snowflake(999999): entry_2,
+            },
+            integrations={},
+            users={},
+            webhooks={},
+        )
+        assert audit_log[1] is entry
+        assert audit_log[4] is entry_2
+
+    def test_get_item_with_index(self):
+        entry_1 = object()
+        entry_2 = object()
+        audit_log = audit_logs.AuditLog(
+            entries={
+                snowflake.Snowflake(432123): object(),
+                snowflake.Snowflake(432654): entry_1,
+                snowflake.Snowflake(432888): object(),
+                snowflake.Snowflake(666666): entry_2,
+                snowflake.Snowflake(783452): object(),
+            },
+            integrations={},
+            users={},
+            webhooks={},
+        )
+        assert audit_log[1:5:2] == (entry_1, entry_2)
+
+    def test_get_item_with_ivalid_type(self):
+        try:
+            audit_logs.AuditLog(entries=[object(), object()], integrations={}, users={}, webhooks={},)["OK"]
+        except TypeError:
+            pass
+        else:
+            assert False, "Expect TypeError but got no exception"
+
+    def test_len(self):
+        audit_log = audit_logs.AuditLog(
+            entries={
+                snowflake.Snowflake(432123): object(),
+                snowflake.Snowflake(432654): object(),
+                snowflake.Snowflake(432888): object(),
+                snowflake.Snowflake(783452): object(),
+            },
+            integrations={},
+            users={},
+            webhooks={},
+        )
+        assert len(audit_log) == 4

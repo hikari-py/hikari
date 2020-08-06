@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
-"""Barebones implementation of a cache that never stores anything.
+"""Bare-bones implementation of a cache that never stores anything.
 
 This is used to enable compatibility with HTTP applications and stateless
 bots where desired.
@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class StatelessCacheImpl(cache.ICacheComponent):
+class StatelessCacheImpl(cache.IMutableCacheComponent):
     """Stateless cache.
 
     A stateless cache implementation that implements dummy operations for

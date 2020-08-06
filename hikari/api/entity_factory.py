@@ -473,7 +473,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def serialize_embed(
         self, embed: embed_models.Embed
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource]]:
+    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters
@@ -885,7 +885,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
     ###############
 
     @abc.abstractmethod
-    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.UserImpl:
+    def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
         """Parse a raw payload from Discord into a user object.
 
         Parameters
@@ -895,7 +895,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.UserImpl
+        hikari.models.users.User
             The deserialized user object.
         """
 

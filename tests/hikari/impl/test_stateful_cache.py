@@ -34,14 +34,14 @@ from hikari.utilities import snowflake
 from tests.hikari import hikari_test_helpers
 
 
-class TestStatefulCacheComponentImpl:
+class TestStatefulCacheImpl:
     @pytest.fixture()
     def app_impl(self):
         return mock.Mock(rest_app.IApp)
 
     @pytest.fixture()
-    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheComponentImpl:
-        return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheComponentImpl)(app=app_impl, intents=None)
+    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
+        return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheImpl)(app=app_impl, intents=None)
 
     def test__build_private_text_channel_with_cached_user(self, cache_impl):
         channel_data = stateful_cache._PrivateTextChannelData(
@@ -188,13 +188,14 @@ class TestStatefulCacheComponentImpl:
 
     def test_set_private_text_channel(self, cache_impl):
         mock_recipient = mock.Mock(users.User, id=snowflake.Snowflake(7652341234))
-        channel = channels.PrivateTextChannel()
-        channel.id = snowflake.Snowflake(23123)
-        channel.app = cache_impl.app
-        channel.name = None
-        channel.type = channels.ChannelType.PRIVATE_TEXT
-        channel.recipient = mock_recipient
-        channel.last_message_id = snowflake.Snowflake(5432134234)
+        channel = channels.PrivateTextChannel(
+            id=snowflake.Snowflake(23123),
+            app=cache_impl.app,
+            name=None,
+            type=channels.ChannelType.PRIVATE_TEXT,
+            recipient=mock_recipient,
+            last_message_id=snowflake.Snowflake(5432134234),
+        )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl.set_private_text_channel(channel)
@@ -576,17 +577,18 @@ class TestStatefulCacheComponentImpl:
 
     def test_set_emoji(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflake.Snowflake(654234))
-        emoji = emojis.KnownCustomEmoji()
-        emoji.app = cache_impl._app
-        emoji.id = snowflake.Snowflake(5123123)
-        emoji.name = "A name"
-        emoji.guild_id = snowflake.Snowflake(65234)
-        emoji.role_ids = [snowflake.Snowflake(213212), snowflake.Snowflake(6873245)]
-        emoji.user = mock_user
-        emoji.is_animated = False
-        emoji.is_colons_required = True
-        emoji.is_managed = True
-        emoji.is_available = False
+        emoji = emojis.KnownCustomEmoji(
+            app=cache_impl._app,
+            id=snowflake.Snowflake(5123123),
+            name="A name",
+            guild_id=snowflake.Snowflake(65234),
+            role_ids=[snowflake.Snowflake(213212), snowflake.Snowflake(6873245)],
+            user=mock_user,
+            is_animated=False,
+            is_colons_required=True,
+            is_managed=True,
+            is_available=False,
+        )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
         assert cache_impl.set_emoji(emoji) is None
@@ -609,17 +611,18 @@ class TestStatefulCacheComponentImpl:
 
     def test_set_emoji_with_pre_cached_emoji(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflake.Snowflake(654234))
-        emoji = emojis.KnownCustomEmoji()
-        emoji.app = cache_impl._app
-        emoji.id = snowflake.Snowflake(5123123)
-        emoji.name = "A name"
-        emoji.guild_id = snowflake.Snowflake(65234)
-        emoji.role_ids = [snowflake.Snowflake(213212), snowflake.Snowflake(6873245)]
-        emoji.user = mock_user
-        emoji.is_animated = False
-        emoji.is_colons_required = True
-        emoji.is_managed = True
-        emoji.is_available = False
+        emoji = emojis.KnownCustomEmoji(
+            app=cache_impl._app,
+            id=snowflake.Snowflake(5123123),
+            name="A name",
+            guild_id=snowflake.Snowflake(65234),
+            role_ids=[snowflake.Snowflake(213212), snowflake.Snowflake(6873245)],
+            user=mock_user,
+            is_animated=False,
+            is_colons_required=True,
+            is_managed=True,
+            is_available=False,
+        )
         cache_impl._emoji_entries = {snowflake.Snowflake(5123123): mock.Mock(stateful_cache._KnownCustomEmojiData)}
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
@@ -1624,15 +1627,16 @@ class TestStatefulCacheComponentImpl:
 
     def test_set_member(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflake.Snowflake(645234123))
-        member_model = guilds.Member()
-        member_model.guild_id = snowflake.Snowflake(67345234)
-        member_model.user = mock_user
-        member_model.nickname = "A NICK LOL"
-        member_model.role_ids = [snowflake.Snowflake(65345234), snowflake.Snowflake(123123)]
-        member_model.joined_at = datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc)
-        member_model.premium_since = datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc)
-        member_model.is_deaf = True
-        member_model.is_mute = False
+        member_model = guilds.Member(
+            guild_id=snowflake.Snowflake(67345234),
+            user=mock_user,
+            nickname="A NICK LOL",
+            role_ids=[snowflake.Snowflake(65345234), snowflake.Snowflake(123123)],
+            joined_at=datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc),
+            premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
+            is_deaf=True,
+            is_mute=False,
+        )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl.set_member(member_model)
