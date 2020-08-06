@@ -425,8 +425,8 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     async def update_voice_state(
         self,
-        guild: typing.Union[guilds.PartialGuild, snowflake.SnowflakeishOr],
-        channel: typing.Union[channels.GuildVoiceChannel, snowflake.SnowflakeishOr, None],
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
