@@ -790,7 +790,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_members_view(self,) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
+    def get_members_view(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
         """Get a view of all the members objects in the cache.
 
         Returns
