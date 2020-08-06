@@ -50,12 +50,10 @@ from hikari.impl import stateful_event_manager
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
 from hikari.impl import voice
-from hikari.models import guilds
 from hikari.models import intents as intents_
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date
-from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -825,27 +823,3 @@ class BotAppImpl(bot.IBotApp):
 
         except Exception as ex:
             _LOGGER.debug("Error occurred fetching version info", exc_info=ex)
-
-    def get_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
-        return self._cache.get_guild(guild_id)
-
-    def get_guilds(self) -> cache_.ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
-        return self._cache.get_guilds_view()
-
-    async def fetch_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.Guild]:
-        try:
-            return await self._rest.fetch_guild(guild_id)
-        except errors.NotFoundError:
-            return None
-
-    def get_user(self, user_id: snowflake.Snowflake) -> typing.Optional[users.User]:
-        return self._cache.get_user(user_id)
-
-    def get_users(self) -> cache_.ICacheView[snowflake.Snowflake, users.User]:
-        return self._cache.get_users_view()
-
-    async def fetch_user(self, user_id: snowflake.Snowflake) -> typing.Optional[users.User]:
-        try:
-            return await self._rest.fetch_user(user_id)
-        except errors.NotFoundError:
-            return None

@@ -25,7 +25,6 @@ __all__: typing.Final[typing.List[str]] = ["IBotApp"]
 import abc
 import typing
 
-from hikari.api import cache
 from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 from hikari.api import shard
@@ -34,10 +33,8 @@ from hikari.api import voice
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.models import guilds
     from hikari.models import intents as intents_
     from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatcherApp, voice.IVoiceApp, abc.ABC):
@@ -175,84 +172,4 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
         -------
         datetime.timedelta
             The number of seconds the application has been running.
-        """
-
-    @abc.abstractmethod
-    def get_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
-        """Find a cached guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The guild ID to search for.
-
-        Returns
-        -------
-        hikari.models.guilds.GatewayGuild or builtins.None
-            The cached guild, or `builtins.None` if it is not cached.
-        """
-
-    @abc.abstractmethod
-    def get_guilds(self) -> cache.ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
-        """Generate a view of all cached guilds and return it.
-
-        Returns
-        -------
-        hikari.api.cache.ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
-            The view of the guild cache.
-        """
-
-    @abc.abstractmethod
-    async def fetch_guild(self, guild_id: snowflake.Snowflake) -> typing.Optional[guilds.Guild]:
-        """Fetch a guild from the API.
-
-        Parameters
-        ----------
-        guild_id : hikari.utilities.snowflake.Snowflake
-            The guild ID to search for.
-
-        Returns
-        -------
-        hikari.models.guilds.Guild or builtins.None
-            The guild, or `builtins.None` if it is not found.
-        """
-
-    @abc.abstractmethod
-    def get_user(self, user_id: snowflake.Snowflake) -> typing.Optional[users.User]:
-        """Find a cached user.
-
-        Parameters
-        ----------
-        user_id : hikari.utilities.snowflake.Snowflake
-            The user ID to search for.
-
-        Returns
-        -------
-        hikari.models.users.User or builtins.None
-            The cached user, or `builtins.None` if it is not cached.
-        """
-
-    @abc.abstractmethod
-    def get_users(self) -> cache.ICacheView[snowflake.Snowflake, users.User]:
-        """Generate a view of all cached users and return it.
-
-        Returns
-        -------
-        hikari.api.cache.ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
-            The view of the user cache.
-        """
-
-    @abc.abstractmethod
-    async def fetch_user(self, user_id: snowflake.Snowflake) -> typing.Optional[users.User]:
-        """Fetch a user from the API.
-
-        Parameters
-        ----------
-        user_id : hikari.utilities.snowflake.Snowflake
-            The user ID to search for.
-
-        Returns
-        -------
-        hikari.models.users.User or builtins.None
-            The user, or `builtins.None` if it is not found.
         """
