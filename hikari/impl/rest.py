@@ -201,7 +201,7 @@ class RESTAppImpl(rest_api.IRESTAppContextManager):
         return self._cache
 
     @property
-    def debug(self) -> bool:
+    def is_debug_enabled(self) -> bool:
         return self._debug
 
     @property
@@ -283,9 +283,8 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
-
-    !!! warning
-        You must only use one event loop with each instance of this object.
+        -
+        ```````````````````````
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
@@ -332,12 +331,12 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         self._version = version
 
     @property
-    def debug(self) -> bool:
-        return self._debug
-
-    @property
     def http_settings(self) -> config.HTTPSettings:
         return self._http_settings
+
+    @property
+    def is_debug_enabled(self) -> bool:
+        return self._debug
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
