@@ -582,7 +582,7 @@ class _GuildChannelCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflak
         return _copy_guild_channel(value)
 
 
-class StatefulCacheImpl(cache.ICacheComponent):
+class StatefulCacheImpl(cache.IMutableCacheComponent):
     """In-memory cache implementation."""
 
     __slots__: typing.Sequence[str] = (
