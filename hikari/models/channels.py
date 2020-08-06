@@ -133,7 +133,7 @@ class PermissionOverwrite(snowflake.Unique):
     """
 
     id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
+        converter=snowflake.Snowflake, eq=True, hash=True, repr=True,
     )
     """The ID of this entity."""
 
@@ -157,7 +157,7 @@ class PermissionOverwrite(snowflake.Unique):
         return permissions.Permission(~(self.allow | self.deny))
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -165,12 +165,10 @@ class PartialChannel(snowflake.Unique):
     not available from Discord.
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -383,7 +381,7 @@ class TextChannel(PartialChannel, abc.ABC):
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
@@ -396,18 +394,23 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PrivateTextChannel(PrivateChannel, TextChannel):
     """Represents a private text channel that is between you and another user."""
 
     recipient: users.User = attr.ib(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
 
+    @property
+    def shard_id(self) -> typing.Literal[0]:
+        """Return the shard ID for the shard."""
+        return 0
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GroupPrivateTextChannel(PrivateChannel):
     """Represents a group private channel.
 
@@ -426,7 +429,7 @@ class GroupPrivateTextChannel(PrivateChannel):
     nicknames: typing.MutableMapping[snowflake.Snowflake, str] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
-    recipients: typing.Mapping[snowflake.Snowflake, users.UserImpl] = attr.ib(eq=False, hash=False, repr=False)
+    recipients: typing.Mapping[snowflake.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The recipients of the group DM."""
 
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -477,7 +480,7 @@ class GroupPrivateTextChannel(PrivateChannel):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
@@ -516,21 +519,17 @@ class GuildChannel(PartialChannel):
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 
-        This may be `builtins.None` if this channel was not received over the
-        gateway in an event, or if the guild is not known, or if the shard count
-        is not known.
+        This may be `builtins.None` if the shard count is not known.
         """
         try:
-            # This is only sensible if there is a shard.
-            if self.guild_id is not None:
-                return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+            return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
         except (TypeError, AttributeError, NameError):
             pass
 
         return None
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
     """Represents a guild category channel.
 
@@ -539,7 +538,7 @@ class GuildCategory(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
@@ -574,7 +573,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, slots=True, kw_only=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, slots=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
@@ -598,7 +597,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel.
 
@@ -608,7 +607,7 @@ class GuildStoreChannel(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildVoiceChannel(GuildChannel):
     """Represents an voice channel."""
 

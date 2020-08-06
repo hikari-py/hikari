@@ -151,7 +151,7 @@ class MessageActivityType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Attachment(snowflake.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -159,9 +159,7 @@ class Attachment(snowflake.Unique, files.WebResource):
     by passing it as an attached file when creating a message, etc.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     url: str = attr.ib(repr=True)
@@ -186,7 +184,7 @@ class Attachment(snowflake.Unique, files.WebResource):
         return self.filename
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -203,7 +201,7 @@ class Reaction:
         return str(self.emoji)
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -214,7 +212,7 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageCrosspost:
     """Represents information about a cross-posted message.
 
@@ -222,7 +220,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     # TODO: get clarification on this! If it cannot happen, this should subclass PartialMessage too.
@@ -248,7 +246,7 @@ class MessageCrosspost:
     """
 
 
-@attr.s(slots=True, kw_only=True, init=False, repr=True, eq=False, weakref_slot=False)
+@attr.s(slots=True, kw_only=True, init=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflake.Unique):
     """A message representation containing partially populated information.
 
@@ -263,12 +261,10 @@ class PartialMessage(snowflake.Unique):
         nullability.
     """
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     channel_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -277,7 +273,7 @@ class PartialMessage(snowflake.Unique):
     guild_id: undefined.UndefinedNoneOr[snowflake.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: undefined.UndefinedOr[users.UserImpl] = attr.ib(repr=True)
+    author: undefined.UndefinedOr[users.User] = attr.ib(repr=True)
     """The author of this message."""
 
     member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)
@@ -800,7 +796,7 @@ class PartialMessage(snowflake.Unique):
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 
@@ -815,7 +811,7 @@ class Message(PartialMessage):
     guild_id: typing.Optional[snowflake.Snowflake]
     """The ID of the guild that the message was sent in."""
 
-    author: users.UserImpl
+    author: users.User
     """The author of this message."""
 
     member: typing.Optional[guilds.Member]

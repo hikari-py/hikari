@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import applications
 from hikari.models import users
@@ -36,21 +37,18 @@ def test_TeamMembershipState_str_operator():
 
 
 def test_TeamMember_str_operator():
-    team_member = applications.TeamMember()
-    team_member_user = users.UserImpl()
-    team_member_user.username = "mario"
-    team_member_user.discriminator = "1234"
-    team_member.user = team_member_user
-    assert str(team_member) == "mario#1234"
+    mock_team_member = mock.Mock(
+        applications.TeamMember, user=mock.Mock(users.User, __str__=mock.Mock(return_value="mario#1234"))
+    )
+    assert applications.TeamMember.__str__(mock_team_member) == "mario#1234"
 
 
 def test_Team_str_operator():
-    team = applications.Team()
-    team.id = 696969
+    team = applications.Team(id=696969, app=object(), icon_hash="", members=[], owner_id=0)
     assert str(team) == "Team 696969"
 
 
 def test_Application_str_operator():
-    application = applications.Application()
-    application.name = "beans"
-    assert str(application) == "beans"
+    mock_application = mock.Mock(applications.Application)
+    mock_application.name = "beans"
+    assert applications.Application.__str__(mock_application) == "beans"

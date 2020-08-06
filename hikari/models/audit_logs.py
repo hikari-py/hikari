@@ -40,6 +40,7 @@ __all__: typing.Final[typing.List[str]] = [
 import abc
 import datetime
 import enum
+import itertools
 import typing
 
 import attr
@@ -122,7 +123,7 @@ class AuditLogChangeKey(str, enum.Enum):
     __repr__ = __str__
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
@@ -181,12 +182,12 @@ class AuditLogEventType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -194,9 +195,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     entries.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     type: channels.PermissionOverwriteType = attr.ib(repr=True)
@@ -206,7 +205,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """The name of the role this overwrite targets, if it targets a role."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -220,7 +219,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The ID of the message that's being pinned or unpinned."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Extra information attached to guild prune log entries."""
 
@@ -231,7 +230,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """The number of members who were removed by this prune."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the message bulk delete audit entry."""
 
@@ -239,7 +238,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """The amount of messages that were deleted."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Extra information attached to the message delete audit entry."""
 
@@ -247,7 +246,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """The guild text based channel where these message(s) were deleted."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the voice chat member disconnect entry."""
 
@@ -255,7 +254,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """The amount of members who were disconnected from voice in this entry."""
 
 
-@attr.s(eq=True, hash=False, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
@@ -281,16 +280,14 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         self.__dict__.update(payload)
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     target_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
@@ -312,9 +309,8 @@ class AuditLogEntry(snowflake.Unique):
     """The reason for this change, if set (between 0-512 characters)."""
 
 
-# TODO: make this support looking like a list of entries...
-@attr.s(eq=True, hash=False, init=False, kw_only=True, repr=False, slots=True, weakref_slot=False)
-class AuditLog:
+@attr.s(eq=True, hash=False, init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
+class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log."""
 
     entries: typing.Mapping[snowflake.Snowflake, AuditLogEntry] = attr.ib(repr=False)
@@ -323,11 +319,31 @@ class AuditLog:
     integrations: typing.Mapping[snowflake.Snowflake, guilds.PartialIntegration] = attr.ib(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
 
-    users: typing.Mapping[snowflake.Snowflake, users_.UserImpl] = attr.ib(repr=False)
+    users: typing.Mapping[snowflake.Snowflake, users_.User] = attr.ib(repr=False)
     """A mapping of the objects of users found in this audit log."""
 
     webhooks: typing.Mapping[snowflake.Snowflake, webhooks_.Webhook] = attr.ib(repr=False)
     """A mapping of the objects of webhooks found in this audit log."""
+
+    @typing.overload
+    def __getitem__(self, index: int, /) -> AuditLogEntry:
+        ...
+
+    @typing.overload
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]:
+        ...
+
+    def __getitem__(
+        self, index_or_slice: typing.Union[int, slice], /
+    ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
+        if isinstance(index_or_slice, slice):
+            return tuple(
+                itertools.islice(self.entries.values(), index_or_slice.start, index_or_slice.stop, index_or_slice.step)
+            )
+        elif isinstance(index_or_slice, int):
+            return next(iter(itertools.islice(self.entries.values(), index_or_slice, None)))
+        else:
+            raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
 
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())

@@ -472,7 +472,7 @@ class TestRESTClientImpl:
     @pytest.mark.parametrize(
         ("emoji", "expected_return"),
         [
-            (emojis.CustomEmoji(), "rooYay:123"),
+            (emojis.CustomEmoji(id=123, name="rooYay", app=object(), is_animated=False), "rooYay:123"),
             ("👌", "👌"),
             ("\N{OK HAND SIGN}", "\N{OK HAND SIGN}"),
             ("<:rooYay:123>", "rooYay:123"),
@@ -481,10 +481,6 @@ class TestRESTClientImpl:
         ],
     )
     def test__transform_emoji_to_url_format(self, rest_client, emoji, expected_return):
-        if isinstance(emoji, emojis.CustomEmoji):
-            emoji.id = 123
-            emoji.name = "rooYay"
-
         assert rest_client._transform_emoji_to_url_format(emoji) == expected_return
 
     #######################
@@ -1021,7 +1017,7 @@ class TestRESTClientImplAsync:
         rest_client._app.entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
         rest_client._request = mock.AsyncMock(return_value={"payload"})
         rest_client._app.entity_factory.serialize_permission_overwrite = mock.Mock(
-            return_value={"type": "member", "allow": 1024, "deny": 8192}
+            return_value={"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}
         )
         expected_json = {
             "name": "new name",
@@ -1032,31 +1028,31 @@ class TestRESTClientImplAsync:
             "user_limit": 100,
             "rate_limit_per_user": 30,
             "parent_id": "1234",
-            "permission_overwrites": [{"type": "member", "allow": 1024, "deny": 8192}],
+            "permission_overwrites": [{"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}],
         }
 
-        assert (
-            await rest_client.edit_channel(
-                StubModel(123),
-                name="new name",
-                position=1,
-                topic="new topic",
-                nsfw=True,
-                bitrate=10,
-                user_limit=100,
-                rate_limit_per_user=30,
-                permission_overwrites=[
-                    channels.PermissionOverwrite(
-                        type=channels.PermissionOverwriteType.MEMBER,
-                        allow=permissions.Permission.VIEW_CHANNEL,
-                        deny=permissions.Permission.MANAGE_MESSAGES,
-                    )
-                ],
-                parent_category=StubModel(1234),
-                reason="some reason :)",
-            )
-            == mock_object
+        result = await rest_client.edit_channel(
+            StubModel(123),
+            name="new name",
+            position=1,
+            topic="new topic",
+            nsfw=True,
+            bitrate=10,
+            user_limit=100,
+            rate_limit_per_user=30,
+            permission_overwrites=[
+                channels.PermissionOverwrite(
+                    type=channels.PermissionOverwriteType.MEMBER,
+                    allow=permissions.Permission.VIEW_CHANNEL,
+                    deny=permissions.Permission.MANAGE_MESSAGES,
+                    id=1235431,
+                )
+            ],
+            parent_category=StubModel(1234),
+            reason="some reason :)",
         )
+
+        assert result == mock_object
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="some reason :)")
         rest_client._app.entity_factory.deserialize_channel.assert_called_once_with({"payload"})
 
@@ -1096,16 +1092,41 @@ class TestRESTClientImplAsync:
     @pytest.mark.parametrize(
         ("target", "expected_type"),
         [
-            (users.UserImpl(), channels.PermissionOverwriteType.MEMBER),
-            (guilds.Role(), channels.PermissionOverwriteType.ROLE),
             (
-                channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER),
+                users.UserImpl(
+                    id=456,
+                    app=object(),
+                    avatar_hash="",
+                    discriminator="",
+                    flags=0,
+                    username="",
+                    is_bot=True,
+                    is_system=True,
+                ),
+                channels.PermissionOverwriteType.MEMBER,
+            ),
+            (
+                guilds.Role(
+                    id=456,
+                    app=object(),
+                    color=None,
+                    guild_id=123,
+                    is_hoisted=True,
+                    is_managed=False,
+                    name="",
+                    is_mentionable=True,
+                    permissions=0,
+                    position=0,
+                ),
+                channels.PermissionOverwriteType.ROLE,
+            ),
+            (
+                channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=456),
                 channels.PermissionOverwriteType.MEMBER,
             ),
         ],
     )
     async def test_edit_permission_overwrites_when_target_undefined(self, rest_client, target, expected_type):
-        target.id = 456
         expected_route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
         expected_json = {"type": expected_type}
