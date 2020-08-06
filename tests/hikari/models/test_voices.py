@@ -15,11 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import voices
 
 
 def test_VoiceRegion_str_operator():
-    region = voices.VoiceRegion()
-    region.id = "eu or something idk"
-    assert str(region) == "eu or something idk"
+    mock_region = mock.Mock(voices.VoiceRegion, id="eu or something idk")
+    assert voices.VoiceRegion.__str__(mock_region) == "eu or something idk"

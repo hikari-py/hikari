@@ -39,6 +39,7 @@ from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
     from hikari.api import bot
+    from hikari.api import cache
     from hikari.api import shard as gateway_shard
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
@@ -51,7 +52,9 @@ if typing.TYPE_CHECKING:
     WaiterT = typing.Tuple[
         event_dispatcher.PredicateT[event_dispatcher.EventT_co], asyncio.Future[event_dispatcher.EventT_co]
     ]
-    WaiterMapT = typing.MutableMapping[typing.Type[event_dispatcher.EventT_co], typing.MutableSet[WaiterT]]
+    WaiterMapT = typing.MutableMapping[
+        typing.Type[event_dispatcher.EventT_co], typing.MutableSet[WaiterT[event_dispatcher.EventT_co]]
+    ]
 
 
 def _default_predicate(_: event_dispatcher.EventT_inv) -> bool:
@@ -65,13 +68,16 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_mutable_cache", "_waiters")
 
-    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intent]) -> None:
+    def __init__(
+        self, app: bot.IBotApp, mutable_cache: cache.IMutableCacheComponent, intents: typing.Optional[intents_.Intent],
+    ) -> None:
         self._app = app
         self._intents = intents
-        self._listeners: ListenerMapT = {}
-        self._waiters: WaiterMapT = {}
+        self._listeners: ListenerMapT[base_events.Event] = {}
+        self._waiters: WaiterMapT[base_events.Event] = {}
+        self._mutable_cache = mutable_cache
 
     @property
     @typing.final
@@ -132,7 +138,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
             event_type.__qualname__,
         )
 
-        self._listeners[event_type].append(callback)
+        self._listeners[event_type].append(callback)  # type: ignore[arg-type]
 
         return callback
 
@@ -182,7 +188,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                 event_type.__module__,
                 event_type.__qualname__,
             )
-            self._listeners[event_type].remove(callback)
+            self._listeners[event_type].remove(callback)  # type: ignore[arg-type]
             if not self._listeners[event_type]:
                 del self._listeners[event_type]
 
@@ -239,7 +245,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
             if cls in self._waiters:
                 for predicate, future in self._waiters[cls]:
                     # noinspection PyTypeChecker
-                    tasks.append(self._test_waiter(event, predicate, future))
+                    tasks.append(self._test_waiter(event, predicate, future))  # type: ignore[misc]
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -309,7 +315,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
         pair = (predicate, future)
 
-        waiter_set.add(pair)
+        waiter_set.add(pair)  # type: ignore[arg-type]
 
         try:
             if timeout is not None:
@@ -318,6 +324,6 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                 return await future
 
         finally:
-            waiter_set.remove(pair)
+            waiter_set.remove(pair)  # type: ignore[arg-type]
             if not waiter_set:
                 del self._waiters[event_type]

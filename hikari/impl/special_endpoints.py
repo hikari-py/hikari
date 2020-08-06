@@ -76,7 +76,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: typing.Union[channels.TextChannel, snowflake.SnowflakeishOr],
+        channel: snowflake.SnowflakeishOr[channels.TextChannel],
         rest_closed_event: asyncio.Event,
     ) -> None:
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
@@ -410,7 +410,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
-class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
+class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
     __slots__: typing.Sequence[str] = ("_app", "_first_id", "_route", "_request_call")
@@ -431,7 +431,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.UserImpl"]):
         self._first_id = undefined.UNDEFINED
         self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.UserImpl, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)

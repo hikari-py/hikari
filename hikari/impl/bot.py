@@ -127,7 +127,7 @@ _LOGGING_FORMAT: typing.Final[str] = (
 
 
 class BotAppImpl(bot.IBotApp):
-    """Implementation of an auto-sharded bot application.
+    """Implementation of an auto-sharded single-instance bot application.
 
     Parameters
     ----------
@@ -230,6 +230,11 @@ class BotAppImpl(bot.IBotApp):
         default values, then the presence will not be _updated_ on startup
         at all.
 
+    !!! note
+        To disable auto-sharding, you should explicitly specify how many shards
+        you wish to use. For non-sharded applications, this can be done by
+        passing `shard_count` as `1` in the constructor.
+
     Raises
     ------
     builtins.TypeError
@@ -305,15 +310,20 @@ class BotAppImpl(bot.IBotApp):
         if banner_package is not None:
             self._dump_banner(banner_package)
 
+        self._cache: cache_.IMutableCacheComponent
         self._event_manager: event_manager_base.EventManagerComponentBase
-        self._cache: cache_.ICacheComponent
+
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
-            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
+            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
+                app=self, mutable_cache=self._cache, intents=intents,
+            )
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.StatefulCacheComponentImpl(app=self, intents=intents)
-            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(app=self, intents=intents)
+            self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
+            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
+                app=self, intents=intents, mutable_cache=self._cache,
+            )
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
@@ -370,7 +380,7 @@ class BotAppImpl(bot.IBotApp):
         return self._cache
 
     @property
-    def debug(self) -> bool:
+    def is_debug_enabled(self) -> bool:
         return self._debug
 
     @property

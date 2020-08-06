@@ -62,8 +62,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
         event = self.app.event_factory.deserialize_ready_event(shard, payload)
-        self.app.cache.update_me(event.my_user)
-        self.app.cache.set_initial_unavailable_guilds(event.unavailable_guilds)
+        self._mutable_cache.update_me(event.my_user)
+        self._mutable_cache.set_initial_unavailable_guilds(event.unavailable_guilds)
         await self.dispatch(event)
 
     async def on_resumed(self, shard: gateway_shard.IGatewayShard, _: data_binding.JSONObject) -> None:
@@ -76,9 +76,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_channel_create_event(shard, payload)
 
         if isinstance(event.channel, channels.GuildChannel):
-            self.app.cache.set_guild_channel(event.channel)
+            self._mutable_cache.set_guild_channel(event.channel)
         else:
-            self.app.cache.set_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
+            self._mutable_cache.set_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
 
         await self.dispatch(event)
 
@@ -87,9 +87,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_channel_update_event(shard, payload)
 
         if isinstance(event.channel, channels.GuildChannel):
-            self.app.cache.update_guild_channel(event.channel)
+            self._mutable_cache.update_guild_channel(event.channel)
         else:
-            self.app.cache.update_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
+            self._mutable_cache.update_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
 
         await self.dispatch(event)
 
@@ -98,9 +98,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_channel_delete_event(shard, payload)
 
         if isinstance(event.channel, channels.GuildChannel):
-            self.app.cache.delete_guild_channel(event.channel.id)
+            self._mutable_cache.delete_guild_channel(event.channel.id)
         else:
-            self.app.cache.delete_private_text_channel(
+            self._mutable_cache.delete_private_text_channel(
                 typing.cast(channels.PrivateTextChannel, event.channel).recipient.id
             )
 
@@ -116,46 +116,46 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     async def on_guild_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event = self.app.event_factory.deserialize_guild_create_event(shard, payload)
-        self.app.cache.update_guild(event.guild)
+        self._mutable_cache.update_guild(event.guild)
 
-        self.app.cache.clear_guild_channels_for_guild(event.guild.id)
+        self._mutable_cache.clear_guild_channels_for_guild(event.guild.id)
         for channel in event.channels.values():
-            self.app.cache.set_guild_channel(channel)
+            self._mutable_cache.set_guild_channel(channel)
 
-        self.app.cache.clear_emojis_for_guild(event.guild.id)
+        self._mutable_cache.clear_emojis_for_guild(event.guild.id)
         for emoji in event.emojis.values():
-            self.app.cache.set_emoji(emoji)
+            self._mutable_cache.set_emoji(emoji)
 
-        self.app.cache.clear_roles_for_guild(event.guild.id)
+        self._mutable_cache.clear_roles_for_guild(event.guild.id)
         for role in event.roles.values():
-            self.app.cache.set_role(role)
+            self._mutable_cache.set_role(role)
 
         # TODO: do we really want to invalidate these all after an outage.
-        self.app.cache.clear_members_for_guild(event.guild.id)
+        self._mutable_cache.clear_members_for_guild(event.guild.id)
         for member in event.members.values():
-            self.app.cache.set_member(member)
+            self._mutable_cache.set_member(member)
 
-        self.app.cache.clear_presences_for_guild(event.guild.id)
+        self._mutable_cache.clear_presences_for_guild(event.guild.id)
         for presence in event.presences.values():
-            self.app.cache.set_presence(presence)
+            self._mutable_cache.set_presence(presence)
 
         for voice_state in event.voice_states.values():
-            self.app.cache.set_voice_state(voice_state)
+            self._mutable_cache.set_voice_state(voice_state)
 
         await self.dispatch(event)
 
     async def on_guild_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         event = self.app.event_factory.deserialize_guild_update_event(shard, payload)
-        self.app.cache.update_guild(event.guild)
+        self._mutable_cache.update_guild(event.guild)
 
-        self.app.cache.clear_roles_for_guild(event.guild.id)
+        self._mutable_cache.clear_roles_for_guild(event.guild.id)
         for role in event.roles.values():  # TODO: do we actually get this here?
-            self.app.cache.set_role(role)
+            self._mutable_cache.set_role(role)
 
-        self.app.cache.clear_emojis_for_guild(event.guild.id)  # TODO: do we actually get this here?
+        self._mutable_cache.clear_emojis_for_guild(event.guild.id)  # TODO: do we actually get this here?
         for emoji in event.emojis.values():
-            self.app.cache.set_emoji(emoji)
+            self._mutable_cache.set_emoji(emoji)
 
         await self.dispatch(event)
 
@@ -164,19 +164,19 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event: typing.Union[guild_events.GuildUnavailableEvent, guild_events.GuildLeaveEvent]
         if payload.get("unavailable", False):
             event = self.app.event_factory.deserialize_guild_unavailable_event(shard, payload)
-            self.app.cache.set_guild_availability(event.guild_id, False)
+            self._mutable_cache.set_guild_availability(event.guild_id, False)
 
         else:
             event = self.app.event_factory.deserialize_guild_leave_event(shard, payload)
             #  TODO: this doesn't work in all intent scenarios
-            self.app.cache.delete_guild(event.guild_id)
-            self.app.cache.clear_voice_states_for_guild(event.guild_id)
-            self.app.cache.clear_invites_for_guild(event.guild_id)
-            self.app.cache.clear_members_for_guild(event.guild_id)
-            self.app.cache.clear_presences_for_guild(event.guild_id)
-            self.app.cache.clear_guild_channels_for_guild(event.guild_id)
-            self.app.cache.clear_emojis_for_guild(event.guild_id)
-            self.app.cache.clear_roles_for_guild(event.guild_id)
+            self._mutable_cache.delete_guild(event.guild_id)
+            self._mutable_cache.clear_voice_states_for_guild(event.guild_id)
+            self._mutable_cache.clear_invites_for_guild(event.guild_id)
+            self._mutable_cache.clear_members_for_guild(event.guild_id)
+            self._mutable_cache.clear_presences_for_guild(event.guild_id)
+            self._mutable_cache.clear_guild_channels_for_guild(event.guild_id)
+            self._mutable_cache.clear_emojis_for_guild(event.guild_id)
+            self._mutable_cache.clear_roles_for_guild(event.guild_id)
 
         await self.dispatch(event)
 
@@ -193,10 +193,10 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
         event = self.app.event_factory.deserialize_guild_emojis_update_event(shard, payload)
-        self.app.cache.clear_emojis_for_guild(event.guild_id)
+        self._mutable_cache.clear_emojis_for_guild(event.guild_id)
 
         for emoji in event.emojis:
-            self.app.cache.set_emoji(emoji)
+            self._mutable_cache.set_emoji(emoji)
 
         await self.dispatch(event)
 
@@ -209,9 +209,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     async def on_guild_member_add(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-add for more info."""
         event = self.app.event_factory.deserialize_guild_member_add_event(shard, payload)
-        self.app.cache.update_user(event.user)  # TODO: do we still need this here if user is set in set member?
+        self._mutable_cache.update_user(event.user)  # TODO: do we still need this here if user is set in set member?
         # or should those be switched?
-        self.app.cache.update_member(event.member)
+        self._mutable_cache.update_member(event.member)
         await self.dispatch(event)
 
     async def on_guild_member_remove(
@@ -219,8 +219,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-remove for more info."""
         event = self.app.event_factory.deserialize_guild_member_remove_event(shard, payload)
-        self.app.cache.update_user(event.user)
-        self.app.cache.delete_member(event.guild_id, event.user.id)
+        self._mutable_cache.update_user(event.user)
+        self._mutable_cache.delete_member(event.guild_id, event.user.id)
         await self.dispatch(event)
 
     async def on_guild_member_update(
@@ -228,7 +228,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-update for more info."""
         event = self.app.event_factory.deserialize_guild_member_update_event(shard, payload)
-        self.app.cache.update_member(event.member)
+        self._mutable_cache.update_member(event.member)
         await self.dispatch(event)
 
     async def on_guild_members_chunk(
@@ -239,41 +239,41 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_guild_member_chunk_event(shard, payload)
 
         for member in event.members.values():
-            self.app.cache.set_member(member)
+            self._mutable_cache.set_member(member)
 
         for presence in event.presences.values():
-            self.app.cache.set_presence(presence)
+            self._mutable_cache.set_presence(presence)
 
         await self.dispatch(event)
 
     async def on_guild_role_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-create for more info."""
         event = self.app.event_factory.deserialize_guild_role_create_event(shard, payload)
-        self.app.cache.set_role(event.role)
+        self._mutable_cache.set_role(event.role)
         await self.dispatch(event)
 
     async def on_guild_role_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-update for more info."""
         event = self.app.event_factory.deserialize_guild_role_update_event(shard, payload)
-        self.app.cache.update_role(event.role)
+        self._mutable_cache.update_role(event.role)
         await self.dispatch(event)
 
     async def on_guild_role_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-delete for more info."""
         event = self.app.event_factory.deserialize_guild_role_delete_event(shard, payload)
-        self.app.cache.delete_role(event.role_id)
+        self._mutable_cache.delete_role(event.role_id)
         await self.dispatch(event)
 
     async def on_invite_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#invite-create for more info."""
         event = self.app.event_factory.deserialize_invite_create_event(shard, payload)
-        self.app.cache.set_invite(event.invite)
+        self._mutable_cache.set_invite(event.invite)
         await self.dispatch(event)
 
     async def on_invite_delete(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#invite-delete for more info."""
         event = self.app.event_factory.deserialize_invite_delete_event(shard, payload)
-        self.app.cache.delete_invite(event.code)
+        self._mutable_cache.delete_invite(event.code)
         await self.dispatch(event)
 
     async def on_message_create(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -327,11 +327,11 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_presence_update_event(shard, payload)
 
         if event.presence.visible_status is presences.Status.OFFLINE:
-            self.app.cache.delete_presence(event.presence.guild_id, event.presence.user_id)
+            self._mutable_cache.delete_presence(event.presence.guild_id, event.presence.user_id)
         else:
-            self.app.cache.update_presence(event.presence)
+            self._mutable_cache.update_presence(event.presence)
 
-        # TODO: update user here when partial_user is set self.app.cache.update_user(event.partial_user)
+        # TODO: update user here when partial_user is set self._mutable_cache.update_user(event.partial_user)
         await self.dispatch(event)
 
     async def on_typing_start(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -341,7 +341,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
     async def on_user_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#user-update for more info."""
         event = self.app.event_factory.deserialize_own_user_update_event(shard, payload)
-        self.app.cache.update_me(event.user)
+        self._mutable_cache.update_me(event.user)
         await self.dispatch(event)
 
     async def on_voice_state_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -349,9 +349,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         event = self.app.event_factory.deserialize_voice_state_update_event(shard, payload)
 
         if event.state.channel_id is None:
-            self.app.cache.delete_voice_state(event.state.guild_id, event.state.user_id)
+            self._mutable_cache.delete_voice_state(event.state.guild_id, event.state.user_id)
         else:
-            self.app.cache.update_voice_state(event.state)
+            self._mutable_cache.update_voice_state(event.state)
 
         await self.dispatch(event)
 

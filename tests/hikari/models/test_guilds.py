@@ -15,9 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+import mock
 
 from hikari.models import guilds
 from hikari.models import users
+from tests.hikari import hikari_test_helpers
 
 
 def test_GuildExplicitContentFilterLevel_str_operator():
@@ -55,34 +57,41 @@ def test_GuildVerificationLevel_str_operator():
     assert str(level) == "NONE"
 
 
+def test_Member_display_name_property_when_nickname_set():
+    member = hikari_test_helpers.stub_class(guilds.Member, user=object(), nickname="davb")
+    assert member.display_name == "davb"
+
+
+def test_Member_display_name_property_when_nickname_not_set():
+    member = hikari_test_helpers.stub_class(guilds.Member, user=mock.Mock(users.User, username="davfsa"), nickname=None)
+    assert member.display_name == "davfsa"
+
+
 def test_Member_str_operator():
-    member = guilds.Member()
-    user = users.UserImpl()
-    user.username = "thomm.o"
-    user.discriminator = "8637"
-    member.user = user
-    assert str(member) == "thomm.o#8637"
+    mock_user = mock.Mock(users.User, __str__=mock.Mock(return_value="thomm.o#8637"))
+    mock_member = mock.Mock(guilds.Member, user=mock_user)
+    assert guilds.Member.__str__(mock_member) == "thomm.o#8637"
 
 
 def test_PartialRole_str_operator():
-    role = guilds.PartialRole()
-    role.name = "The Big Cool"
-    assert str(role) == "The Big Cool"
+    mock_role = mock.Mock(guilds.Role)
+    mock_role.name = "The Big Cool"
+    assert guilds.PartialRole.__str__(mock_role) == "The Big Cool"
 
 
 def test_IntegrationAccount_str_operator():
-    account = guilds.IntegrationAccount()
-    account.name = "your mother"
-    assert str(account) == "your mother"
+    mock_account = mock.Mock(guilds.IntegrationAccount)
+    mock_account.name = "your mother"
+    assert guilds.IntegrationAccount.__str__(mock_account) == "your mother"
 
 
 def test_PartialIntegration_str_operator():
-    integration = guilds.PartialIntegration()
-    integration.name = "not an integration"
-    assert str(integration) == "not an integration"
+    mock_integration = mock.Mock(guilds.PartialIntegration)
+    mock_integration.name = "not an integration"
+    assert guilds.PartialIntegration.__str__(mock_integration) == "not an integration"
 
 
 def test_PartialGuild_str_operator():
-    guild = guilds.PartialGuild()
-    guild.name = "hikari"
-    assert str(guild) == "hikari"
+    mock_guild = mock.Mock(guilds.PartialGuild)
+    mock_guild.name = "hikari"
+    assert guilds.PartialGuild.__str__(mock_guild) == "hikari"

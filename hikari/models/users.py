@@ -105,7 +105,7 @@ class PremiumType(enum.IntEnum):
         return self.name
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class User(snowflake.Unique, abc.ABC):
     """Interface for any user-like object.
 
@@ -228,7 +228,7 @@ class User(snowflake.Unique, abc.ABC):
         """
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialUser(snowflake.Unique):
     """Represents partial information about a user.
 
@@ -236,12 +236,10 @@ class PartialUser(snowflake.Unique):
     present.
     """
 
-    id: snowflake.Snowflake = attr.ib(
-        converter=snowflake.Snowflake, eq=True, hash=True, repr=True, factory=snowflake.Snowflake,
-    )
+    id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this user."""
 
-    app: rest_app.IRESTApp = attr.ib(default=None, repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
     """Reference to the client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -286,12 +284,12 @@ class PartialUser(snowflake.Unique):
             return f"Partial user ID {self.id}"
         return f"{self.username}#{self.discriminator}"
 
-    async def fetch_self(self) -> UserImpl:
+    async def fetch_self(self) -> User:
         """Get this user's up-to-date object.
 
         Returns
         -------
-        hikari.models.users.UserImpl
+        hikari.models.users.User
             The requested user object.
 
         Raises
@@ -384,7 +382,7 @@ class PartialUser(snowflake.Unique):
         )
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class UserImpl(PartialUser, User):
     """Concrete implementation of user information."""
 
@@ -411,7 +409,7 @@ class UserImpl(PartialUser, User):
     """The public flags for this user."""
 
 
-@attr.s(eq=True, hash=True, init=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 

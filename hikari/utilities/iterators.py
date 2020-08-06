@@ -40,7 +40,6 @@ from hikari.utilities import spel
 
 ValueT = typing.TypeVar("ValueT")
 AnotherValueT = typing.TypeVar("AnotherValueT")
-CollectorT = typing.TypeVar("CollectorT", bound=typing.Collection)
 
 
 class All(typing.Generic[ValueT]):
@@ -512,7 +511,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         """Collect all results, then sort the collection before returning it."""
         return sorted(await self, key=key, reverse=reverse)
 
-    async def collect(self, collector: typing.Callable[[typing.Sequence[ValueT]], CollectorT]) -> CollectorT:
+    async def collect(
+        self, collector: typing.Callable[[typing.Sequence[ValueT]], typing.Collection[ValueT]]
+    ) -> typing.Collection[ValueT]:
         """Collect the results into a given type and return it.
 
         Parameters
@@ -718,7 +719,7 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, values: typing.Union[typing.Iterator[ValueT], typing.Iterable[ValueT]]) -> None:
         self._iter = iter(values) if isinstance(values, typing.Iterable) else values
 
-    def __iter__(self) -> FlatLazyIterator:
+    def __iter__(self) -> FlatLazyIterator[ValueT]:
         return self
 
     def __next__(self) -> ValueT:
