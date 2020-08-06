@@ -182,7 +182,7 @@ class CDNRoute:
     """Valid file formats for this endpoint."""
 
     @valid_formats.validator
-    def _(self, _: attr.Attribute, values: typing.AbstractSet[str]) -> None:
+    def _(self, _: attr.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 

@@ -279,7 +279,7 @@ class Webhook(snowflake.Unique):
         self,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar: undefined.UndefinedNoneOr[files_.Resource] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files_.Resource[files_.AsyncReader]] = undefined.UNDEFINED,
         channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

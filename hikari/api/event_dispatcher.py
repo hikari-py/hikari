@@ -134,7 +134,9 @@ class IEventDispatcherBase(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def subscribe(self, event_type: typing.Type[typing.Any], callback: AsyncCallbackT[typing.Any]) -> AsyncCallbackT:
+    def subscribe(
+        self, event_type: typing.Type[typing.Any], callback: AsyncCallbackT[typing.Any]
+    ) -> AsyncCallbackT[typing.Any]:
         """Subscribe a given callback to a given event type.
 
         Parameters

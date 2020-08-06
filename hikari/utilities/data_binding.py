@@ -236,22 +236,27 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             else:
                 self[key] = list(values)
 
-    def put_snowflake(self, key: str, value: undefined.UndefinedOr[snowflake.SnowflakeishOr], /) -> None:
+    def put_snowflake(
+        self, key: str, value: typing.Optional[undefined.UndefinedOr[snowflake.SnowflakeishOr[snowflake.Unique]]], /
+    ) -> None:
         """Put a key with a snowflake value into the builder.
 
         Parameters
         ----------
         key : builtins.str
             The key to give the element.
-        value : hikari.utilities.snowflake.SnowflakeishOr or hikari.utilities.undefined.UndefinedType
-            The JSON type to put. This may alternatively be undefined. In the latter
-            case, nothing is performed.
+        value : hikari.utilities.snowflake.Snowflakeish or hikari.utilities.undefined.UndefinedType or None
+            The JSON type to put. This may alternatively be undefined, in this
+            case, nothing is performed. This may also be `builtins.None`, in this
+            case the value isn't cast.
         """
-        if value is not undefined.UNDEFINED:
+        if value is not undefined.UNDEFINED and value is not None:
             self[key] = str(int(value))
+        elif value is None:
+            self[key] = value
 
     def put_snowflake_array(
-        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflake.SnowflakeishOr]], /,
+        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflake.SnowflakeishOr[snowflake.Unique]]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 

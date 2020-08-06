@@ -48,14 +48,17 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
 
+AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
+
+
 @attr.s(eq=True, slots=True, kw_only=True, weakref_slot=False)
-class EmbedResource(files.Resource):
+class EmbedResource(files.Resource[AsyncReaderT]):
     """A base type for any resource provided in an embed.
 
     Resources can be downloaded and uploaded.
     """
 
-    resource: files.Resource = attr.ib(repr=True)
+    resource: files.Resource[AsyncReaderT] = attr.ib(repr=True)
     """The resource this object wraps around."""
 
     @property
@@ -69,7 +72,7 @@ class EmbedResource(files.Resource):
 
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
-    ) -> files.AsyncReaderContextManager[files.ReaderImplT]:
+    ) -> files.AsyncReaderContextManager[AsyncReaderT]:
         """Produce a stream of data for the resource.
 
         Parameters
@@ -87,10 +90,10 @@ class EmbedResource(files.Resource):
 
 
 @attr.s(eq=True, slots=True, kw_only=True, weakref_slot=False)
-class EmbedResourceWithProxy(EmbedResource):
+class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     """Resource with a corresponding proxied element."""
 
-    proxy_resource: typing.Optional[files.Resource] = attr.ib(default=None, repr=False)
+    proxy_resource: typing.Optional[files.Resource[AsyncReaderT]] = attr.ib(default=None, repr=False)
     """The proxied version of the resource, or `builtins.None` if not present.
 
     !!! note
@@ -109,12 +112,12 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.ib(default=None, repr=True)
     """The footer text, or `builtins.None` if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.ib(default=None, repr=False)
     """The URL of the footer icon, or `builtins.None` if not present."""
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
-class EmbedImage(EmbedResourceWithProxy):
+class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
     """Represents an embed image."""
 
     height: typing.Optional[int] = attr.ib(default=None, repr=False)
@@ -137,7 +140,7 @@ class EmbedImage(EmbedResourceWithProxy):
 
 
 @attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
-class EmbedVideo(EmbedResource):
+class EmbedVideo(EmbedResource[AsyncReaderT]):
     """Represents an embed video.
 
     !!! note
@@ -190,7 +193,7 @@ class EmbedAuthor:
     This may be `builtins.None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.ib(default=None, repr=False)
     """The author's icon, or `builtins.None` if not present."""
 
 
@@ -251,9 +254,9 @@ class Embed:
         url: typing.Optional[str],
         color: typing.Optional[colors.Color],
         timestamp: typing.Optional[datetime.datetime],
-        image: typing.Optional[EmbedImage],
-        thumbnail: typing.Optional[EmbedImage],
-        video: typing.Optional[EmbedVideo],
+        image: typing.Optional[EmbedImage[files.AsyncReader]],
+        thumbnail: typing.Optional[EmbedImage[files.AsyncReader]],
+        video: typing.Optional[EmbedVideo[files.AsyncReader]],
         author: typing.Optional[EmbedAuthor],
         provider: typing.Optional[EmbedProvider],
         footer: typing.Optional[EmbedFooter],
@@ -313,10 +316,10 @@ class Embed:
         self.description = description
         self.url = url
         self._author: typing.Optional[EmbedAuthor] = None
-        self._image: typing.Optional[EmbedImage] = None
-        self._video: typing.Optional[EmbedVideo] = None
+        self._image: typing.Optional[EmbedImage[files.AsyncReader]] = None
+        self._video: typing.Optional[EmbedVideo[files.AsyncReader]] = None
         self._provider: typing.Optional[EmbedProvider] = None
-        self._thumbnail: typing.Optional[EmbedImage] = None
+        self._thumbnail: typing.Optional[EmbedImage[files.AsyncReader]] = None
         self._footer: typing.Optional[EmbedFooter] = None
 
         # More boilerplate to allow this to be optional, but saves a useless list on every embed
@@ -526,7 +529,7 @@ class Embed:
         return self._footer
 
     @property
-    def image(self) -> typing.Optional[EmbedImage]:
+    def image(self) -> typing.Optional[EmbedImage[files.AsyncReader]]:
         """Return the image set in the embed.
 
         Will be `builtins.None` if not set.
@@ -540,7 +543,7 @@ class Embed:
         return self._image
 
     @property
-    def thumbnail(self) -> typing.Optional[EmbedImage]:
+    def thumbnail(self) -> typing.Optional[EmbedImage[files.AsyncReader]]:
         """Return the thumbnail set in the embed.
 
         Will be `builtins.None` if not set.
@@ -554,7 +557,7 @@ class Embed:
         return self._thumbnail
 
     @property
-    def video(self) -> typing.Optional[EmbedVideo]:
+    def video(self) -> typing.Optional[EmbedVideo[files.AsyncReader]]:
         """Return the video to show in the embed.
 
         Will be `builtins.None` if not set.
@@ -758,7 +761,11 @@ class Embed:
         Embed
             This embed. Allows for call chaining.
         """
-        self._image = EmbedImage(resource=files.ensure_resource(image)) if image is not None else None
+        if image is not None:
+            self._image = EmbedImage(resource=files.ensure_resource(image))
+        else:
+            self._image = None
+
         return self
 
     def set_thumbnail(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:
@@ -793,7 +800,11 @@ class Embed:
         Embed
             This embed. Allows for call chaining.
         """
-        self._thumbnail = EmbedImage(resource=files.ensure_resource(image)) if image is not None else None
+        if image is not None:
+            self._thumbnail = EmbedImage(resource=files.ensure_resource(image))
+        else:
+            self._thumbnail = None
+
         return self
 
     def add_field(self, name: str, value: str, *, inline: bool = False) -> Embed:

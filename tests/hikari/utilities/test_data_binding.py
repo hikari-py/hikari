@@ -195,6 +195,11 @@ class TestJSONObjectBuilder:
         builder.put_snowflake("WAWAWA!", input_value)
         assert builder == {"WAWAWA!": expected_str}
 
+    def test_put_snowflake_none(self):
+        builder = data_binding.JSONObjectBuilder()
+        builder.put_snowflake("wawawa osuremono", None)
+        assert builder == {"wawawa osuremono": None}
+
     @pytest.mark.parametrize(
         ("input_value", "expected_str"),
         [
