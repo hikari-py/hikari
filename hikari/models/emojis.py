@@ -31,6 +31,7 @@ import unicodedata
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import routes
@@ -77,6 +78,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
 
+@attr_extensions.with_copy
 @attr.s(hash=True, init=True, kw_only=False, slots=True, eq=False, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
@@ -196,6 +198,7 @@ class UnicodeEmoji(Emoji):
         return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class CustomEmoji(snowflake.Unique, Emoji):
     """Represents a custom emoji.
@@ -221,7 +224,9 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, init=True)
+    app: rest_app.IRESTApp = attr.ib(
+        repr=False, eq=False, hash=False, init=True, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

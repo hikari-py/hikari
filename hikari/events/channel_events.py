@@ -55,6 +55,7 @@ import attr
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.models import intents
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -154,11 +155,12 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.GuildChannel = attr.ib(repr=True)
@@ -177,11 +179,12 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
     """Event fired when a private channel is created."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.PrivateChannel = attr.ib(repr=True)
@@ -217,11 +220,12 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.GuildChannel = attr.ib(repr=True)
@@ -245,11 +249,12 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
     """Event fired when a private channel is edited."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.PrivateChannel = attr.ib(repr=True)
@@ -295,11 +300,12 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.GuildChannel = attr.ib(repr=True)
@@ -329,11 +335,12 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 # TODO: can this actually ever get fired?
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
     """Event fired when a private channel is deleted."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
     channel: channels.PrivateChannel = attr.ib(repr=True)
@@ -383,11 +390,12 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILDS)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -406,11 +414,12 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 
 
 # TODO: This is not documented as having an intent, is this right? The guild version requires GUILDS intent.
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -458,11 +467,12 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     invite: invites.InviteWithMetadata = attr.ib()
@@ -492,11 +502,12 @@ class InviteCreateEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_INVITES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -515,6 +526,7 @@ class InviteDeleteEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):
     """Event fired when a webhook is created/updated/deleted in a channel.
@@ -525,7 +537,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
     the channel manually beforehand.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

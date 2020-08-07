@@ -35,11 +35,13 @@ import typing
 import attr
 
 from hikari.events import base_events
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari.api import event_consumer
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
@@ -64,10 +66,11 @@ class StartingEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib()
+    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
@@ -86,10 +89,11 @@ class StartedEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib()
+    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
@@ -116,10 +120,11 @@ class StoppingEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib()
+    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
@@ -145,5 +150,5 @@ class StoppedEvent(base_events.Event):
     `StoppingEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib()
+    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.

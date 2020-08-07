@@ -78,7 +78,7 @@ class TypingIndicator(abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class GuildBuilder:
+class GuildBuilder(abc.ABC):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
 
     This is used to create a guild in a tidy way using the HTTP API, since

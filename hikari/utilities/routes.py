@@ -32,6 +32,7 @@ import urllib.parse
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
 from hikari.utilities import files
 
@@ -40,6 +41,7 @@ HASH_SEPARATOR: typing.Final[str] = ";"
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
+@attr_extensions.with_copy
 @attr.s(init=True, slots=True, hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
@@ -102,6 +104,7 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
+@attr_extensions.with_copy
 @attr.s(hash=True, init=False, slots=True, weakref_slot=False)
 @typing.final
 class Route:
@@ -171,6 +174,7 @@ def _cdn_valid_formats_converter(values: typing.Set[str]) -> typing.FrozenSet[st
     return frozenset(v.lower() for v in values)
 
 
+@attr_extensions.with_copy
 @attr.s(hash=True, init=True, slots=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
