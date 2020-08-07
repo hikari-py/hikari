@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Event handling logic for more info."""
 
 from __future__ import annotations
@@ -27,6 +30,7 @@ import typing
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.models import channels
+from hikari.models import intents
 from hikari.models import presences
 
 if typing.TYPE_CHECKING:
@@ -142,6 +146,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         for voice_state in event.voice_states.values():
             self._mutable_cache.set_voice_state(voice_state)
 
+        if event.guild.is_large and (self._intents is None or self._intents & intents.Intent.GUILD_MEMBERS):
+            await self._app.guild_chunker.request_guild_chunk(event.guild, shard.id)
+
         await self.dispatch(event)
 
     async def on_guild_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -235,7 +242,6 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
-        # TODO: implement chunking components.
         event = self.app.event_factory.deserialize_guild_member_chunk_event(shard, payload)
 
         for member in event.members.values():

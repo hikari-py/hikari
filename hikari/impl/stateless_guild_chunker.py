@@ -19,6 +19,42 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Package containing internal utilities used within this API."""
+"""Basic implementation of a guild chunker."""
 
-__all__ = []  # type: ignore[var-annotated]
+from __future__ import annotations
+
+__all__: typing.Final[typing.List[str]] = ["StatelessGuildChunkerImpl"]
+
+import typing
+
+from hikari.api import guild_chunker
+
+if typing.TYPE_CHECKING:
+    from hikari.api import bot
+    from hikari.models import guilds
+
+
+class StatelessGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
+    """Stateless guild chunker.
+
+    A stateless guild chunker implementation that implements dummy operations
+    for each of the required attributes of a functional guild chunker
+    implementation. Any methods will always raise `builtins.NotImplemented`
+    when being invoked.
+    """
+
+    __slots__: typing.Sequence[str] = ("_app")
+
+    def __init__(self, app: bot.IBotApp) -> None:
+        self._app = app
+
+    @property
+    @typing.final
+    def app(self) -> bot.IBotApp:
+        return self._app
+
+    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
+        raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
+
+    def close(self) -> None:
+        return

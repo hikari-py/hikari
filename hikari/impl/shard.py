@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Single-shard implementation for the V6 and V7 event gateway for Discord."""
 
 from __future__ import annotations
@@ -37,6 +40,7 @@ import attr
 from hikari import errors
 from hikari.api import shard
 from hikari.impl import rate_limits
+from hikari.models import intents as intents_
 from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import data_binding
@@ -49,7 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
-    from hikari.models import intents as intents_
+    from hikari.models import users
 
 
 @typing.final
@@ -433,6 +437,42 @@ class GatewayShardImpl(shard.IGatewayShard):
     ) -> None:
         payload = self._app.event_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
         await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
+
+    async def request_guild_members(
+        self,
+        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        query: str = "",
+        limit: int = 0,
+        users: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        if self._intents is not None:
+            if not query and not limit and not self._intents & intents_.Intent.GUILD_MEMBERS:
+                raise errors.MissingIntentError(intents_.Intent.GUILD_MEMBERS)
+
+            if presences is not undefined.UNDEFINED and not self._intents & intents_.Intent.GUILD_PRESENCES:
+                raise errors.MissingIntentError(intents_.Intent.GUILD_PRESENCES)
+
+        if users is not undefined.UNDEFINED and query or limit:
+            raise ValueError("Cannot specify limit/query with users")
+
+        if not 0 <= limit <= 100:
+            raise ValueError("'limit' must be between 0 and 100, both inclusive")
+
+        if users is not undefined.UNDEFINED and len(users) >= 100:
+            raise ValueError("'users' is limited to 100 users")
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put("presences", presences)
+        payload.put("query", query)
+        payload.put("limit", limit)
+        payload.put_snowflake_array("user_ids", users)
+        payload.put("nonce", nonce)
+
+        await self._send_json({"op": self._Opcode.REQUEST_GUILD_MEMBERS, "d": payload})
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
