@@ -1,5 +1,5 @@
 
-  ${red}oooo         o8o  oooo                            o8o       ${default}${bright}${hikari_copyright} ${hikari_license}${default}
+  ${red}oooo         o8o  oooo                            o8o       ${default}${bright}${hikari_copyright}, licensed under ${hikari_license}${default}
   ${bright_red}`888         `"'  `888                            `"'       ${default}${dim}Installed at:  ${bright}${cyan}${underline}${hikari_install_location}${default}
   ${yellow} 888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo       ${default}${dim}Support:       ${bright}${cyan}${underline}${hikari_discord_invite}${default}
   ${bright_green} 888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888       ${default}${dim}Documentation: ${bright}${cyan}${underline}${hikari_documentation_url}${default}

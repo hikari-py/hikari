@@ -1,5 +1,5 @@
 **Note:** this API is still under active daily development, and is in a
-**pre-alpha** stage. If you are looking to give feedback, or want to help us
+**alpha** stage. If you are looking to give feedback, or want to help us
 out, then feel free to join our [Discord server](https://discord.gg/Jx4cNGG) and
 chat to us. Any help is greatly appreciated, no matter what your experience
 level may be! :-)
