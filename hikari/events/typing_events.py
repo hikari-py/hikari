@@ -36,6 +36,7 @@ import attr
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.models import intents
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -106,11 +107,12 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -177,11 +179,12 @@ class GuildTypingEvent(TypingEvent):
 
 
 @base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

@@ -62,6 +62,7 @@ class TestStatefulCacheImpl:
         assert channel.type is channels.ChannelType.PRIVATE_TEXT
         assert channel.last_message_id == snowflake.Snowflake(65345)
         assert channel.recipient == mock_user
+        assert channel.recipient is not mock_user
 
     def test__build_private_text_channel_with_passed_through_user(self, cache_impl):
         channel_data = stateful_cache._PrivateTextChannelData(
@@ -76,12 +77,13 @@ class TestStatefulCacheImpl:
             channel_data, cached_users={snowflake.Snowflake(2342344): mock_user}
         )
         assert channel_channel.recipient == mock_user
+        assert channel_channel.recipient is not mock_user
 
     def test_clear_private_text_channels(self, cache_impl):
         mock_channel_data_1 = mock.Mock(stateful_cache._PrivateTextChannelData)
         mock_channel_data_2 = mock.Mock(stateful_cache._PrivateTextChannelData)
-        mock_user_1 = mock.Mock(users.User)
-        mock_user_2 = mock.Mock(users.User)
+        mock_user_1 = object()
+        mock_user_2 = object()
         mock_channel_1 = mock.Mock(channels.PrivateTextChannel)
         mock_channel_2 = mock.Mock(channels.PrivateTextChannel)
         cache_impl._private_text_channel_entries = {
@@ -96,7 +98,8 @@ class TestStatefulCacheImpl:
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_private_text_channel = mock.Mock(side_effect=[mock_channel_1, mock_channel_2])
-        assert cache_impl.clear_private_text_channels() == {
+        view = cache_impl.clear_private_text_channels()
+        assert view == {
             snowflake.Snowflake(978655): mock_channel_1,
             snowflake.Snowflake(2342344): mock_channel_2,
         }
@@ -169,7 +172,8 @@ class TestStatefulCacheImpl:
             snowflake.Snowflake(54213): mock_channel_data_1,
             snowflake.Snowflake(65656): mock_channel_data_2,
         }
-        assert cache_impl.get_private_text_channels_view() == {
+        view = cache_impl.get_private_text_channels_view()
+        assert view == {
             snowflake.Snowflake(54213): mock_channel_1,
             snowflake.Snowflake(65656): mock_channel_2,
         }
@@ -261,6 +265,7 @@ class TestStatefulCacheImpl:
         assert emoji.name == "OKOKOKOKOK"
         assert emoji.guild_id == snowflake.Snowflake(65234123)
         assert emoji.user == mock_user
+        assert emoji.user is not mock_user
         assert emoji.is_animated is True
         assert emoji.is_colons_required is False
         assert emoji.is_managed is False
@@ -282,6 +287,7 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = {}
         emoji = cache_impl._build_emoji(emoji_data, cached_users={snowflake.Snowflake(56234232): mock_user})
         assert emoji.user == mock_user
+        assert emoji.user is not mock_user
 
     def test__build_emoji_with_no_user(self, cache_impl):
         emoji_data = stateful_cache._KnownCustomEmojiData(
@@ -325,7 +331,8 @@ class TestStatefulCacheImpl:
         }
         cache_impl._build_emoji = mock.Mock(side_effect=[mock_emoji_1, mock_emoji_2, mock_emoji_3])
         cache_impl._garbage_collect_user = mock.Mock()
-        assert cache_impl.clear_emojis() == {
+        view = cache_impl.clear_emojis()
+        assert view == {
             snowflake.Snowflake(43123123): mock_emoji_1,
             snowflake.Snowflake(87643523): mock_emoji_2,
             snowflake.Snowflake(6873451): mock_emoji_3,
@@ -726,7 +733,9 @@ class TestStatefulCacheImpl:
             snowflake.Snowflake(54234123): stateful_cache._GuildRecord(),
             snowflake.Snowflake(543123): stateful_cache._GuildRecord(guild=mock_guild, is_available=True),
         }
-        assert cache_impl.get_guild(snowflake.Snowflake(543123)) == mock_guild
+        cached_guild = cache_impl.get_guild(snowflake.Snowflake(543123))
+        assert cached_guild == mock_guild
+        assert cache_impl is not mock_guild
 
     def test_get_guild_for_known_guild_when_unavailable(self, cache_impl):
         mock_guild = mock.Mock(guilds.GatewayGuild)
@@ -781,6 +790,7 @@ class TestStatefulCacheImpl:
         assert cache_impl.set_guild(mock_guild) is None
         assert 5123123 in cache_impl._guild_entries
         assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].guild == mock_guild
+        assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].guild is not mock_guild
         assert cache_impl._guild_entries[snowflake.Snowflake(5123123)].is_available is True
 
     def test_set_guild_availability(self, cache_impl):
@@ -866,6 +876,8 @@ class TestStatefulCacheImpl:
         assert invite.channel_id == snowflake.Snowflake(87345234)
         assert invite.inviter == mock_inviter
         assert invite.target_user == mock_target_user
+        assert invite.inviter is not mock_inviter
+        assert invite.target_user is not mock_target_user
         assert invite.target_user_type is invites.TargetUserType.STREAM
         assert invite.approximate_presence_count is None
         assert invite.approximate_member_count is None
@@ -896,6 +908,8 @@ class TestStatefulCacheImpl:
         )
         assert invite.inviter == mock_inviter
         assert invite.target_user == mock_target_user
+        assert invite.inviter is not mock_inviter
+        assert invite.target_user is not mock_target_user
 
     def test_clear_invites(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
@@ -1408,7 +1422,9 @@ class TestStatefulCacheImpl:
     def test_get_me_for_known_me(self, cache_impl):
         mock_own_user = mock.MagicMock(users.OwnUser)
         cache_impl._me = mock_own_user
-        assert cache_impl.get_me() == mock_own_user
+        cached_me = cache_impl.get_me()
+        assert cached_me == mock_own_user
+        assert cached_me is not mock_own_user
 
     def test_get_me_for_unknown_me(self, cache_impl):
         assert cache_impl.get_me() is None
@@ -1417,6 +1433,7 @@ class TestStatefulCacheImpl:
         mock_own_user = mock.MagicMock(users.OwnUser)
         assert cache_impl.set_me(mock_own_user) is None
         assert cache_impl._me == mock_own_user
+        assert cache_impl._me is not mock_own_user
 
     def test_update_me_for_cached_me(self, cache_impl):
         mock_cached_own_user = mock.MagicMock(users.OwnUser)
@@ -1445,6 +1462,7 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = {snowflake.Snowflake(512312354): stateful_cache._GenericRefWrapper(object=mock_user)}
         member = cache_impl._build_member(member_data)
         assert member.user == mock_user
+        assert member.user is not mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
         assert member.role_ids == (snowflake.Snowflake(65234), snowflake.Snowflake(654234123))
@@ -1468,6 +1486,7 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = {}
         member = cache_impl._build_member(member_data, cached_users={snowflake.Snowflake(512312354): mock_user})
         assert member.user == mock_user
+        assert member.user is not mock_user
 
     def test_clear_members(self, cache_impl):
         mock_view_1 = mock.MagicMock(cache.ICacheView)
@@ -1652,6 +1671,7 @@ class TestStatefulCacheImpl:
         assert member_entry.guild_id == 67345234
         assert member_entry.nickname == "A NICK LOL"
         assert member_entry.role_ids == (65345234, 123123)
+        assert member_entry.role_ids is not member_model.role_ids
         assert isinstance(member_entry.role_ids, tuple)
         assert member_entry.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
@@ -1841,6 +1861,7 @@ class TestStatefulCacheImpl:
         assert cache_impl.set_user(mock_user) is None
         assert 6451234123 in cache_impl._user_entries
         assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object == mock_user
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object is not mock_user
         assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].ref_count == 0
 
     def test_set_user_carries_over_ref_count(self, cache_impl):
@@ -1852,6 +1873,7 @@ class TestStatefulCacheImpl:
         assert cache_impl.set_user(mock_user) is None
         assert 6451234123 in cache_impl._user_entries
         assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object == mock_user
+        assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].object is not mock_user
         assert cache_impl._user_entries[snowflake.Snowflake(6451234123)].ref_count == 42
 
     def test_update_user(self, cache_impl):

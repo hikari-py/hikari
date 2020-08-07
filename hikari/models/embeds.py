@@ -44,6 +44,7 @@ import attr
 
 from hikari import errors
 from hikari.models import colors
+from hikari.utilities import attr_extensions
 from hikari.utilities import files
 from hikari.utilities import undefined
 
@@ -54,6 +55,7 @@ if typing.TYPE_CHECKING:
 AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, init=True, slots=True, kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource[AsyncReaderT]):
     """A base type for any resource provided in an embed.
@@ -106,6 +108,7 @@ class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     """
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class EmbedFooter:
     """Represents an embed footer."""
@@ -162,6 +165,7 @@ class EmbedVideo(EmbedResource[AsyncReaderT]):
     """The width of the video."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
@@ -183,6 +187,7 @@ class EmbedProvider:
     """The URL of the provider."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class EmbedAuthor:
     """Represents an author of an embed."""
@@ -200,6 +205,7 @@ class EmbedAuthor:
     """The author's icon, or `builtins.None` if not present."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class EmbedField:
     """Represents a field in a embed."""
