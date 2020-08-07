@@ -76,7 +76,7 @@ class Intent(flag.Flag):
 
     ```py
     # One or two values that fit on one line.
-    my_intents = Intents.GUILD_MESSAGES | Intents.DIRECT_MESSAGES
+    my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
 
     # Several intents together. You may find it useful to format these like
     # so to keep your code readable.
@@ -86,7 +86,7 @@ class Intent(flag.Flag):
         Intents.GUILD_EMOJIS       |
         Intents.GUILD_INTEGRATIONS |
         Intents.GUILD_MESSAGES     |
-        Intents.DIRECT_MESSAGES
+        Intents.PRIVATE_MESSAGES
     )
     ```
 
@@ -97,16 +97,17 @@ class Intent(flag.Flag):
     check in-place with the `&=` operator if needed.
 
     ```py
+    # Check if an intent is set:
     if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
         print("Guild messages are enabled")
 
     # Checking if ALL in a combination are set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.DIRECT_MESSAGES)
+    expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     if (my_intents & expected_intents) == expected_intents:
         print("Messages are enabled in guilds and direct messages.")
 
     # Checking if AT LEAST ONE in a combination is set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.DIRECT_MESSAGES)
+    expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     if my_intents & expected_intents:
         print("Messages are enabled in guilds or direct messages.")
     ```
@@ -121,9 +122,9 @@ class Intent(flag.Flag):
     my_intents ^= Intents.GUILD_MESSAGES
 
     # Remove all messages events.
-    my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.DIRECT_MESSAGES)
+    my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     # or, simplifying
-    my_intents ^= (Intents.GUILD_MESSAGES | Intents.DIRECT_MESSAGES)
+    my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     ```
 
     What is and is not covered by intents?
