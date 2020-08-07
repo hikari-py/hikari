@@ -47,8 +47,10 @@ from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
 from hikari.impl import stateful_cache as cache_impl
 from hikari.impl import stateful_event_manager
+from hikari.impl import stateful_guild_chunker as guild_chunker_impl
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
+from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
 from hikari.models import intents as intents_
 from hikari.models import presences
@@ -62,6 +64,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
+    from hikari.api import guild_chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
     from hikari.models import users
@@ -245,6 +248,7 @@ class BotAppImpl(bot.IBotApp):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
+        "_guild_chunker",
         "_connector_factory",
         "_debug",
         "_entity_factory",
@@ -312,15 +316,18 @@ class BotAppImpl(bot.IBotApp):
 
         self._cache: cache_.IMutableCacheComponent
         self._event_manager: event_manager_base.EventManagerComponentBase
+        self._guild_chunker: guild_chunker_.IGuildChunkerComponent
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
+            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl(app=self)
             self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
                 app=self, mutable_cache=self._cache, intents=intents,
             )
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
+            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
             self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
                 app=self, intents=intents, mutable_cache=self._cache,
             )
@@ -378,6 +385,10 @@ class BotAppImpl(bot.IBotApp):
     @property
     def cache(self) -> cache_.ICacheComponent:
         return self._cache
+
+    @property
+    def guild_chunker(self) -> guild_chunker_.IGuildChunkerComponent:
+        return self._guild_chunker
 
     @property
     def is_debug_enabled(self) -> bool:
@@ -597,6 +608,7 @@ class BotAppImpl(bot.IBotApp):
     async def close(self) -> None:
         await self._rest.close()
         await self._connector_factory.close()
+        self._guild_chunker.close()
         self._global_ratelimit.close()
 
         if self._tasks:

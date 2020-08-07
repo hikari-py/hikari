@@ -710,7 +710,7 @@ class IEventFactoryComponent(component.IComponent):
     @abc.abstractmethod
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
-    ) -> shard_events.MemberChunkEvent:
+    ) -> guild_events.MemberChunkEvent:
         """Parse a raw payload from Discord into a member chunk event object.
 
         Parameters
