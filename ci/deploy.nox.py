@@ -40,7 +40,7 @@ def update_version_string(version):
     )[:-1]
 
     git_when = subprocess.check_output(
-        ["git", "log", "-1", '-date=format:"%Y/%m/%d"', '--format="%ad"'],
+        ["git", "log", "-1", '--date=format:"%Y/%m/%d"', '--format="%ad"'],
         universal_newlines=True,
         stderr=subprocess.DEVNULL,
     )[:-1]
