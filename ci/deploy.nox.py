@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shlex
+import subprocess
 from distutils.version import LooseVersion
 
 from ci import config
@@ -27,8 +28,28 @@ from ci import nox
 
 
 def update_version_string(version):
+    git_sha1 = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], universal_newlines=True, stderr=subprocess.DEVNULL,
+    )[:8]
+
+    git_branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], universal_newlines=True, stderr=subprocess.DEVNULL,
+    )[:-1]
+
+    git_when = subprocess.check_output(
+        ["git", "log", "-1", '-date=format:"%Y/%m/%d"', '--format="%ad"'],
+        universal_newlines=True,
+        stderr=subprocess.DEVNULL,
+    )[:-1]
+
     print("Updating version in version file to", version)
     nox.shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
+    print("Updating branch in version file to", git_branch)
+    nox.shell("sed", shlex.quote(f's|^__git_branch__.*|__git_branch__ = "{git_branch}"|g'), "-i", config.VERSION_FILE)
+    print("Updating sha1 in version file to", git_sha1)
+    nox.shell("sed", shlex.quote(f's|^__git_sha1__.*|__git_sha1__ = "{git_sha1}"|g'), "-i", config.VERSION_FILE)
+    print("Updating timestamp in version file to", git_when)
+    nox.shell("sed", shlex.quote(f's|^__git_when__.*|__git_when__ = "{git_when}"|g'), "-i", config.VERSION_FILE)
 
 
 def set_official_release_flag(value: bool):

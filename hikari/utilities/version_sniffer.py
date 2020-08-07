@@ -20,8 +20,13 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
+__all__: typing.Final[typing.List[str]] = [
+    "VersionInfo",
+    "fetch_version_info_from_pypi",
+    "log_available_updates",
+]
 
+import logging
 import typing
 from distutils import version as distutils_version
 
@@ -103,3 +108,45 @@ async def fetch_version_info_from_pypi() -> VersionInfo:
     latest_compatible = max(same_compatible_releases)
 
     return VersionInfo(this=this, latest_compatible=latest_compatible, latest=latest,)
+
+
+async def log_available_updates(logger: logging.Logger) -> None:
+    """Log if any updates are available for the library.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        The logger to write to.
+    """
+    if not _about.__is_official_distributed_release__:
+        # If we are on a non-released version, it could be modified or a
+        # fork, so don't do any checks.
+        return
+
+    try:
+        version_info = await fetch_version_info_from_pypi()
+
+        if version_info.this == version_info.latest:
+            logger.info("package is up to date!")
+            return
+
+        if version_info.this != version_info.latest_compatible:
+            logger.warning(
+                "non-breaking updates are available for hikari, update from v%s to v%s!",
+                version_info.this,
+                version_info.latest_compatible,
+            )
+            return
+
+        if version_info.latest != version_info.latest_compatible:
+            logger.info(
+                "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+                version_info.this,
+                version_info.latest,
+            )
+            return
+
+        logger.info("unknown version status -- check PyPI for updates.")
+
+    except Exception as ex:
+        logger.debug("Error occurred fetching version info", exc_info=ex)
