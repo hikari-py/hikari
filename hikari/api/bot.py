@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Core interfaces for types of Hikari application."""
 
 from __future__ import annotations
@@ -33,6 +36,7 @@ from hikari.api import voice
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import guild_chunker as guild_chunker_
     from hikari.models import intents as intents_
     from hikari.models import users
 
@@ -49,6 +53,17 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def guild_chunker(self) -> guild_chunker_.IGuildChunkerComponent:
+        """Guild chunker.
+
+        Returns
+        -------
+        hikari.api.guild_chunker.IGuildChunkerComponent
+            The guild chunker implementation used in this application.
+        """
 
     @property
     @abc.abstractmethod

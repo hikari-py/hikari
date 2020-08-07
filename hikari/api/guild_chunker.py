@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,11 +19,35 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import mock
+"""Component that provides the ability manage guild chunking."""
 
-from hikari.models import voices
+from __future__ import annotations
+
+__all__: typing.Final[typing.List[str]] = ["IGuildChunkerComponent"]
+
+import abc
+import typing
+
+from hikari.api import component
+
+if typing.TYPE_CHECKING:
+    from hikari.models import guilds
 
 
-def test_VoiceRegion_str_operator():
-    mock_region = mock.Mock(voices.VoiceRegion, id="eu or something idk")
-    assert voices.VoiceRegion.__str__(mock_region) == "eu or something idk"
+class IGuildChunkerComponent(component.IComponent, abc.ABC):
+    """Component specialization that is used to manage guild chunking."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
+        """Request for a guild chunk.
+
+        Parameters
+        ----------
+        guild: hikari.models.guilds.Guild
+            The guild to request chunk for.
+        """
+
+    def close(self) -> None:
+        """Close the guild chunker."""

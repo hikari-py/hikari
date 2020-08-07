@@ -1,25 +1,29 @@
 # -*- coding: utf-8 -*-
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Deployment scripts for CI only."""
 import json
 import os
 import re
 import shlex
+import subprocess
 from distutils.version import LooseVersion
 
 from ci import config
@@ -27,8 +31,28 @@ from ci import nox
 
 
 def update_version_string(version):
+    git_sha1 = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], universal_newlines=True, stderr=subprocess.DEVNULL,
+    )[:8]
+
+    git_branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], universal_newlines=True, stderr=subprocess.DEVNULL,
+    )[:-1]
+
+    git_when = subprocess.check_output(
+        ["git", "log", "-1", '-date=format:"%Y/%m/%d"', '--format="%ad"'],
+        universal_newlines=True,
+        stderr=subprocess.DEVNULL,
+    )[:-1]
+
     print("Updating version in version file to", version)
     nox.shell("sed", shlex.quote(f's|^__version__.*|__version__ = "{version}"|g'), "-i", config.VERSION_FILE)
+    print("Updating branch in version file to", git_branch)
+    nox.shell("sed", shlex.quote(f's|^__git_branch__.*|__git_branch__ = "{git_branch}"|g'), "-i", config.VERSION_FILE)
+    print("Updating sha1 in version file to", git_sha1)
+    nox.shell("sed", shlex.quote(f's|^__git_sha1__.*|__git_sha1__ = "{git_sha1}"|g'), "-i", config.VERSION_FILE)
+    print("Updating timestamp in version file to", git_when)
+    nox.shell("sed", shlex.quote(f's|^__git_when__.*|__git_when__ = "{git_when}"|g'), "-i", config.VERSION_FILE)
 
 
 def set_official_release_flag(value: bool):

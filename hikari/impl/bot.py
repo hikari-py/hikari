@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Basic implementation the components for a single-process bot."""
 
 from __future__ import annotations
@@ -26,12 +29,10 @@ import asyncio
 import contextlib
 import datetime
 import logging
-import os
 import reprlib
 import signal
 import sys
 import time
-import types
 import typing
 import warnings
 
@@ -47,14 +48,18 @@ from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
 from hikari.impl import stateful_cache as cache_impl
 from hikari.impl import stateful_event_manager
+from hikari.impl import stateful_guild_chunker as guild_chunker_impl
 from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
+from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
 from hikari.models import intents as intents_
 from hikari.models import presences
+from hikari.utilities import art
 from hikari.utilities import constants
 from hikari.utilities import date
 from hikari.utilities import undefined
+from hikari.utilities import version_sniffer
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -62,68 +67,12 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import event_consumer as event_consumer_
     from hikari.api import event_dispatcher as event_dispatcher_
+    from hikari.api import guild_chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
     from hikari.models import users
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
-
-
-def _determine_palette() -> typing.Mapping[str, str]:  # pragma: no cover
-    # Modified from
-    # https://github.com/django/django/blob/master/django/core/management/color.py
-    _plat = sys.platform
-    _supports_color = False
-
-    # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-    _is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
-
-    if _plat != "Pocket PC":
-        if _plat == "win32":
-            _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
-            _supports_color |= "ANSICON" in os.environ
-            _supports_color &= _is_a_tty
-        else:
-            _supports_color = _is_a_tty
-
-        _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-    _palette_base: typing.Mapping[str, str] = types.MappingProxyType(
-        {
-            "default": "\033[0m",
-            "bright": "\033[1m",
-            "underline": "\033[4m",
-            "invert": "\033[7m",
-            "red": "\033[31m",
-            "green": "\033[32m",
-            "yellow": "\033[33m",
-            "blue": "\033[34m",
-            "magenta": "\033[35m",
-            "cyan": "\033[36m",
-            "white": "\033[37m",
-            "bright_red": "\033[91m",
-            "bright_green": "\033[92m",
-            "bright_yellow": "\033[93m",
-            "bright_blue": "\033[94m",
-            "bright_magenta": "\033[95m",
-            "bright_cyan": "\033[96m",
-            "bright_white": "\033[97m",
-            "framed": "\033[51m",
-            "dim": "\033[2m",
-        }
-    )
-
-    if not _supports_color:
-        _palette_base = types.MappingProxyType({k: "" for k in _palette_base})
-
-    return _palette_base
-
-
-_PALETTE: typing.Final[typing.Mapping[str, str]] = _determine_palette()
-_LOGGING_FORMAT: typing.Final[str] = (
-    "{red}%(levelname)-1.1s{default} {yellow}%(asctime)23.23s"  # noqa: FS002, FS003
-    "{default} {bright}{green}%(name)s: {default}{cyan}%(message)s{default}"  # noqa: FS002, FS003
-).format(**_PALETTE)
 
 
 class BotAppImpl(bot.IBotApp):
@@ -245,6 +194,7 @@ class BotAppImpl(bot.IBotApp):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
+        "_guild_chunker",
         "_connector_factory",
         "_debug",
         "_entity_factory",
@@ -304,7 +254,7 @@ class BotAppImpl(bot.IBotApp):
 
         if logging_level is not None and not _LOGGER.hasHandlers():
             logging.captureWarnings(True)
-            logging.basicConfig(format=_LOGGING_FORMAT)
+            logging.basicConfig(format=art.get_default_logging_format())
             logging.root.setLevel(logging_level)
 
         if banner_package is not None:
@@ -312,15 +262,18 @@ class BotAppImpl(bot.IBotApp):
 
         self._cache: cache_.IMutableCacheComponent
         self._event_manager: event_manager_base.EventManagerComponentBase
+        self._guild_chunker: guild_chunker_.IGuildChunkerComponent
 
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
+            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl(app=self)
             self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
                 app=self, mutable_cache=self._cache, intents=intents,
             )
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
+            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
             self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
                 app=self, intents=intents, mutable_cache=self._cache,
             )
@@ -378,6 +331,10 @@ class BotAppImpl(bot.IBotApp):
     @property
     def cache(self) -> cache_.ICacheComponent:
         return self._cache
+
+    @property
+    def guild_chunker(self) -> guild_chunker_.IGuildChunkerComponent:
+        return self._guild_chunker
 
     @property
     def is_debug_enabled(self) -> bool:
@@ -466,7 +423,7 @@ class BotAppImpl(bot.IBotApp):
         return datetime.timedelta(seconds=raw_uptime)
 
     async def start(self) -> None:
-        await self._check_for_updates()
+        asyncio.create_task(version_sniffer.log_available_updates(_LOGGER), name="check for hikari library updates")
 
         self._start_count += 1
         self._started_at_monotonic = date.monotonic()
@@ -597,6 +554,7 @@ class BotAppImpl(bot.IBotApp):
     async def close(self) -> None:
         await self._rest.close()
         await self._connector_factory.close()
+        self._guild_chunker.close()
         self._global_ratelimit.close()
 
         if self._tasks:
@@ -761,75 +719,7 @@ class BotAppImpl(bot.IBotApp):
 
     @staticmethod
     def _dump_banner(banner_package: str) -> None:
-        import platform
-        import string
-        from importlib import resources
-
-        from hikari import _about
-
-        args = {
-            # Colours:
-            ""
-            # Hikari stuff.
-            "hikari_version": _about.__version__,
-            "hikari_copyright": _about.__copyright__,
-            "hikari_license": _about.__license__,
-            "hikari_install_location": os.path.abspath(os.path.dirname(_about.__file__)),
-            "hikari_documentation_url": _about.__docs__,
-            "hikari_discord_invite": _about.__discord_invite__,
-            "hikari_source_url": _about.__url__,
-            # Python stuff.
-            "python_implementation": platform.python_implementation(),
-            "python_version": platform.python_version(),
-            "python_build": " ".join(platform.python_build()),
-            "python_branch": platform.python_branch(),
-            "python_compiler": platform.python_compiler(),
-            # Platform specific stuff I might remove later.
-            "libc_version": " ".join(platform.libc_ver()),
-            # System stuff.
-            "platform_system": platform.system(),
-            "platform_architecture": " ".join(platform.architecture()),
-        }
-
-        args.update(**_PALETTE)
-
-        with resources.open_text(banner_package, "banner.txt") as banner_fp:
-            banner = string.Template(banner_fp.read()).safe_substitute(args)
-
-        sys.stdout.write(banner + "\n")
+        sys.stdout.write(art.get_banner(banner_package) + "\n")
         sys.stdout.flush()
         # Give the TTY time to flush properly.
         time.sleep(0.05)
-
-    @staticmethod
-    async def _check_for_updates() -> None:
-        from hikari import _about
-        from hikari.utilities import version_sniffer
-
-        if not _about.__is_official_distributed_release__:
-            # If we are on a non-released version, it could be modified or a
-            # fork, so don't do any checks.
-            return
-
-        try:
-            version_info = await version_sniffer.fetch_version_info_from_pypi()
-
-            if version_info.this == version_info.latest:
-                _LOGGER.info("package is up to date!")
-            else:
-                if version_info.this != version_info.latest_compatible:
-                    _LOGGER.warning(
-                        "non-breaking updates are available for hikari, update from v%s to v%s!",
-                        version_info.this,
-                        version_info.latest_compatible,
-                    )
-
-                if version_info.latest != version_info.latest_compatible:
-                    _LOGGER.info(
-                        "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
-                        version_info.this,
-                        version_info.latest,
-                    )
-
-        except Exception as ex:
-            _LOGGER.debug("Error occurred fetching version info", exc_info=ex)

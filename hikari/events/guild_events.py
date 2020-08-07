@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Events that fire when something occurs within a guild."""
 
 from __future__ import annotations
@@ -32,6 +35,7 @@ __all__: typing.Final[typing.List[str]] = [
     "EmojisUpdateEvent",
     "IntegrationsUpdateEvent",
     "PresenceUpdateEvent",
+    "MemberChunkEvent",
 ]
 
 import abc
@@ -395,3 +399,76 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
             ID of the guild the event occurred in.
         """
         return self.presence.guild_id
+
+
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class MemberChunkEvent(shard_events.ShardEvent):
+    """Used to represent the response to Guild Request Members."""
+
+    shard: gateway_shard.IGatewayShard = attr.ib()
+    # <<docstring inherited from ShardEvent>>.
+
+    guild_id: snowflake.Snowflake = attr.ib(repr=True)
+    # <<docstring inherited from ShardEvent>>.
+
+    members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
+    """Mapping of user IDs to the objects of the members in this chunk.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+        Mapping of user IDs to corresponding member objects.
+    """
+
+    index: int = attr.ib(repr=True)
+    """Zero-indexed position of this within the queued up chunks for this request.
+
+    Returns
+    -------
+    builtins.int
+        The sequence index for this chunk.
+    """
+
+    count: int = attr.ib(repr=True)
+    """Total number of expected chunks for the request this is associated with.
+
+    Returns
+    -------
+    builtins.int
+        Total number of chunks to be expected.
+    """
+
+    not_found: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=True)
+    """Sequence of the snowflakes that were not found while making this request.
+
+    This is only applicable when user IDs are specified while making the
+    member request the chunk is associated with.
+
+    Returns
+    -------
+    typing.Sequence[hikari.utilities.snowflake.Snowflake]
+        Sequence of user IDs that were not found.
+    """
+
+    presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    """Mapping of user IDs to found member presence objects.
+
+    This will be empty if no presences are found or `presences` is not passed as
+    `True` while requesting the member chunks.
+
+    Returns
+    -------
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
+        Mapping of user IDs to corresponding presences.
+    """
+
+    nonce: typing.Optional[str] = attr.ib(repr=True)
+    """String nonce used to identify the request member chunks are associated with.
+
+    This is the nonce value passed while requesting member chunks.
+
+    Returns
+    -------
+    builtins.str or builtins.None
+        The request nonce if specified, or `builtins.None` otherwise.
+    """

@@ -1,27 +1,35 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
-# Copyright © Nekoka.tt 2019-2020
+# Copyright (c) 2020 Nekokatt
 #
-# This file is part of Hikari.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# Hikari is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# Hikari is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Hikari. If not, see <https://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """Checks PyPI for a newer release of the library."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
+__all__: typing.Final[typing.List[str]] = [
+    "VersionInfo",
+    "fetch_version_info_from_pypi",
+    "log_available_updates",
+]
 
+import logging
 import typing
 from distutils import version as distutils_version
 
@@ -103,3 +111,45 @@ async def fetch_version_info_from_pypi() -> VersionInfo:
     latest_compatible = max(same_compatible_releases)
 
     return VersionInfo(this=this, latest_compatible=latest_compatible, latest=latest,)
+
+
+async def log_available_updates(logger: logging.Logger) -> None:
+    """Log if any updates are available for the library.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        The logger to write to.
+    """
+    if not _about.__is_official_distributed_release__:
+        # If we are on a non-released version, it could be modified or a
+        # fork, so don't do any checks.
+        return
+
+    try:
+        version_info = await fetch_version_info_from_pypi()
+
+        if version_info.this == version_info.latest:
+            logger.info("package is up to date!")
+            return
+
+        if version_info.this != version_info.latest_compatible:
+            logger.warning(
+                "non-breaking updates are available for hikari, update from v%s to v%s!",
+                version_info.this,
+                version_info.latest_compatible,
+            )
+            return
+
+        if version_info.latest != version_info.latest_compatible:
+            logger.info(
+                "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+                version_info.this,
+                version_info.latest,
+            )
+            return
+
+        logger.info("unknown version status -- check PyPI for updates.")
+
+    except Exception as ex:
+        logger.debug("Error occurred fetching version info", exc_info=ex)
