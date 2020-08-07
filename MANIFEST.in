@@ -1,6 +1,5 @@
 graft hikari
-include COPYING.md
-include COPYING.LESSER.md
+include LICENSE
 include requirements.txt
 include speedup-requirements.txt
 include setup.py
