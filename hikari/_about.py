@@ -34,3 +34,6 @@ __is_official_distributed_release__ = False
 __license__ = "LGPL-3.0-ONLY"
 __url__ = "https://gitlab.com/nekokatt/hikari"
 __version__ = "2.0.0.dev0"
+__git_branch__ = "development"
+__git_sha1__ = "HEAD"
+__git_when__ = "2020/07/06"
