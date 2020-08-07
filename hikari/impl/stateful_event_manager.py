@@ -27,6 +27,7 @@ import typing
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.models import channels
+from hikari.models import intents
 from hikari.models import presences
 
 if typing.TYPE_CHECKING:
@@ -142,6 +143,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         for voice_state in event.voice_states.values():
             self._mutable_cache.set_voice_state(voice_state)
 
+        if event.guild.is_large and (self._intents is None or self._intents & intents.Intent.GUILD_MEMBERS):
+            await self._app.guild_chunker.request_guild_chunk(event.guild, shard.id)
+
         await self.dispatch(event)
 
     async def on_guild_update(self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject) -> None:
@@ -235,7 +239,6 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
-        # TODO: implement chunking components.
         event = self.app.event_factory.deserialize_guild_member_chunk_event(shard, payload)
 
         for member in event.members.values():

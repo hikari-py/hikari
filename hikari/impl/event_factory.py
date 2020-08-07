@@ -469,7 +469,7 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
 
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.IGatewayShard, payload: data_binding.JSONObject
-    ) -> shard_events.MemberChunkEvent:
+    ) -> guild_events.MemberChunkEvent:
         guild_id = snowflake.Snowflake(payload["guild_id"])
         index = int(payload["chunk_index"])
         count = int(payload["chunk_count"])
@@ -492,7 +492,7 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
         else:
             presences = {}
 
-        return shard_events.MemberChunkEvent(
+        return guild_events.MemberChunkEvent(
             shard=shard,
             guild_id=guild_id,
             members=members,
