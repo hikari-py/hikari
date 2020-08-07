@@ -33,6 +33,7 @@ from hikari.api import voice
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari.api import guild_chunker as guild_chunker_
     from hikari.models import intents as intents_
     from hikari.models import users
 
@@ -49,6 +50,17 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def guild_chunker(self) -> guild_chunker_.IGuildChunkerComponent:
+        """Guild chunker.
+
+        Returns
+        -------
+        hikari.api.guild_chunker.IGuildChunkerComponent
+            The guild chunker implementation used in this application.
+        """
 
     @property
     @abc.abstractmethod
