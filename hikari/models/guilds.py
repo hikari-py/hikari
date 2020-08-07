@@ -112,7 +112,10 @@ class GuildFeature(str, enum.Enum):
     """Guild has community features enabled."""
 
     DISCOVERABLE = "DISCOVERABLE"
-    """Guild is able to be discovered in the directory."""
+    """Guild is able to be discovered in the directory.
+
+    This also implies the guild can be viewed without joining.
+    """
 
     FEATURABLE = "FEATURABLE"
     """Guild is able to be featured in the directory."""
@@ -125,9 +128,6 @@ class GuildFeature(str, enum.Enum):
 
     NEWS = "NEWS"
     """Guild has access to create news channels."""
-
-    LURKABLE = "LURKABLE"
-    """People can view channels in this guild without joining."""
 
     PARTNERED = "PARTNERED"
     """Guild is partnered."""
