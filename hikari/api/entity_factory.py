@@ -30,10 +30,10 @@ import typing
 import attr
 
 from hikari.api import component
+from hikari.utilities import attr_extensions
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-
     from hikari.models import applications as application_models
     from hikari.models import audit_logs as audit_log_models
     from hikari.models import channels as channel_models
@@ -52,6 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
+@attr_extensions.with_copy
 @attr.s(slots=True, weakref_slot=False)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""

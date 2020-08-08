@@ -1296,7 +1296,7 @@ class TestEntityFactoryImpl:
             {
                 "nick": None,
                 "roles": ["11111", "22222", "33333", "44444"],
-                "joined_at": None,
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "premium_since": None,
                 "deaf": False,
                 "mute": True,
@@ -1309,7 +1309,6 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is False
         assert member.is_mute is True
         assert isinstance(member, guild_models.Member)
-        assert member.joined_at is undefined.UNDEFINED
 
     def test_deserialize_member_with_undefined_fields(self, entity_factory_impl, user_payload):
         member = entity_factory_impl.deserialize_member(

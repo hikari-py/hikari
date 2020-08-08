@@ -33,6 +33,8 @@
 lint:flake8:
   artifacts:
     expire_in: 2 days
+    paths:
+      - public/flake8
     reports:
       junit: public/flake8-junit.xml
     when: always
@@ -51,6 +53,8 @@ lint:mypy:
     - nox -s mypy --no-error-on-external-run
   artifacts:
     expire_in: 2 days
+    paths:
+      - public/mypy
     reports:
       junit: public/mypy.xml
     when: always

@@ -18,13 +18,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Dependency scanning."""
+"""Additional utilities for Nox."""
+import shutil
 
-from ci import nox
+from pipelines import nox
+
+TRASH = [
+    ".nox",
+    "build",
+    "dist",
+    "hikari.egg-info",
+    "public",
+    ".coverage",
+    ".pytest_cache",
+    ".mypy_cache",
+]
 
 
-@nox.session(reuse_venv=True)
-def safety(session: nox.Session) -> None:
-    """Perform dependency scanning."""
-    session.install("safety", "-Ur", "requirements.txt")
-    session.run("safety", "check", "--full-report")
+@nox.session(reuse_venv=False)
+def purge(_: nox.Session) -> None:
+    """Delete any nox-generated files."""
+    for trash in TRASH:
+        print("Removing", trash)
+        shutil.rmtree(trash, ignore_errors=True)

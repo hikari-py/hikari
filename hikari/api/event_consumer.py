@@ -98,6 +98,6 @@ class IEventConsumerApp(rest_api.IRESTApp, abc.ABC):
 
         Returns
         -------
-        hikari.api.event_factory.IEventFactory.
+        hikari.api.event_factory.IEventFactory
             The model factory for events.
         """

@@ -18,35 +18,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Pdoc documentation generation."""
-import os
-import shutil
+"""Dependency scanning."""
 
-from ci import config
-from ci import nox
+from pipelines import nox
 
 
 @nox.session(reuse_venv=True)
-@nox.inherit_environment_vars
-def pdoc(session: nox.Session) -> None:
-    """Generate documentation with pdoc."""
-    session.install("-r", "requirements.txt")
-    session.install("pdoc3")
-    session.install("sphobjinv")
-
-    session.run(
-        "python",
-        "-m",
-        "pdoc",
-        config.MAIN_PACKAGE,
-        "--html",
-        "--output-dir",
-        config.ARTIFACT_DIRECTORY,
-        "--template-dir",
-        config.DOCUMENTATION_DIRECTORY,
-        "--force",
-    )
-    shutil.copyfile(
-        os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
-        os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
-    )
+def safety(session: nox.Session) -> None:
+    """Perform dependency scanning."""
+    session.install("safety", "-Ur", "requirements.txt")
+    session.run("safety", "check", "--full-report")

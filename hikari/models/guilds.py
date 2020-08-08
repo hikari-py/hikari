@@ -56,6 +56,7 @@ import typing
 import attr
 
 from hikari.models import users
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import flag
@@ -112,7 +113,10 @@ class GuildFeature(str, enum.Enum):
     """Guild has community features enabled."""
 
     DISCOVERABLE = "DISCOVERABLE"
-    """Guild is able to be discovered in the directory."""
+    """Guild is able to be discovered in the directory.
+
+    This also implies the guild can be viewed without joining.
+    """
 
     FEATURABLE = "FEATURABLE"
     """Guild is able to be featured in the directory."""
@@ -125,9 +129,6 @@ class GuildFeature(str, enum.Enum):
 
     NEWS = "NEWS"
     """Guild has access to create news channels."""
-
-    LURKABLE = "LURKABLE"
-    """People can view channels in this guild without joining."""
 
     PARTNERED = "PARTNERED"
     """Guild is partnered."""
@@ -256,11 +257,12 @@ class GuildVerificationLevel(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild embed."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -301,7 +303,7 @@ class Member(users.User):
     role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    joined_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
     premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
@@ -416,17 +418,18 @@ class Member(users.User):
         builtins.str
             The mention string to use.
         """
-        return f"<@!{self.id}>" if isinstance(self.nickname, str) else self.user.mention
+        return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
     def __str__(self) -> str:
         return str(self.user)
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -495,6 +498,7 @@ class IntegrationExpireBehaviour(enum.IntEnum):
     """Kick the subscriber."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
@@ -509,6 +513,7 @@ class IntegrationAccount:
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialIntegration(snowflake.Unique):
     """A partial representation of an integration, found in audit logs."""
@@ -564,6 +569,7 @@ class Integration(PartialIntegration):
     """The datetime of when this integration's subscribers were last synced."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildMemberBan:
     """Used to represent guild bans."""
@@ -575,6 +581,7 @@ class GuildMemberBan:
     """The object of the user this ban targets."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 @typing.final
 class UnavailableGuild(snowflake.Unique):
@@ -597,11 +604,12 @@ class UnavailableGuild(snowflake.Unique):
         return True
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -769,7 +777,7 @@ class GuildPreview(PartialGuild):
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class Guild(PartialGuild):
+class Guild(PartialGuild, abc.ABC):
     """A representation of a guild on Discord."""
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)

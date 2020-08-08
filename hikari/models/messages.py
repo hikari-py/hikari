@@ -40,6 +40,7 @@ import typing
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import flag
@@ -154,6 +155,7 @@ class MessageActivityType(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Attachment(snowflake.Unique, files.WebResource):
     """Represents a file attached to a message.
@@ -187,6 +189,7 @@ class Attachment(snowflake.Unique, files.WebResource):
         return self.filename
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
@@ -204,6 +207,7 @@ class Reaction:
         return str(self.emoji)
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
@@ -215,6 +219,7 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageCrosspost:
     """Represents information about a cross-posted message.
@@ -223,7 +228,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     # TODO: get clarification on this! If it cannot happen, this should subclass PartialMessage too.
@@ -249,6 +254,7 @@ class MessageCrosspost:
     """
 
 
+@attr_extensions.with_copy
 @attr.s(slots=True, kw_only=True, init=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflake.Unique):
     """A message representation containing partially populated information.
@@ -264,7 +270,7 @@ class PartialMessage(snowflake.Unique):
         nullability.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

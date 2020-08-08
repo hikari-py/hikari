@@ -33,12 +33,24 @@ __all__: typing.Final[typing.List[str]] = [
 import enum
 import typing
 
+SelfT = typing.TypeVar("SelfT")
+
 
 class _UndefinedSentinel:
     __slots__: typing.Sequence[str] = ()
 
     def __bool__(self) -> bool:
         return False
+
+    def __copy__(self: SelfT) -> SelfT:
+        # This is meant to be a singleton
+        return self
+
+    def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
+        memo[id(self)] = self
+
+        # This is meant to be a singleton
+        return self
 
     def __repr__(self) -> str:
         return "UNDEFINED"
@@ -76,7 +88,7 @@ class UndefinedType(_UndefinedSentinel, enum.Enum):
 
 
 # Prevent making any more instances as much as possible.
-setattr(_UndefinedSentinel, "__new__", NotImplemented)
+setattr(_UndefinedSentinel, "__new__", lambda _: UNDEFINED)
 del _UndefinedSentinel
 
 
