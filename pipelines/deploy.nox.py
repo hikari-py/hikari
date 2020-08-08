@@ -26,8 +26,8 @@ import shlex
 import subprocess
 from distutils.version import LooseVersion
 
-from ci import config
-from ci import nox
+from pipelines import config
+from pipelines import nox
 
 
 def update_version_string(version):

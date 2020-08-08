@@ -28,7 +28,7 @@ from nox import options as _options
 from nox import session as _session
 from nox.sessions import Session
 
-from ci import config
+from pipelines import config
 
 # Default sessions should be defined here
 _options.sessions = ["reformat-code", "pytest", "pdoc", "pages", "flake8", "mypy", "safety"]

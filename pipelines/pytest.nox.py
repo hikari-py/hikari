@@ -22,8 +22,8 @@
 import os
 import shutil
 
-from ci import config
-from ci import nox
+from pipelines import config
+from pipelines import nox
 
 FLAGS = [
     "-c",
