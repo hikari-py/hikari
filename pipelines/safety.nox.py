@@ -18,15 +18,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+"""Dependency scanning."""
 
-from ci import config
-from ci import nox
+from pipelines import nox
 
 
 @nox.session(reuse_venv=True)
-def mypy(session: nox.Session) -> None:
-    """Perform static type analysis on Python source code."""
-    session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
-    session.run(
-        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,
-    )
+def safety(session: nox.Session) -> None:
+    """Perform dependency scanning."""
+    session.install("safety", "-Ur", "requirements.txt")
+    session.run("safety", "check", "--full-report")

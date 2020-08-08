@@ -26,8 +26,8 @@ import subprocess
 import tarfile
 import tempfile
 
-from ci import config
-from ci import nox
+from pipelines import config
+from pipelines import nox
 
 
 @contextlib.contextmanager

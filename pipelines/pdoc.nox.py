@@ -22,28 +22,31 @@
 import os
 import shutil
 
-from ci import config
-from ci import nox
-
-
-def copy_from_in(src: str, dest: str) -> None:
-    for parent, dirs, files in os.walk(src):
-        sub_parent = os.path.relpath(parent, src)
-
-        for file in files:
-            sub_src = os.path.join(parent, file)
-            sub_dest = os.path.normpath(os.path.join(dest, sub_parent, file))
-            print(sub_src, "->", sub_dest)
-            shutil.copy(sub_src, sub_dest)
+from pipelines import config
+from pipelines import nox
 
 
 @nox.session(reuse_venv=True)
-def pages(session: nox.Session) -> None:
-    """Generate static pages containing resources and tutorials."""
-    for n, v in os.environ.items():
-        if n.startswith(("GITLAB_", "CI")) or n == "CI":
-            session.env[n] = v
+@nox.inherit_environment_vars
+def pdoc(session: nox.Session) -> None:
+    """Generate documentation with pdoc."""
+    session.install("-r", "requirements.txt")
+    session.install("pdoc3")
+    session.install("sphobjinv")
 
-    if not os.path.exists(config.ARTIFACT_DIRECTORY):
-        os.mkdir(config.ARTIFACT_DIRECTORY)
-    copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
+    session.run(
+        "python",
+        "-m",
+        "pdoc",
+        config.MAIN_PACKAGE,
+        "--html",
+        "--output-dir",
+        config.ARTIFACT_DIRECTORY,
+        "--template-dir",
+        config.DOCUMENTATION_DIRECTORY,
+        "--force",
+    )
+    shutil.copyfile(
+        os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
+        os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
+    )
