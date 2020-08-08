@@ -18,35 +18,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Pdoc documentation generation."""
-import os
-import shutil
 
-from ci import config
-from ci import nox
+from pipelines import config
+from pipelines import nox
 
 
 @nox.session(reuse_venv=True)
-@nox.inherit_environment_vars
-def pdoc(session: nox.Session) -> None:
-    """Generate documentation with pdoc."""
-    session.install("-r", "requirements.txt")
-    session.install("pdoc3")
-    session.install("sphobjinv")
-
+def mypy(session: nox.Session) -> None:
+    """Perform static type analysis on Python source code."""
+    session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
     session.run(
-        "python",
-        "-m",
-        "pdoc",
-        config.MAIN_PACKAGE,
-        "--html",
-        "--output-dir",
-        config.ARTIFACT_DIRECTORY,
-        "--template-dir",
-        config.DOCUMENTATION_DIRECTORY,
-        "--force",
-    )
-    shutil.copyfile(
-        os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
-        os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI, "--junit-xml", config.MYPY_JUNIT_OUTPUT_PATH,
     )

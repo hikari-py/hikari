@@ -24,13 +24,13 @@ import shutil
 import subprocess
 import time
 
-from ci import nox
+from pipelines import nox
 
 REFORMATING_PATHS = [
     "hikari",
     "tests",
     "scripts",
-    "ci",
+    "pipelines",
     "setup.py",
     "noxfile.py",
 ]
