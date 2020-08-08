@@ -247,7 +247,7 @@ def stubgen_hack(session: nox.Session) -> None:
             if f == "__init__.py":
                 module = ".".join(root.split(os.sep))
                 file = os.path.join(root, f) + "i"
-                nox.shell("stubgen", "-m", module, "-o", ".")
+                nox.run("stubgen", "-m", module, "-o", ".")
 
                 print("Adding license header to stub", file, "for module", module)
                 with open(file) as fp:
