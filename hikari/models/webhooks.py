@@ -30,6 +30,7 @@ import typing
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files as files_
 from hikari.utilities import routes
@@ -60,6 +61,7 @@ class WebhookType(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Webhook(snowflake.Unique):
     """Represents a webhook object on Discord.
@@ -69,7 +71,7 @@ class Webhook(snowflake.Unique):
     send informational messages to specific channels.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

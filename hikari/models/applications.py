@@ -40,6 +40,7 @@ import typing
 import attr
 
 from hikari.models import guilds
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import routes
@@ -198,6 +199,7 @@ class ConnectionVisibility(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
@@ -262,11 +264,12 @@ class TeamMembershipState(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
@@ -289,11 +292,12 @@ class TeamMember:
         return str(self.user)
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -361,11 +365,12 @@ class Team(snowflake.Unique):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(

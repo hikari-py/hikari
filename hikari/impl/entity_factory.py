@@ -47,6 +47,7 @@ from hikari.models import presences as presence_models
 from hikari.models import users as user_models
 from hikari.models import voices as voice_models
 from hikari.models import webhooks as webhook_models
+from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -70,6 +71,7 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
     return datetime.timedelta(seconds=seconds) if seconds > 0 else None
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _PartialGuildFields:
     id: snowflake.Snowflake = attr.ib()
@@ -78,6 +80,7 @@ class _PartialGuildFields:
     features: typing.Sequence[typing.Union[guild_models.GuildFeature, str]] = attr.ib()
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _GuildChannelFields:
     id: snowflake.Snowflake = attr.ib()
@@ -90,6 +93,7 @@ class _GuildChannelFields:
     parent_id: typing.Optional[snowflake.Snowflake] = attr.ib()
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _IntegrationFields:
     id: snowflake.Snowflake = attr.ib()
@@ -98,6 +102,7 @@ class _IntegrationFields:
     account: guild_models.IntegrationAccount = attr.ib()
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _GuildFields(_PartialGuildFields):
     splash_hash: typing.Optional[str] = attr.ib()
@@ -128,6 +133,7 @@ class _GuildFields(_PartialGuildFields):
     public_updates_channel_id: typing.Optional[snowflake.Snowflake] = attr.ib()
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _InviteFields:
     code: str = attr.ib()
@@ -142,6 +148,7 @@ class _InviteFields:
     approximate_member_count: typing.Optional[int] = attr.ib()
 
 
+@attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _UserFields:
     id: snowflake.Snowflake = attr.ib()
@@ -980,10 +987,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         role_ids = [snowflake.Snowflake(role_id) for role_id in payload["roles"]]
 
-        joined_at: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
-        raw_joined_at = payload.get("joined_at")
-        if raw_joined_at is not None:
-            joined_at = date.iso8601_datetime_string_to_datetime(raw_joined_at)
+        joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
         premium_since: undefined.UndefinedOr[typing.Optional[datetime.datetime]] = undefined.UNDEFINED
         if "premium_since" in payload:

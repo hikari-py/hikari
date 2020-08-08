@@ -48,6 +48,7 @@ import typing
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -126,6 +127,7 @@ class AuditLogChangeKey(str, enum.Enum):
     __repr__ = __str__
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
@@ -190,6 +192,7 @@ class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """Represents the extra information for overwrite related audit log entries.
@@ -208,6 +211,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflake.Unique):
     """The name of the role this overwrite targets, if it targets a role."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
@@ -222,6 +226,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The ID of the message that's being pinned or unpinned."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Extra information attached to guild prune log entries."""
@@ -233,6 +238,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """The number of members who were removed by this prune."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the message bulk delete audit entry."""
@@ -249,6 +255,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """The guild text based channel where these message(s) were deleted."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the voice chat member disconnect entry."""
@@ -283,11 +290,12 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
         self.__dict__.update(payload)
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -312,6 +320,7 @@ class AuditLogEntry(snowflake.Unique):
     """The reason for this change, if set (between 0-512 characters)."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log."""

@@ -106,26 +106,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
     ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
-
-        # If None, the user is on v6 with intents disabled, so we don't care.
-        if self._intents is not None:
-            # Collection of combined bitfield combinations of intents that
-            # could be enabled to receive this event.
-            expected_intent_groups = base_events.get_required_intents_for(event_type)
-
-            if expected_intent_groups:
-                for expected_intent_group in expected_intent_groups:
-                    if (self._intents & expected_intent_group) == expected_intent_group:
-                        break
-                else:
-                    expected_intents_str = ", ".join(map(str, expected_intent_groups))
-
-                    warnings.warn(
-                        f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
-                        f"you enable one of the following intents: {expected_intents_str}.",
-                        category=errors.MissingIntentWarning,
-                        stacklevel=_nested + 2,
-                    )
+        self._check_intents(event_type, _nested)
 
         if event_type not in self._listeners:
             self._listeners[event_type] = []
@@ -144,6 +125,27 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
         self._listeners[event_type].append(callback)  # type: ignore[arg-type]
 
         return callback
+
+    def _check_intents(self, event_type: typing.Type[event_dispatcher.EventT_co], nested: int) -> None:
+        # If None, the user is on v6 with intents disabled, so we don't care.
+        if self._intents is not None:
+            # Collection of combined bitfield combinations of intents that
+            # could be enabled to receive this event.
+            expected_intent_groups = base_events.get_required_intents_for(event_type)
+
+            if expected_intent_groups:
+                for expected_intent_group in expected_intent_groups:
+                    if (self._intents & expected_intent_group) == expected_intent_group:
+                        break
+                else:
+                    expected_intents_str = ", ".join(map(str, expected_intent_groups))
+
+                    warnings.warn(
+                        f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
+                        f"you enable one of the following intents: {expected_intents_str}.",
+                        category=errors.MissingIntentWarning,
+                        stacklevel=nested + 3,
+                    )
 
     def get_listeners(
         self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
@@ -307,6 +309,8 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
 
         if predicate is None:
             predicate = _default_predicate
+
+        self._check_intents(event_type, 1)
 
         future: asyncio.Future[event_dispatcher.EventT_co] = asyncio.get_event_loop().create_future()
 

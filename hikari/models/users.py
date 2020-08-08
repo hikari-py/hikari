@@ -31,6 +31,7 @@ import typing
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import flag
@@ -231,6 +232,7 @@ class User(snowflake.Unique, abc.ABC):
         """
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialUser(snowflake.Unique):
     """Represents partial information about a user.
@@ -242,7 +244,7 @@ class PartialUser(snowflake.Unique):
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this user."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Reference to the client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -254,10 +256,10 @@ class PartialUser(snowflake.Unique):
     avatar_hash: undefined.UndefinedNoneOr[str] = attr.ib(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False)
+    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
     flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)

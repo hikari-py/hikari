@@ -18,11 +18,32 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ci import nox
+"""Pdoc documentation generation."""
+import os
+import shutil
+
+from pipelines import config
+from pipelines import nox
+
+
+def copy_from_in(src: str, dest: str) -> None:
+    for parent, dirs, files in os.walk(src):
+        sub_parent = os.path.relpath(parent, src)
+
+        for file in files:
+            sub_src = os.path.join(parent, file)
+            sub_dest = os.path.normpath(os.path.join(dest, sub_parent, file))
+            print(sub_src, "->", sub_dest)
+            shutil.copy(sub_src, sub_dest)
 
 
 @nox.session(reuse_venv=True)
-def twemoji_test(session: nox.Session):
-    """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".", "requests")
-    session.run("python", "scripts/test_twemoji_mapping.py")
+def pages(session: nox.Session) -> None:
+    """Generate static pages containing resources and tutorials."""
+    for n, v in os.environ.items():
+        if n.startswith(("GITLAB_", "CI")) or n == "CI":
+            session.env[n] = v
+
+    if not os.path.exists(config.ARTIFACT_DIRECTORY):
+        os.mkdir(config.ARTIFACT_DIRECTORY)
+    copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)

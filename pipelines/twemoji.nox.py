@@ -18,26 +18,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Additional utilities for Nox."""
-import shutil
-
-from ci import nox
-
-TRASH = [
-    ".nox",
-    "build",
-    "dist",
-    "hikari.egg-info",
-    "public",
-    ".coverage",
-    ".pytest_cache",
-    ".mypy_cache",
-]
+from pipelines import nox
 
 
-@nox.session(reuse_venv=False)
-def purge(_: nox.Session) -> None:
-    """Delete any nox-generated files."""
-    for trash in TRASH:
-        print("Removing", trash)
-        shutil.rmtree(trash, ignore_errors=True)
+@nox.session(reuse_venv=True)
+def twemoji_test(session: nox.Session):
+    """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
+    session.install("-e", ".", "requests")
+    session.run("python", "scripts/test_twemoji_mapping.py")

@@ -37,11 +37,13 @@ import aiohttp
 import attr
 
 from hikari import _about
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari.utilities import data_binding
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VersionInfo:
     """PyPI release info."""
