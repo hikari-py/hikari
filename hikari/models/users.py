@@ -256,10 +256,10 @@ class PartialUser(snowflake.Unique):
     avatar_hash: undefined.UndefinedNoneOr[str] = attr.ib(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False)
+    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
     flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
