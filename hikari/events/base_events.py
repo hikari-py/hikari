@@ -39,6 +39,7 @@ import attr
 
 from hikari.api import shard as gateway_shard
 from hikari.models import intents
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -149,6 +150,7 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 
 @no_recursive_throw()
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
@@ -161,10 +163,10 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib()
+    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: typing.Optional[gateway_shard.IGatewayShard] = attr.ib()
+    shard: typing.Optional[gateway_shard.IGatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received the event.
 
     Returns

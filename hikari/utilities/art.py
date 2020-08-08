@@ -41,9 +41,11 @@ from importlib import resources
 import attr
 
 from hikari import _about
+from hikari.utilities import attr_extensions
 
 
 @typing.final
+@attr_extensions.with_copy
 @attr.s(frozen=True, kw_only=True)
 class ConsolePalette:
     """Data class containing printable escape codes for colouring console output."""

@@ -18,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import copy
+
 import pytest
 
 from hikari.utilities import undefined
@@ -46,3 +48,9 @@ class TestUndefined:
     def test_cannot_reinstatiate(self):
         with pytest.raises(TypeError):
             type(undefined.UNDEFINED)()
+
+    def test_copy(self):
+        assert copy.copy(undefined.UNDEFINED) is undefined.UNDEFINED
+
+    def test_deepcopy(self):
+        assert copy.deepcopy(undefined.UNDEFINED) is undefined.UNDEFINED

@@ -42,6 +42,7 @@ import typing
 
 import attr
 
+from hikari.utilities import attr_extensions
 from hikari.utilities import flag
 from hikari.utilities import snowflake
 
@@ -88,6 +89,7 @@ class ActivityType(enum.IntEnum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
@@ -99,6 +101,7 @@ class ActivityTimestamps:
     """When this activity's session will end, if applicable."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
@@ -113,6 +116,7 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
@@ -130,6 +134,7 @@ class ActivityAssets:
     """The text that'll appear when hovering over the small image, if set."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
@@ -172,6 +177,7 @@ class ActivityFlag(flag.Flag):
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
@@ -249,6 +255,7 @@ class Status(str, enum.Enum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
@@ -263,11 +270,12 @@ class ClientStatus:
     """The status of the target user's web session."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     user_id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)

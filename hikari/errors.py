@@ -51,6 +51,7 @@ import typing
 import attr
 
 from hikari.models import messages
+from hikari.utilities import attr_extensions
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
@@ -60,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import routes
 
 
+@attr_extensions.with_copy
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
@@ -71,6 +73,7 @@ class HikariError(RuntimeError):
     """
 
 
+@attr_extensions.with_copy
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.

@@ -39,6 +39,7 @@ import typing
 import attr
 
 from hikari.models import guilds
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import routes
@@ -81,11 +82,12 @@ class InviteCode(abc.ABC):
         """
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -198,11 +200,12 @@ class InviteGuild(guilds.PartialGuild):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
