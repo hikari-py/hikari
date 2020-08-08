@@ -267,8 +267,6 @@ def deploy(session: nox.Session) -> None:
     print("Re-running code formatting fixes")
     nox.registry["reformat-code"](session)
 
-    return
-
     nox.shell("pip install requests")
 
     commit_ref = os.getenv("CI_COMMIT_REF_NAME", *session.posargs[0:1])
