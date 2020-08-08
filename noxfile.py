@@ -22,7 +22,7 @@ import os
 import runpy
 import sys
 
-CI_PATH = "ci"
+CI_PATH = "pipelines"
 
 sys.path.append(os.getcwd())
 
