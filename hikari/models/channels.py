@@ -47,6 +47,7 @@ import attr
 
 from hikari.models import permissions
 from hikari.models import users
+from hikari.utilities import attr_extensions
 from hikari.utilities import constants
 from hikari.utilities import files
 from hikari.utilities import routes
@@ -108,6 +109,7 @@ class PermissionOverwriteType(str, enum.Enum):
         return self.name
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PermissionOverwrite(snowflake.Unique):
     """Represents permission overwrites for a channel or role in a channel.
@@ -160,6 +162,7 @@ class PermissionOverwrite(snowflake.Unique):
         return permissions.Permission(~(self.allow | self.deny))
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialChannel(snowflake.Unique):
     """Channel representation for cases where further detail is not provided.
@@ -168,7 +171,7 @@ class PartialChannel(snowflake.Unique):
     not available from Discord.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False)
+    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

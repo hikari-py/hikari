@@ -47,6 +47,7 @@ from hikari.models import invites
 from hikari.models import presences
 from hikari.models import users
 from hikari.models import voices
+from hikari.utilities import attr_extensions
 from hikari.utilities import date
 from hikari.utilities import iterators
 from hikari.utilities import snowflake
@@ -171,6 +172,7 @@ class _EmptyCacheView(cache.ICacheView[typing.Any, typing.Any]):
         return iterators.FlatLazyIterator(())
 
 
+@attr_extensions.with_copy
 @attr.s(slots=True, repr=False, hash=False, weakref_slot=False)
 class _GuildRecord:
     is_available: typing.Optional[bool] = attr.ib(default=None)
@@ -279,6 +281,7 @@ class _BaseData(abc.ABC, typing.Generic[_ValueT]):
         return data
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
     id: snowflake.Snowflake = attr.ib()
@@ -302,6 +305,7 @@ class _PrivateTextChannelData(_BaseData[channels.PrivateTextChannel]):
         return super().build_from_entity(entity, **kwargs, recipient_id=entity.recipient.id)
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _InviteData(_BaseData[invites.InviteWithMetadata]):
     code: str = attr.ib()
@@ -351,6 +355,7 @@ class _InviteData(_BaseData[invites.InviteWithMetadata]):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _MemberData(_BaseData[guilds.Member]):
     id: snowflake.Snowflake = attr.ib()
@@ -374,6 +379,7 @@ class _MemberData(_BaseData[guilds.Member]):
         return super().build_from_entity(entity, **kwargs, id=entity.user.id, role_ids=tuple(entity.role_ids))
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
     id: snowflake.Snowflake = attr.ib()
@@ -402,13 +408,14 @@ class _KnownCustomEmojiData(_BaseData[emojis.KnownCustomEmoji]):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _RichActivityData(_BaseData[presences.RichActivity]):
     name: str = attr.ib()
     url: str = attr.ib()
     type: presences.ActivityType = attr.ib()
     created_at: datetime.datetime = attr.ib()
-    timestamps: presences.ActivityTimestamps = attr.ib()
+    timestamps: typing.Optional[presences.ActivityTimestamps] = attr.ib()
     application_id: typing.Optional[snowflake.Snowflake] = attr.ib()
     details: typing.Optional[str] = attr.ib()
     state: typing.Optional[str] = attr.ib()
@@ -451,14 +458,15 @@ class _RichActivityData(_BaseData[presences.RichActivity]):
     def build_entity(self, target: typing.Type[presences.RichActivity], **kwargs: typing.Any) -> presences.RichActivity:
         return super().build_entity(
             target,
-            timestamps=copy.copy(self.timestamps),
-            party=copy.copy(self.party),
-            assets=copy.copy(self.assets),
-            secrets=copy.copy(self.secrets),
+            timestamps=copy.copy(self.timestamps) if self.timestamps is not None else None,
+            party=copy.copy(self.party) if self.party is not None else None,
+            assets=copy.copy(self.assets) if self.assets is not None else None,
+            secrets=copy.copy(self.secrets) if self.secrets is not None else None,
             **kwargs,
         )
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _MemberPresenceData(_BaseData[presences.MemberPresence]):
     user_id: snowflake.Snowflake = attr.ib()
@@ -498,6 +506,7 @@ class _MemberPresenceData(_BaseData[presences.MemberPresence]):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _VoiceStateData(_BaseData[voices.VoiceState]):
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib()
@@ -529,6 +538,7 @@ class _VoiceStateData(_BaseData[voices.VoiceState]):
         )
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
 class _GenericRefWrapper(typing.Generic[_ValueT]):
     object: _ValueT = attr.ib()
@@ -594,6 +604,12 @@ class _GuildChannelCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflak
     @classmethod
     def _copy(cls, value: channels.GuildChannel) -> channels.GuildChannel:
         return _copy_guild_channel(value)
+
+
+class _3DCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflake, cache.ICacheView[_KeyT, _ValueT]]):
+    @classmethod
+    def _copy(cls, value: cache.ICacheView[_KeyT, _ValueT]) -> cache.ICacheView[_KeyT, _ValueT]:
+        return value
 
 
 class StatefulCacheImpl(cache.IMutableCacheComponent):
@@ -1405,7 +1421,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             views[guild_id] = self.get_members_view_for_guild(guild_id)
 
-        return _StatefulCacheMappingView(views)
+        return _3DCacheMappingView(views)
 
     def get_members_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
@@ -1466,13 +1482,10 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                 else:
                     presence_kwargs.append({"emoji": copy.copy(emoji)})
 
-                continue
-
             elif isinstance(identifier, snowflake.Snowflake) and identifier in self._emoji_entries:
                 presence_kwargs.append(
                     {"emoji": self._build_emoji(self._emoji_entries[identifier], cached_users=cached_users)}
                 )
-                continue
 
             else:
                 presence_kwargs.append({"emoji": copy.copy(self._unknown_emoji_entries[identifier].object)})
@@ -1599,7 +1612,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             views[guild_id] = self.get_presences_view_for_guild(guild_id)
 
-        return _StatefulCacheMappingView(views)
+        return _3DCacheMappingView(views)
 
     def get_presences_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
@@ -1935,7 +1948,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             views[guild_id] = self.get_voice_states_view_for_guild(guild_id)
 
-        return _StatefulCacheMappingView(views)
+        return _3DCacheMappingView(views)
 
     def get_voice_states_view_for_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /

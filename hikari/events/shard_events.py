@@ -38,6 +38,7 @@ import typing
 import attr
 
 from hikari.events import base_events
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari.api import event_consumer
@@ -75,27 +76,30 @@ class ShardStateEvent(ShardEvent, abc.ABC):
     """
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
     actual_gateway_version: int = attr.ib(repr=True)
@@ -138,9 +142,10 @@ class ShardReadyEvent(ShardStateEvent):
     """
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.

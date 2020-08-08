@@ -37,6 +37,7 @@ import attr
 from hikari import errors
 from hikari.api import special_endpoints
 from hikari.models import channels
+from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import files
@@ -120,6 +121,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
@@ -195,7 +197,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _app: rest.IRESTApp = attr.ib()
+    _app: rest.IRESTApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _name: str = attr.ib()
 
     # Optional args that we kept hidden.
@@ -203,7 +205,9 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     _counter: int = attr.ib(default=0, init=False)
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.ib()
+    ] = attr.ib(
+        metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )  # TODO: this can't be pickedl right?
     _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
 
     @property

@@ -37,6 +37,7 @@ import attr
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.models import intents
+from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
@@ -72,12 +73,13 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.ib()
@@ -100,12 +102,13 @@ class RoleCreateEvent(RoleEvent):
         return self.role.id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.ib()
@@ -128,12 +131,13 @@ class RoleUpdateEvent(RoleEvent):
         return self.role.id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intent.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib()
+    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
