@@ -39,6 +39,7 @@ FLAKE8_HTML = "public/flake8"
 FLAKE8_TXT = "public/flake8.txt"
 MYPY_INI = "mypy.ini"
 MYPY_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy.xml")
+MYPY_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy")
 PYDOCSTYLE_INI = "pydocstyle.ini"
 PYTEST_INI = "pytest.ini"
 PYTEST_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pytest.html")

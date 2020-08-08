@@ -20,4 +20,3 @@ MutPy==0.6.1
 
 # Other stuff
 async-timeout~=3.0.1  # Used for timeouts in some test cases.
-isort==5.2.2
