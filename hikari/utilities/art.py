@@ -83,7 +83,7 @@ def _default_palette() -> ConsolePalette:  # pragma: no cover
 
     if _plat != "Pocket PC":
         if _plat == "win32":
-            _supports_color |= os.getenv("TERM_PROGRAM", None) == "mintty"
+            _supports_color |= os.getenv("TERM_PROGRAM", None) in ("mintty", "Terminus")
             _supports_color |= "ANSICON" in os.environ
             _supports_color &= _is_a_tty
         else:
