@@ -40,7 +40,6 @@ class IApp(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    @property
     @abc.abstractmethod
     def cache(self) -> cache_.ICacheComponent:
         """Entity cache.

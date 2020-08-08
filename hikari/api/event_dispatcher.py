@@ -240,6 +240,7 @@ class IEventDispatcherBase(abc.ABC):
         Has listener: `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
         """
 
+    # FIXME: deprecate
     @abc.abstractmethod
     def has_listener(
         self, event_type: typing.Type[EventT_co], callback: AsyncCallbackT[EventT_co], *, polymorphic: bool = True
@@ -287,7 +288,7 @@ class IEventDispatcherBase(abc.ABC):
         typing.Callable[[T], T]
             A decorator for a coroutine function that passes it to
             `IEventDispatcherBase.subscribe` before returning the function
-            reference.7
+            reference.
 
         See Also
         --------
