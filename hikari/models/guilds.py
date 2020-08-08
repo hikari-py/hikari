@@ -303,7 +303,7 @@ class Member(users.User):
     role_ids: typing.Sequence[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    joined_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
     premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
@@ -418,7 +418,7 @@ class Member(users.User):
         builtins.str
             The mention string to use.
         """
-        return f"<@!{self.id}>" if isinstance(self.nickname, str) else self.user.mention
+        return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
     def __str__(self) -> str:
         return str(self.user)

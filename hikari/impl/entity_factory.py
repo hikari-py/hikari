@@ -987,10 +987,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
         role_ids = [snowflake.Snowflake(role_id) for role_id in payload["roles"]]
 
-        joined_at: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
-        raw_joined_at = payload.get("joined_at")
-        if raw_joined_at is not None:
-            joined_at = date.iso8601_datetime_string_to_datetime(raw_joined_at)
+        joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
         premium_since: undefined.UndefinedOr[typing.Optional[datetime.datetime]] = undefined.UNDEFINED
         if "premium_since" in payload:
