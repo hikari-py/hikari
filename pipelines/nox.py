@@ -26,6 +26,7 @@ import typing
 
 from nox import options as _options
 from nox import session as _session
+from nox.registry import _REGISTRY as registry
 from nox.sessions import Session
 
 from pipelines import config
