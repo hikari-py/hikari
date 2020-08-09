@@ -34,5 +34,5 @@ def test_PremiumType_str_operator():
 
 
 def test_PartialUser_str_operator():
-    mock_user = mock.Mock(users.PartialUser, username="thomm.o", discriminator="8637")
-    assert users.PartialUser.__str__(mock_user) == "thomm.o#8637"
+    mock_user = mock.Mock(users.PartialUserImpl, username="thomm.o", discriminator="8637")
+    assert users.PartialUserImpl.__str__(mock_user) == "thomm.o#8637"
