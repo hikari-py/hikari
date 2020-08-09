@@ -904,7 +904,7 @@ class TestHandshake:
         client._expect_opcode = mock.AsyncMock()
         client._session_id = None
         client._token = "token"
-        client._intents = intents.Intent.ALL
+        client._intents = intents.Intent.ALL_UNPRIVILEGED
         client._large_threshold = 123
         client._activity = undefined.UNDEFINED
         client._status = undefined.UNDEFINED
@@ -928,7 +928,7 @@ class TestHandshake:
                     "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [0, 1],
-                "intents": intents.Intent.ALL,
+                "intents": intents.Intent.ALL_UNPRIVILEGED,
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
