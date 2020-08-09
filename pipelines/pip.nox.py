@@ -42,7 +42,7 @@ def temp_chdir(session: nox.Session, target: str):
 
 def predicate():
     commit_ref = os.getenv("CI_COMMIT_REF_NAME")
-    return commit_ref in (config.PROD_BRANCH, config.PREPROD_BRANCH) and "CI" in os.environ
+    return commit_ref in (config.PROD_BRANCH, config.PREPROD_BRANCH) and config.IS_CI
 
 
 @nox.session(reuse_venv=False, only_if=predicate)
