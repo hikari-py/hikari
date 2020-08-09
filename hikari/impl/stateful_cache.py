@@ -756,11 +756,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         emoji_data.ref_count -= decrement
 
-        if self._can_delete_emoji(emoji_data):
+        if self._can_remove_emoji(emoji_data):
             del self._emoji_entries[emoji_id]
 
     @staticmethod
-    def _can_delete_emoji(emoji: _KnownCustomEmojiData) -> bool:
+    def _can_remove_emoji(emoji: _KnownCustomEmojiData) -> bool:
         return emoji.has_been_deleted is True and emoji.ref_count < 1
 
     def _clear_emojis(
@@ -776,7 +776,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             emoji_ids = guild_record.emojis
             guild_record.emojis = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         cached_emojis = {}
         cached_users = {}
@@ -784,7 +784,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         for emoji_id in emoji_ids:
             emoji_data = self._emoji_entries[emoji_id]
             emoji_data.has_been_deleted = True
-            if not self._can_delete_emoji(emoji_data):
+            if not self._can_remove_emoji(emoji_data):
                 continue
 
             del self._emoji_entries[emoji_id]
@@ -804,7 +804,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         for guild_id, guild_record in tuple(self._guild_entries.items()):
             if guild_record.emojis is not None:  # TODO: add test coverage for this.
                 guild_record.emojis = None
-                self._delete_guild_record_if_empty(guild_id)
+                self._remove_guild_record_if_empty(guild_id)
 
         return result
 
@@ -819,7 +819,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             return None
 
         emoji_data.has_been_deleted = True
-        if not self._can_delete_emoji(emoji_data):
+        if not self._can_remove_emoji(emoji_data):
             return None
 
         emoji = self._build_emoji(emoji_data)
@@ -895,7 +895,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         self.set_emoji(emoji)
         return cached_emoji, self.get_emoji(emoji.id)
 
-    def _delete_guild_record_if_empty(self, guild_id: snowflake.Snowflake) -> None:
+    def _remove_guild_record_if_empty(self, guild_id: snowflake.Snowflake) -> None:
         if guild_id in self._guild_entries and not self._guild_entries[guild_id]:
             del self._guild_entries[guild_id]
 
@@ -915,7 +915,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             cached_guilds[guild_id] = guild_record.guild
             guild_record.guild = None
             guild_record.is_available = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(cached_guilds) if cached_guilds else _EmptyCacheView()
 
@@ -929,7 +929,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if guild is not None:
             guild_record.guild = None
             guild_record.is_available = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return guild
 
@@ -1000,7 +1000,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         cached_channels = {sf: self._guild_channel_entries.pop(sf) for sf in guild_record.channels}
         guild_record.channels = None
-        self._delete_guild_record_if_empty(guild_id)
+        self._remove_guild_record_if_empty(guild_id)
         return _StatefulCacheMappingView(cached_channels)
 
     def delete_guild_channel(self, channel_id: snowflake.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
@@ -1096,7 +1096,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             invite_codes = guild_record.invites
             guild_record.invites = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         else:
             invite_codes = tuple(self._invite_entries.keys())
@@ -1157,7 +1157,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         if not guild_record.invites:
             guild_record.invites = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(
             cached_invites, builder=lambda invite_data: self._build_invite(invite_data, cached_users=cached_users)
@@ -1182,7 +1182,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
                 if not guild_record.invites:
                     guild_record.invites = None  # TODO: test when this is set to None
-                    self._delete_guild_record_if_empty(invite.guild_id)
+                    self._remove_guild_record_if_empty(invite.guild_id)
 
         return invite
 
@@ -1256,7 +1256,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         if not guild_entry.channels:  # TODO: test coverage
             guild_entry.channels = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(
             cached_invites, builder=lambda invite_data: self._build_invite(invite_data, cached_users=cached_users)
@@ -1320,11 +1320,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         return member_data.build_entity(guilds.Member, user=user)
 
-    def _can_remove_member(self, member: _MemberData) -> bool:
+    @staticmethod
+    def _can_remove_member(member: _MemberData, guild_record: _GuildRecord) -> bool:
         if member.has_been_deleted is False:
             return False
 
-        guild_record = self._guild_entries[member.guild_id]
         return bool(not guild_record.voice_states or member.id not in guild_record.voice_states)
 
     def _garbage_collect_member(self, guild_id: snowflake.Snowflake, user_id: snowflake.Snowflake) -> None:
@@ -1333,23 +1333,50 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             return
 
         member_data = guild_record.members[user_id]
-        if not self._can_remove_member(member_data):
+        if not self._can_remove_member(member_data, guild_record):
             return
 
         del guild_record.members[user_id]
         if not guild_record.members:
             guild_record.members = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
+
+    def _chainable_remove_member(self, member: _MemberData, guild_record: _GuildRecord) -> typing.Optional[_MemberData]:
+        assert guild_record.members
+        member.has_been_deleted = True
+        if not self._can_remove_member(member, guild_record):
+            return None
+
+        self._garbage_collect_user(member.id, decrement=1)
+        del guild_record.members[member.id]
+        return member
 
     def clear_members(
         self,
     ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, guilds.Member]]:
         views = {}
+        cached_users = dict(self._user_entries)
+
+        def build_member(member: _MemberData) -> guilds.Member:
+            return self._build_member(member, cached_users=cached_users)
+
         for guild_id, guild_record in tuple(self._guild_entries.items()):
             if not guild_record.members:
                 continue
 
-            views[guild_id] = self.clear_members_for_guild(guild_id)
+            cached_members = {
+                member.id: member
+                for member in itertools.starmap(
+                    self._chainable_remove_member, ((m, guild_record) for m in tuple(guild_record.members.values())),
+                )
+                if member is not None
+            }
+
+            if not guild_record.members:
+                guild_record.members = None
+                self._remove_guild_record_if_empty(guild_id)
+
+            views[guild_id] = _StatefulCacheMappingView(cached_members, builder=build_member)
 
         return _StatefulCacheMappingView(views)
 
@@ -1360,21 +1387,18 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if guild_record is None or guild_record.members is None:
             return _EmptyCacheView()
 
-        cached_members = {}
-        cached_users = {}
-
-        for user_id, member_data in tuple(guild_record.members.items()):
-            member_data.has_been_deleted = True
-            if not self._can_remove_member(member_data):
-                continue
-
-            cached_members[user_id] = guild_record.members.pop(user_id)
-            cached_users[user_id] = self._user_entries[user_id]
-            self._garbage_collect_user(user_id, decrement=1)
+        cached_users = {user_id: self._user_entries[user_id] for user_id in guild_record.members}
+        cached_members = {
+            member.id: member
+            for member in itertools.starmap(
+                self._chainable_remove_member, ((m, guild_record) for m in tuple(guild_record.members.values())),
+            )
+            if member is not None
+        }
 
         if not guild_record.members:
             guild_record.members = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(
             cached_members, builder=lambda member: self._build_member(member, cached_users=cached_users)
@@ -1388,14 +1412,14 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             return None
 
         member_data = guild_record.members.get(user_id)
-        if member_data is None or not self._can_remove_member(member_data):
+        if member_data is None or not self._can_remove_member(member_data, guild_record):
             return None
 
         member = self._build_member(member_data)
         del guild_record.members[user_id]
         if not guild_record.members:
             guild_record.members = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         self._garbage_collect_user(user_id, decrement=1)
         return member
@@ -1433,12 +1457,10 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if guild_record is None or guild_record.members is None:
             return _EmptyCacheView()
 
-        cached_members = {}
-        cached_users = {}
-
-        for user_id, member in guild_record.members.items():
-            cached_users[user_id] = self._user_entries[user_id]
-            cached_members[user_id] = member
+        cached_members = {
+            user_id: member for user_id, member in guild_record.members.items() if not member.has_been_deleted
+        }
+        cached_users = {user_id: self._user_entries[user_id] for user_id in cached_members}
 
         return _StatefulCacheMappingView(
             cached_members, builder=lambda member: self._build_member(member, cached_users=cached_users)
@@ -1706,7 +1728,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         for guild_id, guild_record in tuple(self._guild_entries.items()):
             if guild_record.roles is not None:  # TODO: test coverage for this
                 guild_record.roles = None
-                self._delete_guild_record_if_empty(guild_id)
+                self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(roles)
 
@@ -1719,7 +1741,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         view = _StatefulCacheMappingView({role_id: self._role_entries[role_id] for role_id in guild_record.roles})
         guild_record.roles = None
-        self._delete_guild_record_if_empty(guild_id)
+        self._remove_guild_record_if_empty(guild_id)
         return view
 
     def delete_role(self, role_id: snowflake.Snowflake, /) -> typing.Optional[guilds.Role]:
@@ -1733,7 +1755,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
             if not guild_record.roles:  # TODO: should this make assumptions and be flat?
                 guild_record.roles = None
-                self._delete_guild_record_if_empty(role.guild_id)
+                self._remove_guild_record_if_empty(role.guild_id)
 
         return role
 
@@ -1768,8 +1790,8 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         self.set_role(role)
         return cached_role, self.get_role(role.id)
 
-    def _can_remove_user(self, user_id: snowflake.Snowflake) -> bool:
-        user_data = self._user_entries.get(user_id)
+    @staticmethod
+    def _can_remove_user(user_data: typing.Optional[_GenericRefWrapper[users.User]]) -> bool:
         return bool(user_data and user_data.ref_count == 0)
 
     def _increment_user_ref_count(self, user_id: snowflake.Snowflake, increment: int = 1) -> None:
@@ -1779,7 +1801,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if decrement is not None and user_id in self._user_entries:
             self._increment_user_ref_count(user_id, -decrement)
 
-        if self._can_remove_user(user_id):
+        if self._can_remove_user(self._user_entries.get(user_id)):
             del self._user_entries[user_id]
 
     def clear_users(self) -> cache.ICacheView[snowflake.Snowflake, users.User]:
@@ -1798,7 +1820,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         return _StatefulCacheMappingView(cached_users) if cached_users else _EmptyCacheView()
 
     def delete_user(self, user_id: snowflake.Snowflake, /) -> typing.Optional[users.User]:
-        if self._can_remove_user(user_id):
+        if self._can_remove_user(self._user_entries.get(user_id)):
             return self._user_entries.pop(user_id).object
 
         return None
@@ -1878,7 +1900,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         if not guild_record.voice_states:
             guild_record.voice_states = None
-            self._delete_guild_record_if_empty(guild_id)
+            self._remove_guild_record_if_empty(guild_id)
 
         return _StatefulCacheMappingView(
             cached_voice_states,
@@ -1901,12 +1923,12 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_members = {}
         cached_users = {}
 
-        for user_id in cached_voice_states.keys():
+        for user_id in cached_voice_states:
             cached_members[user_id] = guild_record.members[user_id]
             cached_users[user_id] = self._user_entries[user_id]
             self._garbage_collect_member(guild_id, user_id)
 
-        self._delete_guild_record_if_empty(guild_id)
+        self._remove_guild_record_if_empty(guild_id)
         return _StatefulCacheMappingView(
             cached_voice_states,
             builder=lambda voice_data: self._build_voice_state(
@@ -1930,7 +1952,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         voice_state = self._build_voice_state(voice_state_data)
         self._garbage_collect_member(voice_state.guild_id, voice_state.user_id)
-        self._delete_guild_record_if_empty(guild_id)
+        self._remove_guild_record_if_empty(guild_id)
         return voice_state
 
     def get_voice_state(
@@ -1992,7 +2014,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_members = {}
         cached_users = {}
 
-        for user_id in voice_states.keys():
+        for user_id in voice_states:
             cached_members[user_id] = guild_record.members[user_id]
             cached_users[user_id] = self._user_entries[user_id]
 
