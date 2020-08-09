@@ -19,8 +19,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Pdoc documentation generation."""
+import contextlib
+import functools
+import http.server
+import logging
 import os
 import shutil
+import socket
+import threading
+import webbrowser
 
 from pipelines import config
 from pipelines import nox
@@ -50,3 +57,33 @@ def pdoc(session: nox.Session) -> None:
         os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
         os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
     )
+
+
+class HTTPServerThread(threading.Thread):
+    def __init__(self) -> None:
+        logging.basicConfig(level="INFO")
+
+        super().__init__(name="HTTP Server", daemon=True)
+        # Use a socket to obtain a random free port to host the HTTP server on.
+        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+            sock.bind(("", 0))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.host, self.port = sock.getsockname()
+
+        handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=config.ARTIFACT_DIRECTORY)
+        self.server = http.server.HTTPServer((self.host, self.port), handler)
+
+    def run(self) -> None:
+        self.server.serve_forever()
+
+    def close(self) -> None:
+        self.server.shutdown()
+
+
+@nox.session(reuse_venv=True)
+def test_pages(_: nox.Session) -> None:
+    """Start an HTTP server for any generated pages in `/public`."""
+    with contextlib.closing(HTTPServerThread()) as thread:
+        thread.start()
+        webbrowser.open(f"http://{thread.host}:{thread.port}")
+        thread.join()
