@@ -305,7 +305,7 @@ class EventFactoryComponentImpl(event_factory.IEventFactoryComponent):
             if "public_flags" in user_payload:
                 flags = user_models.UserFlag(user_payload["public_flags"])
 
-            user = user_models.PartialUser(
+            user = user_models.PartialUserImpl(
                 app=self._app,
                 id=snowflake.Snowflake(user_payload["id"]),
                 discriminator=discriminator,
