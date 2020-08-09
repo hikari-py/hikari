@@ -663,10 +663,10 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def _build_private_text_channel(
         self,
         channel_data: _PrivateTextChannelData,
-        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]] = None,
     ) -> channels.PrivateTextChannel:
         if cached_users:
-            recipient = copy.copy(cached_users[channel_data.recipient_id])
+            recipient = copy.copy(cached_users[channel_data.recipient_id].object)
         else:
             recipient = copy.copy(self._user_entries[channel_data.recipient_id].object)
 
@@ -681,7 +681,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_users = {}
 
         for user_id in cached_channels.keys():
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             self._garbage_collect_user(user_id, decrement=1)
 
         return _StatefulCacheMappingView(
@@ -709,9 +709,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if not self._private_text_channel_entries:
             return _EmptyCacheView()
 
-        cached_users = {
-            sf: user.object for sf, user in self._user_entries.items() if sf in self._private_text_channel_entries
-        }
+        cached_users = {sf: user for sf, user in self._user_entries.items() if sf in self._private_text_channel_entries}
         return _StatefulCacheMappingView(
             dict(self._private_text_channel_entries),
             builder=lambda channel: self._build_private_text_channel(channel, cached_users),
@@ -735,11 +733,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def _build_emoji(
         self,
         emoji_data: _KnownCustomEmojiData,
-        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]] = None,
     ) -> emojis.KnownCustomEmoji:
         user: typing.Optional[users.User]
         if cached_users is not None and emoji_data.user_id is not None:
-            user = copy.copy(cached_users[emoji_data.user_id])
+            user = copy.copy(cached_users[emoji_data.user_id].object)
         elif emoji_data.user_id is not None:
             user = copy.copy(self._user_entries[emoji_data.user_id].object)
         else:
@@ -793,7 +791,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             cached_emojis[emoji_id] = emoji_data
 
             if emoji_data.user_id is not None:
-                cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id].object
+                cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id]
                 self._garbage_collect_user(emoji_data.user_id, decrement=1)
 
         return _StatefulCacheMappingView(
@@ -862,7 +860,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             cached_emojis[emoji_id] = emoji_data
 
             if emoji_data.user_id is not None:
-                cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id].object
+                cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id]
 
         return _StatefulCacheMappingView(
             cached_emojis, builder=lambda emoji: self._build_emoji(emoji, cached_users=cached_users)
@@ -1062,11 +1060,13 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def _build_invite(
         self,
         invite_data: _InviteData,
-        cached_users: undefined.UndefinedOr[typing.Mapping[snowflake.Snowflake, users.User]] = undefined.UNDEFINED,
+        cached_users: undefined.UndefinedOr[
+            typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]
+        ] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         inviter: typing.Optional[users.User]
         if cached_users is not undefined.UNDEFINED and invite_data.inviter_id is not None:
-            inviter = copy.copy(cached_users[invite_data.inviter_id])
+            inviter = copy.copy(cached_users[invite_data.inviter_id].object)
         elif invite_data.inviter_id is not None:
             inviter = copy.copy(self._user_entries[invite_data.inviter_id].object)
         else:
@@ -1074,7 +1074,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         target_user: typing.Optional[users.User]
         if cached_users is not undefined.UNDEFINED and invite_data.target_user_id is not None:
-            target_user = copy.copy(cached_users[invite_data.target_user_id])
+            target_user = copy.copy(cached_users[invite_data.target_user_id].object)
         elif invite_data.target_user_id is not None:
             target_user = copy.copy(self._user_entries[invite_data.target_user_id].object)
         else:
@@ -1109,11 +1109,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             cached_invites[code] = invite_data
 
             if invite_data.inviter_id is not None:
-                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id].object
+                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id]
                 self._garbage_collect_user(invite_data.inviter_id, decrement=1)
 
             if invite_data.target_user_id is not None:
-                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id].object
+                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id]
                 self._garbage_collect_user(invite_data.target_user_id, decrement=1)
 
         return _StatefulCacheMappingView(
@@ -1148,11 +1148,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             guild_record.invites.remove(code)
 
             if invite_data.inviter_id is not None:
-                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id].object
+                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id]
                 self._garbage_collect_user(invite_data.inviter_id, decrement=1)
 
             if invite_data.target_user_id is not None:
-                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id].object
+                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id]
                 self._garbage_collect_user(invite_data.target_user_id, decrement=1)
 
         if not guild_record.invites:
@@ -1211,10 +1211,10 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             cached_invites[code] = invite_data
 
             if invite_data.inviter_id is not None:
-                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id].object
+                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id]
 
             if invite_data.target_user_id is not None:
-                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id].object
+                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id]
 
         return _StatefulCacheMappingView(
             cached_invites, builder=lambda invite_data: self._build_invite(invite_data, cached_users=cached_users)
@@ -1249,10 +1249,10 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
             del self._invite_entries[code]
 
             if invite_data.inviter_id is not None:
-                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id].object
+                cached_users[invite_data.inviter_id] = self._user_entries[invite_data.inviter_id]
 
             if invite_data.target_user_id is not None:
-                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id].object
+                cached_users[invite_data.target_user_id] = self._user_entries[invite_data.target_user_id]
 
         if not guild_entry.channels:  # TODO: test coverage
             guild_entry.channels = None
@@ -1311,12 +1311,12 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def _build_member(
         self,
         member_data: _MemberData,
-        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]] = None,
     ) -> guilds.Member:
         if cached_users is None:
             user = copy.copy(self._user_entries[member_data.id].object)
         else:
-            user = copy.copy(cached_users[member_data.id])
+            user = copy.copy(cached_users[member_data.id].object)
 
         return member_data.build_entity(guilds.Member, user=user)
 
@@ -1369,7 +1369,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                 continue
 
             cached_members[user_id] = guild_record.members.pop(user_id)
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             self._garbage_collect_user(user_id, decrement=1)
 
         if not guild_record.members:
@@ -1413,15 +1413,18 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def get_members_view(
         self,
     ) -> cache.ICacheView[snowflake.Snowflake, cache.ICacheView[snowflake.Snowflake, guilds.Member]]:
-        views = {}
+        cached_users = dict(self._user_entries)
 
-        for guild_id, guild_record in self._guild_entries.items():
-            if not guild_record.members:  # TODO: if None?
-                continue
+        def member_builder(member: _MemberData) -> guilds.Member:
+            return self._build_member(member, cached_users=cached_users)
 
-            views[guild_id] = self.get_members_view_for_guild(guild_id)
-
-        return _3DCacheMappingView(views)
+        return _3DCacheMappingView(
+            {
+                guild_id: _StatefulCacheMappingView(view.members, builder=member_builder)
+                for guild_id, view in self._guild_entries.items()
+                if view.members
+            }
+        )
 
     def get_members_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
@@ -1434,7 +1437,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_users = {}
 
         for user_id, member in guild_record.members.items():
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             cached_members[user_id] = member
 
         return _StatefulCacheMappingView(
@@ -1467,7 +1470,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         cached_emojis: typing.Optional[
             typing.Mapping[typing.Union[str, snowflake.Snowflake], typing.Union[emojis.Emoji, _KnownCustomEmojiData]]
         ] = None,
-        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]] = None,
     ) -> presences.MemberPresence:
         presence_kwargs: typing.MutableSequence[typing.Mapping[str, typing.Optional[emojis.Emoji]]] = []
         for activity_data in presence_data.activities:
@@ -1541,7 +1544,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                     known_emoji_data = self._emoji_entries[emoji_identifier]
 
                     if known_emoji_data.user_id is not None:
-                        cached_users[known_emoji_data.user_id] = self._user_entries[known_emoji_data.user_id].object
+                        cached_users[known_emoji_data.user_id] = self._user_entries[known_emoji_data.user_id]
 
                     cached_emojis[emoji_identifier] = known_emoji_data
                     self._garbage_collect_emoji(emoji_identifier, decrement=-1)
@@ -1640,7 +1643,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                     emoji_data = self._emoji_entries[emoji_identifier]
 
                     if emoji_data.user_id is not None:
-                        cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id].object
+                        cached_users[emoji_data.user_id] = self._user_entries[emoji_data.user_id]
 
                     cached_emojis[emoji_identifier] = emoji_data
 
@@ -1828,7 +1831,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         self,
         voice_data: _VoiceStateData,
         cached_members: typing.Optional[typing.Mapping[snowflake.Snowflake, _MemberData]] = None,
-        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, users.User]] = None,
+        cached_users: typing.Optional[typing.Mapping[snowflake.Snowflake, _GenericRefWrapper[users.User]]] = None,
     ) -> voices.VoiceState:
         if cached_members:
             member = self._build_member(cached_members[voice_data.user_id], cached_users=cached_users)
@@ -1870,7 +1873,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                 continue
 
             cached_members[user_id] = guild_record.members[user_id]
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             cached_voice_states[user_id] = voice_state
 
         if not guild_record.voice_states:
@@ -1900,7 +1903,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         for user_id in cached_voice_states.keys():
             cached_members[user_id] = guild_record.members[user_id]
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             self._garbage_collect_member(guild_id, user_id)
 
         self._delete_guild_record_if_empty(guild_id)
@@ -1967,7 +1970,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
                 continue
 
             cached_members[user_id] = guild_record.members[user_id]
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
             cached_voice_states[user_id] = voice_state
 
         return _StatefulCacheMappingView(
@@ -1991,7 +1994,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
 
         for user_id in voice_states.keys():
             cached_members[user_id] = guild_record.members[user_id]
-            cached_users[user_id] = self._user_entries[user_id].object
+            cached_users[user_id] = self._user_entries[user_id]
 
         return _StatefulCacheMappingView(
             voice_states,
