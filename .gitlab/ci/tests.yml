@@ -86,6 +86,11 @@ test:3.9rc:
     - .cpython:3.9rc
     - .test
 
+test:stackless-3.8-rc:
+  extends:
+    - .stackless:3.8-rc
+    - .test
+
 test:twemoji-mapping:
   extends: .cpython
   interruptible: true
@@ -116,6 +121,7 @@ test:results:
     - test:3.8.4
     - test:3.8.5
     - test:3.9rc
+    - test:stackless-3.8-rc
   script:
     - pip install nox virtualenv
     - nox -s coalesce-coverage --no-error-on-external-run
