@@ -62,6 +62,9 @@
   extends:
     - .cpython:3.8
 
+.stackless:3.8-rc:
+  image: nekokatt/stackless-python-hikari:3.8.0-rc
+
 # Shared windows runner. Does not use docker.
 # Python will need to be installed manually.
 .win32:

@@ -69,6 +69,11 @@ install:3.9rc:
     - .cpython:3.9rc
     - .pip
 
+install:stackless-3.8-rc:
+  extends:
+    - .stackless:3.8-rc
+    - .pip
+
 install:results:
   extends:
     - .cpython
@@ -82,6 +87,7 @@ install:results:
     - install:3.8.4
     - install:3.8.5
     - install:3.9rc
+    - install:stackless-3.8-rc
   script:
     - time eval "pip install -Ur $(echo *requirements.txt | sed 's/ / -Ur /g')"
     - pip list -o
