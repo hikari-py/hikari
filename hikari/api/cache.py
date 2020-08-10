@@ -49,6 +49,8 @@ _ValueT = typing.TypeVar("_ValueT")
 class ICacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
     """Interface describing an immutable snapshot view of part of a cache."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @abc.abstractmethod
     def get_item_at(self, index: int) -> _ValueT:
         """Get an entry in the view at position `index`."""
