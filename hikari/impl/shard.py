@@ -455,13 +455,13 @@ class GatewayShardImpl(shard.IGatewayShard):
             if presences is not undefined.UNDEFINED and not self._intents & intents_.Intent.GUILD_PRESENCES:
                 raise errors.MissingIntentError(intents_.Intent.GUILD_PRESENCES)
 
-        if users is not undefined.UNDEFINED and query or limit:
+        if users is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
 
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if users is not undefined.UNDEFINED and len(users) >= 100:
+        if users is not undefined.UNDEFINED and len(users) > 100:
             raise ValueError("'users' is limited to 100 users")
 
         payload = data_binding.JSONObjectBuilder()
