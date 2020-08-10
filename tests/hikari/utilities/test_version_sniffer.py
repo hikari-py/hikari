@@ -272,3 +272,94 @@ class TestFetchVersionInfoFromPyPI:
             assert result.this == distutils.version.LooseVersion(this_version)
             assert result.latest_compatible == distutils.version.LooseVersion(this_version)
             assert result.latest == distutils.version.LooseVersion(this_version)
+
+
+@pytest.mark.asyncio
+class TestLogAvailableUpdates:
+    async def test_when_not_official_release(self):
+        logger = mock.Mock()
+        with mock.patch.object(_about, "__is_official_distributed_release__", new=False):
+            await version_sniffer.log_available_updates(mock.Mock())
+
+        logger.debug.assert_not_called()
+        logger.info.assert_not_called()
+        logger.warning.assert_not_called()
+
+    async def test_when_exception(self):
+        logger = mock.Mock()
+        exception = RuntimeError()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
+        stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", side_effect=exception))
+
+        with stack:
+            await version_sniffer.log_available_updates(logger)
+
+        logger.info.assert_not_called()
+        logger.warning.assert_not_called()
+        logger.debug.assert_called_once_with("Error occurred fetching version info", exc_info=exception)
+
+    async def test_when_package_up_to_date(self):
+        class StubVersionInfo:
+            this = distutils.version.LooseVersion("2.0.0")
+            latest = distutils.version.LooseVersion("2.0.0")
+
+        logger = mock.Mock()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
+        stack.enter_context(
+            mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=StubVersionInfo())
+        )
+
+        with stack:
+            await version_sniffer.log_available_updates(logger)
+
+        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
+        logger.info.assert_called_once_with("package is up to date!")
+
+    async def test_when_non_breaking_changes_available(self):
+        class StubVersionInfo:
+            this = distutils.version.LooseVersion("2.0.0")
+            latest = distutils.version.LooseVersion("3.0.0")
+            latest_compatible = distutils.version.LooseVersion("2.0.1")
+
+        logger = mock.Mock()
+        version = StubVersionInfo()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
+        stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
+
+        with stack:
+            await version_sniffer.log_available_updates(logger)
+
+        logger.debug.assert_not_called()
+        logger.info.assert_not_called()
+        logger.warning.assert_called_once_with(
+            "non-breaking updates are available for hikari, update from v%s to v%s!",
+            version.this,
+            version.latest_compatible,
+        )
+
+    async def test_when_breaking_changes_available(self):
+        class StubVersionInfo:
+            this = distutils.version.LooseVersion("2.0.0")
+            latest = distutils.version.LooseVersion("3.0.0")
+            latest_compatible = distutils.version.LooseVersion("2.0.0")
+
+        logger = mock.Mock()
+        version = StubVersionInfo()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
+        stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
+
+        with stack:
+            await version_sniffer.log_available_updates(logger)
+
+        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
+        logger.info.assert_called_once_with(
+            "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+            version.this,
+            version.latest,
+        )
