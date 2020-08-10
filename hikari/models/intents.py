@@ -372,7 +372,3 @@ class Intent(flag.Flag):
         in your application.
         """
         return bool(self & (self.GUILD_MEMBERS | self.GUILD_PRESENCES))
-
-
-def __getattr__(name: str) -> Intent:
-    return typing.cast("Intent", getattr(Intent, name))

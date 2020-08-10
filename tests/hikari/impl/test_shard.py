@@ -21,7 +21,6 @@
 import asyncio
 import contextlib
 import datetime
-import logging
 
 import aiohttp.client_reqrep
 import mock
@@ -834,6 +833,74 @@ class TestUpdateVoiceState:
 
         client._send_json.assert_awaited_once_with(
             {"op": shard.GatewayShardImpl._Opcode.VOICE_STATE_UPDATE, "d": payload}
+        )
+
+
+@pytest.mark.asyncio
+class TestRequestGuildMembers:
+    @pytest.fixture
+    def client(self, proxy_settings, http_settings):
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
+            url="wss://gateway.discord.gg",
+            token="lol",
+            app=mock.Mock(),
+            http_settings=http_settings,
+            proxy_settings=proxy_settings,
+            shard_id=3,
+            shard_count=17,
+        )
+        return hikari_test_helpers.mock_methods_on(
+            client,
+            except_=(
+                "request_guild_members",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_CloseCode",
+                "_Opcode",
+            ),
+        )
+
+    async def test_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
+        client._intents = intents.Intent.GUILD_INTEGRATIONS
+
+        with pytest.raises(errors.MissingIntentError):
+            await client.request_guild_members(123, query="", limit=0)
+
+    async def test_when_presences_and_GUILD_PRESENCES_not_enabled(self, client):
+        client._intents = intents.Intent.GUILD_INTEGRATIONS
+
+        with pytest.raises(errors.MissingIntentError):
+            await client.request_guild_members(123, query="test", limit=1, presences=True)
+
+    @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
+    async def test_when_specifiying_users_with_limit_or_query(self, client, kwargs):
+        client._intents = intents.Intent.GUILD_INTEGRATIONS
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, users=[], **kwargs)
+
+    @pytest.mark.parametrize("limit", [-1, 101])
+    async def test_when_limit_under_0_or_over_100(self, client, limit):
+        client._intents = None
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, limit=limit)
+
+    async def test_when_users_over_100(self, client):
+        client._intents = None
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, users=range(101))
+
+    async def test_request_guild_members(self, client):
+        client._intents = None
+        client._send_json = mock.AsyncMock()
+
+        await client.request_guild_members(123)
+
+        client._send_json.assert_awaited_once_with(
+            {"op": client._Opcode.REQUEST_GUILD_MEMBERS, "d": {"guild_id": "123", "query": "", "limit": 0}}
         )
 
 
