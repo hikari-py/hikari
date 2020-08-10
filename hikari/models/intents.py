@@ -104,12 +104,12 @@ class Intent(flag.Flag):
     # Checking if ALL in a combination are set:
     expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     if (my_intents & expected_intents) == expected_intents:
-        print("Messages are enabled in guilds and direct messages.")
+        print("Messages are enabled in guilds and private messages.")
 
     # Checking if AT LEAST ONE in a combination is set:
     expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
     if my_intents & expected_intents:
-        print("Messages are enabled in guilds or direct messages.")
+        print("Messages are enabled in guilds or private messages.")
     ```
 
     Removing one or more intents from a combination can be done with the
@@ -299,7 +299,7 @@ class Intent(flag.Flag):
     # will not be documented by pdoc. Alas, my dream of being smart with
     # operator.or_ and functools.reduce has been destroyed.
 
-    ALL_GUILDS = (
+    ALL_GUILDS_UNPRIVILEGED = (
         GUILDS
         | GUILD_BANS
         | GUILD_EMOJIS
@@ -313,19 +313,27 @@ class Intent(flag.Flag):
     )
     """All unprivileged guild-related intents."""
 
-    ALL_GUILDS_PRIVILEGED = ALL_GUILDS | GUILD_MEMBERS | GUILD_PRESENCES
-    """All unprivileged guild intents and all privileged guild intents.
-
-    This combines `Intent.ALL_GUILDS`, `Intent.GUILD_MEMBERS` and
-    `Intent.GUILD_PRESENCES`.
+    ALL_GUILDS_PRIVILEGED = GUILD_MEMBERS | GUILD_PRESENCES
+    """All privileged guild intents.
 
     !!! warning
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
 
-    ALL_DIRECT = PRIVATE_MESSAGES | PRIVATE_MESSAGE_TYPING | PRIVATE_MESSAGE_REACTIONS
-    """All direct message intents."""
+    ALL_GUILDS = ALL_GUILDS_UNPRIVILEGED | ALL_GUILDS_PRIVILEGED
+    """All unprivileged guild intents and all privileged guild intents.
+
+    This combines `Intent.ALL_GUILDS_UNPRIVILEGED` and
+    `Intent.ALL_GUILDS_PRIVILEGED`.
+
+    !!! warning
+        This set of intent is privileged, and requires enabling/whitelisting to
+        use.
+    """
+
+    ALL_PRIVATE = PRIVATE_MESSAGES | PRIVATE_MESSAGE_TYPING | PRIVATE_MESSAGE_REACTIONS
+    """All private message intents."""
 
     ALL_MESSAGES = PRIVATE_MESSAGES | GUILD_MESSAGES
     """All message intents."""
@@ -336,24 +344,18 @@ class Intent(flag.Flag):
     ALL_MESSAGE_TYPING = PRIVATE_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
 
-    ALL = (
-        GUILDS
-        | GUILD_BANS
-        | GUILD_EMOJIS
-        | GUILD_INTEGRATIONS
-        | GUILD_WEBHOOKS
-        | GUILD_INVITES
-        | GUILD_VOICE_STATES
-        | GUILD_MESSAGES
-        | GUILD_MESSAGE_REACTIONS
-        | GUILD_MESSAGE_TYPING
-        | PRIVATE_MESSAGES
-        | PRIVATE_MESSAGE_REACTIONS
-        | PRIVATE_MESSAGE_TYPING
-    )
+    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_PRIVATE
     """All unprivileged intents."""
 
-    ALL_PRIVILEGED = ALL | GUILD_MEMBERS | GUILD_PRESENCES
+    ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED
+    """All privileged intents.
+
+    !!! warning
+        This set of intent is privileged, and requires enabling/whitelisting to
+        use.
+    """
+
+    ALL = ALL_UNPRIVILEGED | ALL_PRIVILEGED
     """All unprivileged and privileged intents.
 
     !!! warning
