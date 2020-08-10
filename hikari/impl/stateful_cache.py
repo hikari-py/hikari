@@ -1050,9 +1050,22 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         if guild_record is None or not guild_record.channels:
             return _EmptyCacheView()
 
-        return _GuildChannelCacheMappingView(
-            {sf: self._guild_channel_entries[sf] for sf in tuple(guild_record.channels)}
-        )
+        cached_channels = {sf: self._guild_channel_entries[sf] for sf in tuple(guild_record.channels)}
+
+        def sorter(args: typing.Tuple[snowflake.Snowflake, channels.GuildChannel]) -> typing.Tuple[int, int, int]:
+            channel = args[1]
+            if isinstance(channel, channels.GuildCategory):
+                return channel.position, -1, 0
+
+            parent_position = -1 if channel.parent_id is None else cached_channels[channel.parent_id].position
+
+            if not isinstance(channel, channels.GuildVoiceChannel):
+                return parent_position, 0, channel.position
+
+            return parent_position, 1, channel.position
+
+        cached_channels = dict(sorted(cached_channels.items(), key=sorter))
+        return _GuildChannelCacheMappingView(cached_channels)
 
     def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
         self._guild_channel_entries[channel.id] = _copy_guild_channel(channel)
