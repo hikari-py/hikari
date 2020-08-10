@@ -108,7 +108,7 @@ class _IDTable(typing.MutableSet[snowflake.Snowflake]):
 
 
 class _StatefulCacheMappingView(cache.ICacheView[_KeyT, _ValueT], typing.Generic[_KeyT, _ValueT]):
-    __slots__: typing.Sequence[str] = ("_builder", "_data", "_predicate")
+    __slots__: typing.Sequence[str] = ("_builder", "_data", "_unpack", "_predicate")
 
     def __init__(
         self,
@@ -175,6 +175,8 @@ class _StatefulCacheMappingView(cache.ICacheView[_KeyT, _ValueT], typing.Generic
 
 
 class _EmptyCacheView(cache.ICacheView[typing.Any, typing.Any]):
+    __slots__: typing.Sequence[str] = ()
+
     def __contains__(self, _: typing.Any) -> typing.Literal[False]:
         return False
 
@@ -623,12 +625,16 @@ def _copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel
 
 
 class _GuildChannelCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflake, channels.GuildChannel]):
+    __slots__: typing.Sequence[str] = ()
+
     @classmethod
     def _copy(cls, value: channels.GuildChannel) -> channels.GuildChannel:
         return _copy_guild_channel(value)
 
 
 class _3DCacheMappingView(_StatefulCacheMappingView[snowflake.Snowflake, cache.ICacheView[_KeyT, _ValueT]]):
+    __slots__: typing.Sequence[str] = ()
+
     @classmethod
     def _copy(cls, value: cache.ICacheView[_KeyT, _ValueT]) -> cache.ICacheView[_KeyT, _ValueT]:
         return value
