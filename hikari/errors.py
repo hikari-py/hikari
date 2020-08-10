@@ -193,7 +193,7 @@ class HTTPResponseError(HTTPError):
             name = self.status.name.replace("_", " ").title()
             name_value = f"{name} {self.status.value}"
         else:
-            name_value = str(self.status)
+            name_value = str(self.status).title()
 
         return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''} for {self.url}"
 
@@ -348,7 +348,7 @@ class BulkDeleteError(HikariError):
         """
         deleted = len(self.messages_deleted)
         total = deleted + len(self.messages_skipped)
-        return 100 * len(self.messages_deleted) / total
+        return 100 * deleted / total
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
@@ -368,7 +368,7 @@ class MissingIntentError(HikariError):
     """The combination of intents that are missing."""
 
     def __str__(self) -> str:
-        return f"You are missing intents: {self.intents}"
+        return f"You are missing the following intent(s): {str(self.intents)}"
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)

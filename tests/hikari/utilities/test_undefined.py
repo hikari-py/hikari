@@ -54,3 +54,8 @@ class TestUndefined:
 
     def test_deepcopy(self):
         assert copy.deepcopy(undefined.UNDEFINED) is undefined.UNDEFINED
+
+
+class TestUndefinedSentinel:
+    def test_new(self):
+        assert type(undefined.UndefinedType.UNDEFINED_VALUE.value)() is undefined.UNDEFINED
