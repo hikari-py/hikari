@@ -238,7 +238,7 @@ class BotAppImpl(bot.IBotApp):
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
-        intents: typing.Optional[intents_.Intent] = intents_.Intent.ALL,
+        intents: typing.Optional[intents_.Intent] = intents_.Intent.ALL_UNPRIVILEGED,
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,

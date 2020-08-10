@@ -40,12 +40,11 @@ FLAKE8_TXT = "public/flake8.txt"
 MYPY_INI = "mypy.ini"
 MYPY_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy.xml")
 MYPY_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy")
-PYDOCSTYLE_INI = "pydocstyle.ini"
 PYTEST_INI = "pytest.ini"
 PYTEST_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pytest.html")
+COVERAGE_INI = "coverage.ini"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 COVERAGE_JUNIT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "tests.xml")
-COVERAGE_INI = "coverage.ini"
 
 # Deployment variables; these only apply to CI stuff specifically.
 VERSION_FILE = _os.path.join(MAIN_PACKAGE, "_about.py")
