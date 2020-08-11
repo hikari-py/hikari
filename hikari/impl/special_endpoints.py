@@ -49,7 +49,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari.api import rest
+    from hikari.api import entity_factory as entity_factory_
     from hikari.models import applications
     from hikari.models import audit_logs
     from hikari.models import colors
@@ -61,14 +61,14 @@ if typing.TYPE_CHECKING:
 
 @typing.final
 class TypingIndicator(special_endpoints.TypingIndicator):
-    """Result type of `hikari.api.rest.IRESTClient.trigger_typing`.
+    """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
     """
@@ -124,14 +124,14 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
-    """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
+    """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
         omitted from the following examples for brevity.
@@ -197,7 +197,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _app: rest.IRESTApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    _entity_factory: entity_factory_.EntityFactory = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _name: str = attr.ib()
 
     # Optional args that we kept hidden.
@@ -378,11 +378,11 @@ class GuildBuilder(special_endpoints.GuildBuilder):
 class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
     """Implementation of an iterator for message history."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_direction", "_first_id", "_route")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_direction", "_first_id", "_route")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        entity_factory: entity_factory_.EntityFactory,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -391,7 +391,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         first_id: undefined.UndefinedOr[str],
     ) -> None:
         super().__init__()
-        self._app = app
+        self._entity_factory = entity_factory
         self._request_call = request_call
         self._direction = direction
         self._first_id = first_id
@@ -411,7 +411,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
             chunk.reverse()
 
         self._first_id = chunk[-1]["id"]
-        return (self._app.entity_factory.deserialize_message(m) for m in chunk)
+        return (self._entity_factory.deserialize_message(m) for m in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -420,11 +420,11 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_first_id", "_route", "_request_call")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_route", "_request_call")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        entity_factory: entity_factory_.EntityFactory,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -433,7 +433,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         emoji: str,
     ) -> None:
         super().__init__()
-        self._app = app
+        self._entity_factory = entity_factory
         self._request_call = request_call
         self._first_id = undefined.UNDEFINED
         self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
@@ -450,7 +450,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
             return None
 
         self._first_id = chunk[-1]["id"]
-        return (self._app.entity_factory.deserialize_user(u) for u in chunk)
+        return (self._entity_factory.deserialize_user(u) for u in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -459,11 +459,11 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_request_call", "_route", "_newest_first", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_route", "_newest_first", "_first_id")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        entity_factory: entity_factory_.EntityFactory,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -471,7 +471,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         first_id: str,
     ) -> None:
         super().__init__()
-        self._app = app
+        self._entity_factory = entity_factory
         self._newest_first = newest_first
         self._request_call = request_call
         self._first_id = first_id
@@ -489,7 +489,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
             return None
 
         self._first_id = chunk[-1]["id"]
-        return (self._app.entity_factory.deserialize_own_guild(g) for g in chunk)
+        return (self._entity_factory.deserialize_own_guild(g) for g in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -498,11 +498,11 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_guild_id", "_request_call", "_route", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_guild_id", "_request_call", "_route", "_first_id")
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        entity_factory: entity_factory_.EntityFactory,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -512,7 +512,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._guild_id = snowflake.Snowflake(str(int(guild)))
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
-        self._app = app
+        self._entity_factory = entity_factory
         # This starts at the default provided by discord instead of the max snowflake
         # because that caused discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
@@ -531,7 +531,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         # noinspection PyTypeChecker
         self._first_id = chunk[-1]["user"]["id"]
 
-        return (self._app.entity_factory.deserialize_member(m, guild_id=self._guild_id) for m in chunk)
+        return (self._entity_factory.deserialize_member(m, guild_id=self._guild_id) for m in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -540,11 +540,18 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
 class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     """Iterator implementation for an audit log."""
 
-    __slots__: typing.Sequence[str] = ("_app", "_action_type", "_request_call", "_route", "_first_id", "_user")
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_action_type",
+        "_request_call",
+        "_route",
+        "_first_id",
+        "_user",
+    )
 
     def __init__(
         self,
-        app: rest.IRESTApp,
+        entity_factory: entity_factory_.EntityFactory,
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
@@ -554,7 +561,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         action_type: undefined.UndefinedOr[int],
     ) -> None:
         self._action_type = action_type
-        self._app = app
+        self._entity_factory = entity_factory
         self._first_id = before
         self._request_call = request_call
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild)
@@ -573,6 +580,6 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         if not response["audit_log_entries"]:
             raise StopAsyncIteration
 
-        log = self._app.entity_factory.deserialize_audit_log(response)
+        log = self._entity_factory.deserialize_audit_log(response)
         self._first_id = str(min(log.entries.keys()))
         return log

@@ -29,9 +29,8 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
     "BasicLazyCachedTCPConnectorFactory",
-    "RESTAppImpl",
-    "RESTAppFactoryImpl",
-    "RESTClientImpl",
+    "RESTApp",
+    "RESTClient",
 ]
 
 import asyncio
@@ -50,12 +49,12 @@ import attr
 
 from hikari import config
 from hikari import errors
+from hikari import traits
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
-from hikari.impl import stateless_cache
 from hikari.models import channels
 from hikari.models import embeds as embeds_
 from hikari.models import emojis
@@ -75,7 +74,6 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
-    from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -91,7 +89,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 
 @typing.final
-class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
+class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
     """Lazy cached TCP connector factory."""
 
     __slots__: typing.Sequence[str] = ("connector", "connector_kwargs")
@@ -112,137 +110,26 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.IConnectorFactory):
         return self.connector
 
 
-class RESTAppImpl(rest_api.IRESTAppContextManager):
-    """Client for a specific set of credentials within a HTTP-only application.
+class _RESTProvider(traits.RESTAware):
+    __slots__: typing.Sequence[str] = ("_rest",)
 
-    Parameters
-    ----------
-    connector_factory : hikari.api.rest.IConnectorFactory or builtins.None
-        A factory that produces an `aiohttp.BaseConnector` when requested.
-
-        Defaults to a connector for a shared `aiohttp.TCPConnector` if
-        `builtins.None`.
-
-        The connector factory is expected to handle providing locks around
-        resources and caching any result as desired.
-    debug : builtins.bool
-        Defaulting to `builtins.False`, if `builtins.True`, then each payload
-        sent and received in HTTP requests will be dumped to debug logs. This
-        will provide useful debugging context at the cost of performance.
-        Generally you do not need to enable this.
-    executor : concurrent.futures.Executor or builtins.None
-        The executor to use for blocking file IO operations. If `builtins.None`
-        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
-        the `asyncio.AbstractEventLoop` will be used instead.
-    http_settings : hikari.config.HTTPSettings
-        HTTP-related settings.
-    proxy_settings : hikari.config.ProxySettings
-        Proxy-related settings.
-    token : builtins.str or builtins.None
-        If defined, the token to use. If not defined, no token will be injected
-        into the `Authorization` header for requests.
-    token_type : builtins.str or builtins.None
-        The token type to use. If undefined, a default is used instead, which
-        will be `Bot`. If no `token` is provided, this is ignored.
-    url : builtins.str or builtins.None
-        The API URL to hit. Generally you can leave this undefined and use the
-        default.
-    version : builtins.int
-        The API version to use. This is interpolated into the default `url`
-        to create the full URL. Currently this only supports `6` or `7`.
-    """
-
-    __slots__: typing.Sequence[str] = (
-        "_cache",
-        "_debug",
-        "_entity_factory",
-        "_executor",
-        "_http_settings",
-        "_proxy_settings",
-        "_rest",
-    )
-
-    def __init__(
-        self,
-        *,
-        connector_factory: rest_api.IConnectorFactory,
-        debug: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor],
-        http_settings: config.HTTPSettings,
-        proxy_settings: config.ProxySettings,
-        token: typing.Optional[str],
-        token_type: typing.Optional[str],
-        url: typing.Optional[str],
-        version: int,
-    ) -> None:
-        self._cache: cache_.ICacheComponent = stateless_cache.StatelessCacheImpl(self)
-        self._debug = debug
-        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(self)
-        self._executor = executor
-        self._http_settings = http_settings
-        self._proxy_settings = proxy_settings
-        self._rest = RESTClientImpl(
-            app=self,
-            connector_factory=connector_factory,
-            connector_owner=False,
-            debug=debug,
-            http_settings=http_settings,
-            proxy_settings=proxy_settings,
-            token=token,
-            token_type=token_type,
-            rest_url=url,
-            version=version,
-        )
+    def __init__(self, rest: typing.Callable[[], rest_api.RESTClient]) -> None:
+        self._rest = rest
 
     @property
-    def cache(self) -> cache_.ICacheComponent:
-        """Return the cache component.
-
-        !!! warn
-            This will always return `builtins.NotImplemented` for HTTP-only applications.
-        """
-        return self._cache
-
-    @property
-    def is_debug_enabled(self) -> bool:
-        return self._debug
-
-    @property
-    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
-        return self._executor
-
-    @property
-    def entity_factory(self) -> entity_factory_.IEntityFactoryComponent:
-        return self._entity_factory
+    def rest(self) -> rest_api.RESTClient:
+        return self._rest()
 
     @property
     def http_settings(self) -> config.HTTPSettings:
-        return self._http_settings
+        return self._rest().http_settings
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
-        return self._proxy_settings
-
-    @property
-    def rest(self) -> rest_api.IRESTClient:
-        return self._rest
-
-    async def close(self) -> None:
-        await self._rest.close()
-
-    async def __aenter__(self) -> RESTAppImpl:
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        await self.close()
+        return self._rest().proxy_settings
 
 
-class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
+class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
@@ -251,7 +138,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
 
     Parameters
     ----------
-    connector_factory : IConnectorFactory or builtins.None
+    connector_factory : ConnectorFactory or builtins.None
         A factory that produces an `aiohttp.BaseConnector` when requested.
 
         Defaults to a connector for a shared `aiohttp.TCPConnector` if
@@ -307,7 +194,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     def __init__(
         self,
         *,
-        connector_factory: typing.Optional[rest_api.IConnectorFactory] = None,
+        connector_factory: typing.Optional[rest_api.ConnectorFactory] = None,
         connector_owner: bool = True,
         debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
@@ -323,7 +210,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         # the connector here and initialised this class in global scope, it
         # would potentially end up using the wrong event loop and aiohttp
         # would then fail when creating an HTTP request.
-        self._connector_factory: rest_api.IConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
+        self._connector_factory: rest_api.ConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
         self._connector_owner = connector_owner
         self._debug = debug
         self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
@@ -332,6 +219,10 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
         self._version = version
+
+    @property
+    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+        return self._executor
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -345,29 +236,38 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.IRESTAppContextManager:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
         if loop != self._event_loop:
             raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
 
-        return RESTAppImpl(
+        # Since we essentially mimic a fake App instance, we need to make a circular provider.
+        # We can achieve this using a lambda. This allows the entity factory to build models that
+        # are also REST-aware
+        entity_factory = entity_factory_impl.EntityFactoryComponentImpl(_RESTProvider(lambda: rest_client))
+
+        rest_client = RESTClient(
             connector_factory=self._connector_factory,
+            connector_owner=self._connector_owner,
             debug=self._debug,
+            entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
-            url=self._url,
+            rest_url=self._url,
             version=self._version,
         )
+
+        return rest_client
 
     async def close(self) -> None:
         if self._connector_owner:
             await self._connector_factory.close()
 
-    async def __aenter__(self) -> RESTAppFactoryImpl:
+    async def __aenter__(self) -> RESTApp:
         return self
 
     async def __aexit__(
@@ -379,7 +279,7 @@ class RESTAppFactoryImpl(rest_api.IRESTAppFactory):
         await self.close()
 
 
-class RESTClientImpl(rest_api.IRESTClient):
+class RESTClient(rest_api.RESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -388,15 +288,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
     Parameters
     ----------
-    app : hikari.api.rest.app.IRESTApp
-        The HTTP application containing all other application components
-        that Hikari uses.
-        connector_factory : typing.Callable[[], typing.Awaitable[aiohttp.BaseConnector]]
-        A factory function that produces an `aiohttp.BaseConnector` when
-        requested.
-
-        Defaults to a connector for an `aiohttp.TCPConnector`.
-    connector_factory : IConnectorFactory or builtins.None
+    connector_factory : ConnectorFactory or builtins.None
         A factory that produces an `aiohttp.BaseConnector` when requested.
 
         Defaults to a connector for a shared `aiohttp.TCPConnector` if
@@ -417,6 +309,11 @@ class RESTClientImpl(rest_api.IRESTClient):
         other information useful for debugging this application. These logs will
         be written as DEBUG log entries. For most purposes, this should be
         left `builtins.False`.
+    entity_factory : hikari.api.entity_factory.EntityFactory
+        The entity factory to use.
+    executor : concurrent.futures.Executor or builtins.None
+        The executor to use for blocking IO. Defaults to the `asyncio` thread
+        pool if set to `builtins.None`.
     token : hikari.utilities.undefined.UndefinedOr[builtins.str]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -440,12 +337,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         "buckets",
         "global_rate_limit",
         "version",
-        "_app",
         "_client_session",
         "_closed_event",
         "_connector_factory",
         "_connector_owner",
         "_debug",
+        "_entity_factory",
+        "_executor",
         "_http_settings",
         "_proxy_settings",
         "_rest_url",
@@ -468,10 +366,11 @@ class RESTClientImpl(rest_api.IRESTClient):
     def __init__(
         self,
         *,
-        app: rest_api.IRESTApp,
-        connector_factory: rest_api.IConnectorFactory,
+        connector_factory: rest_api.ConnectorFactory,
         connector_owner: bool,
         debug: bool,
+        entity_factory: entity_factory_.EntityFactory,
+        executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
@@ -484,12 +383,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         self.global_rate_limit = rate_limits.ManualRateLimiter()
         self.version = version
 
-        self._app = app
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._closed_event = asyncio.Event()
         self._connector_factory = connector_factory
         self._connector_owner = connector_owner
         self._debug = debug
+        self._entity_factory = entity_factory
+        self._executor = executor
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
 
@@ -509,8 +409,12 @@ class RESTClientImpl(rest_api.IRESTClient):
         self._rest_url = rest_url.format(self)
 
     @property
-    def app(self) -> rest_api.IRESTApp:
-        return self._app
+    def http_settings(self) -> config.HTTPSettings:
+        return self._http_settings
+
+    @property
+    def proxy_settings(self) -> config.ProxySettings:
+        return self._proxy_settings
 
     @typing.final
     async def close(self) -> None:
@@ -787,7 +691,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_CHANNEL.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_channel(response)
+        return self._entity_factory.deserialize_channel(response)
 
     async def edit_channel(
         self,
@@ -820,12 +724,12 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_array(
             "permission_overwrites",
             permission_overwrites,
-            conversion=self._app.entity_factory.serialize_permission_overwrite,
+            conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_channel(response)
+        return self._entity_factory.deserialize_channel(response)
 
     async def delete_channel(self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]) -> None:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
@@ -879,7 +783,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_invite_with_metadata)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
 
     async def create_invite(
         self,
@@ -903,7 +807,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put("target_user_type", target_user_type)
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_invite_with_metadata(response)
+        return self._entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
@@ -918,7 +822,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_message)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_message)
 
     async def pin_message(
         self,
@@ -972,7 +876,11 @@ class RESTClientImpl(rest_api.IRESTClient):
             timestamp = undefined.UNDEFINED
 
         return special_endpoints.MessageIterator(
-            app=self._app, request_call=self._request, channel=channel, direction=direction, first_id=timestamp
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            channel=channel,
+            direction=direction,
+            first_id=timestamp,
         )
 
     async def fetch_message(
@@ -983,7 +891,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_message(response)
+        return self._entity_factory.deserialize_message(response)
 
     async def create_message(
         self,
@@ -1044,7 +952,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
         if embed is not undefined.UNDEFINED:
-            embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
+            embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
 
@@ -1056,7 +964,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
             try:
                 for i, attachment in enumerate(final_attachments):
-                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
                     )
@@ -1068,7 +976,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             raw_response = await self._request(route, json=body)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_message(response)
+        return self._entity_factory.deserialize_message(response)
 
     async def edit_message(
         self,
@@ -1106,14 +1014,14 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("content", None)
 
         if isinstance(embed, embeds_.Embed):
-            embed_payload, _ = self._app.entity_factory.serialize_embed(embed)
+            embed_payload, _ = self._entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
         elif embed is None:
             body.put("embed", None)
 
         raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_message(response)
+        return self._entity_factory.deserialize_message(response)
 
     async def delete_message(
         self,
@@ -1244,7 +1152,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
         return special_endpoints.ReactorIterator(
-            app=self._app,
+            entity_factory=self._entity_factory,
             request_call=self._request,
             channel=channel,
             message=message,
@@ -1265,12 +1173,12 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         if avatar is not None:
             avatar_resource = files.ensure_resource(avatar)
-            async with avatar_resource.stream(executor=self._app.executor) as stream:
+            async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_webhook(response)
+        return self._entity_factory.deserialize_webhook(response)
 
     async def fetch_webhook(
         self,
@@ -1287,7 +1195,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_webhook(response)
+        return self._entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
         self, channel: snowflake.SnowflakeishOr[channels.TextChannel],
@@ -1295,7 +1203,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
@@ -1303,7 +1211,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_webhook)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
 
     async def edit_webhook(
         self,
@@ -1330,12 +1238,12 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("avatar", None)
         elif avatar is not undefined.UNDEFINED:
             avatar_resource = files.ensure_resource(avatar)
-            async with avatar_resource.stream(executor=self._app.executor) as stream:
+            async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_webhook(response)
+        return self._entity_factory.deserialize_webhook(response)
 
     async def delete_webhook(
         self,
@@ -1419,7 +1327,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         if embeds is not undefined.UNDEFINED:
             for embed in embeds:
-                embed_payload, embed_attachments = self._app.entity_factory.serialize_embed(embed)
+                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
                 final_attachments.extend(embed_attachments)
 
@@ -1441,7 +1349,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
             try:
                 for i, attachment in enumerate(final_attachments):
-                    stream = await stack.enter_async_context(attachment.stream(executor=self._app.executor))
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
                     form.add_field(
                         f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
                     )
@@ -1453,7 +1361,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             raw_response = await self._request(route, query=query, json=body, no_auth=True)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_message(response)
+        return self._entity_factory.deserialize_message(response)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
@@ -1466,7 +1374,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GATEWAY_BOT.compile()
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_gateway_bot(response)
+        return self._entity_factory.deserialize_gateway_bot(response)
 
     async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
@@ -1474,7 +1382,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         query.put("with_counts", True)
         raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_invite(response)
+        return self._entity_factory.deserialize_invite(response)
 
     async def delete_invite(self, invite: invites.Inviteish) -> None:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
@@ -1484,7 +1392,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_MY_USER.compile()
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_my_user(response)
+        return self._entity_factory.deserialize_my_user(response)
 
     async def edit_my_user(
         self,
@@ -1500,18 +1408,18 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("avatar", None)
         elif avatar is not undefined.UNDEFINED:
             avatar_resource = files.ensure_resource(avatar)
-            async with avatar_resource.stream(executor=self._app.executor) as stream:
+            async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
         raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_my_user(response)
+        return self._entity_factory.deserialize_my_user(response)
 
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         route = routes.GET_MY_CONNECTIONS.compile()
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_own_connection)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_own_connection)
 
     def fetch_my_guilds(
         self,
@@ -1527,7 +1435,10 @@ class RESTClientImpl(rest_api.IRESTClient):
             start_at = int(start_at)
 
         return special_endpoints.OwnGuildIterator(
-            app=self._app, request_call=self._request, newest_first=newest_first, first_id=str(start_at)
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            newest_first=newest_first,
+            first_id=str(start_at),
         )
 
     async def leave_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], /) -> None:
@@ -1542,13 +1453,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_snowflake("recipient_id", user)
         raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_private_text_channel(response)
+        return self._entity_factory.deserialize_private_text_channel(response)
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_application(response)
+        return self._entity_factory.deserialize_application(response)
 
     async def add_user_to_guild(
         self,
@@ -1573,7 +1484,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         if (raw_response := await self._request(route, json=body)) is not None:
             response = typing.cast(data_binding.JSONObject, raw_response)
-            return self._app.entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
+            return self._entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
         else:
             # User already is in the guild.
             return None
@@ -1582,13 +1493,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_VOICE_REGIONS.compile()
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
 
     async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_user(response)
+        return self._entity_factory.deserialize_user(response)
 
     def fetch_audit_log(
         self,
@@ -1608,7 +1519,12 @@ class RESTClientImpl(rest_api.IRESTClient):
             timestamp = str(int(before))
 
         return special_endpoints.AuditLogIterator(
-            app=self._app, request_call=self._request, guild=guild, before=timestamp, user=user, action_type=event_type
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            guild=guild,
+            before=timestamp,
+            user=user,
+            action_type=event_type,
         )
 
     async def fetch_emoji(
@@ -1621,7 +1537,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def fetch_guild_emojis(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
@@ -1630,7 +1546,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(
-            response, self._app.entity_factory.deserialize_known_custom_emoji, guild_id=snowflake.Snowflake(guild)
+            response, self._entity_factory.deserialize_known_custom_emoji, guild_id=snowflake.Snowflake(guild)
         )
 
     async def create_emoji(
@@ -1648,14 +1564,14 @@ class RESTClientImpl(rest_api.IRESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         image_resource = files.ensure_resource(image)
-        async with image_resource.stream(executor=self._app.executor) as stream:
+        async with image_resource.stream(executor=self._executor) as stream:
             body.put("image", await stream.data_uri())
 
         body.put_snowflake_array("roles", roles)
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def edit_emoji(
         self,
@@ -1677,7 +1593,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflake.Snowflake(guild))
 
     async def delete_emoji(
         self,
@@ -1690,7 +1606,9 @@ class RESTClientImpl(rest_api.IRESTClient):
         await self._request(route)
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
-        return special_endpoints.GuildBuilder(app=self._app, request_call=self._request, name=name)
+        return special_endpoints.GuildBuilder(
+            entity_factory=self._entity_factory, request_call=self._request, name=name
+        )
 
     async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         route = routes.GET_GUILD.compile(guild=guild)
@@ -1698,13 +1616,13 @@ class RESTClientImpl(rest_api.IRESTClient):
         query.put("with_counts", True)
         raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_rest_guild(response)
+        return self._entity_factory.deserialize_rest_guild(response)
 
     async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild_preview(response)
+        return self._entity_factory.deserialize_guild_preview(response)
 
     async def edit_guild(
         self,
@@ -1758,7 +1676,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("icon", None)
         elif icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
-            async with icon_resource.stream(executor=self._app.executor) as stream:
+            async with icon_resource.stream(executor=self._executor) as stream:
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("icon", future.result()))
                 tasks.append(task)
@@ -1767,7 +1685,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("splash", None)
         elif splash is not undefined.UNDEFINED:
             splash_resource = files.ensure_resource(splash)
-            async with splash_resource.stream(executor=self._app.executor) as stream:
+            async with splash_resource.stream(executor=self._executor) as stream:
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("splash", future.result()))
                 tasks.append(task)
@@ -1776,7 +1694,7 @@ class RESTClientImpl(rest_api.IRESTClient):
             body.put("banner", None)
         elif banner is not undefined.UNDEFINED:
             banner_resource = files.ensure_resource(banner)
-            async with banner_resource.stream(executor=self._app.executor) as stream:
+            async with banner_resource.stream(executor=self._executor) as stream:
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("banner", future.result()))
                 tasks.append(task)
@@ -1785,7 +1703,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_rest_guild(response)
+        return self._entity_factory.deserialize_rest_guild(response)
 
     async def delete_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
@@ -1797,7 +1715,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        channel_sequence = data_binding.cast_json_array(response, self._app.entity_factory.deserialize_channel)
+        channel_sequence = data_binding.cast_json_array(response, self._entity_factory.deserialize_channel)
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast("typing.Sequence[channels.GuildChannel]", channel_sequence)
 
@@ -1939,12 +1857,12 @@ class RESTClientImpl(rest_api.IRESTClient):
         body.put_array(
             "permission_overwrites",
             permission_overwrites,
-            conversion=self._app.entity_factory.serialize_permission_overwrite,
+            conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        channel = self._app.entity_factory.deserialize_channel(response)
+        channel = self._entity_factory.deserialize_channel(response)
         return typing.cast(channels.GuildChannel, channel)
 
     async def reposition_channels(
@@ -1962,12 +1880,14 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_member(response, guild_id=snowflake.Snowflake(guild))
 
     def fetch_members(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
     ) -> iterators.LazyIterator[guilds.Member]:
-        return special_endpoints.MemberIterator(app=self._app, request_call=self._request, guild=guild)
+        return special_endpoints.MemberIterator(
+            entity_factory=self._entity_factory, request_call=self._request, guild=guild
+        )
 
     async def edit_member(
         self,
@@ -2080,7 +2000,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild_member_ban(response)
+        return self._entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
@@ -2088,14 +2008,14 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_guild_member_ban)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_guild_member_ban)
 
     async def fetch_roles(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(
-            response, self._app.entity_factory.deserialize_role, guild_id=snowflake.Snowflake(guild)
+            response, self._entity_factory.deserialize_role, guild_id=snowflake.Snowflake(guild)
         )
 
     async def create_role(
@@ -2124,7 +2044,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
 
     async def reposition_roles(
         self,
@@ -2163,7 +2083,7 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
+        return self._entity_factory.deserialize_role(response, guild_id=snowflake.Snowflake(guild))
 
     async def delete_role(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], role: snowflake.SnowflakeishOr[guilds.PartialRole],
@@ -2217,7 +2137,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_voice_region)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
 
     async def fetch_guild_invites(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
@@ -2225,7 +2145,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_invite_with_metadata)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
 
     async def fetch_integrations(
         self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
@@ -2233,7 +2153,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._app.entity_factory.deserialize_integration)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_integration)
 
     async def edit_integration(
         self,
@@ -2275,7 +2195,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild_widget(response)
+        return self._entity_factory.deserialize_guild_widget(response)
 
     async def edit_widget(
         self,
@@ -2296,10 +2216,10 @@ class RESTClientImpl(rest_api.IRESTClient):
 
         raw_response = await self._request(route, json=body, reason=reason)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_guild_widget(response)
+        return self._entity_factory.deserialize_guild_widget(response)
 
     async def fetch_vanity_url(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_vanity_url(response)
+        return self._entity_factory.deserialize_vanity_url(response)

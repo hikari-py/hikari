@@ -22,14 +22,13 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IEntityFactoryComponent"]
+__all__: typing.Final[typing.List[str]] = ["EntityFactory"]
 
 import abc
 import typing
 
 import attr
 
-from hikari.api import component
 from hikari.utilities import attr_extensions
 from hikari.utilities import undefined
 
@@ -78,13 +77,13 @@ class GatewayGuildDefinition:
     """
 
     presences: typing.Optional[typing.Mapping[snowflake.Snowflake, presence_models.MemberPresence]] = attr.ib()
-    """Mapping of user IDs to the presences that are active in the guild.
+    """Mapping of user IDs to the include_presences that are active in the guild.
 
     Will be `builtins.None` when returned by guild update gateway events rather
     than create.
 
     !!! note
-        This may be a partial mapping of presences active in the guild.
+        This may be a partial mapping of include_presences active in the guild.
     """
 
     roles: typing.Mapping[snowflake.Snowflake, guild_models.Role] = attr.ib()
@@ -101,7 +100,7 @@ class GatewayGuildDefinition:
     """
 
 
-class IEntityFactoryComponent(component.IComponent, abc.ABC):
+class EntityFactory(abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
     __slots__: typing.Sequence[str] = ()
@@ -753,7 +752,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
             maps of `hikari.utilities.snowflake.Snowflake` mapping to
             `hikari.models.channels.GuildChannel`,
             `hikari.models.guilds.Member`,
-            `hikari.models.presences.MemberPresence`,
+            `hikari.models.include_presences.MemberPresence`,
             `hikari.models.guilds.Role`, and
             `hikari.models.emojis.KnownCustomEmoji`. This is provided in
             several components to allow separate caching and linking
@@ -866,7 +865,7 @@ class IEntityFactoryComponent(component.IComponent, abc.ABC):
 
         !!! note
             At the time of writing, the only place where `guild_id` will be
-            mandatory is when parsing presences sent in a `GUILD_CREATE` event
+            mandatory is when parsing include_presences sent in a `GUILD_CREATE` event
             from Discord, since the `guild_id` attribute in the payload will
             have been omitted for redundancy.
 

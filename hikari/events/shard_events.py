@@ -58,12 +58,12 @@ class ShardEvent(base_events.Event, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def shard(self) -> gateway_shard.IGatewayShard:
+    def shard(self) -> gateway_shard.GatewayShard:
         """Shard that received this event.
 
         Returns
         -------
-        hikari.api.shard.IGatewayShard
+        hikari.api.shard.GatewayShard
             The shard that triggered the event.
         """
 
@@ -81,7 +81,7 @@ class ShardStateEvent(ShardEvent, abc.ABC):
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
@@ -90,7 +90,7 @@ class ShardConnectedEvent(ShardStateEvent):
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
@@ -99,7 +99,7 @@ class ShardDisconnectedEvent(ShardStateEvent):
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
     actual_gateway_version: int = attr.ib(repr=True)
@@ -147,5 +147,5 @@ class ShardReadyEvent(ShardStateEvent):
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.

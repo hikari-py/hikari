@@ -699,7 +699,7 @@ class GuildPreview(PartialGuild):
     """The mapping of IDs to the emojis this guild provides."""
 
     approximate_presence_count: int = attr.ib(eq=False, hash=False, repr=True)
-    """The approximate amount of presences in guild."""
+    """The approximate amount of include_presences in guild."""
 
     approximate_member_count: int = attr.ib(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
@@ -853,7 +853,7 @@ class Guild(PartialGuild, abc.ABC):
     """
 
     max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild.
+    """The maximum number of include_presences for the guild.
 
     If this is `builtins.None`, then the default value is used (currently 25000).
     """
@@ -1168,10 +1168,10 @@ class GatewayGuild(Guild):
 
     @property
     def presences(self) -> typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]:
-        """Get the presences cached for the guild.
+        """Get the include_presences cached for the guild.
 
-        typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-            A mapping of user IDs to objects of the presences cached for the
+        typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+            A mapping of user IDs to objects of the include_presences cached for the
             guild.
         """
         return self.app.cache.get_presences_view_for_guild(self.id)
@@ -1263,7 +1263,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.presences.MemberPresence or builtins.None
+        hikari.models.include_presences.MemberPresence or builtins.None
             The cached presence object if found, else `builtins.None`.
         """
         return self.app.cache.get_presence(self.id, snowflake.Snowflake(user))

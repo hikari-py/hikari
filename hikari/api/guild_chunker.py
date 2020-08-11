@@ -23,24 +23,22 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IGuildChunkerComponent"]
+__all__: typing.Final[typing.List[str]] = ["GuildChunker"]
 
 import abc
 import typing
-
-from hikari.api import component
 
 if typing.TYPE_CHECKING:
     from hikari.models import guilds
 
 
-class IGuildChunkerComponent(component.IComponent, abc.ABC):
+class GuildChunker(abc.ABC):
     """Component specialization that is used to manage guild chunking."""
 
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
+    async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
         """Request for a guild chunk.
 
         Parameters

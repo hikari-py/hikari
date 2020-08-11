@@ -91,7 +91,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     member: guilds.Member = attr.ib()
@@ -123,7 +123,7 @@ class MemberUpdateEvent(MemberEvent):
     This may occur if roles are amended, or if the nickname is changed.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     member: guilds.Member = attr.ib()
@@ -152,7 +152,7 @@ class MemberUpdateEvent(MemberEvent):
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()

@@ -31,7 +31,6 @@ import typing
 import warnings
 
 from hikari import errors
-from hikari.api import event_consumer
 from hikari.api import event_dispatcher
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -41,9 +40,8 @@ from hikari.utilities import data_binding
 from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
-    from hikari.api import bot
-    from hikari.api import cache
     from hikari.api import shard as gateway_shard
+
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -64,31 +62,22 @@ def _default_predicate(_: event_dispatcher.EventT_inv) -> bool:
     return True
 
 
-class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, event_consumer.IEventConsumerComponent):
+class EventManagerComponentBase(event_dispatcher.EventDispatcher):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_mutable_cache", "_waiters")
+    __slots__: typing.Sequence[str] = ("_intents", "_listeners", "_waiters")
 
-    def __init__(
-        self, app: bot.IBotApp, mutable_cache: cache.IMutableCacheComponent, intents: typing.Optional[intents_.Intents],
-    ) -> None:
-        self._app = app
+    def __init__(self, intents: typing.Optional[intents_.Intents]) -> None:
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
-        self._mutable_cache = mutable_cache
-
-    @property
-    @typing.final
-    def app(self) -> bot.IBotApp:
-        return self._app
 
     async def consume_raw_event(
-        self, shard: gateway_shard.IGatewayShard, event_name: str, payload: data_binding.JSONObject
+        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         try:
             callback = getattr(self, "on_" + event_name.lower())
@@ -162,23 +151,6 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
                 return items[:]
 
             return []
-
-    def has_listener(
-        self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
-        *,
-        polymorphic: bool = True,
-    ) -> bool:
-        if polymorphic:
-            for subscribed_event_type, listeners in self._listeners.items():
-                if issubclass(subscribed_event_type, event_type) and callback in listeners:
-                    return True
-            return False
-        else:
-            if event_type not in self._listeners:
-                return False
-            return callback in self._listeners[event_type]
 
     def unsubscribe(
         self,

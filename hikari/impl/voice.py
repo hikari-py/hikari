@@ -32,10 +32,10 @@ import logging
 import typing
 
 from hikari import errors
-from hikari.api import bot
 from hikari.api import event_dispatcher
 from hikari.api import voice
 from hikari.events import voice_events
+from hikari.impl import bot
 from hikari.models import channels
 from hikari.models import guilds
 from hikari.utilities import snowflake
@@ -47,10 +47,10 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.voice.management")
 
 
-_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.IVoiceConnection")
+_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.VoiceConnection")
 
 
-class VoiceComponentImpl(voice.IVoiceComponent):
+class VoiceComponentImpl(voice.VoiceComponent):
     """A standard voice component management implementation.
 
     This is the regular implementation you will generally use to connect to
@@ -59,18 +59,18 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
     __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.IBotApp, dispatcher: event_dispatcher.IEventDispatcherComponent) -> None:
+    def __init__(self, app: bot.BotApp, dispatcher: event_dispatcher.EventDispatcher) -> None:
         self._app = app
         self._dispatcher = dispatcher
-        self._connections: typing.Dict[snowflake.Snowflake, voice.IVoiceConnection] = {}
+        self._connections: typing.Dict[snowflake.Snowflake, voice.VoiceConnection] = {}
         self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     @property
-    def app(self) -> bot.IBotApp:
+    def app(self) -> bot.BotApp:
         return self._app
 
     @property
-    def connections(self) -> typing.Mapping[snowflake.Snowflake, voice.IVoiceConnection]:
+    def connections(self) -> typing.Mapping[snowflake.Snowflake, voice.VoiceConnection]:
         return self._connections.copy()
 
     async def disconnect(self) -> None:
@@ -201,7 +201,7 @@ class VoiceComponentImpl(voice.IVoiceComponent):
 
         return predicate
 
-    async def _on_connection_close(self, connection: voice.IVoiceConnection) -> None:
+    async def _on_connection_close(self, connection: voice.VoiceConnection) -> None:
         try:
             del self._connections[connection.guild_id]
 

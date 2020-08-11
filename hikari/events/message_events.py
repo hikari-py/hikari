@@ -246,7 +246,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
@@ -265,7 +265,7 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
 class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
@@ -278,7 +278,7 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
 class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -297,7 +297,7 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
 class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -310,7 +310,7 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
 class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -329,7 +329,7 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
 class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -364,7 +364,7 @@ class MessageBulkDeleteEvent(MessagesEvent, abc.ABC):
 class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     """Event triggered when messages are bulk-deleted from a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

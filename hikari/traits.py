@@ -43,6 +43,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import datetime
 
     from hikari import config
     from hikari.api import cache
@@ -53,7 +54,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
+
+    # noinspection PyUnresolvedReferences
     from hikari.events import base_events
+    from hikari.models import intents as intents_
+    from hikari.models import users
 
 
 EventT_co = typing.TypeVar("EventT_co", bound="base_events.Event", covariant=True)
@@ -126,12 +131,12 @@ class CacheAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def cache(self) -> cache.ICacheComponent:
+    def cache(self) -> cache.Cache:
         """Return the immutable cache implementation for this object.
 
         Returns
         -------
-        hikari.api.cache.ICacheComponent
+        hikari.api.cache.Cache
             The cache component for this object.
         """
         raise NotImplementedError
@@ -148,12 +153,12 @@ class DispatcherAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def dispatcher(self) -> event_dispatcher.IEventDispatcherComponent:
+    def dispatcher(self) -> event_dispatcher.EventDispatcher:
         """Return the event dispatcher for this object.
 
         Returns
         -------
-        hikari.api.event_dispatcher.IEventDispatcherComponent
+        hikari.api.event_dispatcher.EventDispatcher
             The event dispatcher component.
         """
         raise NotImplementedError
@@ -169,12 +174,12 @@ class EntityFactoryAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def entity_factory(self) -> entity_factory.IEntityFactoryComponent:
+    def entity_factory(self) -> entity_factory.EntityFactory:
         """Return the entity factory implementation for this object.
 
         Returns
         -------
-        hikari.api.entity_factory.IEntityFactoryComponent
+        hikari.api.entity_factory.EntityFactory
             The entity factory component.
         """
         raise NotImplementedError
@@ -217,12 +222,12 @@ class EventFactoryAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def event_factory(self) -> event_factory.IEventFactoryComponent:
+    def event_factory(self) -> event_factory.EventFactory:
         """Return the event factory component.
 
         Returns
         -------
-        hikari.api.event_factory.IEventFactoryComponent
+        hikari.api.event_factory.EventFactory
             The event factory component.
         """
         raise NotImplementedError
@@ -239,12 +244,12 @@ class GuildChunkerAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def chunker(self) -> guild_chunker.IGuildChunkerComponent:
+    def chunker(self) -> guild_chunker.GuildChunker:
         """Return the guild chunker component.
 
         Returns
         -------
-        hikari.api.guild_chunker.IGuildChunkerComponent
+        hikari.api.guild_chunker.GuildChunker
             The guild chunker component.
         """
         raise NotImplementedError
@@ -260,12 +265,12 @@ class RESTAware(NetworkSettingsAware, typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def rest(self) -> rest_.IRESTClient:
+    def rest(self) -> rest_.RESTClient:
         """Return the REST client to use for HTTP requests.
 
         Returns
         -------
-        hikari.api.rest.IRESTClient
+        hikari.api.rest.RESTClient
             The REST client to use.
         """
         raise NotImplementedError
@@ -281,7 +286,63 @@ class ShardAware(NetworkSettingsAware, typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def shards(self) -> typing.Mapping[int, gateway_shard.IGatewayShard]:
+    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[datetime.timedelta]]:
+        """Return a mapping of shard ID to heartbeat latency.
+
+        Any shards that are not yet started will be `builtins.None`.
+
+        Returns
+        -------
+        typing.Mapping[builtins.int, datetime.timedelta]
+            Each shard ID mapped to the corresponding heartbeat latency.
+        """
+        raise NotImplementedError
+
+    @property
+    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+        """Return the average heartbeat latency of all started shards.
+
+        If no shards are started, this will return `None`.
+
+        Returns
+        -------
+        datetime.timedelta or builtins.None
+            The average heartbeat latency of all started shards, or
+            `builtins.None`.
+        """
+        raise NotImplementedError
+
+    @property
+    def intents(self) -> typing.Optional[intents_.Intent]:
+        """Return the intents registered for the application.
+
+        If no intents are in use, `builtins.None` is returned instead.
+
+        Returns
+        -------
+        hikari.models.intents.Intent or builtins.None
+            The intents registered on this application.
+        """
+        raise NotImplementedError
+
+    @property
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
+
+        Returns
+        -------
+        hikari.models.users.OwnUser or builtins.None
+            The bot user, if known, otherwise `builtins.None`.
+        """
+        raise NotImplementedError
+
+    @property
+    def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
         """Return a mapping of shards in this application instance.
 
         Each shard ID is mapped to the corresponding shard instance.
@@ -291,7 +352,7 @@ class ShardAware(NetworkSettingsAware, typing.Protocol):
 
         Returns
         -------
-        typing.Mapping[int, hikari.api.shard.IGatewayShard]
+        typing.Mapping[int, hikari.api.shard.GatewayShard]
             The shard mapping.
         """
         raise NotImplementedError
@@ -322,12 +383,12 @@ class VoiceAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def voice(self) -> voice_.IVoiceComponent:
+    def voice(self) -> voice_.VoiceComponent:
         """Return the voice connection manager component for this application.
 
         Returns
         -------
-        hikari.api.voice.IVoiceComponent
+        hikari.api.voice.VoiceComponent
             The voice component for the application.
         """
         raise NotImplementedError
