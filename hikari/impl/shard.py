@@ -417,8 +417,8 @@ class GatewayShardImplV6(shard.GatewayShard):
                 "d": {
                     "guild_id": str(int(guild)),
                     "channel_id": str(int(channel)) if channel is not None else None,
-                    "self_mute": self_mute,
-                    "self_deaf": self_deaf,
+                    "mute": self_mute,
+                    "deaf": self_deaf,
                 },
             }
         )
@@ -887,7 +887,7 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         self._logger.debug(message, *args)
 
-    async def _serialize_presence_payload(self) -> data_binding.JSONObject:
+    def _serialize_presence_payload(self) -> data_binding.JSONObject:
         idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
         afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
         status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
