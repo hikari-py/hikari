@@ -189,10 +189,10 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             audit_log_models.AuditLogChangeKey.POSITION: int,
             audit_log_models.AuditLogChangeKey.BITRATE: int,
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflake.Snowflake,
-            audit_log_models.AuditLogChangeKey.PERMISSIONS: permission_models.Permission,
+            audit_log_models.AuditLogChangeKey.PERMISSIONS: permission_models.Permissions,
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
-            audit_log_models.AuditLogChangeKey.ALLOW: permission_models.Permission,
-            audit_log_models.AuditLogChangeKey.DENY: permission_models.Permission,
+            audit_log_models.AuditLogChangeKey.ALLOW: permission_models.Permissions,
+            audit_log_models.AuditLogChangeKey.DENY: permission_models.Permissions,
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.INVITER_ID: snowflake.Snowflake,
             audit_log_models.AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
@@ -272,7 +272,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             icon_hash=guild_fields.icon_hash,
             features=guild_fields.features,
             is_owner=bool(payload["owner"]),
-            my_permissions=permission_models.Permission(int(payload["permissions_new"])),
+            my_permissions=permission_models.Permissions(int(payload["permissions_new"])),
         )
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
@@ -473,8 +473,8 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         return channel_models.PermissionOverwrite(
             id=snowflake.Snowflake(payload["id"]),
             type=channel_models.PermissionOverwriteType(payload["type"]),
-            allow=permission_models.Permission(int(payload["allow_new"])),
-            deny=permission_models.Permission(int(payload["deny_new"])),
+            allow=permission_models.Permissions(int(payload["allow_new"])),
+            deny=permission_models.Permissions(int(payload["deny_new"])),
         )
 
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
@@ -1019,7 +1019,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
             is_hoisted=payload["hoist"],
             position=int(payload["position"]),
             # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
-            permissions=permission_models.Permission(int(payload["permissions_new"])),
+            permissions=permission_models.Permissions(int(payload["permissions_new"])),
             is_managed=payload["managed"],
             is_mentionable=payload["mentionable"],
         )
@@ -1216,7 +1216,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
-        my_permissions = permission_models.Permission(payload["permissions"]) if "permissions" in payload else None
+        my_permissions = permission_models.Permissions(payload["permissions"]) if "permissions" in payload else None
         is_large = payload["large"] if "large" in payload else None
         joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
         member_count = int(payload["member_count"]) if "member_count" in payload else None

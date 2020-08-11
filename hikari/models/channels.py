@@ -145,21 +145,21 @@ class PermissionOverwrite(snowflake.Unique):
     type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True, repr=True)
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False,
+    allow: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False,
     )
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
+    deny: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
     )
     """The permissions this overwrite denies."""
 
     @property
-    def unset(self) -> permissions.Permission:
+    def unset(self) -> permissions.Permissions:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
         # noinspection PyArgumentList
-        return permissions.Permission(~(self.allow | self.deny))
+        return permissions.Permissions(~(self.allow | self.deny))
 
 
 @attr_extensions.with_copy
