@@ -604,15 +604,15 @@
 
         example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
-        is_protocol = getattr(c.obj, "_is_protocol", False)
+        suppress_params = getattr(c.obj, "_is_protocol", False)
 
-        if not is_protocol and (len(params) > 4 or len(example_str) > 70 and len(params) > 0):
+        if not suppress_params and (len(params) > 4 or len(example_str) > 70 and len(params) > 0):
             representation = "\n".join((
                 f"{QUAL_CLASS} {c.name} (",
                 *(f"    {p}," for p in params),
                 "): ..."
             ))
-        elif params and not is_protocol:
+        elif params and not suppress_params:
             representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
             representation = f"{QUAL_CLASS} {c.name}: ..."
