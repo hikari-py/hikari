@@ -11,13 +11,13 @@ We would like to keep consistency in how branches are named.
 
 To push branches directly to the remote, you will have to name them like this:
   - `task/issue-number-small-info-on-branch`
-    - This should be the default for any commit that doesnt fall in any of the cases under
+    - This should be the default for any commit that doesnt fall in any of the cases under.
   - `feature/issue-number-small-info-on-branch`
-    - This should be used for branches that require more tasks to merge into before going as one MR into `development`
+    - This should be used for branches that require more tasks to merge into before going as one MR into `development`.
   - `bugfix/issue-number-small-info-on-branch`
     - This should be used for bugfixes.
 
-`issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced with a small description of the branch
+`issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced with a small description of the branch.
 
 # Nox
 
@@ -33,21 +33,21 @@ We have several jobs to ensure that the code is at its best that in can be.
 
 This includes:
   - `install`
-    - Test installation
+    - Test installation.
   - `flake8`
-    - Linting
+    - Linting.
   - `mypy`
-    - Type checking
+    - Type checking.
   - `safety`
-    - Vulnerability checking
+    - Vulnerability checking.
   - `twemoji-mapping`
-    - Force test all discord emojis (will only run when a file regarding emojis has been changed)
+    - Force test all discord emojis (will only run when a file regarding emojis has been changed).
   - `pdoc3`
-    - Generate documentation
+    - Generate documentation.
   - `pages`
-    - Generate final documentation
+    - Generate final documentation.
   - `deploy`
-    - Deployment to pypi (will only run on `staging` and `master`)
+    - Deployment to pypi (will only run on `staging` and `master`).
 
 All jobs will need to succeed before anything gets merged.
 
