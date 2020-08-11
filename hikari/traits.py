@@ -22,42 +22,57 @@
 """Core app interface for application implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
+__all__: typing.Final[typing.List[str]] = [
+    "AsyncCallbackT",
+    "EventT_co",
+    "EventT_inv",
+    "PredicateT",
+    "CacheAware",
+    "DispatcherAware",
+    "EntityFactoryAware",
+    "EventFactoryAware",
+    "ExecutorAware",
+    "GuildChunkerAware",
+    "NetworkSettingsAware",
+    "RESTAware",
+    "ShardAware",
+    "VoiceAware",
+]
 
 import typing
 
 if typing.TYPE_CHECKING:
-    import asyncio
+    import concurrent.futures
 
+    from hikari import config
     from hikari.api import cache
     from hikari.api import entity_factory
-    from hikari.api import event_consumer
     from hikari.api import event_dispatcher
     from hikari.api import event_factory
     from hikari.api import guild_chunker
-    from hikari.api import rest
+    from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
-    from hikari.api import voice
+    from hikari.api import voice as voice_
     from hikari.events import base_events
-    from hikari.utilities import data_binding
 
-EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
+
+EventT_co = typing.TypeVar("EventT_co", bound="base_events.Event", covariant=True)
 """Type-hint for a covariant event implementation instance.
 
 This will bind to the bound event type, or any subclass of that type.
 """
 
-EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
+EventT_inv = typing.TypeVar("EventT_inv", bound="base_events.Event")
 """Type-hint for an invariant event implementation instance.
 
-This will bind to the bound event type only. Subclasses and superclasses will 
+This will bind to the bound event type only. Subclasses and superclasses will
 not be matched.
 """
 
 PredicateT = typing.Callable[[EventT_co], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
 """Type-hint for an event waiter predicate.
 
-This should be a function or coroutine function that consumes a covariant 
+This should be a function or coroutine function that consumes a covariant
 instance of the bound event type and returns a boolean that matches
 `builtins.True` if the event is a match for the waiter, or `builtins.False`
 otherwise.
@@ -73,12 +88,41 @@ This is not expected to return anything.
 """
 
 
+class NetworkSettingsAware(typing.Protocol):
+    """Structural supertype for any component aware of network settings."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def http_settings(self) -> config.HTTPSettings:
+        """Return the HTTP settings in use by this component.
+
+        Returns
+        -------
+        hikari.config.HTTPSettings
+            The HTTP settings in use.
+        """
+        raise NotImplementedError
+
+    @property
+    def proxy_settings(self) -> config.ProxySettings:
+        """Return the proxy settings in use by this component.
+
+        Returns
+        -------
+        hikari.config.ProxySettings
+            The proxy settings in use.
+        """
+        raise NotImplementedError
+
+
 @typing.runtime_checkable
 class CacheAware(typing.Protocol):
     """Structural supertype for a cache-aware object.
 
     Any cache-aware objects are able to access the Discord application cache.
     """
+
     __slots__: typing.Sequence[str] = ()
 
     @property
@@ -90,6 +134,7 @@ class CacheAware(typing.Protocol):
         hikari.api.cache.ICacheComponent
             The cache component for this object.
         """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
@@ -99,6 +144,7 @@ class DispatcherAware(typing.Protocol):
     Dispatcher-aware components are able to register and dispatch
     event listeners and waiters.
     """
+
     __slots__: typing.Sequence[str] = ()
 
     @property
@@ -110,6 +156,7 @@ class DispatcherAware(typing.Protocol):
         hikari.api.event_dispatcher.IEventDispatcherComponent
             The event dispatcher component.
         """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
@@ -118,6 +165,7 @@ class EntityFactoryAware(typing.Protocol):
 
     These components will be able to construct library entities.
     """
+
     __slots__: typing.Sequence[str] = ()
 
     @property
@@ -129,6 +177,34 @@ class EntityFactoryAware(typing.Protocol):
         hikari.api.entity_factory.IEntityFactoryComponent
             The entity factory component.
         """
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class ExecutorAware(typing.Protocol):
+    """Structural supertype for an executor-aware object.
+
+    These components will contain an `executor` attribute that may return
+    a `concurrent.futures.Executor` or `builtins.None` if the
+    default `asyncio` thread pool for the event loop is used.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+        """Return the executor to use for blocking operations.
+
+        This may return `builtins.None` if the default `asyncio` thread pool
+        should be used instead.
+
+        Returns
+        -------
+        concurrent.futures.Executor or builtins.None
+            The executor to use, or `builtins.None` to use the `asyncio` default
+            instead.
+        """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
@@ -137,6 +213,7 @@ class EventFactoryAware(typing.Protocol):
 
     These components are able to construct library events.
     """
+
     __slots__: typing.Sequence[str] = ()
 
     @property
@@ -148,15 +225,15 @@ class EventFactoryAware(typing.Protocol):
         hikari.api.event_factory.IEventFactoryComponent
             The event factory component.
         """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
 class GuildChunkerAware(typing.Protocol):
     """Structural supertype for a guild chunker-aware object.
 
-    These are able to request member chunks for guilds via the
-    gateway to retrieve mass member and presence information in
-    bulk.
+    These are able to request member chunks for guilds via the gateway to
+    retrieve mass member and presence information in bulk.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -170,10 +247,32 @@ class GuildChunkerAware(typing.Protocol):
         hikari.api.guild_chunker.IGuildChunkerComponent
             The guild chunker component.
         """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
-class ShardAware(typing.Protocol):
+class RESTAware(NetworkSettingsAware, typing.Protocol):
+    """Structural supertype for a REST-aware object.
+
+    These are able to perform REST API calls.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def rest(self) -> rest_.IRESTClient:
+        """Return the REST client to use for HTTP requests.
+
+        Returns
+        -------
+        hikari.api.rest.IRESTClient
+            The REST client to use.
+        """
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class ShardAware(NetworkSettingsAware, typing.Protocol):
     """Structural supertype for a shard-aware object.
 
     These will expose a mapping of shards and a
@@ -195,6 +294,7 @@ class ShardAware(typing.Protocol):
         typing.Mapping[int, hikari.api.shard.IGatewayShard]
             The shard mapping.
         """
+        raise NotImplementedError
 
     @property
     def shard_count(self) -> int:
@@ -208,6 +308,7 @@ class ShardAware(typing.Protocol):
         builtins.int
             The number of shards in the total application.
         """
+        raise NotImplementedError
 
 
 @typing.runtime_checkable
@@ -219,3 +320,14 @@ class VoiceAware(typing.Protocol):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    def voice(self) -> voice_.IVoiceComponent:
+        """Return the voice connection manager component for this application.
+
+        Returns
+        -------
+        hikari.api.voice.IVoiceComponent
+            The voice component for the application.
+        """
+        raise NotImplementedError
