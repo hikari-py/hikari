@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(
-    intents.Intent.GUILDS, intents.Intent.GUILD_BANS, intents.Intent.GUILD_EMOJIS, intents.Intent.GUILD_PRESENCES
+    intents.Intents.GUILDS, intents.Intents.GUILD_BANS, intents.Intents.GUILD_EMOJIS, intents.Intents.GUILD_PRESENCES
 )
 class GuildEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any guild-bound event."""
@@ -79,7 +79,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildVisibilityEvent(GuildEvent, abc.ABC):
     """Event base for any event that changes the visibility of a guild.
 
@@ -92,7 +92,7 @@ class GuildVisibilityEvent(GuildEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
 
@@ -178,7 +178,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildLeaveEvent(GuildVisibilityEvent):
     """Event fired when the bot is banned/kicked/leaves a guild.
 
@@ -194,7 +194,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUnavailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes unavailable because of an outage."""
 
@@ -207,7 +207,7 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
 
@@ -248,7 +248,7 @@ class GuildUpdateEvent(GuildEvent):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanEvent(GuildEvent, abc.ABC):
     """Event base for any guild ban or unban."""
 
@@ -266,7 +266,7 @@ class BanEvent(GuildEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
 
@@ -282,7 +282,7 @@ class BanCreateEvent(BanEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
 
@@ -298,7 +298,7 @@ class BanDeleteEvent(BanEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
 
@@ -320,7 +320,7 @@ class EmojisUpdateEvent(GuildEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class IntegrationsUpdateEvent(GuildEvent):
     """Event that is fired when the integrations in a guild are changed.
 
@@ -345,7 +345,7 @@ class IntegrationsUpdateEvent(GuildEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
+@base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
 class PresenceUpdateEvent(shard_events.ShardEvent):
     """Event fired when a user in a guild updates their presence in a guild.
 

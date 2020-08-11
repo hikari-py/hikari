@@ -468,7 +468,7 @@ class Role(PartialRole):
     and increase as you go up the hierarchy.
     """
 
-    permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to,
 
     This may be overridden by channel overwrites.
@@ -1101,7 +1101,7 @@ class RESTGuild(Guild):
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
-    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
+    my_permissions: typing.Optional[permissions_.Permissions] = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the bot user.
 
     This will not take into account permission overwrites or implied

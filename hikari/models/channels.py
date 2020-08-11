@@ -125,13 +125,13 @@ class PermissionOverwrite(snowflake.Unique):
     overwrite = PermissionOverwrite(
         type=PermissionOverwriteType.MEMBER,
         allow=(
-            Permission.VIEW_CHANNEL
-            | Permission.READ_MESSAGE_HISTORY
-            | Permission.SEND_MESSAGES
+            Permissions.VIEW_CHANNEL
+            | Permissions.READ_MESSAGE_HISTORY
+            | Permissions.SEND_MESSAGES
         ),
         deny=(
-            Permission.MANAGE_MESSAGES
-            | Permission.SPEAK
+            Permissions.MANAGE_MESSAGES
+            | Permissions.SPEAK
         ),
     )
     ```
@@ -146,12 +146,12 @@ class PermissionOverwrite(snowflake.Unique):
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False,
+        converter=permissions.Permission, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False,
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False
+        converter=permissions.Permission, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
     )
     """The permissions this overwrite denies."""
 

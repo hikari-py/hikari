@@ -326,8 +326,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel: snowflake.SnowflakeishOr[channels.GuildChannel],
         target: typing.Union[channels.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
         *,
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a target entity."""
@@ -340,8 +340,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         target: snowflake.Snowflakeish,
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a given entity ID and type."""
@@ -355,8 +355,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         ],
         *,
         target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
@@ -1661,7 +1661,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1685,7 +1685,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

@@ -61,7 +61,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_VOICE_STATES)
+@base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):

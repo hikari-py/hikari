@@ -19,16 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Bitfield of permissions.
-
-All permissions in the `Permissions` class are exported to this package,
-thus `permissions.Permission.MANAGE_MESSAGES` will behave the same as
-`permissions.MANAGE_MESSAGES`.
-"""
+"""Bitfield of permissions."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Permission"]
+__all__: typing.Final[typing.List[str]] = ["Permissions"]
 
 import enum
 
@@ -40,29 +35,29 @@ from hikari.utilities import flag
 
 @enum.unique
 @typing.final
-class Permission(flag.Flag):
+class Permissions(flag.Flag):
     """Represents the permissions available in a given channel or guild.
 
     This is an int-flag enum. This means that you can **combine multiple
     permissions together** into one value using the bitwise-OR operator (`|`).
 
-        my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
+        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
         your_perms = (
-            Permission.CREATE_INSTANT_INVITE
-            | Permission.KICK_MEMBERS
-            | Permission.BAN_MEMBERS
-            | Permission.MANAGE_GUILD
+            Permissions.CREATE_INSTANT_INVITE
+            | Permissions.KICK_MEMBERS
+            | Permissions.BAN_MEMBERS
+            | Permissions.MANAGE_GUILD
         )
 
     You can **check if a permission is present** in a set of combined
     permissions by using the bitwise-AND operator (`&`). This will return
     the int-value of the permission if it is present, or `0` if not present.
 
-        my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
+        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
-        if my_perms & Permission.MANAGE_CHANNELS:
-            if my_perms & Permission.MANAGE_GUILD:
+        if my_perms & Permissions.MANAGE_CHANNELS:
+            if my_perms & Permissions.MANAGE_GUILD:
                 print("I have the permission to both manage the guild and the channels in it!")
             else:
                 print("I have the permission to manage channels!")
@@ -71,9 +66,9 @@ class Permission(flag.Flag):
 
         # Or you could simplify it:
 
-        if my_perms & (Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD):
+        if my_perms & (Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD):
             print("I have the permission to both manage the guild and the channels in it!")
-        elif my_perms & Permission.MANAGE_CHANNELS:
+        elif my_perms & Permissions.MANAGE_CHANNELS:
             print("I have the permission to manage channels!")
         else:
             print("I don't have the permission to manage channels!")
@@ -82,16 +77,16 @@ class Permission(flag.Flag):
     bitwise-XOR operator (`^`) to check. If the permission is not present, it
     will return a non-zero value, otherwise if it is present, it will return `0`.
 
-        my_perms = Permission.MANAGE_CHANNELS | Permission.MANAGE_GUILD
+        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
-        if my_perms ^ Permission.MANAGE_CHANNELS:
+        if my_perms ^ Permissions.MANAGE_CHANNELS:
             print("Please give me the MANAGE_CHANNELS permission!")
 
     Lastly, if you need all the permissions set except the permission you want,
     you can use the inversion operator (`~`) to do that.
 
         # All permissions except ADMINISTRATOR.
-        my_perms = ~Permission.ADMINISTRATOR
+        my_perms = ~Permissions.ADMINISTRATOR
 
     """
 
@@ -194,7 +189,3 @@ class Permission(flag.Flag):
 
     MANAGE_EMOJIS = 1 << 30
     """Allows management and editing of emojis."""
-
-
-def __getattr__(name: str) -> Permission:
-    return typing.cast("Permission", getattr(Permission, name))

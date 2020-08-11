@@ -67,7 +67,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
@@ -100,7 +100,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         return await self.app.rest.fetch_channel(self.channel_id)
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in guilds."""
@@ -132,7 +132,7 @@ class PrivateChannelEvent(ChannelEvent, abc.ABC):
             ...
 
 
-@base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelCreateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being created."""
@@ -154,7 +154,7 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
         return self.channel.id
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
@@ -178,7 +178,7 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
         return self.channel.guild_id
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
@@ -197,7 +197,7 @@ class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
     """
 
 
-@base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being updated."""
@@ -219,7 +219,7 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
         return self.channel.id
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
@@ -248,7 +248,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
         return self.channel.guild_id
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
@@ -272,7 +272,7 @@ class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
         return self.channel.id
 
 
-@base_events.requires_intents(intents.Intent.GUILDS, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being deleted."""
@@ -299,7 +299,7 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
             ...
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
@@ -334,7 +334,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 
 # TODO: can this actually ever get fired?
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
@@ -389,7 +389,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
             ...
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
@@ -434,7 +434,7 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
             ...
 
 
-@base_events.requires_intents(intents.Intent.GUILD_INVITES)
+@base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteEvent(GuildChannelEvent, abc.ABC):
     """Base event type for guild invite updates."""
@@ -466,7 +466,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
         return await self.app.rest.fetch_invite(self.code)
 
 
-@base_events.requires_intents(intents.Intent.GUILD_INVITES)
+@base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
@@ -501,7 +501,7 @@ class InviteCreateEvent(InviteEvent):
         return self.invite.code
 
 
-@base_events.requires_intents(intents.Intent.GUILD_INVITES)
+@base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
@@ -525,7 +525,7 @@ class InviteDeleteEvent(InviteEvent):
             ...
 
 
-@base_events.requires_intents(intents.Intent.GUILD_WEBHOOKS)
+@base_events.requires_intents(intents.Intents.GUILD_WEBHOOKS)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):

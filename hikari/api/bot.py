@@ -94,14 +94,14 @@ class IBotApp(event_consumer.IEventConsumerApp, event_dispatcher.IEventDispatche
 
     @property
     @abc.abstractmethod
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         """Return the intents registered for the application.
 
         If no intents are in use, `builtins.None` is returned instead.
 
         Returns
         -------
-        hikari.models.intents.Intent or builtins.None
+        hikari.models.intents.Intents or builtins.None
             The intents registered on this application.
         """
 

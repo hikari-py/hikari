@@ -45,9 +45,9 @@ class StatefulGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
 
     __slots__: typing.Sequence[str] = ("_app", "_presences", "_queues", "_chunkers")
 
-    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intent]):
+    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intents]):
         self._app = app
-        self._presences: bool = intents is None or bool(intents & intents_.Intent.GUILD_PRESENCES)
+        self._presences: bool = intents is None or bool(intents & intents_.Intents.GUILD_PRESENCES)
         self._queues: typing.Dict[int, typing.List[int]] = {}
         self._chunkers: typing.Dict[int, asyncio.Task[None]] = {}
 

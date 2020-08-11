@@ -1046,8 +1046,8 @@ class TestRESTClientImplAsync:
             permission_overwrites=[
                 channels.PermissionOverwrite(
                     type=channels.PermissionOverwriteType.MEMBER,
-                    allow=permissions.Permission.VIEW_CHANNEL,
-                    deny=permissions.Permission.MANAGE_MESSAGES,
+                    allow=permissions.Permissions.VIEW_CHANNEL,
+                    deny=permissions.Permissions.MANAGE_MESSAGES,
                     id=1235431,
                 )
             ],
@@ -1086,8 +1086,8 @@ class TestRESTClientImplAsync:
             StubModel(123),
             target,
             target_type=channels.PermissionOverwriteType.MEMBER,
-            allow=permissions.Permission.BAN_MEMBERS,
-            deny=permissions.Permission.CREATE_INSTANT_INVITE,
+            allow=permissions.Permissions.BAN_MEMBERS,
+            deny=permissions.Permissions.CREATE_INSTANT_INVITE,
             reason="cause why not :)",
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
@@ -2193,7 +2193,7 @@ class TestRESTClientImplAsync:
         returned = await rest_client.create_role(
             StubModel(123),
             name="admin",
-            permissions=permissions.Permission.ADMINISTRATOR,
+            permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
             mentionable=False,
@@ -2234,7 +2234,7 @@ class TestRESTClientImplAsync:
             StubModel(123),
             StubModel(789),
             name="admin",
-            permissions=permissions.Permission.ADMINISTRATOR,
+            permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
             mentionable=False,

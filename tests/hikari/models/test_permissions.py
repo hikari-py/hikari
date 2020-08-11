@@ -23,15 +23,15 @@ from hikari.models import permissions
 
 
 def test_Permission_str_operator_on_zero_value():
-    permission = permissions.Permission.NONE
+    permission = permissions.Permissions.NONE
     assert str(permission) == "NONE"
 
 
 def test_Permission_str_operator():
-    permission = permissions.Permission.MANAGE_EMOJIS
+    permission = permissions.Permissions.MANAGE_EMOJIS
     assert str(permission) == "MANAGE_EMOJIS"
 
 
 def test_combined_Permission_str_operator():
-    permission = permissions.Permission.MANAGE_CHANNELS | permissions.Permission.MANAGE_EMOJIS
+    permission = permissions.Permissions.MANAGE_CHANNELS | permissions.Permissions.MANAGE_EMOJIS
     assert str(permission) == "MANAGE_CHANNELS | MANAGE_EMOJIS"

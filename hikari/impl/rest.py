@@ -839,8 +839,8 @@ class RESTClientImpl(rest_api.IRESTClient):
         ],
         *,
         target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if target_type is undefined.UNDEFINED:
@@ -2103,7 +2103,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2141,7 +2141,7 @@ class RESTClientImpl(rest_api.IRESTClient):
         role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

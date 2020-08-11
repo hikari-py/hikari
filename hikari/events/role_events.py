@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class RoleEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that involves guild roles."""
 
@@ -75,7 +75,7 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
@@ -104,7 +104,7 @@ class RoleCreateEvent(RoleEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
@@ -133,7 +133,7 @@ class RoleUpdateEvent(RoleEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
