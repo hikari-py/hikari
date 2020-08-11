@@ -235,7 +235,7 @@ class TestClose:
 
         await client.close()
 
-        client._close_ws.assert_awaited_once_with(client._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+        client._close_ws.assert_awaited_once_with(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
 
     @pytest.mark.parametrize("is_alive", [True, False])
     async def test_websocket_not_closed_if_None(self, client, is_alive):
@@ -303,15 +303,7 @@ class TestRunOnceShielded:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=(
-                "_run_once_shielded",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_dispatch",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            except_=("_run_once_shielded", "_InvalidSession", "_Reconnect", "_SocketClosed", "_dispatch", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger"],
         )
         client._dispatch = mock.AsyncMock()
@@ -385,17 +377,13 @@ class TestRunOnceShielded:
     async def test_invalid_session_resume_does_not_invalidate_session(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         await client._run_once_shielded(client_session)
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
-        )
+        client._close_ws.assert_awaited_once_with(3000, "invalid session (resume)")
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_invalidates_session(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         await client._run_once_shielded(client_session)
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
-        )
+        client._close_ws.assert_awaited_once_with(errors.ShardCloseCode.NORMAL_CLOSURE, "invalid session (no resume)")
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client, client_session):
@@ -461,7 +449,7 @@ class TestRunOnceShielded:
             await client._run_once_shielded(client_session)
 
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+            errors.ShardCloseCode.UNEXPECTED_CONDITION, "unexpected error occurred"
         )
 
 
@@ -480,7 +468,7 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         # Disable backoff checking by making the condition a negative tautology.
@@ -716,8 +704,7 @@ class TestUpdatePresence:
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client,
-            except_=("update_presence", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            client, except_=("update_presence", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
         )
 
     async def test_update_presence_transforms_all_params(self, client):
@@ -814,8 +801,7 @@ class TestUpdateVoiceState:
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client,
-            except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            client, except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
         )
 
     @pytest.mark.parametrize("channel", ["12345", None])
@@ -850,15 +836,7 @@ class TestRequestGuildMembers:
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client,
-            except_=(
-                "request_guild_members",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            client, except_=("request_guild_members", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
         )
 
     async def test_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
@@ -1127,9 +1105,7 @@ class TestCloseZombie:
                 await client._close_zombie()
 
         assert client._zombied is True
-        client._close_ws.assert_called_once_with(
-            code=client._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout"
-        )
+        client._close_ws.assert_called_once_with(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
         create_task.assert_called_once_with(client._close_ws())
         assert mock_task.await_count == 1
         sleep.assert_awaited_once_with(0.1)
@@ -1293,7 +1269,7 @@ class TestExpectOpcode:
             await client._expect_opcode(client._Opcode.HEARTBEAT)
 
         client._close_ws.assert_awaited_once_with(
-            client._CloseCode.RFC_6455_PROTOCOL_ERROR,
+            errors.ShardCloseCode.PROTOCOL_ERROR,
             f"Unexpected opcode {client._Opcode.HEARTBEAT_ACK} received, expected {client._Opcode.HEARTBEAT}",
         )
 

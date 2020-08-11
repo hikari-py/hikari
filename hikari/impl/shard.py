@@ -23,7 +23,10 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GatewayShardImpl"]
+__all__: typing.Final[typing.List[str]] = [
+    "GatewayShardImplV6",
+    "GatewayShardImpl",
+]
 
 import asyncio
 import datetime
@@ -57,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class GatewayShardImpl(shard.IGatewayShard):
+class GatewayShardImplV6(shard.IGatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
@@ -156,38 +159,6 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     @enum.unique
     @typing.final
-    class _CloseCode(enum.IntEnum):
-        RFC_6455_NORMAL_CLOSURE = 1000
-        RFC_6455_GOING_AWAY = 1001
-        RFC_6455_PROTOCOL_ERROR = 1002
-        RFC_6455_TYPE_ERROR = 1003
-        RFC_6455_ENCODING_ERROR = 1007
-        RFC_6455_POLICY_VIOLATION = 1008
-        RFC_6455_TOO_BIG = 1009
-        RFC_6455_UNEXPECTED_CONDITION = 1011
-
-        # Discord seems to invalidate sessions if I send a 1xxx, which is useless
-        # for invalid session and reconnect messages where I want to be able to
-        # resume.
-        DO_NOT_INVALIDATE_SESSION = 3000
-
-        UNKNOWN_ERROR = 4000
-        UNKNOWN_OPCODE = 4001
-        DECODE_ERROR = 4002
-        NOT_AUTHENTICATED = 4003
-        AUTHENTICATION_FAILED = 4004
-        ALREADY_AUTHENTICATED = 4005
-        INVALID_SEQ = 4007
-        RATE_LIMITED = 4008
-        SESSION_TIMEOUT = 4009
-        INVALID_SHARD = 4010
-        SHARDING_REQUIRED = 4011
-        INVALID_VERSION = 4012
-        INVALID_INTENT = 4013
-        DISALLOWED_INTENT = 4014
-
-    @enum.unique
-    @typing.final
     class _Opcode(enum.IntEnum):
         DISPATCH = 0
         HEARTBEAT = 1
@@ -223,6 +194,12 @@ class GatewayShardImpl(shard.IGatewayShard):
     This is potentially important if the internet connection turns off, as the
     bot will simply attempt to reconnect repeatedly until the connection
     resumes.
+    """
+
+    _NO_SESSION_INVALIDATION_CLOSE_CODE: typing.Final[typing.ClassVar[int]] = 3000
+    """Discord seems to invalidate sessions if I send a 1xxx, which is useless
+    for invalid session and reconnect messages where I want to be able to
+    resume.
     """
 
     def __init__(
@@ -394,7 +371,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
             if self._ws is not None:
                 self._logger.warning("gateway client closed, will not attempt to restart")
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+                await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
 
     async def update_presence(
         self,
@@ -522,11 +499,11 @@ class GatewayShardImpl(shard.IGatewayShard):
         except self._InvalidSession as ex:
             if ex.can_resume:
                 self._logger.warning("invalid session, so will attempt to resume session %s now", self._session_id)
-                await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+                await self._close_ws(3000, "invalid session (resume)")
                 self._backoff.reset()
             else:
                 self._logger.warning("invalid session, so will attempt to reconnect with new session in a few seconds")
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self._session_id = None
                 self._session_started_at = None
@@ -534,7 +511,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         except self._Reconnect:
             self._logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
             self._backoff.reset()
-            await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+            await self._close_ws(3000, "reconnecting")
 
         except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
@@ -566,7 +543,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._seq = None
             self._session_id = None
             self._session_started_at = None
-            await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            await self._close_ws(errors.ShardCloseCode.UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
         return True
@@ -738,7 +715,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         # Probably should file a bug report at some point... if I remember.
         self._zombied = True
         close_task = asyncio.create_task(
-            self._close_ws(code=self._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout")
+            self._close_ws(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
         )
         await asyncio.sleep(0.1)
         # noinspection PyProtectedMember
@@ -805,7 +782,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             return typing.cast("data_binding.JSONObject", message["d"])
 
         error_message = f"Unexpected opcode {op} received, expected {opcode}"
-        await self._close_ws(self._CloseCode.RFC_6455_PROTOCOL_ERROR, error_message)
+        await self._close_ws(errors.ShardCloseCode.PROTOCOL_ERROR, error_message)
         raise errors.GatewayError(error_message)
 
     async def _receive_json(self) -> data_binding.JSONObject:
@@ -858,11 +835,11 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._logger.error("connection closed with code %s (%s)", close_code, reason)
 
             can_reconnect = close_code < 4000 or close_code in (
-                self._CloseCode.DECODE_ERROR,
-                self._CloseCode.INVALID_SEQ,
-                self._CloseCode.UNKNOWN_ERROR,
-                self._CloseCode.SESSION_TIMEOUT,
-                self._CloseCode.RATE_LIMITED,
+                errors.ShardCloseCode.DECODE_ERROR,
+                errors.ShardCloseCode.INVALID_SEQ,
+                errors.ShardCloseCode.UNKNOWN_ERROR,
+                errors.ShardCloseCode.SESSION_TIMEOUT,
+                errors.ShardCloseCode.RATE_LIMITED,
             )
 
             # Assume we can always resume first.
@@ -908,3 +885,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             args = (*args, self._seq, self._session_id, len(payload))
 
         self._logger.debug(message, *args)
+
+
+GatewayShardImpl = GatewayShardImplV6
+"""Most up-to-date documented and stable release."""
