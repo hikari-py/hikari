@@ -515,6 +515,8 @@ class Embed:
               timestamp = datetime.datetime.now().astimezone()
               # or
               timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+              
+            NOTE: datetime.utcnow WILL NOT WORK CORRECTLY WITH THIS IMPLEMENTATION.
 
             Relying on timezone-naive datetimes may be deprecated and result in
             an error in future releases.
