@@ -29,7 +29,7 @@ from hikari.models import voices
 class TestVoiceStateUpdateEvent:
     @pytest.fixture
     def event(self):
-        return voice_events.VoiceStateUpdateEvent(shard=object(), state=mock.Mock(voices.VoiceState))
+        return voice_events.VoiceStateUpdateEvent(app=mock.object(), shard=object(), state=mock.Mock(voices.VoiceState))
 
     def test_guild_id_property(self, event):
         event.state.guild_id = 123

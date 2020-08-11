@@ -171,7 +171,7 @@ class TestRESTAppImplAsync:
 
 @pytest.fixture
 def rest_factory():
-    return hikari_test_helpers.unslot_class(rest.RESTAppFactoryImpl)(
+    return hikari_test_helpers.unslot_class(rest.RESTApp)(
         connector_factory=mock.Mock(),
         connector_owner=False,
         debug=True,
@@ -201,11 +201,11 @@ class TestRESTAppFactoryImpl:
     def test_acquire(self, rest_factory):
         mock_event_loop = mock.Mock()
         rest_factory._event_loop = mock_event_loop
-        with mock.patch.object(rest, "RESTAppImpl") as mock_app:
+        with mock.patch.object(rest, "RESTClient") as mock_client:
             with mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop):
                 rest_factory.acquire(token="token", token_type="Type")
 
-        mock_app.assert_called_once_with(
+        mock_client.assert_called_once_with(
             connector_factory=rest_factory._connector_factory,
             debug=rest_factory._debug,
             executor=rest_factory._executor,
@@ -217,7 +217,7 @@ class TestRESTAppFactoryImpl:
             version=3,
         )
 
-    def test_acquire_when__event_loop_and_loop_dont_equal(self, rest_factory):
+    def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_factory):
         rest_factory._event_loop = None
         with mock.patch.object(asyncio, "get_running_loop"):
             with pytest.raises(RuntimeError):
