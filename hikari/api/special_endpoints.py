@@ -45,14 +45,14 @@ if typing.TYPE_CHECKING:
 
 
 class TypingIndicator(abc.ABC):
-    """Result type of `hikari.api.rest.IRESTClient.trigger_typing`.
+    """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
     """
@@ -79,14 +79,14 @@ class TypingIndicator(abc.ABC):
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(abc.ABC):
-    """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
+    """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
         omitted from the following examples for brevity.

@@ -30,7 +30,7 @@ class TestShardEvent:
     @pytest.fixture
     def event(self):
         class ShardEventImpl(shard_events.ShardEvent):
-            shard = mock.Mock(shard.IGatewayShard)
+            shard = mock.Mock(shard.GatewayShard)
 
         return ShardEventImpl()
 

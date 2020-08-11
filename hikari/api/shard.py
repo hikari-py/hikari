@@ -22,13 +22,12 @@
 """Provides an interface for gateway shard implementations to conform to."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GatewayDataFormat", "GatewayCompression", "IGatewayShard"]
+__all__: typing.Final[typing.List[str]] = ["GatewayDataFormat", "GatewayCompression", "GatewayShard"]
 
 import abc
 import enum
 import typing
 
-from hikari.api import component
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
@@ -36,7 +35,6 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import intents as intents_
@@ -67,18 +65,13 @@ class GatewayCompression(str, enum.Enum):
     """Payload compression using ZLIB."""
 
 
-class IGatewayShard(component.IComponent, abc.ABC):
+class GatewayShard(abc.ABC):
     """Interface for a definition of a V6/V7 compatible websocket gateway.
 
     Each instance should represent a single shard.
     """
 
     __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def app(self) -> event_consumer.IEventConsumerApp:
-        ...
 
     @property
     @abc.abstractmethod
@@ -321,10 +314,10 @@ class IGatewayShard(component.IComponent, abc.ABC):
             If `builtins.True`, the user is marked as AFK. If `builtins.False`,
             the user is marked as being active. If undefined, this will not be
             changed.
-        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+        status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
             The web status to show. If undefined, this will not be changed.
         """
 
@@ -373,7 +366,7 @@ class IGatewayShard(component.IComponent, abc.ABC):
         guild: hikari.models.guilds.Guild
             The guild to request chunk for.
         presences: hikari.utilities.undefined.UndefinedOr[builtins.bool]
-            If specified, whether to request presences.
+            If specified, whether to request include_presences.
         query: builtins.str
             If not `builtins.None`, request the members which username starts with the string.
         limit: builtins.int
@@ -393,6 +386,6 @@ class IGatewayShard(component.IComponent, abc.ABC):
             When trying to specify `users` with `query`/`limit`, if `limit` is not between
             0 and 100, both inclusive or if `users` length is over 100.
         hikari.errors.MisingIntent
-            When trying to request presences without the `GUILD_MEMBERS` or when trying to
+            When trying to request include_presences without the `GUILD_MEMBERS` or when trying to
             request the full list of members without `GUILD_PRESENCES`.
         """  # noqa: E501 - Line too long

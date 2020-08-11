@@ -53,20 +53,17 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import config
-    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users
 
 
 @typing.final
-class GatewayShardImplV6(shard.IGatewayShard):
+class GatewayShardImplV6(shard.GatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
-    app : hikari.api.gateway.consumer.IEventConsumerApp
-        The base application.
     compression : buitlins.str or buitlins.None
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
@@ -77,15 +74,21 @@ class GatewayShardImplV6(shard.IGatewayShard):
         If `builtins.True`, each sent and received payload is dumped to the
         logs. If `builtins.False`, only the fact that data has been
         sent/received will be logged.
+    event_consumer
+        A coroutine function consuming a `GatewayShardImplV6`,
+        a `builtins.str` event name, and a
+        `hikari.utilities.data_binding.JSONObject` event object as parameters.
+        This should return `builtins.None`, and will be called asynchronously
+        with each event that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
         The initial activity to appear to have for this shard.
     initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
         The datetime to appear to be idle since.
     initial_is_afk : hikari.utilities.undefined.UndefinedOr[bool]
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
         The initial status to set on login for the shard.
     intents : hikari.models.intents.Intents or builtins.None
         Collection of intents to use, or `builtins.None` to not use intents at
@@ -121,12 +124,12 @@ class GatewayShardImplV6(shard.IGatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
-        "_app",
         "_backoff",
         "_compression",
         "_connected_at",
         "_data_format",
         "_debug",
+        "_event_consumer",
         "_handshake_event",
         "_heartbeat_interval",
         "_heartbeat_latency",
@@ -205,10 +208,12 @@ class GatewayShardImplV6(shard.IGatewayShard):
     def __init__(
         self,
         *,
-        app: event_consumer.IEventConsumerApp,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
         data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
+        event_consumer: typing.Callable[
+            [shard.GatewayShard, str, data_binding.JSONObject], typing.Coroutine[None, None, None]
+        ],
         http_settings: config.HTTPSettings,
         initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
@@ -224,12 +229,12 @@ class GatewayShardImplV6(shard.IGatewayShard):
         version: int = 6,
     ) -> None:
         self._activity: undefined.UndefinedNoneOr[presences.Activity] = initial_activity
-        self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._data_format = data_format.lower()
         self._debug = debug
+        self._event_consumer = event_consumer
         self._handshake_event = asyncio.Event()
         self._heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
@@ -273,10 +278,6 @@ class GatewayShardImplV6(shard.IGatewayShard):
 
         new_query = urllib.parse.urlencode(new_query)
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
-
-    @property
-    def app(self) -> event_consumer.IEventConsumerApp:
-        return self._app
 
     @property
     def compression(self) -> typing.Optional[str]:
@@ -412,41 +413,50 @@ class GatewayShardImplV6(shard.IGatewayShard):
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        payload = self._app.event_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
-        await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
+        await self._send_json(
+            {
+                "op": self._Opcode.VOICE_STATE_UPDATE,
+                "d": {
+                    "guild_id": str(int(guild)),
+                    "channel_id": str(int(channel)) if channel is not None else None,
+                    "self_mute": self_mute,
+                    "self_deaf": self_deaf,
+                },
+            }
+        )
 
     async def request_guild_members(
         self,
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        users: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
             if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
-            if presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
+            if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
-        if users is not undefined.UNDEFINED and (query or limit):
+        if user_ids is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
 
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if users is not undefined.UNDEFINED and len(users) > 100:
+        if users is not undefined.UNDEFINED and len(user_ids) > 100:
             raise ValueError("'users' is limited to 100 users")
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
-        payload.put("presences", presences)
+        payload.put("include_presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
-        payload.put_snowflake_array("user_ids", users)
+        payload.put_snowflake_array("user_ids", user_ids)
         payload.put("nonce", nonce)
 
         await self._send_json({"op": self._Opcode.REQUEST_GUILD_MEMBERS, "d": payload})
@@ -656,13 +666,26 @@ class GatewayShardImplV6(shard.IGatewayShard):
                 payload["d"]["intents"] = self._intents
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-                # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._app.event_factory.serialize_gateway_presence(
-                    idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
-                    afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
-                    status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                    activity=self._activity if self._activity is not undefined.UNDEFINED else None,
-                )
+                idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
+                afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
+                status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
+                activity = self._activity if self._activity is not undefined.UNDEFINED else None
+                presence_pl = data_binding.JSONObjectBuilder()
+
+                if activity is not None:
+                    presence_pl.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+                else:
+                    presence_pl.put("game", None)
+
+                presence_pl.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
+                presence_pl.put("afk", afk)
+
+                # Turns out Discord don't document this properly. I can send "offline"
+                # to the gateway, but it will actually just result in the bot not
+                # changing the status. I have to set it to "invisible" instead to get
+                # this to work...
+                presence_pl.put("status", "invisible" if status is presences.Status.OFFLINE else status)
+                payload["d"]["presence"] = presence_pl
 
             await self._send_json(payload)
 
@@ -868,8 +891,7 @@ class GatewayShardImplV6(shard.IGatewayShard):
 
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
         return asyncio.create_task(
-            self._app.event_consumer.consume_raw_event(self, event_name, event),
-            name=f"gateway shard {self._shard_id} dispatch {event_name}",
+            self._event_consumer(self, event_name, event), name=f"gateway shard {self._shard_id} dispatch {event_name}",
         )
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:

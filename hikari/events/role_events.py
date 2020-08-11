@@ -79,7 +79,7 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.ib()
@@ -108,7 +108,7 @@ class RoleCreateEvent(RoleEvent):
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.ib()
@@ -137,7 +137,7 @@ class RoleUpdateEvent(RoleEvent):
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()

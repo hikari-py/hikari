@@ -30,6 +30,7 @@ import typing
 
 import attr
 
+from hikari import traits
 from hikari.api import entity_factory
 from hikari.api import rest as rest_app
 from hikari.models import applications as application_models
@@ -159,7 +160,7 @@ class _UserFields:
     is_system: bool = attr.ib()
 
 
-class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
+class EntityFactoryComponentImpl(entity_factory.EntityFactory):
     """Standard implementation for a serializer/deserializer.
 
     This will convert objects to/from JSON compatible representations.
@@ -173,7 +174,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
         "_guild_channel_type_mapping",
     )
 
-    def __init__(self, app: rest_app.IRESTApp) -> None:
+    def __init__(self, app: traits.RESTAware) -> None:
         self._app = app
         self._audit_log_entry_converters: typing.Mapping[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflake.Snowflake,
@@ -238,7 +239,7 @@ class EntityFactoryComponentImpl(entity_factory.IEntityFactoryComponent):
 
     @property
     @typing.final
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> traits.EntityFactoryAware:
         return self._app
 
     ######################

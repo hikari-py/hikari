@@ -22,7 +22,7 @@
 """A sane Python framework for writing modern Discord bots.
 
 To get started, you will want to initialize an instance of `Bot`
-(an alias for `hikari.impl.bot.BotAppImpl`) for writing a bot, or `REST` (an
+(an alias for `hikari.impl.bot.BotApp`) for writing a bot, or `REST` (an
 alias for `hikari.impl.rest.RESTAppFactoryImpl`) if you only need to use
 the REST API.
 """
@@ -46,8 +46,8 @@ from hikari._about import __version__
 from hikari.config import *
 from hikari.errors import *
 from hikari.events import *
-from hikari.impl.bot import BotAppImpl as Bot
-from hikari.impl.rest import RESTAppFactoryImpl as REST
+from hikari.impl.bot import BotApp as Bot
+from hikari.impl.rest import RESTApp as REST
 from hikari.models import *
 from hikari.utilities.files import File
 from hikari.utilities.files import LazyByteIteratorish

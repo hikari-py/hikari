@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["BotAppImpl"]
+__all__: typing.Final[typing.List[str]] = ["BotApp"]
 
 import asyncio
 import contextlib
@@ -38,7 +38,8 @@ import warnings
 
 from hikari import config
 from hikari import errors
-from hikari.api import bot
+from hikari import traits
+from hikari.api import event_dispatcher
 from hikari.api import shard as gateway_shard
 from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
@@ -65,8 +66,6 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
-    from hikari.api import event_consumer as event_consumer_
-    from hikari.api import event_dispatcher as event_dispatcher_
     from hikari.api import guild_chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
@@ -75,7 +74,18 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotAppImpl(bot.IBotApp):
+class BotApp(
+    traits.CacheAware,
+    traits.DispatcherAware,
+    traits.EntityFactoryAware,
+    traits.EventFactoryAware,
+    traits.ExecutorAware,
+    traits.GuildChunkerAware,
+    traits.RESTAware,
+    traits.ShardAware,
+    traits.VoiceAware,
+    event_dispatcher.EventDispatcher,
+):
     """Implementation of an auto-sharded single-instance bot application.
 
     Parameters
@@ -96,9 +106,9 @@ class BotAppImpl(bot.IBotApp):
         are supported. This defaults to using v6.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
-    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
         The initial activity to have on each shard.
-    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
         The initial status to have on each shard.
     initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
         The initial time to show as being idle since, or `builtins.None` if not
@@ -260,28 +270,10 @@ class BotAppImpl(bot.IBotApp):
         if banner_package is not None:
             self._dump_banner(banner_package)
 
-        self._cache: cache_.IMutableCacheComponent
-        self._event_manager: event_manager_base.EventManagerComponentBase
-        self._guild_chunker: guild_chunker_.IGuildChunkerComponent
-
-        if stateless:
-            self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
-            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl(app=self)
-            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
-                app=self, mutable_cache=self._cache, intents=intents,
-            )
-            _LOGGER.info("this application is stateless, cache-based operations will not be available")
-        else:
-            self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
-            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
-            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
-                app=self, intents=intents, mutable_cache=self._cache,
-            )
-
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
-        self._event_factory = event_factory_impl.EventFactoryComponentImpl(app=self)
+        self._event_factory = event_factory_impl.EventFactoryComponentImpl(entity_factory=self._entity_factory)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -294,11 +286,12 @@ class BotAppImpl(bot.IBotApp):
         self._max_concurrency = 1
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._request_close_event = asyncio.Event()
-        self._rest = rest_client_impl.RESTClientImpl(  # noqa: S106 - Possible hardcoded password
-            app=self,
+        self._rest = rest_client_impl.RESTClient(  # noqa: S106 - Possible hardcoded password
             connector_factory=self._connector_factory,
             connector_owner=False,
             debug=debug,
+            entity_factory=self._entity_factory,
+            executor=self._executor,
             http_settings=self._http_settings,
             proxy_settings=self._proxy_settings,
             token=token,
@@ -309,15 +302,30 @@ class BotAppImpl(bot.IBotApp):
         self._shard_count: int = shard_count if shard_count is not None else 0
         self._shard_gather_task: typing.Optional[asyncio.Task[None]] = None
         self._shard_ids: typing.AbstractSet[int] = set() if shard_ids is None else shard_ids
-        self._shards: typing.Dict[int, gateway_shard.IGatewayShard] = {}
+        self._shards: typing.Dict[int, gateway_shard.GatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
         self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._version = gateway_version
-        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
         # This should always be last so that we don't get an extra error when failed to initialize
         self._start_count: int = 0
+
+        if stateless:
+            self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
+            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl(app=self)
+            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
+                event_factory=self._event_factory, intents=intents,
+            )
+            _LOGGER.info("this application is stateless, cache-based operations will not be available")
+        else:
+            self._cache = cache_impl.StatefulCacheImpl(intents=intents)
+            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
+            self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
+                event_factory=self._event_factory, cache=self._cache, chunker=self._guild_chunker, intents=intents
+            )
+
+        self._voice = voice.VoiceComponentImpl(self, self._event_manager)
 
     def __del__(self) -> None:
         # If something goes wrong while initializing the bot, `_start_count` might not be there.
@@ -329,28 +337,20 @@ class BotAppImpl(bot.IBotApp):
             )
 
     @property
-    def cache(self) -> cache_.ICacheComponent:
+    def cache(self) -> cache_.Cache:
         return self._cache
 
     @property
-    def guild_chunker(self) -> guild_chunker_.IGuildChunkerComponent:
+    def chunker(self) -> guild_chunker_.GuildChunker:
         return self._guild_chunker
 
     @property
-    def is_debug_enabled(self) -> bool:
-        return self._debug
+    def dispatcher(self) -> event_dispatcher.EventDispatcher:
+        return self._event_manager
 
     @property
     def entity_factory(self) -> entity_factory_impl.EntityFactoryComponentImpl:
         return self._entity_factory
-
-    @property
-    def event_consumer(self) -> event_consumer_.IEventConsumerComponent:
-        return self._event_manager
-
-    @property
-    def event_dispatcher(self) -> event_dispatcher_.IEventDispatcherComponent:
-        return self._event_manager
 
     @property
     def event_factory(self) -> event_factory_impl.EventFactoryComponentImpl:
@@ -383,6 +383,10 @@ class BotAppImpl(bot.IBotApp):
         return self._http_settings
 
     @property
+    def is_debug_enabled(self) -> bool:
+        return self._debug
+
+    @property
     def intents(self) -> typing.Optional[intents_.Intents]:
         return self._intents
 
@@ -395,11 +399,11 @@ class BotAppImpl(bot.IBotApp):
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_client_impl.RESTClientImpl:
+    def rest(self) -> rest_client_impl.RESTClient:
         return self._rest
 
     @property
-    def shards(self) -> typing.Mapping[int, gateway_shard.IGatewayShard]:
+    def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
         return self._shards
 
     @property
@@ -504,52 +508,43 @@ class BotAppImpl(bot.IBotApp):
             await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     def listen(
-        self, event_type: typing.Optional[typing.Type[event_dispatcher_.EventT_co]] = None,
+        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]],
-        event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+        [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
+        event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
     ]:
-        return self.event_dispatcher.listen(event_type)
+        return self.dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher_.EventT_co], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]]:
-        return self.event_dispatcher.get_listeners(event_type, polymorphic=polymorphic)
-
-    def has_listener(
-        self,
-        event_type: typing.Type[event_dispatcher_.EventT_co],
-        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
-        *,
-        polymorphic: bool = True,
-    ) -> bool:
-        return self.event_dispatcher.has_listener(event_type, callback, polymorphic=polymorphic)
+        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
+    ) -> typing.Collection[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]]:
+        return self.dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def subscribe(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT_co],
-        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
-    ) -> event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co]:
-        return self.event_dispatcher.subscribe(event_type, callback)
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+    ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
+        return self.dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT_co],
-        callback: event_dispatcher_.AsyncCallbackT[event_dispatcher_.EventT_co],
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
     ) -> None:
-        return self.event_dispatcher.unsubscribe(event_type, callback)
+        return self.dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher_.EventT_co],
+        event_type: typing.Type[event_dispatcher.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher_.PredicateT[event_dispatcher_.EventT_co]] = None,
-    ) -> event_dispatcher_.EventT_co:
-        return await self.event_dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
+        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
+    ) -> event_dispatcher.EventT_co:
+        return await self.dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        return self.event_dispatcher.dispatch(event)
+        return self.dispatcher.dispatch(event)
 
     async def close(self) -> None:
         await self._rest.close()
@@ -623,13 +618,13 @@ class BotAppImpl(bot.IBotApp):
 
         reset_at = gw_recs.session_start_limit.reset_at.strftime("%d/%m/%y %H:%M:%S %Z").rstrip()
 
-        shard_clients: typing.Dict[int, gateway_shard.IGatewayShard] = {}
+        shard_clients: typing.Dict[int, gateway_shard.GatewayShard] = {}
         for shard_id in self._shard_ids:
             shard = gateway_shard_impl.GatewayShardImpl(
-                app=self,
                 compression=gateway_shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
                 data_format=gateway_shard.GatewayDataFormat.JSON,
                 debug=self._debug,
+                event_consumer=self._event_manager.consume_raw_event,
                 http_settings=self._http_settings,
                 initial_activity=self._initial_activity,
                 initial_idle_since=self._initial_idle_since,

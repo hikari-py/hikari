@@ -91,13 +91,13 @@ class TestBasicLazyCachedTCPConnectorFactoryAsync:
 
 
 ###############
-# RESTAppImpl #
+# RESTApp #
 ###############
 
 
 @pytest.fixture
 def rest_app():
-    return hikari_test_helpers.unslot_class(rest.RESTAppImpl)(
+    return hikari_test_helpers.unslot_class(rest.RESTApp)(
         connector_factory=mock.Mock(),
         debug=True,
         executor=None,
@@ -201,7 +201,7 @@ class TestRESTAppFactoryImpl:
     def test_acquire(self, rest_factory):
         mock_event_loop = mock.Mock()
         rest_factory._event_loop = mock_event_loop
-        with mock.patch.object(rest, "RESTAppImpl") as mock_app:
+        with mock.patch.object(rest, "RESTApp") as mock_app:
             with mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop):
                 rest_factory.acquire(token="token", token_type="Type")
 
@@ -251,7 +251,7 @@ class TestRESTAppFactoryImplAsync:
 
 
 ##################
-# RESTClientImpl #
+# RESTClient #
 ##################
 
 
@@ -262,7 +262,7 @@ def stub_app():
 
 @pytest.fixture(scope="module")
 def rest_client_class():
-    return hikari_test_helpers.unslot_class(rest.RESTClientImpl)
+    return hikari_test_helpers.unslot_class(rest.RESTClient)
 
 
 @pytest.fixture
@@ -328,7 +328,7 @@ class StubModel(snowflake.Unique):
 
 class TestRESTClientImpl:
     def test__init__when_token_is_None_sets_token_to_None(self):
-        obj = rest.RESTClientImpl(
+        obj = rest.RESTClient(
             app=mock.Mock(),
             connector_factory=mock.Mock(),
             connector_owner=True,
@@ -343,7 +343,7 @@ class TestRESTClientImpl:
         assert obj._token is None
 
     def test__init__when_token_is_not_None_and_token_type_is_None_generates_token_with_default_type(self):
-        obj = rest.RESTClientImpl(
+        obj = rest.RESTClient(
             app=mock.Mock(),
             connector_factory=mock.Mock(),
             connector_owner=True,
@@ -358,7 +358,7 @@ class TestRESTClientImpl:
         assert obj._token == "Bot some_token"
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
-        obj = rest.RESTClientImpl(
+        obj = rest.RESTClient(
             app=mock.Mock(),
             connector_factory=mock.Mock(),
             connector_owner=True,
@@ -373,7 +373,7 @@ class TestRESTClientImpl:
         assert obj._token == "Type some_token"
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
-        obj = rest.RESTClientImpl(
+        obj = rest.RESTClient(
             app=mock.Mock(),
             connector_factory=mock.Mock(),
             connector_owner=True,
@@ -388,7 +388,7 @@ class TestRESTClientImpl:
         assert obj._rest_url == "https://discord.com/api/v1"
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
-        obj = rest.RESTClientImpl(
+        obj = rest.RESTClient(
             app=mock.Mock(),
             connector_factory=mock.Mock(),
             connector_owner=True,

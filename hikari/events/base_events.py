@@ -166,12 +166,12 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: typing.Optional[gateway_shard.IGatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received the event.
 
     Returns
     -------
-    hikari.api.shard.IGatewayShard
+    hikari.api.shard.GatewayShard
         Shard that raised this exception.
 
         This may be `builtins.None` if no specific shard was the cause of this

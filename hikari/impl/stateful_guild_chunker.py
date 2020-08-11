@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
 _LOGGER = logging.getLogger("hikari.guild_chunker")
 
 
-class StatefulGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
+class StatefulGuildChunkerImpl(guild_chunker.GuildChunker):
     """Guild chunker implementation."""
 
     __slots__: typing.Sequence[str] = ("_app", "_presences", "_queues", "_chunkers")
@@ -56,7 +56,8 @@ class StatefulGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
     def app(self) -> bot.IBotApp:
         return self._app
 
-    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
+    async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
+        shard_id = guild.shard_id
         if shard_id not in self._queues:
             self._queues[shard_id] = []
 
@@ -79,7 +80,7 @@ class StatefulGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
                 if self._presences:
                     message = f"{message} with presences"
                 _LOGGER.debug(message, guild_id, shard_id)
-                await self._app.shards[shard_id].request_guild_members(guild_id, presences=self._presences)
+                await self._app.shards[shard_id].request_guild_members(guild_id, include_presences=self._presences)
 
             del self._chunkers[shard_id]
 

@@ -23,16 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
-    "IEventDispatcherBase",
-    "IEventDispatcherApp",
-    "IEventDispatcherComponent",
+    "EventDispatcher",
 ]
 
 import abc
 import asyncio
 import typing
-
-from hikari.api import rest
 
 if typing.TYPE_CHECKING:
     from hikari.events import base_events
@@ -43,7 +39,7 @@ if typing.TYPE_CHECKING:
     AsyncCallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
-class IEventDispatcherBase(abc.ABC):
+class EventDispatcher(abc.ABC):
     """Base interface for event dispatcher implementations.
 
     This is a consumer of a `hikari.events.base.Event` object, and is
@@ -240,32 +236,6 @@ class IEventDispatcherBase(abc.ABC):
         Has listener: `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
         """
 
-    # FIXME: deprecate
-    @abc.abstractmethod
-    def has_listener(
-        self, event_type: typing.Type[EventT_co], callback: AsyncCallbackT[EventT_co], *, polymorphic: bool = True
-    ) -> bool:
-        """Check whether the callback is subscribed to the given event.
-
-        Parameters
-        ----------
-        event_type : typing.Type[T]
-            The event type to look for.
-
-            `T` must be a subclass of `hikari.events.base.Event`.
-        callback
-            The callback to look for.
-        polymorphic : builtins.bool
-            If `builtins.True`, this will return `builtins.True` if a subclass
-            of the given event type has a listener registered. If
-            `builtins.False`, then only listeners for this class specifically
-            are checked. The default is `builtins.True`.
-
-        See Also
-        --------
-        Get listeners: `hikari.api.event_dispatcher.IEventDispatcherBase.get_listeners`
-        """
-
     @abc.abstractmethod
     def listen(
         self, event_type: typing.Optional[typing.Type[EventT_co]] = None,
@@ -342,74 +312,4 @@ class IEventDispatcherBase(abc.ABC):
         Listen: `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
         Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
         Dispatch: `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
-        """
-
-
-class IEventDispatcherComponent(IEventDispatcherBase, abc.ABC):
-    """Base interface for event dispatcher implementations that are components.
-
-    This is a consumer of a `hikari.events.base.Event` object, and is
-    expected to invoke one or more corresponding event listeners where
-    appropriate.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-
-class IEventDispatcherApp(IEventDispatcherBase, rest.IRESTApp, abc.ABC):
-    """Application specialization that supports dispatching of events.
-
-    These events are expected to be instances of
-    `hikari.events.base.Event`.
-
-    This may be combined with `IGatewayZookeeperApp` for most single-process
-    bots, or may be a specific component for large distributed applications
-    that consume events from a message queue, for example.
-
-    This acts as an event dispatcher-like object that can simply delegate to
-    the implementation, which makes event-based tasks like adding listeners
-    and waiting for events much tidier.
-
-    ```py
-
-    # ... this means we can do this...
-
-    >>> @bot.listen()
-    >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
-
-    # ...instead of having to do this...
-
-    >>> @bot.event_dispatcher.listen(hikari.MessageCreateEvent)
-    >>> async def on_message(event: hikari.MessageCreateEvent) -> None: ...
-    ```
-
-    This app type must derive from `hikari.api.rest.IRESTApp`, since almost
-    all event and model types will have REST functionality built-in.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def event_dispatcher(self) -> IEventDispatcherBase:
-        """Event dispatcher and subscription manager.
-
-        This stores every event you subscribe to in your application, and
-        manages invoking those subscribed callbacks when the corresponding
-        event occurs.
-
-        Event dispatchers also provide a `wait_for` functionality that can be
-        used to wait for a one-off event that matches a certain criteria. This
-        is useful if waiting for user feedback for a specific procedure being
-        performed.
-
-        Users may create their own events and trigger them using this as well,
-        thus providing a simple in-process event bus that can easily be extended
-        with a little work to span multiple applications in a distributed
-        cluster.
-
-        Returns
-        -------
-        hikari.api.event_dispatcher.IEventDispatcherBase
-            The event dispatcher in use.
         """

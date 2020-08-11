@@ -22,13 +22,11 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ICacheView", "ICacheComponent", "IMutableCacheComponent"]
+__all__: typing.Final[typing.List[str]] = ["CacheView", "Cache", "MutableCache"]
 
 import abc
 import typing
 
-from hikari.api import component
-from hikari.api import rest
 from hikari.utilities import iterators
 
 if typing.TYPE_CHECKING:
@@ -46,7 +44,7 @@ _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
 
 
-class ICacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
+class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
     """Interface describing an immutable snapshot view of part of a cache."""
 
     __slots__: typing.Sequence[str] = ()
@@ -60,7 +58,7 @@ class ICacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
         """Get a lazy iterator of the entities in the view."""
 
 
-class ICacheComponent(component.IComponent, abc.ABC):
+class Cache(abc.ABC):
     """Interface describing the operations a cache component should provide.
 
     This will be used by the gateway and HTTP API to cache specific types of
@@ -75,11 +73,6 @@ class ICacheComponent(component.IComponent, abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def app(self) -> rest.IRESTApp:
-        """Get the app this cache is bound by."""
 
     @abc.abstractmethod
     def get_private_text_channel(self, user_id: snowflake.Snowflake, /) -> typing.Optional[channels.PrivateTextChannel]:
@@ -99,12 +92,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_private_text_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+    def get_private_text_channels_view(self) -> CacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
         """Get a view of the private text channel objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
             The view of the user IDs to private text channel objects in the cache.
         """
 
@@ -124,12 +117,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_emojis_view(self) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+    def get_emojis_view(self) -> CacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
         """Get a view of the known custom emoji objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emoji.KnownCustomEmoji]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emoji.KnownCustomEmoji]
             A view of emoji IDs to objects of the known custom emojis found in
             the cache.
         """
@@ -137,7 +130,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_emojis_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+    ) -> CacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
         """Get a view of the known custom emojis cached for a specific guild.
 
         Parameters
@@ -147,7 +140,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
             A view of emoji IDs to objects of emojis found in the cache for the
             specified guild.
         """
@@ -168,12 +161,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guilds_view(self) -> ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
+    def get_guilds_view(self) -> CacheView[snowflake.Snowflake, guilds.GatewayGuild]:
         """Get a view of the guild objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
             A view of guild IDs to the guild objects found in the cache.
         """
 
@@ -194,12 +187,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_channels_view(self) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+    def get_guild_channels_view(self) -> CacheView[snowflake.Snowflake, channels.GuildChannel]:
         """Get a view of the guild channels in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels found in the
             cache.
         """
@@ -207,7 +200,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_guild_channels_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+    ) -> CacheView[snowflake.Snowflake, channels.GuildChannel]:
         """Get a view of the guild channels in the cache for a specific guild.
 
         Parameters
@@ -216,7 +209,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels found in the
             cache for the specified guild.
         """
@@ -237,12 +230,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_invites_view(self) -> ICacheView[str, invites.InviteWithMetadata]:
+    def get_invites_view(self) -> CacheView[str, invites.InviteWithMetadata]:
         """Get a view of the invite objects in the cache.
 
         Returns
         -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+        CacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
             A view of string codes to objects of the invites that were found in
             the cache.
         """
@@ -250,7 +243,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_invites_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[str, invites.InviteWithMetadata]:
+    ) -> CacheView[str, invites.InviteWithMetadata]:
         """Get a view of the invite objects in the cache for a specific guild.
 
         Parameters
@@ -260,7 +253,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+        CacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
             A view of string code to objects of the invites that were found in
             the cache for the specified guild.
         """
@@ -268,7 +261,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_invites_view_for_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /,
-    ) -> ICacheView[str, invites.InviteWithMetadata]:
+    ) -> CacheView[str, invites.InviteWithMetadata]:
         """Get a view of the invite objects in the cache for a specified channel.
 
         Parameters
@@ -280,7 +273,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[str, invites.InviteWithMetadata]
+        CacheView[str, invites.InviteWithMetadata]
             A view of string codes to objects of the invites there were found in
             the cache for the specified channel.
         """
@@ -313,12 +306,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_members_view(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
+    def get_members_view(self) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, guilds.Member]]:
         """Get a view of all the members objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were found from the cache.
         """  # noqa E501: - Line too long
@@ -326,7 +319,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod  # TODO: Return None if no entities are found for cache view stuff?
     def get_members_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, guilds.Member]:
+    ) -> CacheView[snowflake.Snowflake, guilds.Member]:
         """Get a view of the members cached for a specific guild.
 
         Parameters
@@ -336,7 +329,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
             The view of user IDs to the members cached for the specified guild.
         """
 
@@ -355,7 +348,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.presences.MemberPresence or builtins.None
+        hikari.models.include_presences.MemberPresence or builtins.None
             The object of the presence that was found in the cache or
             `builtins.None`.
         """
@@ -363,20 +356,20 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_presences_view(
         self,
-    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
+    ) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, presences.MemberPresence]]:
         """Get a view of all the presence objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake]]
-            A view of guild IDs to views of user IDs to objects of the presences
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake]]
+            A view of guild IDs to views of user IDs to objects of the include_presences
             found in the cache.
         """
 
     @abc.abstractmethod
     def get_presences_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
+    ) -> CacheView[snowflake.Snowflake, presences.MemberPresence]:
         """Get a view of the presence objects in the cache for a specific guild.
 
         Parameters
@@ -386,7 +379,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
             A view of user IDs to objects of the presence found in the cache
             for the specified guild.
         """
@@ -407,19 +400,17 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_roles_view(self) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+    def get_roles_view(self) -> CacheView[snowflake.Snowflake, guilds.Role]:
         """Get a view of all the role objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
             A view of role IDs to objects of the roles found in the cache.
         """
 
     @abc.abstractmethod
-    def get_roles_view_for_guild(
-        self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+    def get_roles_view_for_guild(self, guild_id: snowflake.Snowflake, /) -> CacheView[snowflake.Snowflake, guilds.Role]:
         """Get a view of the roles in the cache for a specific guild.
 
         Parameters
@@ -429,7 +420,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
             A view of role IDs to objects of the roles that were found in the
             cache for the specified guild.
         """
@@ -450,12 +441,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_users_view(self) -> ICacheView[snowflake.Snowflake, users.User]:
+    def get_users_view(self) -> CacheView[snowflake.Snowflake, users.User]:
         """Get a view of the user objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
             The view of user IDs to the users found in the cache.
         """
 
@@ -482,12 +473,12 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_voice_states_view(
         self,
-    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, voices.VoiceState]]:
+    ) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, voices.VoiceState]]:
         """Get a view of all the voice state objects in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]]
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were found in the cache,
         """  # noqa E501: - Line too long
@@ -495,7 +486,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_voice_states_view_for_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+    ) -> CacheView[snowflake.Snowflake, voices.VoiceState]:
         """Get a view of the voice states cached for a specific channel.
 
         Parameters
@@ -507,7 +498,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
             A view of user IDs to objects of the voice states found cached for
             the specified channel.
         """
@@ -515,7 +506,7 @@ class ICacheComponent(component.IComponent, abc.ABC):
     @abc.abstractmethod
     def get_voice_states_view_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+    ) -> CacheView[snowflake.Snowflake, voices.VoiceState]:
         """Get a view of the voice states cached for a specific guild.
 
         Parameters
@@ -525,13 +516,13 @@ class ICacheComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voice.VoiceState]
             A view of user IDs to objects of the voice states found cached for
             the specified guild.
         """
 
 
-class IMutableCacheComponent(ICacheComponent, abc.ABC):
+class MutableCache(Cache, abc.ABC):
     """Cache that exposes read-only operations as well as mutation operations.
 
     This is only exposed to internal components. There is no guarantee the
@@ -539,12 +530,12 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     """
 
     @abc.abstractmethod
-    def clear_private_text_channels(self) -> ICacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
+    def clear_private_text_channels(self) -> CacheView[snowflake.Snowflake, channels.PrivateTextChannel]:
         """Remove all the private text channel channel objects from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.PrivateTextChannel]
             The cache view of user IDs to the private text channel objects that
             were removed from the cache.
         """
@@ -598,7 +589,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
-    def clear_emojis(self) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+    def clear_emojis(self) -> CacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
         """Remove all the known custom emoji objects from the cache.
 
         !!! note
@@ -607,7 +598,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.models.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+        CacheView[hikari.models.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
             A cache view of emoji IDs to objects of the emojis that were
             removed from the cache.
         """
@@ -615,7 +606,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_emojis_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
+    ) -> CacheView[snowflake.Snowflake, emojis.KnownCustomEmoji]:
         """Remove the known custom emoji objects cached for a specific guild.
 
         Parameters
@@ -630,7 +621,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.models.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+        CacheView[hikari.models.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
             A view of emoji IDs to objects of the emojis that were removed
             from the cache.
         """
@@ -685,12 +676,12 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
-    def clear_guilds(self) -> ICacheView[snowflake.Snowflake, guilds.GatewayGuild]:
+    def clear_guilds(self) -> CacheView[snowflake.Snowflake, guilds.GatewayGuild]:
         """Remove all the guild objects from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.GatewayGuild]
             The cache view of guild IDs to guild objects that were removed from
             the cache.
         """
@@ -757,12 +748,12 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
-    def clear_guild_channels(self) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+    def clear_guild_channels(self) -> CacheView[snowflake.Snowflake, channels.GuildChannel]:
         """Remove all guild channels from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
         """
@@ -770,7 +761,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_guild_channels_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, channels.GuildChannel]:
+    ) -> CacheView[snowflake.Snowflake, channels.GuildChannel]:
         """Remove guild channels from the cache for a specific guild.
 
         Parameters
@@ -780,7 +771,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
         """
@@ -831,18 +822,18 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
-    def clear_invites(self) -> ICacheView[str, invites.InviteWithMetadata]:
+    def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
         """Remove all the invite objects from the cache.
 
         Returns
         -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+        CacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache.
         """
 
     @abc.abstractmethod
-    def clear_invites_for_guild(self, guild_id: snowflake.Snowflake, /) -> ICacheView[str, invites.InviteWithMetadata]:
+    def clear_invites_for_guild(self, guild_id: snowflake.Snowflake, /) -> CacheView[str, invites.InviteWithMetadata]:
         """Remove the invite objects in the cache for a specific guild.
 
         Parameters
@@ -852,7 +843,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+        CacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified guild.
         """
@@ -860,7 +851,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_invites_for_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake, /
-    ) -> ICacheView[str, invites.InviteWithMetadata]:
+    ) -> CacheView[str, invites.InviteWithMetadata]:
         """Remove the invite objects in the cache for a specific channel.
 
         Parameters
@@ -872,7 +863,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
+        CacheView[builtins.str, hikari.models.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified channel.
         """
@@ -963,12 +954,12 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_members(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, guilds.Member]]:
+    def clear_members(self) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, guilds.Member]]:
         """Remove all the guild members in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were removed from the cache.
         """  # noqa E501: - Line too long
@@ -976,7 +967,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_members_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, guilds.Member]:
+    ) -> CacheView[snowflake.Snowflake, guilds.Member]:
         """Remove the members for a specific guild from the cache.
 
         Parameters
@@ -990,7 +981,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
             The view of user IDs to the member objects that were removed from
             the cache.
         """
@@ -1052,31 +1043,31 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_presences(
         self,
-    ) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, presences.MemberPresence]]:
-        """Remove all the presences in the cache.
+    ) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, presences.MemberPresence]]:
+        """Remove all the include_presences in the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]]
-            A view of guild IDs to views of user IDs to objects of the presences
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]]
+            A view of guild IDs to views of user IDs to objects of the include_presences
             that were removed from the cache.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
     def clear_presences_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, presences.MemberPresence]:
-        """Remove the presences in the cache for a specific guild.
+    ) -> CacheView[snowflake.Snowflake, presences.MemberPresence]:
+        """Remove the include_presences in the cache for a specific guild.
 
         Parameters
         ----------
         guild_id : hikari.utilities.snowflake.Snowflake
-            The ID of the guild to remove presences for.
+            The ID of the guild to remove include_presences for.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-            A view of user IDs to objects of the presences that were removed
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
+            A view of user IDs to objects of the include_presences that were removed
             from the cache for the specified guild.
         """
 
@@ -1095,7 +1086,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        hikari.models.presences.MemberPresence or builtins.None
+        hikari.models.include_presences.MemberPresence or builtins.None
             The object of the presence that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -1130,18 +1121,18 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
-    def clear_roles(self) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+    def clear_roles(self) -> CacheView[snowflake.Snowflake, guilds.Role]:
         """Remove all role objects from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
             A view of role IDs to objects of the roles that were removed from
             the cache.
         """
 
     @abc.abstractmethod
-    def clear_roles_for_guild(self, guild_id: snowflake.Snowflake, /) -> ICacheView[snowflake.Snowflake, guilds.Role]:
+    def clear_roles_for_guild(self, guild_id: snowflake.Snowflake, /) -> CacheView[snowflake.Snowflake, guilds.Role]:
         """Remove role objects from the cache for a specific guild.
 
         Parameters
@@ -1151,7 +1142,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
             A view of role IDs to objects of the roles that were removed from
             the cache for the specific guild.
         """
@@ -1202,7 +1193,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_users(self) -> ICacheView[snowflake.Snowflake, users.User]:
+    def clear_users(self) -> CacheView[snowflake.Snowflake, users.User]:
         """Clear the user objects from the cache.
 
         !!! note
@@ -1212,7 +1203,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.users.User]
             The view of user IDs to the user objects that were removed from the
             cache.
         """
@@ -1267,12 +1258,12 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_voice_states(self) -> ICacheView[snowflake.Snowflake, ICacheView[snowflake.Snowflake, voices.VoiceState]]:
+    def clear_voice_states(self) -> CacheView[snowflake.Snowflake, CacheView[snowflake.Snowflake, voices.VoiceState]]:
         """Remove all voice state objects from the cache.
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]]
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were removed from the states.
         """  # noqa E501: - Line too long
@@ -1280,7 +1271,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_voice_states_for_guild(
         self, guild_id: snowflake.Snowflake, /
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+    ) -> CacheView[snowflake.Snowflake, voices.VoiceState]:
         """Clear the voice state objects cached for a specific guild.
 
         Parameters
@@ -1290,7 +1281,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
             A view of user IDs to the voice state objects that were removed from
             the cache.
         """
@@ -1298,7 +1289,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
     @abc.abstractmethod
     def clear_voice_states_for_channel(
         self, guild_id: snowflake.Snowflake, channel_id: snowflake.Snowflake,
-    ) -> ICacheView[snowflake.Snowflake, voices.VoiceState]:
+    ) -> CacheView[snowflake.Snowflake, voices.VoiceState]:
         """Remove the voice state objects cached for a specific channel.
 
         Parameters
@@ -1310,7 +1301,7 @@ class IMutableCacheComponent(ICacheComponent, abc.ABC):
 
         Returns
         -------
-        ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
+        CacheView[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
             A view of user IDs to objects of the voice state that were removed
             from the cache for the specified channel.
         """
