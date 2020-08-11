@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EntityFactoryComponentImpl"]
+__all__: typing.Final[typing.List[str]] = ["EntityFactoryImpl"]
 
 import datetime
 import typing
@@ -159,7 +159,7 @@ class _UserFields:
     is_system: bool = attr.ib()
 
 
-class EntityFactoryComponentImpl(entity_factory.EntityFactory):
+class EntityFactoryImpl(entity_factory.EntityFactory):
     """Standard implementation for a serializer/deserializer.
 
     This will convert objects to/from JSON compatible representations.
