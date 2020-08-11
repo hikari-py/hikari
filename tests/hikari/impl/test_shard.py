@@ -849,7 +849,7 @@ class TestRequestGuildMembers:
         client._intents = intents.Intents.GUILD_INTEGRATIONS
 
         with pytest.raises(errors.MissingIntentError):
-            await client.request_guild_members(123, query="test", limit=1, include_presences=True)
+            await client.request_guild_members(123, query="test", limit=1, presences=True)
 
     @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
     async def test_when_specifiying_users_with_limit_or_query(self, client, kwargs):

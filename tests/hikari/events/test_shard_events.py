@@ -30,11 +30,11 @@ class TestShardEvent:
     @pytest.fixture
     def event(self):
         class ShardEventImpl(shard_events.ShardEvent):
-            shard = mock.Mock(shard.GatewayShard)
+            shard = mock.Mock(shard.IGatewayShard)
 
         return ShardEventImpl()
 
     def test_app_property(self, event):
         stub_app = object()
-        event.shard._rest = stub_app
+        event.shard.app = stub_app
         assert event.app is stub_app

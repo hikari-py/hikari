@@ -35,7 +35,7 @@ class TestStatelessCache:
 
     @pytest.fixture
     def component(self, app):
-        return stateless_cache.StatelessCacheImpl(app)
+        return stateless_cache.StatelessCacheImpl()
 
     def test_app_property(self, component, app):
         assert component.app is app
@@ -51,7 +51,7 @@ class TestStatelessCache:
         component.set_me(me)
         assert component._me is me
 
-    @pytest.mark.parametrize("method", sorted(cache.MutableCache.__abstractmethods__ - {"get_me", "set_me", "_rest"}))
+    @pytest.mark.parametrize("method", sorted(cache.MutableCache.__abstractmethods__ - {"get_me", "set_me", "app"}))
     def test_stateless_method_raises_NotImplementedError(self, component, method):
         with pytest.raises(NotImplementedError):
             method_impl = getattr(component, method)

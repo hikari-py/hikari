@@ -218,7 +218,7 @@ class _GuildRecord:
         "guild",
         "invites",
         "members",
-        "include_presences",
+        "presences",
         "roles",
         "voice_states",
     )

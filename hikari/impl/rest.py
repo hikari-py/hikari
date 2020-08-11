@@ -245,7 +245,7 @@ class RESTApp(traits.ExecutorAware):
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        entity_factory = entity_factory_impl.EntityFactoryComponentImpl(_RESTProvider(lambda: rest_client))
+        entity_factory = entity_factory_impl.EntityFactoryImpl(_RESTProvider(lambda: rest_client))
 
         rest_client = RESTClient(
             connector_factory=self._connector_factory,

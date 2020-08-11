@@ -267,7 +267,7 @@ class BotApp(
 
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
-        self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
+        self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)
         self._event_factory = event_factory_impl.EventFactoryImpl(app=self)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
@@ -346,7 +346,7 @@ class BotApp(
         return self._event_manager
 
     @property
-    def entity_factory(self) -> entity_factory_impl.EntityFactoryComponentImpl:
+    def entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
         return self._entity_factory
 
     @property

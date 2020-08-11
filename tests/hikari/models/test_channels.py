@@ -109,7 +109,7 @@ async def test_TextChannel_send():
         role_mentions=[789, 567],
     )
 
-    mock_channel._rest.rest.create_message.assert_called_once_with(
+    mock_channel.app.rest.create_message.assert_called_once_with(
         channel=123,
         content="test content",
         nonce="abc123",
@@ -136,7 +136,7 @@ async def test_TextChannel_history():
         around=datetime.datetime(2020, 4, 1, 0, 30, 0),
     )
 
-    mock_channel._rest.rest.fetch_messages.assert_called_once_with(
+    mock_channel.app.rest.fetch_messages.assert_called_once_with(
         123,
         before=datetime.datetime(2020, 4, 1, 1, 0, 0),
         after=datetime.datetime(2020, 4, 1, 0, 0, 0),

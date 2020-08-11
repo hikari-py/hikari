@@ -336,7 +336,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         raise NotImplementedError
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         """Return the intents registered for the application.
 
         If no intents are in use, `builtins.None` is returned instead.
