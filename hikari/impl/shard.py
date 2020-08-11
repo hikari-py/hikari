@@ -453,7 +453,7 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
-        payload.put("include_presences", include_presences)
+        payload.put("presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
         payload.put_snowflake_array("user_ids", user_ids)
