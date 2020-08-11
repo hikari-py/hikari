@@ -31,7 +31,6 @@ __all__: typing.Final[typing.List[str]] = ["StatelessCacheImpl"]
 import typing
 
 from hikari.api import cache
-from hikari.api import rest
 
 if typing.TYPE_CHECKING:
     from hikari.models import channels
@@ -60,13 +59,8 @@ class StatelessCacheImpl(cache.MutableCache):
 
     __slots__: typing.Sequence[str] = ("_app", "_me")
 
-    def __init__(self, app: rest.IRESTApp) -> None:
-        self._app = app
+    def __init__(self) -> None:
         self._me: typing.Optional[users.OwnUser] = None
-
-    @property
-    def app(self) -> rest.IRESTApp:
-        return self._app
 
     def get_me(self) -> typing.Optional[users.OwnUser]:
         return self._me

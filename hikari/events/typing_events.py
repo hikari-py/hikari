@@ -41,6 +41,7 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import channels
     from hikari.models import guilds
@@ -111,6 +112,9 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -183,6 +187,9 @@ class GuildTypingEvent(TypingEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

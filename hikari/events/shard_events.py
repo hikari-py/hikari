@@ -41,7 +41,7 @@ from hikari.events import base_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari.api import event_consumer
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import users
     from hikari.utilities import snowflake
@@ -50,11 +50,6 @@ if typing.TYPE_CHECKING:
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardEvent(base_events.Event, abc.ABC):
     """Base class for any event that was shard-specific."""
-
-    @property
-    def app(self) -> event_consumer.IEventConsumerApp:
-        # <<inherited docstring from Event>>.
-        return self.shard.app
 
     @property
     @abc.abstractmethod
@@ -81,6 +76,9 @@ class ShardStateEvent(ShardEvent, abc.ABC):
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
@@ -90,6 +88,9 @@ class ShardConnectedEvent(ShardStateEvent):
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
@@ -98,6 +99,9 @@ class ShardDisconnectedEvent(ShardStateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
@@ -146,6 +150,9 @@ class ShardReadyEvent(ShardStateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.

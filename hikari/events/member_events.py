@@ -34,6 +34,7 @@ import typing
 
 import attr
 
+from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.models import intents
@@ -91,6 +92,9 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -123,6 +127,9 @@ class MemberUpdateEvent(MemberEvent):
     This may occur if roles are amended, or if the nickname is changed.
     """
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -151,6 +158,9 @@ class MemberUpdateEvent(MemberEvent):
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

@@ -40,7 +40,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
 
 
 @enum.unique
@@ -121,7 +121,7 @@ class PartialUser(snowflake.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
 
     @property
@@ -183,7 +183,7 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
 
     @property
@@ -308,7 +308,7 @@ class PartialUserImpl(PartialUser):
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this user."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Reference to the client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)

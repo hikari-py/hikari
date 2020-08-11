@@ -32,6 +32,7 @@ from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import users
 
@@ -40,6 +41,9 @@ if typing.TYPE_CHECKING:
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class OwnUserUpdateEvent(shard_events.ShardEvent):
     """Event fired when the account user is updated."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

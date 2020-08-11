@@ -40,6 +40,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import voices
     from hikari.utilities import snowflake
@@ -73,6 +74,9 @@ class VoiceStateUpdateEvent(VoiceEvent):
     to connect to the voice gateway to stream audio or video content.
     """
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
@@ -99,6 +103,9 @@ class VoiceServerUpdateEvent(VoiceEvent):
     Sent when initially connecting to voice and when the current voice instance
     falls over to a new server.
     """
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

@@ -383,17 +383,15 @@ class GatewayShardImplV6(shard.GatewayShard):
         status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
         if idle_since is undefined.UNDEFINED:
-            idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
+            self._idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
         if afk is undefined.UNDEFINED:
-            afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
+            self._is_afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
         if status is undefined.UNDEFINED:
-            status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
+            self._status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
         if activity is undefined.UNDEFINED:
-            activity = self._activity if self._activity is not undefined.UNDEFINED else None
+            self._activity = self._activity if self._activity is not undefined.UNDEFINED else None
 
-        presence = self._app.event_factory.serialize_gateway_presence(
-            idle_since=idle_since, afk=afk, status=status, activity=activity
-        )
+        presence = self._serialize_presence_payload()
 
         payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}
 
@@ -448,12 +446,12 @@ class GatewayShardImplV6(shard.GatewayShard):
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if users is not undefined.UNDEFINED and len(user_ids) > 100:
+        if user_ids is not undefined.UNDEFINED and len(user_ids) > 100:
             raise ValueError("'users' is limited to 100 users")
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
-        payload.put("presences", include_presences)
+        payload.put("include_presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
         payload.put_snowflake_array("user_ids", user_ids)
@@ -666,26 +664,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                 payload["d"]["intents"] = self._intents
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-                idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
-                afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
-                status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
-                activity = self._activity if self._activity is not undefined.UNDEFINED else None
-                presence_pl = data_binding.JSONObjectBuilder()
-
-                if activity is not None:
-                    presence_pl.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
-                else:
-                    presence_pl.put("game", None)
-
-                presence_pl.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
-                presence_pl.put("afk", afk)
-
-                # Turns out Discord don't document this properly. I can send "offline"
-                # to the gateway, but it will actually just result in the bot not
-                # changing the status. I have to set it to "invisible" instead to get
-                # this to work...
-                presence_pl.put("status", "invisible" if status is presences.Status.OFFLINE else status)
-                payload["d"]["presence"] = presence_pl
+                payload["d"]["presence"] = self._serialize_presence_payload()
 
             await self._send_json(payload)
 
@@ -907,6 +886,29 @@ class GatewayShardImplV6(shard.GatewayShard):
             args = (*args, self._seq, self._session_id, len(payload))
 
         self._logger.debug(message, *args)
+
+    async def _serialize_presence_payload(self) -> data_binding.JSONObject:
+        idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
+        afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
+        status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
+        activity = self._activity if self._activity is not undefined.UNDEFINED else None
+        presence_pl = data_binding.JSONObjectBuilder()
+
+        if activity is not None:
+            presence_pl.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+        else:
+            presence_pl.put("game", None)
+
+        presence_pl.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
+        presence_pl.put("afk", afk)
+
+        # Turns out Discord don't document this properly. I can send "offline"
+        # to the gateway, but it will actually just result in the bot not
+        # changing the status. I have to set it to "invisible" instead to get
+        # this to work...
+        presence_pl.put("status", "invisible" if status is presences.Status.OFFLINE else status)
+
+        return presence_pl
 
 
 GatewayShardImpl = GatewayShardImplV6

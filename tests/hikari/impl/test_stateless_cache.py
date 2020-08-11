@@ -51,7 +51,7 @@ class TestStatelessCache:
         component.set_me(me)
         assert component._me is me
 
-    @pytest.mark.parametrize("method", sorted(cache.MutableCache.__abstractmethods__ - {"get_me", "set_me", "app"}))
+    @pytest.mark.parametrize("method", sorted(cache.MutableCache.__abstractmethods__ - {"get_me", "set_me", "_rest"}))
     def test_stateless_method_raises_NotImplementedError(self, component, method):
         with pytest.raises(NotImplementedError):
             method_impl = getattr(component, method)

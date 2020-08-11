@@ -1607,7 +1607,7 @@ class RESTClient(rest_api.RESTClient):
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints.GuildBuilder(
-            entity_factory=self._entity_factory, request_call=self._request, name=name
+            entity_factory=self._entity_factory, executor=self._executor, request_call=self._request, name=name
         )
 
     async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:

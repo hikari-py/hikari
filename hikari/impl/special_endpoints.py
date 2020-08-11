@@ -47,6 +47,7 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
     import types
 
     from hikari.api import entity_factory as entity_factory_
@@ -198,6 +199,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
 
     # Required arguments.
     _entity_factory: entity_factory_.EntityFactory = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    _executor: typing.Optional[concurrent.futures.Executor] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _name: str = attr.ib()
 
     # Optional args that we kept hidden.
@@ -205,9 +207,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     _counter: int = attr.ib(default=0, init=False)
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.ib(
-        metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )  # TODO: this can't be pickedl right?
+    ] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
 
     @property
@@ -228,13 +228,13 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         if self.icon is not undefined.UNDEFINED:
             icon = files.ensure_resource(self.icon)
 
-            async with icon.stream(executor=self._app.executor) as stream:
+            async with icon.stream(executor=self._executor) as stream:
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)
 
         raw_response = await self._request_call(route, json=payload)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._app.entity_factory.deserialize_rest_guild(response)
+        return self._entity_factory.deserialize_rest_guild(response)
 
     def add_role(
         self,
@@ -294,7 +294,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put_array(
             "permission_overwrites",
             permission_overwrites,
-            conversion=self._app.entity_factory.serialize_permission_overwrite,
+            conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)
@@ -328,7 +328,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put_array(
             "permission_overwrites",
             permission_overwrites,
-            conversion=self._app.entity_factory.serialize_permission_overwrite,
+            conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)
@@ -360,7 +360,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put_array(
             "permission_overwrites",
             permission_overwrites,
-            conversion=self._app.entity_factory.serialize_permission_overwrite,
+            conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
         self._channels.append(payload)

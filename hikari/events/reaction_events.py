@@ -52,6 +52,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import emojis
     from hikari.models import guilds
@@ -199,6 +200,9 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -237,6 +241,9 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
 class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a guild message."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -262,6 +269,9 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
 class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a guild message's reactions."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -284,6 +294,9 @@ class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent
 class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a guild message's reactions are removed."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -302,6 +315,9 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -325,6 +341,9 @@ class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
 class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -347,6 +366,9 @@ class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
 class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -365,6 +387,9 @@ class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiE
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteAllEvent(PrivateReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

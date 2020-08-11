@@ -636,13 +636,13 @@ CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
     "/avatars/{user_id}/{hash}", {PNG, JPEG, WEBP, GIF},
 )
 CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-icons/{application_id}/{hash}", {PNG, JPEG, WEBP},
+    "/_rest-icons/{application_id}/{hash}", {PNG, JPEG, WEBP},
 )
 CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
+    "/_rest-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
 )
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, WEBP},
+    "/_rest-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, WEBP},
 )
 CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute(
     "/team-icons/{team_id}/{hash}", {PNG, JPEG, WEBP},
@@ -650,7 +650,7 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute(
 
 # undocumented on the Discord docs.
 CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
+    "/_rest-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
 )
 # undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute(

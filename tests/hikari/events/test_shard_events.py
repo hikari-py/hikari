@@ -36,5 +36,5 @@ class TestShardEvent:
 
     def test_app_property(self, event):
         stub_app = object()
-        event.shard.app = stub_app
+        event.shard._rest = stub_app
         assert event.app is stub_app

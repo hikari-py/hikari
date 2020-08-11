@@ -438,7 +438,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_partial_channel(self, entity_factory_impl, mock_app, partial_channel_payload):
         partial_channel = entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
-        assert partial_channel.app is mock_app
+        assert partial_channel._rest is mock_app
         assert partial_channel.id == 561884984214814750
         assert partial_channel.name == "general"
         assert partial_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -458,7 +458,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_dm_channel(self, entity_factory_impl, mock_app, dm_channel_payload, user_payload):
         dm_channel = entity_factory_impl.deserialize_private_text_channel(dm_channel_payload)
-        assert dm_channel.app is mock_app
+        assert dm_channel._rest is mock_app
         assert dm_channel.id == 123
         assert dm_channel.name is None
         assert dm_channel.last_message_id == 456
@@ -488,7 +488,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_group_dm_channel(self, entity_factory_impl, mock_app, group_dm_channel_payload, user_payload):
         group_dm = entity_factory_impl.deserialize_private_group_text_channel(group_dm_channel_payload)
-        assert group_dm.app is mock_app
+        assert group_dm._rest is mock_app
         assert group_dm.id == 123
         assert group_dm.name == "Secret Developer Group"
         assert group_dm.icon_hash == "123asdf123adsf"
@@ -531,7 +531,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_category_payload, permission_overwrite_payload
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(guild_category_payload)
-        assert guild_category.app is mock_app
+        assert guild_category._rest is mock_app
         assert guild_category.id == 123
         assert guild_category.name == "Test"
         assert guild_category.type == channel_models.ChannelType.GUILD_CATEGORY
@@ -594,7 +594,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_text_channel_payload, permission_overwrite_payload
     ):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(guild_text_channel_payload)
-        assert guild_text_channel.app is mock_app
+        assert guild_text_channel._rest is mock_app
         assert guild_text_channel.id == 123
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -673,7 +673,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload
     ):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(guild_news_channel_payload)
-        assert news_channel.app is mock_app
+        assert news_channel._rest is mock_app
         assert news_channel.id == 7777
         assert news_channel.name == "Important Announcements"
         assert news_channel.type == channel_models.ChannelType.GUILD_NEWS

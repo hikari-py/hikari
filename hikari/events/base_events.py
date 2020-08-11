@@ -37,14 +37,13 @@ import typing
 
 import attr
 
+from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import types
-
-    from hikari.api import event_consumer
 
 
 T = typing.TypeVar("T")
@@ -58,13 +57,13 @@ class Event(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> event_consumer.IEventConsumerApp:
+    def app(self) -> traits.RESTAware:
         """App instance for this application.
 
         Returns
         -------
-        hikari.api.event_consumer.IEventConsumerApp
-            The app containing the event consumer component.
+        hikari.traits.RESTAware
+            The REST-aware app trait.
         """
 
 
@@ -163,7 +162,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
     shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

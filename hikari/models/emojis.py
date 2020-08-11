@@ -38,7 +38,7 @@ from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import users
 
 
@@ -224,7 +224,7 @@ class CustomEmoji(snowflake.Unique, Emoji):
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
 
-    app: rest_app.IRESTApp = attr.ib(
+    app: traits.RESTAware = attr.ib(
         repr=False, eq=False, hash=False, init=True, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""

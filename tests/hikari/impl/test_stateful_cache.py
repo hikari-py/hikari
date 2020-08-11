@@ -56,7 +56,7 @@ class TestStatefulCacheImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {snowflake.Snowflake(2342344): stateful_cache._GenericRefWrapper(object=mock_user)}
         channel = cache_impl._build_private_text_channel(channel_data)
-        assert channel.app is cache_impl.app
+        assert channel._rest is cache_impl.app
         assert channel.id == snowflake.Snowflake(5642134)
         assert channel.name is None
         assert channel.type is channels.ChannelType.PRIVATE_TEXT
@@ -218,7 +218,7 @@ class TestStatefulCacheImpl:
         assert 7652341234 in cache_impl._private_text_channel_entries
         channel_data = cache_impl._private_text_channel_entries[snowflake.Snowflake(7652341234)]
         assert channel_data.id == 23123
-        assert not hasattr(channel_data, "app")
+        assert not hasattr(channel_data, "_rest")
         assert channel_data.name is None
         assert not hasattr(channel_data, "type")
         assert not hasattr(channel_data, "recipient")
