@@ -66,7 +66,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import channels as channels_
     from hikari.models import colors
     from hikari.models import colours
@@ -260,9 +260,9 @@ class GuildVerificationLevel(enum.IntEnum):
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildWidget:
-    """Represents a guild embed."""
+    """Represents a guild widget."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -328,7 +328,7 @@ class Member(users.User):
     """
 
     @property
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
@@ -429,7 +429,7 @@ class Member(users.User):
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -609,7 +609,7 @@ class UnavailableGuild(snowflake.Unique):
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

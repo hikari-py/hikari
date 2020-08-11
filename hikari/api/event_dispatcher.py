@@ -72,7 +72,7 @@ class EventDispatcher(abc.ABC):
 
         @attr.s()
         class EveryoneMentionedEvent(Event):
-            app: IEventDispatcherApp = attr.ib()
+            _rest: IEventDispatcherApp = attr.ib()
 
             author: User = attr.ib()
             '''The user who mentioned everyone.'''

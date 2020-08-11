@@ -32,7 +32,6 @@ import attr
 
 from hikari import traits
 from hikari.api import entity_factory
-from hikari.api import rest as rest_app
 from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
 from hikari.models import channels as channel_models
@@ -237,11 +236,6 @@ class EntityFactoryComponentImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
         }
 
-    @property
-    @typing.final
-    def app(self) -> traits.EntityFactoryAware:
-        return self._app
-
     ######################
     # APPLICATION MODELS #
     ######################
@@ -282,7 +276,7 @@ class EntityFactoryComponentImpl(entity_factory.EntityFactory):
             members = {}
             for member_payload in team_payload["members"]:
                 team_member = application_models.TeamMember(
-                    app=self.app,
+                    app=self._app,
                     membership_state=application_models.TeamMembershipState(member_payload["membership_state"]),
                     permissions=member_payload["permissions"],
                     team_id=snowflake.Snowflake(member_payload["team_id"]),

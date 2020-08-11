@@ -29,43 +29,40 @@ import asyncio
 import logging
 import typing
 
-from hikari.api import guild_chunker
+from hikari.api import chunker
 from hikari.impl import rate_limits
 from hikari.models import intents as intents_
 
 if typing.TYPE_CHECKING:
-    from hikari.api import bot
+    from hikari import traits
     from hikari.models import guilds
 
 _LOGGER = logging.getLogger("hikari.guild_chunker")
 
 
-class StatefulGuildChunkerImpl(guild_chunker.GuildChunker):
+class StatefulGuildChunkerImpl(chunker.GuildChunker):
     """Guild chunker implementation."""
 
     __slots__: typing.Sequence[str] = ("_app", "_presences", "_queues", "_chunkers")
 
-    def __init__(self, app: bot.IBotApp, intents: typing.Optional[intents_.Intents]):
+    def __init__(self, app: traits.ShardAware, intents: typing.Optional[intents_.Intents]):
         self._app = app
         self._presences: bool = intents is None or bool(intents & intents_.Intents.GUILD_PRESENCES)
         self._queues: typing.Dict[int, typing.List[int]] = {}
         self._chunkers: typing.Dict[int, asyncio.Task[None]] = {}
 
-    @property
-    @typing.final
-    def app(self) -> bot.IBotApp:
-        return self._app
-
     async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
-        shard_id = guild.shard_id
-        if shard_id not in self._queues:
-            self._queues[shard_id] = []
+        if (shard_id := guild.shard_id) is not None:
+            if shard_id not in self._queues:
+                self._queues[shard_id] = []
 
-        self._queues[shard_id].append(guild.id)
+            self._queues[shard_id].append(guild.id)
 
-        if shard_id not in self._chunkers:
-            task = asyncio.create_task(self._request_chunk(shard_id))
-            self._chunkers[shard_id] = task
+            if shard_id not in self._chunkers:
+                task = asyncio.create_task(self._request_chunk(shard_id))
+                self._chunkers[shard_id] = task
+        else:
+            raise RuntimeError("Guild did not have sharding information available")
 
     async def _request_chunk(self, shard_id: int) -> None:
         # Since this is not an endpoint but a request, we dont get the ratelimit info

@@ -406,7 +406,7 @@ class TestRESTClientImpl:
         app_mock = mock.Mock()
         rest_client._app = app_mock
 
-        assert rest_client.app is app_mock
+        assert rest_client._rest is app_mock
 
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = object()

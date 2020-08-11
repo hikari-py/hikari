@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventManagerComponentBase"]
+__all__: typing.Final[typing.List[str]] = ["EventManagerBase"]
 
 import asyncio
 import logging
@@ -31,6 +31,7 @@ import typing
 import warnings
 
 from hikari import errors
+from hikari import traits
 from hikari.api import event_dispatcher
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -62,16 +63,17 @@ def _default_predicate(_: event_dispatcher.EventT_inv) -> bool:
     return True
 
 
-class EventManagerComponentBase(event_dispatcher.EventDispatcher):
+class EventManagerBase(event_dispatcher.EventDispatcher):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, intents: typing.Optional[intents_.Intents]) -> None:
+    def __init__(self, app: traits.BotAware, intents: typing.Optional[intents_.Intents]) -> None:
+        self._app = app
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
@@ -263,7 +265,7 @@ class EventManagerComponentBase(event_dispatcher.EventDispatcher):
                 _LOGGER.error("an exception occurred handling an event", exc_info=trio)
                 await self.dispatch(
                     base_events.ExceptionEvent(
-                        app=self.app,
+                        app=self._app,
                         shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
                         exception=ex,
                         failed_event=event,

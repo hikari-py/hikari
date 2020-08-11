@@ -49,6 +49,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import channels as channels_
     from hikari.models import emojis as emojis_
@@ -103,6 +104,9 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
     """
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -185,6 +189,9 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     This will also fire if the guild was deleted.
     """
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -198,6 +205,9 @@ class GuildLeaveEvent(GuildVisibilityEvent):
 class GuildUnavailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes unavailable because of an outage."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -210,6 +220,9 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -270,6 +283,9 @@ class BanEvent(GuildEvent, abc.ABC):
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -286,6 +302,9 @@ class BanCreateEvent(BanEvent):
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -301,6 +320,9 @@ class BanDeleteEvent(BanEvent):
 @base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -336,6 +358,9 @@ class IntegrationsUpdateEvent(GuildEvent):
         We agree that it is not overly helpful to you.
     """
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -359,6 +384,9 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     presence on specific shards, this will only fire for the corresponding
     shards that saw the presence update.
     """
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -415,6 +443,9 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MemberChunkEvent(shard_events.ShardEvent):
     """Used to represent the response to Guild Request Members."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.

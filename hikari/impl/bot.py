@@ -66,7 +66,7 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari.api import cache as cache_
-    from hikari.api import guild_chunker as guild_chunker_
+    from hikari.api import chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
     from hikari.models import users
@@ -75,15 +75,10 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 class BotApp(
-    traits.CacheAware,
     traits.DispatcherAware,
-    traits.EntityFactoryAware,
     traits.EventFactoryAware,
-    traits.ExecutorAware,
-    traits.GuildChunkerAware,
     traits.RESTAware,
     traits.ShardAware,
-    traits.VoiceAware,
     event_dispatcher.EventDispatcher,
 ):
     """Implementation of an auto-sharded single-instance bot application.
@@ -273,7 +268,7 @@ class BotApp(
         self._connector_factory = rest_client_impl.BasicLazyCachedTCPConnectorFactory()
         self._debug = debug
         self._entity_factory = entity_factory_impl.EntityFactoryComponentImpl(app=self)
-        self._event_factory = event_factory_impl.EventFactoryComponentImpl(entity_factory=self._entity_factory)
+        self._event_factory = event_factory_impl.EventFactoryImpl(app=self)
         self._executor = executor
         self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -311,18 +306,20 @@ class BotApp(
         # This should always be last so that we don't get an extra error when failed to initialize
         self._start_count: int = 0
 
+        self._cache: cache_.MutableCache
+        self._guild_chunker: guild_chunker_.GuildChunker
+        self._event_manager: event_manager_base.EventManagerBase
+
         if stateless:
-            self._cache = stateless_cache_impl.StatelessCacheImpl(app=self)
-            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl(app=self)
-            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(
-                event_factory=self._event_factory, intents=intents,
-            )
+            self._cache = stateless_cache_impl.StatelessCacheImpl()
+            self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl()
+            self._event_manager = stateless_event_manager.StatelessEventManagerImpl(app=self, intents=intents)
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
-            self._cache = cache_impl.StatefulCacheImpl(intents=intents)
+            self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
             self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
             self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
-                event_factory=self._event_factory, cache=self._cache, chunker=self._guild_chunker, intents=intents
+                app=self, cache=self._cache, intents=intents
             )
 
         self._voice = voice.VoiceComponentImpl(self, self._event_manager)
@@ -353,7 +350,7 @@ class BotApp(
         return self._entity_factory
 
     @property
-    def event_factory(self) -> event_factory_impl.EventFactoryComponentImpl:
+    def event_factory(self) -> event_factory_impl.EventFactoryImpl:
         return self._event_factory
 
     @property

@@ -49,7 +49,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import emojis as emojis_
 
 
@@ -275,7 +275,7 @@ class ClientStatus:
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     user_id: snowflake.Snowflake = attr.ib(repr=True, eq=False, hash=True)

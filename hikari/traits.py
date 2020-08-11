@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Core app interface for application implementations."""
+"""Core _rest interface for application implementations."""
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
@@ -32,11 +32,12 @@ __all__: typing.Final[typing.List[str]] = [
     "EntityFactoryAware",
     "EventFactoryAware",
     "ExecutorAware",
-    "GuildChunkerAware",
+    "ChunkerAware",
     "NetworkSettingsAware",
     "RESTAware",
     "ShardAware",
     "VoiceAware",
+    "BotAware",
 ]
 
 import typing
@@ -47,10 +48,10 @@ if typing.TYPE_CHECKING:
 
     from hikari import config
     from hikari.api import cache
+    from hikari.api import chunker
     from hikari.api import entity_factory
     from hikari.api import event_dispatcher
     from hikari.api import event_factory
-    from hikari.api import guild_chunker
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
@@ -234,7 +235,7 @@ class EventFactoryAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class GuildChunkerAware(typing.Protocol):
+class ChunkerAware(typing.Protocol):
     """Structural supertype for a guild chunker-aware object.
 
     These are able to request member chunks for guilds via the gateway to
@@ -244,19 +245,19 @@ class GuildChunkerAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def chunker(self) -> guild_chunker.GuildChunker:
+    def chunker(self) -> chunker.GuildChunker:
         """Return the guild chunker component.
 
         Returns
         -------
-        hikari.api.guild_chunker.GuildChunker
+        hikari.api.chunker.GuildChunker
             The guild chunker component.
         """
         raise NotImplementedError
 
 
 @typing.runtime_checkable
-class RESTAware(NetworkSettingsAware, typing.Protocol):
+class RESTAware(EntityFactoryAware, NetworkSettingsAware, ExecutorAware, CacheAware, typing.Protocol):
     """Structural supertype for a REST-aware object.
 
     These are able to perform REST API calls.
@@ -277,7 +278,29 @@ class RESTAware(NetworkSettingsAware, typing.Protocol):
 
 
 @typing.runtime_checkable
-class ShardAware(NetworkSettingsAware, typing.Protocol):
+class VoiceAware(typing.Protocol):
+    """Structural supertype for a voice-aware object.
+
+    This is an object that provides a `voice` property to allow the creation
+    of custom voice client instances.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def voice(self) -> voice_.VoiceComponent:
+        """Return the voice connection manager component for this application.
+
+        Returns
+        -------
+        hikari.api.voice.VoiceComponent
+            The voice component for the application.
+        """
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, VoiceAware, typing.Protocol):
     """Structural supertype for a shard-aware object.
 
     These will expose a mapping of shards and a
@@ -373,22 +396,5 @@ class ShardAware(NetworkSettingsAware, typing.Protocol):
 
 
 @typing.runtime_checkable
-class VoiceAware(typing.Protocol):
-    """Structural supertype for a voice-aware object.
-
-    This is an object that provides a `voice` property to allow the creation
-    of custom voice client instances.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    def voice(self) -> voice_.VoiceComponent:
-        """Return the voice connection manager component for this application.
-
-        Returns
-        -------
-        hikari.api.voice.VoiceComponent
-            The voice component for the application.
-        """
-        raise NotImplementedError
+class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing.Protocol):
+    """Structural supertype for a component that is aware of all internals."""

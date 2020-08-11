@@ -54,7 +54,8 @@ from hikari.utilities import snowflake
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
+
 
 _DataT = typing.TypeVar("_DataT", bound="_BaseData[typing.Any]")
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
@@ -217,7 +218,7 @@ class _GuildRecord:
         "guild",
         "invites",
         "members",
-        "presences",
+        "include_presences",
         "roles",
         "voice_states",
     )
@@ -657,7 +658,8 @@ class StatefulCacheImpl(cache.MutableCache):
         "_user_entries",
     )
 
-    def __init__(self, intents: typing.Optional[intents_.Intents]) -> None:
+    def __init__(self, app: traits.RESTAware, intents: typing.Optional[intents_.Intents]) -> None:
+        self._app = app
         self._me: typing.Optional[users.OwnUser] = None
         self._private_text_channel_entries: typing.MutableMapping[
             snowflake.Snowflake, _PrivateTextChannelData

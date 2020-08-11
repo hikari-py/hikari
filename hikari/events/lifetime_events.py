@@ -38,7 +38,7 @@ from hikari.events import base_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari.api import event_consumer
+    from hikari import traits
 
 
 @attr_extensions.with_copy
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
-    This will only fire once per `app.run`/`app.start`, so is suitable for
+    This will only fire once per `_rest.run`/`_rest.start`, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
@@ -66,7 +66,7 @@ class StartingEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
@@ -75,7 +75,7 @@ class StartingEvent(base_events.Event):
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
-    This will only fire once per `app.run`/`app.start`, so is suitable for
+    This will only fire once per `_rest.run`/`_rest.start`, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
@@ -89,7 +89,7 @@ class StartedEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
@@ -100,7 +100,7 @@ class StoppingEvent(base_events.Event):
 
     This will fire before the connection is physically disconnected.
 
-    This will only fire once per `app.close`, so is suitable for
+    This will only fire once per `_rest.close`, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
@@ -120,7 +120,7 @@ class StoppingEvent(base_events.Event):
     `StoppedEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
@@ -129,12 +129,12 @@ class StoppingEvent(base_events.Event):
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 
-    This will only fire once per `app.close`, so is suitable for
+    This will only fire once per `_rest.close`, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
     !!! warning
-        The application will not proceed to leave the `app.run` call until all
+        The application will not proceed to leave the `_rest.run` call until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring where a script may
         terminate the process before a callback can occur.
@@ -150,5 +150,5 @@ class StoppedEvent(base_events.Event):
     `StoppingEvent`
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.

@@ -1048,7 +1048,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]]
+        CacheView[hikari.utilities.snowflake.Snowflake, ICacheView[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]]
             A view of guild IDs to views of user IDs to objects of the include_presences
             that were removed from the cache.
         """  # noqa E501: - Line too long

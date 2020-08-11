@@ -52,6 +52,7 @@ import typing
 
 import attr
 
+from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.models import intents
@@ -160,6 +161,9 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -183,6 +187,9 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
     """Event fired when a private channel is created."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -225,6 +232,9 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -253,6 +263,9 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
     """Event fired when a private channel is edited."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -305,6 +318,9 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -339,6 +355,9 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
     """Event fired when a private channel is deleted."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
@@ -395,6 +414,9 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -418,6 +440,9 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -472,6 +497,9 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -507,6 +535,9 @@ class InviteCreateEvent(InviteEvent):
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -536,6 +567,9 @@ class WebhookUpdateEvent(GuildChannelEvent):
     so this event is pretty useless unless you keep track of the webhooks in
     the channel manually beforehand.
     """
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

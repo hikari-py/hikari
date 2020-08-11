@@ -52,6 +52,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import messages
     from hikari.models import users
@@ -246,6 +247,9 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a guild channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -265,6 +269,9 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
 class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a private channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -277,6 +284,9 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a guild channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -297,6 +307,9 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
 class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a private channel."""
 
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -309,6 +322,9 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a guild channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -328,6 +344,9 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a private channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -363,6 +382,9 @@ class MessageBulkDeleteEvent(MessagesEvent, abc.ABC):
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     """Event triggered when messages are bulk-deleted from a guild channel."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.

@@ -353,10 +353,10 @@ class GatewayShard(abc.ABC):
         self,
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        users: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Request for a guild chunk.
@@ -365,13 +365,13 @@ class GatewayShard(abc.ABC):
         ----------
         guild: hikari.models.guilds.Guild
             The guild to request chunk for.
-        presences: hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        include_presences: hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If specified, whether to request include_presences.
         query: builtins.str
             If not `builtins.None`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
-        users: hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.User]]]
+        user_ids: hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.User]]]
             If specified, the users to request for.
         nonce: hikari.utilities.undefined.UndefinedOr[builtins.str]
             If specified, the nonce to be sent with guild chunks.
