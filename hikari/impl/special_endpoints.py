@@ -107,8 +107,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         # This will always be true, but this keeps MyPy quiet.
         if self._task is not None:
             self._task.cancel()
-            # Prevent reusing this object by not setting it back to None.
-            self._task = NotImplemented
+            await self._task
 
     async def _keep_typing(self) -> None:
         # Cancelled error will occur when the context manager is requested to
@@ -119,7 +118,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 # Use slightly less than 10s to ensure latency does not
                 # cause the typing indicator to stop showing for a split
                 # second if the request is slow to execute.
-                await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
+                with contextlib.suppress(asyncio.TimeoutError):
+                    await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
 @attr_extensions.with_copy
