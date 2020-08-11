@@ -35,6 +35,7 @@ __all__: typing.Final[typing.List[str]] = [
     "HTTPClientClosedError",
     "ClientHTTPResponseError",
     "InternalServerError",
+    "ShardCloseCode",
     "GatewayServerClosedConnectionError",
     "GatewayClientClosedError",
     "GatewayError",
@@ -45,6 +46,7 @@ __all__: typing.Final[typing.List[str]] = [
     "VoiceError",
 ]
 
+import enum
 import http
 import typing
 
@@ -107,19 +109,64 @@ class GatewayClientClosedError(GatewayError):
         return self.reason
 
 
+@enum.unique
+@typing.final
+class ShardCloseCode(enum.IntEnum):
+    """Reasons for a shard connection closure."""
+
+    NORMAL_CLOSURE = 1000
+    GOING_AWAY = 1001
+    PROTOCOL_ERROR = 1002
+    TYPE_ERROR = 1003
+    ENCODING_ERROR = 1007
+    POLICY_VIOLATION = 1008
+    TOO_BIG = 1009
+    UNEXPECTED_CONDITION = 1011
+    UNKNOWN_ERROR = 4000
+    UNKNOWN_OPCODE = 4001
+    DECODE_ERROR = 4002
+    NOT_AUTHENTICATED = 4003
+    AUTHENTICATION_FAILED = 4004
+    ALREADY_AUTHENTICATED = 4005
+    INVALID_SEQ = 4007
+    RATE_LIMITED = 4008
+    SESSION_TIMEOUT = 4009
+    INVALID_SHARD = 4010
+    SHARDING_REQUIRED = 4011
+    INVALID_VERSION = 4012
+    INVALID_INTENT = 4013
+    DISALLOWED_INTENT = 4014
+
+
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
-    code: typing.Optional[int] = attr.ib(default=None)
-    """The close code."""
+    code: typing.Union[ShardCloseCode, int, None] = attr.ib(default=None)
+    """Return the close code that was received, if there is one.
+
+    Returns
+    -------
+    typing.Union[ShardCloseCode, builtins.int, builtins.None]
+        The shard close code if there was one. Will be a `ShardCloseCode`
+        if the definition is known. Undocumented close codes may instead be
+        an `builtins.int` instead.
+
+        If no close code was received, this will be `builtins.None`.
+    """
 
     can_reconnect: bool = attr.ib(default=False)
-    """Whether we can try to reconnect.
+    """Return `builtins.True` if we can recover from this closure.
 
     If `builtins.True`, it will try to reconnect after this is raised rather
     than it being propagated to the caller. If `builtins.False`, this will
-    be raised.
+    be raised, thus stopping the applicaiton unless handled explicitly by the
+    user.
+
+    Returns
+    -------
+    builtins.bool
+        Whether the closure can be recovered from via a reconnect.
     """
 
     def __str__(self) -> str:
@@ -256,7 +303,7 @@ class NotFoundError(ClientHTTPResponseError):
     """The error message."""
 
 
-@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+@attr.s(auto_exc=True, kw_only=True, slots=True, repr=False, weakref_slot=False)
 class RateLimitedError(ClientHTTPResponseError):
     """Raised when a non-global ratelimit that cannot be handled occurs.
 
