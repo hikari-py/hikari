@@ -68,7 +68,7 @@ class Event(abc.ABC):
         """
 
 
-def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intent]:
+def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
@@ -78,22 +78,22 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
     Returns
     -------
-    typing.Collection[hikari.models.intents.Intent]
+    typing.Collection[hikari.models.intents.Intents]
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
     return typing.cast(typing.Collection[typing.Any], getattr(event_type, REQUIRED_INTENTS_ATTR, ()))
 
 
-def requires_intents(first: intents.Intent, *rest: intents.Intent) -> typing.Callable[[T], T]:
+def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.Callable[[T], T]:
     """Decorate an event type to define what intents it requires.
 
     Parameters
     ----------
-    first : hikari.models.intents.Intent
+    first : hikari.models.intents.Intents
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.models.intents.Intent
+    *rest : hikari.models.intents.Intents
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
     """

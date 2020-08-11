@@ -175,12 +175,12 @@ class IGatewayShard(component.IComponent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         """Return the intents set on this shard.
 
         Returns
         -------
-        hikari.models.intents.Intent or builtins.None
+        hikari.models.intents.Intents or builtins.None
             The intents being used on this shard. This may be
             `builtins.None` if intents were not specified.
 

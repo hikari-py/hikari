@@ -74,7 +74,7 @@ class EventManagerComponentBase(event_dispatcher.IEventDispatcherComponent, even
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_mutable_cache", "_waiters")
 
     def __init__(
-        self, app: bot.IBotApp, mutable_cache: cache.IMutableCacheComponent, intents: typing.Optional[intents_.Intent],
+        self, app: bot.IBotApp, mutable_cache: cache.IMutableCacheComponent, intents: typing.Optional[intents_.Intents],
     ) -> None:
         self._app = app
         self._intents = intents

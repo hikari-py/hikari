@@ -106,7 +106,7 @@ class BotAppImpl(bot.IBotApp):
     initial_is_afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
         each shard will appear as _not_ being AFK.
-    intents : hikari.models.intents.Intent or builtins.None
+    intents : hikari.models.intents.Intents or builtins.None
         The intents to use for each shard. If `builtins.None`, then no intents
         are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
@@ -238,7 +238,7 @@ class BotAppImpl(bot.IBotApp):
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
-        intents: typing.Optional[intents_.Intent] = intents_.Intent.ALL_UNPRIVILEGED,
+        intents: typing.Optional[intents_.Intents] = intents_.Intents.ALL_UNPRIVILEGED,
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,
@@ -383,7 +383,7 @@ class BotAppImpl(bot.IBotApp):
         return self._http_settings
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         return self._intents
 
     @property

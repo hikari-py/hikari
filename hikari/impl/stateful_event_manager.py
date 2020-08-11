@@ -146,7 +146,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerComponentBase):
         for voice_state in event.voice_states.values():
             self._mutable_cache.set_voice_state(voice_state)
 
-        if event.guild.is_large and (self._intents is None or self._intents & intents.Intent.GUILD_MEMBERS):
+        if event.guild.is_large and (self._intents is None or self._intents & intents.Intents.GUILD_MEMBERS):
             await self._app.guild_chunker.request_guild_chunk(event.guild, shard.id)
 
         await self.dispatch(event)

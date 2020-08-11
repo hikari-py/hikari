@@ -87,7 +87,7 @@ class GatewayShardImplV6(shard.IGatewayShard):
         Whether to appear to be AFK or not on login.
     initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
         The initial status to set on login for the shard.
-    intents : hikari.models.intents.Intent or builtins.None
+    intents : hikari.models.intents.Intents or builtins.None
         Collection of intents to use, or `builtins.None` to not use intents at
         all.
     large_threshold : builtins.int
@@ -214,7 +214,7 @@ class GatewayShardImplV6(shard.IGatewayShard):
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
-        intents: typing.Optional[intents_.Intent] = None,
+        intents: typing.Optional[intents_.Intents] = None,
         large_threshold: int = 250,
         proxy_settings: config.ProxySettings,
         shard_id: int = 0,
@@ -235,7 +235,7 @@ class GatewayShardImplV6(shard.IGatewayShard):
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
         self._idle_since: undefined.UndefinedNoneOr[datetime.datetime] = initial_idle_since
-        self._intents: typing.Optional[intents_.Intent] = intents
+        self._intents: typing.Optional[intents_.Intents] = intents
         self._is_afk: undefined.UndefinedOr[bool] = initial_is_afk
         self._large_threshold = large_threshold
         self._last_heartbeat_sent = float("nan")
@@ -310,7 +310,7 @@ class GatewayShardImplV6(shard.IGatewayShard):
         return self._shard_id
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         return self._intents
 
     @property
@@ -426,11 +426,11 @@ class GatewayShardImplV6(shard.IGatewayShard):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
-            if not query and not limit and not self._intents & intents_.Intent.GUILD_MEMBERS:
-                raise errors.MissingIntentError(intents_.Intent.GUILD_MEMBERS)
+            if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
+                raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
-            if presences is not undefined.UNDEFINED and not self._intents & intents_.Intent.GUILD_PRESENCES:
-                raise errors.MissingIntentError(intents_.Intent.GUILD_PRESENCES)
+            if presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
+                raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
         if users is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")

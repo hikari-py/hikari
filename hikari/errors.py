@@ -411,7 +411,7 @@ class MissingIntentError(HikariError):
     unavailable due to certain intents being disabled.
     """
 
-    intents: intents_.Intent = attr.ib()
+    intents: intents_.Intents = attr.ib()
     """The combination of intents that are missing."""
 
     def __str__(self) -> str:

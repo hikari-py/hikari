@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.PRIVATE_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.PRIVATE_MESSAGE_TYPING)
 class TypingEvent(shard_events.ShardEvent, abc.ABC):
     """Base event fired when a user begins typing in a channel."""
 
@@ -106,7 +106,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         return await self.app.rest.fetch_user(self.user_id)
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
@@ -178,7 +178,7 @@ class GuildTypingEvent(TypingEvent):
         return await self.app.rest.fetch_guild_preview(self.guild_id)
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateTypingEvent(TypingEvent):

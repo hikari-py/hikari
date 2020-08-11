@@ -657,7 +657,7 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
         "_user_entries",
     )
 
-    def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intent]) -> None:
+    def __init__(self, app: rest_app.IRESTApp, intents: typing.Optional[intents_.Intents]) -> None:
         self._me: typing.Optional[users.OwnUser] = None
         self._private_text_channel_entries: typing.MutableMapping[
             snowflake.Snowflake, _PrivateTextChannelData
@@ -681,11 +681,11 @@ class StatefulCacheImpl(cache.IMutableCacheComponent):
     def app(self) -> rest_app.IRESTApp:
         return self._app
 
-    def _assert_has_intent(self, intents: intents_.Intent, /) -> None:
+    def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
         if self._intents is not None and self._intents ^ intents:
             raise errors.MissingIntentError(intents) from None
 
-    def _is_intent_enabled(self, intents: intents_.Intent, /) -> bool:
+    def _is_intent_enabled(self, intents: intents_.Intents, /) -> bool:
         return self._intents is None or (self._intents & intents) == intents
 
     def _build_private_text_channel(

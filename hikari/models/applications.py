@@ -246,7 +246,7 @@ class OwnGuild(guilds.PartialGuild):
     is_owner: bool = attr.ib(eq=False, hash=False, repr=True)
     """`builtins.True` when the current user owns this guild."""
 
-    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
+    my_permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
 
 

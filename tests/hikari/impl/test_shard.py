@@ -840,20 +840,20 @@ class TestRequestGuildMembers:
         )
 
     async def test_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
-        client._intents = intents.Intent.GUILD_INTEGRATIONS
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
 
         with pytest.raises(errors.MissingIntentError):
             await client.request_guild_members(123, query="", limit=0)
 
     async def test_when_presences_and_GUILD_PRESENCES_not_enabled(self, client):
-        client._intents = intents.Intent.GUILD_INTEGRATIONS
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
 
         with pytest.raises(errors.MissingIntentError):
             await client.request_guild_members(123, query="test", limit=1, presences=True)
 
     @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
     async def test_when_specifiying_users_with_limit_or_query(self, client, kwargs):
-        client._intents = intents.Intent.GUILD_INTEGRATIONS
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
 
         with pytest.raises(ValueError):
             await client.request_guild_members(123, users=[], **kwargs)
@@ -949,7 +949,7 @@ class TestHandshake:
         client._expect_opcode = mock.AsyncMock()
         client._session_id = None
         client._token = "token"
-        client._intents = intents.Intent.ALL_UNPRIVILEGED
+        client._intents = intents.Intents.ALL_UNPRIVILEGED
         client._large_threshold = 123
         client._activity = undefined.UNDEFINED
         client._status = undefined.UNDEFINED
@@ -973,7 +973,7 @@ class TestHandshake:
                     "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [0, 1],
-                "intents": intents.Intent.ALL_UNPRIVILEGED,
+                "intents": intents.Intents.ALL_UNPRIVILEGED,
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)

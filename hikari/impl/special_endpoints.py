@@ -162,7 +162,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     guild_builder = rest.guild_builder("My Server!")
 
     everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permission.ADMINISTRATOR)
+    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
 
     await guild_builder.create()
     ```
@@ -245,7 +245,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         if not undefined.count(color, colour):
