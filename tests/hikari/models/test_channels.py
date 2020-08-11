@@ -84,7 +84,7 @@ def test_PermissionOverwrite_unset():
     overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=1234321)
     overwrite.allow = permissions.Permissions.CREATE_INSTANT_INVITE
     overwrite.deny = permissions.Permissions.CHANGE_NICKNAME
-    assert overwrite.unset == permissions.Permission(-67108866)
+    assert overwrite.unset == permissions.Permissions(-67108866)
 
 
 @pytest.mark.asyncio

@@ -372,9 +372,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         target_type : hikari.utilities.undefined.UndefinedOr[hikari.models.channels.PermissionOverwriteType or builtins.str]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             If provided, the new vale of all disallowed permissions.
         reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.

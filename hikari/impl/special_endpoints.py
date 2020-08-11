@@ -157,7 +157,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     Adding roles to your guild.
 
     ```py
-    from hikari.models.permissions import Permission
+    from hikari.models.permissions import Permissions
 
     guild_builder = rest.guild_builder("My Server!")
 

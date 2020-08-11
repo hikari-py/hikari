@@ -112,7 +112,7 @@ class GuildBuilder(abc.ABC):
     Adding roles to your guild.
 
     ```py
-    from hikari.models.permissions import Permission
+    from hikari.models.permissions import Permissions
 
     guild_builder = rest.guild_builder("My Server!")
 
@@ -255,7 +255,7 @@ class GuildBuilder(abc.ABC):
             unspecified, then this will not occur.
         mentionable : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, then the role will be able to be mentioned.
-        permissions : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        permissions : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             The optional permissions to enforce on the role. If unspecified,
             the default permissions for roles will be used.
 
