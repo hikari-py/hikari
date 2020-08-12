@@ -152,7 +152,7 @@ class GuildTypingEvent(TypingEvent):
             ...
 
     async def fetch_member(self) -> guilds.Member:
-        """Perform an API call to fetch an up-to-date image of this guild.
+        """Perform an API call to fetch an up-to-date image of this member.
 
         Returns
         -------

@@ -444,7 +444,7 @@ class Application(snowflake.Unique):
         return self.name
 
     @property
-    def icon(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> typing.Optional[files.URL]:
         """Team icon, if there is one.
 
         Returns
@@ -486,7 +486,7 @@ class Application(snowflake.Unique):
         )
 
     @property
-    def cover_image(self) -> typing.Optional[files.URL]:
+    def cover_image_url(self) -> typing.Optional[files.URL]:
         """Cover image used on the store.
 
         Returns
@@ -523,6 +523,6 @@ class Application(snowflake.Unique):
         if self.cover_image_hash is None:
             return None
 
-        return routes.CDN_APPLICATION_ASSET.compile_to_file(
-            constants.CDN_URL, team_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
+        return routes.CDN_APPLICATION_COVER.compile_to_file(
+            constants.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
         )
