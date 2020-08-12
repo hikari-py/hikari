@@ -266,346 +266,155 @@ class CDNRoute:
 
 
 GET: typing.Final[str] = "GET"
+POST: typing.Final[str] = "POST"
 PATCH: typing.Final[str] = "PATCH"
 DELETE: typing.Final[str] = "DELETE"
 PUT: typing.Final[str] = "PUT"
 
-POST: typing.Final[str] = "POST"
 # Channels
-GET_CHANNEL: typing.Final[Route] = Route(
-    GET, "/channels/{channel}",
-)
-PATCH_CHANNEL: typing.Final[Route] = Route(
-    PATCH, "/channels/{channel}",
-)
+GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
+PATCH_CHANNEL: typing.Final[Route] = Route(PATCH, "/channels/{channel}")
+DELETE_CHANNEL: typing.Final[Route] = Route(DELETE, "/channels/{channel}")
 
-DELETE_CHANNEL: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}",
-)
-GET_CHANNEL_INVITES: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/invites",
-)
+GET_CHANNEL_INVITES: typing.Final[Route] = Route(GET, "/channels/{channel}/invites")
+POST_CHANNEL_INVITES: typing.Final[Route] = Route(POST, "/channels/{channel}/invites")
 
-POST_CHANNEL_INVITES: typing.Final[Route] = Route(
-    POST, "/channels/{channel}/invites",
-)
-GET_CHANNEL_MESSAGE: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/messages/{message}",
-)
-PATCH_CHANNEL_MESSAGE: typing.Final[Route] = Route(
-    PATCH, "/channels/{channel}/messages/{message}",
-)
+GET_CHANNEL_MESSAGE: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}")
+PATCH_CHANNEL_MESSAGE: typing.Final[Route] = Route(PATCH, "/channels/{channel}/messages/{message}")
+DELETE_CHANNEL_MESSAGE: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}")
 
-DELETE_CHANNEL_MESSAGE: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}",
-)
-GET_CHANNEL_MESSAGES: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/messages",
-)
+GET_CHANNEL_MESSAGES: typing.Final[Route] = Route(GET, "/channels/{channel}/messages")
+POST_CHANNEL_MESSAGES: typing.Final[Route] = Route(POST, "/channels/{channel}/messages")
 
-POST_CHANNEL_MESSAGES: typing.Final[Route] = Route(
-    POST, "/channels/{channel}/messages",
-)
+POST_DELETE_CHANNEL_MESSAGES_BULK: typing.Final[Route] = Route(POST, "/channels/{channel}/messages/bulk-delete")
 
-POST_DELETE_CHANNEL_MESSAGES_BULK: typing.Final[Route] = Route(
-    POST, "/channels/{channel}/messages/bulk-delete",
-)
-PATCH_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(
-    PATCH, "/channels/{channel}/permissions/{overwrite}",
-)
+PATCH_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(PATCH, "/channels/{channel}/permissions/{overwrite}")
+DELETE_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/permissions/{overwrite}")
 
-DELETE_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/permissions/{overwrite}",
-)
+GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/pins")
+PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/pins/{message}")
+DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/pins/{message}")
 
-DELETE_CHANNEL_PIN: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/pins/{message}",
-)
-GET_CHANNEL_PINS: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/pins",
-)
+POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typing")
 
-PUT_CHANNEL_PINS: typing.Final[Route] = Route(
-    PUT, "/channels/{channel}/pins/{message}",
-)
+POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
+GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
-POST_CHANNEL_TYPING: typing.Final[Route] = Route(
-    POST, "/channels/{channel}/typing",
-)
-POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(
-    POST, "/channels/{channel}/webhooks",
-)
-
-GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/webhooks",
-)
 # Reactions
-
-DELETE_ALL_REACTIONS: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions",
-)
-DELETE_REACTION_EMOJI: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}",
-)
+GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
+DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
+DELETE_REACTION_EMOJI: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_REACTION_USER: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}",
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}"
 )
 
-GET_REACTIONS: typing.Final[Route] = Route(
-    GET, "/channels/{channel}/messages/{message}/reactions/{emoji}",
-)
 # Guilds
-GET_GUILD: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}",
-)
-PATCH_GUILD: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}",
-)
+GET_GUILD: typing.Final[Route] = Route(GET, "/guilds/{guild}")
+POST_GUILDS: typing.Final[Route] = Route(POST, "/guilds")
+PATCH_GUILD: typing.Final[Route] = Route(PATCH, "/guilds/{guild}")
+DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
-DELETE_GUILD: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}",
-)
+GET_GUILD_AUDIT_LOGS: typing.Final[Route] = Route(GET, "/guilds/{guild}/audit-logs")
 
-POST_GUILDS: typing.Final[Route] = Route(
-    POST, "/guilds",
-)
+GET_GUILD_BAN: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans/{user}")
+PUT_GUILD_BAN: typing.Final[Route] = Route(PUT, "/guilds/{guild}/bans/{user}")
+DELETE_GUILD_BAN: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/bans/{user}")
 
-GET_GUILD_AUDIT_LOGS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/audit-logs",
-)
-GET_GUILD_BAN: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/bans/{user}",
-)
-PUT_GUILD_BAN: typing.Final[Route] = Route(
-    PUT, "/guilds/{guild}/bans/{user}",
-)
+GET_GUILD_BANS: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans")
 
-DELETE_GUILD_BAN: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/bans/{user}",
-)
+GET_GUILD_CHANNELS: typing.Final[Route] = Route(GET, "/guilds/{guild}/channels")
+POST_GUILD_CHANNELS: typing.Final[Route] = Route(POST, "/guilds/{guild}/channels")
+PATCH_GUILD_CHANNELS: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/channels")
 
-GET_GUILD_BANS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/bans",
-)
-GET_GUILD_CHANNELS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/channels",
-)
-POST_GUILD_CHANNELS: typing.Final[Route] = Route(
-    POST, "/guilds/{guild}/channels",
-)
+GET_GUILD_WIDGET: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget")
+PATCH_GUILD_WIDGET: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/widget")
 
-PATCH_GUILD_CHANNELS: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/channels",
-)
-GET_GUILD_WIDGET: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/widget",
-)
+GET_GUILD_EMOJI: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis/{emoji}")
+PATCH_GUILD_EMOJI: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/emojis/{emoji}")
+DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/{emoji}")
 
-PATCH_GUILD_WIDGET: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/widget",
-)
-GET_GUILD_EMOJI: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/emojis/{emoji}",
-)
-PATCH_GUILD_EMOJI: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/emojis/{emoji}",
-)
+GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
+POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
+PATCH_GUILD_INTEGRATION: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/integrations/{integration}")
+DELETE_GUILD_INTEGRATION: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/integrations/{integration}")
 
-DELETE_GUILD_EMOJI: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/emojis/{emoji}",
-)
-GET_GUILD_EMOJIS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/emojis",
-)
+GET_GUILD_INTEGRATIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/integrations")
+POST_GUILD_INTEGRATION_SYNC: typing.Final[Route] = Route(POST, "/guilds/{guild}/integrations/{integration}")
 
-POST_GUILD_EMOJIS: typing.Final[Route] = Route(
-    POST, "/guilds/{guild}/emojis",
-)
-PATCH_GUILD_INTEGRATION: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/integrations/{integration}",
-)
+GET_GUILD_INVITES: typing.Final[Route] = Route(GET, "/guilds/{guild}/invites")
 
-DELETE_GUILD_INTEGRATION: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/integrations/{integration}",
-)
+GET_GUILD_MEMBER: typing.Final[Route] = Route(GET, "/guilds/{guild}/members/{user}")
+PATCH_GUILD_MEMBER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/members/{user}")
+PUT_GUILD_MEMBER: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}")
 
-GET_GUILD_INTEGRATIONS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/integrations",
-)
+GET_GUILD_MEMBERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/members")
+DELETE_GUILD_MEMBER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}")
 
-POST_GUILD_INTEGRATION_SYNC: typing.Final[Route] = Route(
-    POST, "/guilds/{guild}/integrations/{integration}",
-)
+PUT_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
+DELETE_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}/roles/{role}")
 
-GET_GUILD_INVITES: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/invites",
-)
+GET_GUILD_PREVIEW: typing.Final[Route] = Route(GET, "/guilds/{guild}/preview")
 
-GET_GUILD_MEMBERS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/members",
-)
-GET_GUILD_MEMBER: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/members/{user}",
-)
-PATCH_GUILD_MEMBER: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/members/{user}",
-)
-PUT_GUILD_MEMBER: typing.Final[Route] = Route(
-    PUT, "/guilds/{guild}/members/{user}",
-)
+GET_GUILD_PRUNE: typing.Final[Route] = Route(GET, "/guilds/{guild}/prune")
+POST_GUILD_PRUNE: typing.Final[Route] = Route(POST, "/guilds/{guild}/prune")
 
-DELETE_GUILD_MEMBER: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/members/{user}",
-)
-PUT_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(
-    PUT, "/guilds/{guild}/members/{user}/roles/{role}",
-)
+PATCH_GUILD_ROLE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles/{role}")
+DELETE_GUILD_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/roles/{role}")
 
-DELETE_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/members/{user}/roles/{role}",
-)
+GET_GUILD_ROLES: typing.Final[Route] = Route(GET, "/guilds/{guild}/roles")
+POST_GUILD_ROLES: typing.Final[Route] = Route(POST, "/guilds/{guild}/roles")
+PATCH_GUILD_ROLES: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles")
 
-GET_GUILD_PREVIEW: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/preview",
-)
-GET_GUILD_PRUNE: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/prune",
-)
+GET_GUILD_VANITY_URL: typing.Final[Route] = Route(GET, "/guilds/{guild}/vanity-url")
 
-POST_GUILD_PRUNE: typing.Final[Route] = Route(
-    POST, "/guilds/{guild}/prune",
-)
-PATCH_GUILD_ROLE: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/roles/{role}",
-)
+GET_GUILD_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/regions")
 
-DELETE_GUILD_ROLE: typing.Final[Route] = Route(
-    DELETE, "/guilds/{guild}/roles/{role}",
-)
-GET_GUILD_ROLES: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/roles",
-)
-POST_GUILD_ROLES: typing.Final[Route] = Route(
-    POST, "/guilds/{guild}/roles",
-)
+GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(GET, "/guilds/{guild}/webhooks")
 
-PATCH_GUILD_ROLES: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/roles",
-)
+GET_GUILD_BANNER_IMAGE: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget.png")
 
-GET_GUILD_VANITY_URL: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/vanity-url",
-)
-
-GET_GUILD_VOICE_REGIONS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/regions",
-)
-
-GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/webhooks",
-)
-
-GET_GUILD_BANNER_IMAGE: typing.Final[Route] = Route(
-    GET, "/guilds/{guild}/widget.png",
-)
 # Invites
-GET_INVITE: typing.Final[Route] = Route(
-    GET, "/invites/{invite_code}",
-)
+GET_INVITE: typing.Final[Route] = Route(GET, "/invites/{invite_code}")
+DELETE_INVITE: typing.Final[Route] = Route(DELETE, "/invites/{invite_code}")
 
-DELETE_INVITE: typing.Final[Route] = Route(
-    DELETE, "/invites/{invite_code}",
-)
 # Users
+GET_USER: typing.Final[Route] = Route(GET, "/users/{user}")
 
-GET_USER: typing.Final[Route] = Route(
-    GET, "/users/{user}",
-)
 # @me
+POST_MY_CHANNELS: typing.Final[Route] = Route(POST, "/users/@me/channels")
+GET_MY_CONNECTIONS: typing.Final[Route] = Route(GET, "/users/@me/connections")  # OAuth2 only
+DELETE_MY_GUILD: typing.Final[Route] = Route(DELETE, "/users/@me/guilds/{guild}")
 
-DELETE_MY_GUILD: typing.Final[Route] = Route(
-    DELETE, "/users/@me/guilds/{guild}",
-)
+GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
+PATCH_MY_GUILD_NICKNAME: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/members/@me/nick")
 
-GET_MY_CONNECTIONS: typing.Final[Route] = Route(
-    GET, "/users/@me/connections",
-)  # OAuth2 only
+GET_MY_USER: typing.Final[Route] = Route(GET, "/users/@me")
+PATCH_MY_USER: typing.Final[Route] = Route(PATCH, "/users/@me")
 
-POST_MY_CHANNELS: typing.Final[Route] = Route(
-    POST, "/users/@me/channels",
-)
+PUT_MY_REACTION: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
+DELETE_MY_REACTION: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
 
-GET_MY_GUILDS: typing.Final[Route] = Route(
-    GET, "/users/@me/guilds",
-)
-
-PATCH_MY_GUILD_NICKNAME: typing.Final[Route] = Route(
-    PATCH, "/guilds/{guild}/members/@me/nick",
-)
-GET_MY_USER: typing.Final[Route] = Route(
-    GET, "/users/@me",
-)
-
-PATCH_MY_USER: typing.Final[Route] = Route(
-    PATCH, "/users/@me",
-)
-PUT_MY_REACTION: typing.Final[Route] = Route(
-    PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me",
-)
-
-DELETE_MY_REACTION: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me",
-)
 # Voice
+GET_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/voice/regions")
 
-GET_VOICE_REGIONS: typing.Final[Route] = Route(
-    GET, "/voice/regions",
-)
 # Webhooks
-GET_WEBHOOK: typing.Final[Route] = Route(
-    GET, "/webhooks/{webhook}",
-)
-PATCH_WEBHOOK: typing.Final[Route] = Route(
-    PATCH, "/webhooks/{webhook}",
-)
+GET_WEBHOOK: typing.Final[Route] = Route(GET, "/webhooks/{webhook}")
+PATCH_WEBHOOK: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}")
+DELETE_WEBHOOK: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}")
 
-DELETE_WEBHOOK: typing.Final[Route] = Route(
-    DELETE, "/webhooks/{webhook}",
-)
-GET_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(
-    GET, "/webhooks/{webhook}/{token}",
-)
-PATCH_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(
-    PATCH, "/webhooks/{webhook}/{token}",
-)
-DELETE_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(
-    DELETE, "/webhooks/{webhook}/{token}",
-)
+GET_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}")
+PATCH_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}")
+DELETE_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}")
+POST_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}")
+POST_WEBHOOK_WITH_TOKEN_GITHUB: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/github")
+POST_WEBHOOK_WITH_TOKEN_SLACK: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/slack")
 
-POST_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(
-    POST, "/webhooks/{webhook}/{token}",
-)
-POST_WEBHOOK_WITH_TOKEN_GITHUB: typing.Final[Route] = Route(
-    POST, "/webhooks/{webhook}/{token}/github",
-)
-
-POST_WEBHOOK_WITH_TOKEN_SLACK: typing.Final[Route] = Route(
-    POST, "/webhooks/{webhook}/{token}/slack",
-)
 # OAuth2 API
+GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 
-GET_MY_APPLICATION: typing.Final[Route] = Route(
-    GET, "/oauth2/applications/@me",
-)
 # Gateway
-GET_GATEWAY: typing.Final[Route] = Route(
-    GET, "/gateway",
-)
-
-
-GET_GATEWAY_BOT: typing.Final[Route] = Route(
-    GET, "/gateway/bot",
-)
+GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
+GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
 
 PNG: typing.Final[str] = "png".casefold()
@@ -614,41 +423,24 @@ WEBP: typing.Final[str] = "webp".casefold()
 GIF: typing.Final[str] = "gif".casefold()
 
 # CDN specific endpoints. These reside on a different server.
-CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute(
-    "/emojis/{emoji_id}", {PNG, GIF},
-)
-CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/icons/{guild_id}/{hash}", {PNG, JPEG, WEBP, GIF},
-)
-CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute(
-    "/splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP},
-)
+CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, GIF})
+
+CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, JPEG, WEBP, GIF})
+CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP})
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
-    "/discovery-splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP},
+    "/discovery-splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute(
-    "/banners/{guild_id}/{hash}", {PNG, JPEG, WEBP},
-)
-CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
-    "/embed/avatars/{discriminator}", {PNG}, sizable=False,
-)
-CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
-    "/avatars/{user_id}/{hash}", {PNG, JPEG, WEBP, GIF},
-)
-CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-icons/{application_id}/{hash}", {PNG, JPEG, WEBP},
-)
-CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
-)
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, JPEG, WEBP})
+
+CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, sizable=False)
+CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, JPEG, WEBP, GIF})
+
+CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP})
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, WEBP},
-)
-CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/team-icons/{team_id}/{hash}", {PNG, JPEG, WEBP},
+    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, WEBP}
 )
 
+CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, JPEG, WEBP})
 # undocumented on the Discord docs.
-CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/channel-icons/{channel_id}/{hash}", {PNG, JPEG, WEBP},
-)
+CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, JPEG, WEBP})
