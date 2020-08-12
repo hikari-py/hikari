@@ -451,7 +451,7 @@ class GroupPrivateTextChannel(PrivateChannel):
         return self.name
 
     @property
-    def icon(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> typing.Optional[files.URL]:
         """Icon for this DM channel, if set."""
         return self.format_icon()
 
