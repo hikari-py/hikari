@@ -34,26 +34,28 @@ class TestStatelessEventManager:
         return object()
 
     @pytest.fixture
+    def app(self):
+        return mock.Mock()
+
+    @pytest.fixture
     def payload(self):
         return object()
 
     @pytest.fixture
-    def event_manager(self):
-        obj = hikari_test_helpers.unslot_class(stateless_event_manager.StatelessEventManagerImpl)(
-            mock.Mock(), object(), None
-        )
+    def event_manager(self, app):
+        obj = hikari_test_helpers.unslot_class(stateless_event_manager.StatelessEventManagerImpl)(app, object())
         obj.dispatch = mock.AsyncMock()
         return obj
 
-    async def test_on_connected(self, event_manager, shard, payload):
-        expected_dispatch = shard_events.ShardConnectedEvent(shard=shard)
+    async def test_on_connected(self, event_manager, app, shard, payload):
+        expected_dispatch = shard_events.ShardConnectedEvent(app=app, shard=shard)
 
         await event_manager.on_connected(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(expected_dispatch)
 
-    async def test_on_disconnected(self, event_manager, shard, payload):
-        expected_dispatch = shard_events.ShardDisconnectedEvent(shard=shard)
+    async def test_on_disconnected(self, event_manager, app, shard, payload):
+        expected_dispatch = shard_events.ShardDisconnectedEvent(app=app, shard=shard)
 
         await event_manager.on_disconnected(shard, payload)
 
@@ -68,8 +70,8 @@ class TestStatelessEventManager:
         event_manager.dispatch.assert_awaited_once_with(event)
         event_manager._app.event_factory.deserialize_ready_event.assert_called_once_with(shard, payload)
 
-    async def test_on_resumed(self, event_manager, shard, payload):
-        expected_dispatch = shard_events.ShardResumedEvent(shard=shard)
+    async def test_on_resumed(self, event_manager, app, shard, payload):
+        expected_dispatch = shard_events.ShardResumedEvent(app=app, shard=shard)
 
         await event_manager.on_resumed(shard, payload)
 

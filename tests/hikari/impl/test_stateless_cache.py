@@ -30,15 +30,8 @@ from hikari.models import users
 
 class TestStatelessCache:
     @pytest.fixture
-    def app(self):
-        return object()
-
-    @pytest.fixture
-    def component(self, app):
+    def component(self):
         return stateless_cache.StatelessCacheImpl()
-
-    def test_app_property(self, component, app):
-        assert component.app is app
 
     def test_get_me(self, component):
         me = mock.Mock(spec_set=users.OwnUser)
