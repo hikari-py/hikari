@@ -212,13 +212,16 @@ __all__: typing.Final[typing.List[str]] = ["UNKNOWN_HASH", "RESTBucket", "RESTBu
 import asyncio
 import datetime
 import logging
-import types
 import typing
 
 from hikari.impl import rate_limits
 from hikari.utilities import aio
 from hikari.utilities import date
 from hikari.utilities import routes
+
+if typing.TYPE_CHECKING:
+    import types
+
 
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""

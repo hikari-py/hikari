@@ -35,6 +35,7 @@ import platform
 import string
 import sys
 import typing
+import types
 from importlib import resources
 
 import attr
