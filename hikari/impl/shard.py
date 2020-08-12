@@ -33,6 +33,7 @@ import datetime
 import enum
 import logging
 import math
+import random
 import typing
 import urllib.parse
 import zlib
@@ -507,7 +508,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         except self._InvalidSession as ex:
             if ex.can_resume:
                 self._logger.warning("invalid session, so will attempt to resume session %s now", self._session_id)
-                await self._close_ws(3000, "invalid session (resume)")
+                await self._close_ws(self._NO_SESSION_INVALIDATION_CLOSE_CODE, "invalid session (resume)")
                 self._backoff.reset()
             else:
                 self._logger.warning("invalid session, so will attempt to reconnect with new session in a few seconds")
@@ -519,7 +520,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         except self._Reconnect:
             self._logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
             self._backoff.reset()
-            await self._close_ws(3000, "reconnecting")
+            await self._close_ws(self._NO_SESSION_INVALIDATION_CLOSE_CODE, "reconnecting")
 
         except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
@@ -669,6 +670,14 @@ class GatewayShardImplV6(shard.GatewayShard):
             await self._send_json(payload)
 
     async def _heartbeat_keepalive(self) -> None:
+        # Wait a random offset between 0ms and <heartbeat_interval>ms before
+        # sending the first heartbeat. This helps not overload the gateway
+        # after recovering from an outage.
+        #
+        # S311 - Dont use random for security/cryptographic purposes
+        offset = random.random() * self._heartbeat_interval  # noqa: S311
+        await asyncio.sleep(offset)
+
         try:
             while not self._request_close_event.is_set():
                 now = date.monotonic()

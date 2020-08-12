@@ -1044,7 +1044,8 @@ class TestHeartbeatKeepalive:
 
         with mock.patch.object(hikari_date, "monotonic", side_effect=[10, 10, asyncio.CancelledError]):
             with mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError):
-                await client._heartbeat_keepalive()
+                with mock.patch.object(asyncio, "sleep"):
+                    await client._heartbeat_keepalive()
 
         client._close_zombie.assert_not_called()
         client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT, "d": 123})
@@ -1059,18 +1060,21 @@ class TestHeartbeatKeepalive:
         client._send_json = mock.AsyncMock()
 
         with mock.patch.object(hikari_date, "monotonic", return_value=10):
-            await client._heartbeat_keepalive()
+            with mock.patch.object(asyncio, "sleep"):
+                await client._heartbeat_keepalive()
 
         client._close_zombie.assert_awaited_once_with()
         client._send_json.assert_not_called()
 
     @hikari_test_helpers.timeout()
     async def test_when_request_close_event_set(self, client):
+        client._heartbeat_interval = 5
         client._close_zombie = mock.AsyncMock()
         client._send_json = mock.AsyncMock()
         client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=True))
 
-        await client._heartbeat_keepalive()
+        with mock.patch.object(asyncio, "sleep"):
+            await client._heartbeat_keepalive()
 
         client._close_zombie.assert_not_called()
         client._send_json.assert_not_called()
