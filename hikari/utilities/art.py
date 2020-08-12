@@ -149,32 +149,40 @@ def get_default_logging_format(palette: ConsolePalette = DEFAULT_PALETTE) -> str
     )
 
 
-DEFAULT_BANNER_ARGS: typing.Final[typing.Mapping[str, str]] = types.MappingProxyType(
-    {
-        # Hikari stuff.
-        "hikari_version": _about.__version__,
-        "hikari_git_branch": _about.__git_branch__,
-        "hikari_git_sha1": _about.__git_sha1__,
-        "hikari_git_when": _about.__git_when__,
-        "hikari_copyright": _about.__copyright__,
-        "hikari_license": _about.__license__,
-        "hikari_install_location": os.path.abspath(os.path.dirname(_about.__file__)),
-        "hikari_documentation_url": _about.__docs__,
-        "hikari_discord_invite": _about.__discord_invite__,
-        "hikari_source_url": _about.__url__,
-        # Python stuff.
-        "python_implementation": platform.python_implementation(),
-        "python_version": platform.python_version(),
-        "python_build": " ".join(platform.python_build()),
-        "python_branch": platform.python_branch(),
-        "python_compiler": platform.python_compiler(),
-        # Platform specific stuff I might remove later.
-        "libc_version": " ".join(platform.libc_ver()),
-        # System stuff.
-        "platform_system": platform.system(),
-        "platform_architecture": " ".join(platform.architecture()),
-    }
-)
+def _default_banner_args() -> typing.Mapping[str, str]:
+    system_bits = (
+        platform.release(),
+        platform.system(),
+        platform.machine(),
+    )
+    filtered_system_bits = (s.strip() for s in system_bits if s.strip())
+
+    return types.MappingProxyType(
+        {
+            # Hikari stuff.
+            "hikari_version": _about.__version__,
+            "hikari_git_branch": _about.__git_branch__,
+            "hikari_git_sha1": _about.__git_sha1__,
+            "hikari_git_when": _about.__git_when__,
+            "hikari_copyright": _about.__copyright__,
+            "hikari_license": _about.__license__,
+            "hikari_install_location": os.path.abspath(os.path.dirname(_about.__file__)),
+            "hikari_documentation_url": _about.__docs__,
+            "hikari_discord_invite": _about.__discord_invite__,
+            "hikari_source_url": _about.__url__,
+            # Python stuff.
+            "python_implementation": platform.python_implementation(),
+            "python_version": platform.python_version(),
+            "python_build": " ".join(platform.python_build()),
+            "python_branch": platform.python_branch(),
+            "python_compiler": platform.python_compiler(),
+            # Platform specific stuff I might remove later.
+            "system_description": " ".join(filtered_system_bits),
+        }
+    )
+
+
+DEFAULT_BANNER_ARGS: typing.Final[typing.Mapping[str, str]] = _default_banner_args()
 
 
 def get_banner(

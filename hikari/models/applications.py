@@ -47,7 +47,7 @@ from hikari.utilities import routes
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import permissions as permissions_
     from hikari.models import users
 
@@ -246,7 +246,7 @@ class OwnGuild(guilds.PartialGuild):
     is_owner: bool = attr.ib(eq=False, hash=False, repr=True)
     """`builtins.True` when the current user owns this guild."""
 
-    my_permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
+    my_permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
 
 
@@ -269,7 +269,7 @@ class TeamMembershipState(enum.IntEnum):
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
@@ -297,7 +297,7 @@ class TeamMember:
 class Team(snowflake.Unique):
     """Represents a development team, along with all its members."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -370,7 +370,7 @@ class Team(snowflake.Unique):
 class Application(snowflake.Unique):
     """Represents the information of an Oauth2 Application."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(
@@ -444,7 +444,7 @@ class Application(snowflake.Unique):
         return self.name
 
     @property
-    def icon(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> typing.Optional[files.URL]:
         """Team icon, if there is one.
 
         Returns
@@ -486,7 +486,7 @@ class Application(snowflake.Unique):
         )
 
     @property
-    def cover_image(self) -> typing.Optional[files.URL]:
+    def cover_image_url(self) -> typing.Optional[files.URL]:
         """Cover image used on the store.
 
         Returns
@@ -523,6 +523,6 @@ class Application(snowflake.Unique):
         if self.cover_image_hash is None:
             return None
 
-        return routes.CDN_APPLICATION_ASSET.compile_to_file(
-            constants.CDN_URL, team_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
+        return routes.CDN_APPLICATION_COVER.compile_to_file(
+            constants.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
         )

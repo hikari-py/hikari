@@ -143,15 +143,12 @@ async def log_available_updates(logger: logging.Logger) -> None:
             )
             return
 
-        if version_info.latest != version_info.latest_compatible:
-            logger.info(
-                "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
-                version_info.this,
-                version_info.latest,
-            )
-            return
-
-        logger.info("unknown version status -- check PyPI for updates.")
+        # We can only get here if there are breaking changes available
+        logger.info(
+            "breaking updates are available for hikari, consider upgrading from v%s to v%s!",
+            version_info.this,
+            version_info.latest,
+        )
 
     except Exception as ex:
         logger.debug("Error occurred fetching version info", exc_info=ex)

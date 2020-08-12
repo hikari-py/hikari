@@ -19,42 +19,33 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Base interface for any internal components of an application."""
+"""Component that provides the ability manage guild chunking."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IComponent"]
+__all__: typing.Final[typing.List[str]] = ["GuildChunker"]
 
 import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari.models import guilds
 
 
-class IComponent(abc.ABC):
-    """A component that makes up part of the application.
-
-    Objects that derive from this should usually be attributes on the
-    `hikari.api.rest.IRESTApp` object.
-
-    Examples
-    --------
-    See the source code for `hikari.api.entity_factory.IEntityFactoryComponent`,
-    `hikari.api.cache.ICacheComponent`, and
-    `hikari.api.event_dispatcher.IEventDispatcherComponent`
-    for examples of usage.
-    """
+class GuildChunker(abc.ABC):
+    """Component specialization that is used to manage guild chunking."""
 
     __slots__: typing.Sequence[str] = ()
 
-    @property
     @abc.abstractmethod
-    def app(self) -> rest_app.IRESTApp:
-        """Return the Application that owns this component.
+    async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
+        """Request for a guild chunk.
 
-        Returns
-        -------
-        hikari.api.rest.IRESTApp
-            The application implementation that owns this component.
+        Parameters
+        ----------
+        guild: hikari.models.guilds.Guild
+            The guild to request chunk for.
         """
+
+    def close(self) -> None:
+        """Close the guild chunker."""

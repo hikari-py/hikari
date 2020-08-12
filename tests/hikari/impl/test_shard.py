@@ -21,7 +21,6 @@
 import asyncio
 import contextlib
 import datetime
-import logging
 
 import aiohttp.client_reqrep
 import mock
@@ -62,7 +61,7 @@ def client(http_settings, proxy_settings):
     return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
         url="wss://gateway.discord.gg",
         token="lol",
-        app=mock.Mock(),
+        event_consumer=mock.Mock(),
         http_settings=http_settings,
         proxy_settings=proxy_settings,
     )
@@ -80,7 +79,7 @@ class TestInit:
     )
     def test_url_is_correct_json(self, v, compression, expect, http_settings, proxy_settings):
         g = shard.GatewayShardImpl(
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             token=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
@@ -98,7 +97,7 @@ class TestInit:
 
         with pytest.raises(NotImplementedError):
             shard.GatewayShardImpl(
-                app=mock.Mock(),
+                event_consumer=mock.Mock(),
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 token=mock.Mock(),
@@ -107,19 +106,6 @@ class TestInit:
                 data_format="etf",
                 compression=compression,
             )
-
-
-class TestAppProperty:
-    def test_returns_app(self, http_settings, proxy_settings):
-        app = mock.Mock()
-        g = shard.GatewayShardImpl(
-            url="wss://gateway.discord.gg",
-            token="lol",
-            app=app,
-            http_settings=http_settings,
-            proxy_settings=proxy_settings,
-        )
-        assert g.app is app
 
 
 class TestIsAliveProperty:
@@ -154,7 +140,7 @@ class TestStart:
         g = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=shard_id,
@@ -203,7 +189,7 @@ class TestClose:
         return GatewayStub(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
         )
@@ -236,7 +222,7 @@ class TestClose:
 
         await client.close()
 
-        client._close_ws.assert_awaited_once_with(client._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+        client._close_ws.assert_awaited_once_with(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
 
     @pytest.mark.parametrize("is_alive", [True, False])
     async def test_websocket_not_closed_if_None(self, client, is_alive):
@@ -296,7 +282,7 @@ class TestRunOnceShielded:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             shard_id=3,
             shard_count=17,
             http_settings=http_settings,
@@ -304,15 +290,7 @@ class TestRunOnceShielded:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=(
-                "_run_once_shielded",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_dispatch",
-                "_CloseCode",
-                "_Opcode",
-            ),
+            except_=("_run_once_shielded", "_InvalidSession", "_Reconnect", "_SocketClosed", "_dispatch", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger"],
         )
         client._dispatch = mock.AsyncMock()
@@ -386,17 +364,13 @@ class TestRunOnceShielded:
     async def test_invalid_session_resume_does_not_invalidate_session(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(True))
         await client._run_once_shielded(client_session)
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)"
-        )
+        client._close_ws.assert_awaited_once_with(3000, "invalid session (resume)")
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_invalidates_session(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession(False))
         await client._run_once_shielded(client_session)
-        client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)"
-        )
+        client._close_ws.assert_awaited_once_with(errors.ShardCloseCode.NORMAL_CLOSURE, "invalid session (no resume)")
 
     @hikari_test_helpers.timeout()
     async def test_invalid_session_no_resume_clears_seq_and_session_id(self, client, client_session):
@@ -462,7 +436,7 @@ class TestRunOnceShielded:
             await client._run_once_shielded(client_session)
 
         client._close_ws.assert_awaited_once_with(
-            shard.GatewayShardImpl._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred"
+            errors.ShardCloseCode.UNEXPECTED_CONDITION, "unexpected error occurred"
         )
 
 
@@ -473,7 +447,7 @@ class TestRunOnce:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             shard_id=3,
             shard_count=17,
             http_settings=http_settings,
@@ -481,7 +455,7 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
         )
         # Disable backoff checking by making the condition a negative tautology.
@@ -710,7 +684,7 @@ class TestUpdatePresence:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=3,
@@ -718,28 +692,15 @@ class TestUpdatePresence:
         )
         return hikari_test_helpers.mock_methods_on(
             client,
-            except_=("update_presence", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            except_=(
+                "update_presence",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_Opcode",
+                "_serialize_presence_payload",
+            ),
         )
-
-    async def test_update_presence_transforms_all_params(self, client):
-        now = datetime.datetime.now()
-        idle_since = now
-        afk = False
-        activity = presences.Activity(type=presences.ActivityType.PLAYING, name="with my saxaphone")
-        status = presences.Status.DO_NOT_DISTURB
-
-        result = object()
-        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
-
-        await client.update_presence(
-            idle_since=idle_since, afk=afk, activity=activity, status=status,
-        )
-
-        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
-            idle_since=idle_since, afk=afk, activity=activity, status=status,
-        )
-
-        client._send_json.assert_awaited_once_with({"op": shard.GatewayShardImpl._Opcode.PRESENCE_UPDATE, "d": result})
 
     @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
     @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
@@ -754,51 +715,72 @@ class TestUpdatePresence:
         ],
     )
     @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
-    async def test_update_presence_ignores_undefined(self, client, idle_since, afk, status, activity):
-        result = object()
-        client_activity = mock.Mock()
-        client_idle_since = mock.Mock()
-        client_afk = mock.Mock()
-        client_status = mock.Mock()
+    async def test_serialize_presence_payload(self, client, idle_since, afk, status, activity):
+        client._activity = activity
+        client._idle_since = idle_since
+        client._is_afk = afk
+        client._status = status
 
-        client._activity = client_activity
-        client._idle_since = client_idle_since
-        client._is_afk = client_afk
-        client._status = client_status
+        actual_result = client._serialize_presence_payload()
 
-        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
+        if activity is not undefined.UNDEFINED and activity is not None:
+            expected_activity = {
+                "name": activity.name,
+                "type": activity.type,
+                "url": activity.url,
+            }
+        else:
+            expected_activity = None
+
+        if status == undefined.UNDEFINED:
+            expected_status = "online"
+        elif status == presences.Status.OFFLINE:
+            expected_status = "invisible"
+        else:
+            expected_status = status.value
+
+        expected_result = {
+            "game": expected_activity,
+            "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
+            "afk": afk if afk is not undefined.UNDEFINED else False,
+            "status": expected_status,
+        }
+
+        assert expected_result == actual_result
+
+    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
+    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
+    @pytest.mark.parametrize(
+        "status",
+        [
+            undefined.UNDEFINED,
+            presences.Status.DO_NOT_DISTURB,
+            presences.Status.IDLE,
+            presences.Status.ONLINE,
+            presences.Status.OFFLINE,
+        ],
+    )
+    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
+    async def test_sets_state(self, client, idle_since, afk, status, activity):
+        presence_payload = object()
+        client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
+
+        await client.update_presence(idle_since=idle_since, afk=afk, status=status, activity=activity)
+
+        assert client._activity == activity
+        assert client._idle_since == idle_since
+        assert client._is_afk == afk
+        assert client._status == status
+
+    async def test_sends_to_websocket(self, client):
+        presence_payload = object()
+        client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
 
         await client.update_presence(
-            idle_since=idle_since, afk=afk, status=status, activity=activity,
+            idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None,
         )
 
-        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
-            idle_since=idle_since if idle_since is not undefined.UNDEFINED else client_idle_since,
-            afk=afk if afk is not undefined.UNDEFINED else client_afk,
-            activity=activity if activity is not undefined.UNDEFINED else client_activity,
-            status=status if status is not undefined.UNDEFINED else client_status,
-        )
-
-    async def test_update_presence_has_defaults_for_undefined_on_object(self, client):
-        result = object()
-
-        client._activity = undefined.UNDEFINED
-        client._idle_since = undefined.UNDEFINED
-        client._is_afk = undefined.UNDEFINED
-        client._status = undefined.UNDEFINED
-
-        client._app.event_factory.serialize_gateway_presence = mock.Mock(return_value=result)
-
-        await client.update_presence(
-            idle_since=undefined.UNDEFINED,
-            afk=undefined.UNDEFINED,
-            status=undefined.UNDEFINED,
-            activity=undefined.UNDEFINED,
-        )
-
-        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
-            idle_since=None, afk=False, activity=None, status=presences.Status.ONLINE,
-        )
+        client._send_json.assert_awaited_once_with({"op": 3, "d": presence_payload})
 
 
 @pytest.mark.asyncio
@@ -808,32 +790,91 @@ class TestUpdateVoiceState:
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
             token="lol",
-            app=mock.Mock(),
+            event_consumer=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             shard_id=3,
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client,
-            except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_CloseCode", "_Opcode",),
+            client, except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
         )
 
-    @pytest.mark.parametrize("channel", ["12345", None])
+    @pytest.mark.parametrize("channel", [12345, None])
     @pytest.mark.parametrize("self_deaf", [True, False])
     @pytest.mark.parametrize("self_mute", [True, False])
-    async def test_invoked(self, client, channel, self_deaf, self_mute):
-        await client.update_voice_state("69696", channel, self_deaf=self_deaf, self_mute=self_mute)
-        client._app.event_factory.serialize_gateway_voice_state_update("69696", channel)
+    async def test_serialized_result_sent_on_websocket(self, client, channel, self_deaf, self_mute):
+        payload = {
+            "channel_id": str(channel) if channel is not None else None,
+            "guild_id": "6969420",
+            "deaf": self_deaf,
+            "mute": self_mute,
+        }
 
-    async def test_serialized_result_sent_on_websocket(self, client):
-        payload = mock.Mock()
-        client._app.event_factory.serialize_gateway_voice_state_update = mock.Mock(return_value=payload)
-
-        await client.update_voice_state("6969420", "12345")
+        await client.update_voice_state("6969420", channel, self_mute=self_mute, self_deaf=self_deaf)
 
         client._send_json.assert_awaited_once_with(
             {"op": shard.GatewayShardImpl._Opcode.VOICE_STATE_UPDATE, "d": payload}
+        )
+
+
+@pytest.mark.asyncio
+class TestRequestGuildMembers:
+    @pytest.fixture
+    def client(self, proxy_settings, http_settings):
+        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
+            url="wss://gateway.discord.gg",
+            token="lol",
+            event_consumer=mock.Mock(),
+            http_settings=http_settings,
+            proxy_settings=proxy_settings,
+            shard_id=3,
+            shard_count=17,
+        )
+        return hikari_test_helpers.mock_methods_on(
+            client, except_=("request_guild_members", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+        )
+
+    async def test_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
+
+        with pytest.raises(errors.MissingIntentError):
+            await client.request_guild_members(123, query="", limit=0)
+
+    async def test_when_presences_and_GUILD_PRESENCES_not_enabled(self, client):
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
+
+        with pytest.raises(errors.MissingIntentError):
+            await client.request_guild_members(123, query="test", limit=1, include_presences=True)
+
+    @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
+    async def test_when_specifiying_users_with_limit_or_query(self, client, kwargs):
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, user_ids=[], **kwargs)
+
+    @pytest.mark.parametrize("limit", [-1, 101])
+    async def test_when_limit_under_0_or_over_100(self, client, limit):
+        client._intents = None
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, limit=limit)
+
+    async def test_when_users_over_100(self, client):
+        client._intents = None
+
+        with pytest.raises(ValueError):
+            await client.request_guild_members(123, user_ids=range(101))
+
+    async def test_request_guild_members(self, client):
+        client._intents = None
+        client._send_json = mock.AsyncMock()
+
+        await client.request_guild_members(123)
+
+        client._send_json.assert_awaited_once_with(
+            {"op": client._Opcode.REQUEST_GUILD_MEMBERS, "d": {"guild_id": "123", "query": "", "limit": 0}}
         )
 
 
@@ -904,7 +945,7 @@ class TestHandshake:
         client._expect_opcode = mock.AsyncMock()
         client._session_id = None
         client._token = "token"
-        client._intents = intents.Intent.ALL_UNPRIVILEGED
+        client._intents = intents.Intents.ALL_UNPRIVILEGED
         client._large_threshold = 123
         client._activity = undefined.UNDEFINED
         client._status = undefined.UNDEFINED
@@ -928,7 +969,7 @@ class TestHandshake:
                     "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [0, 1],
-                "intents": intents.Intent.ALL_UNPRIVILEGED,
+                "intents": intents.Intents.ALL_UNPRIVILEGED,
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
@@ -954,12 +995,12 @@ class TestHandshake:
         client._shard_count = 1
         client._send_json = mock.AsyncMock()
         client._app = mock.Mock()
-        client._app.event_factory.serialize_gateway_presence = mock.Mock(
+        client._serialize_presence_payload = mock.Mock(
             return_value={
-                "idle_since": idle_since if idle_since is not undefined.UNDEFINED else None,
+                "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
                 "afk": afk if afk is not undefined.UNDEFINED else False,
                 "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                "activity": activity if activity is not undefined.UNDEFINED else None,
+                "game": activity if activity is not undefined.UNDEFINED else None,
             }
         )
 
@@ -978,20 +1019,15 @@ class TestHandshake:
                 },
                 "shard": [0, 1],
                 "presence": {
-                    "idle_since": idle_since if idle_since is not undefined.UNDEFINED else None,
+                    "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
                     "afk": afk if afk is not undefined.UNDEFINED else False,
                     "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                    "activity": activity if activity is not undefined.UNDEFINED else None,
+                    "game": activity if activity is not undefined.UNDEFINED else None,
                 },
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
-        client._app.event_factory.serialize_gateway_presence.assert_called_once_with(
-            idle_since=idle_since if idle_since is not undefined.UNDEFINED else None,
-            afk=afk if afk is not undefined.UNDEFINED else False,
-            status=status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
-            activity=activity if activity is not undefined.UNDEFINED else None,
-        )
+        client._serialize_presence_payload.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -1008,7 +1044,8 @@ class TestHeartbeatKeepalive:
 
         with mock.patch.object(hikari_date, "monotonic", side_effect=[10, 10, asyncio.CancelledError]):
             with mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError):
-                await client._heartbeat_keepalive()
+                with mock.patch.object(asyncio, "sleep"):
+                    await client._heartbeat_keepalive()
 
         client._close_zombie.assert_not_called()
         client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT, "d": 123})
@@ -1023,18 +1060,21 @@ class TestHeartbeatKeepalive:
         client._send_json = mock.AsyncMock()
 
         with mock.patch.object(hikari_date, "monotonic", return_value=10):
-            await client._heartbeat_keepalive()
+            with mock.patch.object(asyncio, "sleep"):
+                await client._heartbeat_keepalive()
 
         client._close_zombie.assert_awaited_once_with()
         client._send_json.assert_not_called()
 
     @hikari_test_helpers.timeout()
     async def test_when_request_close_event_set(self, client):
+        client._heartbeat_interval = 5
         client._close_zombie = mock.AsyncMock()
         client._send_json = mock.AsyncMock()
         client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=True))
 
-        await client._heartbeat_keepalive()
+        with mock.patch.object(asyncio, "sleep"):
+            await client._heartbeat_keepalive()
 
         client._close_zombie.assert_not_called()
         client._send_json.assert_not_called()
@@ -1060,9 +1100,7 @@ class TestCloseZombie:
                 await client._close_zombie()
 
         assert client._zombied is True
-        client._close_ws.assert_called_once_with(
-            code=client._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout"
-        )
+        client._close_ws.assert_called_once_with(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
         create_task.assert_called_once_with(client._close_ws())
         assert mock_task.await_count == 1
         sleep.assert_awaited_once_with(0.1)
@@ -1226,7 +1264,7 @@ class TestExpectOpcode:
             await client._expect_opcode(client._Opcode.HEARTBEAT)
 
         client._close_ws.assert_awaited_once_with(
-            client._CloseCode.RFC_6455_PROTOCOL_ERROR,
+            errors.ShardCloseCode.PROTOCOL_ERROR,
             f"Unexpected opcode {client._Opcode.HEARTBEAT_ACK} received, expected {client._Opcode.HEARTBEAT}",
         )
 
@@ -1342,15 +1380,13 @@ class TestDispatch:
         mock_task = object()
         mock_coroutine = object()
         client._app = mock.Mock()
-        client._app.event_consumer.consume_raw_event = mock.Mock(return_value=mock_coroutine)
+        client._event_consumer = mock.Mock(return_value=mock_coroutine)
         client._shard_id = 123
 
         with mock.patch.object(asyncio, "create_task", return_value=mock_task) as create_task:
             assert client._dispatch("MESSAGE_CREATE", {"some": "payload"}) == mock_task
 
-        client._app.event_consumer.consume_raw_event.assert_called_once_with(
-            client, "MESSAGE_CREATE", {"some": "payload"}
-        )
+        client._event_consumer.assert_called_once_with(client, "MESSAGE_CREATE", {"some": "payload"})
         create_task.assert_called_once_with(mock_coroutine, name="gateway shard 123 dispatch MESSAGE_CREATE")
 
 

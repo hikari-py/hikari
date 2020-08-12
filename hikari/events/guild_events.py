@@ -49,6 +49,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import channels as channels_
     from hikari.models import emojis as emojis_
@@ -61,7 +62,7 @@ if typing.TYPE_CHECKING:
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(
-    intents.Intent.GUILDS, intents.Intent.GUILD_BANS, intents.Intent.GUILD_EMOJIS, intents.Intent.GUILD_PRESENCES
+    intents.Intents.GUILDS, intents.Intents.GUILD_BANS, intents.Intents.GUILD_EMOJIS, intents.Intents.GUILD_PRESENCES
 )
 class GuildEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any guild-bound event."""
@@ -79,7 +80,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildVisibilityEvent(GuildEvent, abc.ABC):
     """Event base for any event that changes the visibility of a guild.
 
@@ -92,19 +93,22 @@ class GuildVisibilityEvent(GuildEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
 
     This will occur on startup, after outages, and if the bot joins a new guild.
 
     !!! note
-        Some fields like `members` and `presences` are included here but not on
+        Some fields like `members` and `include_presences` are included here but not on
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild: guilds.GatewayGuild = attr.ib()
@@ -153,12 +157,12 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
-    """Mapping of user IDs to the presences for the guild.
+    """Mapping of user IDs to the include_presences for the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-        The member presences in the guild.
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+        The member include_presences in the guild.
     """
 
     voice_states: typing.Mapping[snowflake.Snowflake, voices.VoiceState] = attr.ib(repr=False)
@@ -178,14 +182,17 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildLeaveEvent(GuildVisibilityEvent):
     """Event fired when the bot is banned/kicked/leaves a guild.
 
     This will also fire if the guild was deleted.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -194,11 +201,14 @@ class GuildLeaveEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUnavailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes unavailable because of an outage."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -207,11 +217,14 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild: guilds.GatewayGuild = attr.ib()
@@ -248,7 +261,7 @@ class GuildUpdateEvent(GuildEvent):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanEvent(GuildEvent, abc.ABC):
     """Event base for any guild ban or unban."""
 
@@ -266,11 +279,14 @@ class BanEvent(GuildEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -282,11 +298,14 @@ class BanCreateEvent(BanEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -298,11 +317,14 @@ class BanDeleteEvent(BanEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -320,7 +342,7 @@ class EmojisUpdateEvent(GuildEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_EMOJIS)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class IntegrationsUpdateEvent(GuildEvent):
     """Event that is fired when the integrations in a guild are changed.
 
@@ -336,7 +358,10 @@ class IntegrationsUpdateEvent(GuildEvent):
         We agree that it is not overly helpful to you.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -345,7 +370,7 @@ class IntegrationsUpdateEvent(GuildEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
+@base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
 class PresenceUpdateEvent(shard_events.ShardEvent):
     """Event fired when a user in a guild updates their presence in a guild.
 
@@ -360,7 +385,10 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shards that saw the presence update.
     """
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     presence: presences_.MemberPresence = attr.ib()
@@ -368,7 +396,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    hikari.models.presences.MemberPresence
+    hikari.models.include_presences.MemberPresence
         Presence for the user in this guild.
     """
 
@@ -416,7 +444,10 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 class MemberChunkEvent(shard_events.ShardEvent):
     """Used to represent the response to Guild Request Members."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib(repr=True)
@@ -464,13 +495,13 @@ class MemberChunkEvent(shard_events.ShardEvent):
     presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
     """Mapping of user IDs to found member presence objects.
 
-    This will be empty if no presences are found or `presences` is not passed as
+    This will be empty if no include_presences are found or `include_presences` is not passed as
     `True` while requesting the member chunks.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-        Mapping of user IDs to corresponding presences.
+    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+        Mapping of user IDs to corresponding include_presences.
     """
 
     nonce: typing.Optional[str] = attr.ib(repr=True)

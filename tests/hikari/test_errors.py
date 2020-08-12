@@ -19,6 +19,67 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import http
 
-def test_issue_408_is_fixed():
-    assert True
+import pytest
+
+from hikari import errors
+from hikari.models import intents
+
+
+class TestGatewayError:
+    @pytest.fixture
+    def error(self):
+        return errors.GatewayError("some reason")
+
+    def test_str(self, error):
+        assert str(error) == "some reason"
+
+
+class TestGatewayClientClosedError:
+    @pytest.fixture
+    def error(self):
+        return errors.GatewayClientClosedError("some reason")
+
+    def test_str(self, error):
+        assert str(error) == "some reason"
+
+
+class TestGatewayServerClosedConnectionError:
+    @pytest.fixture
+    def error(self):
+        return errors.GatewayServerClosedConnectionError("some reason", 123)
+
+    def test_str(self, error):
+        assert str(error) == "Server closed connection with code 123 (some reason)"
+
+
+class TestHTTPResponseError:
+    @pytest.fixture
+    def error(self):
+        return errors.HTTPResponseError("https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body")
+
+    def test_str(self, error):
+        assert str(error) == "Bad Request 400: raw body for https://some.url"
+
+    def test_str_when_status_is_not_HTTPStatus(self, error):
+        error.status = "SOME STATUS"
+        assert str(error) == "Some Status: raw body for https://some.url"
+
+
+class TestBulkDeleteError:
+    @pytest.fixture
+    def error(self):
+        return errors.BulkDeleteError(range(10), range(10))
+
+    def test_percentage_completion_property(self, error):
+        assert error.percentage_completion == 50
+
+
+class TestMissingIntentError:
+    @pytest.fixture
+    def error(self):
+        return errors.MissingIntentError(intents.Intents.GUILD_BANS | intents.Intents.GUILD_EMOJIS)
+
+    def test_str(self, error):
+        assert str(error) == "You are missing the following intent(s): GUILD_BANS | GUILD_EMOJIS"

@@ -50,7 +50,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import applications
     from hikari.models import channels
     from hikari.models import embeds as embeds_
@@ -228,7 +228,7 @@ class MessageCrosspost:
     "published" to another.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     # TODO: get clarification on this! If it cannot happen, this should subclass PartialMessage too.
@@ -270,7 +270,7 @@ class PartialMessage(snowflake.Unique):
         nullability.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

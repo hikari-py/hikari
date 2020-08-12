@@ -22,21 +22,18 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IConnectorFactory", "IRESTApp", "IRESTAppFactory", "IRESTClient"]
+__all__: typing.Final[typing.List[str]] = ["ConnectorFactory", "RESTClient"]
 
 import abc
 import typing
 
-from hikari.api import app
-from hikari.api import component
+from hikari import traits
 from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
-    import types
 
     import aiohttp
 
-    from hikari import config
     from hikari.api import special_endpoints
     from hikari.models import applications
     from hikari.models import audit_logs
@@ -58,7 +55,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-class IConnectorFactory(abc.ABC):
+class ConnectorFactory(abc.ABC):
     """Provider of a connector."""
 
     __slots__: typing.Sequence[str] = ()
@@ -72,105 +69,7 @@ class IConnectorFactory(abc.ABC):
         """Acquire the connector."""
 
 
-class IRESTApp(app.IApp, abc.ABC):
-    """Component specialization that is used for HTTP-only applications.
-
-    This is a specific instance of a HTTP-only client provided by pooled
-    implementations of `IRESTAppFactory`. It may also be used by bots
-    as a base if they require HTTP-API access.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def rest(self) -> IRESTClient:
-        """HTTP API Client.
-
-        Use this to make calls to Discord's HTTP API over HTTPS.
-
-        Returns
-        -------
-        IRESTClient
-            The HTTP API client.
-        """
-
-
-class IRESTAppContextManager(IRESTApp):
-    """An IRESTApp that may behave as a context manager."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    async def __aenter__(self) -> IRESTAppContextManager:
-        ...
-
-    @abc.abstractmethod
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        ...
-
-
-class IRESTAppFactory(abc.ABC):
-    """A client factory that emits clients.
-
-    This enables a connection pool to be shared for stateless HTTP-only
-    applications such as web dashboards, while still using the HTTP architecture
-    that the bot system will use.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    def acquire(self, token: str, token_type: str) -> IRESTAppContextManager:
-        """Acquire a HTTP client for the given authentication details.
-
-        Parameters
-        ----------
-        token : builtins.str
-            The token to use.
-        token_type : builtins.str
-            The token type to use.
-
-        Returns
-        -------
-        IRESTApp
-            The HTTP client to use.
-        """
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Safely shut down all resources."""
-
-    @property
-    @abc.abstractmethod
-    def http_settings(self) -> config.HTTPSettings:
-        """HTTP-specific settings."""
-
-    @property
-    @abc.abstractmethod
-    def proxy_settings(self) -> config.ProxySettings:
-        """Proxy-specific settings."""
-
-    @abc.abstractmethod
-    async def __aenter__(self) -> IRESTAppFactory:
-        ...
-
-    @abc.abstractmethod
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        ...
-
-
-class IRESTClient(component.IComponent, abc.ABC):
+class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     """Interface for functionality that a REST API implementation provides."""
 
     __slots__: typing.Sequence[str] = ()
@@ -326,8 +225,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         channel: snowflake.SnowflakeishOr[channels.GuildChannel],
         target: typing.Union[channels.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
         *,
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a target entity."""
@@ -340,8 +239,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         target: snowflake.Snowflakeish,
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a given entity ID and type."""
@@ -355,8 +254,8 @@ class IRESTClient(component.IComponent, abc.ABC):
         ],
         *,
         target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
-        allow: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
@@ -372,9 +271,9 @@ class IRESTClient(component.IComponent, abc.ABC):
         target_type : hikari.utilities.undefined.UndefinedOr[hikari.models.channels.PermissionOverwriteType or builtins.str]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             If provided, the new vale of all disallowed permissions.
         reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
@@ -1661,7 +1560,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1685,7 +1584,7 @@ class IRESTClient(component.IComponent, abc.ABC):
         role: snowflake.SnowflakeishOr[guilds.PartialRole],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

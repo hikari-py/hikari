@@ -24,22 +24,14 @@ import mock
 import pytest
 
 from hikari.api import cache
-from hikari.api import rest
 from hikari.impl import stateless_cache
 from hikari.models import users
 
 
 class TestStatelessCache:
     @pytest.fixture
-    def app(self):
-        return mock.Mock(spec_set=rest.IRESTApp)
-
-    @pytest.fixture
-    def component(self, app):
-        return stateless_cache.StatelessCacheImpl(app)
-
-    def test_app_property(self, component, app):
-        assert component.app is app
+    def component(self):
+        return stateless_cache.StatelessCacheImpl()
 
     def test_get_me(self, component):
         me = mock.Mock(spec_set=users.OwnUser)
@@ -52,10 +44,10 @@ class TestStatelessCache:
         component.set_me(me)
         assert component._me is me
 
-    @pytest.mark.parametrize("method", sorted(cache.ICacheComponent.__abstractmethods__ - {"get_me", "set_me", "app"}))
+    @pytest.mark.parametrize("method", sorted(cache.MutableCache.__abstractmethods__ - {"get_me", "set_me", "app"}))
     def test_stateless_method_raises_NotImplementedError(self, component, method):
         with pytest.raises(NotImplementedError):
             method_impl = getattr(component, method)
             arg_count = len(inspect.signature(method_impl).parameters)
-            args = [mock.Mock()] * arg_count
+            args = [object()] * arg_count
             method_impl(*args)

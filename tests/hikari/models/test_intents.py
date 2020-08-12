@@ -23,19 +23,19 @@ from hikari.models import intents
 
 
 def test_Intent_str_operator():
-    intent = intents.Intent.GUILD_MESSAGES
+    intent = intents.Intents.GUILD_MESSAGES
     assert str(intent) == "GUILD_MESSAGES"
 
 
 def test_Intent_str_operator_when_value_is_zero():
-    intent = intents.Intent(0)
+    intent = intents.Intents(0)
     assert str(intent) == "NONE"
 
 
 def test_Intent_is_privileged():
-    intent = intents.Intent.GUILD_MESSAGES
-    intent2 = intents.Intent.GUILD_MEMBERS
-    intent3 = intents.Intent.GUILD_PRESENCES
+    intent = intents.Intents.GUILD_MESSAGES
+    intent2 = intents.Intents.GUILD_MEMBERS
+    intent3 = intents.Intents.GUILD_PRESENCES
 
     assert not intent.is_privileged
     assert intent2.is_privileged

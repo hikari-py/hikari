@@ -27,14 +27,13 @@ __all__: typing.Final[typing.List[str]] = ["StatelessGuildChunkerImpl"]
 
 import typing
 
-from hikari.api import guild_chunker
+from hikari.api import chunker
 
 if typing.TYPE_CHECKING:
-    from hikari.api import bot
     from hikari.models import guilds
 
 
-class StatelessGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
+class StatelessGuildChunkerImpl(chunker.GuildChunker):
     """Stateless guild chunker.
 
     A stateless guild chunker implementation that implements dummy operations
@@ -43,17 +42,9 @@ class StatelessGuildChunkerImpl(guild_chunker.IGuildChunkerComponent):
     when being invoked.
     """
 
-    __slots__: typing.Sequence[str] = ("_app")
+    __slots__: typing.Sequence[str] = ()
 
-    def __init__(self, app: bot.IBotApp) -> None:
-        self._app = app
-
-    @property
-    @typing.final
-    def app(self) -> bot.IBotApp:
-        return self._app
-
-    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
+    async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
         raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
     def close(self) -> None:

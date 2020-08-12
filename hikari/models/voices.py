@@ -32,7 +32,7 @@ import attr
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import guilds
     from hikari.utilities import snowflake
 
@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
 class VoiceState:
     """Represents a user's voice connection status."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(eq=False, hash=False, repr=True)

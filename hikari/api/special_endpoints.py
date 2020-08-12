@@ -45,14 +45,14 @@ if typing.TYPE_CHECKING:
 
 
 class TypingIndicator(abc.ABC):
-    """Result type of `hikari.api.rest.IRESTClient.trigger_typing`.
+    """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
     """
@@ -79,14 +79,14 @@ class TypingIndicator(abc.ABC):
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(abc.ABC):
-    """Result type of `hikari.api.rest.IRESTClient.guild_builder`.
+    """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.IRESTClient`.
+        This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
         omitted from the following examples for brevity.
@@ -112,12 +112,12 @@ class GuildBuilder(abc.ABC):
     Adding roles to your guild.
 
     ```py
-    from hikari.models.permissions import Permission
+    from hikari.models.permissions import Permissions
 
     guild_builder = rest.guild_builder("My Server!")
 
     everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permission.ADMINISTRATOR)
+    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
 
     await guild_builder.create()
     ```
@@ -232,7 +232,7 @@ class GuildBuilder(abc.ABC):
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permission] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflake.Snowflake:
         """Create a role.
@@ -255,7 +255,7 @@ class GuildBuilder(abc.ABC):
             unspecified, then this will not occur.
         mentionable : hikari.utilities.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, then the role will be able to be mentioned.
-        permissions : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permission]
+        permissions : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
             The optional permissions to enforce on the role. If unspecified,
             the default permissions for roles will be used.
 

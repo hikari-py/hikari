@@ -82,9 +82,9 @@ def test_GroupDMChannel_str_operator_when_name_is_None():
 
 def test_PermissionOverwrite_unset():
     overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=1234321)
-    overwrite.allow = permissions.Permission.CREATE_INSTANT_INVITE
-    overwrite.deny = permissions.Permission.CHANGE_NICKNAME
-    assert overwrite.unset == permissions.Permission(-67108866)
+    overwrite.allow = permissions.Permissions.CREATE_INSTANT_INVITE
+    overwrite.deny = permissions.Permissions.CHANGE_NICKNAME
+    assert overwrite.unset == permissions.Permissions(-67108866)
 
 
 @pytest.mark.asyncio
@@ -144,11 +144,11 @@ async def test_TextChannel_history():
     )
 
 
-def test_GroupDMChannel_icon():
+def test_GroupDMChannel_icon_url():
     channel = hikari_test_helpers.mock_class_namespace(
         channels.GroupPrivateTextChannel, init=False, format_icon=mock.Mock(return_value="icon")
     )()
-    assert channel.icon == "icon"
+    assert channel.icon_url == "icon"
     channel.format_icon.assert_called_once()
 
 

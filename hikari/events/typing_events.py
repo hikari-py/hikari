@@ -41,6 +41,7 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import channels
     from hikari.models import guilds
@@ -48,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING, intents.Intent.PRIVATE_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.PRIVATE_MESSAGE_TYPING)
 class TypingEvent(shard_events.ShardEvent, abc.ABC):
     """Base event fired when a user begins typing in a channel."""
 
@@ -106,13 +107,16 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         return await self.app.rest.fetch_user(self.user_id)
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -148,7 +152,7 @@ class GuildTypingEvent(TypingEvent):
             ...
 
     async def fetch_member(self) -> guilds.Member:
-        """Perform an API call to fetch an up-to-date image of this guild.
+        """Perform an API call to fetch an up-to-date image of this member.
 
         Returns
         -------
@@ -178,13 +182,16 @@ class GuildTypingEvent(TypingEvent):
         return await self.app.rest.fetch_guild_preview(self.guild_id)
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

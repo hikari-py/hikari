@@ -37,14 +37,13 @@ import typing
 
 import attr
 
+from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import types
-
-    from hikari.api import event_consumer
 
 
 T = typing.TypeVar("T")
@@ -58,17 +57,17 @@ class Event(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def app(self) -> event_consumer.IEventConsumerApp:
+    def app(self) -> traits.RESTAware:
         """App instance for this application.
 
         Returns
         -------
-        hikari.api.event_consumer.IEventConsumerApp
-            The app containing the event consumer component.
+        hikari.traits.RESTAware
+            The REST-aware app trait.
         """
 
 
-def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intent]:
+def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
@@ -78,22 +77,22 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
     Returns
     -------
-    typing.Collection[hikari.models.intents.Intent]
+    typing.Collection[hikari.models.intents.Intents]
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
     return typing.cast(typing.Collection[typing.Any], getattr(event_type, REQUIRED_INTENTS_ATTR, ()))
 
 
-def requires_intents(first: intents.Intent, *rest: intents.Intent) -> typing.Callable[[T], T]:
+def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.Callable[[T], T]:
     """Decorate an event type to define what intents it requires.
 
     Parameters
     ----------
-    first : hikari.models.intents.Intent
+    first : hikari.models.intents.Intents
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.models.intents.Intent
+    *rest : hikari.models.intents.Intents
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
     """
@@ -163,15 +162,15 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    app: event_consumer.IEventConsumerApp = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: typing.Optional[gateway_shard.IGatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received the event.
 
     Returns
     -------
-    hikari.api.shard.IGatewayShard
+    hikari.api.shard.GatewayShard
         Shard that raised this exception.
 
         This may be `builtins.None` if no specific shard was the cause of this

@@ -48,7 +48,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import channels
     from hikari.models import users
 
@@ -87,7 +87,7 @@ class InviteCode(abc.ABC):
 class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -205,7 +205,7 @@ class InviteGuild(guilds.PartialGuild):
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     code: str = attr.ib(eq=True, hash=True, repr=True)
@@ -244,7 +244,7 @@ class Invite(InviteCode):
     """The type of user target this invite is, if applicable."""
 
     approximate_presence_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate amount of presences in this invite's guild.
+    """The approximate amount of include_presences in this invite's guild.
 
     This is only present when `with_counts` is passed as `builtins.True` to the GET
     Invites endpoint.

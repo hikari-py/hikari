@@ -22,19 +22,49 @@
 import mock
 import pytest
 
-from hikari.api import shard
-from hikari.events import shard_events
+from hikari.events import member_events
 
 
-class TestShardEvent:
+class TestMemberEvent:
     @pytest.fixture
     def event(self):
-        class ShardEventImpl(shard_events.ShardEvent):
-            shard = mock.Mock(shard.IGatewayShard)
+        class StubEvent(member_events.MemberEvent):
+            guild_id = 123
+            user = mock.Mock(id=456)
+            shard = None
+            app = None
 
-        return ShardEventImpl()
+        return StubEvent()
 
-    def test_app_property(self, event):
-        stub_app = object()
-        event.shard.app = stub_app
-        assert event.app is stub_app
+    def test_user_id_property(self, event):
+        event.user_id == 456
+
+
+class TestMemberCreateEvent:
+    @pytest.fixture
+    def event(self):
+        return member_events.MemberCreateEvent(app=None, shard=None, member=mock.Mock())
+
+    def test_guild_property(self, event):
+        event.member.guild_id = 123
+        event.guild_id == 123
+
+    def test_user_property(self, event):
+        user = object()
+        event.member.user = user
+        event.user == user
+
+
+class TestMemberUpdateEvent:
+    @pytest.fixture
+    def event(self):
+        return member_events.MemberUpdateEvent(app=None, shard=None, member=mock.Mock())
+
+    def test_guild_property(self, event):
+        event.member.guild_id = 123
+        event.guild_id == 123
+
+    def test_user_property(self, event):
+        user = object()
+        event.member.user = user
+        event.user == user

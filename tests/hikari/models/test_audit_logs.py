@@ -68,7 +68,7 @@ class TestAuditLog:
         assert audit_log[1] is entry
         assert audit_log[4] is entry_2
 
-    def test_get_item_with_index(self):
+    def test_get_item_with_slice(self):
         entry_1 = object()
         entry_2 = object()
         audit_log = audit_logs.AuditLog(

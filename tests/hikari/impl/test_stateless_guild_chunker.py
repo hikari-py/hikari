@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,35 +18,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Component that provides the ability manage guild chunking."""
 
-from __future__ import annotations
+import pytest
 
-__all__: typing.Final[typing.List[str]] = ["IGuildChunkerComponent"]
-
-import abc
-import typing
-
-from hikari.api import component
-
-if typing.TYPE_CHECKING:
-    from hikari.models import guilds
+from hikari.impl import stateless_guild_chunker
 
 
-class IGuildChunkerComponent(component.IComponent, abc.ABC):
-    """Component specialization that is used to manage guild chunking."""
+class TestStatelessGuildChunkerImpl:
+    @pytest.fixture
+    def component(self):
+        return stateless_guild_chunker.StatelessGuildChunkerImpl()
 
-    __slots__: typing.Sequence[str] = ()
+    @pytest.mark.asyncio
+    async def test_request_guild_chunk_raises_NotImplementedError(self, component):
+        with pytest.raises(NotImplementedError):
+            await component.request_guild_chunk(object())
 
-    @abc.abstractmethod
-    async def request_guild_chunk(self, guild: guilds.Guild, shard_id: int) -> None:
-        """Request for a guild chunk.
-
-        Parameters
-        ----------
-        guild: hikari.models.guilds.Guild
-            The guild to request chunk for.
-        """
-
-    def close(self) -> None:
-        """Close the guild chunker."""
+    def test_close(self, component):
+        component.close()
