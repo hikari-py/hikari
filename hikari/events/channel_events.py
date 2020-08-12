@@ -217,7 +217,7 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The channel that was created.
+            The channel that was updated.
         """
 
     @property
@@ -248,11 +248,6 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
-        # <<inherited docstring from ChannelEvent>>.
-        return self.channel.id
-
-    @property
     def guild_id(self) -> snowflake.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
@@ -279,11 +274,6 @@ class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
         The private channel that was updated.
     """
 
-    @property
-    def channel_id(self) -> snowflake.Snowflake:
-        # <<inherited docstring from ChannelEvent>>.
-        return self.channel.id
-
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -298,7 +288,7 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
         Returns
         -------
         hikari.models.channels.PartialChannel
-            The channel that was created.
+            The channel that was deleted.
         """
 
     @property
@@ -334,11 +324,6 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
-        # <<inherited docstring from ChannelEvent>>.
-        return self.channel.id
-
-    @property
     def guild_id(self) -> snowflake.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
@@ -370,11 +355,6 @@ class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
     hikari.models.channels.PrivateChannel
         The private channel that was deleted.
     """
-
-    @property
-    def channel_id(self) -> snowflake.Snowflake:
-        # <<inherited docstring from ChannelEvent>>.
-        return self.channel.id
 
     if typing.TYPE_CHECKING:
         # Channel will never be found.
@@ -486,7 +466,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
         Returns
         -------
         hikari.models.invites.Invite
-            The invite.
+            The invite object.
         """
         return await self.app.rest.fetch_invite(self.code)
 
@@ -521,7 +501,8 @@ class InviteCreateEvent(InviteEvent):
     def guild_id(self) -> snowflake.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         # This will always be non-None for guild channel invites.
-        return typing.cast(snowflake.Snowflake, self.invite.guild_id)
+        assert self.invite.guild_id is not None
+        return self.invite.guild_id
 
     @property
     def code(self) -> str:

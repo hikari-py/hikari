@@ -94,7 +94,7 @@ def reformat_code(session: nox.Session) -> None:
 
     # Black
     session.install("black")
-    session.run("black", "--target-version", "py38", *REFORMATING_PATHS)
+    session.run("black", *REFORMATING_PATHS)
 
 
 def remove_trailing_whitespaces() -> None:
