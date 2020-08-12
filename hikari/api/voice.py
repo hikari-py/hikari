@@ -22,13 +22,11 @@
 """Interfaces used to describe voice client implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["IVoiceApp", "IVoiceComponent", "IVoiceConnection"]
+__all__: typing.Final[typing.List[str]] = ["VoiceComponent", "VoiceConnection"]
 
 import abc
 import typing
 
-from hikari.api import app
-from hikari.api import component
 from hikari.events import voice_events
 
 if typing.TYPE_CHECKING:
@@ -37,28 +35,17 @@ if typing.TYPE_CHECKING:
     from hikari.utilities import snowflake
 
 
-class IVoiceApp(app.IApp, abc.ABC):
-    """Voice application mixin."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def voice(self) -> IVoiceComponent:
-        """Return the voice component."""
+_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
 
-_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="IVoiceConnection")
-
-
-class IVoiceComponent(component.IComponent, abc.ABC):
+class VoiceComponent(abc.ABC):
     """Interface for a voice system implementation."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def connections(self) -> typing.Mapping[snowflake.Snowflake, IVoiceConnection]:
+    def connections(self) -> typing.Mapping[snowflake.Snowflake, VoiceConnection]:
         """Return a mapping of guild-id to active voice connection."""
 
     @abc.abstractmethod
@@ -103,7 +90,7 @@ class IVoiceComponent(component.IComponent, abc.ABC):
         mute : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel muted (thus unable to send audio).
-        voice_connection_type : typing.Type[IVoiceConnection]
+        voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
             internally using the `IVoiceConnection.initialize`
             `builtins.classmethod`.
@@ -114,12 +101,12 @@ class IVoiceComponent(component.IComponent, abc.ABC):
 
         Returns
         -------
-        IVoiceConnection
+        VoiceConnection
             A voice connection implementation of some sort.
         """
 
 
-class IVoiceConnection(abc.ABC):
+class VoiceConnection(abc.ABC):
     """An abstract interface for defining how bots can interact with voice.
 
     Since voice will generally be run in a subprocess to prevent interfering
@@ -148,7 +135,7 @@ class IVoiceConnection(abc.ABC):
         endpoint: str,
         guild_id: snowflake.Snowflake,
         on_close: typing.Callable[[_T], typing.Awaitable[None]],
-        owner: IVoiceComponent,
+        owner: VoiceComponent,
         session_id: str,
         shard_id: int,
         token: str,
@@ -174,7 +161,7 @@ class IVoiceConnection(abc.ABC):
         on_close : typing.Callable[[T], typing.Awaitable[None]]
             A shutdown hook to invoke when closing a connection to ensure the
             connection is unregistered from the voice component safely.
-        owner : IVoiceComponent
+        owner : VoiceComponent
             The component that made this connection object.
         session_id : builtins.str
             The voice session ID to use.
@@ -217,7 +204,7 @@ class IVoiceConnection(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def owner(self) -> IVoiceComponent:
+    def owner(self) -> VoiceComponent:
         """Return the component that is managing this connection."""
 
     @abc.abstractmethod

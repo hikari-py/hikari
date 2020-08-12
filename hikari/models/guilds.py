@@ -66,7 +66,7 @@ from hikari.utilities import snowflake
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import channels as channels_
     from hikari.models import colors
     from hikari.models import colours
@@ -260,9 +260,9 @@ class GuildVerificationLevel(enum.IntEnum):
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildWidget:
-    """Represents a guild embed."""
+    """Represents a guild widget."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflake.Snowflake] = attr.ib(repr=True)
@@ -328,7 +328,7 @@ class Member(users.User):
     """
 
     @property
-    def app(self) -> rest_app.IRESTApp:
+    def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
@@ -429,7 +429,7 @@ class Member(users.User):
 class PartialRole(snowflake.Unique):
     """Represents a partial guild bound Role object."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -468,7 +468,7 @@ class Role(PartialRole):
     and increase as you go up the hierarchy.
     """
 
-    permissions: permissions_.Permission = attr.ib(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to,
 
     This may be overridden by channel overwrites.
@@ -609,7 +609,7 @@ class UnavailableGuild(snowflake.Unique):
 class PartialGuild(snowflake.Unique):
     """Base object for any partial guild objects."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -699,7 +699,7 @@ class GuildPreview(PartialGuild):
     """The mapping of IDs to the emojis this guild provides."""
 
     approximate_presence_count: int = attr.ib(eq=False, hash=False, repr=True)
-    """The approximate amount of presences in guild."""
+    """The approximate amount of include_presences in guild."""
 
     approximate_member_count: int = attr.ib(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
@@ -853,7 +853,7 @@ class Guild(PartialGuild, abc.ABC):
     """
 
     max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild.
+    """The maximum number of include_presences for the guild.
 
     If this is `builtins.None`, then the default value is used (currently 25000).
     """
@@ -1101,7 +1101,7 @@ class RESTGuild(Guild):
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
-    my_permissions: typing.Optional[permissions_.Permission] = attr.ib(eq=False, hash=False, repr=False)
+    my_permissions: typing.Optional[permissions_.Permissions] = attr.ib(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the bot user.
 
     This will not take into account permission overwrites or implied
@@ -1168,10 +1168,10 @@ class GatewayGuild(Guild):
 
     @property
     def presences(self) -> typing.Mapping[snowflake.Snowflake, presences_.MemberPresence]:
-        """Get the presences cached for the guild.
+        """Get the include_presences cached for the guild.
 
-        typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.presences.MemberPresence]
-            A mapping of user IDs to objects of the presences cached for the
+        typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+            A mapping of user IDs to objects of the include_presences cached for the
             guild.
         """
         return self.app.cache.get_presences_view_for_guild(self.id)
@@ -1263,7 +1263,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.presences.MemberPresence or builtins.None
+        hikari.models.include_presences.MemberPresence or builtins.None
             The cached presence object if found, else `builtins.None`.
         """
         return self.app.cache.get_presence(self.id, snowflake.Snowflake(user))

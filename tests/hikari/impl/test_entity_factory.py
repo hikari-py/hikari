@@ -23,13 +23,7 @@ import datetime
 import mock
 import pytest
 
-from hikari.api import rest
-from hikari.events import channel_events
-from hikari.events import guild_events
-from hikari.events import lifetime_events
-from hikari.events import message_events
-from hikari.events import user_events
-from hikari.events import voice_events
+from hikari import traits
 from hikari.impl import entity_factory
 from hikari.models import applications as application_models
 from hikari.models import audit_logs as audit_log_models
@@ -80,15 +74,15 @@ def test__deserialize_max_age_returns_null():
 
 class TestEntityFactoryImpl:
     @pytest.fixture()
-    def mock_app(self) -> rest.IRESTApp:
-        return mock.MagicMock(rest.IRESTApp)
+    def mock_app(self) -> traits.RESTAware:
+        return mock.MagicMock(traits.RESTAware)
 
     @pytest.fixture()
-    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryComponentImpl:
-        return entity_factory.EntityFactoryComponentImpl(app=mock_app)
+    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
+        return entity_factory.EntityFactoryImpl(app=mock_app)
 
     def test_app(self, entity_factory_impl, mock_app):
-        assert entity_factory_impl.app is mock_app
+        assert entity_factory_impl._app is mock_app
 
     ######################
     # APPLICATION MODELS #
@@ -151,7 +145,7 @@ class TestEntityFactoryImpl:
         assert own_guild.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
         assert own_guild.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
         assert own_guild.is_owner is False
-        assert own_guild.my_permissions == permission_models.Permission(2147483647)
+        assert own_guild.my_permissions == permission_models.Permissions(2147483647)
 
     def test_deserialize_own_guild_with_null_and_unset_fields(self, entity_factory_impl):
         own_guild = entity_factory_impl.deserialize_own_guild(
@@ -423,8 +417,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_permission_overwrite(self, entity_factory_impl, permission_overwrite_payload):
         overwrite = entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
         assert overwrite.type == channel_models.PermissionOverwriteType.MEMBER
-        assert overwrite.allow == permission_models.Permission(65)
-        assert overwrite.deny == permission_models.Permission(49152)
+        assert overwrite.allow == permission_models.Permissions(65)
+        assert overwrite.deny == permission_models.Permissions(49152)
         assert isinstance(overwrite, channel_models.PermissionOverwrite)
 
     def test_serialize_permission_overwrite(self, entity_factory_impl):
@@ -1364,7 +1358,7 @@ class TestEntityFactoryImpl:
         assert guild_role.color == color_models.Color(3_447_003)
         assert guild_role.is_hoisted is True
         assert guild_role.position == 0
-        assert guild_role.permissions == permission_models.Permission(66_321_471)
+        assert guild_role.permissions == permission_models.Permissions(66_321_471)
         assert guild_role.is_managed is False
         assert guild_role.is_mentionable is False
         assert isinstance(guild_role, guild_models.Role)
@@ -1809,7 +1803,7 @@ class TestEntityFactoryImpl:
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
-        assert guild.my_permissions == permission_models.Permission(66_321_471)
+        assert guild.my_permissions == permission_models.Permissions(66_321_471)
         assert guild.region == "eu-central"
         assert guild.afk_channel_id == 99998888777766
         assert guild.afk_timeout == datetime.timedelta(seconds=1200)

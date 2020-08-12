@@ -50,26 +50,26 @@ class Flag(enum.IntFlag):
     ...     UPDATE = enum.auto()
     ...     DELETE = enum.auto()
 
-    >>> perms = Permission.CREATE | Permission.READ
+    >>> perms = Permissions.CREATE | Permissions.READ
     >>> print(perms.split())
-    [Permission.CREATE, Permission.READ]
+    [Permissions.CREATE, Permissions.READ]
     ```
 
     This also provides two operators for clearer semantics of combining and
     removing flag members.
 
     ```py
-    perms = Permission.CREATE + Permission.READ
-    assert perms  == Permission.CREATE | Permission.READ
+    perms = Permissions.CREATE + Permissions.READ
+    assert perms  == Permissions.CREATE | Permissions.READ
 
-    perms -= Permission.CREATE
-    assert perms == Permission.READ
+    perms -= Permissions.CREATE
+    assert perms == Permissions.READ
     ```
 
     Members will be iterable if you wish to inspect each individual flag.
 
     ```py
-    for p in Permission.CREATE + Permission.READ:
+    for p in Permissions.CREATE + Permissions.READ:
         print(p)
     ```
     """

@@ -52,7 +52,7 @@ from hikari.utilities import attr_extensions
 from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users as users_
@@ -295,7 +295,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
 class AuditLogEntry(snowflake.Unique):
     """Represents an entry in a guild's audit log."""
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)

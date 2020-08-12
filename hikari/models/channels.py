@@ -57,7 +57,7 @@ from hikari.utilities import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari.api import rest as rest_app
+    from hikari import traits
     from hikari.models import embeds
     from hikari.models import guilds
     from hikari.models import messages
@@ -125,13 +125,13 @@ class PermissionOverwrite(snowflake.Unique):
     overwrite = PermissionOverwrite(
         type=PermissionOverwriteType.MEMBER,
         allow=(
-            Permission.VIEW_CHANNEL
-            | Permission.READ_MESSAGE_HISTORY
-            | Permission.SEND_MESSAGES
+            Permissions.VIEW_CHANNEL
+            | Permissions.READ_MESSAGE_HISTORY
+            | Permissions.SEND_MESSAGES
         ),
         deny=(
-            Permission.MANAGE_MESSAGES
-            | Permission.SPEAK
+            Permissions.MANAGE_MESSAGES
+            | Permissions.SPEAK
         ),
     )
     ```
@@ -145,21 +145,21 @@ class PermissionOverwrite(snowflake.Unique):
     type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True, repr=True)
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False,
+    allow: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False,
     )
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permission = attr.ib(
-        converter=permissions.Permission, default=permissions.Permission.NONE, eq=False, hash=False, repr=False
+    deny: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
     )
     """The permissions this overwrite denies."""
 
     @property
-    def unset(self) -> permissions.Permission:
+    def unset(self) -> permissions.Permissions:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
         # noinspection PyArgumentList
-        return permissions.Permission(~(self.allow | self.deny))
+        return permissions.Permissions(~(self.allow | self.deny))
 
 
 @attr_extensions.with_copy
@@ -171,7 +171,7 @@ class PartialChannel(snowflake.Unique):
     not available from Discord.
     """
 
-    app: rest_app.IRESTApp = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
     id: snowflake.Snowflake = attr.ib(eq=True, hash=True, repr=True)
@@ -451,7 +451,7 @@ class GroupPrivateTextChannel(PrivateChannel):
         return self.name
 
     @property
-    def icon(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> typing.Optional[files.URL]:
         """Icon for this DM channel, if set."""
         return self.format_icon()
 

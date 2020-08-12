@@ -26,14 +26,14 @@ from hikari.events import base_events
 from hikari.models import intents
 
 
-@base_events.requires_intents(intents.Intent.GUILDS)
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class DummyGuildEVent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
-@base_events.requires_intents(intents.Intent.GUILD_PRESENCES)
+@base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
 class DummyPresenceEvent(base_events.Event):
     pass
@@ -63,14 +63,14 @@ def test_is_no_recursive_throw_event_marked():
 
 
 def test_requires_intents():
-    assert list(base_events.get_required_intents_for(DummyGuildEVent)) == [intents.Intent.GUILDS]
-    assert list(base_events.get_required_intents_for(DummyPresenceEvent)) == [intents.Intent.GUILD_PRESENCES]
+    assert list(base_events.get_required_intents_for(DummyGuildEVent)) == [intents.Intents.GUILDS]
+    assert list(base_events.get_required_intents_for(DummyPresenceEvent)) == [intents.Intents.GUILD_PRESENCES]
     assert list(base_events.get_required_intents_for(ErrorEvent)) == []
 
 
 def test_inherited_requires_intents():
-    assert list(base_events.get_required_intents_for(DummyPresenceDerivedEvent)) == [intents.Intent.GUILD_PRESENCES]
-    assert list(base_events.get_required_intents_for(DummyGuildDerivedEvent)) == [intents.Intent.GUILDS]
+    assert list(base_events.get_required_intents_for(DummyPresenceDerivedEvent)) == [intents.Intents.GUILD_PRESENCES]
+    assert list(base_events.get_required_intents_for(DummyGuildDerivedEvent)) == [intents.Intents.GUILDS]
 
 
 def test_inherited_is_no_recursive_throw_event():

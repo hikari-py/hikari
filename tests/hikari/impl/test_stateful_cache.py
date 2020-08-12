@@ -24,8 +24,7 @@ import mock
 import pytest
 
 from hikari import errors
-from hikari.api import cache
-from hikari.api.rest import app as rest_app
+from hikari import traits
 from hikari.impl import stateful_cache
 from hikari.models import channels
 from hikari.models import emojis
@@ -40,7 +39,7 @@ from tests.hikari import hikari_test_helpers
 class TestStatefulCacheImpl:
     @pytest.fixture()
     def app_impl(self):
-        return mock.Mock(rest_app.IApp)
+        return mock.Mock(traits.RESTAware)
 
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
@@ -56,7 +55,7 @@ class TestStatefulCacheImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {snowflake.Snowflake(2342344): stateful_cache._GenericRefWrapper(object=mock_user)}
         channel = cache_impl._build_private_text_channel(channel_data)
-        assert channel.app is cache_impl.app
+        assert channel.app is cache_impl._app
         assert channel.id == snowflake.Snowflake(5642134)
         assert channel.name is None
         assert channel.type is channels.ChannelType.PRIVATE_TEXT
@@ -204,7 +203,7 @@ class TestStatefulCacheImpl:
         mock_recipient = mock.Mock(users.User, id=snowflake.Snowflake(7652341234))
         channel = channels.PrivateTextChannel(
             id=snowflake.Snowflake(23123),
-            app=cache_impl.app,
+            app=cache_impl._app,
             name=None,
             type=channels.ChannelType.PRIVATE_TEXT,
             recipient=mock_recipient,
@@ -267,7 +266,7 @@ class TestStatefulCacheImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = {snowflake.Snowflake(56234232): stateful_cache._GenericRefWrapper(object=mock_user)}
         emoji = cache_impl._build_emoji(emoji_data)
-        assert emoji.app is cache_impl.app
+        assert emoji.app is cache_impl._app
         assert emoji.id == snowflake.Snowflake(1233534234)
         assert emoji.name == "OKOKOKOKOK"
         assert emoji.guild_id == snowflake.Snowflake(65234123)
@@ -896,7 +895,7 @@ class TestStatefulCacheImpl:
             snowflake.Snowflake(9543453): stateful_cache._GenericRefWrapper(object=mock_target_user),
         }
         invite = cache_impl._build_invite(invite_data)
-        assert invite.app is cache_impl.app
+        assert invite.app is cache_impl._app
         assert invite.code == "okokok"
         assert invite.guild is None
         assert invite.guild_id == snowflake.Snowflake(965234)
@@ -2051,7 +2050,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_member = mock.Mock(return_value=mock_member)
         current_voice_state = cache_impl._build_voice_state(voice_state_data)
         cache_impl._build_member.assert_called_once_with(mock_member_data, cached_users=None)
-        assert current_voice_state.app is cache_impl.app
+        assert current_voice_state.app is cache_impl._app
         assert current_voice_state.channel_id == snowflake.Snowflake(4651234123)
         assert current_voice_state.guild_id == snowflake.Snowflake(54123123)
         assert current_voice_state.is_guild_deafened is True
@@ -2093,7 +2092,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_member.assert_called_once_with(
             mock_member_data, cached_users={snowflake.Snowflake(7512312): mock_user}
         )
-        assert current_voice_state.app is cache_impl.app
+        assert current_voice_state.app is cache_impl._app
         assert current_voice_state.channel_id == snowflake.Snowflake(4651234123)
         assert current_voice_state.guild_id == snowflake.Snowflake(54123123)
         assert current_voice_state.is_guild_deafened is True

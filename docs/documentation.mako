@@ -111,6 +111,7 @@
     QUAL_NAMESPACE = "<abbr title='A standard Python PEP-420 namespace package.'>namespace</abbr>"
     QUAL_PACKAGE = "<abbr title='A standard Python package.'>package</abbr>"
     QUAL_PROPERTY = "<abbr title='A descriptor on an object that behaves like a synthetic attribute/variable.'>property</abbr>"
+    QUAL_PROTOCOL = "<abbr title='A structural supertype (similar to an ABC, but with implicit inheritance)'>trait</abbr>"
     QUAL_TYPEHINT = "<abbr title='A type hint that is usable by static-type checkers like MyPy, but otherwise serves no functional purpose.'>type hint</abbr>"
     QUAL_VAR = "<abbr title='A standard variable'>var</abbr>"
     QUAL_WARNING = "<abbr title='A standard Python warning that can be raised.'>warning</abbr>"
@@ -327,7 +328,9 @@
             elif isinstance(dobj, pdoc.Class):
                 qual = ""
 
-                if issubclass(dobj.obj, type):
+                if getattr(dobj.obj, "_is_protocol", False):
+                    qual += QUAL_PROTOCOL
+                elif issubclass(dobj.obj, type):
                     qual += QUAL_METACLASS
                 else:
                     if enum.Flag in dobj.obj.mro():
@@ -601,13 +604,15 @@
 
         example_str = f"{QUAL_CLASS} " + c.name + "(" + ", ".join(params) + ")"
 
-        if len(params) > 4 or len(example_str) > 70 and len(params) > 0:
+        suppress_params = getattr(c.obj, "_is_protocol", False)
+
+        if not suppress_params and (len(params) > 4 or len(example_str) > 70 and len(params) > 0):
             representation = "\n".join((
                 f"{QUAL_CLASS} {c.name} (",
                 *(f"    {p}," for p in params),
                 "): ..."
             ))
-        elif params:
+        elif params and not suppress_params:
             representation = f"{QUAL_CLASS} {c.name} (" + ", ".join(params) + "): ..."
         else:
             representation = f"{QUAL_CLASS} {c.name}: ..."

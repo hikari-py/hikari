@@ -19,15 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Shard intents for controlling which events the application receives.
-
-All intents in the `Intent` class are exported to this package,
-thus `intents.Intent.GUILDS` will behave the same as `intents.GUILDS`.
-"""
+"""Shard intents for controlling which events the application receives."""
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Intent"]
+__all__: typing.Final[typing.List[str]] = ["Intents"]
 
 # noinspection PyUnresolvedReferences
 import typing
@@ -36,7 +32,7 @@ from hikari.utilities import flag
 
 
 @typing.final
-class Intent(flag.Flag):
+class Intents(flag.Flag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event
@@ -67,7 +63,7 @@ class Intent(flag.Flag):
     simply a case of accessing it normally.
 
     ```py
-    my_intents = Intent.GUILDS
+    my_intents = Intents.GUILDS
     ```
 
     If we wanted to have several intents grouped together, we would use the
@@ -324,8 +320,8 @@ class Intent(flag.Flag):
     ALL_GUILDS = ALL_GUILDS_UNPRIVILEGED | ALL_GUILDS_PRIVILEGED
     """All unprivileged guild intents and all privileged guild intents.
 
-    This combines `Intent.ALL_GUILDS_UNPRIVILEGED` and
-    `Intent.ALL_GUILDS_PRIVILEGED`.
+    This combines `Intents.ALL_GUILDS_UNPRIVILEGED` and
+    `Intents.ALL_GUILDS_PRIVILEGED`.
 
     !!! warning
         This set of intent is privileged, and requires enabling/whitelisting to
@@ -372,7 +368,3 @@ class Intent(flag.Flag):
         in your application.
         """
         return bool(self & (self.GUILD_MEMBERS | self.GUILD_PRESENCES))
-
-
-def __getattr__(name: str) -> Intent:
-    return typing.cast("Intent", getattr(Intent, name))

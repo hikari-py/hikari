@@ -649,10 +649,6 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute(
 )
 
 # undocumented on the Discord docs.
-CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP},
-)
-# undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute(
     "/channel-icons/{channel_id}/{hash}", {PNG, JPEG, WEBP},
 )

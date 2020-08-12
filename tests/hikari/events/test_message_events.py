@@ -30,6 +30,7 @@ class TestMessageCreateEvent:
     @pytest.fixture
     def event(self):
         class MessageCreateEvent(message_events.MessageCreateEvent):
+            app = None
             message = mock.Mock(messages.Message)
             shard = object()
 
@@ -52,6 +53,7 @@ class TestMessageUpdateEvent:
     @pytest.fixture
     def event(self):
         class MessageUpdateEvent(message_events.MessageUpdateEvent):
+            app = None
             message = mock.Mock(messages.Message)
             shard = object()
 
@@ -74,6 +76,7 @@ class TestMessageDeleteEvent:
     @pytest.fixture
     def event(self):
         class MessageDeleteEvent(message_events.MessageDeleteEvent):
+            app = None
             message = mock.Mock(messages.Message)
             shard = object()
 
@@ -91,7 +94,7 @@ class TestMessageDeleteEvent:
 class TestGuildMessageCreateEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageCreateEvent(message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageCreateEvent(app=None, message=mock.Mock(messages.Message), shard=object())
 
     def test_guild_id_property(self, event):
         event.message.guild_id = 123
@@ -101,7 +104,7 @@ class TestGuildMessageCreateEvent:
 class TestGuildMessageUpdateEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageUpdateEvent(message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageUpdateEvent(app=None, message=mock.Mock(messages.Message), shard=object())
 
     def test_guild_id_property(self, event):
         event.message.guild_id = 123
@@ -111,7 +114,7 @@ class TestGuildMessageUpdateEvent:
 class TestGuildMessageDeleteEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageDeleteEvent(message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageDeleteEvent(app=None, message=mock.Mock(messages.Message), shard=object())
 
     def test_guild_id_property(self, event):
         event.message.guild_id = 123

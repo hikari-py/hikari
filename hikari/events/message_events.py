@@ -52,13 +52,14 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import messages
     from hikari.models import users
     from hikari.utilities import snowflake
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MessagesEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any message-bound event."""
@@ -75,7 +76,7 @@ class MessagesEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MessageEvent(MessagesEvent, abc.ABC):
     """Event base for any event that concerns a single message."""
@@ -92,13 +93,13 @@ class MessageEvent(MessagesEvent, abc.ABC):
         """
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateMessageEvent(MessageEvent, abc.ABC):
     """Event base for any message-bound event in private messages."""
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageEvent(MessageEvent, abc.ABC):
     """Event base for any message-bound event in guild messages."""
@@ -115,7 +116,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         """
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MessageCreateEvent(MessageEvent, abc.ABC):
     """Event base for any message creation event."""
@@ -153,7 +154,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.author.id
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MessageUpdateEvent(MessageEvent, abc.ABC):
     """Event base for any message update event."""
@@ -200,7 +201,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.channel_id
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES, intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class MessageDeleteEvent(MessageEvent, abc.ABC):
     """Event base for any message delete event."""
@@ -240,13 +241,16 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         return self.message.channel_id
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
@@ -259,26 +263,32 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
         return typing.cast("snowflake.Snowflake", self.message.guild_id)
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
     # <<inherited docstring from MessageCreateEvent>>.
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -291,26 +301,32 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
         return typing.cast("snowflake.Snowflake", self.message.guild_id)
 
 
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>.
 
 
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -325,11 +341,14 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a private channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
@@ -339,7 +358,7 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
 # NOTE: if this ever has a private channel equivalent implemented, this intents
 # constraint should be relaxed.
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class MessageBulkDeleteEvent(MessagesEvent, abc.ABC):
     """Event triggered when messages are bulk-deleted from a channel.
 
@@ -360,11 +379,14 @@ class MessageBulkDeleteEvent(MessagesEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     """Event triggered when messages are bulk-deleted from a guild channel."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

@@ -52,6 +52,7 @@ from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.models import emojis
     from hikari.models import guilds
@@ -59,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class ReactionEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any message reaction event."""
 
@@ -87,7 +88,7 @@ class ReactionEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in guild messages."""
 
@@ -104,13 +105,13 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in private messages."""
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class ReactionAddEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction that is added to a message."""
 
@@ -139,7 +140,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     """Event base for any single reaction that is removed from a message."""
 
@@ -169,13 +170,13 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteAllEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed from a message."""
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS, intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed for one emoji."""
 
@@ -195,11 +196,14 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     member: guilds.Member = attr.ib()
@@ -233,11 +237,14 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a guild message."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     user_id: snowflake.Snowflake = attr.ib()
@@ -258,11 +265,14 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a guild message's reactions."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -280,11 +290,14 @@ class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a guild message's reactions are removed."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflake.Snowflake = attr.ib()
@@ -299,11 +312,14 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     user_id: snowflake.Snowflake = attr.ib()
@@ -321,11 +337,14 @@ class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     user_id: snowflake.Snowflake = attr.ib()
@@ -343,11 +362,14 @@ class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()
@@ -362,11 +384,14 @@ class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiE
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intent.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
 class PrivateReactionDeleteAllEvent(PrivateReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""
 
-    shard: gateway_shard.IGatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflake.Snowflake = attr.ib()

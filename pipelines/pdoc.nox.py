@@ -40,6 +40,7 @@ def pdoc(session: nox.Session) -> None:
     session.install("-r", "requirements.txt")
     session.install("pdoc3")
     session.install("sphobjinv")
+    session.env["PDOC3_GENERATING"] = "1"
 
     session.run(
         "python",

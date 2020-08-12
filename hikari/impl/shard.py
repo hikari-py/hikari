@@ -23,13 +23,17 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GatewayShardImpl"]
+__all__: typing.Final[typing.List[str]] = [
+    "GatewayShardImplV6",
+    "GatewayShardImpl",
+]
 
 import asyncio
 import datetime
 import enum
 import logging
 import math
+import random
 import typing
 import urllib.parse
 import zlib
@@ -50,20 +54,17 @@ from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     from hikari import config
-    from hikari.api import event_consumer
     from hikari.models import channels
     from hikari.models import guilds
     from hikari.models import users
 
 
 @typing.final
-class GatewayShardImpl(shard.IGatewayShard):
+class GatewayShardImplV6(shard.GatewayShard):
     """Implementation of a V6 and V7 compatible gateway.
 
     Parameters
     ----------
-    app : hikari.api.gateway.consumer.IEventConsumerApp
-        The base application.
     compression : buitlins.str or buitlins.None
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
@@ -74,17 +75,23 @@ class GatewayShardImpl(shard.IGatewayShard):
         If `builtins.True`, each sent and received payload is dumped to the
         logs. If `builtins.False`, only the fact that data has been
         sent/received will be logged.
+    event_consumer
+        A coroutine function consuming a `GatewayShardImplV6`,
+        a `builtins.str` event name, and a
+        `hikari.utilities.data_binding.JSONObject` event object as parameters.
+        This should return `builtins.None`, and will be called asynchronously
+        with each event that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
         The initial activity to appear to have for this shard.
     initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
         The datetime to appear to be idle since.
     initial_is_afk : hikari.utilities.undefined.UndefinedOr[bool]
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
         The initial status to set on login for the shard.
-    intents : hikari.models.intents.Intent or builtins.None
+    intents : hikari.models.intents.Intents or builtins.None
         Collection of intents to use, or `builtins.None` to not use intents at
         all.
     large_threshold : builtins.int
@@ -118,12 +125,12 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
-        "_app",
         "_backoff",
         "_compression",
         "_connected_at",
         "_data_format",
         "_debug",
+        "_event_consumer",
         "_handshake_event",
         "_heartbeat_interval",
         "_heartbeat_latency",
@@ -153,38 +160,6 @@ class GatewayShardImpl(shard.IGatewayShard):
         "_zombied",
         "url",
     )
-
-    @enum.unique
-    @typing.final
-    class _CloseCode(enum.IntEnum):
-        RFC_6455_NORMAL_CLOSURE = 1000
-        RFC_6455_GOING_AWAY = 1001
-        RFC_6455_PROTOCOL_ERROR = 1002
-        RFC_6455_TYPE_ERROR = 1003
-        RFC_6455_ENCODING_ERROR = 1007
-        RFC_6455_POLICY_VIOLATION = 1008
-        RFC_6455_TOO_BIG = 1009
-        RFC_6455_UNEXPECTED_CONDITION = 1011
-
-        # Discord seems to invalidate sessions if I send a 1xxx, which is useless
-        # for invalid session and reconnect messages where I want to be able to
-        # resume.
-        DO_NOT_INVALIDATE_SESSION = 3000
-
-        UNKNOWN_ERROR = 4000
-        UNKNOWN_OPCODE = 4001
-        DECODE_ERROR = 4002
-        NOT_AUTHENTICATED = 4003
-        AUTHENTICATION_FAILED = 4004
-        ALREADY_AUTHENTICATED = 4005
-        INVALID_SEQ = 4007
-        RATE_LIMITED = 4008
-        SESSION_TIMEOUT = 4009
-        INVALID_SHARD = 4010
-        SHARDING_REQUIRED = 4011
-        INVALID_VERSION = 4012
-        INVALID_INTENT = 4013
-        DISALLOWED_INTENT = 4014
 
     @enum.unique
     @typing.final
@@ -225,19 +200,27 @@ class GatewayShardImpl(shard.IGatewayShard):
     resumes.
     """
 
+    _NO_SESSION_INVALIDATION_CLOSE_CODE: typing.Final[typing.ClassVar[int]] = 3000
+    """Discord seems to invalidate sessions if I send a 1xxx, which is useless
+    for invalid session and reconnect messages where I want to be able to
+    resume.
+    """
+
     def __init__(
         self,
         *,
-        app: event_consumer.IEventConsumerApp,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
         data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
+        event_consumer: typing.Callable[
+            [shard.GatewayShard, str, data_binding.JSONObject], typing.Coroutine[None, None, None]
+        ],
         http_settings: config.HTTPSettings,
         initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
-        intents: typing.Optional[intents_.Intent] = None,
+        intents: typing.Optional[intents_.Intents] = None,
         large_threshold: int = 250,
         proxy_settings: config.ProxySettings,
         shard_id: int = 0,
@@ -247,18 +230,18 @@ class GatewayShardImpl(shard.IGatewayShard):
         version: int = 6,
     ) -> None:
         self._activity: undefined.UndefinedNoneOr[presences.Activity] = initial_activity
-        self._app = app
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._data_format = data_format.lower()
         self._debug = debug
+        self._event_consumer = event_consumer
         self._handshake_event = asyncio.Event()
         self._heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
         self._idle_since: undefined.UndefinedNoneOr[datetime.datetime] = initial_idle_since
-        self._intents: typing.Optional[intents_.Intent] = intents
+        self._intents: typing.Optional[intents_.Intents] = intents
         self._is_afk: undefined.UndefinedOr[bool] = initial_is_afk
         self._large_threshold = large_threshold
         self._last_heartbeat_sent = float("nan")
@@ -298,10 +281,6 @@ class GatewayShardImpl(shard.IGatewayShard):
         self.url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
 
     @property
-    def app(self) -> event_consumer.IEventConsumerApp:
-        return self._app
-
-    @property
     def compression(self) -> typing.Optional[str]:
         return self._compression
 
@@ -333,7 +312,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         return self._shard_id
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intent]:
+    def intents(self) -> typing.Optional[intents_.Intents]:
         return self._intents
 
     @property
@@ -394,7 +373,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
             if self._ws is not None:
                 self._logger.warning("gateway client closed, will not attempt to restart")
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "client shut down")
+                await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
 
     async def update_presence(
         self,
@@ -405,17 +384,15 @@ class GatewayShardImpl(shard.IGatewayShard):
         status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
         if idle_since is undefined.UNDEFINED:
-            idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
+            self._idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
         if afk is undefined.UNDEFINED:
-            afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
+            self._is_afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
         if status is undefined.UNDEFINED:
-            status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
+            self._status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
         if activity is undefined.UNDEFINED:
-            activity = self._activity if self._activity is not undefined.UNDEFINED else None
+            self._activity = self._activity if self._activity is not undefined.UNDEFINED else None
 
-        presence = self._app.event_factory.serialize_gateway_presence(
-            idle_since=idle_since, afk=afk, status=status, activity=activity
-        )
+        presence = self._serialize_presence_payload()
 
         payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}
 
@@ -435,41 +412,50 @@ class GatewayShardImpl(shard.IGatewayShard):
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        payload = self._app.event_factory.serialize_gateway_voice_state_update(guild, channel, self_mute, self_deaf)
-        await self._send_json({"op": self._Opcode.VOICE_STATE_UPDATE, "d": payload})
+        await self._send_json(
+            {
+                "op": self._Opcode.VOICE_STATE_UPDATE,
+                "d": {
+                    "guild_id": str(int(guild)),
+                    "channel_id": str(int(channel)) if channel is not None else None,
+                    "mute": self_mute,
+                    "deaf": self_deaf,
+                },
+            }
+        )
 
     async def request_guild_members(
         self,
         guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
         *,
-        presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        users: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
-            if not query and not limit and not self._intents & intents_.Intent.GUILD_MEMBERS:
-                raise errors.MissingIntentError(intents_.Intent.GUILD_MEMBERS)
+            if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
+                raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
-            if presences is not undefined.UNDEFINED and not self._intents & intents_.Intent.GUILD_PRESENCES:
-                raise errors.MissingIntentError(intents_.Intent.GUILD_PRESENCES)
+            if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
+                raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
-        if users is not undefined.UNDEFINED and query or limit:
+        if user_ids is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
 
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if users is not undefined.UNDEFINED and len(users) >= 100:
+        if user_ids is not undefined.UNDEFINED and len(user_ids) > 100:
             raise ValueError("'users' is limited to 100 users")
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
-        payload.put("presences", presences)
+        payload.put("include_presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
-        payload.put_snowflake_array("user_ids", users)
+        payload.put_snowflake_array("user_ids", user_ids)
         payload.put("nonce", nonce)
 
         await self._send_json({"op": self._Opcode.REQUEST_GUILD_MEMBERS, "d": payload})
@@ -522,11 +508,11 @@ class GatewayShardImpl(shard.IGatewayShard):
         except self._InvalidSession as ex:
             if ex.can_resume:
                 self._logger.warning("invalid session, so will attempt to resume session %s now", self._session_id)
-                await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "invalid session (resume)")
+                await self._close_ws(self._NO_SESSION_INVALIDATION_CLOSE_CODE, "invalid session (resume)")
                 self._backoff.reset()
             else:
                 self._logger.warning("invalid session, so will attempt to reconnect with new session in a few seconds")
-                await self._close_ws(self._CloseCode.RFC_6455_NORMAL_CLOSURE, "invalid session (no resume)")
+                await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "invalid session (no resume)")
                 self._seq = None
                 self._session_id = None
                 self._session_started_at = None
@@ -534,7 +520,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         except self._Reconnect:
             self._logger.warning("instructed by Discord to reconnect and resume session %s", self._session_id)
             self._backoff.reset()
-            await self._close_ws(self._CloseCode.DO_NOT_INVALIDATE_SESSION, "reconnecting")
+            await self._close_ws(self._NO_SESSION_INVALIDATION_CLOSE_CODE, "reconnecting")
 
         except self._SocketClosed:
             # The socket has already closed, so no need to close it again.
@@ -566,7 +552,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._seq = None
             self._session_id = None
             self._session_started_at = None
-            await self._close_ws(self._CloseCode.RFC_6455_UNEXPECTED_CONDITION, "unexpected error occurred")
+            await self._close_ws(errors.ShardCloseCode.UNEXPECTED_CONDITION, "unexpected error occurred")
             raise
 
         return True
@@ -679,17 +665,19 @@ class GatewayShardImpl(shard.IGatewayShard):
                 payload["d"]["intents"] = self._intents
 
             if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-                # noinspection PyTypeChecker
-                payload["d"]["presence"] = self._app.event_factory.serialize_gateway_presence(
-                    idle_since=self._idle_since if self._idle_since is not undefined.UNDEFINED else None,
-                    afk=self._is_afk if self._is_afk is not undefined.UNDEFINED else False,
-                    status=self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                    activity=self._activity if self._activity is not undefined.UNDEFINED else None,
-                )
+                payload["d"]["presence"] = self._serialize_presence_payload()
 
             await self._send_json(payload)
 
     async def _heartbeat_keepalive(self) -> None:
+        # Wait a random offset between 0ms and <heartbeat_interval>ms before
+        # sending the first heartbeat. This helps not overload the gateway
+        # after recovering from an outage.
+        #
+        # S311 - Dont use random for security/cryptographic purposes
+        offset = random.random() * self._heartbeat_interval  # noqa: S311
+        await asyncio.sleep(offset)
+
         try:
             while not self._request_close_event.is_set():
                 now = date.monotonic()
@@ -738,7 +726,7 @@ class GatewayShardImpl(shard.IGatewayShard):
         # Probably should file a bug report at some point... if I remember.
         self._zombied = True
         close_task = asyncio.create_task(
-            self._close_ws(code=self._CloseCode.RFC_6455_PROTOCOL_ERROR, message="heartbeat timeout")
+            self._close_ws(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
         )
         await asyncio.sleep(0.1)
         # noinspection PyProtectedMember
@@ -805,7 +793,7 @@ class GatewayShardImpl(shard.IGatewayShard):
             return typing.cast("data_binding.JSONObject", message["d"])
 
         error_message = f"Unexpected opcode {op} received, expected {opcode}"
-        await self._close_ws(self._CloseCode.RFC_6455_PROTOCOL_ERROR, error_message)
+        await self._close_ws(errors.ShardCloseCode.PROTOCOL_ERROR, error_message)
         raise errors.GatewayError(error_message)
 
     async def _receive_json(self) -> data_binding.JSONObject:
@@ -858,11 +846,11 @@ class GatewayShardImpl(shard.IGatewayShard):
             self._logger.error("connection closed with code %s (%s)", close_code, reason)
 
             can_reconnect = close_code < 4000 or close_code in (
-                self._CloseCode.DECODE_ERROR,
-                self._CloseCode.INVALID_SEQ,
-                self._CloseCode.UNKNOWN_ERROR,
-                self._CloseCode.SESSION_TIMEOUT,
-                self._CloseCode.RATE_LIMITED,
+                errors.ShardCloseCode.DECODE_ERROR,
+                errors.ShardCloseCode.INVALID_SEQ,
+                errors.ShardCloseCode.UNKNOWN_ERROR,
+                errors.ShardCloseCode.SESSION_TIMEOUT,
+                errors.ShardCloseCode.RATE_LIMITED,
             )
 
             # Assume we can always resume first.
@@ -891,8 +879,7 @@ class GatewayShardImpl(shard.IGatewayShard):
 
     def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
         return asyncio.create_task(
-            self._app.event_consumer.consume_raw_event(self, event_name, event),
-            name=f"gateway shard {self._shard_id} dispatch {event_name}",
+            self._event_consumer(self, event_name, event), name=f"gateway shard {self._shard_id} dispatch {event_name}",
         )
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
@@ -908,3 +895,30 @@ class GatewayShardImpl(shard.IGatewayShard):
             args = (*args, self._seq, self._session_id, len(payload))
 
         self._logger.debug(message, *args)
+
+    def _serialize_presence_payload(self) -> data_binding.JSONObject:
+        idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
+        afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
+        status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
+        activity = self._activity if self._activity is not undefined.UNDEFINED else None
+        presence_pl = data_binding.JSONObjectBuilder()
+
+        if activity is not None:
+            presence_pl.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+        else:
+            presence_pl.put("game", None)
+
+        presence_pl.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
+        presence_pl.put("afk", afk)
+
+        # Turns out Discord don't document this properly. I can send "offline"
+        # to the gateway, but it will actually just result in the bot not
+        # changing the status. I have to set it to "invisible" instead to get
+        # this to work...
+        presence_pl.put("status", "invisible" if status is presences.Status.OFFLINE else status)
+
+        return presence_pl
+
+
+GatewayShardImpl = GatewayShardImplV6
+"""Most up-to-date documented and stable release."""
