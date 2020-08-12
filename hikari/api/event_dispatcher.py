@@ -66,13 +66,14 @@ class EventDispatcher(abc.ABC):
         ```py
         import attr
 
+        from hikari.traits import RESTAware
         from hikari.events.base_events import Event
         from hikari.models.users import User
         from hikari.utilities.snowflake import Snowflake
 
         @attr.s()
         class EveryoneMentionedEvent(Event):
-            _rest: IEventDispatcherApp = attr.ib()
+            app: RESTAware = attr.ib()
 
             author: User = attr.ib()
             '''The user who mentioned everyone.'''
