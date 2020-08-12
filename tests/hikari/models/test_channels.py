@@ -144,11 +144,11 @@ async def test_TextChannel_history():
     )
 
 
-def test_GroupDMChannel_icon():
+def test_GroupDMChannel_icon_url():
     channel = hikari_test_helpers.mock_class_namespace(
         channels.GroupPrivateTextChannel, init=False, format_icon=mock.Mock(return_value="icon")
     )()
-    assert channel.icon == "icon"
+    assert channel.icon_url == "icon"
     channel.format_icon.assert_called_once()
 
 
