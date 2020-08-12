@@ -34,8 +34,8 @@ import os
 import platform
 import string
 import sys
-import typing
 import types
+import typing
 from importlib import resources
 
 import attr

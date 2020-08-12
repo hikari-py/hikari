@@ -26,20 +26,13 @@ from hikari.impl import stateless_guild_chunker
 
 class TestStatelessGuildChunkerImpl:
     @pytest.fixture
-    def app(self):
-        return object()
-
-    @pytest.fixture
-    def component(self, app):
-        return stateless_guild_chunker.StatelessGuildChunkerImpl(app)
-
-    def test_app_property(self, component, app):
-        assert component.app is app
+    def component(self):
+        return stateless_guild_chunker.StatelessGuildChunkerImpl()
 
     @pytest.mark.asyncio
     async def test_request_guild_chunk_raises_NotImplementedError(self, component):
         with pytest.raises(NotImplementedError):
-            await component.request_guild_chunk(object(), 123)
+            await component.request_guild_chunk(object())
 
     def test_close(self, component):
         component.close()
