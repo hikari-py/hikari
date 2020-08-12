@@ -29,7 +29,7 @@ from hikari.models import guilds
 class TestRoleCreateEvent:
     @pytest.fixture
     def event(self):
-        return role_events.RoleCreateEvent(shard=object(), role=mock.Mock(guilds.Role))
+        return role_events.RoleCreateEvent(app=None, shard=object(), role=mock.Mock(guilds.Role))
 
     def test_guild_id_property(self, event):
         event.role.guild_id = 123
@@ -43,7 +43,7 @@ class TestRoleCreateEvent:
 class TestRoleUpdateEvent:
     @pytest.fixture
     def event(self):
-        return role_events.RoleUpdateEvent(shard=object(), role=mock.Mock(guilds.Role))
+        return role_events.RoleUpdateEvent(app=None, shard=object(), role=mock.Mock(guilds.Role))
 
     def test_guild_id_property(self, event):
         event.role.guild_id = 123

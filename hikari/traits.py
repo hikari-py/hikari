@@ -47,17 +47,17 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import config
-    from hikari.api import cache
-    from hikari.api import chunker
-    from hikari.api import entity_factory
+    from hikari.api import cache as cache_
+    from hikari.api import chunker as chunker_
+    from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_dispatcher
-    from hikari.api import event_factory
+    from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
 
     # noinspection PyUnresolvedReferences
-    from hikari.events import base_events
+    from hikari.events import base_events  # noqa F401 - Imported but unused (false positive)
     from hikari.models import intents as intents_
     from hikari.models import users
 
@@ -132,7 +132,7 @@ class CacheAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def cache(self) -> cache.Cache:
+    def cache(self) -> cache_.Cache:
         """Return the immutable cache implementation for this object.
 
         Returns
@@ -175,7 +175,7 @@ class EntityFactoryAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def entity_factory(self) -> entity_factory.EntityFactory:
+    def entity_factory(self) -> entity_factory_.EntityFactory:
         """Return the entity factory implementation for this object.
 
         Returns
@@ -223,7 +223,7 @@ class EventFactoryAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def event_factory(self) -> event_factory.EventFactory:
+    def event_factory(self) -> event_factory_.EventFactory:
         """Return the event factory component.
 
         Returns
@@ -245,7 +245,7 @@ class ChunkerAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def chunker(self) -> chunker.GuildChunker:
+    def chunker(self) -> chunker_.GuildChunker:
         """Return the guild chunker component.
 
         Returns
