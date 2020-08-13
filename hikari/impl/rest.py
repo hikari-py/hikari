@@ -30,7 +30,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "BasicLazyCachedTCPConnectorFactory",
     "RESTApp",
-    "RESTClient",
+    "RESTClientImpl",
 ]
 
 import asyncio
@@ -173,8 +173,8 @@ class RESTApp(traits.ExecutorAware):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
-        -
-        ```````````````````````
+
+    !!! note
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
@@ -239,6 +239,9 @@ class RESTApp(traits.ExecutorAware):
     def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
+        if self._event_loop is None:
+            self._event_loop = loop
+
         if loop != self._event_loop:
             raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
 
@@ -247,7 +250,7 @@ class RESTApp(traits.ExecutorAware):
         # are also REST-aware
         entity_factory = entity_factory_impl.EntityFactoryImpl(_RESTProvider(lambda: rest_client))
 
-        rest_client = RESTClient(
+        rest_client = RESTClientImpl(
             connector_factory=self._connector_factory,
             connector_owner=self._connector_owner,
             debug=self._debug,
@@ -279,7 +282,7 @@ class RESTApp(traits.ExecutorAware):
         await self.close()
 
 
-class RESTClient(rest_api.RESTClient):
+class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
@@ -424,6 +427,17 @@ class RESTClient(rest_api.RESTClient):
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
+
+    async def __aenter__(self) -> RESTClientImpl:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        await self.close()
 
     @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:

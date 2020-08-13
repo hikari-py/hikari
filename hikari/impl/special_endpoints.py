@@ -107,7 +107,6 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         # This will always be true, but this keeps MyPy quiet.
         if self._task is not None:
             self._task.cancel()
-            await self._task
 
     async def _keep_typing(self) -> None:
         # Cancelled error will occur when the context manager is requested to
