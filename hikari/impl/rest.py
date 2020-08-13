@@ -30,7 +30,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "BasicLazyCachedTCPConnectorFactory",
     "RESTApp",
-    "RESTClient",
+    "RESTClientImpl",
 ]
 
 import asyncio
@@ -247,7 +247,7 @@ class RESTApp(traits.ExecutorAware):
         # are also REST-aware
         entity_factory = entity_factory_impl.EntityFactoryImpl(_RESTProvider(lambda: rest_client))
 
-        rest_client = RESTClient(
+        rest_client = RESTClientImpl(
             connector_factory=self._connector_factory,
             connector_owner=self._connector_owner,
             debug=self._debug,
@@ -279,7 +279,7 @@ class RESTApp(traits.ExecutorAware):
         await self.close()
 
 
-class RESTClient(rest_api.RESTClient):
+class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity

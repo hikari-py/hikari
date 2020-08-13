@@ -137,7 +137,7 @@ class TestRESTApp:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl", return_value=mock_entity_factory))
-        mock_client = stack.enter_context(mock.patch.object(rest, "RESTClient"))
+        mock_client = stack.enter_context(mock.patch.object(rest, rest.RESTClientImpl.__qualname__))
         stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
 
         with stack:
@@ -197,7 +197,7 @@ class TestRESTAppAsync:
 
 @pytest.fixture(scope="module")
 def rest_client_class():
-    return hikari_test_helpers.unslot_class(rest.RESTClient)
+    return hikari_test_helpers.unslot_class(rest.RESTClientImpl)
 
 
 @pytest.fixture
@@ -264,7 +264,7 @@ class StubModel(snowflake.Unique):
 
 class TestRESTClient:
     def test__init__when_token_is_None_sets_token_to_None(self):
-        obj = rest.RESTClient(
+        obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
@@ -280,7 +280,7 @@ class TestRESTClient:
         assert obj._token is None
 
     def test__init__when_token_is_not_None_and_token_type_is_None_generates_token_with_default_type(self):
-        obj = rest.RESTClient(
+        obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
@@ -296,7 +296,7 @@ class TestRESTClient:
         assert obj._token == "Bot some_token"
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
-        obj = rest.RESTClient(
+        obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
@@ -312,7 +312,7 @@ class TestRESTClient:
         assert obj._token == "Type some_token"
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
-        obj = rest.RESTClient(
+        obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
@@ -328,7 +328,7 @@ class TestRESTClient:
         assert obj._rest_url == "https://discord.com/api/v1"
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
-        obj = rest.RESTClient(
+        obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             debug=True,
