@@ -158,7 +158,7 @@ class TestRESTApp:
         )
 
     def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_app):
-        rest_app._event_loop = None
+        rest_app._event_loop = object()
         with mock.patch.object(asyncio, "get_running_loop"):
             with pytest.raises(RuntimeError):
                 rest_app.acquire(token="token", token_type="Type")
