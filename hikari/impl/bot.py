@@ -281,7 +281,7 @@ class BotApp(
         self._max_concurrency = 1
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._request_close_event = asyncio.Event()
-        self._rest = rest_client_impl.RESTClient(  # noqa: S106 - Possible hardcoded password
+        self._rest = rest_client_impl.RESTClientImpl(  # noqa: S106 - Possible hardcoded password
             connector_factory=self._connector_factory,
             connector_owner=False,
             debug=debug,
@@ -396,7 +396,7 @@ class BotApp(
         return self._proxy_settings
 
     @property
-    def rest(self) -> rest_client_impl.RESTClient:
+    def rest(self) -> rest_client_impl.RESTClientImpl:
         return self._rest
 
     @property
