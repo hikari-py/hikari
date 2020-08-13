@@ -1,5 +1,5 @@
 
-  ${red}oooo         o8o  oooo                            o8o      ${default}${bright}${white} 光 v${hikari_version} [${hikari_git_branch}/${hikari_git_sha1}]${default}
+  ${red}oooo         o8o  oooo                            o8o      ${default}${bright}${white} 光 v${hikari_version} [${hikari_git_branch}/${hikari_git_sha1} - ${hikari_git_when}]${default}
   ${bright_red}`888         `"'  `888                            `"'       ${default}${hikari_copyright}, licensed under ${hikari_license}${default}
   ${yellow} 888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo       ${default}${dim}Support:       ${bright}${cyan}${underline}${hikari_discord_invite}${default}
   ${bright_green} 888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888       ${default}${dim}Documentation: ${bright}${cyan}${underline}${hikari_documentation_url}${default}

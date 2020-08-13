@@ -173,8 +173,8 @@ class RESTApp(traits.ExecutorAware):
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).
-        -
-        ```````````````````````
+
+    !!! note
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
     """
@@ -238,6 +238,9 @@ class RESTApp(traits.ExecutorAware):
 
     def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
+
+        if self._event_loop is None:
+            self._event_loop = loop
 
         if loop != self._event_loop:
             raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
@@ -424,6 +427,17 @@ class RESTClientImpl(rest_api.RESTClient):
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
+
+    async def __aenter__(self) -> RESTClientImpl:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        await self.close()
 
     @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
