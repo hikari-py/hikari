@@ -91,6 +91,34 @@ class TestBasicLazyCachedTCPConnectorFactoryAsync:
         connector_mock.close.assert_awaited_once_with()
 
 
+#################
+# _RESTProvider #
+#################
+
+
+class TestRestProvider:
+    @pytest.fixture
+    def rest_client(self):
+        class StubRestClient:
+            http_settings = object()
+            proxy_settings = object()
+
+        return StubRestClient()
+
+    @pytest.fixture
+    def rest_provider(self, rest_client):
+        return rest._RESTProvider(lambda: rest_client)
+
+    def test_rest_property(self, rest_provider, rest_client):
+        assert rest_provider.rest == rest_client
+
+    def test_http_settings_property(self, rest_provider, rest_client):
+        assert rest_provider.http_settings == rest_client.http_settings
+
+    def test_proxy_settings_property(self, rest_provider, rest_client):
+        assert rest_provider.proxy_settings == rest_client.proxy_settings
+
+
 ###########
 # RESTApp #
 ###########
@@ -190,9 +218,9 @@ class TestRESTAppAsync:
         rest_app.close.assert_awaited_once_with()
 
 
-##############
-# RESTClient #
-##############
+##################
+# RESTClientImpl #
+##################
 
 
 @pytest.fixture(scope="module")
@@ -262,7 +290,7 @@ class StubModel(snowflake.Unique):
         self.id = snowflake.Snowflake(id)
 
 
-class TestRESTClient:
+class TestRESTClientImpl:
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
@@ -342,6 +370,16 @@ class TestRESTClient:
             entity_factory=None,
         )
         assert obj._rest_url == "https://some.where/api/v2"
+
+    def test_http_settings_property(self, rest_client):
+        mock_http_settings = object()
+        rest_client._http_settings = mock_http_settings
+        assert rest_client.http_settings is mock_http_settings
+
+    def test_proxy_settings(self, rest_client):
+        mock_proxy_settings = object()
+        rest_client._proxy_settings = mock_proxy_settings
+        assert rest_client.proxy_settings is mock_proxy_settings
 
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = object()
@@ -1218,6 +1256,15 @@ class TestRESTClientImplAsync:
             mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
             mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
         ]
+
+    async def test_delete_messages_when_exception(self, rest_client):
+        channel = StubModel(123)
+        messages = [StubModel(i) for i in range(101)]
+
+        rest_client._request = mock.AsyncMock(side_effect=Exception)
+
+        with pytest.raises(errors.BulkDeleteError):
+            await rest_client.delete_messages(channel, *messages)
 
     async def test_add_reaction(self, rest_client):
         expected_route = routes.PUT_MY_REACTION.compile(emoji="rooYay:123", channel=123, message=456)

@@ -111,15 +111,27 @@ class TestEntityFactoryImpl:
             "visibility": 0,
         }
 
-    def test_deserialize_own_connection(
-        self, entity_factory_impl, mock_app, own_connection_payload, partial_integration
-    ):
+    def test_deserialize_own_connection(self, entity_factory_impl, own_connection_payload, partial_integration):
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
         assert own_connection.id == "2513849648abc"
         assert own_connection.name == "FS"
         assert own_connection.type == "twitter"
         assert own_connection.is_revoked is False
         assert own_connection.integrations == [entity_factory_impl.deserialize_partial_integration(partial_integration)]
+        assert own_connection.is_verified is True
+        assert own_connection.is_friend_sync_enabled is False
+        assert own_connection.is_activity_visible is True
+        assert own_connection.visibility == application_models.ConnectionVisibility.NONE
+        assert isinstance(own_connection, application_models.OwnConnection)
+
+    def test_deserialize_own_connection_when_integrations_is_None(self, entity_factory_impl, own_connection_payload):
+        del own_connection_payload["integrations"]
+        own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
+        assert own_connection.id == "2513849648abc"
+        assert own_connection.name == "FS"
+        assert own_connection.type == "twitter"
+        assert own_connection.is_revoked is False
+        assert own_connection.integrations == []
         assert own_connection.is_verified is True
         assert own_connection.is_friend_sync_enabled is False
         assert own_connection.is_activity_visible is True
@@ -391,8 +403,8 @@ class TestEntityFactoryImpl:
             "changes": [
                 {
                     "key": "$add",
-                    "old_value": [{"id": "568651298858074123", "name": "Casual"}],
-                    "new_value": [{"id": "123123123312312", "name": "aRole"}],
+                    "new_value": [{"id": "568651298858074123", "name": "Casual"}],
+                    "old_value": [{"id": "123123123312312", "name": "aRole"}],
                 }
             ],
             "id": "694026906592477214",
@@ -402,9 +414,115 @@ class TestEntityFactoryImpl:
             "reason": "An artificial insanity.",
         }
 
-    @pytest.mark.skip("TODO")
-    def test_deserialize_audit_log(self, entity_factory_impl, mock_app, audit_log_entry_payload):
-        raise NotImplementedError  # TODO: test coverage for audit log cases
+    @pytest.fixture()
+    def partial_integration_payload(self):
+        return {
+            "id": "4949494949",
+            "name": "Blah blah",
+            "type": "twitch",
+            "account": {"id": "543453", "name": "Blam"},
+        }
+
+    @pytest.fixture()
+    def webhook_payload(self, user_payload):
+        return {
+            "id": "1234",
+            "type": 1,
+            "guild_id": "123",
+            "channel_id": "456",
+            "user": user_payload,
+            "name": "hikari webhook",
+            "avatar": "bb71f469c158984e265093a81b3397fb",
+            "token": "ueoqrialsdfaKJLKfajslkdf",
+        }
+
+    @pytest.fixture
+    def audit_log_payload(self, audit_log_entry_payload, user_payload, webhook_payload, partial_integration_payload):
+        return {
+            "audit_log_entries": [audit_log_entry_payload],
+            "integrations": [partial_integration_payload],
+            "users": [user_payload],
+            "webhooks": [webhook_payload],
+        }
+
+    def test_deserialize_audit_log(
+        self,
+        entity_factory_impl,
+        mock_app,
+        audit_log_payload,
+        user_payload,
+        webhook_payload,
+        partial_integration_payload,
+    ):
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+
+        assert len(audit_log.entries) == 1
+        entry = audit_log.entries[694026906592477214]
+        assert entry.app is mock_app
+        assert entry.id == 694026906592477214
+        assert entry.target_id == 115590097100865541
+        assert entry.user_id == 560984860634644482
+        assert entry.action_type == audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE
+        assert entry.options.id == 115590097100865541
+        assert entry.options.type == channel_models.PermissionOverwriteType.MEMBER
+        assert entry.options.role_name is None
+        assert entry.reason == "An artificial insanity."
+
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
+
+        assert len(change.new_value) == 1
+        role = change.new_value[568651298858074123]
+        role.app is mock_app
+        role.id == 568651298858074123
+        role.name == "Casual"
+
+        assert len(change.old_value) == 1
+        role = change.old_value[123123123312312]
+        role.app is mock_app
+        role.id == 123123123312312
+        role.name == "aRole"
+
+        assert audit_log.integrations == {
+            4949494949: entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
+        }
+        assert audit_log.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert audit_log.webhooks == {1234: entity_factory_impl.deserialize_webhook(webhook_payload)}
+
+    def test_deserialize_audit_log_with_unset_or_unknown_fields(self, entity_factory_impl, audit_log_payload):
+        # Unset fields
+        audit_log_payload["audit_log_entries"][0]["changes"] = None
+        audit_log_payload["audit_log_entries"][0]["target_id"] = None
+        audit_log_payload["audit_log_entries"][0]["user_id"] = None
+        audit_log_payload["audit_log_entries"][0]["options"] = None
+        audit_log_payload["audit_log_entries"][0]["action_type"] = 69
+        del audit_log_payload["audit_log_entries"][0]["reason"]
+
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+
+        assert len(audit_log.entries) == 1
+        entry = audit_log.entries[694026906592477214]
+        assert entry.changes == []
+        assert entry.target_id is None
+        assert entry.user_id is None
+        assert entry.action_type == 69
+        assert entry.options is None
+        assert entry.reason is None
+
+    def test_deserialize_audit_log_with_change_key_unknown(self, entity_factory_impl, audit_log_payload):
+        # Unset fields
+        audit_log_payload["audit_log_entries"][0]["changes"][0]["key"] = "unknown"
+
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+
+        assert len(audit_log.entries) == 1
+        entry = audit_log.entries[694026906592477214]
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == "unknown"
+        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
+        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
 
     ##################
     # CHANNEL MODELS #
@@ -500,7 +618,7 @@ class TestEntityFactoryImpl:
                 "name": "Secret Developer Group",
                 "icon": "123asdf123adsf",
                 "owner_id": "456",
-                "last_message_id": "456",
+                "last_message_id": None,
                 "type": 3,
                 "recipients": [user_payload],
             }
@@ -1136,6 +1254,23 @@ class TestEntityFactoryImpl:
     def test_serialize_embed_with_null_attributes(self, entity_factory_impl):
         assert entity_factory_impl.serialize_embed(embed_models.Embed()) == ({}, [])
 
+    @pytest.mark.parametrize(
+        "field_kwargs",
+        [
+            {"name": None, "value": "correct value"},
+            {"name": "", "value": "correct value"},
+            {"name": "    ", "value": "correct value"},
+            {"name": "correct value", "value": None},
+            {"name": "correct value", "value": ""},
+            {"name": "correct value", "value": "    "},
+        ],
+    )
+    def test_serialize_embed_validators(self, entity_factory_impl, field_kwargs):
+        embed_obj = embed_models.Embed()
+        embed_obj.add_field(**field_kwargs)
+        with pytest.raises(TypeError):
+            entity_factory_impl.serialize_embed(embed_obj)
+
     ################
     # EMOJI MODELS #
     ################
@@ -1362,15 +1497,6 @@ class TestEntityFactoryImpl:
         assert guild_role.is_managed is False
         assert guild_role.is_mentionable is False
         assert isinstance(guild_role, guild_models.Role)
-
-    @pytest.fixture()
-    def partial_integration_payload(self):
-        return {
-            "id": "4949494949",
-            "name": "Blah blah",
-            "type": "twitch",
-            "account": {"id": "543453", "name": "Blam"},
-        }
 
     def test_deserialize_partial_integration(self, entity_factory_impl, partial_integration_payload):
         partial_integration = entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
@@ -2230,6 +2356,112 @@ class TestEntityFactoryImpl:
             "nonce": "171000788183678976",
         }
 
+    def test_deserialize_partial_message(
+        self,
+        entity_factory_impl,
+        mock_app,
+        message_payload,
+        user_payload,
+        member_payload,
+        partial_application_payload,
+        custom_emoji_payload,
+        embed_payload,
+    ):
+        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+        assert partial_message.app is mock_app
+        assert partial_message.id == 123
+        assert partial_message.channel_id == 456
+        assert partial_message.guild_id == 678
+        assert partial_message.author == entity_factory_impl.deserialize_user(user_payload)
+        assert partial_message.member == entity_factory_impl.deserialize_member(
+            member_payload, user=partial_message.author, guild_id=snowflake.Snowflake(678)
+        )
+        assert partial_message.content == "some info"
+        assert partial_message.timestamp == datetime.datetime(
+            2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
+        )
+        assert partial_message.edited_timestamp == datetime.datetime(
+            2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
+        )
+        assert partial_message.is_tts is True
+        assert partial_message.is_mentioning_everyone is True
+        assert partial_message.user_mentions == [5678]
+        assert partial_message.role_mentions == [987]
+        assert partial_message.channel_mentions == [456]
+        # Attachment
+        assert len(partial_message.attachments) == 1
+        attachment = partial_message.attachments[0]
+        assert attachment.id == 690922406474154014
+        assert attachment.filename == "IMG.jpg"
+        assert attachment.size == 660521
+        assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
+        assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
+        assert attachment.width == 1844
+        assert attachment.height == 2638
+        assert isinstance(attachment, message_models.Attachment)
+
+        expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
+        assert partial_message.embeds == [expected_embed]
+        # Reaction
+        reaction = partial_message.reactions[0]
+        assert reaction.count == 100
+        assert reaction.is_me is True
+        expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        assert reaction.emoji == expected_emoji
+        assert isinstance(reaction, message_models.Reaction)
+
+        assert partial_message.is_pinned is True
+        assert partial_message.webhook_id == 1234
+        assert partial_message.type == message_models.MessageType.DEFAULT
+
+        # Activity
+        assert partial_message.activity.type == message_models.MessageActivityType.JOIN_REQUEST
+        assert partial_message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
+        assert isinstance(partial_message.activity, message_models.MessageActivity)
+
+        assert partial_message.application == entity_factory_impl.deserialize_application(partial_application_payload)
+        # MessageCrosspost
+        assert partial_message.message_reference.app is mock_app
+        assert partial_message.message_reference.id == 306588351130107906
+        assert partial_message.message_reference.channel_id == 278325129692446722
+        assert partial_message.message_reference.guild_id == 278325129692446720
+
+        assert partial_message.flags == message_models.MessageFlag.IS_CROSSPOST
+        assert partial_message.nonce == "171000788183678976"
+
+    def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
+        message_payload["edited_timestamp"] = None
+        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+        assert partial_message.edited_timestamp is None
+
+    def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
+        partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
+        assert partial_message.app is mock_app
+        assert partial_message.id == 123
+        assert partial_message.channel_id == 456
+        assert partial_message.guild_id == undefined.UNDEFINED
+        assert partial_message.author == undefined.UNDEFINED
+        assert partial_message.member == undefined.UNDEFINED
+        assert partial_message.content == undefined.UNDEFINED
+        assert partial_message.timestamp == undefined.UNDEFINED
+        assert partial_message.edited_timestamp == undefined.UNDEFINED
+        assert partial_message.is_tts == undefined.UNDEFINED
+        assert partial_message.is_mentioning_everyone == undefined.UNDEFINED
+        assert partial_message.user_mentions == undefined.UNDEFINED
+        assert partial_message.role_mentions == undefined.UNDEFINED
+        assert partial_message.channel_mentions == undefined.UNDEFINED
+        assert partial_message.attachments == undefined.UNDEFINED
+        assert partial_message.embeds == undefined.UNDEFINED
+        assert partial_message.reactions == undefined.UNDEFINED
+        assert partial_message.is_pinned == undefined.UNDEFINED
+        assert partial_message.webhook_id == undefined.UNDEFINED
+        assert partial_message.type == undefined.UNDEFINED
+        assert partial_message.activity == undefined.UNDEFINED
+        assert partial_message.application == undefined.UNDEFINED
+        assert partial_message.message_reference == undefined.UNDEFINED
+        assert partial_message.flags == undefined.UNDEFINED
+        assert partial_message.nonce == undefined.UNDEFINED
+
     def test_deserialize_full_message(
         self,
         entity_factory_impl,
@@ -2799,19 +3031,6 @@ class TestEntityFactoryImpl:
     ##################
     # WEBHOOK MODELS #
     ##################
-
-    @pytest.fixture()
-    def webhook_payload(self, user_payload):
-        return {
-            "id": "1234",
-            "type": 1,
-            "guild_id": "123",
-            "channel_id": "456",
-            "user": user_payload,
-            "name": "hikari webhook",
-            "avatar": "bb71f469c158984e265093a81b3397fb",
-            "token": "ueoqrialsdfaKJLKfajslkdf",
-        }
 
     def test_deserialize_webhook(self, entity_factory_impl, mock_app, webhook_payload, user_payload):
         webhook = entity_factory_impl.deserialize_webhook(webhook_payload)

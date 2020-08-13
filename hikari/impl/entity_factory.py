@@ -984,7 +984,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
-        premium_since: undefined.UndefinedOr[typing.Optional[datetime.datetime]] = undefined.UNDEFINED
+        premium_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED
         if "premium_since" in payload:
             raw_premium_since = payload["premium_since"]
             premium_since = (
@@ -1420,7 +1420,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "timestamp" in payload:
             timestamp = date.iso8601_datetime_string_to_datetime(payload["timestamp"])
 
-        edited_timestamp: undefined.UndefinedOr[typing.Optional[datetime.datetime]] = undefined.UNDEFINED
+        edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED
         if "edited_timestamp" in payload:
             if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
                 edited_timestamp = date.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
@@ -1439,7 +1439,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         channel_mentions: undefined.UndefinedOr[typing.Sequence[snowflake.Snowflake]] = undefined.UNDEFINED
         if "mention_channels" in payload:
-            [snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
+            channel_mentions = [snowflake.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
 
         attachments: undefined.UndefinedOr[typing.MutableSequence[message_models.Attachment]] = undefined.UNDEFINED
         if "attachments" in payload:
@@ -1481,7 +1481,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         application: undefined.UndefinedOr[application_models.Application] = undefined.UNDEFINED
         if "application" in payload:
-            self.deserialize_application(payload["application"])
+            application = self.deserialize_application(payload["application"])
 
         message_reference: undefined.UndefinedOr[message_models.MessageCrosspost] = undefined.UNDEFINED
         if "message_reference" in payload:
