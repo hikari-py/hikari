@@ -335,34 +335,42 @@ class BotApp(
 
     @property
     def cache(self) -> cache_.Cache:
+        # <<inherited docstring from traits.CacheAware>>
         return self._cache
 
     @property
     def chunker(self) -> guild_chunker_.GuildChunker:
+        # <<inherited docstring from traits.ChunkerAware>>
         return self._guild_chunker
 
     @property
     def dispatcher(self) -> event_dispatcher.EventDispatcher:
+        # <<inherited docstring from traits.DispatcherAware>>
         return self._event_manager
 
     @property
     def entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
+        # <<inherited docstring from traits.EntityFactoryAware>>
         return self._entity_factory
 
     @property
     def event_factory(self) -> event_factory_impl.EventFactoryImpl:
+        # <<inherited docstring from traits.EventFactoryAware>>
         return self._event_factory
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+        # <<inherited docstring from traits.ExecutorAware>>
         return self._executor
 
     @property
     def heartbeat_latencies(self) -> typing.Mapping[int, float]:
+        # <<inherited docstring from traits.ShardAware>>
         return {shard_id: shard.heartbeat_latency for shard_id, shard in self._shards.items()}
 
     @property
     def heartbeat_latency(self) -> float:
+        # <<inherited docstring from traits.ShardAware>>
         started_shards = [
             shard.heartbeat_latency for shard in self._shards.values() if not math.isnan(shard.heartbeat_latency)
         ]
@@ -374,53 +382,108 @@ class BotApp(
 
     @property
     def http_settings(self) -> config.HTTPSettings:
+        # <<inherited docstring from traits.NetworkSettingsAware>>
         return self._http_settings
 
     @property
     def is_debug_enabled(self) -> bool:
+        """Return `builtins.True` if debugging is enabled.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if debugging is enabled, `builtins.False` otherwise.
+
+        """
         return self._debug
 
     @property
     def intents(self) -> typing.Optional[intents_.Intents]:
+        # <<inherited docstring from traits.ShardAware>>
         return self._intents
 
     @property
     def me(self) -> typing.Optional[users.OwnUser]:
+        # <<inherited docstring from traits.ShardAware>>
         return self._cache.get_me()
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
+        # <<inherited docstring from traits.NetworkSettingsAware>>
         return self._proxy_settings
 
     @property
     def rest(self) -> rest_client_impl.RESTClientImpl:
+        # <<inherited docstring from traits.RESTAware>>
         return self._rest
 
     @property
     def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
+        # <<inherited docstring from traits.ShardAware>>
         return self._shards
 
     @property
     def shard_count(self) -> int:
+        # <<inherited docstring from traits.ShardAware>>
         return self._shard_count
 
     @property
     def voice(self) -> voice.VoiceComponentImpl:
+        # <<inherited docstring from traits.VoiceAware>>
         return self._voice
 
     @property
     def started_at(self) -> typing.Optional[datetime.datetime]:
+        """Return the datetime when the bot first connected.
+
+        Returns
+        -------
+        datetime.datetime or builtins.None
+            The datetime that the bot connected at for the first time, or
+            `builtins.None` if it has not yet connected.
+        """
         return self._started_at_timestamp
 
     @property
-    def uptime(self) -> datetime.timedelta:
-        if self._started_at_monotonic:
-            raw_uptime = date.monotonic() - self._started_at_monotonic
-        else:
-            raw_uptime = 0.0
-        return datetime.timedelta(seconds=raw_uptime)
+    def uptime(self) -> float:
+        """Return the number of seconds that the bot has been up.
+
+        This is a monotonic time. To get the physical startup date, see
+        `BotApp.started_at` instead.
+
+        Returns
+        -------
+        builtins.float
+            The number of seconds the application has been running for.
+            If not started, then this will return `0.0`.
+        """
+        return date.monotonic() - self._started_at_monotonic if self._started_at_monotonic else 0.0
 
     async def start(self) -> None:
+        """Determine sharding settings if needed, and start all shards.
+
+        This method will first log if any library updates are available.
+
+        The bot user info and sharding settings will be fetched from the REST
+        API. If no explicit shard count/shard IDs have been provided to the
+        constructor of this class, then the recommended shard count that
+        Discord recommends will be used instead.
+
+        The first shard will be started individually first. This ensures that
+        we do not spam IDENTIFY payloads on multiple shards in large
+        applications if the application will be unable to start.
+
+        After this, each remaining shard will be started, respecting the API's
+        max concurrency that Discord specifies.
+
+        This will return once all shards that are to be started have
+        fired their READY event. Any exceptions that are raised before this
+        will be propagated, and all existing connections will be closed again.
+
+        To wait for the bot to close indefinitely, you should call `BotApp.join`
+        immediately after this call returns, else this will attempt to
+        keep-alive in the background.
+        """
         asyncio.create_task(version_sniffer.log_available_updates(_LOGGER), name="check for hikari library updates")
 
         self._start_count += 1
@@ -484,14 +547,14 @@ class BotApp(
                     "application aborted midway through initialization, will begin shutting down %s shard(s)",
                     len(self._tasks),
                 )
-                await self._abort()
+                await self._abort_shards()
 
                 # We know an error occurred if this condition is met, so re-raise it.
                 raise
 
             finish_time = date.monotonic()
             self._shard_gather_task = asyncio.create_task(
-                self._gather(), name=f"zookeeper for {len(self._shards)} shard(s)"
+                self._gather_shard_lifecycles(), name=f"zookeeper for {len(self._shards)} shard(s)"
             )
 
             # Don't bother logging this if we are single sharded. It is useless information.
@@ -506,11 +569,13 @@ class BotApp(
         [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
         event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
     ]:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.listen(event_type)
 
     def get_listeners(
         self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
     ) -> typing.Collection[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]]:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def subscribe(
@@ -518,6 +583,7 @@ class BotApp(
         event_type: typing.Type[event_dispatcher.EventT_co],
         callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
     ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
@@ -525,6 +591,7 @@ class BotApp(
         event_type: typing.Type[event_dispatcher.EventT_co],
         callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
     ) -> None:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.unsubscribe(event_type, callback)
 
     async def wait_for(
@@ -534,31 +601,66 @@ class BotApp(
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
     ) -> event_dispatcher.EventT_co:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return await self.dispatcher.wait_for(event_type, predicate=predicate, timeout=timeout)
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.dispatch(event)
 
     async def close(self) -> None:
-        await self._rest.close()
-        await self._connector_factory.close()
+        """Request that all shards disconnect and the application shuts down.
+
+        This will close all shards that are running, and then close any
+        REST components and connectors.
+        """
         self._guild_chunker.close()
-        self._global_ratelimit.close()
 
-        if self._tasks:
-            # This way if we cancel the stopping task, we still shut down properly.
-            self._request_close_event.set()
+        try:
+            if self._tasks:
+                # This way if we cancel the stopping task, we still shut down properly.
+                self._request_close_event.set()
 
-            _LOGGER.info("stopping %s shard(s)", len(self._tasks))
+                _LOGGER.info("stopping %s shard(s)", len(self._tasks))
 
-            try:
-                await self.dispatch(lifetime_events.StoppingEvent(app=self))
-                await self._abort()
-            finally:
-                self._tasks.clear()
-                await self.dispatch(lifetime_events.StoppedEvent(app=self))
+                try:
+                    await self.dispatch(lifetime_events.StoppingEvent(app=self))
+                    await self._abort_shards()
+                finally:
+                    self._tasks.clear()
+                    await self.dispatch(lifetime_events.StoppedEvent(app=self))
+        finally:
+            await self._rest.close()
+            await self._connector_factory.close()
+            self._global_ratelimit.close()
 
     def run(self, *, close_loop: bool = True) -> None:
+        """Run this application on the current thread in an event loop.
+
+        This will use the event loop that is set for the current thread, or
+        it will create one if it does not already exist.
+
+        This call will **block** the current thread until the application
+        has closed. Additionally, it will hook into any OS signals to
+        detect external interrupts to request the process terminates.
+
+        All hooks will be removed again on shutdown. Any fatal exceptions
+        that may have occurred during the startup or execution of the
+        application will be propagated.
+
+        The application is always guaranteed to be shut down before this
+        function completes or propagates any exception.
+
+        Parameters
+        ----------
+        close_loop : builtins.bool
+            If `builtins.True` (per the default), then the event loop will
+            be explicitly closed once the application has closed. If
+            `builtins.False`, this behaviour will not occur.
+
+            Setting this to `builtins.False` may be desirable if you wish
+            to continue using the event loop after the application has closed.
+        """
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -571,7 +673,7 @@ class BotApp(
                 loop.add_signal_handler,
                 lambda *_: loop.create_task(self.close(), name="signal interrupt shutting down application"),
             )
-            loop.run_until_complete(self._run())
+            loop.run_until_complete(self._shard_management_lifecycle())
 
         except KeyboardInterrupt as ex:
             _LOGGER.info("received signal to shut down client")
@@ -590,6 +692,14 @@ class BotApp(
                 loop.close()
 
     async def join(self) -> None:
+        """Wait for the application to finish running.
+
+        If the application has not started, then calling this will return
+        immediately.
+
+        Any exceptions that are raised by the application that go unhandled
+        will be propagated.
+        """
         if self._shard_gather_task is not None:
             await self._shard_gather_task
 
@@ -601,13 +711,50 @@ class BotApp(
         idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
-        await asyncio.gather(
-            *(
-                s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
-                for s in self._shards.values()
-                if s.is_alive
-            )
-        )
+        """Update the presence on all shards.
+
+        This call will patch the presence on each shard. This means that
+        unless you explicitly specify a parameter, the previous value will be
+        retained. This means you do not have to track the global presence
+        in your code.
+
+        Parameters
+        ----------
+        status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+            The status to set all shards to. If undefined, no statuses are
+            changed.
+        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+            The activity to set. May be `builtins.None` if the activity should
+            be cleared. If undefined, no activities are changed.
+        idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
+            The datetime to appear to be idle since. If `builtins.None`, then
+            this is not sent (this does not need to be specified to set the
+            bot's status to idle). If undefined, the idle timestamp is not
+            changed.
+        afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+            If `builtins.True`, then the bot is marked as being AFK. If
+            `builtins.False`, the bot is marked as not being AFK. If
+            unspecified, this is not changed.
+
+        !!! note
+            This will only send the update payloads to shards that are alive.
+            Any shards that are not alive will cache the new presence for
+            when they do start.
+
+        !!! note
+            If you want to set presences per shard, access the shard you wish
+            to update (e.g. by using `BotApp.shards`), and call
+            `hikari.api.shard.IGatewayShard.update_presence` on that shard.
+
+            This method is simply a facade to make performing this in bulk
+            simpler.
+        """
+        coros = [
+            s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
+            for s in self._shards.values()
+        ]
+
+        await asyncio.gather(*coros)
 
     async def _init(self) -> None:
         gw_recs, bot_user = await asyncio.gather(self.rest.fetch_gateway_bot(), self.rest.fetch_my_user())
@@ -623,6 +770,7 @@ class BotApp(
 
         shard_clients: typing.Dict[int, gateway_shard.GatewayShard] = {}
         for shard_id in self._shard_ids:
+            # TODO: allow custom connector factory?
             shard = gateway_shard_impl.GatewayShardImpl(
                 compression=gateway_shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
                 data_format=gateway_shard.GatewayDataFormat.JSON,
@@ -694,32 +842,37 @@ class BotApp(
                 yield iter(next_window)
             n += self._max_concurrency
 
-    async def _abort(self) -> None:
+    async def _abort_shards(self) -> None:
+        """Close all shards and wait for them to terminate."""
         for shard_id in self._tasks:
             if self._shards[shard_id].is_alive:
                 _LOGGER.debug("stopping shard %s", shard_id)
                 await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
-    async def _gather(self) -> None:
+    async def _gather_shard_lifecycles(self) -> None:
+        """Await all shards.
+
+        Ensure shards are requested to close before the coroutine function
+        completes.
+        """
         try:
             _LOGGER.debug("gathering shards")
             await asyncio.gather(*self._tasks.values())
         finally:
             _LOGGER.debug("gather terminated, shutting down shard(s)")
-            await self.close()
-
-    async def _run(self) -> None:
-        try:
-            await self.start()
-            await self.join()
-        finally:
             await asyncio.shield(self.close())
+
+    async def _shard_management_lifecycle(self) -> None:
+        """Start all shards and then wait for them to finish."""
+        await self.start()
+        await self.join()
 
     @staticmethod
     def _map_signal_handlers(
         mapping_function: typing.Callable[..., None], *args: typing.Callable[[], typing.Any]
     ) -> None:
+        """Register/deregister a given signal handler to all signals."""
         valid_interrupts = signal.valid_signals()
         # We must getattr on these, or we risk an exception occurring on Windows.
         for interrupt_name in ("SIGQUIT", "SIGTERM"):
@@ -730,6 +883,7 @@ class BotApp(
 
     @staticmethod
     def _dump_banner(banner_package: str) -> None:
+        """Dump the banner art and wait for it to flush before continuing."""
         sys.stdout.write(art.get_banner(banner_package) + "\n")
         sys.stdout.flush()
         # Give the TTY time to flush properly.
