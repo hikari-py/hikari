@@ -393,7 +393,10 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}
 
-        await self._send_json(payload)
+        if self.is_alive:
+            await self._send_json(payload)
+        else:
+            self._logger.debug("not sending presence update, I am not alive")
 
         # Update internal status.
         self._idle_since = idle_since

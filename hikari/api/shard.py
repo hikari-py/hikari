@@ -304,6 +304,10 @@ class GatewayShard(abc.ABC):
     ) -> None:
         """Update the presence of the shard user.
 
+        If the shard is not alive, no physical data will be sent, however,
+        the new presence settings will be remembered for when the shard
+        does connect.
+
         Parameters
         ----------
         idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
