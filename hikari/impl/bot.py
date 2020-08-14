@@ -558,26 +558,36 @@ class BotApp(
                 self._tasks.clear()
                 await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
-    def run(self) -> None:
-        loop = asyncio.get_event_loop()
-
-        def on_interrupt() -> None:
-            loop.create_task(self.close(), name="signal interrupt shutting down application")
+    def run(self, *, close_loop: bool = True) -> None:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            _LOGGER.debug("no event loop registered on this thread; now creating one...")
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
         try:
-            self._map_signal_handlers(loop.add_signal_handler, on_interrupt)
+            self._map_signal_handlers(
+                loop.add_signal_handler,
+                lambda *_: loop.create_task(self.close(), name="signal interrupt shutting down application"),
+            )
             loop.run_until_complete(self._run())
+
         except KeyboardInterrupt as ex:
             _LOGGER.info("received signal to shut down client")
             if self._debug:
                 raise
-            else:
-                # The user will not care where this gets raised from, unless we are
-                # debugging. It just causes a lot of confusing spam.
-                raise ex.with_traceback(None)  # noqa: R100 raise in except handler without from
+            # The user will not care where this gets raised from, unless we are
+            # debugging. It just causes a lot of confusing spam.
+            raise ex.with_traceback(None) from None
+
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
             _LOGGER.info("client has shut down")
+
+            if close_loop and not loop.is_closed():
+                _LOGGER.info("closing event loop")
+                loop.close()
 
     async def join(self) -> None:
         if self._shard_gather_task is not None:

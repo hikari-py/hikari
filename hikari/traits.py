@@ -44,7 +44,6 @@ import typing
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
-    import datetime
 
     from hikari import config
     from hikari.api import cache as cache_
