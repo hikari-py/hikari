@@ -309,29 +309,30 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[datetime.timedelta]]:
+    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         """Return a mapping of shard ID to heartbeat latency.
 
-        Any shards that are not yet started will be `builtins.None`.
+        Any shards that are not yet started will be `float('nan')`.
 
         Returns
         -------
-        typing.Mapping[builtins.int, datetime.timedelta]
-            Each shard ID mapped to the corresponding heartbeat latency.
+        typing.Mapping[builtins.int, builtins.float]
+            Each shard ID mapped to the corresponding heartbeat latency in
+            seconds.
         """
         raise NotImplementedError
 
     @property
-    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+    def heartbeat_latency(self) -> float:
         """Return the average heartbeat latency of all started shards.
 
-        If no shards are started, this will return `None`.
+        If no shards are started, this will return `float('nan')`.
 
         Returns
         -------
-        datetime.timedelta or builtins.None
+        builtins.float
             The average heartbeat latency of all started shards, or
-            `builtins.None`.
+            `float('nan')` if no shards are started.
         """
         raise NotImplementedError
 

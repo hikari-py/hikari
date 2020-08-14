@@ -38,6 +38,8 @@ from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
+# TODO: testing all properties
+
 
 @pytest.fixture()
 def http_settings():

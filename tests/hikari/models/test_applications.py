@@ -23,8 +23,8 @@ import pytest
 
 from hikari.models import applications
 from hikari.models import users
-from hikari.utilities import routes
 from hikari.utilities import constants
+from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
 

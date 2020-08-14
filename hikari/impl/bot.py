@@ -29,7 +29,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
-import reprlib
+import math
 import signal
 import sys
 import time
@@ -358,22 +358,19 @@ class BotApp(
         return self._executor
 
     @property
-    def heartbeat_latencies(self) -> typing.Mapping[int, typing.Optional[datetime.timedelta]]:
+    def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         return {shard_id: shard.heartbeat_latency for shard_id, shard in self._shards.items()}
 
     @property
-    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+    def heartbeat_latency(self) -> float:
         started_shards = [
-            shard.heartbeat_latency.total_seconds()
-            for shard in self._shards.values()
-            if shard.heartbeat_latency is not None
+            shard.heartbeat_latency for shard in self._shards.values() if not math.isnan(shard.heartbeat_latency)
         ]
 
         if not started_shards:
-            return None
+            return float("nan")
 
-        raw = sum(started_shards) / len(started_shards)
-        return datetime.timedelta(seconds=raw)
+        return sum(started_shards) / len(started_shards)
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -460,8 +457,7 @@ class BotApp(
                     break
 
                 if i > 0:
-                    _LOGGER.info("waiting for 5 seconds until next shard can start")
-
+                    _LOGGER.info("backing off for 5 seconds")
                     completed, _ = await asyncio.wait(
                         self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
                     )
@@ -649,13 +645,11 @@ class BotApp(
             )
         else:
             _LOGGER.info(
-                "max_concurrency: %s (contact Discord for an increase) -- "
-                "will connect %s shards %s; the distributed application should have %s shards in total -- "
+                "will connect %s/%s shards with a max concurrency of %s -- "
                 "you have started %s/%s sessions prior to connecting (resets at %s)",
-                gw_recs.session_start_limit.max_concurrency,
                 len(self._shard_ids),
-                reprlib.repr(sorted(self._shard_ids)),
                 self._shard_count,
+                self._max_concurrency,
                 gw_recs.session_start_limit.used,
                 gw_recs.session_start_limit.total,
                 reset_at,
@@ -668,26 +662,41 @@ class BotApp(
         at the same time.
 
         You should then wait 5 seconds between each window.
+
+        The first window will always contain a single shard.
+        The reasoning behind this is to ensure we are able to successfully
+        connect on one shard before spamming the gateway with failed
+        connections on large applications, as this can exhaust the daily
+        identify limit.
         """
         n = 0
+        is_first = True
+
         while n < self._shard_count:
             next_window = [i for i in range(n, n + self._max_concurrency) if i in self._shard_ids]
             # Don't yield anything if no IDs are in the given window.
             if next_window:
+                if is_first:
+                    is_first = False
+                    first, next_window = next_window[0], next_window[1:]
+                    yield iter((first,))
+
                 yield iter(next_window)
             n += self._max_concurrency
 
     async def _abort(self) -> None:
         for shard_id in self._tasks:
             if self._shards[shard_id].is_alive:
+                _LOGGER.debug("stopping shard %s", shard_id)
                 await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
     async def _gather(self) -> None:
         try:
+            _LOGGER.debug("gathering shards")
             await asyncio.gather(*self._tasks.values())
         finally:
-            _LOGGER.debug("gather failed, shutting down shard(s)")
+            _LOGGER.debug("gather terminated, shutting down shard(s)")
             await self.close()
 
     async def _run(self) -> None:
