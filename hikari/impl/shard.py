@@ -32,7 +32,6 @@ import asyncio
 import datetime
 import enum
 import logging
-import math
 import random
 import typing
 import urllib.parse
@@ -285,23 +284,20 @@ class GatewayShardImplV6(shard.GatewayShard):
         return self._compression
 
     @property
-    def connection_uptime(self) -> datetime.timedelta:
-        delta = date.monotonic() - self._connected_at if self._connected_at is not None else 0
-        return datetime.timedelta(seconds=delta)
+    def connection_uptime(self) -> float:
+        return date.monotonic() - self._connected_at if self._connected_at is not None else 0
 
     @property
     def data_format(self) -> str:
         return self._data_format
 
     @property
-    def heartbeat_interval(self) -> typing.Optional[datetime.timedelta]:
-        interval = self._heartbeat_interval
-        return datetime.timedelta(seconds=interval) if not math.isnan(interval) else None
+    def heartbeat_interval(self) -> float:
+        return self._heartbeat_interval
 
     @property
-    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
-        latency = self._heartbeat_latency
-        return datetime.timedelta(seconds=latency) if not math.isnan(latency) else None
+    def heartbeat_latency(self) -> float:
+        return self._heartbeat_latency
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -332,9 +328,8 @@ class GatewayShardImplV6(shard.GatewayShard):
         return self._session_id
 
     @property
-    def session_uptime(self) -> datetime.timedelta:
-        delta = date.monotonic() - self._session_started_at if self._session_started_at is not None else 0
-        return datetime.timedelta(seconds=delta)
+    def session_uptime(self) -> float:
+        return date.monotonic() - self._session_started_at if self._session_started_at is not None else 0
 
     @property
     def shard_count(self) -> int:
@@ -355,7 +350,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         handshake_future = asyncio.ensure_future(self._handshake_event.wait())
         await asyncio.wait([run_task, handshake_future], return_when=asyncio.FIRST_COMPLETED)  # type: ignore
 
-        # Ensure we propogate a startup error without joining the run task first.
+        # Ensure we propagate a startup error without joining the run task first.
         # We should not need to kill the handshake event, that should be done for us.
         if run_task.done() and (exception := run_task.exception()) is not None:
             raise exception
@@ -392,6 +387,8 @@ class GatewayShardImplV6(shard.GatewayShard):
         if activity is undefined.UNDEFINED:
             self._activity = self._activity if self._activity is not undefined.UNDEFINED else None
 
+        # TODO: make parameters get passed to this method instead of it
+        # assuming it is already set correctly.
         presence = self._serialize_presence_payload()
 
         payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}

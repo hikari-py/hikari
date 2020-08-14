@@ -90,18 +90,17 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def connection_uptime(self) -> datetime.timedelta:
+    def connection_uptime(self) -> float:
         """Return the uptime of the connected shard.
 
         If the shard is not yet connected, this will be 0.
 
         This is measured as the time since the last disconnect, whether the
-        session has been kept alive or not. This will be measured as a monotonic
-        timedelta.
+        session has been kept alive or not.
 
         Returns
         -------
-        datetime.timedelta
+        builtins.float
             Uptime of this shard.
         """
 
@@ -121,27 +120,27 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def heartbeat_interval(self) -> typing.Optional[datetime.timedelta]:
+    def heartbeat_interval(self) -> float:
         """Return the heartbeat interval for this shard.
 
         Returns
         -------
-        datetime.timedelta or builtins.None
+        builtins.float
             How often the shard will send a heartbeat in seconds. If the
-            information is not yet available, this returns `builtins.None`
+            information is not yet available, this returns `float('nan')`
             instead.
         """
 
     @property
     @abc.abstractmethod
-    def heartbeat_latency(self) -> typing.Optional[datetime.timedelta]:
+    def heartbeat_latency(self) -> float:
         """Return the shard's most recent heartbeat latency.
 
         Returns
         -------
-        datetime.timedelta or builtins.None
+        builtins.float
             Heartbeat latency measured in seconds. If the information is
-            not yet available, then this will be `builtins.None` instead.
+            not yet available, then this will be `float('nan')` instead.
         """
 
     @property
@@ -232,15 +231,15 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def session_uptime(self) -> typing.Optional[datetime.timedelta]:
+    def session_uptime(self) -> float:
         """Return the time that the session has been active for.
 
-        This will be measured as a monotonic time delta.
+        This will be measured in monotonic time.
 
         Returns
         -------
-        datetime.timedelta or builtins.None
-            The session uptime, or `builtins.None` if no session is
+        builtins.float
+            The session uptime, or `0` if no session is
             active.
         """
 
