@@ -28,13 +28,5 @@ def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code."""
     session.install("-r", "requirements.txt", "-r", "mypy-requirements.txt")
     session.run(
-        "mypy",
-        "-p",
-        config.MAIN_PACKAGE,
-        "--config",
-        config.MYPY_INI,
-        "--junit-xml",
-        config.MYPY_JUNIT_OUTPUT_PATH,
-        "--html-report",
-        config.MYPY_HTML_OUTPUT_PATH,
+        "mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI,
     )
