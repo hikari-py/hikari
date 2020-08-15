@@ -91,8 +91,8 @@ jobs:
           secure: "hRjbVk8VicGkEbv/AmEJMQmWNmkC7amaPpGdaJtDC/RrfvxDXMrPFZChwi8QN42Jy28sFN0om3Fw3AQfp85ddH2itcMFeJerKOpQ2QnjOECLlgL0+6xhZqV50dj8Pd6U6BLrkSu+PXETxloSUv421ojT4dq7EgVLbQBgqs8fT5tVHB2qNIxZoOjrGFZ7Lwj5gRojnrGXf6oZt7wh/2TCnTM5GY+Zc0uAj04gwN9zZnbqWii0EcY9jRQvoE3gf0F1bTlDWjbOrDnGA+2DfZEYK9YjCztXgHwvyOBdaGn56sh9mEXH1e+OxtuJvbMQ+RDGsMW94UtiLdXJUVPyOQLFB129FscGpX5LKatlnJI1HKTi2SBEL+IxAU0NhiuzJVYSYlIAmBcgBxKuk+dxdv2QYRpFhVTKomdp1U4BZgeXFVa7XjBthXm2ng3Yrpc7lrEEmle15X8/C/yv9xeaYrnPz2SCCA3J4MkRBcg+W/+L8l68g8MKyZGamImu5ZQsso4mZ4cnbJCCAhqvtMz2ydEzhwEFx2yeowyW9PhFkF79BQhTx9ZG3I9djbgDXAu3fwXyYIloKw2DGZ8LupsQBtamHtQxq7hjdfP2fUr2tFdXR0SHzFbHAaOh2y+8wdgwW+pGT3rVRE9LbhIFtK5cDheyo+/XIhpngwKpYrSk1J2Mf0k="
         on:
           tags: true
-          distributions: "sdist bdist_wheel"
           repo: nekokatt/hikari
+        distributions: "sdist bdist_wheel"
         cleanup: 'true'
       after_deploy:
         - bash scripts/post-deploy.sh
