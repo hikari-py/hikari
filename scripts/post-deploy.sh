@@ -2,6 +2,10 @@
 VERSION=${TRAVIS_TAG}
 REF=${TRAVIS_COMMIT}
 
+echo "===== SENDING WEBHOOK ====="
+python -m pip install requests
+python scripts/deploy_webhook.py
+
 echo "===== UPDATING VERSIONS ====="
 git config user.name "Nekokatt"
 git config user.email "69713762+nekokatt@users.noreply.github.com"
