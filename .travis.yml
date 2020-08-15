@@ -1,0 +1,79 @@
+language: python
+python:
+  - 3.8
+os: linux
+arch: amd64
+
+_test_job: &test_job
+  install: "${PYTHON_COMMAND} -m pip install nox"
+  before_script: "mkdir public > /dev/null 2>&1 || true"
+  script: "${PYTHON_COMMAND} -m nox --sessions pytest twemoji-test"
+
+_windows_test_job: &windows_test_job
+  os: windows
+  language: shell
+  before_install: "choco install --no-progress python --version=${PYTHON_VERSION} -y && python -V"
+  env:
+    - PYTHON_COMMAND="py -3"
+  <<: *test_job
+
+_linux_test_job: &linux_test_job
+  os: linux
+  env:
+    - PYTHON_COMMAND=python
+  <<: *test_job
+
+jobs:
+  include:
+    # Linting
+    - name: "Linting"
+      install: "pip install nox"
+      script: "python -m nox --sessions safety mypy flake8"
+
+    # Windows-specific test jobs.
+    - name: "Windows 10 Python 3.8.5 AMD64 Tests"
+      env: PYTHON_VERSION="3.8.5"
+      arch: amd64
+      <<: *windows_test_job
+
+    - name: "Windows 10 Python 3.9 Dev AMD64 Tests"
+      env: PYTHON_VERSION="3.9.0-rc1 --pre"
+      arch: amd64
+      <<: *windows_test_job
+
+    # Linux-specific test jobs.
+    - name: "Linux Python 3.8.5 AMD64 Tests"
+      python: '3.8.5'
+      arch: amd64
+      after_script: nox --sessions coveralls
+      <<: *linux_test_job
+
+    - name: "Linux Python 3.9 Dev AMD64 Tests"
+      python: '3.9-dev'
+      arch: amd64
+      <<: *linux_test_job
+
+    - name: "Linux Python 3.8.5 ARM64 Tests"
+      python: '3.8.5'
+      arch: arm64
+      <<: *linux_test_job
+
+    - name: "Linux Python 3.9 Dev ARM64 Tests"
+      python: '3.9-dev'
+      arch: arm64
+      <<: *linux_test_job
+
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: lWzSgAUyZbZMqsOTwTVpLDBqkoN7UpCmVvxyjSVZGse3t9yGxXm+Vw8sWLgYSaOpraknOGN+0+vi5WY3VdXjPo1UgD/47kqRGQLq+QwSl9zm7slpRXNA3XNKDF9xYD48egakEwg3jGHoKVYYZBiL+F8I9K9TDi9MOnHK0nP5j5v5IoBA39PqKEzvoqXuXrgOV3VzpfVYkbwYU/zgcJzWz4b/xumDT0Cu/zP9XR/8T/ZLIhxG4yY+JZVoGPP1BXQZS28OxQzBSXUS3G05NYxz6B2OYRsOOoEqetV4jNajqRLtOdszP/e7vxkVmnkXVckxhjwWqda6C08jWtZB9NbDYoZKc+u+hZfuXFFs+2KHX89de8MUEqivDoM4Bz9mddgWiUfHw1Az9ZvT/CHY1FRSaYneJoq4CCoZeXqo6x5H7DE9BMX52iGJ2Oc2gB7VNyLKMgfEoFUwKER/AlzgfmTuOCoat6PUvoZkIUDA4RwADrJ3TFD4hwM6e4BfrxpoWTGPI3AYgKbHwIhMcqOAtnOhg9Otj7hpbaRpIGNTr/LUKw/eGjwe8iGmB73FmRaS//vyNWKc2Yv29k4ENd3wwKNMVF6qpLkmAliWIwUZQQTNsuhNf0vtfDskhqLBlU/l4x6Vb0XGeMO4n3ddiHhiSgkD37tMO7NBU9chYUDRYhodGxU=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: nekokatt/hikari
+  skip_cleanup: 'true'
+  edge: true # opt in to dpl v2
+
+after_deploy:
+  - bash scripts/post-deploy

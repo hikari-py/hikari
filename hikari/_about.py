@@ -25,16 +25,13 @@
 # FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
 __author__ = "Nekokatt"
-__ci__ = "https://gitlab.com/nekokatt/hikari/pipelines"
+__ci__ = "https://travis-ci.org/github/nekokatt/hikari"
 __copyright__ = "© 2020 Nekokatt"
 __discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://nekokatt.gitlab.io/hikari"
+__docs__ = "https://nekokatt.github.io/hikari"
 __email__ = "3903853-nekokatt@users.noreply.gitlab.com"
-__issue_tracker__ = "https://gitlab.com/nekokatt/hikari/issues"
-__is_official_distributed_release__ = False
+__issue_tracker__ = "https://github.com/nekokatt/hikari/issues"
 __license__ = "MIT"
-__url__ = "https://gitlab.com/nekokatt/hikari"
+__url__ = "https://github.com/nekokatt/hikari"
 __version__ = "2.0.0.dev0"
-__git_branch__ = "development"
 __git_sha1__ = "HEAD"
-__git_when__ = "2020/07/06"
