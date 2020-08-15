@@ -70,10 +70,10 @@ def try_fetch(i, n, emoji_surrogates, name):
 
     if path.is_file():
         valid_emojis.append((emoji_surrogates, name))
-        print("\033[1;32m[  OK  ]\033[0m", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+        print("[  OK  ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
     else:
         invalid_emojis.append((emoji_surrogates, name))
-        print("\033[1;31m[ FAIL ]\033[0m", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+        print("[ FAIL ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
 
 
 with tempfile.TemporaryDirectory() as tempdir:

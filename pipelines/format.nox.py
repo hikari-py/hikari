@@ -71,7 +71,7 @@ FILE_EXTS = (
     ".ps1",
     ".rb",
     ".pl",
-    ".travis.yml"
+    ".travis.yml",
 )
 
 LINE_ENDING_PATHS = {
@@ -81,7 +81,6 @@ LINE_ENDING_PATHS = {
     "docs",
     "insomnia",
     ".gitlab",
-
 }
 
 

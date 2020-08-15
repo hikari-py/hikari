@@ -38,10 +38,9 @@ FLAGS = [
     "term",
     "--cov-report",
     f"html:{config.COVERAGE_HTML_PATH}",
+    "--cov-report",
+    "xml",
     "--cov-branch",
-    "--junitxml",
-    config.COVERAGE_JUNIT_PATH,
-    "--force-testdox",
     "--showlocals",
 ]
 
