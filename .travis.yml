@@ -1,3 +1,8 @@
+stages:
+  - test
+  - deploy
+  - webhooks
+
 language: python
 python:
   - "3.8"
@@ -28,53 +33,77 @@ jobs:
     # Linting
     - name: "Linting"
       install: "pip install nox"
+      stage: test
       script: "python -m nox --sessions safety mypy flake8"
 
     # Windows-specific test jobs.
     - name: "Windows 10 Python 3.8.5 AMD64 Tests"
       env: PYTHON_VERSION="3.8.5"
       arch: amd64
+      stage: test
       <<: *windows_test_job
 
     - name: "Windows 10 Python 3.9 Dev AMD64 Tests"
       env: PYTHON_VERSION="3.9.0-rc1 --pre"
       arch: amd64
+      stage: test
       <<: *windows_test_job
 
     # Linux-specific test jobs.
     - name: "Linux Python 3.8.5 AMD64 Tests"
       python: '3.8.5'
       arch: amd64
+      stage: test
       after_script: nox --sessions coveralls
       <<: *linux_test_job
 
     - name: "Linux Python 3.9 Dev AMD64 Tests"
       python: '3.9-dev'
       arch: amd64
+      stage: test
       <<: *linux_test_job
 
     - name: "Linux Python 3.8.5 ARM64 Tests"
       python: '3.8.5'
       arch: arm64
+      stage: test
       <<: *linux_test_job
 
     - name: "Linux Python 3.9 Dev ARM64 Tests"
       python: '3.9-dev'
       arch: arm64
+      stage: test
       <<: *linux_test_job
 
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
       script: echo "Will deploy ${TRAVIS_TAG}"
+      stage: deploy
+      language: python
+      python: 3.8
+      arch: amd64
+      os: linux
+      env:
       deploy:
         provider: pypi
         user: __token__
         password:
-          secure: lWzSgAUyZbZMqsOTwTVpLDBqkoN7UpCmVvxyjSVZGse3t9yGxXm+Vw8sWLgYSaOpraknOGN+0+vi5WY3VdXjPo1UgD/47kqRGQLq+QwSl9zm7slpRXNA3XNKDF9xYD48egakEwg3jGHoKVYYZBiL+F8I9K9TDi9MOnHK0nP5j5v5IoBA39PqKEzvoqXuXrgOV3VzpfVYkbwYU/zgcJzWz4b/xumDT0Cu/zP9XR/8T/ZLIhxG4yY+JZVoGPP1BXQZS28OxQzBSXUS3G05NYxz6B2OYRsOOoEqetV4jNajqRLtOdszP/e7vxkVmnkXVckxhjwWqda6C08jWtZB9NbDYoZKc+u+hZfuXFFs+2KHX89de8MUEqivDoM4Bz9mddgWiUfHw1Az9ZvT/CHY1FRSaYneJoq4CCoZeXqo6x5H7DE9BMX52iGJ2Oc2gB7VNyLKMgfEoFUwKER/AlzgfmTuOCoat6PUvoZkIUDA4RwADrJ3TFD4hwM6e4BfrxpoWTGPI3AYgKbHwIhMcqOAtnOhg9Otj7hpbaRpIGNTr/LUKw/eGjwe8iGmB73FmRaS//vyNWKc2Yv29k4ENd3wwKNMVF6qpLkmAliWIwUZQQTNsuhNf0vtfDskhqLBlU/l4x6Vb0XGeMO4n3ddiHhiSgkD37tMO7NBU9chYUDRYhodGxU=
+          secure: "hRjbVk8VicGkEbv/AmEJMQmWNmkC7amaPpGdaJtDC/RrfvxDXMrPFZChwi8QN42Jy28sFN0om3Fw3AQfp85ddH2itcMFeJerKOpQ2QnjOECLlgL0+6xhZqV50dj8Pd6U6BLrkSu+PXETxloSUv421ojT4dq7EgVLbQBgqs8fT5tVHB2qNIxZoOjrGFZ7Lwj5gRojnrGXf6oZt7wh/2TCnTM5GY+Zc0uAj04gwN9zZnbqWii0EcY9jRQvoE3gf0F1bTlDWjbOrDnGA+2DfZEYK9YjCztXgHwvyOBdaGn56sh9mEXH1e+OxtuJvbMQ+RDGsMW94UtiLdXJUVPyOQLFB129FscGpX5LKatlnJI1HKTi2SBEL+IxAU0NhiuzJVYSYlIAmBcgBxKuk+dxdv2QYRpFhVTKomdp1U4BZgeXFVa7XjBthXm2ng3Yrpc7lrEEmle15X8/C/yv9xeaYrnPz2SCCA3J4MkRBcg+W/+L8l68g8MKyZGamImu5ZQsso4mZ4cnbJCCAhqvtMz2ydEzhwEFx2yeowyW9PhFkF79BQhTx9ZG3I9djbgDXAu3fwXyYIloKw2DGZ8LupsQBtamHtQxq7hjdfP2fUr2tFdXR0SHzFbHAaOh2y+8wdgwW+pGT3rVRE9LbhIFtK5cDheyo+/XIhpngwKpYrSk1J2Mf0k="
         on:
           tags: true
           distributions: "sdist bdist_wheel"
           repo: nekokatt/hikari
         cleanup: 'true'
       after_deploy:
-        - bash scripts/post-deploy
+        - bash scripts/post-deploy.sh
+
+    - name: Build Webhook
+      stage: webhooks
+      language: python
+      python: 3.8
+      arch: amd64
+      os: linux
+      env:
+        secure: "TDaw6Ryljomk6NwuoHCtuV4PGlvBFM/GjEmhXGFTXOn32ENrh14oXWaWIw6ZmKLtekccs2kQpnN+8l5kuzqr9aHvalJzwm05RYfu3wCw09rOeXXWX0GacnCrIh2yBfYXWq/pIS0CSPO+7IRnwwLaVSqUHGXfQV5mEHNbuJTU3tAlgOqrN/L4ZWdlPiclwvKStV4VGRSqxNGEj1G10VEq0+dn6KjrhkQMpDuhQ/3o+8F0vjMNb8rQeKwogeHP3tmwEiCUoxwekjzZU9Oevc75d836/ys2hvsStF8mMtQsd4QgTMYwSWQtKHmKyqgW21nXw8TE1HcnJnc3ahfueOFMbhplJ32h7svTPuPFTaVl99+z2TG8OBbFTQEkQakc5HO7lRH0AGLmhlyXkhYIGxWCS1h266VEzVkcNAliLR/auSFKQ4XKISPZQo6ee0Cx+FkRSKm2OgLw+Nzax8AQQd89C0+hibFq3kdOx0nORpWApjz1vIyCTTEl60UtWf/wkW5o/wTiPFwoHk3k6GxHZDkXCsUb8AjxpjIt9qxo53Yu7bv3msrGLmBScxdLeDs6qdCXXWJWI1D17nhNCclXgzLrZKf5n1zBqOAQjyeoJEOTnVUCQvIHSZYErVv8s0gCArv9ONtaIfq1Vmz+E234/K+IWOYDayvcDjFna7ySgK60W9I="
+      install: pip install requests
+      script: python scripts/build_webhook.py
