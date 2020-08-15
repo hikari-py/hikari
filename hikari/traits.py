@@ -302,7 +302,8 @@ class VoiceAware(typing.Protocol):
 class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, VoiceAware, typing.Protocol):
     """Structural supertype for a shard-aware object.
 
-    These will expose a mapping of shards and a
+    These will expose a mapping of shards, the intents in use
+    and the bot user object.
     """
 
     __slots__: typing.Sequence[str] = ()
