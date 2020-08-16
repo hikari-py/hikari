@@ -1,14 +1,17 @@
-async-timeout==3.0.1
-coverage==5.0.3
-nox
-pytest==5.3.5
-pytest-asyncio==0.10.0
-pytest-cov==2.8.1
-pytest-html==2.0.1
-pytest-xdist==1.31.0
+# Pipelines.
+nox==2020.5.24
 
-# My Cythonized mock module
-cymock==2020.2.26.2
+# Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
+mock~=4.0.2
 
-# We use this to get pretty output, but for now I have disabled it to see how it impacts test execution speed.
-# pytest-testdox==1.2.1
+# Py.test stuff.
+pytest==6.0.1
+pytest-asyncio==0.14.0
+pytest-cov==2.10.1
+pytest-randomly==3.4.1
+
+# Coverage testing.
+coverage~=5.2.1
+
+# Other stuff
+async-timeout~=3.0.1  # Used for timeouts in some test cases.

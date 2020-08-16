@@ -22,28 +22,38 @@ public/
 # Secrets
 .pypirc
 
-# Setuptools/twine-generated files
+# Setuptools/twine-generated files, compiled sources.
 build/
 dist/
 *.egg-info/
 pip-wheel-metadata/
+*.so
+*.o
+*.pyd
 
 # Tox/Nox-generated files
 .[nt]ox/
 
 # Coverage-generated files
 .coverage*
+coverage.xml
 **/*,cover*
 
 # PyTest-generated files
 .pytest/
 .pytest_cache/
 
-# Pip stuff
-pip-wheel-metadata/
-
-# Poetry lockfile
-poetry.lock
-
 # Container logs
 **.container.log
+
+# Docker secrets
+credentials.env
+
+# Mypy Cache
+.mypy_cache/
+
+# Profiling in pytest
+prof/
+
+# Generated stubs for MyPy --strict hackfixes.
+hikari/**/__init__.pyi

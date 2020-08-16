@@ -1,0 +1,40 @@
+[flake8]
+count = true
+
+ignore =
+    A002,      # Argument is shadowing a python builtin.
+    A003,      # Class attribute is shadowing a python builtin.
+    CFQ002,    # Function has too many arguments.
+    D102,      # Missing docstring in public method.
+    D105,      # Magic methods not having a docstring.
+    D412,      # No blank lines allowed between a section header and its content
+    E402,      # Module level import not at top of file (isn't compatible with our import style).
+    IFSTMT001  # "use a oneliner here".
+    T101,      # TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
+    W503,      # line break before binary operator.
+    W504,      # line break before binary operator (again, I guess).
+    S101,      # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+
+# F401:  unused import.
+# F403:  cannot detect unused vars if we use starred import
+# FS003: f-string missing prefix.
+# R102: unnecessary parenthesis on raised exception (raises false positives in places)
+per-file-ignores =
+    hikari/__init__.py:              F401,F403
+    hikari/events/__init__.py:       F401,F403
+    hikari/events/new/__init__.py:   F401,F403
+    hikari/models/__init__.py:       F401,F403
+    hikari/utilities/routes.py:      FS003
+    hikari/utilities/date.py:        FS003
+    hikari/impl/stateless_cache.py:  R102
+
+max-complexity = 20
+# TODO reset to 100 again if possible.
+max-function-length = 130
+# Technically this is 120, but black has a policy of "1 or 2 over is fine if it is tidier", so we have to raise this.
+max-line-length = 130
+show_source = False
+statistics = False
+
+accept-encodings = utf-8
+docstring-convention = numpy
