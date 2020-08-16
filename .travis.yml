@@ -99,3 +99,5 @@ jobs:
       os: linux
       script:
         - bash scripts/deploy.sh
+      env:
+        secure: "J/lejouS7Usm5iup1IkEoNpzx3wWbx5le1nbKbZzFam4GlZmJBONwAVtTkvjKgWMUsLLtX+mahGY8eq3aJ7PjqZ/QnCN45eYaXhI04VIyPJDijbZ3CedU7gqEfjbE0P2Ib3HDsRB+CmEE5DPrulB3kWfLqZRDf7IV3X6Winmd2BMmGUm1yU4FO1dfLVfxI/DtSlaH+jnXbu7+HhJ0JsSdDoJL2ok/fAxOy6zS5uNh5ux8UVqVADaxpiGo7PLHSGGgx9QWx0jk0W7hesPqf07Ih2jb5bTKh0wOzPoYbw4nbHTCSkR8JDI/RGkk2rae3YtvU0655r4j3D3xNYak9jMLOvcywhxtDZwNwpmwpnW7IixPGgS4WMaEKCzyBTjv2hh6Xh8+lEIlE0jr+vPkkmlrhxZOgFQR88GcNnRfF+zC6oj6lF4tWPnRbFPEjpfwHQufnZ7JrHYve9rpMdalHjjr94hEXucKvOgEdvTQTqgar3/EqZJdjyyAKs0/WoRfUX370LcYvu6nb9v9ETLbFMo68TBY46E4jfG4hArC9rfwDmqZncTwg38GsLdzLfsTG9HvLg0U5TW508jCVN65Xdbzd3PmiYkcp40NbhmvQ6sFP3dc4rMiA0vFw5mPUzHYDxRpSYFSv9h2pVXvIEeNYRnSfpDocNOSXZFLkIQVL0xAyo="
