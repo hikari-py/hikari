@@ -1,10 +1,12 @@
 <%!
+    import os
     import typing
     import builtins
     import importlib
     import inspect
     import re
     import sphobjinv
+    import urllib.error
 
     inventory_urls = [
         "https://docs.python.org/3/objects.inv",
@@ -17,10 +19,17 @@
     inventories = {}
 
     for i in inventory_urls:
-        print("Prefetching", i)
-        inv = sphobjinv.Inventory(url=i)
-        url, _, _ = i.partition("objects.inv")
-        inventories[url] = inv.json_dict()
+        try:
+            print("Prefetching", i)
+            inv = sphobjinv.Inventory(url=i)
+            url, _, _ = i.partition("objects.inv")
+            inventories[url] = inv.json_dict()
+        except urllib.error.URLError as ex:
+            # Ignore not being able to fetch inventory when not on CI
+            if "CI" not in os.environ:
+                print(f"Not able to prefetch {i}. Will continue without it")
+            else:
+                raise ex from None
 
     located_external_refs = {}
     unlocatable_external_refs = set()

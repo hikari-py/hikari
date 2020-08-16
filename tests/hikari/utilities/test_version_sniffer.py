@@ -276,20 +276,10 @@ class TestFetchVersionInfoFromPyPI:
 
 @pytest.mark.asyncio
 class TestLogAvailableUpdates:
-    async def test_when_not_official_release(self):
-        logger = mock.Mock()
-        with mock.patch.object(_about, "__is_official_distributed_release__", new=False):
-            await version_sniffer.log_available_updates(mock.Mock())
-
-        logger.debug.assert_not_called()
-        logger.info.assert_not_called()
-        logger.warning.assert_not_called()
-
     async def test_when_exception(self):
         logger = mock.Mock()
         exception = RuntimeError()
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", side_effect=exception))
 
         with stack:
@@ -306,7 +296,6 @@ class TestLogAvailableUpdates:
 
         logger = mock.Mock()
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
         stack.enter_context(
             mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=StubVersionInfo())
         )
@@ -327,7 +316,6 @@ class TestLogAvailableUpdates:
         logger = mock.Mock()
         version = StubVersionInfo()
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
 
         with stack:
@@ -350,7 +338,6 @@ class TestLogAvailableUpdates:
         logger = mock.Mock()
         version = StubVersionInfo()
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(_about, "__is_official_distributed_release__", new=True))
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
 
         with stack:

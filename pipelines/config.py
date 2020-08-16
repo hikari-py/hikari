@@ -22,6 +22,13 @@ import os as _os
 
 IS_CI = "CI" in _os.environ
 
+if "GITLAB_CI" in _os.environ:
+    CI_PROVIDER = "gitlab"
+elif "TRAVIS" in _os.environ:
+    CI_PROVIDER = "travis"
+else:
+    CI_PROVIDER = "other"
+
 # Packaging
 MAIN_PACKAGE = "hikari"
 TEST_PACKAGE = "tests"
@@ -34,38 +41,8 @@ ROOT_INDEX_SOURCE = "index.html"
 LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
-FLAKE8_JUNIT = "public/flake8-junit.xml"
-FLAKE8_HTML = "public/flake8"
 FLAKE8_TXT = "public/flake8.txt"
 MYPY_INI = "mypy.ini"
-MYPY_JUNIT_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy.xml")
-MYPY_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "mypy")
 PYTEST_INI = "pytest.ini"
-PYTEST_HTML_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "pytest.html")
 COVERAGE_INI = "coverage.ini"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
-COVERAGE_JUNIT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "tests.xml")
-
-# Deployment variables; these only apply to CI stuff specifically.
-VERSION_FILE = _os.path.join(MAIN_PACKAGE, "_about.py")
-API_NAME = "hikari"
-GIT_SVC_HOST = "gitlab.com"
-GIT_TEST_SSH_PATH = "git@gitlab.com"
-AUTHOR = "Nekokatt"
-ORIGINAL_REPO_URL = f"https://{GIT_SVC_HOST}/${AUTHOR}/{API_NAME}"
-SSH_DIR = "~/.ssh"
-SSH_PRIVATE_KEY_PATH = _os.path.join(SSH_DIR, "id_rsa")
-SSH_KNOWN_HOSTS = _os.path.join(SSH_DIR, "known_hosts")
-CI_ROBOT_NAME = AUTHOR
-CI_ROBOT_EMAIL = "3903853-nekokatt@users.noreply.gitlab.com"
-SKIP_CI_PHRASE = "[skip ci]"
-SKIP_DEPLOY_PHRASE = "[skip deploy]"
-SKIP_PAGES_PHRASE = "[skip pages]"
-PROD_BRANCH = "master"
-PREPROD_BRANCH = "staging"
-DEV_BRANCH = "development"
-REMOTE_NAME = "origin"
-DISTS = ["sdist", "bdist_wheel"]
-PYPI_REPO = "https://upload.pypi.org/legacy/"
-PYPI = "https://pypi.org/"
-PYPI_API = f"{PYPI}/pypi/{API_NAME}/json"
