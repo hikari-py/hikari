@@ -2,6 +2,9 @@
 VERSION=${TRAVIS_TAG}
 REF=${TRAVIS_COMMIT}
 
+echo "Defined environment variables"
+env | grep -oP "^[^=]+" | sort
+
 if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
@@ -29,7 +32,6 @@ ls -ahl dist
 
 echoo "-- Checking generated dists --"
 python -m twine check dist/*
-env | sort
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
