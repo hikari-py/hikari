@@ -29,22 +29,24 @@ ls -ahl dist
 
 echoo "-- Checking generated dists --"
 python -m twine check dist/*
-python -m twine upload --disable-progress-bar --skip-existing dist/*
+env | sort
+python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
 python -m pip install requests
 python scripts/deploy_webhook.py
 
-echo "===== UPDATING VERSIONS ====="
+echo "===== DEPLOYING PAGES ====="
 git config user.name "Nekokatt"
 git config user.email "69713762+nekokatt@users.noreply.github.com"
 
-echo "===== DEPLOYING PAGES ====="
 python -m pip install nox
 mkdir public || true
 nox --sessions pdoc pages
 cd public || exit 1
 git init
-git remote add origin https://nekokatt:${GITHUB_TOKEN}github.com/${TRAVIS_REPO_SLUG}
+git remote add origin https://nekokatt:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
+git checkout -B gh-pages
+git add -Av .
 git commit -am "Deployed documentation [skip ci]"
 git push origin gh-pages --force
