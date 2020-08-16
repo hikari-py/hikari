@@ -161,9 +161,7 @@ def _default_banner_args() -> typing.Mapping[str, str]:
         {
             # Hikari stuff.
             "hikari_version": _about.__version__,
-            "hikari_git_branch": _about.__git_branch__,
             "hikari_git_sha1": _about.__git_sha1__,
-            "hikari_git_when": _about.__git_when__,
             "hikari_copyright": _about.__copyright__,
             "hikari_license": _about.__license__,
             "hikari_install_location": os.path.abspath(os.path.dirname(_about.__file__)),

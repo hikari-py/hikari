@@ -38,12 +38,8 @@ def copy_from_in(src: str, dest: str) -> None:
 
 
 @nox.session(reuse_venv=True)
-def pages(session: nox.Session) -> None:
+def pages(_: nox.Session) -> None:
     """Generate static pages containing resources and tutorials."""
-    for n, v in os.environ.items():
-        if n.startswith(("GITLAB_", "CI")) or n == "CI":
-            session.env[n] = v
-
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
     copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
