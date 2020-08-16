@@ -29,30 +29,7 @@ from pipelines import nox
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
     session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
-
-    if "GITLAB_CI" in os.environ or "--gitlab" in session.posargs:
-        print("Generating HTML report")
-
-        shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
-
-        session.run(
-            "flake8", "--exit-zero", "--format=html", f"--htmldir={config.FLAKE8_HTML}", config.MAIN_PACKAGE,
-        )
-
-        shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
-
-        print("Detected GitLab, will output CodeClimate report next!")
-        # If we add the args for --statistics or --show-source, the thing breaks
-        # silently, and I cant find another decent package that actually works
-        # in any of the gitlab-supported formats :(
-        session.run(
-            "flake8", "--exit-zero", "--format=junit-xml", f"--output-file={config.FLAKE8_JUNIT}", config.MAIN_PACKAGE,
-        )
-
-    print("Generating console output")
-
     shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
-
     session.run(
         "flake8", f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source", "--tee", config.MAIN_PACKAGE,
     )
