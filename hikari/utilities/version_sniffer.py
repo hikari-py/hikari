@@ -57,13 +57,6 @@ class VersionInfo:
     latest: distutils_version.LooseVersion = attr.ib()
     """Latest version. May contain breaking API changes."""
 
-    is_official: bool = attr.ib(default=_about.__is_official_distributed_release__)
-    """True if this library version is a valid PyPI release.
-
-    This will be False for non-release versions (e.g. cloned from version
-    control, on forks, or not released using the Hikari CI pipeline).
-    """
-
 
 async def _fetch_all_releases() -> typing.Sequence[distutils_version.LooseVersion]:
     # Make a client session, it is easier to stub.
@@ -123,11 +116,6 @@ async def log_available_updates(logger: logging.Logger) -> None:
     logger : logging.Logger
         The logger to write to.
     """
-    if not _about.__is_official_distributed_release__:
-        # If we are on a non-released version, it could be modified or a
-        # fork, so don't do any checks.
-        return
-
     try:
         version_info = await fetch_version_info_from_pypi()
 

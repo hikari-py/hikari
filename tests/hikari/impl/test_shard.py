@@ -38,6 +38,8 @@ from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
+# TODO: testing all properties
+
 
 @pytest.fixture()
 def http_settings():
@@ -748,6 +750,7 @@ class TestUpdatePresence:
 
         assert expected_result == actual_result
 
+    @pytest.mark.parametrize("is_alive", [True, False])
     @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
     @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
     @pytest.mark.parametrize(
@@ -761,8 +764,9 @@ class TestUpdatePresence:
         ],
     )
     @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
-    async def test_sets_state(self, client, idle_since, afk, status, activity):
+    async def test_sets_state(self, client, idle_since, afk, status, activity, is_alive):
         presence_payload = object()
+        client._connected_at = 1234.5 if is_alive else None
         client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
 
         await client.update_presence(idle_since=idle_since, afk=afk, status=status, activity=activity)
@@ -772,15 +776,20 @@ class TestUpdatePresence:
         assert client._is_afk == afk
         assert client._status == status
 
-    async def test_sends_to_websocket(self, client):
+    @pytest.mark.parametrize("is_alive", [True, False])
+    async def test_sends_to_websocket_if_alive(self, client, is_alive):
         presence_payload = object()
+        client._connected_at = 1234.5 if is_alive else None
         client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
 
         await client.update_presence(
             idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None,
         )
 
-        client._send_json.assert_awaited_once_with({"op": 3, "d": presence_payload})
+        if is_alive:
+            client._send_json.assert_awaited_once_with({"op": 3, "d": presence_payload})
+        else:
+            client._send_json.assert_not_called()
 
 
 @pytest.mark.asyncio
