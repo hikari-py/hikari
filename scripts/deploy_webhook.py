@@ -2,7 +2,6 @@ import os
 
 import requests
 
-
 if os.getenv("TRAVIS_TAG"):
     webhook_url = os.environ["DEPLOY_WEBHOOK_URL"]
     tag = os.environ["TRAVIS_TAG"]

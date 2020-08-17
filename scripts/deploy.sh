@@ -2,6 +2,16 @@
 VERSION=${TRAVIS_TAG}
 REF=${TRAVIS_COMMIT}
 
+ech "===== INSTALLING DEPENDENCIES ====="
+python -m pip install \
+    setuptools \
+    wheel \
+    nox \
+    mypy \
+    twine \
+    requests \
+    -r requirements.txt
+
 echo "Defined environment variables"
 env | grep -oP "^[^=]+" | sort
 
@@ -21,8 +31,18 @@ echo "==========================================================================
 cat hikari/_about.py
 echo "=========================================================================="
 
+echo "===== GENERATING MYPY STUBS FOR --strict SUPPORT ====="
+
+find hikari -name "__init__.py" | while read -r f; do
+    base=$(dirname "${f}")
+    echo "Generating stub for ${f} as module ${base}"
+    stubgen -m "${base}" -o "."
+done
+
+echo "===== REFORMATTING GENERATED MYPY STUBS ====="
+python -m nox --sessions reformat-code
+
 echo "===== DEPLOYING TO PYPI ====="
-python -m pip install -U twine setuptools wheel -r requirements.txt
 python setup.py sdist bdist_wheel
 echo "-- Contents of . --"
 ls -ahl
@@ -35,14 +55,12 @@ python -m twine check dist/*
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
-python -m pip install requests
 python scripts/deploy_webhook.py
 
 echo "===== DEPLOYING PAGES ====="
 git config user.name "Nekokatt"
 git config user.email "69713762+nekokatt@users.noreply.github.com"
 
-python -m pip install nox
 mkdir public || true
 nox --sessions pdoc pages
 cd public || exit 1
