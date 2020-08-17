@@ -33,6 +33,8 @@ __all__: typing.Final[typing.List[str]] = [
     "All",
     "AttrComparator",
     "BufferedLazyIterator",
+    "ValueT",
+    "AnotherValueT",
 ]
 
 import abc
@@ -42,7 +44,9 @@ import typing
 from hikari.utilities import spel
 
 ValueT = typing.TypeVar("ValueT")
+"""Type-hint of the type of the value returned by a lazy iterator."""
 AnotherValueT = typing.TypeVar("AnotherValueT")
+"""Type-hint of the type of a value by a mapped lazy iterator."""
 
 
 class All(typing.Generic[ValueT]):
@@ -80,7 +84,7 @@ class All(typing.Generic[ValueT]):
 
     Operators
     ---------
-    * `this(value : T) -> bool`:
+    * `this(value : ValueT) -> bool`:
         Return `builtins.True` if all conditions return `builtins.True` when
         invoked with the given value.
     * `~this`:
@@ -89,7 +93,7 @@ class All(typing.Generic[ValueT]):
 
     Parameters
     ----------
-    *conditions : typing.Callable[[T], builtins.bool]
+    *conditions : typing.Callable[[ValueT], builtins.bool]
         The predicates to wrap.
     """
 
@@ -117,9 +121,9 @@ class AttrComparator(typing.Generic[ValueT]):
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
         `str.isupper`, for example).
-    expected_value : T
+    expected_value : typing.Any
         The expected value.
-    cast : typing.Callable[[T], typing.Any] or builtins.None
+    cast : typing.Callable[[ValueT], typing.Any] or builtins.None
         Optional cast to perform on the input value when being called before
         comparing it to the expected value but after accessing the attribute.
     """
@@ -200,6 +204,21 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    def chunk(self, chunk_size: int) -> LazyIterator[typing.Sequence[ValueT]]:
+        """Return results in chunks of up to `chunk_size` amount of entries.
+
+        Parameters
+        ----------
+        chunk_size : int
+            The limit for how many results should be returned in each chunk.
+
+        Returns
+        -------
+        LazyIterator[typing.Sequence[ValueT]]
+            `LazyIterator` that emits each chunked sequence.
+        """
+        return _ChunkedLazyIterator(self, chunk_size)
 
     def map(
         self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
@@ -452,7 +471,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Returns
         -------
-        LazyIterator[T]
+        LazyIterator[ValueT]
             A paginated results view that asynchronously yields a maximum
             of the given number of items before completing.
         """
@@ -468,24 +487,24 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Returns
         -------
-        LazyIterator[T]
+        LazyIterator[ValueT]
             A paginated results view that asynchronously yields all items
             AFTER the given number of items are discarded first.
         """
         return _DropCountLazyIterator(self, number)
 
-    async def first(self) -> ValueT:
-        """Return the first element of this iterator only.
+    async def next(self) -> ValueT:
+        """Return the next element of this iterator only.
 
         Returns
         -------
-        T
-            The first result.
+        ValueT
+            The next result.
 
         Raises
         ------
         builtins.LookupError
-            If no result exists.
+            If no more results exist.
         """
         try:
             return await self.__anext__()
@@ -497,18 +516,28 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Returns
         -------
-        T
+        ValueT
             The last result.
+
+        !!! note
+            This method will consume the whole iterator if run.
 
         Raises
         ------
         builtins.LookupError
             If no result exists.
         """
-        try:
-            return (await self)[0]
-        except IndexError:
-            raise LookupError("No elements were found") from None
+        return await self.reversed().next()
+
+    def reversed(self) -> LazyIterator[ValueT]:
+        """Return a lazy iterator of the remainder of this iterator's values reversed.
+
+        Returns
+        -------
+        LazyIterator[ValueT]
+            The lazy iterator of this iterator's remaining values reversed.
+        """
+        return _ReversedLazyIterator(self)
 
     async def sort(self, *, key: typing.Any = None, reverse: bool = False) -> typing.Sequence[ValueT]:
         """Collect all results, then sort the collection before returning it."""
@@ -629,6 +658,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def __aiter__(self) -> LazyIterator[ValueT]:
         # We are our own iterator.
         return self
+
+    def __iter__(self) -> LazyIterator[ValueT]:
+        # This iterator is async only.
+        cls = type(self)
+        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is an async-only iterator, did you mean 'async for'?")
 
     async def _fetch_all(self) -> typing.Sequence[ValueT]:
         return [item async for item in self]
@@ -797,7 +831,48 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         async for item in self._iterator:
             if self._predicate(item):
                 return item
-        raise StopAsyncIteration
+
+        self._complete()
+
+
+class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[ValueT]]):
+    __slots__: typing.Sequence[str] = ("_iterator", "_chunk_size")
+
+    def __init__(self, iterator: LazyIterator[ValueT], chunk_size: int) -> None:
+        self._iterator = iterator
+        self._chunk_size = chunk_size
+
+    async def __anext__(self) -> typing.Sequence[ValueT]:
+        chunk = []
+
+        async for item in self._iterator:
+            chunk.append(item)
+
+            if len(chunk) == self._chunk_size:
+                break
+
+        if chunk:
+            return chunk
+
+        self._complete()
+
+
+class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    __slots__: typing.Sequence[str] = ("_buffer", "_origin")
+
+    def __init__(self, iterator: LazyIterator[ValueT]) -> None:
+        self._buffer: typing.MutableSequence[ValueT] = []
+        self._origin: typing.Optional[LazyIterator[ValueT]] = iterator
+
+    async def __anext__(self) -> ValueT:
+        if self._origin is not None:
+            self._buffer.extend(await self._origin)
+            self._origin = None
+
+        try:
+            return self._buffer.pop()
+        except IndexError:
+            self._complete()
 
 
 class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[ValueT]):
