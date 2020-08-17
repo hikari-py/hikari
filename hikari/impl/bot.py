@@ -101,16 +101,17 @@ class BotApp(
         are supported. This defaults to using v6.
     http_settings : hikari.config.HTTPSettings or builtins.None
         The HTTP-related settings to use.
-    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
-        The initial activity to have on each shard.
-    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
-        The initial status to have on each shard.
-    initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
+    initial_activity : typing.Optional[hikari.models.presences.Activity]
+        The initial activity to have on each shard. Defaults to `builtins.None`.
+    initial_status : hikari.models.presences.Status
+        The initial status to have on each shard. Defaults to
+        `hikari.models.presences.Status.ONLINE`.
+    initial_idle_since : typing.Optional[datetime.datetime]
         The initial time to show as being idle since, or `builtins.None` if not
-        idle, for each shard.
-    initial_is_afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        idle, for each shard. Defaults to `builtins.None`.
+    initial_is_afk : builtins.bool
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
-        each shard will appear as _not_ being AFK.
+        each shard will appear as _not_ being AFK. Defaults to `builtins.False`
     intents : hikari.models.intents.Intents or builtins.None
         The intents to use for each shard. If `builtins.None`, then no intents
         are passed. Note that on the version `7` gateway, this will cause an
@@ -239,10 +240,10 @@ class BotApp(
         executor: typing.Optional[concurrent.futures.Executor] = None,
         gateway_version: int = 6,
         http_settings: typing.Optional[config.HTTPSettings] = None,
-        initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
-        initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        initial_activity: typing.Optional[presences.Activity] = None,
+        initial_idle_since: typing.Optional[datetime.datetime] = None,
+        initial_is_afk: bool = False,
+        initial_status: presences.Status = presences.Status.ONLINE,
         intents: typing.Optional[intents_.Intents] = intents_.Intents.ALL_UNPRIVILEGED,
         large_threshold: int = 250,
         logging_level: typing.Union[str, int, None] = "INFO",
@@ -834,13 +835,14 @@ class BotApp(
         while n < self._shard_count:
             next_window = [i for i in range(n, n + self._max_concurrency) if i in self._shard_ids]
             # Don't yield anything if no IDs are in the given window.
-            if next_window:
-                if is_first:
-                    is_first = False
-                    first, next_window = next_window[0], next_window[1:]
-                    yield iter((first,))
+            if is_first:
+                is_first = False
+                first, next_window = next_window[0], next_window[1:]
+                yield iter((first,))
 
+            if next_window:
                 yield iter(next_window)
+
             n += self._max_concurrency
 
     async def _abort_shards(self) -> None:

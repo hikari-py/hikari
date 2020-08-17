@@ -723,7 +723,7 @@ class TestUpdatePresence:
         client._is_afk = afk
         client._status = status
 
-        actual_result = client._serialize_presence_payload()
+        actual_result = client._serialize_and_store_presence_payload()
 
         if activity is not undefined.UNDEFINED and activity is not None:
             expected_activity = {
@@ -767,7 +767,7 @@ class TestUpdatePresence:
     async def test_sets_state(self, client, idle_since, afk, status, activity, is_alive):
         presence_payload = object()
         client._connected_at = 1234.5 if is_alive else None
-        client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
+        client._serialize_and_store_presence_payload = mock.Mock(return_value=presence_payload)
 
         await client.update_presence(idle_since=idle_since, afk=afk, status=status, activity=activity)
 
@@ -780,7 +780,7 @@ class TestUpdatePresence:
     async def test_sends_to_websocket_if_alive(self, client, is_alive):
         presence_payload = object()
         client._connected_at = 1234.5 if is_alive else None
-        client._serialize_presence_payload = mock.Mock(return_value=presence_payload)
+        client._serialize_and_store_presence_payload = mock.Mock(return_value=presence_payload)
 
         await client.update_presence(
             idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None,
@@ -1004,7 +1004,7 @@ class TestHandshake:
         client._shard_count = 1
         client._send_json = mock.AsyncMock()
         client._app = mock.Mock()
-        client._serialize_presence_payload = mock.Mock(
+        client._serialize_and_store_presence_payload = mock.Mock(
             return_value={
                 "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
                 "afk": afk if afk is not undefined.UNDEFINED else False,
@@ -1036,7 +1036,7 @@ class TestHandshake:
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
-        client._serialize_presence_payload.assert_called_once_with()
+        client._serialize_and_store_presence_payload.assert_called_once_with()
 
 
 @pytest.mark.asyncio

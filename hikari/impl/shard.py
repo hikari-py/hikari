@@ -82,14 +82,19 @@ class GatewayShardImplV6(shard.GatewayShard):
         with each event that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
-        The initial activity to appear to have for this shard.
-    initial_idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
-        The datetime to appear to be idle since.
-    initial_is_afk : hikari.utilities.undefined.UndefinedOr[bool]
-        Whether to appear to be AFK or not on login.
-    initial_status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
-        The initial status to set on login for the shard.
+    initial_activity : typing.Optional[hikari.models.presences.Activity]
+        The initial activity to appear to have for this shard, or
+        `builtins.None` if no activity should be set initially. This is the
+        default.
+    initial_idle_since : typing.Optional[datetime.datetime]
+        The datetime to appear to be idle since, or `builtins.None` if the
+        shard should not provide this. The default is `builtins.None`.
+    initial_is_afk : bool
+        Whether to appear to be AFK or not on login. Defaults to
+        `builtins.False`.
+    initial_status : hikari.models.presences.Status
+        The initial status to set on login for the shard. Defaults to
+        `hikari.models.presences.Status.ONLINE`.
     intents : hikari.models.intents.Intents or builtins.None
         Collection of intents to use, or `builtins.None` to not use intents at
         all.
@@ -215,10 +220,10 @@ class GatewayShardImplV6(shard.GatewayShard):
             [shard.GatewayShard, str, data_binding.JSONObject], typing.Coroutine[None, None, None]
         ],
         http_settings: config.HTTPSettings,
-        initial_activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
-        initial_idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        initial_is_afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        initial_status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        initial_activity: typing.Optional[presences.Activity] = None,
+        initial_idle_since: typing.Optional[datetime.datetime] = None,
+        initial_is_afk: bool = False,
+        initial_status: presences.Status = presences.Status.ONLINE,
         intents: typing.Optional[intents_.Intents] = None,
         large_threshold: int = 250,
         proxy_settings: config.ProxySettings,
@@ -239,7 +244,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._heartbeat_interval = float("nan")
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
-        self._idle_since: undefined.UndefinedNoneOr[datetime.datetime] = initial_idle_since
+        self._idle_since: typing.Optional[datetime.datetime] = initial_idle_since
         self._intents: typing.Optional[intents_.Intents] = intents
         self._is_afk: undefined.UndefinedOr[bool] = initial_is_afk
         self._large_threshold = large_threshold
@@ -378,31 +383,15 @@ class GatewayShardImplV6(shard.GatewayShard):
         activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
-        if idle_since is undefined.UNDEFINED:
-            self._idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
-        if afk is undefined.UNDEFINED:
-            self._is_afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
-        if status is undefined.UNDEFINED:
-            self._status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
-        if activity is undefined.UNDEFINED:
-            self._activity = self._activity if self._activity is not undefined.UNDEFINED else None
-
-        # TODO: make parameters get passed to this method instead of it
-        # assuming it is already set correctly.
-        presence = self._serialize_presence_payload()
-
-        payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence}
+        presence_payload = self._serialize_and_store_presence_payload(
+            idle_since=idle_since, afk=afk, activity=activity, status=status,
+        )
+        payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence_payload}
 
         if self.is_alive:
             await self._send_json(payload)
         else:
             self._logger.debug("not sending presence update, I am not alive")
-
-        # Update internal status.
-        self._idle_since = idle_since
-        self._is_afk = afk
-        self._activity = activity
-        self._status = status
 
     async def update_voice_state(
         self,
@@ -664,8 +653,7 @@ class GatewayShardImplV6(shard.GatewayShard):
             if self._intents is not None:
                 payload["d"]["intents"] = self._intents
 
-            if undefined.count(self._activity, self._status, self._idle_since, self._is_afk) != 4:
-                payload["d"]["presence"] = self._serialize_presence_payload()
+            payload["d"]["presence"] = self._serialize_and_store_presence_payload()
 
             await self._send_json(payload)
 
@@ -896,28 +884,54 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         self._logger.debug(message, *args)
 
-    def _serialize_presence_payload(self) -> data_binding.JSONObject:
-        idle_since = self._idle_since if self._idle_since is not undefined.UNDEFINED else None
-        afk = self._is_afk if self._is_afk is not undefined.UNDEFINED else False
-        status = self._status if self._status is not undefined.UNDEFINED else presences.Status.ONLINE
-        activity = self._activity if self._activity is not undefined.UNDEFINED else None
-        presence_pl = data_binding.JSONObjectBuilder()
+    def _serialize_and_store_presence_payload(
+        self,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+    ) -> data_binding.JSONObject:
+        payload = data_binding.JSONObjectBuilder()
 
-        if activity is not None:
-            presence_pl.put("game", {"name": activity.name, "url": activity.url, "type": activity.type})
+        if activity is undefined.UNDEFINED:
+            activity = self._activity
         else:
-            presence_pl.put("game", None)
+            self._activity = activity
 
-        presence_pl.put("since", int(idle_since.timestamp() * 1_000) if idle_since is not None else None)
-        presence_pl.put("afk", afk)
+        if status is undefined.UNDEFINED:
+            status = self._status
+        else:
+            self._status = status
 
-        # Turns out Discord don't document this properly. I can send "offline"
-        # to the gateway, but it will actually just result in the bot not
-        # changing the status. I have to set it to "invisible" instead to get
-        # this to work...
-        presence_pl.put("status", "invisible" if status is presences.Status.OFFLINE else status)
+        if idle_since is undefined.UNDEFINED:
+            idle_since = self._idle_since
+        else:
+            self._idle_since = idle_since
 
-        return presence_pl
+        if afk is undefined.UNDEFINED:
+            afk = self._is_afk
+        else:
+            self._is_afk = afk
+
+        payload.put("since", idle_since, conversion=self._serialize_datetime)
+        payload.put("afk", afk)
+        payload.put("status", status, conversion=lambda s: typing.cast(str, s.value))
+        payload.put("game", activity, conversion=self._serialize_activity)
+        return payload
+
+    @staticmethod
+    def _serialize_datetime(dt: typing.Optional[datetime.datetime]) -> typing.Optional[int]:
+        if dt is None:
+            return None
+
+        return int(dt.timestamp() * 1_000)
+
+    @staticmethod
+    def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:
+        if activity is None:
+            return None
+
+        return {"name": activity.name, "type": int(activity.type), "url": activity.url}
 
 
 GatewayShardImpl = GatewayShardImplV6
