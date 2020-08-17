@@ -73,19 +73,6 @@ SOFTWARE.
 
         ## Provide LaTeX math support
         <script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/${mathjax_version}/latest.js?config=TeX-AMS_CHTML'></script>
-
-        ## If this is a merge request on GitLab, inject the visual feedback scripts.
-        % if "CI_MERGE_REQUEST_IID" in os.environ:
-            <% print("Injecting Visual Feedback GitLab scripts") %>
-            <script data-project-id="${os.environ['CI_PROJECT_ID']}"
-                    data-merge-request-id="${os.environ['CI_MERGE_REQUEST_IID']}"
-                    data-mr-url="https://gitlab.com"
-                    data-project-path="${os.environ['CI_PROJECT_PATH']}"
-                    id="review-app-toolbar-script"
-                    data-require-auth="false"
-                    src="https://gitlab.com/assets/webpack/visual_review_toolbar.js">
-            </script>
-        % endif
     </head>
 
     <body>

@@ -9,7 +9,7 @@
         <ul class="navbar-nav">
             <li class="nav-item"><a class="nav-link" href="/hikari/index.html">Home</a></li>
             <li class="nav-item active"><a class="nav-link" href="/hikari/hikari/index.html">Documentation</a></li>
-            <li class="nav-item"><a class="nav-link" href="https://gitlab.com/nekokatt/hikari">GitLab</a></li>
+            <li class="nav-item"><a class="nav-link" href="https://github.com/nekokatt/hikari">GitHub</a></li>
             <li class="nav-item"><a class="nav-link" href="https://pypi.org/project/hikari">PyPI</a></li>
             <li class="nav-item"><a class="nav-link" href="https://discord.gg/Jx4cNGG">Discord Server</a></li>
         </ul>
