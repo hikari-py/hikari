@@ -117,6 +117,9 @@ async def log_available_updates(logger: logging.Logger) -> None:
         The logger to write to.
     """
     try:
+        if _about.__git_sha1__.casefold() == "head":
+            return
+
         version_info = await fetch_version_info_from_pypi()
 
         if version_info.this == version_info.latest:
