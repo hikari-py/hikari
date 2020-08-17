@@ -676,17 +676,18 @@ class BotApp(
             loop.run_until_complete(self._shard_management_lifecycle())
 
         except KeyboardInterrupt as ex:
-            _LOGGER.info("received signal to shut down client")
+            _LOGGER.info("received OS signal to shut down client")
             if self._debug:
                 raise
             # The user will not care where this gets raised from, unless we are
             # debugging. It just causes a lot of confusing spam.
             raise ex.with_traceback(None) from None
 
+        except errors.GatewayClientClosedError:
+            _LOGGER.info("client shut itself down")
+
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
-            _LOGGER.info("client has shut down")
-
             if close_loop and not loop.is_closed():
                 _LOGGER.info("closing event loop")
                 loop.close()
