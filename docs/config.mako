@@ -33,19 +33,19 @@ SOFTWARE.
 
     show_source_code = True
 
-    git_link_template = "https://gitlab.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}"
+    git_link_template = "https://github.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}"
 
     link_prefix = ""
 
     hljs_style = "atom-one-dark"
 
     if "dev" in _version.LooseVersion(_hikari.__version__).version:
-        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
+        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.github.io/hikari/hikari"
     else:  # TODO: "hikari/staging/hikari" temporarily changed to "hikari/hikari" for staging site search link.
-        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.gitlab.io/hikari/hikari"
+        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.github.io/hikari/hikari"
 
     site_accent = "#ff029a"
-    site_logo = "https://nekokatt.gitlab.io/hikari/logo.png"
+    site_logo = "https://nekokatt.github.io/hikari/logo.png"
     site_description = "A Discord Bot framework for modern Python and asyncio built on good intentions"
 
     # Versions of stuff
@@ -55,5 +55,5 @@ SOFTWARE.
     jquery_version = "3.5.1"
     popperjs_version = "1.16.0"
 
-    root_url = "https://gitlab.com/nekokatt/hikari"
+    root_url = "https://github.com/nekokatt/hikari"
 %>

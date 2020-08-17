@@ -22,9 +22,7 @@ import os as _os
 
 IS_CI = "CI" in _os.environ
 
-if "GITLAB_CI" in _os.environ:
-    CI_PROVIDER = "gitlab"
-elif "TRAVIS" in _os.environ:
+if "TRAVIS" in _os.environ:
     CI_PROVIDER = "travis"
 else:
     CI_PROVIDER = "other"

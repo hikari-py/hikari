@@ -80,7 +80,7 @@ LINE_ENDING_PATHS = {
     "pages",
     "docs",
     "insomnia",
-    ".gitlab",
+    ".github",
 }
 
 
