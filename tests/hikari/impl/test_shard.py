@@ -681,106 +681,12 @@ class TestRunOnce:
 
 @pytest.mark.asyncio
 class TestUpdatePresence:
-    @pytest.fixture
-    def client(self, proxy_settings, http_settings):
-        client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
-            url="wss://gateway.discord.gg",
-            token="lol",
-            event_consumer=mock.Mock(),
-            http_settings=http_settings,
-            proxy_settings=proxy_settings,
-            shard_id=3,
-            shard_count=17,
-        )
-        return hikari_test_helpers.mock_methods_on(
-            client,
-            except_=(
-                "update_presence",
-                "_InvalidSession",
-                "_Reconnect",
-                "_SocketClosed",
-                "_Opcode",
-                "_serialize_presence_payload",
-            ),
-        )
-
-    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
-    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
-    @pytest.mark.parametrize(
-        "status",
-        [
-            undefined.UNDEFINED,
-            presences.Status.DO_NOT_DISTURB,
-            presences.Status.IDLE,
-            presences.Status.ONLINE,
-            presences.Status.OFFLINE,
-        ],
-    )
-    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
-    async def test_serialize_presence_payload(self, client, idle_since, afk, status, activity):
-        client._activity = activity
-        client._idle_since = idle_since
-        client._is_afk = afk
-        client._status = status
-
-        actual_result = client._serialize_and_store_presence_payload()
-
-        if activity is not undefined.UNDEFINED and activity is not None:
-            expected_activity = {
-                "name": activity.name,
-                "type": activity.type,
-                "url": activity.url,
-            }
-        else:
-            expected_activity = None
-
-        if status == undefined.UNDEFINED:
-            expected_status = "online"
-        elif status == presences.Status.OFFLINE:
-            expected_status = "invisible"
-        else:
-            expected_status = status.value
-
-        expected_result = {
-            "game": expected_activity,
-            "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
-            "afk": afk if afk is not undefined.UNDEFINED else False,
-            "status": expected_status,
-        }
-
-        assert expected_result == actual_result
-
-    @pytest.mark.parametrize("is_alive", [True, False])
-    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
-    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
-    @pytest.mark.parametrize(
-        "status",
-        [
-            undefined.UNDEFINED,
-            presences.Status.DO_NOT_DISTURB,
-            presences.Status.IDLE,
-            presences.Status.ONLINE,
-            presences.Status.OFFLINE,
-        ],
-    )
-    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
-    async def test_sets_state(self, client, idle_since, afk, status, activity, is_alive):
-        presence_payload = object()
-        client._connected_at = 1234.5 if is_alive else None
-        client._serialize_and_store_presence_payload = mock.Mock(return_value=presence_payload)
-
-        await client.update_presence(idle_since=idle_since, afk=afk, status=status, activity=activity)
-
-        assert client._activity == activity
-        assert client._idle_since == idle_since
-        assert client._is_afk == afk
-        assert client._status == status
-
     @pytest.mark.parametrize("is_alive", [True, False])
     async def test_sends_to_websocket_if_alive(self, client, is_alive):
         presence_payload = object()
         client._connected_at = 1234.5 if is_alive else None
         client._serialize_and_store_presence_payload = mock.Mock(return_value=presence_payload)
+        client._send_json = mock.AsyncMock()
 
         await client.update_presence(
             idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None,
@@ -918,16 +824,12 @@ class TestHandshake:
         expected_json = {"op": client._Opcode.RESUME, "d": {"token": "token", "seq": 456, "session_id": 123}}
         client._send_json.assert_awaited_once_with(expected_json)
 
-    async def test__handshake_when__session_id_is_None_and_no_intents_and_no_activity(self, client):
+    async def test__handshake_when__session_id_is_None_and_no_intents(self, client):
         client._expect_opcode = mock.AsyncMock()
         client._session_id = None
         client._token = "token"
         client._intents = None
         client._large_threshold = 123
-        client._activity = undefined.UNDEFINED
-        client._status = undefined.UNDEFINED
-        client._idle_since = undefined.UNDEFINED
-        client._is_afk = undefined.UNDEFINED
         client._shard_id = 0
         client._shard_count = 1
         client._send_json = mock.AsyncMock()
@@ -946,6 +848,7 @@ class TestHandshake:
                     "$device": constants.LIBRARY_VERSION,
                 },
                 "shard": [0, 1],
+                "presence": {"since": None, "afk": False, "status": presences.Status.ONLINE, "game": None},
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
@@ -956,10 +859,6 @@ class TestHandshake:
         client._token = "token"
         client._intents = intents.Intents.ALL_UNPRIVILEGED
         client._large_threshold = 123
-        client._activity = undefined.UNDEFINED
-        client._status = undefined.UNDEFINED
-        client._idle_since = undefined.UNDEFINED
-        client._is_afk = undefined.UNDEFINED
         client._shard_id = 0
         client._shard_count = 1
         client._send_json = mock.AsyncMock()
@@ -979,17 +878,18 @@ class TestHandshake:
                 },
                 "shard": [0, 1],
                 "intents": intents.Intents.ALL_UNPRIVILEGED,
+                "presence": {"since": None, "afk": False, "status": presences.Status.ONLINE, "game": None},
             },
         }
         client._send_json.assert_awaited_once_with(expected_json)
 
-    @pytest.mark.parametrize("idle_since", [undefined.UNDEFINED, datetime.datetime.now()])
-    @pytest.mark.parametrize("afk", [undefined.UNDEFINED, True, False])
+    @pytest.mark.parametrize("idle_since", [None, datetime.datetime.now()])
+    @pytest.mark.parametrize("afk", [None, True, False])
     @pytest.mark.parametrize(
         "status",
         [presences.Status.DO_NOT_DISTURB, presences.Status.IDLE, presences.Status.ONLINE, presences.Status.OFFLINE],
     )
-    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, presences.Activity(name="foo"), None])
+    @pytest.mark.parametrize("activity", [presences.Activity(name="foo"), None])
     async def test__handshake_when__session_id_is_None_and_activity(self, client, idle_since, afk, status, activity):
         client._expect_opcode = mock.AsyncMock()
         client._session_id = None
@@ -1006,10 +906,10 @@ class TestHandshake:
         client._app = mock.Mock()
         client._serialize_and_store_presence_payload = mock.Mock(
             return_value={
-                "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
-                "afk": afk if afk is not undefined.UNDEFINED else False,
-                "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                "game": activity if activity is not undefined.UNDEFINED else None,
+                "since": int(idle_since.timestamp() * 1_000) if idle_since is not None else None,
+                "afk": afk,
+                "status": status,
+                "game": activity,
             }
         )
 
@@ -1028,10 +928,10 @@ class TestHandshake:
                 },
                 "shard": [0, 1],
                 "presence": {
-                    "since": int(idle_since.timestamp() * 1_000) if idle_since is not undefined.UNDEFINED else None,
-                    "afk": afk if afk is not undefined.UNDEFINED else False,
-                    "status": status if status is not undefined.UNDEFINED else presences.Status.ONLINE,
-                    "game": activity if activity is not undefined.UNDEFINED else None,
+                    "since": int(idle_since.timestamp() * 1_000) if idle_since is not None else None,
+                    "afk": afk,
+                    "status": status,
+                    "game": activity,
                 },
             },
         }
@@ -1438,3 +1338,76 @@ class TestLogDebugPayload:
         client._logger.debug.assert_called_once_with(
             "some message %s [seq:%s, session:%s, size:%s]", "args", 456, 123, 1
         )
+
+
+class TestSerializeAndStorePresencePayload:
+    @pytest.mark.parametrize("idle_since", [datetime.datetime.now(), None])
+    @pytest.mark.parametrize("afk", [True, False])
+    @pytest.mark.parametrize(
+        "status",
+        [presences.Status.DO_NOT_DISTURB, presences.Status.IDLE, presences.Status.ONLINE, presences.Status.OFFLINE],
+    )
+    @pytest.mark.parametrize("activity", [presences.Activity(name="foo"), None])
+    def test_when_all_args_undefined(self, client, idle_since, afk, status, activity):
+        client._activity = activity
+        client._idle_since = idle_since
+        client._is_afk = afk
+        client._status = status
+
+        actual_result = client._serialize_and_store_presence_payload()
+
+        if activity is not undefined.UNDEFINED and activity is not None:
+            expected_activity = {
+                "name": activity.name,
+                "type": activity.type,
+                "url": activity.url,
+            }
+        else:
+            expected_activity = None
+
+        if status == presences.Status.OFFLINE:
+            expected_status = "invisible"
+        else:
+            expected_status = status.value
+
+        expected_result = {
+            "game": expected_activity,
+            "since": int(idle_since.timestamp() * 1_000) if idle_since is not None else None,
+            "afk": afk if afk is not undefined.UNDEFINED else False,
+            "status": expected_status,
+        }
+
+        assert expected_result == actual_result
+
+    @pytest.mark.parametrize("idle_since", [datetime.datetime.now(), None])
+    @pytest.mark.parametrize("afk", [True, False])
+    @pytest.mark.parametrize(
+        "status",
+        [presences.Status.DO_NOT_DISTURB, presences.Status.IDLE, presences.Status.ONLINE, presences.Status.OFFLINE],
+    )
+    @pytest.mark.parametrize("activity", [presences.Activity(name="foo"), None])
+    def test_sets_state(self, client, idle_since, afk, status, activity):
+        client._serialize_and_store_presence_payload(idle_since=idle_since, afk=afk, status=status, activity=activity)
+
+        assert client._activity == activity
+        assert client._idle_since == idle_since
+        assert client._is_afk == afk
+        assert client._status == status
+
+
+class TestSerializeDatetime:
+    def test_when_None(self, client):
+        assert client._serialize_datetime(None) is None
+
+    def test_when_not_None(self, client):
+        date_obj = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
+        assert client._serialize_datetime(date_obj) == 1595456556988
+
+
+class TestSerializeActivity:
+    def test_when_None(self, client):
+        assert client._serialize_activity(None) is None
+
+    def test_when_not_None(self, client):
+        activity_obj = presences.Activity(name="foo", type=presences.ActivityType.PLAYING, url="some.url")
+        assert client._serialize_activity(activity_obj) == {"name": "foo", "type": 0, "url": "some.url"}

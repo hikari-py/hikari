@@ -915,8 +915,13 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         payload.put("since", idle_since, conversion=self._serialize_datetime)
         payload.put("afk", afk)
-        payload.put("status", status, conversion=lambda s: typing.cast(str, s.value))
         payload.put("game", activity, conversion=self._serialize_activity)
+        # Sending "offline" to the gateway wont do anything, we will have to
+        # send "invisible" instead for this to work.
+        if status is presences.Status.OFFLINE:
+            payload.put("status", "invisible")
+        else:
+            payload.put("status", status, conversion=lambda s: typing.cast(str, s.value))
         return payload
 
     @staticmethod

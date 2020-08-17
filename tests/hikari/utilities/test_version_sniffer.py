@@ -276,11 +276,22 @@ class TestFetchVersionInfoFromPyPI:
 
 @pytest.mark.asyncio
 class TestLogAvailableUpdates:
+    async def test_when_in_HEAD(self):
+        logger = mock.Mock()
+
+        with mock.patch.object(_about, "__git_sha1__", new="HEAD"):
+            await version_sniffer.log_available_updates(logger)
+
+        logger.info.assert_not_called()
+        logger.warning.assert_not_called()
+        logger.debug.assert_not_called()
+
     async def test_when_exception(self):
         logger = mock.Mock()
         exception = RuntimeError()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", side_effect=exception))
+        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="162387fhadjfKjJDkad9"))
 
         with stack:
             await version_sniffer.log_available_updates(logger)
@@ -299,6 +310,7 @@ class TestLogAvailableUpdates:
         stack.enter_context(
             mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=StubVersionInfo())
         )
+        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="162387fhadjfKjJDkad9"))
 
         with stack:
             await version_sniffer.log_available_updates(logger)
@@ -317,6 +329,7 @@ class TestLogAvailableUpdates:
         version = StubVersionInfo()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
+        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="162387fhadjfKjJDkad9"))
 
         with stack:
             await version_sniffer.log_available_updates(logger)
@@ -339,6 +352,7 @@ class TestLogAvailableUpdates:
         version = StubVersionInfo()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(version_sniffer, "fetch_version_info_from_pypi", return_value=version))
+        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="162387fhadjfKjJDkad9"))
 
         with stack:
             await version_sniffer.log_available_updates(logger)
