@@ -43,13 +43,13 @@ __all__: typing.Final[typing.List[str]] = [
 import abc
 import datetime
 import enum
-import itertools
 import typing
 
 import attr
 
 from hikari import snowflakes
 from hikari.utilities import attr_extensions
+from hikari.utilities import mapping
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -348,14 +348,7 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
-        if isinstance(index_or_slice, slice):
-            return tuple(
-                itertools.islice(self.entries.values(), index_or_slice.start, index_or_slice.stop, index_or_slice.step)
-            )
-        elif isinstance(index_or_slice, int):
-            return next(iter(itertools.islice(self.entries.values(), index_or_slice, None)))
-        else:
-            raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
+        return mapping.get_index_or_slice(self.entries, index_or_slice)
 
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())

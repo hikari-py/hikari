@@ -40,6 +40,7 @@ import attr
 
 from hikari.events import base_events
 from hikari.utilities import attr_extensions
+from hikari.utilities import mapping
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -163,7 +164,7 @@ class ShardResumedEvent(ShardStateEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class MemberChunkEvent(ShardEvent):
+class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -184,7 +185,7 @@ class MemberChunkEvent(ShardEvent):
         Mapping of user IDs to corresponding member objects.
     """
 
-    index: int = attr.ib(repr=True)
+    chunk_index: int = attr.ib(repr=True)
     """Zero-indexed position of this within the queued up chunks for this request.
 
     Returns
@@ -193,7 +194,7 @@ class MemberChunkEvent(ShardEvent):
         The sequence index for this chunk.
     """
 
-    count: int = attr.ib(repr=True)
+    chunk_count: int = attr.ib(repr=True)
     """Total number of expected chunks for the request this is associated with.
 
     Returns
@@ -236,3 +237,22 @@ class MemberChunkEvent(ShardEvent):
     typing.Optional[builtins.str]
         The request nonce if specified, or `builtins.None` otherwise.
     """
+
+    @typing.overload
+    def __getitem__(self, index_or_slice: int, /) -> guilds.Member:
+        ...
+
+    @typing.overload
+    def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]:
+        ...
+
+    def __getitem__(
+        self, index_or_slice: typing.Union[int, slice], /
+    ) -> typing.Union[guilds.Member, typing.Sequence[guilds.Member]]:
+        return mapping.get_index_or_slice(self.members, index_or_slice)
+
+    def __iter__(self) -> typing.Iterator[guilds.Member]:
+        return iter(self.members.values())
+
+    def __len__(self) -> int:
+        return len(self.members)

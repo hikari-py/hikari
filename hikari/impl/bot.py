@@ -326,7 +326,7 @@ class BotApp(
             _LOGGER.info("this application is stateless, cache-based operations will not be available")
         else:
             self._cache = cache_impl.StatefulCacheImpl(app=self, intents=intents)
-            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self, intents=intents)
+            self._guild_chunker = guild_chunker_impl.StatefulGuildChunkerImpl(app=self)
             self._event_manager = stateful_event_manager.StatefulEventManagerImpl(
                 app=self, cache=self._cache, intents=intents
             )

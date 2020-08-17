@@ -449,6 +449,11 @@ class GatewayShardImplV6(shard.GatewayShard):
         if user_ids is not undefined.UNDEFINED and len(user_ids) > 100:
             raise ValueError("'users' is limited to 100 users")
 
+        message = "requesting guild members for guild %s"
+        if include_presences:
+            message += " with presences"
+        self._logger.debug(message, int(guild))
+
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
         payload.put("presences", include_presences)

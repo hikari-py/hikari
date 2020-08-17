@@ -27,10 +27,15 @@ __all__: typing.Final[typing.List[str]] = ["StatelessGuildChunkerImpl"]
 
 import typing
 
+from hikari import undefined
 from hikari.api import chunker
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import iterators
+    from hikari import snowflakes
+    from hikari import users
+    from hikari.events import shard_events
 
 
 class StatelessGuildChunkerImpl(chunker.GuildChunker):
@@ -44,8 +49,40 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
 
     __slots__: typing.Sequence[str] = ()
 
-    async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
+    def fetch_members_for_guild(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
+        *,
+        timeout: int,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        limit: int = 0,
+        query: str = "",
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
+        return iterators.FlatLazyIterator([])
+
+    async def get_chunk_status(self, shard_id: int, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
+        return None
+
+    async def list_chunk_statuses_for_shard(self, shard_id: int) -> typing.Sequence[chunker.ChunkInformation]:
+        return ()
+
+    async def list_chunk_statuses_for_guild(self, guild_id: int) -> typing.Sequence[chunker.ChunkInformation]:
+        return ()
+
+    async def on_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
+        return None
+
+    async def request_guild_chunk(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
+        /,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        limit: int = 0,
+        query: str = "",
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+    ) -> typing.NoReturn:
         raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
-    def close(self) -> None:
-        return
+    async def close(self) -> None:
+        return None
