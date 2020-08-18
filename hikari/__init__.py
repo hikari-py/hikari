@@ -23,7 +23,7 @@
 
 To get started, you will want to initialize an instance of `Bot`
 (an alias for `hikari.impl.bot.BotApp`) for writing a bot, or `REST` (an
-alias for `hikari.impl.rest.RESTAppFactoryImpl`) if you only need to use
+alias for `hikari.impl.rest.RESTApp`) if you only need to use
 the REST API.
 """
 

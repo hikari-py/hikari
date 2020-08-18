@@ -403,10 +403,7 @@ class Webhook(snowflake.Unique):
         If the webhook has a custom avatar, a URL to this is returned. Otherwise
         a URL to the default avatar is provided instead.
         """
-        url = self.format_avatar()
-        if url is None:
-            return self.default_avatar
-        return url
+        return self.format_avatar() or self.default_avatar
 
     @property
     def default_avatar(self) -> files_.URL:
