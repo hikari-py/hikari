@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import voice as voice_
 
     # noinspection PyUnresolvedReferences
-    from hikari.events import base_events  # noqa F401 - Imported but unused (false positive)
+    from hikari.events import base_events  # noqa F401 - Unused (False positive)
     from hikari.models import intents as intents_
     from hikari.models import users
 

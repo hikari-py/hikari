@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Got a cool idea you would like implemented? Share it to us!
+about: Got a cool idea you would like implemented? Share it with us!
 title: ''
 labels: enhancement
 assignees: ''
