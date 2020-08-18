@@ -519,7 +519,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
-        query.put("limit", 100)
+        query.put("limit", 1000)
 
         raw_chunk = await self._request_call(compiled_route=self._route, query=query)
         chunk = typing.cast(data_binding.JSONArray, raw_chunk)
