@@ -21,23 +21,8 @@
 # SOFTWARE.
 """Data classes representing Discord entities."""
 
-from hikari.models import applications
-from hikari.models import audit_logs
-from hikari.models import channels
-from hikari.models import colors
-from hikari.models import colours
-from hikari.models import embeds
-from hikari.models import emojis
-from hikari.models import gateway
-from hikari.models import guilds
-from hikari.models import intents
-from hikari.models import invites
-from hikari.models import messages
-from hikari.models import permissions
-from hikari.models import presences
-from hikari.models import users
-from hikari.models import voices
-from hikari.models import webhooks
+from __future__ import annotations
+
 from hikari.models.applications import *
 from hikari.models.audit_logs import *
 from hikari.models.channels import *
@@ -55,23 +40,3 @@ from hikari.models.presences import *
 from hikari.models.users import *
 from hikari.models.voices import *
 from hikari.models.webhooks import *
-
-__all__ = (
-    applications.__all__
-    + audit_logs.__all__
-    + channels.__all__
-    + colors.__all__
-    + colours.__all__
-    + embeds.__all__
-    + emojis.__all__
-    + gateway.__all__
-    + guilds.__all__
-    + intents.__all__
-    + invites.__all__
-    + messages.__all__
-    + permissions.__all__
-    + presences.__all__
-    + users.__all__
-    + voices.__all__
-    + webhooks.__all__
-)

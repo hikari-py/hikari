@@ -27,4 +27,4 @@ performance or structural requirements, you will want to use these
 implementations.
 """
 
-__all__ = []  # type: ignore[var-annotated]
+from __future__ import annotations

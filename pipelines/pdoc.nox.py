@@ -44,8 +44,7 @@ def pdoc(session: nox.Session) -> None:
 
     session.run(
         "python",
-        "-m",
-        "pdoc",
+        "docs/patched_pdoc.py",
         config.MAIN_PACKAGE,
         "--html",
         "--output-dir",

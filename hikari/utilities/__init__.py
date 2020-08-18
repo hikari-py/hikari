@@ -21,4 +21,4 @@
 # SOFTWARE.
 """Package containing internal utilities used within this API."""
 
-__all__ = []  # type: ignore[var-annotated]
+from __future__ import annotations
