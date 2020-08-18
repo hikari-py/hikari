@@ -26,4 +26,4 @@ implementation, thus allowing custom solutions to be engineered such as bots
 relying on a distributed event bus or cache.
 """
 
-__all__ = []  # type: ignore[var-annotated]
+from __future__ import annotations

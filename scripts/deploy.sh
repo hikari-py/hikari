@@ -7,7 +7,6 @@ python -m pip install \
     setuptools \
     wheel \
     nox \
-    mypy \
     twine \
     requests \
     -r requirements.txt
@@ -30,17 +29,6 @@ sed "s|^__git_sha1__.*|__git_sha1__ = \"${REF}\"|g" -i hikari/_about.py
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
-
-echo "===== GENERATING MYPY STUBS FOR --strict SUPPORT ====="
-
-find hikari -name "__init__.py" | while read -r f; do
-    base=$(dirname "${f}")
-    echo "Generating stub for ${f} as module ${base}"
-    stubgen -m "${base}" -o "."
-done
-
-echo "===== REFORMATTING GENERATED MYPY STUBS ====="
-python -m nox --sessions reformat-code
 
 echo "===== DEPLOYING TO PYPI ====="
 python setup.py sdist bdist_wheel

@@ -27,12 +27,8 @@ alias for `hikari.impl.rest.RESTApp`) if you only need to use
 the REST API.
 """
 
-# We need these imported explicitly for the __all__ to be visible due to
-# Python's weird import visibility system.
-from hikari import config
-from hikari import errors
-from hikari import events
-from hikari import models
+from __future__ import annotations
+
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
@@ -63,32 +59,3 @@ from hikari.utilities.snowflake import Unique
 from hikari.utilities.undefined import UNDEFINED
 from hikari.utilities.undefined import UndefinedNoneOr
 from hikari.utilities.undefined import UndefinedOr
-
-_presorted_all = [
-    "File",
-    "Pathish",
-    "Rawish",
-    "LazyByteIteratorish",
-    "Resourceish",
-    "Snowflake",
-    "Snowflakeish",
-    "SnowflakeishOr",
-    "SearchableSnowflakeish",
-    "SearchableSnowflakeishOr",
-    "Unique",
-    "UNDEFINED",
-    "UndefinedOr",
-    "UndefinedNoneOr",
-    *config.__all__,
-    *events.__all__,
-    *errors.__all__,
-    *models.__all__,
-]
-
-# This may seem a bit dirty, but I have added an edge case to the documentation
-# logic to *ignore* the sorting member rules for the root `hikari` module
-# (this file) specifically. This way, we can force `Bot` and `RESTClientFactory`
-# to the top of the list.
-__all__ = ["Bot", "REST", *sorted(_presorted_all)]
-
-del _presorted_all

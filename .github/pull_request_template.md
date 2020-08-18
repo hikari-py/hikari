@@ -7,7 +7,7 @@
 - [ ] I have made unittests according to the code I have added/modified/deleted.
 
 ### Related issues
-<!-- 
+<!--
 To mention an issue use `#issue-id` and to mention a merge request use `!merge-request-id`
 To close/fix an issue use `Close #issue-id` or `Fix #issue-id` (depending on the merge request)
 -->
