@@ -136,13 +136,13 @@ def remove_trailing_whitespaces() -> None:
 
 def remove_trailing_whitespaces_for_file(file) -> bool:
     try:
-        with open(file) as fp:
+        with open(file, "rb") as fp:
             lines = fp.readlines()
             new_lines = lines[:]
 
         for i in range(len(new_lines)):
-            line = lines[i].rstrip("\n\r \t")
-            line += "\n"
+            line = lines[i].rstrip(b"\n\r \t")
+            line += b"\n"
             new_lines[i] = line
 
         if lines == new_lines:
@@ -150,7 +150,7 @@ def remove_trailing_whitespaces_for_file(file) -> bool:
 
         print("Removing trailing whitespaces present in", file)
 
-        with open(file, "w") as fp:
+        with open(file, "wb") as fp:
             fp.writelines(new_lines)
 
         if GIT is not None:
