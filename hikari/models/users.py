@@ -89,9 +89,10 @@ class UserFlag(flag.Flag):
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
     """Verified Bot Developer.
-    
+
     Only applies to users that verified their account before 20th August 2019.
     """
+
 
 @enum.unique
 @typing.final
