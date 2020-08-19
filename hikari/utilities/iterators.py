@@ -570,19 +570,17 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         return count
 
-    def flat_map(
-        self,
-        flattener: typing.Callable[
-            [ValueT], typing.Union[typing.AsyncIterator[AnotherValueT], typing.Iterator[AnotherValueT]]
-        ],
-    ) -> LazyIterator[AnotherValueT]:
+    def flat_map(self, flattener: _FlattenerT[ValueT, AnotherValueT]) -> LazyIterator[AnotherValueT]:
         r"""Perform a flat mapping operation.
 
         This will pass each item in the iterator to the given `function`
-        parameter, expecting a new `typing.Iterator` or `typing.AsyncIterator`
+        parameter, expecting a new `typing.Iterable` or `typing.AsyncIterator`
         to be returned as the result. This means you can map to a new
-        `LazyIterator`, `typing.AsyncIterator`, `typing.Iterator`,
+        `LazyIterator`, `typing.AsyncIterator`, `typing.Iterable`,
         async generator, or generator.
+
+        Remember that `typing.Iterator` implicitly provides `typing.Iterable`
+        compatibility.
 
         This is used to provide lazy conversions, and can be used to implement
         reactive-like pipelines if desired.
@@ -594,7 +592,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         flattener
             A function that returns either an async iterator or iterator of
-            new values.
+            new values. Could be an attribute name instead.
 
         Example
         -------
@@ -603,7 +601,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         users in the given channel from the past 500 messages.
 
         ```py
-        def iter_mentioned_users(message: hikari.Message) -> typing.Iterator[Snowflake]:
+        def iter_mentioned_users(message: hikari.Message) -> typing.Iterable[Snowflake]:
             for match in re.findall(r"<@!?(\d+)>", message.content):
                 yield Snowflake(match)
 
@@ -623,6 +621,41 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             The new lazy iterator to return.
         """
         return _FlatMapLazyIterator(self, flattener)
+
+    def awaiting(self, window_size: int = 10) -> LazyIterator[ValueT]:
+        """Await each item concurrently in a fixed size window.
+
+        Parameters
+        ----------
+        window_size : int
+            The window size of how many tasks to await at once. You can set this
+            to `0` to await everything at once, but see the below warning.
+
+        Returns
+        -------
+        LazyIterator[ValueT]
+            The new lazy iterator to return.
+
+        !!! warning
+            Setting a large window size, or setting it to 0 to await everything
+            is a dangerous thing to do if you are making API calls. Some
+            endpoints will get ratelimited and cause a backup of waiting
+            tasks, others may begin to spam global rate limits instead
+            (the `fetch_user` endpoint seems to be notorious for doing this).
+
+        !!! note
+            This call assumes that the iterator contains awaitable values as
+            input. MyPy cannot detect this nicely, so any cast is forced
+            internally.
+
+            If the item is not awaitable, you will receive a
+            `builtins.TypeError` instead.
+
+            You have been warned. You cannot escape the ways of the duck type
+            young grasshopper.
+        """
+        # Not type safe. Can I make this type safe?
+        return _AwaitingLazyIterator(typing.cast(LazyIterator[typing.Awaitable[ValueT]], self), window_size)
 
     @staticmethod
     def _map_predicates_and_attr_getters(
@@ -656,9 +689,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         raise StopAsyncIteration("No more items exist in this iterator. It has been exhausted.") from None
 
     def __aiter__(self) -> LazyIterator[ValueT]:
-        # We are our own iterator.
+        # We are our own async iterator.
         return self
 
+    # noinspection PyTypeChecker
     def __iter__(self) -> LazyIterator[ValueT]:
         # This iterator is async only.
         cls = type(self)
@@ -753,8 +787,8 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
     __slots__: typing.Sequence[str] = ("_iter",)
 
-    def __init__(self, values: typing.Union[typing.Iterator[ValueT], typing.Iterable[ValueT]]) -> None:
-        self._iter = iter(values) if isinstance(values, typing.Iterable) else values
+    def __init__(self, values: typing.Iterable[ValueT]) -> None:
+        self._iter = iter(values)
 
     def __iter__(self) -> FlatLazyIterator[ValueT]:
         return self
@@ -923,16 +957,18 @@ class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return await self._iterator.__anext__()
 
 
+_FlattenerResultT = typing.Union[typing.AsyncIterator[AnotherValueT], typing.Iterable[AnotherValueT]]
+
+_FlattenerT = typing.Union[
+    spel.AttrGetter[ValueT, _FlattenerResultT[AnotherValueT]],
+    typing.Callable[[ValueT], _FlattenerResultT[AnotherValueT]],
+]
+
+
 class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[AnotherValueT]):
     __slots__: typing.Sequence[str] = ("_iterator", "_flattener", "_result_iterator")
 
-    def __init__(
-        self,
-        iterator: LazyIterator[ValueT],
-        flattener: typing.Callable[
-            [ValueT], typing.Union[typing.AsyncIterator[AnotherValueT], typing.Iterator[AnotherValueT]]
-        ],
-    ) -> None:
+    def __init__(self, iterator: LazyIterator[ValueT], flattener: _FlattenerT[ValueT, AnotherValueT]) -> None:
         self._iterator = iterator
         self._flattener = flattener
         self._result_iterator: typing.Optional[typing.AsyncIterator[AnotherValueT]] = None
@@ -941,7 +977,8 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
         async for input_item in self._iterator:
             result_iterator = self._flattener(input_item)
 
-            if isinstance(result_iterator, typing.Iterator):
+            # Turns out that Iterator is also Iterable, interestingly.
+            if isinstance(result_iterator, typing.Iterable):
                 for output_item in result_iterator:
                     yield output_item
             else:
@@ -953,3 +990,30 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
             self._result_iterator = self._generator()
 
         return await self._result_iterator.__anext__()
+
+
+class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    __slots__: typing.Sequence[str] = ("_iterator", "_window_size", "_buffer")
+
+    def __init__(self, iterator: LazyIterator[typing.Awaitable[ValueT]], window_size: int) -> None:
+        self._iterator = iterator
+        self._window_size = float("inf") if window_size <= 0 else window_size
+        self._buffer: typing.List[ValueT] = []
+
+    async def __anext__(self) -> ValueT:
+        if not self._buffer:
+            coroutines: typing.List[typing.Awaitable[ValueT]] = []
+
+            while len(coroutines) < self._window_size:
+                try:
+                    next_coroutine = await self._iterator.__anext__()
+                    coroutines.append(next_coroutine)
+                except StopAsyncIteration:
+                    break
+
+            if not coroutines:
+                raise StopAsyncIteration
+
+            self._buffer.extend(await asyncio.gather(*coroutines))
+
+        return self._buffer.pop(0)

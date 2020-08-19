@@ -622,7 +622,6 @@ class RESTClientImpl(rest_api.RESTClient):
         if body.get("global", False) is True:
             self.global_rate_limit.throttle(body_retry_after)
 
-            _LOGGER.warning("you are being rate-limited globally - trying again after %ss", body_retry_after)
             raise self._RetryRequest
 
         # Discord have started applying ratelimits to operations on some endpoints

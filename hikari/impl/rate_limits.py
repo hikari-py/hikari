@@ -187,6 +187,7 @@ class ManualRateLimiter(BurstRateLimiter):
         """
         loop = asyncio.get_running_loop()
         future = loop.create_future()
+
         if self.throttle_task is not None:
             self.queue.append(future)
         else:
