@@ -223,7 +223,7 @@ def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[i
     ----------
     model : ModelT
         The attrs model to deep copy.
-    memo : typing.MutableMapping[builtins.int, typing.Any] or builtins.None
+    memo : typing.Optional[typing.MutableMapping[builtins.int, typing.Any]]
         A memo dictionary of objects already copied during the current copying
         pass, see https://docs.python.org/3/library/copy.html for more details.
 

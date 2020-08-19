@@ -174,7 +174,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
 
     Returns
     -------
-    Resource or builtins.None
+    typing.Optional[Resource]
         The resource to use, or `builtins.None` if `builtins.None` was input.
     """
     if isinstance(url_or_resource, RAWISH_TYPES):
@@ -210,7 +210,7 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 
     Returns
     -------
-    builtins.str or builtins.None
+    typing.Optional[builtins.str]
         The closest guess to the given filename. May be `builtins.None` if
         no match was found.
     """
@@ -232,7 +232,7 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
 
     Returns
     -------
-    builtins.str or builtins.None
+    typing.Optional[builtins.str]
         The mimetype, if it was found. If the header is unrecognised, then
         `builtins.None` is returned.
     """
@@ -264,7 +264,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Returns
     -------
-    builtins.str or builtins.None
+    typing.Optional[builtins.str]
         The file extension, prepended with a `.`. If no match was found,
         return `builtins.None`.
     """
@@ -281,11 +281,11 @@ def generate_filename_from_details(
 
     Parameters
     ----------
-    mimetype : builtins.str or builtins.None
+    mimetype : typing.Optional[builtins.str]
         The mimetype of the content, or `builtins.None` if not known.
-    extension : builtins.str or builtins.None
+    extension : typing.Optional[builtins.str]
         The file extension to use, or `builtins.None` if not known.
-    data : builtins.bytes or builtins.None
+    data : typing.Optional[builtins.bytes]
         The data to inspect, or `builtins.None` if not known.
 
     Returns
@@ -315,7 +315,7 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
     ----------
     data : builtins.bytes
         The data to encode as base64.
-    mimetype : builtins.str or builtins.None
+    mimetype : typing.Optional[builtins.str]
         The mimetype, or `builtins.None` if we should attempt to guess it.
 
     Returns
@@ -426,7 +426,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or builtins.None
+        executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
             If `builtins.None`, then the default executor is used for the
             current event loop.
@@ -594,7 +594,7 @@ class WebResource(Resource[WebReader], abc.ABC):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or builtins.None
+        executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
         head_only : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then the
@@ -798,7 +798,7 @@ class File(Resource[FileReader]):
             This will all be performed as required in an executor to prevent
             blocking the event loop.
 
-    filename : builtins.str or builtins.None
+    filename : typing.Optional[builtins.str]
         The filename to use. If this is `builtins.None`, the name of the file is taken
         from the path instead.
     """
@@ -832,7 +832,7 @@ class File(Resource[FileReader]):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or builtins.None
+        executor : typing.Optional[concurrent.futures.Executor]
             The executor to run the blocking read operations in. If
             `builtins.None`, the default executor for the running event loop
             will be used instead.
@@ -939,7 +939,7 @@ class Bytes(Resource[IteratorReader]):
         The raw data.
     filename : builtins.str
         The filename to use.
-    mimetype : builtins.str or builtins.None
+    mimetype : typing.Optional[builtins.str]
         The mimetype, or `builtins.None` if you do not wish to specify this.
         If not provided, then this will be generated from the file extension
         of the filename instead.
@@ -986,7 +986,7 @@ class Bytes(Resource[IteratorReader]):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or builtins.None
+        executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
         head_only : builtins.bool
             Not used. Provided only to match the underlying interface.
@@ -1007,7 +1007,7 @@ class Bytes(Resource[IteratorReader]):
         ----------
         data_uri : builtins.str
             The data URI to parse.
-        filename : builtins.str or builtins.None
+        filename : typing.Optional[builtins.str]
             Filename to use. If this is not provided, then this is generated
             instead.
 

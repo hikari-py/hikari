@@ -247,7 +247,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[T] or builtins.None
+        event_type : typing.Optional[typing.Type[T]]
             The event type to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
@@ -290,7 +290,7 @@ class EventDispatcher(abc.ABC):
             return, or `builtins.False` if the event should not be returned.
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
-        timeout : builtins.float or builtins.int or builtins.None
+        timeout : typing.Optional[builtins.float or builtins.int]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
             `builtins.None`, then no timeout will be waited for (no timeout can

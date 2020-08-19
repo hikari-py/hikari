@@ -250,7 +250,7 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        format : builtins.str or builtins.None
+        format : typing.Optional[builtins.str]
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
@@ -265,7 +265,7 @@ class User(PartialUser, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL to the avatar, or `builtins.None` if not present.
 
         Raises

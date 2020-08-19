@@ -123,7 +123,7 @@ class AttrComparator(typing.Generic[ValueT]):
         `str.isupper`, for example).
     expected_value : typing.Any
         The expected value.
-    cast : typing.Callable[[ValueT], typing.Any] or builtins.None
+    cast : typing.Optional[typing.Callable[[ValueT], typing.Any]]
         Optional cast to perform on the input value when being called before
         comparing it to the expected value but after accessing the attribute.
     """

@@ -82,7 +82,7 @@ class EmbedResource(files.Resource[AsyncReaderT]):
 
         Parameters
         ----------
-        executor : concurrent.futures.Executor or builtins.None
+        executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
             If `builtins.None`, then the default executor is used for the
             current event loop.
@@ -394,7 +394,7 @@ class Embed:
 
         Returns
         -------
-        hikari.models.colors.Color or builtins.None
+        typing.Optional[hikari.models.colors.Color]
             The colour that is set.
         """
         return self._color
@@ -414,7 +414,7 @@ class Embed:
 
         Returns
         -------
-        datetime.datetime or builtins.None
+        typing.Optional[datetime.datetime]
             The timestamp set on the embed.
 
         !!! warning
@@ -534,7 +534,7 @@ class Embed:
 
         Will be `builtins.None` if not set.
 
-        EmbedFooter or builtins.None
+        typing.Optional[EmbedFooter]
             The footer of the embed.
         """
         return self._footer
@@ -545,7 +545,7 @@ class Embed:
 
         Will be `builtins.None` if not set.
 
-        EmbedImage or builtins.None
+        typing.Optional[EmbedImage]
             The image of the embed.
 
         !!! note
@@ -559,7 +559,7 @@ class Embed:
 
         Will be `builtins.None` if not set.
 
-        EmbedImage or builtins.None
+        typing.Optional[EmbedImage]
             The thumbnail of the embed.
 
         !!! note
@@ -575,7 +575,7 @@ class Embed:
 
         Returns
         -------
-        EmbedVideo or builtins.None
+        typing.Optional[EmbedVideo]
             The video of the embed.
 
         !!! note
@@ -594,7 +594,7 @@ class Embed:
 
         Returns
         -------
-        EmbedProvider or builtins.None
+        typing.Optional[EmbedProvider]
             The provider of the embed.
 
         !!! note
@@ -613,7 +613,7 @@ class Embed:
 
         Returns
         -------
-        EmbedAuthor or builtins.None
+        typing.Optional[EmbedAuthor]
             The author of the embed.
 
         !!! note
@@ -642,11 +642,11 @@ class Embed:
 
         Parameters
         ----------
-        name : builtins.str or builtins.None
+        name : typing.Optional[builtins.str]
             The optional name of the author.
-        url : builtins.str or builtins.None
+        url : typing.Optional[builtins.str]
             The optional URL of the author.
-        icon : hikari.utilities.files.Resourceish or builtins.None
+        icon : typing.Optional[hikari.utilities.files.Resourceish]
             The optional image to show next to the embed author.
 
             This can be many different things, to aid in convenience.
@@ -691,10 +691,10 @@ class Embed:
 
         Parameters
         ----------
-        text : str or builtins.None
+        text : typing.Optional[str]
             The mandatory text string to set in the footer.
             If `builtins.None`, the footer is removed.
-        icon : hikari.utilities.files.Resourceish or builtins.None
+        icon : typing.Optional[hikari.utilities.files.Resourceish]
             The optional image to show next to the embed footer.
 
             This can be many different things, to aid in convenience.
@@ -744,7 +744,7 @@ class Embed:
 
         Parameters
         ----------
-        image : hikari.utilities.files.Resourceish or builtins.None
+        image : typing.Optional[hikari.utilities.files.Resourceish]
             The optional resource to show for the embed image.
 
             This can be many different things, to aid in convenience.
@@ -784,7 +784,7 @@ class Embed:
 
         Parameters
         ----------
-        image : hikari.utilities.files.Resourceish or builtins.None
+        image : typing.Optional[hikari.utilities.files.Resourceish]
             The optional resource to show for the embed thumbnail.
 
             This can be many different things, to aid in convenience.

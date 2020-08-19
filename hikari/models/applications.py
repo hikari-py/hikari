@@ -328,7 +328,7 @@ class Team(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no icon exists.
         """
         return self.format_icon()
@@ -348,7 +348,7 @@ class Team(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no icon exists.
 
         Raises
@@ -449,7 +449,7 @@ class Application(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no icon exists.
         """
         return self.format_icon()
@@ -469,7 +469,7 @@ class Application(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no icon exists.
 
         Raises
@@ -491,7 +491,7 @@ class Application(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no cover image exists.
         """
         return self.format_cover_image()
@@ -511,7 +511,7 @@ class Application(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no cover image exists.
 
         Raises

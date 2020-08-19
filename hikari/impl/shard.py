@@ -95,7 +95,7 @@ class GatewayShardImplV6(shard.GatewayShard):
     initial_status : hikari.models.presences.Status
         The initial status to set on login for the shard. Defaults to
         `hikari.models.presences.Status.ONLINE`.
-    intents : hikari.models.intents.Intents or builtins.None
+    intents : typing.Optional[hikari.models.intents.Intents]
         Collection of intents to use, or `builtins.None` to not use intents at
         all.
     large_threshold : builtins.int

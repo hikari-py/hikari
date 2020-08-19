@@ -138,7 +138,7 @@ class RESTApp(traits.ExecutorAware):
 
     Parameters
     ----------
-    connector_factory : ConnectorFactory or builtins.None
+    connector_factory : typing.Optional[ConnectorFactory]
         A factory that produces an `aiohttp.BaseConnector` when requested.
 
         Defaults to a connector for a shared `aiohttp.TCPConnector` if
@@ -157,14 +157,14 @@ class RESTApp(traits.ExecutorAware):
         If `builtins.True`, then much more information is logged each time a
         request is made. Generally you do not need this to be on, so it will
         default to `builtins.False` instead.
-    executor : concurrent.futures.Executor or builtins.None
+    executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
-    http_settings : hikari.config.HTTPSettings or builtins.None
+    http_settings : typing.Optional[hikari.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
         `builtins.None`.
-    proxy_settings : hikari.config.ProxySettings or builtins.None
+    proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
     url : str or hikari.utilities.undefined.UndefinedType
@@ -291,7 +291,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    connector_factory : ConnectorFactory or builtins.None
+    connector_factory : typing.Optional[ConnectorFactory]
         A factory that produces an `aiohttp.BaseConnector` when requested.
 
         Defaults to a connector for a shared `aiohttp.TCPConnector` if
@@ -314,7 +314,7 @@ class RESTClientImpl(rest_api.RESTClient):
         left `builtins.False`.
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory to use.
-    executor : concurrent.futures.Executor or builtins.None
+    executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking IO. Defaults to the `asyncio` thread
         pool if set to `builtins.None`.
     token : hikari.utilities.undefined.UndefinedOr[builtins.str]

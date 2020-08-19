@@ -470,7 +470,7 @@ class GroupPrivateTextChannel(PrivateChannel):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL, or `builtins.None` if no icon is present.
 
         Raises

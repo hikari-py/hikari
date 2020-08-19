@@ -85,7 +85,7 @@ class BotApp(
 
     Parameters
     ----------
-    banner_package : builtins.str or builtins.None
+    banner_package : typing.Optional[builtins.str]
         The package to look for a `banner.txt` in. Will default to Hikari's
         banner if unspecified. If you set this to `builtins.None`, then no
         banner will be displayed.
@@ -99,7 +99,7 @@ class BotApp(
         The version of the gateway to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to using v6.
-    http_settings : hikari.config.HTTPSettings or builtins.None
+    http_settings : typing.Optional[hikari.config.HTTPSettings]
         The HTTP-related settings to use.
     initial_activity : typing.Optional[hikari.models.presences.Activity]
         The initial activity to have on each shard. Defaults to `builtins.None`.
@@ -112,7 +112,7 @@ class BotApp(
     initial_is_afk : builtins.bool
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
         each shard will appear as _not_ being AFK. Defaults to `builtins.False`
-    intents : hikari.models.intents.Intents or builtins.None
+    intents : typing.Optional[hikari.models.intents.Intents]
         The intents to use for each shard. If `builtins.None`, then no intents
         are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
@@ -128,7 +128,7 @@ class BotApp(
     large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    logging_level : builtins.str or builtins.int or builtins.None
+    logging_level : typing.Optional[builtins.str or builtins.int]
         If not `builtins.None`, then this will be the logging level set if you
         have not enabled logging already. In this case, it should be a valid
         `logging` level that can be passed to `logging.basicConfig`. If you have
@@ -141,17 +141,17 @@ class BotApp(
             Initializing logging means already have a handler in the root
             logger. This is usually achieved by calling `logging.basicConfig`
             or adding the handler manually.
-    proxy_settings : hikari.config.ProxySettings or builtins.None
+    proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Settings to use for the proxy.
     rest_version : int
         The version of the HTTP API to connect to. At the time of writing,
         only version `6` and version `7` (undocumented development release)
         are supported. This defaults to v6.
-    shard_ids : typing.AbstractSet[builtins.int] or builtins.None
+    shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
         A set of every shard ID that should be created and started on startup.
         If left to `builtins.None` along with `shard_count`, then auto-sharding
         is used instead, which is the default.
-    shard_count : builtins.int or builtins.None
+    shard_count : typing.Optional[builtins.int]
         The number of shards in the entire application. If left to
         `builtins.None` along with `shard_ids`, then auto-sharding is used
         instead, which is the default.
@@ -439,7 +439,7 @@ class BotApp(
 
         Returns
         -------
-        datetime.datetime or builtins.None
+        typing.Optional[datetime.datetime]
             The datetime that the bot connected at for the first time, or
             `builtins.None` if it has not yet connected.
         """

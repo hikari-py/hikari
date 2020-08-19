@@ -1677,9 +1677,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        builtins.int or builtins.None
+        typing.Optional[builtins.int]
             If `compute_prune_count` is not provided or `builtins.True`, the
-            number of members pruned.
+            number of members pruned. Else `builtins.None`.
 
         Raises
         ------

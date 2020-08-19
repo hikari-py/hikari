@@ -205,7 +205,7 @@ class ExecutorAware(typing.Protocol):
 
         Returns
         -------
-        concurrent.futures.Executor or builtins.None
+        typing.Optional[concurrent.futures.Executor]
             The executor to use, or `builtins.None` to use the `asyncio` default
             instead.
         """
@@ -344,7 +344,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
         Returns
         -------
-        hikari.models.intents.Intent or builtins.None
+        typing.Optional[hikari.models.intents.Intent]
             The intents registered on this application.
         """
         raise NotImplementedError
@@ -360,7 +360,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
         Returns
         -------
-        hikari.models.users.OwnUser or builtins.None
+        typing.Optional[hikari.models.users.OwnUser]
             The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError

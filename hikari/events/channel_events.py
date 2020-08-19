@@ -377,7 +377,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        datetime.datetime or builtins.None
+        typing.Optional[datetime.datetime]
             The datetime of the most recent pinned message in the channel,
             or `builtins.None` if no pins are available.
         """

@@ -433,7 +433,7 @@ class Webhook(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL of the resource. `builtins.None` if no avatar is set (in
             this case, use the `default_avatar` instead).
 
