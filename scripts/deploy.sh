@@ -1,8 +1,10 @@
 #!/bin/sh
+set -e
+
 VERSION=${TRAVIS_TAG}
 REF=${TRAVIS_COMMIT}
 
-ech "===== INSTALLING DEPENDENCIES ====="
+echo "===== INSTALLING DEPENDENCIES ====="
 python -m pip install \
     setuptools \
     wheel \
@@ -38,9 +40,9 @@ echo
 echo "-- Contents of ./dist --"
 ls -ahl dist
 
-echoo "-- Checking generated dists --"
-python -m twine check dist/*
-python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
+echo "-- Checking generated dists --"
+python -m twine check dist/* 
+python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/ 
 
 echo "===== SENDING WEBHOOK ====="
 python scripts/deploy_webhook.py
@@ -56,5 +58,5 @@ git init
 git remote add origin https://nekokatt:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
 git checkout -B gh-pages
 git add -Av .
-git commit -am "Deployed documentation [skip ci]"
+git commit -am "Deployed documentation for ${VERSION}"
 git push origin gh-pages --force
