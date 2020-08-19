@@ -218,7 +218,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
 
         Returns
         -------
-        builtins.tuple[typing.Type[Exception], Exception, types.TracebackType or builtins.None]
+        builtins.tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]
             The `sys.exc_info`-compatible tuple of the exception type, the
             exception instance, and the traceback of the exception.
         """

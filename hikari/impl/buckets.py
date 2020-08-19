@@ -545,7 +545,7 @@ class RESTBucketManager:
         ----------
         compiled_route : hikari.utilities.routes.CompiledRoute
             The compiled _route to get the bucket for.
-        bucket_header : builtins.str or builtins.None
+        bucket_header : typing.Optional[builtins.str]
             The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : builtins.int
             The `X-RateLimit-Remaining` header cast to an `builtins.int`.

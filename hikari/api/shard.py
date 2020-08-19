@@ -83,7 +83,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        builtins.str or builtins.None
+        typing.Optional[builtins.str]
             The name of the compression method being used. Will be
             `builtins.None` if no compression is being used.
         """
@@ -172,7 +172,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        hikari.models.intents.Intents or builtins.None
+        typing.Optional[hikari.models.intents.Intents]
             The intents being used on this shard. This may be
             `builtins.None` if intents were not specified.
 
@@ -214,7 +214,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        builtins.int or builtins.None
+        typing.Optional[builtins.int]
             The session sequence, or `builtins.None` if no session is active.
         """
 
@@ -225,7 +225,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        builtins.str or builtins.None
+        typing.Optional[builtins.str]
             The session ID, or `builtins.None` if no session is active.
         """
 
@@ -339,7 +339,7 @@ class GatewayShard(abc.ABC):
         ----------
         guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel] or builtins.None
+        channel : typing.Optional[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel]]
             The channel or channel ID to update the voice state for. If `builtins.None`
             then the bot will leave the voice channel that it is in for the
             given guild.

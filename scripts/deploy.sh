@@ -41,8 +41,8 @@ echo "-- Contents of ./dist --"
 ls -ahl dist
 
 echo "-- Checking generated dists --"
-python -m twine check dist/* 
-python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/ 
+python -m twine check dist/*
+python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
 python scripts/deploy_webhook.py

@@ -412,7 +412,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    hikari.models.users.PartialUser or builtins.None
+    typing.Optional[hikari.models.users.PartialUser]
         The partial user containing the updated fields.
     """
 
@@ -511,6 +511,6 @@ class MemberChunkEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    builtins.str or builtins.None
+    typing.Optional[builtins.str]
         The request nonce if specified, or `builtins.None` otherwise.
     """

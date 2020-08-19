@@ -150,7 +150,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL to the splash, or `builtins.None` if not set.
 
         Raises
@@ -184,7 +184,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL of the banner, or `builtins.None` if no banner is set.
 
         Raises

@@ -94,7 +94,7 @@ class ProxySettings:
 
         Returns
         -------
-        hikari.utilities.data_binding.Headers or builtins.None
+        typing.Optional[hikari.utilities.data_binding.Headers]
             Any headers that are set, or `builtins.None` if no headers are to
             be sent with any request.
         """

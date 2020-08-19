@@ -650,7 +650,7 @@ class PartialGuild(snowflake.Unique):
 
         Parameters
         ----------
-        format_ : builtins.str or builtins.None
+        format_ : typing.Optional[builtins.str]
             The format to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
@@ -663,7 +663,7 @@ class PartialGuild(snowflake.Unique):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL to the resource, or `builtins.None` if no icon is set.
 
         Raises
@@ -726,7 +726,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL to the splash, or `builtins.None` if not set.
 
         Raises
@@ -760,7 +760,7 @@ class GuildPreview(PartialGuild):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The string URL.
 
         Raises
@@ -966,7 +966,7 @@ class Guild(PartialGuild, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL to the splash, or `builtins.None` if not set.
 
         Raises
@@ -1000,7 +1000,7 @@ class Guild(PartialGuild, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The string URL.
 
         Raises
@@ -1034,7 +1034,7 @@ class Guild(PartialGuild, abc.ABC):
 
         Returns
         -------
-        hikari.utilities.files.URL or builtins.None
+        typing.Optional[hikari.utilities.files.URL]
             The URL of the banner, or `builtins.None` if no banner is set.
 
         Raises
@@ -1198,7 +1198,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        Role or builtins.None
+        typing.Optional[Role]
             The object of the role found in cache, else `builtins.None`.
         """
         return self.app.cache.get_role(snowflake.Snowflake(role))
@@ -1215,7 +1215,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.emojis.KnownCustomEmoji or builtins.None
+        typing.Optional[hikari.models.emojis.KnownCustomEmoji]
             The object of the custom emoji if found in cache, else
             `builtins.None`.
         """
@@ -1233,7 +1233,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.channels.GuildChannel or builtins.None
+        typing.Optional[hikari.models.channels.GuildChannel]
             The object of the guild channel found in cache or `builtins.None.
         """
         return self.app.cache.get_guild_channel(snowflake.Snowflake(channel))
@@ -1248,7 +1248,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        Member or builtins.None
+        typing.Optional[Member]
             The cached member object if found, else `builtins.None`.
         """
         return self.app.cache.get_member(self.id, snowflake.Snowflake(user))
@@ -1263,7 +1263,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.include_presences.MemberPresence or builtins.None
+        typing.Optional[hikari.models.include_presences.MemberPresence]
             The cached presence object if found, else `builtins.None`.
         """
         return self.app.cache.get_presence(self.id, snowflake.Snowflake(user))
@@ -1278,7 +1278,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        hikari.models.voice.VoiceState or builtins.None
+        typing.Optional[hikari.models.voice.VoiceState]
             The cached voice state object if found, else `builtins.None`.
         """
         return self.app.cache.get_voice_state(self.id, snowflake.Snowflake(user))

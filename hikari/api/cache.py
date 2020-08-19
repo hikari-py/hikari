@@ -86,7 +86,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PrivateTextChannel or builtins.None
+        typing.Optional[hikari.models.channels.PrivateTextChannel]
             The object of the private text channel that was found in the cache
             or `builtins.None`.
         """
@@ -112,7 +112,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.emojis.KnownCustomEmoji or builtins.None
+        typing.Optional[hikari.models.emojis.KnownCustomEmoji]
             The object of the emoji that was found in the cache or `builtins.None`.
         """
 
@@ -156,7 +156,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.GatewayGuild or builtins.None
+        typing.Optional[hikari.models.guilds.GatewayGuild]
             The object of the guild if found, else None.
         """
 
@@ -181,7 +181,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.GuildChannel or builtins.None
+        typing.Optional[hikari.models.channels.GuildChannel]
             The object of the guild channel that was found in the cache or
             `builtins.None`.
         """
@@ -225,7 +225,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.invites.InvteWithMetadata or builtins.None
+        typing.Optional[hikari.models.invites.InvteWithMetadata]
             The object of the invite that was found in the cache or `builtins.None`.
         """
 
@@ -284,7 +284,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.users.OwnUser or builtins.None
+        typing.Optional[hikari.models.users.OwnUser]
             The own user object that was found in the cache, else `builtins.None`.
         """
 
@@ -301,7 +301,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Member or builtins.None
+        typing.Optional[hikari.models.guilds.Member]
             The object of the member found in the cache, else `builtins.None`.
         """
 
@@ -348,7 +348,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.include_presences.MemberPresence or builtins.None
+        typing.Optional[hikari.models.include_presences.MemberPresence]
             The object of the presence that was found in the cache or
             `builtins.None`.
         """
@@ -395,7 +395,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Role or builtins.None
+        typing.Optional[hikari.models.guilds.Role]
             The object of the role found in the cache or `builtins.None`.
         """
 
@@ -436,7 +436,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.users.User or builtins.None
+        typing.Optional[hikari.models.users.User]
             The object of the user that was found in the cache else `builtins.None`.
         """
 
@@ -465,7 +465,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        hikari.models.voices.VoiceState or builtins.None
+        typing.Optional[hikari.models.voices.VoiceState]
             The object of the voice state that was found in the cache, or
             `builtins.None`.
         """
@@ -554,7 +554,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PrivateTextChannel or builtins.None
+        typing.Optional[hikari.models.channels.PrivateTextChannel]
             The object of the private text channel that was removed from the
             cache if found, else `builtins.None`
         """
@@ -582,7 +582,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.channels.PrivateTextChannel or builtins.None, hikari.models.channels.PrivateTextChannel or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.channels.PrivateTextChannel], typing.Optional[hikari.models.channels.PrivateTextChannel]]
             A tuple of the old cached private text channel if found
             (else `builtins.None`) and the new cached private text channel if it
             could be cached (else `builtins.None`).
@@ -641,7 +641,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.emojis.KnownCustomEmoji or builtins.None
+        typing.Optional[hikari.models.emojis.KnownCustomEmoji]
             The object of the emoji that was removed from the cache or
             `builtins.None`.
         """
@@ -669,7 +669,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.emojis.KnownCustomEmoji or builtins.None, hikari.models.emojis.KnownCustomEmoji or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.emojis.KnownCustomEmoji], typing.Optional[hikari.models.emojis.KnownCustomEmoji]]
             A tuple of the old cached emoji object if found (else `builtins.None`)
             and the new cached emoji object if it could be cached (else
             `builtins.None`).
@@ -697,7 +697,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.GatewayGuild or builtins.None
+        typing.Optional[hikari.models.guilds.GatewayGuild]
             The object of the guild that was removed from the cache, will be
             `builtins.None` if not found.
         """
@@ -741,7 +741,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.guilds.GatewayGuild or builtins.None, hikari.models.guilds.GatewayGuild or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.guilds.GatewayGuild], typing.Optional[hikari.models.guilds.GatewayGuild]]
             A tuple of the old cached guild object if found (else `builtins.None`)
             and the object of the guild that was added to the cache if it could
             be added (else `builtins.None`).
@@ -787,7 +787,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.GuildChannel or builtins.None
+        typing.Optional[hikari.models.channels.GuildChannel]
             The object of the guild channel that was removed from the cache if
             found, else `builtins.None`.ww
         """
@@ -815,7 +815,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.channels.GuildChannel or builtins.None, hikari.models.channels.GuildChannel or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.channels.GuildChannel], typing.Optional[hikari.models.channels.GuildChannel]]
             A tuple of the old cached guild channel if found (else `builtins.None`)
             and the new cached guild channel if it could be cached
             (else `builtins.None`).
@@ -879,7 +879,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.invites.InviteWithMetaData or builtins.None
+        typing.Optional[hikari.models.invites.InviteWithMetaData]
             The object of the invite that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -907,7 +907,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.invites.InviteWithMetadata or builtins.None, hikari.models.invites.InviteWithMetadata or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.invites.InviteWithMetadata], typing.Optional[hikari.models.invites.InviteWithMetadata]]
             A tuple of the old cached invite object if found (else
             `builtins.None`) and the new cached invite object if it could be
             cached (else `builtins.None`).
@@ -919,7 +919,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.OwnUser or builtins.None
+        typing.Optional[hikari.models.users.OwnUser]
             The own user object that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -947,7 +947,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.users.OwnUser or builtins.None, hikari.models.users.OwnUser or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.users.OwnUser], typing.Optional[hikari.models.users.OwnUser]]
             A tuple of the old cached own user object if found (else
             `builtins.None`) and the new cached own user object if it could be
             cached, else `builtins.None`.
@@ -1006,7 +1006,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Member or builtins.None
+        typing.Optional[hikari.models.guilds.Member]
             The object of the member that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -1034,7 +1034,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.guilds.Member or builtins.None, hikari.models.guilds.Member or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.guilds.Member], typing.Optional[hikari.models.guilds.Member]]
             A tuple of the old cached member object if found (else `builtins.None`)
             and the new cached member object if it could be cached (else
             `builtins.None`)
@@ -1086,7 +1086,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.include_presences.MemberPresence or builtins.None
+        typing.Optional[hikari.models.include_presences.MemberPresence]
             The object of the presence that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -1114,7 +1114,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.presence.MemberPresence or builtins.None, hikari.models.presence.MemberPresence or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.presence.MemberPresence], typing.Optional[hikari.models.presence.MemberPresence]]
             A tuple of the old cached invite object if found (else `builtins.None`
             and the new cached invite object if it could be cached ( else
             `builtins.None`).
@@ -1158,7 +1158,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.guilds.Role or builtins.None
+        typing.Optional[hikari.models.guilds.Role]
             The object of the role that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -1186,7 +1186,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.guilds.Role or builtins.None, hikari.models.guilds.Role or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.guilds.Role], typing.Optional[hikari.models.guilds.Role]]
             A tuple of the old cached role object if found (else `builtins.None`
             and the new cached role object if it could be cached (else
             `builtins.None`).
@@ -1224,7 +1224,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.User or builtins.None
+        typing.Optional[hikari.models.users.User]
             The object of the user that was removed from the cache if found,
             else `builtins.None`.
         """
@@ -1252,7 +1252,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.users.User or builtins.None, hikari.models.users.User or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.users.User], typing.Optional[hikari.models.users.User]]
             A tuple of the old cached user if found (else `builtins.None`) and
             the newly cached user if it could be cached (else `builtins.None`).
         """
@@ -1321,7 +1321,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        hikari.models.voices.VoiceState or builtins.None
+        typing.Optional[hikari.models.voices.VoiceState]
             The object of the voice state that was removed from the cache if
             found, else `builtins.None`.
         """
@@ -1349,7 +1349,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.models.voices.VoiceState or builtins.None, hikari.models.voices.VoiceState or builtins.None]
+        typing.Tuple[typing.Optional[hikari.models.voices.VoiceState], typing.Optional[hikari.models.voices.VoiceState]]
             A tuple of the old cached voice state if found (else `builtins.None`)
             and the new cached voice state object if it could be cached
             (else `builtins.None`).
