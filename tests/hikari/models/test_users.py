@@ -30,7 +30,7 @@ from tests.hikari import hikari_test_helpers
 
 def test_UserFlag_str_operator():
     flag = users.UserFlag(1 << 17)
-    assert str(flag) == "VERIFIED_BOT_DEVELOPER"
+    assert str(flag) == "EARLY_VERIFIED_DEVELOPER"
 
 
 def test_PremiumType_str_operator():

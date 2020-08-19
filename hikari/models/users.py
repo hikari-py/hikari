@@ -87,8 +87,11 @@ class UserFlag(flag.Flag):
     VERIFIED_BOT = 1 << 16
     """Verified Bot"""
 
-    VERIFIED_BOT_DEVELOPER = 1 << 17
-    """Verified Bot Developer"""
+    EARLY_VERIFIED_DEVELOPER = 1 << 17
+    """Verified Bot Developer.
+
+    Only applies to users that verified their account before 20th August 2019.
+    """
 
 
 @enum.unique

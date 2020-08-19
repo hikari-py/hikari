@@ -2844,7 +2844,7 @@ class TestEntityFactoryImpl:
             "discriminator": "6127",
             "bot": True,
             "system": True,
-            "public_flags": int(user_models.UserFlag.VERIFIED_BOT_DEVELOPER),
+            "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
         }
 
     def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload):
@@ -2856,7 +2856,7 @@ class TestEntityFactoryImpl:
         assert user.discriminator == "6127"
         assert user.is_bot is True
         assert user.is_system is True
-        assert user.flags == user_models.UserFlag.VERIFIED_BOT_DEVELOPER
+        assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER
         assert isinstance(user, user_models.UserImpl)
 
     def test_deserialize_user_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
@@ -2885,7 +2885,7 @@ class TestEntityFactoryImpl:
             "verified": True,
             "locale": "en-US",
             "mfa_enabled": True,
-            "public_flags": int(user_models.UserFlag.VERIFIED_BOT_DEVELOPER),
+            "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
             "flags": int(user_models.UserFlag.DISCORD_PARTNER | user_models.UserFlag.DISCORD_EMPLOYEE),
             "premium_type": 1,
         }
@@ -2916,7 +2916,7 @@ class TestEntityFactoryImpl:
                 "discriminator": "2880",
                 "locale": "en-US",
                 "mfa_enabled": True,
-                "public_flags": int(user_models.UserFlag.VERIFIED_BOT_DEVELOPER),
+                "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
                 "flags": int(user_models.UserFlag.DISCORD_PARTNER | user_models.UserFlag.DISCORD_EMPLOYEE),
                 "premium_type": 1,
             }
