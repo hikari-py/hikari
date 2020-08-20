@@ -1,0 +1,22 @@
+# https://github.com/bobvanderlinden/probot-auto-merge
+minApprovals:
+  OWNER: 1
+  COLLABORATOR: 1
+  MEMBER: 2
+
+maxRequestedChanges:
+  OWNER: 0
+  COLLABORATOR: 0
+  MEMBER: 0
+  FIRST_TIME_CONTRIBUTOR: 2
+  FIRST_TIMER: 2
+  
+blockingLabels: 
+  - blocked
+
+requiredLabels:
+  - automerge
+  
+reportStatus: true
+mergeCommitMessage: "{title} (#{number})"
+deleteBranchAfterMerge:
