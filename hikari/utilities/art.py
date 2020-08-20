@@ -24,7 +24,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "ConsolePalette",
-    "DEFAULT_PALETTE",
+    "default_palette",
     "DEFAULT_BANNER_ARGS",
     "get_default_logging_format",
     "get_banner",
@@ -72,26 +72,65 @@ class ConsolePalette:
     dim: str = attr.ib(default="")
 
 
-def _default_palette() -> ConsolePalette:  # pragma: no cover
+def _supports_color(colour_flag_set: bool, force_colour_flag_set: bool) -> bool:  # pragma: no cover
+    # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
+    is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+    if os.getenv("CLICOLOR_FORCE", "0") != "0" or force_colour_flag_set:
+        return True
+    elif (os.getenv("CLICOLOR", "0") != "0" or colour_flag_set) and is_a_tty:
+        return True
+
+    plat = sys.platform
+    supports_color = False
+
+    if plat != "Pocket PC":
+        if plat == "win32":
+            supports_color |= os.getenv("TERM_PROGRAM", None) in ("mintty", "Terminus")
+            supports_color |= "ANSICON" in os.environ
+            supports_color &= is_a_tty
+        else:
+            supports_color = is_a_tty
+
+        supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
+
+    return supports_color
+
+
+def default_palette(colour_flag_set: bool, force_colour_flag_set: bool) -> ConsolePalette:  # pragma: no cover
+    """Generate the default pallete to use for the runtime.
+
+    Contains a set of constant escape codes that are able to be printed.
+
+    These codes will force the console to change colour or style, if supported.
+
+    On unsupported platforms, these will be empty strings, thus making them safe
+    to be used on non-coloured terminals or in logs specifically.
+
+    This will also respect `CLICOLOR` and `CLICOLOR_FORCE` environment
+    variables if `colour_flag_set` is `builtins.False` and
+    `force_colour_flag_set` is also `builtins.False`.
+    See https://bixense.com/clicolors/ for details.
+
+    Parameters
+    ----------
+    colour_flag_set : builtins.bool
+        If `builtins.True` then colour should be on if the output is a TTY.
+    force_colour_flag_set : builtins.bool
+        Same as `colour_flag_set` but forces colour for everything.
+
+
+    Returns
+    -------
+    ConsolePalette
+        A console palette to use.
+    """
     # Modified from
     # https://github.com/django/django/blob/master/django/core/management/color.py
-    _plat = sys.platform
-    _supports_color = False
 
-    # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
-    _is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+    supports_color = _supports_color(colour_flag_set, force_colour_flag_set)
 
-    if _plat != "Pocket PC":
-        if _plat == "win32":
-            _supports_color |= os.getenv("TERM_PROGRAM", None) in ("mintty", "Terminus")
-            _supports_color |= "ANSICON" in os.environ
-            _supports_color &= _is_a_tty
-        else:
-            _supports_color = _is_a_tty
-
-        _supports_color |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
-    if _supports_color:
+    if supports_color:
         return ConsolePalette(
             default="\033[0m",
             bright="\033[1m",
@@ -118,30 +157,23 @@ def _default_palette() -> ConsolePalette:  # pragma: no cover
     return ConsolePalette()
 
 
-DEFAULT_PALETTE: typing.Final[ConsolePalette] = _default_palette()
-"""Contains a set of constant escape codes that are able to be printed.
-
-These codes will force the console to change colour or style, if supported.
-
-On unsupported platforms, these will be empty strings, thus making them safe
-to be used on non-coloured terminals or in logs specifically.
-"""
-
-
-def get_default_logging_format(palette: ConsolePalette = DEFAULT_PALETTE) -> str:
+def get_default_logging_format(palette: typing.Optional[ConsolePalette] = None) -> str:
     """Generate the default library logger format string.
 
     Parameters
     ----------
-    palette : ConsolePalette
+    palette : typing.Optional[ConsolePalette]
         The custom palette to use. Defaults to sane environment-dependent
-        ANSI colour-codes if not specified.
+        ANSI colour-codes if not specified and CLICOLOR/CLICOLOR_FORCE
+        environment variables are not set.
 
     Returns
     -------
     builtins.str
         The string logging console format.
     """
+    palette = palette or default_palette(False, False)
+
     return (
         f"{palette.red}%(levelname)-1.1s{palette.default} {palette.yellow}%(asctime)23.23s"
         f"{palette.default} {palette.bright}{palette.green}%(name)s: {palette.default}{palette.cyan}%(message)s"
@@ -185,7 +217,7 @@ DEFAULT_BANNER_ARGS: typing.Final[typing.Mapping[str, str]] = _default_banner_ar
 
 def get_banner(
     package: str = "hikari",
-    palette: ConsolePalette = DEFAULT_PALETTE,
+    palette: typing.Optional[ConsolePalette] = None,
     args: typing.Mapping[str, str] = DEFAULT_BANNER_ARGS,
 ) -> str:
     """Attempt to read a banner.txt from the given package.
@@ -194,9 +226,10 @@ def get_banner(
     ----------
     package : builtins.str
         The package to read the banner.txt from. Defaults to `hikari`.
-    palette : ConsolePalette
+    palette : typing.Optional[ConsolePalette]
         The console palette to use (defaults to sane ANSI colour defaults or
-        empty-strings if colours are not supported by your TTY.
+        empty-strings if colours are not supported by your TTY and
+        CLICOLOR/CLICOLOR_FORCE environment variables are not set.
     args : typing.Mapping[builtins.str, builtins.str]
         The mapping of arguments to interpolate into the banner, if desired.
 
@@ -205,6 +238,8 @@ def get_banner(
     builtins.str
         The raw banner that can be printed to the console.
     """
+    palette = palette or default_palette(False, False)
+
     params = {**attr.asdict(palette), **args}
 
     with resources.open_text(package, "banner.txt") as banner_fp:
