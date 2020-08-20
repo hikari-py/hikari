@@ -28,7 +28,7 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
-    session.install("-r", "requirements.txt", "-r", "flake-requirements.txt")
+    session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
     shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
     session.run(
         "flake8", f"--output-file={config.FLAKE8_TXT}", "--statistics", "--show-source", "--tee", config.MAIN_PACKAGE,
