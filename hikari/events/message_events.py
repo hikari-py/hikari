@@ -54,6 +54,8 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     # Do NOT remove the users import here. It **is** required, even if PyCharm
     # tries to assure you otherwise.
+    from hikari import channels
+    from hikari import guilds
     from hikari import messages
     from hikari import snowflakes
     from hikari import traits
@@ -75,6 +77,17 @@ class MessagesEvent(shard_events.ShardEvent, abc.ABC):
         -------
         hikari.snowflakes.Snowflake
             The ID of the channel that this event concerns.
+        """
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.TextChannel]:
+        """Get the cached channel that this event concerns, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextChannel]
+            The cached channel, if known.
         """
 
 
@@ -116,6 +129,27 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         hikari.snowflakes.Snowflake
             The ID of the guild that this event concerns.
         """
+
+    @property
+    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
+        # <<inherited docstring from MessagesEvent>>.
+        return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
+
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild this event corresponds to, if known.
+
+        !!! note
+            You will need `hikari.Intents.GUILDS` enabled to receive this
+            information.
+
+        Returns
+        -------
+        hikari.guilds.GatewayGuild
+            The gateway guild that this event corresponds to, if known and
+            cached.
+        """
+        return self.app.cache.get_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -280,6 +314,11 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     message: messages.Message = attr.ib()
     # <<inherited docstring from MessageCreateEvent>>.
 
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+        # <<inherited docstring from MessagesEvent>>.
+        return self.app.cache.get_private_text_channel(self.author_id)
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
@@ -318,6 +357,11 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>.
 
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+        # <<inherited docstring from MessagesEvent>>.
+        return self.app.cache.get_private_text_channel(self.author_id)
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
@@ -355,6 +399,12 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
 
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageDeleteEvent>>.
+
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+        # <<inherited from MessageEvent>>.
+        # TODO: fix it so we can look this up without user ID.
+        return None
 
 
 # NOTE: if this ever has a private channel equivalent implemented, this intents
@@ -411,3 +461,24 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     typing.Sequence[hikari.snowflakes.Snowflake]
         A sequence of message IDs that were bulk deleted.
     """
+
+    @property
+    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
+        # <<inherited docstring from MessagesEvent>>.
+        return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
+
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild this event corresponds to, if known.
+
+        !!! note
+            You will need `hikari.Intents.GUILDS` enabled to receive this
+            information.
+
+        Returns
+        -------
+        hikari.guilds.GatewayGuild
+            The gateway guild that this event corresponds to, if known and
+            cached.
+        """
+        return self.app.cache.get_guild(self.guild_id)

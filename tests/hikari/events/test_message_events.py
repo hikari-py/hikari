@@ -33,6 +33,7 @@ class TestMessageCreateEvent:
             app = None
             message = mock.Mock(messages.Message)
             shard = object()
+            channel = object()
 
         return MessageCreateEvent()
 
@@ -56,6 +57,7 @@ class TestMessageUpdateEvent:
             app = None
             message = mock.Mock(messages.Message)
             shard = object()
+            channel = object()
 
         return MessageUpdateEvent()
 
@@ -79,6 +81,7 @@ class TestMessageDeleteEvent:
             app = None
             message = mock.Mock(messages.Message)
             shard = object()
+            channel = object()
 
         return MessageDeleteEvent()
 

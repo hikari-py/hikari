@@ -1134,15 +1134,18 @@ class GatewayGuild(Guild):
     `builtins.None`.
     """
 
-    def get_roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+    @property
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
         # <<inherited docstring from Guild>>.
         return self.app.cache.get_roles_view_for_guild(self.id)
 
-    def get_emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+    @property
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
         # <<inherited docstring from Guild>>.
         return self.app.cache.get_emojis_view_for_guild(self.id)
 
-    def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
+    @property
+    def members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
@@ -1150,7 +1153,8 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_members_view_for_guild(self.id)
 
-    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+    @property
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
         """Get the channels cached for the guild.
 
         Returns
@@ -1161,7 +1165,8 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
-    def get_presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
+    @property
+    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
         """Get the include_presences cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
@@ -1170,7 +1175,8 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_presences_view_for_guild(self.id)
 
-    def get_voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
+    @property
+    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
         """Get the voice states cached for the guild.
 
         Returns

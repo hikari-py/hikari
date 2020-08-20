@@ -35,6 +35,8 @@ class TestTypingEvent:
             timestamp = None
             shard = None
             app = mock.Mock(rest=mock.AsyncMock())
+            channel = object()
+            guild = object()
 
         return StubEvent()
 
