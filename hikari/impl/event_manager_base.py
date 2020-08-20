@@ -260,18 +260,23 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
 
             if base_events.is_no_recursive_throw_event(event):
-                _LOGGER.error("an exception occurred handling an event, but it has been ignored", exc_info=trio)
-            else:
-                _LOGGER.error("an exception occurred handling an event", exc_info=trio)
-                await self.dispatch(
-                    base_events.ExceptionEvent(
-                        app=self._app,
-                        shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
-                        exception=ex,
-                        failed_event=event,
-                        failed_callback=callback,
-                    )
+                _LOGGER.error(
+                    "an exception occurred handling an event (%s), but it has been ignored",
+                    type(event).__name__,
+                    exc_info=trio,
                 )
+            else:
+                exception_event = base_events.ExceptionEvent(
+                    app=self._app,
+                    shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
+                    exception=ex,
+                    failed_event=event,
+                    failed_callback=callback,
+                )
+
+                log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
+                log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
+                await self.dispatch(exception_event)
 
     async def wait_for(
         self,
