@@ -151,6 +151,22 @@ class CacheAware(typing.Protocol):
         """
         raise NotImplementedError
 
+    @property
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.OwnUser]
+            The bot user, if known, otherwise `builtins.None`.
+        """
+        raise NotImplementedError
+
 
 @typing.runtime_checkable
 class DispatcherAware(typing.Protocol):
@@ -356,22 +372,6 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         -------
         typing.Optional[hikari.intents.Intent]
             The intents registered on this application.
-        """
-        raise NotImplementedError
-
-    @property
-    def me(self) -> typing.Optional[users.OwnUser]:
-        """Return the bot user, if known.
-
-        This should be available as soon as the bot has fired the
-        `hikari.events.lifetime_events.StartingEvent`.
-
-        Until then, this may or may not be `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.users.OwnUser]
-            The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError
 

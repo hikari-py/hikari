@@ -1134,18 +1134,15 @@ class GatewayGuild(Guild):
     `builtins.None`.
     """
 
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+    def get_roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
         # <<inherited docstring from Guild>>.
         return self.app.cache.get_roles_view_for_guild(self.id)
 
-    @property
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+    def get_emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
         # <<inherited docstring from Guild>>.
         return self.app.cache.get_emojis_view_for_guild(self.id)
 
-    @property
-    def members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
+    def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
@@ -1153,8 +1150,7 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_members_view_for_guild(self.id)
 
-    @property
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
         """Get the channels cached for the guild.
 
         Returns
@@ -1165,8 +1161,7 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
-    @property
-    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
+    def get_presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
         """Get the include_presences cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
@@ -1175,8 +1170,7 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_presences_view_for_guild(self.id)
 
-    @property
-    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
+    def get_voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
         """Get the voice states cached for the guild.
 
         Returns
@@ -1251,6 +1245,22 @@ class GatewayGuild(Guild):
             The cached member object if found, else `builtins.None`.
         """
         return self.app.cache.get_member(self.id, snowflakes.Snowflake(user))
+
+    def get_my_member(self) -> typing.Optional[Member]:
+        """Return the cached member for the bot user in this guild, if known.
+
+        Returns
+        -------
+        typing.Optional[Member]
+            The cached member for this guild, or `builtins.None` if not known.
+            This will be sent on each `hikari.GuildCreateEvent`, as well as any
+            presence updates if you have opted into them.
+        """
+        me = self.app.me
+        if me is None:
+            return None
+
+        return self.get_member(me.id)
 
     def get_presence(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[presences_.MemberPresence]:
         """Get a cached presence that belongs to the guild by it's user ID or object.
