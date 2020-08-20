@@ -13,6 +13,7 @@ _test_job: &test_job
     - ${PYTHON_COMMAND} -V
   script:
     - ${PYTHON_COMMAND} -m nox --sessions pytest
+  after_script:
     - bash <(curl -s https://codecov.io/bash)
 
 _windows_test_job: &windows_test_job
@@ -54,41 +55,49 @@ jobs:
       script:
         - python -m nox --sessions twemoji-test
 
-    - name: "Windows 10 Python 3.8.5 AMD64 Tests"
+    - name: "Windows 10 CPython 3.8.5 AMD64 Tests"
       env: PYTHON_VERSION="3.8.5"
       arch: amd64
       stage: test
       <<: *windows_test_job
 
-    - name: "Windows 10 Python 3.9 Dev AMD64 Tests"
+    - name: "Windows 10 CPython 3.9 Dev AMD64 Tests"
       env: PYTHON_VERSION="3.9.0-rc1 --pre"
       arch: amd64
       stage: test
       <<: *windows_test_job
 
-    - name: "Linux Python 3.8.5 AMD64 Tests"
+    - name: "Linux CPython 3.8.5 AMD64 Tests"
       python: "3.8.5"
       arch: amd64
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux Python 3.9 Dev AMD64 Tests"
+    - name: "Linux CPython 3.9 Dev AMD64 Tests"
       python: "3.9-dev"
       arch: amd64
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux Python 3.8.5 ARM64 Tests"
+    - name: "Linux CPython 3.8.5 ARM64 Tests"
       python: "3.8.5"
       arch: arm64
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux Python 3.9 Dev ARM64 Tests"
+    - name: "Linux CPython 3.9 Dev ARM64 Tests"
       python: "3.9-dev"
       arch: arm64
       stage: test
       <<: *linux_test_job
+
+    - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
+      language: ruby
+      arch: amd64
+      stage: test
+      script:
+        - docker build . --file scripts/stackless3.8.0-test.dockerfile --tag nekokatt/stackless3.8.0-test.hikari --force-rm
+        - docker run -it nekokatt/stackless3.8.0-test.hikari /bin/bash -c "nox --sessions pytest && bash <(curl -s https://codecov.io/bash)"
 
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
