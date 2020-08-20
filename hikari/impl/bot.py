@@ -225,6 +225,7 @@ class BotApp(
         "_shards",
         "_started_at_monotonic",
         "_started_at_timestamp",
+        "_stateless",
         "_tasks",
         "_token",
         "_version",
@@ -311,6 +312,7 @@ class BotApp(
         self._guild_chunker: guild_chunker_.GuildChunker
         self._event_manager: event_manager_base.EventManagerBase
 
+        self._stateless = stateless
         if stateless:
             self._cache = stateless_cache_impl.StatelessCacheImpl()
             self._guild_chunker = stateless_guild_chunker_impl.StatelessGuildChunkerImpl()
@@ -387,6 +389,11 @@ class BotApp(
         return self._http_settings
 
     @property
+    def intents(self) -> typing.Optional[intents_.Intents]:
+        # <<inherited docstring from traits.ShardAware>>
+        return self._intents
+
+    @property
     def is_debug_enabled(self) -> bool:
         """Return `builtins.True` if debugging is enabled.
 
@@ -399,9 +406,9 @@ class BotApp(
         return self._debug
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intents]:
-        # <<inherited docstring from traits.ShardAware>>
-        return self._intents
+    def is_stateless(self) -> bool:
+        # <<inherited docstring from traits.CacheAware>>
+        return self._stateless
 
     @property
     def me(self) -> typing.Optional[users.OwnUser]:

@@ -141,6 +141,18 @@ class CacheAware(typing.Protocol):
         """
         raise NotImplementedError
 
+    @property
+    def is_stateless(self) -> bool:
+        """Return `builtins.True` if the cache is stateless.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if the cache is stateless. Otherwise,
+            `builtins.False`.
+        """
+        raise NotImplementedError
+
 
 @typing.runtime_checkable
 class DispatcherAware(typing.Protocol):
