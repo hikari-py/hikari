@@ -29,7 +29,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari.models import guilds
+    from hikari import guilds
 
 
 class GuildChunker(abc.ABC):
@@ -43,7 +43,7 @@ class GuildChunker(abc.ABC):
 
         Parameters
         ----------
-        guild: hikari.models.guilds.Guild
+        guild: hikari.guilds.Guild
             The guild to request chunk for.
         """
 

@@ -29,13 +29,13 @@ import asyncio
 import logging
 import typing
 
+from hikari import intents as intents_
 from hikari.api import chunker
 from hikari.impl import rate_limits
-from hikari.models import intents as intents_
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
     from hikari import traits
-    from hikari.models import guilds
 
 _LOGGER = logging.getLogger("hikari.guild_chunker")
 

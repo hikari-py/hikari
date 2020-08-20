@@ -38,7 +38,10 @@ import warnings
 
 from hikari import config
 from hikari import errors
+from hikari import intents as intents_
+from hikari import presences
 from hikari import traits
+from hikari import undefined
 from hikari.api import event_dispatcher
 from hikari.api import shard as gateway_shard
 from hikari.events import lifetime_events
@@ -54,22 +57,19 @@ from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
 from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
-from hikari.models import intents as intents_
-from hikari.models import presences
 from hikari.utilities import art
 from hikari.utilities import constants
 from hikari.utilities import date
-from hikari.utilities import undefined
 from hikari.utilities import version_sniffer
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
+    from hikari import users
     from hikari.api import cache as cache_
     from hikari.api import chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
-    from hikari.models import users
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -101,18 +101,18 @@ class BotApp(
         are supported. This defaults to using v6.
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         The HTTP-related settings to use.
-    initial_activity : typing.Optional[hikari.models.presences.Activity]
+    initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to have on each shard. Defaults to `builtins.None`.
-    initial_status : hikari.models.presences.Status
+    initial_status : hikari.presences.Status
         The initial status to have on each shard. Defaults to
-        `hikari.models.presences.Status.ONLINE`.
+        `hikari.presences.Status.ONLINE`.
     initial_idle_since : typing.Optional[datetime.datetime]
         The initial time to show as being idle since, or `builtins.None` if not
         idle, for each shard. Defaults to `builtins.None`.
     initial_is_afk : builtins.bool
         If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
         each shard will appear as _not_ being AFK. Defaults to `builtins.False`
-    intents : typing.Optional[hikari.models.intents.Intents]
+    intents : typing.Optional[hikari.intents.Intents]
         The intents to use for each shard. If `builtins.None`, then no intents
         are passed. Note that on the version `7` gateway, this will cause an
         immediate connection close with an error code.
@@ -722,18 +722,18 @@ class BotApp(
 
         Parameters
         ----------
-        status : hikari.utilities.undefined.UndefinedOr[hikari.models.presences.Status]
+        status : hikari.undefined.UndefinedOr[hikari.presences.Status]
             The status to set all shards to. If undefined, no statuses are
             changed.
-        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.presences.Activity]
+        activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
             The activity to set. May be `builtins.None` if the activity should
             be cleared. If undefined, no activities are changed.
-        idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
+        idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime to appear to be idle since. If `builtins.None`, then
             this is not sent (this does not need to be specified to set the
             bot's status to idle). If undefined, the idle timestamp is not
             changed.
-        afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        afk : hikari.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, then the bot is marked as being AFK. If
             `builtins.False`, the bot is marked as not being AFK. If
             unspecified, this is not changed.

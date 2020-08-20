@@ -22,9 +22,9 @@
 import mock
 import pytest
 
+from hikari import guilds
+from hikari import presences
 from hikari.events import guild_events
-from hikari.models import guilds
-from hikari.models import presences
 
 
 class TestGuildAvailableEvent:

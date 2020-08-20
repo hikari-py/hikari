@@ -22,8 +22,8 @@
 import mock
 import pytest
 
+from hikari import guilds
 from hikari.events import role_events
-from hikari.models import guilds
 
 
 class TestRoleCreateEvent:

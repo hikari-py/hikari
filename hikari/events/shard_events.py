@@ -41,10 +41,10 @@ from hikari.events import base_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import snowflakes
     from hikari import traits
+    from hikari import users
     from hikari.api import shard as gateway_shard
-    from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -129,11 +129,11 @@ class ShardReadyEvent(ShardStateEvent):
 
     Returns
     -------
-    hikari.models.users.OwnUser
+    hikari.users.OwnUser
         This bot's user.
     """
 
-    unavailable_guilds: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=False)
+    unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=False)
     """Sequence of the IDs for all guilds this bot is currently in.
 
     All guilds will start off "unavailable" and should become available after
@@ -141,7 +141,7 @@ class ShardReadyEvent(ShardStateEvent):
 
     Returns
     -------
-    typing.Sequence[hikari.utilities.snowflake.Snowflake]
+    typing.Sequence[hikari.snowflakes.Snowflake]
         All guild IDs that the bot is in for this shard.
     """
 

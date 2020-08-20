@@ -37,9 +37,9 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
@@ -77,7 +77,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
     Returns
     -------
-    typing.Collection[hikari.models.intents.Intents]
+    typing.Collection[hikari.intents.Intents]
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
@@ -89,10 +89,10 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
 
     Parameters
     ----------
-    first : hikari.models.intents.Intents
+    first : hikari.intents.Intents
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.models.intents.Intents
+    *rest : hikari.intents.Intents
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
     """

@@ -23,26 +23,26 @@ import datetime
 import mock
 import pytest
 
+from hikari import applications as application_models
+from hikari import audit_logs as audit_log_models
+from hikari import channels as channel_models
+from hikari import colors as color_models
+from hikari import embeds as embed_models
+from hikari import emojis as emoji_models
+from hikari import files
+from hikari import guilds as guild_models
+from hikari import invites as invite_models
+from hikari import messages as message_models
+from hikari import permissions as permission_models
+from hikari import presences as presence_models
+from hikari import sessions as gateway_models
+from hikari import snowflakes
 from hikari import traits
+from hikari import undefined
+from hikari import users as user_models
+from hikari import voices as voice_models
+from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
-from hikari.models import applications as application_models
-from hikari.models import audit_logs as audit_log_models
-from hikari.models import channels as channel_models
-from hikari.models import colors as color_models
-from hikari.models import embeds as embed_models
-from hikari.models import emojis as emoji_models
-from hikari.models import gateway as gateway_models
-from hikari.models import guilds as guild_models
-from hikari.models import invites as invite_models
-from hikari.models import messages as message_models
-from hikari.models import permissions as permission_models
-from hikari.models import presences as presence_models
-from hikari.models import users as user_models
-from hikari.models import voices as voice_models
-from hikari.models import webhooks as webhook_models
-from hikari.utilities import files
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 
 
 def test__deserialize_seconds_timedelta():
@@ -1316,7 +1316,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, user_payload, known_custom_emoji_payload
     ):
         emoji = entity_factory_impl.deserialize_known_custom_emoji(
-            known_custom_emoji_payload, guild_id=snowflake.Snowflake(1235123)
+            known_custom_emoji_payload, guild_id=snowflakes.Snowflake(1235123)
         )
         assert emoji.app is mock_app
         assert emoji.id == 12345
@@ -1340,7 +1340,7 @@ class TestEntityFactoryImpl:
                 "require_colons": True,
                 "managed": False,
             },
-            guild_id=snowflake.Snowflake(642334234),
+            guild_id=snowflakes.Snowflake(642334234),
         )
         assert emoji.user is None
         assert emoji.is_animated is False
@@ -1465,7 +1465,7 @@ class TestEntityFactoryImpl:
                 "mute": True,
             },
             user=mock_user,
-            guild_id=snowflake.Snowflake(64234),
+            guild_id=snowflakes.Snowflake(64234),
         )
         assert member.user is mock_user
         assert member.guild_id == 64234
@@ -1485,7 +1485,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_role(self, entity_factory_impl, mock_app, guild_role_payload):
-        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflake.Snowflake(76534453))
+        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
         assert guild_role.app is mock_app
         assert guild_role.id == 41771983423143936
         assert guild_role.guild_id == 76534453
@@ -1615,7 +1615,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.discovery_splash_hash == "lkodwaidi09239uid"
         assert guild_preview.emojis == {
             12345: entity_factory_impl.deserialize_known_custom_emoji(
-                known_custom_emoji_payload, guild_id=snowflake.Snowflake(152559372126519269)
+                known_custom_emoji_payload, guild_id=snowflakes.Snowflake(152559372126519269)
             )
         }
         assert guild_preview.approximate_member_count == 69
@@ -1716,12 +1716,12 @@ class TestEntityFactoryImpl:
         assert guild.explicit_content_filter == guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
         assert guild.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(
-                guild_role_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                guild_role_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild.emojis == {
             12345: entity_factory_impl.deserialize_known_custom_emoji(
-                known_custom_emoji_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
@@ -1959,41 +1959,41 @@ class TestEntityFactoryImpl:
 
         assert guild_definition.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(
-                guild_role_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                guild_role_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild_definition.emojis == {
             12345: entity_factory_impl.deserialize_known_custom_emoji(
-                known_custom_emoji_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild_definition.members == {
             115590097100865541: entity_factory_impl.deserialize_member(
-                member_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild_definition.channels == {
             123: entity_factory_impl.deserialize_guild_text_channel(
-                guild_text_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                guild_text_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             ),
             555: entity_factory_impl.deserialize_guild_voice_channel(
-                guild_voice_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                guild_voice_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             ),
             7777: entity_factory_impl.deserialize_guild_news_channel(
-                guild_news_channel_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                guild_news_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             ),
         }
         assert guild_definition.presences == {
             115590097100865541: entity_factory_impl.deserialize_member_presence(
-                member_presence_payload, guild_id=snowflake.Snowflake(265828729970753537)
+                member_presence_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
         assert guild_definition.voice_states == {
             115590097100865541: entity_factory_impl.deserialize_voice_state(
                 voice_state_payload,
-                guild_id=snowflake.Snowflake(265828729970753537),
+                guild_id=snowflakes.Snowflake(265828729970753537),
                 member=entity_factory_impl.deserialize_member(
-                    member_payload, guild_id=snowflake.Snowflake(265828729970753537),
+                    member_payload, guild_id=snowflakes.Snowflake(265828729970753537),
                 ),
             )
         }
@@ -2374,7 +2374,7 @@ class TestEntityFactoryImpl:
         assert partial_message.guild_id == 678
         assert partial_message.author == entity_factory_impl.deserialize_user(user_payload)
         assert partial_message.member == entity_factory_impl.deserialize_member(
-            member_payload, user=partial_message.author, guild_id=snowflake.Snowflake(678)
+            member_payload, user=partial_message.author, guild_id=snowflakes.Snowflake(678)
         )
         assert partial_message.content == "some info"
         assert partial_message.timestamp == datetime.datetime(
@@ -2480,7 +2480,7 @@ class TestEntityFactoryImpl:
         assert message.guild_id == 678
         assert message.author == entity_factory_impl.deserialize_user(user_payload)
         assert message.member == entity_factory_impl.deserialize_member(
-            member_payload, user=message.author, guild_id=snowflake.Snowflake(678)
+            member_payload, user=message.author, guild_id=snowflakes.Snowflake(678)
         )
         assert message.content == "some info"
         assert message.timestamp == datetime.datetime(2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc)
@@ -2702,9 +2702,9 @@ class TestEntityFactoryImpl:
                 "activities": [],
                 "client_status": {},
             },
-            guild_id=snowflake.Snowflake(9654234123),
+            guild_id=snowflakes.Snowflake(9654234123),
         )
-        assert presence.guild_id == snowflake.Snowflake(9654234123)
+        assert presence.guild_id == snowflakes.Snowflake(9654234123)
         assert presence.premium_since is None
         assert presence.nickname is None
         assert presence.role_ids is None
@@ -2958,7 +2958,7 @@ class TestEntityFactoryImpl:
         assert voice_state.channel_id == 157733188964188161
         assert voice_state.user_id == 115590097100865541
         assert voice_state.member == entity_factory_impl.deserialize_member(
-            member_payload, guild_id=snowflake.Snowflake(929292929292992)
+            member_payload, guild_id=snowflakes.Snowflake(929292929292992)
         )
         assert voice_state.session_id == "90326bd25d71d39b9ef95b299e3872ff"
         assert voice_state.is_guild_deafened is True
@@ -2988,11 +2988,11 @@ class TestEntityFactoryImpl:
                 "self_video": True,
                 "suppress": False,
             },
-            guild_id=snowflake.Snowflake(43123),
+            guild_id=snowflakes.Snowflake(43123),
         )
         assert voice_state.guild_id == 43123
         assert voice_state.member == entity_factory_impl.deserialize_member(
-            member_payload, guild_id=snowflake.Snowflake(43123)
+            member_payload, guild_id=snowflakes.Snowflake(43123)
         )
 
     def test_deserialize_voice_state_with_null_and_unset_fields(self, entity_factory_impl, member_payload):

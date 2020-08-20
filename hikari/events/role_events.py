@@ -34,16 +34,16 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import snowflakes
     from hikari import traits
     from hikari.api import shard as gateway_shard
-    from hikari.models import guilds
-    from hikari.utilities import snowflake
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -53,23 +53,23 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild that relates to this event.
         """
 
     @property
     @abc.abstractmethod
-    def role_id(self) -> snowflake.Snowflake:
+    def role_id(self) -> snowflakes.Snowflake:
         """ID of the role that this event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the role that relates to this event.
         """
 
@@ -91,17 +91,17 @@ class RoleCreateEvent(RoleEvent):
 
     Returns
     -------
-    hikari.models.guilds.Role
+    hikari.guilds.Role
         The created role.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
-    def role_id(self) -> snowflake.Snowflake:
+    def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
 
@@ -123,17 +123,17 @@ class RoleUpdateEvent(RoleEvent):
 
     Returns
     -------
-    hikari.models.guilds.Role
+    hikari.guilds.Role
         The created role.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
-    def role_id(self) -> snowflake.Snowflake:
+    def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
 
@@ -150,8 +150,8 @@ class RoleDeleteEvent(RoleEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from RoleEvent>>.
 
-    role_id: snowflake.Snowflake = attr.ib()
+    role_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from RoleEvent>>.

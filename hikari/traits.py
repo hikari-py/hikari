@@ -46,6 +46,8 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari import config
+    from hikari import intents as intents_
+    from hikari import users
     from hikari.api import cache as cache_
     from hikari.api import chunker as chunker_
     from hikari.api import entity_factory as entity_factory_
@@ -57,8 +59,6 @@ if typing.TYPE_CHECKING:
 
     # noinspection PyUnresolvedReferences
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
-    from hikari.models import intents as intents_
-    from hikari.models import users
 
 
 EventT_co = typing.TypeVar("EventT_co", bound="base_events.Event", covariant=True)
@@ -344,7 +344,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
         Returns
         -------
-        typing.Optional[hikari.models.intents.Intent]
+        typing.Optional[hikari.intents.Intent]
             The intents registered on this application.
         """
         raise NotImplementedError
@@ -360,7 +360,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
         Returns
         -------
-        typing.Optional[hikari.models.users.OwnUser]
+        typing.Optional[hikari.users.OwnUser]
             The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError

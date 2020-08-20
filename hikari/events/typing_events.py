@@ -33,20 +33,20 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import channels
+    from hikari import guilds
+    from hikari import snowflakes
     from hikari import traits
+    from hikari import users
     from hikari.api import shard as gateway_shard
-    from hikari.models import channels
-    from hikari.models import guilds
-    from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.PRIVATE_MESSAGE_TYPING)
@@ -55,23 +55,23 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         """ID of the channel that this event concerns.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the channel that this event concerns.
         """
 
     @property
     @abc.abstractmethod
-    def user_id(self) -> snowflake.Snowflake:
+    def user_id(self) -> snowflakes.Snowflake:
         """ID of the user who triggered this typing event.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             ID of the user who is typing.
         """
 
@@ -91,7 +91,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.TextChannel
+        hikari.channels.TextChannel
             The channel.
         """
         return typing.cast("channels.TextChannel", await self.app.rest.fetch_channel(self.channel_id))
@@ -101,7 +101,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.user
+        hikari.users.user
             The user.
         """
         return await self.app.rest.fetch_user(self.user_id)
@@ -119,21 +119,21 @@ class GuildTypingEvent(TypingEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from TypingEvent>>.
 
-    user_id: snowflake.Snowflake = attr.ib(repr=True)
+    user_id: snowflakes.Snowflake = attr.ib(repr=True)
     # <<inherited docstring from TypingEvent>>.
 
     timestamp: datetime.datetime = attr.ib(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     """ID of the guild that this event relates to.
 
     Returns
     -------
-    hikari.utilities.snowflake.Snowflake
+    hikari.snowflakes.Snowflake
         The ID of the guild that relates to this event.
     """
 
@@ -142,7 +142,7 @@ class GuildTypingEvent(TypingEvent):
 
     Returns
     -------
-    hikari.models.guilds.Member
+    hikari.guilds.Member
         Member of the user who triggered this typing event.
     """
 
@@ -156,7 +156,7 @@ class GuildTypingEvent(TypingEvent):
 
         Returns
         -------
-        hikari.models.guilds.Member
+        hikari.guilds.Member
             The member.
         """
         return await self.app.rest.fetch_member(self.guild_id, self.user_id)
@@ -166,7 +166,7 @@ class GuildTypingEvent(TypingEvent):
 
         Returns
         -------
-        hikari.models.guilds.Guild
+        hikari.guilds.Guild
             The guild.
         """
         return await self.app.rest.fetch_guild(self.guild_id)
@@ -176,7 +176,7 @@ class GuildTypingEvent(TypingEvent):
 
         Returns
         -------
-        hikari.models.guilds.GuildPreview
+        hikari.guilds.GuildPreview
             The guild.
         """
         return await self.app.rest.fetch_guild_preview(self.guild_id)
@@ -194,10 +194,10 @@ class PrivateTypingEvent(TypingEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from TypingEvent>>.
 
-    user_id: snowflake.Snowflake = attr.ib(repr=True)
+    user_id: snowflakes.Snowflake = attr.ib(repr=True)
     # <<inherited docstring from TypingEvent>>.
 
     timestamp: datetime.datetime = attr.ib(repr=False)

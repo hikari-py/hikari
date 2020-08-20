@@ -34,30 +34,30 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import errors
+from hikari import files
+from hikari import iterators
+from hikari import snowflakes
+from hikari import undefined
 from hikari.api import special_endpoints
-from hikari.models import channels
 from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
 from hikari.utilities import date
-from hikari.utilities import files
-from hikari.utilities import iterators
 from hikari.utilities import routes
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    from hikari import applications
+    from hikari import audit_logs
+    from hikari import colors
+    from hikari import guilds
+    from hikari import messages
+    from hikari import permissions as permissions_
+    from hikari import users
     from hikari.api import entity_factory as entity_factory_
-    from hikari.models import applications
-    from hikari.models import audit_logs
-    from hikari.models import colors
-    from hikari.models import guilds
-    from hikari.models import messages
-    from hikari.models import permissions as permissions_
-    from hikari.models import users
 
 
 @typing.final
@@ -81,7 +81,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         rest_closed_event: asyncio.Event,
     ) -> None:
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
@@ -147,7 +147,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     Creating a guild with an icon
 
     ```py
-    from hikari.models.files import WebResourceStream
+    from hikari.files import WebResourceStream
 
     guild_builder = rest.guild_builder("My Server!")
     guild_builder.icon = WebResourceStream("cat.png", "http://...")
@@ -157,7 +157,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     Adding roles to your guild.
 
     ```py
-    from hikari.models.permissions import Permissions
+    from hikari.permissions import Permissions
 
     guild_builder = rest.guild_builder("My Server!")
 
@@ -176,7 +176,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         text channels/voice channels/categories.
 
     !!! note
-        Functions that return a `hikari.utilities.snowflake.Snowflake` do
+        Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
         re-reference particular objects while building the guild format.
@@ -246,7 +246,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflake.Snowflake:
+    ) -> snowflakes.Snowflake:
         if not undefined.count(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
@@ -281,7 +281,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> snowflake.Snowflake:
+    ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake_id)
@@ -304,7 +304,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         name: str,
         /,
         *,
-        parent_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -312,7 +312,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> snowflake.Snowflake:
+    ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake_id)
@@ -338,14 +338,14 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         name: str,
         /,
         *,
-        parent_id: undefined.UndefinedOr[snowflake.Snowflake] = undefined.UNDEFINED,
+        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflake.Snowflake:
+    ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake_id)
@@ -365,10 +365,10 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._channels.append(payload)
         return snowflake_id
 
-    def _new_snowflake(self) -> snowflake.Snowflake:
+    def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflake.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
+        return snowflakes.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value,)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -385,7 +385,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         direction: str,
         first_id: undefined.UndefinedOr[str],
     ) -> None:
@@ -427,8 +427,8 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages.Message],
         emoji: str,
     ) -> None:
         super().__init__()
@@ -505,10 +505,10 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> None:
         super().__init__()
-        self._guild_id = snowflake.Snowflake(str(int(guild)))
+        self._guild_id = snowflakes.Snowflake(str(int(guild)))
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
@@ -554,9 +554,9 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
-        user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]],
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
         action_type: undefined.UndefinedOr[int],
     ) -> None:
         self._action_type = action_type

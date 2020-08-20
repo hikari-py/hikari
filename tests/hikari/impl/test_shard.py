@@ -28,13 +28,13 @@ import pytest
 
 from hikari import config
 from hikari import errors
+from hikari import intents
+from hikari import presences
+from hikari import snowflakes
+from hikari import undefined
 from hikari.impl import shard
-from hikari.models import intents
-from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import date as hikari_date
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
@@ -1045,7 +1045,7 @@ class TestPollEvents:
         assert client._handshake_event.is_set()
         assert client._session_id == 123
         assert client._seq == 101
-        assert client._user_id == snowflake.Snowflake(456)
+        assert client._user_id == snowflakes.Snowflake(456)
         assert client._session_started_at == timestamp
 
     @hikari_test_helpers.timeout()

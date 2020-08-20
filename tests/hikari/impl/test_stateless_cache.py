@@ -23,9 +23,9 @@ import inspect
 import mock
 import pytest
 
+from hikari import users
 from hikari.api import cache
 from hikari.impl import stateless_cache
-from hikari.models import users
 
 
 class TestStatelessCache:

@@ -22,8 +22,8 @@
 import mock
 import pytest
 
+from hikari import messages
 from hikari.events import message_events
-from hikari.models import messages
 
 
 class TestMessageCreateEvent:

@@ -30,9 +30,9 @@ import typing
 from hikari.events import voice_events
 
 if typing.TYPE_CHECKING:
-    from hikari.models import channels
-    from hikari.models import guilds
-    from hikari.utilities import snowflake
+    from hikari import channels
+    from hikari import guilds
+    from hikari import snowflakes
 
 
 _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
@@ -45,7 +45,7 @@ class VoiceComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def connections(self) -> typing.Mapping[snowflake.Snowflake, VoiceConnection]:
+    def connections(self) -> typing.Mapping[snowflakes.Snowflake, VoiceConnection]:
         """Return a mapping of guild-id to active voice connection."""
 
     @abc.abstractmethod
@@ -68,8 +68,8 @@ class VoiceComponent(abc.ABC):
     @abc.abstractmethod
     async def connect_to(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildVoiceChannel],
-        guild: snowflake.SnowflakeishOr[guilds.Guild],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
+        guild: snowflakes.SnowflakeishOr[guilds.Guild],
         *,
         deaf: bool = False,
         mute: bool = False,
@@ -80,9 +80,9 @@ class VoiceComponent(abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
             The channel or channel ID to connect to.
-        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.Guild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
             The guild to connect to.
         deaf : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
@@ -130,23 +130,23 @@ class VoiceConnection(abc.ABC):
     @abc.abstractmethod
     async def initialize(
         cls: typing.Type[_T],
-        channel_id: snowflake.Snowflake,
+        channel_id: snowflakes.Snowflake,
         debug: bool,
         endpoint: str,
-        guild_id: snowflake.Snowflake,
+        guild_id: snowflakes.Snowflake,
         on_close: typing.Callable[[_T], typing.Awaitable[None]],
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
         token: str,
-        user_id: snowflake.Snowflake,
+        user_id: snowflakes.Snowflake,
         **kwargs: typing.Any,
     ) -> _T:
         """Initialize and connect the voice connection.
 
         Parameters
         ----------
-        channel_id : hikari.utilities.snowflake.Snowflake
+        channel_id : hikari.snowflakes.Snowflake
             The channel ID that the voice connection is actively connected to.
         debug : builtins.bool
             `builtins.True` if debugging mode should be enabled. This is up to
@@ -156,7 +156,7 @@ class VoiceConnection(abc.ABC):
             protocol at the start (i.e. `wss://`), and end with the **correct**
             port (the port and protocol are sanitized since Discord still
             provide the wrong information four years later).
-        guild_id : hikari.utilities.snowflake.Snowflake
+        guild_id : hikari.snowflakes.Snowflake
             The guild ID that the websocket should connect to.
         on_close : typing.Callable[[T], typing.Awaitable[None]]
             A shutdown hook to invoke when closing a connection to ensure the
@@ -170,7 +170,7 @@ class VoiceConnection(abc.ABC):
             from.
         token : builtins.str
             The voice token to use.
-        user_id : hikari.utilities.snowflake.Snowflake
+        user_id : hikari.snowflakes.Snowflake
             The user ID of the account that just joined the voice channel.
         **kwargs : typing.Any
             Any implementation-specific arguments to provide to the
@@ -184,12 +184,12 @@ class VoiceConnection(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         """Return the ID of the voice channel this voice connection is in."""
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """Return the ID of the guild this voice connection is in."""
 
     @property

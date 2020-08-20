@@ -46,17 +46,17 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import messages
+    from hikari import snowflakes
     from hikari import traits
+    from hikari import users
     from hikari.api import shard as gateway_shard
-    from hikari.models import messages
-    from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -66,12 +66,12 @@ class MessagesEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         """ID of the channel that this event concerns.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the channel that this event concerns.
         """
 
@@ -83,12 +83,12 @@ class MessageEvent(MessagesEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def message_id(self) -> snowflake.Snowflake:
+    def message_id(self) -> snowflakes.Snowflake:
         """ID of the message that this event concerns.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the message that this event concerns.
         """
 
@@ -106,12 +106,12 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event concerns.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild that this event concerns.
         """
 
@@ -128,27 +128,27 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.messages.Message
+        hikari.messages.Message
             The message object that was sent with this event.
         """
 
     @property
-    def message_id(self) -> snowflake.Snowflake:
+    def message_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.id
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.channel_id
 
     @property
-    def author_id(self) -> snowflake.Snowflake:
+    def author_id(self) -> snowflakes.Snowflake:
         """ID of the author that triggered this event.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the author that triggered this event concerns.
         """
         return self.message.author.id
@@ -166,37 +166,37 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
         !!! warning
             Unlike `MessageCreateEvent`, `MessageUpdateEvent.message` is an
-            arbitrarily partial version of `hikari.models.messages.Message`
+            arbitrarily partial version of `hikari.messages.Message`
             where any field except `id` and `channel_id` may be set to
-            `hikari.utilities.undefined.UndefinedType` (a singleton) to indicate
+            `hikari.undefined.UndefinedType` (a singleton) to indicate
             that it has not been changed.
 
         Returns
         -------
-        hikari.models.messages.PartialMessage
+        hikari.messages.PartialMessage
             The partially populated message object that was sent with this
             event.
         """
 
     @property
-    def message_id(self) -> snowflake.Snowflake:
+    def message_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.id
 
     @property
-    def author_id(self) -> snowflake.Snowflake:
+    def author_id(self) -> snowflakes.Snowflake:
         """ID of the author that triggered this event.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the author that triggered this event concerns.
         """
         # Looks like `author` is always present in this event variant.
         return typing.cast("users.PartialUser", self.message.author).id
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.channel_id
 
@@ -213,8 +213,8 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 
         !!! warning
             Unlike `MessageCreateEvent`, `message` is a severely limited partial
-            version of `hikari.models.messages.Message`. The only attributes
-            that will not be `hikari.utilities.undefined.UNDEFINED` will be
+            version of `hikari.messages.Message`. The only attributes
+            that will not be `hikari.undefined.UNDEFINED` will be
             `id`, `channel_id`, and `guild_id` if the message was in a guild.
             This is a limitation of Discord.
 
@@ -225,18 +225,18 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.messages.PartialMessage
+        hikari.messages.PartialMessage
             The partially populated message object that was sent with this
             event.
         """
 
     @property
-    def message_id(self) -> snowflake.Snowflake:
+    def message_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.id
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessagesEvent>>.
         return self.message.channel_id
 
@@ -257,10 +257,10 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflake.Snowflake", self.message.guild_id)
+        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
@@ -295,10 +295,10 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflake.Snowflake", self.message.guild_id)
+        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
@@ -333,10 +333,10 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflake.Snowflake", self.message.guild_id)
+        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
 
 
 @attr_extensions.with_copy
@@ -389,23 +389,23 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from MessagesEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     """ID of the guild that this event concerns.
 
     Returns
     -------
-    hikari.utilities.snowflake.Snowflake
+    hikari.snowflakes.Snowflake
         The ID of the guild that this event concerns.
     """
 
-    message_ids: typing.Sequence[snowflake.Snowflake] = attr.ib()
+    message_ids: typing.Sequence[snowflakes.Snowflake] = attr.ib()
     """Sequence of message IDs that were bulk deleted.
 
     Returns
     -------
-    typing.Sequence[hikari.utilities.snowflake.Snowflake]
+    typing.Sequence[hikari.snowflakes.Snowflake]
         A sequence of message IDs that were bulk deleted.
     """

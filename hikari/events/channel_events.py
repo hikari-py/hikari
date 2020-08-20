@@ -52,20 +52,20 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import channels
+    from hikari import invites
+    from hikari import snowflakes
+    from hikari import webhooks
     from hikari.api import shard as gateway_shard
-    from hikari.models import channels
-    from hikari.models import invites
-    from hikari.models import webhooks
-    from hikari.utilities import snowflake
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
@@ -75,12 +75,12 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         """ID of the channel the event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the channel this event relates to.
         """
 
@@ -93,8 +93,8 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
-            A derivative of `hikari.models.channels.PartialChannel`. The actual
+        hikari.channels.PartialChannel
+            A derivative of `hikari.channels.PartialChannel`. The actual
             type will vary depending on the type of channel this event
             concerns.
         """
@@ -108,12 +108,12 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild that relates to this event.
         """
 
@@ -145,12 +145,12 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
+        hikari.channels.PartialChannel
             The channel that was created.
         """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
@@ -172,12 +172,12 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 
     Returns
     -------
-    hikari.models.channels.GuildChannel
+    hikari.channels.GuildChannel
         The guild channel that was created.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
 
@@ -199,7 +199,7 @@ class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
 
     Returns
     -------
-    hikari.models.channels.PrivateChannel
+    hikari.channels.PrivateChannel
         The guild channel that was created.
     """
 
@@ -216,12 +216,12 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
+        hikari.channels.PartialChannel
             The channel that was updated.
         """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
@@ -243,12 +243,12 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 
     Returns
     -------
-    hikari.models.channels.GuildChannel
+    hikari.channels.GuildChannel
         The guild channel that was updated.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
 
@@ -270,7 +270,7 @@ class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
 
     Returns
     -------
-    hikari.models.channels.PrivateChannel
+    hikari.channels.PrivateChannel
         The private channel that was updated.
     """
 
@@ -287,12 +287,12 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
+        hikari.channels.PartialChannel
             The channel that was deleted.
         """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
@@ -319,12 +319,12 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
     Returns
     -------
-    hikari.models.channels.GuildChannel
+    hikari.channels.GuildChannel
         The guild channel that was deleted.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
 
@@ -352,7 +352,7 @@ class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
 
     Returns
     -------
-    hikari.models.channels.PrivateChannel
+    hikari.channels.PrivateChannel
         The private channel that was deleted.
     """
 
@@ -400,10 +400,10 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
@@ -427,7 +427,7 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
@@ -465,7 +465,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.invites.Invite
+        hikari.invites.Invite
             The invite object.
         """
         return await self.app.rest.fetch_invite(self.code)
@@ -488,17 +488,17 @@ class InviteCreateEvent(InviteEvent):
 
     Returns
     -------
-    hikari.models.invites.InviteWithMetaData
+    hikari.invites.InviteWithMetaData
         The created invite object.
     """
 
     @property
-    def channel_id(self) -> snowflake.Snowflake:
+    def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.invite.channel_id
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         # This will always be non-None for guild channel invites.
         assert self.invite.guild_id is not None
@@ -522,10 +522,10 @@ class InviteDeleteEvent(InviteEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildChannelEvent>>.
 
     code: str = attr.ib()
@@ -555,10 +555,10 @@ class WebhookUpdateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflake.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildChannelEvent>>.
 
     async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.Webhook]:
@@ -566,7 +566,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
 
         Returns
         -------
-        typing.Sequence[hikari.models.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.Webhook]
             The webhooks in this channel.
         """
         return await self.app.rest.fetch_channel_webhooks(self.channel_id)
@@ -576,7 +576,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
 
         Returns
         -------
-        typing.Sequence[hikari.models.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.Webhook]
             The webhooks in this guild.
         """
         return await self.app.rest.fetch_guild_webhooks(self.guild_id)

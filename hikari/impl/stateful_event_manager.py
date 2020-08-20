@@ -27,12 +27,12 @@ __all__: typing.Final[typing.List[str]] = ["StatefulEventManagerImpl"]
 
 import typing
 
+from hikari import channels
+from hikari import intents as intents_
+from hikari import presences
 from hikari import traits
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
-from hikari.models import channels
-from hikari.models import intents as intents_
-from hikari.models import presences
 
 if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_

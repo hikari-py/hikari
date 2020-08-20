@@ -21,7 +21,7 @@
 import mock
 import pytest
 
-from hikari.utilities import files
+from hikari import files
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 

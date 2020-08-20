@@ -31,11 +31,11 @@ import typing
 import warnings
 
 from hikari import errors
+from hikari import intents as intents_
 from hikari import traits
 from hikari.api import event_dispatcher
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents as intents_
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import reflect
