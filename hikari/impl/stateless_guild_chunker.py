@@ -30,7 +30,7 @@ import typing
 from hikari.api import chunker
 
 if typing.TYPE_CHECKING:
-    from hikari.models import guilds
+    from hikari import guilds
 
 
 class StatelessGuildChunkerImpl(chunker.GuildChunker):

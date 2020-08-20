@@ -28,19 +28,19 @@ import abc
 import enum
 import typing
 
-from hikari.utilities import undefined
+from hikari import undefined
 
 if typing.TYPE_CHECKING:
     import asyncio
     import datetime
 
+    from hikari import channels
     from hikari import config
-    from hikari.models import channels
-    from hikari.models import guilds
-    from hikari.models import intents as intents_
-    from hikari.models import presences
-    from hikari.models import users
-    from hikari.utilities import snowflake
+    from hikari import guilds
+    from hikari import intents as intents_
+    from hikari import presences
+    from hikari import snowflakes
+    from hikari import users
 
 
 @enum.unique
@@ -172,7 +172,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.models.intents.Intents]
+        typing.Optional[hikari.intents.Intents]
             The intents being used on this shard. This may be
             `builtins.None` if intents were not specified.
 
@@ -266,7 +266,7 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_user_id(self) -> snowflake.Snowflake:
+    async def get_user_id(self) -> snowflakes.Snowflake:
         """Return the user ID.
 
         If the shard has not connected fully yet, this should wait until the ID
@@ -274,7 +274,7 @@ class GatewayShard(abc.ABC):
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The user ID for the application user.
         """
 
@@ -310,25 +310,25 @@ class GatewayShard(abc.ABC):
 
         Parameters
         ----------
-        idle_since : hikari.utilities.undefined.UndefinedNoneOr[datetime.datetime]
+        idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        afk : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        afk : hikari.undefined.UndefinedOr[builtins.bool]
             If `builtins.True`, the user is marked as AFK. If `builtins.False`,
             the user is marked as being active. If undefined, this will not be
             changed.
-        activity : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.include_presences.Activity]
+        activity : hikari.undefined.UndefinedNoneOr[hikari.include_presences.Activity]
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.utilities.undefined.UndefinedOr[hikari.models.include_presences.Status]
+        status : hikari.undefined.UndefinedOr[hikari.include_presences.Status]
             The web status to show. If undefined, this will not be changed.
         """
 
     @abc.abstractmethod
     async def update_voice_state(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
@@ -337,9 +337,9 @@ class GatewayShard(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
-        channel : typing.Optional[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildVoiceChannel]]
+        channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
             The channel or channel ID to update the voice state for. If `builtins.None`
             then the bot will leave the voice channel that it is in for the
             given guild.
@@ -354,29 +354,29 @@ class GatewayShard(abc.ABC):
     @abc.abstractmethod
     async def request_guild_members(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Request for a guild chunk.
 
         Parameters
         ----------
-        guild: hikari.models.guilds.Guild
+        guild: hikari.guilds.Guild
             The guild to request chunk for.
-        include_presences: hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether to request include_presences.
         query: builtins.str
             If not `builtins.None`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
-        user_ids: hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.User]]]
+        user_ids: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
             If specified, the users to request for.
-        nonce: hikari.utilities.undefined.UndefinedOr[builtins.str]
+        nonce: hikari.undefined.UndefinedOr[builtins.str]
             If specified, the nonce to be sent with guild chunks.
 
         !!! note

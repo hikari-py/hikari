@@ -24,7 +24,7 @@ import http
 import pytest
 
 from hikari import errors
-from hikari.models import intents
+from hikari import intents
 
 
 class TestGatewayError:

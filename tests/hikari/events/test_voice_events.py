@@ -22,8 +22,8 @@
 import mock
 import pytest
 
+from hikari import voices
 from hikari.events import voice_events
-from hikari.models import voices
 
 
 class TestVoiceStateUpdateEvent:

@@ -34,17 +34,17 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import snowflakes
+    from hikari import users
     from hikari.api import shard as gateway_shard
-    from hikari.models import guilds
-    from hikari.models import users
-    from hikari.utilities import snowflake
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -54,12 +54,12 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild that relates to this event.
         """
 
@@ -70,17 +70,17 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.User
+        hikari.users.User
             User object for the member this event concerns.
         """
 
     @property
-    def user_id(self) -> snowflake.Snowflake:
+    def user_id(self) -> snowflakes.Snowflake:
         """ID of the user that this event concerns.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the user that this event relates to.
         """
         return self.user.id
@@ -103,12 +103,12 @@ class MemberCreateEvent(MemberEvent):
 
     Returns
     -------
-    hikari.models.guilds.Member
+    hikari.guilds.Member
         The member object for the member who just joined.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
@@ -138,12 +138,12 @@ class MemberUpdateEvent(MemberEvent):
 
     Returns
     -------
-    hikari.models.guilds.Member
+    hikari.guilds.Member
         The member object for the member that was updated.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
@@ -165,7 +165,7 @@ class MemberDeleteEvent(MemberEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from MemberEvent>>.
 
     user: users.User = attr.ib()

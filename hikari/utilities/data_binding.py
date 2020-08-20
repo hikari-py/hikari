@@ -44,8 +44,8 @@ import aiohttp.client_reqrep
 import aiohttp.typedefs
 import multidict
 
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
+from hikari import snowflakes
+from hikari import undefined
 
 T = typing.TypeVar("T", covariant=True)
 
@@ -97,7 +97,7 @@ else:
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
-    This will consume any items that are not `hikari.utilities.undefined.UndefinedType`.
+    This will consume any items that are not `hikari.undefined.UndefinedType`.
     If a value _is_ unspecified, it will be ignored when inserting it. This reduces
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
@@ -127,7 +127,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         ----------
         key : builtins.str
             The string key.
-        value : hikari.utilities.undefined.UndefinedOr[typing.Any]
+        value : hikari.undefined.UndefinedOr[typing.Any]
             The value to set.
         conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
             An optional conversion to perform.
@@ -149,7 +149,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
                 value = "false"
             elif value is None:
                 value = "null"
-            elif isinstance(value, snowflake.Unique):
+            elif isinstance(value, snowflakes.Unique):
                 value = str(value.id)
             else:
                 value = str(value)
@@ -162,7 +162,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
 class JSONObjectBuilder(typing.Dict[str, JSONish]):
     """Helper class used to quickly build JSON objects from various values.
 
-    If provided with any values that are `hikari.utilities.undefined.UndefinedType`,
+    If provided with any values that are `hikari.undefined.UndefinedType`,
     then these values will be ignored.
 
     This speeds up generation of JSON payloads for low level HTTP and websocket
@@ -195,7 +195,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        value : typing.Any or hikari.utilities.undefined.UndefinedType
+        value : typing.Any or hikari.undefined.UndefinedType
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
@@ -226,7 +226,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        values : typing.Iterable[T] or hikari.utilities.undefined.UndefinedType
+        values : typing.Iterable[T] or hikari.undefined.UndefinedType
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
@@ -240,7 +240,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
                 self[key] = list(values)
 
     def put_snowflake(
-        self, key: str, value: undefined.UndefinedNoneOr[snowflake.SnowflakeishOr[snowflake.Unique]], /
+        self, key: str, value: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[snowflakes.Unique]], /
     ) -> None:
         """Put a key with a snowflake value into the builder.
 
@@ -248,7 +248,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        value : hikari.undefined.UndefinedNoneOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.utilities.snowflake.Unique]]
+        value : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]
             The JSON type to put. This may alternatively be undefined, in this
             case, nothing is performed. This may also be `builtins.None`, in this
             case the value isn't cast.
@@ -259,7 +259,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = value
 
     def put_snowflake_array(
-        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflake.SnowflakeishOr[snowflake.Unique]]], /,
+        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -271,7 +271,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        values : hikari.utilities.undefined.UndefinedOr[typing.Iterable[hikari.utilities.snowflake.SnowflakeishOr[hikari.utilities.snowflake.Unique]]]
+        values : hikari.undefined.UndefinedOr[typing.Iterable[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]]
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """  # noqa: E501 - Line too long

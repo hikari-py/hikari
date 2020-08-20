@@ -1,6 +1,3 @@
-# Pipelines.
-nox==2020.5.24
-
 # Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
 mock~=4.0.2
 

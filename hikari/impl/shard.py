@@ -41,21 +41,21 @@ import aiohttp
 import attr
 
 from hikari import errors
+from hikari import intents as intents_
+from hikari import presences
+from hikari import snowflakes
+from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
-from hikari.models import intents as intents_
-from hikari.models import presences
 from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
     from hikari import config
-    from hikari.models import channels
-    from hikari.models import guilds
-    from hikari.models import users
+    from hikari import guilds
+    from hikari import users
 
 
 @typing.final
@@ -82,7 +82,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         with each event that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    initial_activity : typing.Optional[hikari.models.presences.Activity]
+    initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
         `builtins.None` if no activity should be set initially. This is the
         default.
@@ -92,10 +92,10 @@ class GatewayShardImplV6(shard.GatewayShard):
     initial_is_afk : bool
         Whether to appear to be AFK or not on login. Defaults to
         `builtins.False`.
-    initial_status : hikari.models.presences.Status
+    initial_status : hikari.presences.Status
         The initial status to set on login for the shard. Defaults to
-        `hikari.models.presences.Status.ONLINE`.
-    intents : typing.Optional[hikari.models.intents.Intents]
+        `hikari.presences.Status.ONLINE`.
+    intents : typing.Optional[hikari.intents.Intents]
         Collection of intents to use, or `builtins.None` to not use intents at
         all.
     large_threshold : builtins.int
@@ -262,7 +262,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._shard_count: int = shard_count
         self._status: undefined.UndefinedOr[presences.Status] = initial_status
         self._token = token
-        self._user_id: typing.Optional[snowflake.Snowflake] = None
+        self._user_id: typing.Optional[snowflakes.Snowflake] = None
         self._version = version
         self._ws: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self._zlib: typing.Any = None  # No typeshed/stub.
@@ -344,7 +344,7 @@ class GatewayShardImplV6(shard.GatewayShard):
     def version(self) -> int:
         return self._version
 
-    async def get_user_id(self) -> snowflake.Snowflake:
+    async def get_user_id(self) -> snowflakes.Snowflake:
         await self._handshake_event.wait()
         if self._user_id is None:
             raise RuntimeError("user_id was not known, this is probably a bug")
@@ -395,8 +395,8 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def update_voice_state(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
         *,
         self_mute: bool = False,
         self_deaf: bool = False,
@@ -415,12 +415,12 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def request_guild_members(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflake.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
@@ -740,7 +740,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                     self._session_id = data["session_id"]
                     user_pl = data["user"]
                     user_id = user_pl["id"]
-                    self._user_id = snowflake.Snowflake(user_id)
+                    self._user_id = snowflakes.Snowflake(user_id)
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
                         "shard is ready [session:%s, user_id:%s, tag:%s]", self._session_id, user_id, tag,

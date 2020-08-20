@@ -68,8 +68,8 @@ class EventDispatcher(abc.ABC):
 
         from hikari.traits import RESTAware
         from hikari.events.base_events import Event
-        from hikari.models.users import User
-        from hikari.utilities.snowflake import Snowflake
+        from hikari.users import User
+        from hikari.snowflakes import Snowflake
 
         @attr.s()
         class EveryoneMentionedEvent(Event):

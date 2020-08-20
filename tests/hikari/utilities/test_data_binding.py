@@ -25,14 +25,14 @@ import mock
 import multidict
 import pytest
 
+from hikari import snowflakes
+from hikari import undefined
 from hikari.utilities import data_binding
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 
 
 @attr.s(slots=True)
-class MyUnique(snowflake.Unique):
-    id: snowflake.Snowflake = attr.ib(converter=snowflake.Snowflake)
+class MyUnique(snowflakes.Unique):
+    id: snowflakes.Snowflake = attr.ib(converter=snowflakes.Snowflake)
 
 
 class TestStringMapBuilder:
@@ -189,8 +189,8 @@ class TestJSONObjectBuilder:
             ("100124", "100124"),
             (MyUnique(100127), "100127"),
             (MyUnique("100129"), "100129"),
-            (snowflake.Snowflake(100125), "100125"),
-            (snowflake.Snowflake("100126"), "100126"),
+            (snowflakes.Snowflake(100125), "100125"),
+            (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
     def test_put_snowflake(self, input_value, expected_str):
@@ -210,8 +210,8 @@ class TestJSONObjectBuilder:
             ("100124", "100124"),
             (MyUnique(100127), "100127"),
             (MyUnique("100129"), "100129"),
-            (snowflake.Snowflake(100125), "100125"),
-            (snowflake.Snowflake("100126"), "100126"),
+            (snowflakes.Snowflake(100125), "100125"),
+            (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
     def test_put_snowflake_array_conversions(self, input_value, expected_str):

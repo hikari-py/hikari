@@ -34,7 +34,7 @@ import requests
 sys.path.append(".")
 
 
-from hikari.models import emojis
+from hikari import emojis
 
 TWEMOJI_REPO_BASE_URL = "https://github.com/twitter/twemoji.git"
 

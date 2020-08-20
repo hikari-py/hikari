@@ -27,25 +27,25 @@ import aiohttp
 import mock
 import pytest
 
+from hikari import audit_logs
+from hikari import channels
+from hikari import colors
 from hikari import config
+from hikari import emojis
 from hikari import errors
+from hikari import files
+from hikari import guilds
+from hikari import invites
+from hikari import permissions
+from hikari import snowflakes
+from hikari import undefined
+from hikari import users
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
-from hikari.models import audit_logs
-from hikari.models import channels
-from hikari.models import colors
-from hikari.models import emojis
-from hikari.models import guilds
-from hikari.models import invites
-from hikari.models import permissions
-from hikari.models import users
 from hikari.utilities import constants
-from hikari.utilities import files
 from hikari.utilities import net
 from hikari.utilities import routes
-from hikari.utilities import snowflake
-from hikari.utilities import undefined
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
@@ -283,11 +283,11 @@ def file_resource(_file_resource):
         yield resource
 
 
-class StubModel(snowflake.Unique):
+class StubModel(snowflakes.Unique):
     id = None
 
     def __init__(self, id=0):
-        self.id = snowflake.Snowflake(id)
+        self.id = snowflakes.Snowflake(id)
 
 
 class TestRESTClientImpl:

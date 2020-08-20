@@ -52,13 +52,13 @@ import typing
 
 import attr
 
-from hikari.models import messages
 from hikari.utilities import attr_extensions
-from hikari.utilities import snowflake
 
 if typing.TYPE_CHECKING:
-    from hikari.models import guilds
-    from hikari.models import intents as intents_
+    from hikari import guilds
+    from hikari import intents as intents_
+    from hikari import messages
+    from hikari import snowflakes
     from hikari.utilities import data_binding
     from hikari.utilities import routes
 
@@ -378,10 +378,10 @@ class BulkDeleteError(HikariError):
     and will have a cause containing the initial exception.
     """
 
-    messages_deleted: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]] = attr.ib()
+    messages_deleted: typing.Sequence[snowflakes.SnowflakeishOr[messages.Message]] = attr.ib()
     """Any message objects that were deleted before an exception occurred."""
 
-    messages_skipped: typing.Sequence[snowflake.SnowflakeishOr[messages.Message]] = attr.ib()
+    messages_skipped: typing.Sequence[snowflakes.SnowflakeishOr[messages.Message]] = attr.ib()
     """Any message objects that were skipped due to an exception."""
 
     @property

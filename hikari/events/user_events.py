@@ -33,8 +33,8 @@ from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import traits
+    from hikari import users
     from hikari.api import shard as gateway_shard
-    from hikari.models import users
 
 
 @attr_extensions.with_copy
@@ -53,6 +53,6 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    hikari.models.users.OwnUser
+    hikari.users.OwnUser
         This application user.
     """

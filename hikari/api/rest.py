@@ -28,31 +28,31 @@ import abc
 import typing
 
 from hikari import traits
-from hikari.utilities import undefined
+from hikari import undefined
 
 if typing.TYPE_CHECKING:
 
     import aiohttp
 
+    from hikari import applications
+    from hikari import audit_logs
+    from hikari import channels
+    from hikari import colors
+    from hikari import embeds as embeds_
+    from hikari import emojis
+    from hikari import files
+    from hikari import guilds
+    from hikari import invites
+    from hikari import iterators
+    from hikari import messages as messages_
+    from hikari import permissions as permissions_
+    from hikari import sessions
+    from hikari import snowflakes
+    from hikari import users
+    from hikari import voices
+    from hikari import webhooks
     from hikari.api import special_endpoints
-    from hikari.models import applications
-    from hikari.models import audit_logs
-    from hikari.models import channels
-    from hikari.models import colors
-    from hikari.models import embeds as embeds_
-    from hikari.models import emojis
-    from hikari.models import gateway
-    from hikari.models import guilds
-    from hikari.models import invites
-    from hikari.models import messages as messages_
-    from hikari.models import permissions as permissions_
-    from hikari.models import users
-    from hikari.models import voices
-    from hikari.models import webhooks
     from hikari.utilities import date
-    from hikari.utilities import files
-    from hikari.utilities import iterators
-    from hikari.utilities import snowflake
 
 
 class ConnectorFactory(abc.ABC):
@@ -80,35 +80,35 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel(
-        self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]
     ) -> channels.PartialChannel:
         """Fetch a channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr
+        channel : hikari.snowflakes.SnowflakeishOr
             The channel to fetch. This may be a
-            `hikari.models.channels.PartialChannel` object, or the ID of an
+            `hikari.channels.PartialChannel` object, or the ID of an
             existing channel.
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
+        hikari.channels.PartialChannel
             The channel. This will be a _derivative_ of
-            `hikari.models.channels.PartialChannel`, depending on the type of
+            `hikari.channels.PartialChannel`, depending on the type of
             channel you request for.
 
             This means that you may get one of
-            `hikari.models.channels.PrivateTextChannel`,
-            `hikari.models.channels.GroupPrivateTextChannel`,
-            `hikari.models.channels.GuildTextChannel`,
-            `hikari.models.channels.GuildVoiceChannel`,
-            `hikari.models.channels.GuildStoreChannel`,
-            `hikari.models.channels.GuildNewsChannel`.
+            `hikari.channels.PrivateTextChannel`,
+            `hikari.channels.GroupPrivateTextChannel`,
+            `hikari.channels.GuildTextChannel`,
+            `hikari.channels.GuildVoiceChannel`,
+            `hikari.channels.GuildStoreChannel`,
+            `hikari.channels.GuildNewsChannel`.
 
-            Likewise, the `hikari.models.channels.GuildChannel` can be used to
+            Likewise, the `hikari.channels.GuildChannel` can be used to
             determine if a channel is guild-bound, and
-            `hikari.models.channels.TextChannel` can be used to determine
+            `hikari.channels.TextChannel` can be used to determine
             if the channel provides textual functionality to the application.
 
             You can check for these using the `builtins.isinstance`
@@ -129,7 +129,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -142,40 +142,40 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        parent_category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.PartialChannel:
         """Edit a channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to edit. This may be a channel object, or the ID of an
             existing channel.
-        name : hikari.utilities.undefined.UndefinedOr[[builtins.str]
+        name : hikari.undefined.UndefinedOr[[builtins.str]
             If provided, the new name for the channel.
-        position : hikari.utilities.undefined.UndefinedOr[[builtins.int]
+        position : hikari.undefined.UndefinedOr[[builtins.int]
             If provided, the new position for the channel.
-        topic : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new topic for the channel.
-        nsfw : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.utilities.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new bitrate for the channel.
-        user_limit : hikari.utilities.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.utilities.date.Intervalish
             If provided, the new rate limit per user in the channel.
-        permission_overwrites : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.models.channels.PermissionOverwrite]]
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildCategory]]
+        parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
-        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
         -------
-        hikari.models.channels.PartialChannel
+        hikari.channels.PartialChannel
             The edited channel.
 
         Raises
@@ -193,12 +193,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def delete_channel(self, channel: snowflake.SnowflakeishOr[channels.PartialChannel]) -> None:
+    async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]) -> None:
         """Delete a channel in a guild, or close a DM.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.PartialChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
             The channel to delete. This may be a channel object, or the ID of an
             existing channel.
 
@@ -222,7 +222,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         target: typing.Union[channels.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
         *,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -235,8 +235,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
-        target: snowflake.Snowflakeish,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        target: snowflakes.Snowflakeish,
         *,
         target_type: typing.Union[channels.PermissionOverwriteType, str],
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -248,9 +248,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         target: typing.Union[
-            snowflake.Snowflakeish, users.PartialUser, guilds.PartialRole, channels.PermissionOverwrite
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels.PermissionOverwrite
         ],
         *,
         target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
@@ -262,20 +262,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to edit a permission overwrite in. This may be a
             channel object, or the ID of an existing channel.
-        target : hikari.models.users.PartialUser or hikari.models.guilds.PartialRole or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflakeish
+        target : hikari.users.PartialUser or hikari.guilds.PartialRole or hikari.channels.PermissionOverwrite or hikari.snowflakes.Snowflakeish
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.utilities.undefined.UndefinedOr[hikari.models.channels.PermissionOverwriteType or builtins.str]
+        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType or builtins.str]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
+        allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             If provided, the new vale of all allowed permissions.
-        deny : hikari.utilities.undefined.UndefinedOr[hikari.models.permissions.Permissions]
+        deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             If provided, the new vale of all disallowed permissions.
-        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Raises
@@ -299,19 +299,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_permission_overwrite(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
-        target: snowflake.SnowflakeishOr[
-            typing.Union[channels.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflake.Snowflakeish]
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        target: snowflakes.SnowflakeishOr[
+            typing.Union[channels.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
         ],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to delete a permission overwrite in. This may be a
             channel object, or the ID of an existing channel.
-        target : hikari.models.users.PartialUser or hikari.models.guilds.PartialRole or hikari.models.channels.PermissionOverwrite or hikari.utilities.snowflake.Snowflakeish
+        target : hikari.users.PartialUser or hikari.guilds.PartialRole or hikari.channels.PermissionOverwrite or hikari.snowflakes.Snowflakeish
             The channel overwrite to delete.
 
         Raises
@@ -328,19 +328,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_invites(
-        self, channel: snowflake.SnowflakeishOr[channels.GuildChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch all invites pointing to the given guild channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to fetch the invites from. This may be a channel
             object, or the ID of an existing channel.
 
         Returns
         -------
-        typing.Sequence[hikari.models.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata]
             The invites pointing to the given guild channel.
 
         Raises
@@ -358,13 +358,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_invite(
         self,
-        channel: snowflake.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
         max_age: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        target_user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
@@ -372,28 +372,28 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.utilities.undefined.UndefinedOr[datetime.timedelta or builtins.float or builtins.int]
+        max_age : hikari.undefined.UndefinedOr[datetime.timedelta or builtins.float or builtins.int]
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.utilities.undefined.UndefinedOr[builtins.int]
+        max_uses : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the max uses the invite can have.
-        temporary : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        temporary : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        unique : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the invite should be unique.
-        target_user : hikari.utilities.undefined.UndefinedOr[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser]]
+        target_user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.utilities.undefined.UndefinedOr[hikari.models.invites.TargetUserType or builtins.int]
+        target_user_type : hikari.undefined.UndefinedOr[hikari.invites.TargetUserType or builtins.int]
             If provided, the type of target user for this invite.
-        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
         -------
-        hikari.models.invites.InviteWithMetadata
+        hikari.invites.InviteWithMetadata
             The invite to the given guild channel.
 
         Raises
@@ -413,7 +413,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def trigger_typing(
-        self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel]
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
@@ -438,7 +438,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to trigger typing in. This may be a channel object, or
             the ID of an existing channel.
 
@@ -467,19 +467,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_pins(
-        self, channel: snowflake.SnowflakeishOr[channels.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel]
     ) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to fetch pins from. This may be a channel object, or
             the ID of an existing channel.
 
         Returns
         -------
-        typing.Sequence[hikari.models.messages.Message]
+        typing.Sequence[hikari.messages.Message]
             The pinned messages in this text channel.
 
         Raises
@@ -498,17 +498,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def pin_message(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Pin an existing message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to pin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to pin. This may be a message object,
             or the ID of an existing message.
 
@@ -528,17 +528,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def unpin_message(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Unpin a given message from a given text channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to unpin a message in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to unpin. This may be a message object, or the ID of an
             existing message.
 
@@ -558,38 +558,38 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def fetch_messages(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         *,
-        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
-        after: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
-        around: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        before : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
-            If provided, fetch messages before this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake. This
+        before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages before this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
-        after : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
-            If provided, fetch messages after this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake. This
+        after : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages after this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
-        around : hikari.utilities.undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[hikari.utilities.snowflake.Unique]]
-            If provided, fetch messages around this snowflake. If you provide
-            a datetime object, it will be transformed into a snowflake. This
+        around : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages around this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
 
         Returns
         -------
-        hikari.utilities.iterators.LazyIterator[hikari.models.messages.Message]
+        hikari.iterators.LazyIterator[hikari.messages.Message]
             A iterator to fetch the messages.
 
         Raises
@@ -616,23 +616,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_message(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> messages_.Message:
         """Fetch a specific message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to fetch messages in. This may be a channel object, or
             the ID of an existing channel.
-        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to fetch. This may be a channel object, or the ID of an
             existing channel.
 
         Returns
         -------
-        hikari.models.messages.Message
+        hikari.messages.Message
             The requested message.
 
         Raises
@@ -652,7 +652,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_message(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -662,60 +662,60 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to create the message in.
-        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+        content : hikari.undefined.UndefinedOr[typing.Any]
             If specified, the message contents. If
-            `hikari.utilities.undefined.UNDEFINED`, then nothing will be sent
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
             `builtins.str`.
 
-            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
             provided, then this will instead update the embed. This allows for
             simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.utilities.files.Resource`, then the
+            Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-        embed : hikari.utilities.undefined.UndefinedOr[hikari.models.embeds.Embed]
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If specified, the message embed.
-        attachment : hikari.utilities.undefined.UndefinedOr[hikari.utilities.files.Resourceish],
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If specified, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.utilities.undefined.UndefinedOr[typing.Sequence[hikari.utilities.files.Resourceish]],
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If specified, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        tts : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message will be TTS (Text To Speech).
-        nonce : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        nonce : hikari.undefined.UndefinedOr[builtins.str]
             If specified, a nonce that can be used for optimistic message
             sending.
-        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.utilities.snowflake.Snowflake`, or
-            `hikari.models.users.PartialUser` derivatives to enforce mentioning
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.utilities.snowflake.Snowflake`, or
-            `hikari.models.guilds.PartialRole` derivatives to enforce mentioning
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
 
         !!! note
@@ -725,18 +725,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
-                `hikari.utilities.files.WebResource` such as
-                `hikari.utilities.files.URL`,
-                `hikari.models.messages.Attachment`,
-                `hikari.models.emojis.Emoji`,
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
                 `EmbedResource`, etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a `hikari.utilities.files.Bytes` is passed, or a `builtins.str`
+            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a `hikari.utilities.files.File`, `pathlib.PurePath` or
+            - If a `hikari.files.File`, `pathlib.PurePath` or
                 `builtins.str` that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
@@ -747,7 +747,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.models.messages.Message
+        hikari.messages.Message
             The created message.
 
         Raises
@@ -782,17 +782,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_message(
         self,
-        channel: typing.Union[snowflake.SnowflakeishOr[channels.TextChannel]],
-        message: typing.Union[snowflake.SnowflakeishOr[messages_.Message]],
+        channel: typing.Union[snowflakes.SnowflakeishOr[channels.TextChannel]],
+        message: typing.Union[snowflakes.SnowflakeishOr[messages_.Message]],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
@@ -800,58 +800,58 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to create the message in. This may be
-            a `hikari.models.channels.TextChannel` or the ID of an existing
+            a `hikari.channels.TextChannel` or the ID of an existing
             channel.
-        message : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
-            The message to edit. This may be a `hikari.models.messages.Message`
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to edit. This may be a `hikari.messages.Message`
             or the ID of an existing message.
-        content : hikari.utilities.undefined.UndefinedOr[typing.Any]
+        content : hikari.undefined.UndefinedOr[typing.Any]
             The message content to update with. If
-            `hikari.utilities.undefined.UNDEFINED`, then the content will not
+            `hikari.undefined.UNDEFINED`, then the content will not
             be changed. If `builtins.None`, then the content will be removed.
 
             Any other value will be cast to a `builtins.str` before sending.
 
-            If this is a `hikari.models.embeds.Embed` and no `embed` kwarg is
+            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
             provided, then this will instead update the embed. This allows for
             simpler syntax when sending an embed alone.
-        embed : hikari.utilities.undefined.UndefinedNoneOr[hikari.models.embeds.Embed]
+        embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             The embed to set on the message. If
-            `hikari.utilities.undefined.UNDEFINED`, the previous embed if
+            `hikari.undefined.UNDEFINED`, the previous embed if
             present is not changed. If this is `builtins.None`, then the embed
             is removed if present. Otherwise, the new embed value that was
             provided will be used as the replacement.
-        mentions_everyone : hikari.utilities.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             Sanitation for `@everyone` mentions. If
-            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
             Sanitation for user mentions. If
-            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
             as mentions. If `builtins.False`, all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
-            `hikari.utilities.snowflake.Snowflake` user IDs, or
-            `hikari.models.users.PartialUser`-derived objects.
-        role_mentions : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole] or builtins.bool]
+            `hikari.snowflakes.Snowflake` user IDs, or
+            `hikari.users.PartialUser`-derived objects.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
             Sanitation for role mentions. If
-            `hikari.utilities.undefined.UNDEFINED`, then the previous setting is
+            `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
             as mentions. If `builtins.False`, all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
-            `hikari.utilities.snowflake.Snowflake` role IDs, or
-            `hikari.models.guilds.PartialRole`-derived objects.
-        flags : hikari.utilities.undefined.UndefinedOr[hikari.models.messages.MessageFlag]
+            `hikari.snowflakes.Snowflake` role IDs, or
+            `hikari.guilds.PartialRole`-derived objects.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
             Optional flags to set on the message. If
-            `hikari.utilities.undefined.UNDEFINED`, then nothing is changed.
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
             flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
@@ -885,7 +885,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.models.messages.Message
+        hikari.messages.Message
             The edited message.
 
         Raises
@@ -913,8 +913,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_message(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -939,9 +939,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_messages(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         /,
-        *messages: snowflake.SnowflakeishOr[messages_.Message],
+        *messages: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Bulk-delete messages from the channel.
 
@@ -968,9 +968,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The text channel, or text channel ID to delete messages from.
-        *messages : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.messages.Message]
+        *messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             One or more messages
 
         Raises
@@ -985,8 +985,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def add_reaction(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
@@ -1015,8 +1015,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_my_reaction(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> None:
         """Delete a reaction that your application user created.
@@ -1043,8 +1043,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> None:
         ...
@@ -1052,26 +1052,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_reaction(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def delete_all_reactions(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         ...
 
     @abc.abstractmethod
     def fetch_reactions_for_emoji(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
-        message: snowflake.SnowflakeishOr[messages_.Message],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
         ...
@@ -1079,7 +1079,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_webhook(
         self,
-        channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         name: str,
         *,
         avatar: typing.Optional[files.Resourceish] = None,
@@ -1090,7 +1090,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_webhook(
         self,
-        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
@@ -1098,25 +1098,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
-        self, channel: snowflake.SnowflakeishOr[channels.TextChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
     @abc.abstractmethod
     async def edit_webhook(
         self,
-        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         ...
@@ -1124,7 +1124,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook(
         self,
-        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1133,7 +1133,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def execute_webhook(
         self,
-        webhook: snowflake.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1146,10 +1146,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         ...
@@ -1159,7 +1159,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_gateway_bot(self) -> gateway.GatewayBot:
+    async def fetch_gateway_bot(self) -> sessions.GatewayBot:
         ...
 
     @abc.abstractmethod
@@ -1192,18 +1192,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         *,
         newest_first: bool = False,
-        start_at: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         ...
 
     @abc.abstractmethod
-    async def leave_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], /) -> None:
+    async def leave_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> None:
         ...
 
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def create_dm_channel(
-        self, user: snowflake.SnowflakeishOr[users.PartialUser], /
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
     ) -> channels.PrivateTextChannel:
         ...
 
@@ -1217,12 +1217,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def add_user_to_guild(
         self,
         access_token: str,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1234,15 +1234,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_user(self, user: snowflake.SnowflakeishOr[users.PartialUser]) -> users.User:
+    async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
         ...
 
     def fetch_audit_log(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        before: undefined.UndefinedOr[snowflake.SearchableSnowflakeishOr[snowflake.Unique]] = undefined.UNDEFINED,
-        user: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         ...
@@ -1250,7 +1250,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_emoji(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
         # likewise this only is valid for custom emojis, unicode emojis make little sense here.
         emoji: typing.Union[str, emojis.CustomEmoji],
@@ -1259,19 +1259,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_emojis(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         ...
 
     @abc.abstractmethod
     async def create_emoji(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         image: files.Resourceish,
         *,
         roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
@@ -1280,14 +1280,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_emoji(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
         # likewise this only is valid for custom emojis, unicode emojis make little sense here.
         emoji: typing.Union[str, emojis.CustomEmoji],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
@@ -1296,7 +1296,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_emoji(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
         emoji: typing.Union[str, emojis.CustomEmoji],
         # TODO: check this is still true? iirc I got yelled at about something similar to this when I reported it.
@@ -1309,17 +1309,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
+    async def fetch_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         ...
 
     @abc.abstractmethod
-    async def fetch_guild_preview(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         ...
 
     @abc.abstractmethod
     async def edit_guild(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
@@ -1330,20 +1330,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         explicit_content_filter_level: undefined.UndefinedOr[
             guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
-        afk_channel: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
+        afk_channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
         afk_timeout: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        owner: undefined.UndefinedOr[snowflake.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         system_channel: undefined.UndefinedNoneOr[
-            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
         ] = undefined.UNDEFINED,
         rules_channel: undefined.UndefinedNoneOr[
-            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
         ] = undefined.UNDEFINED,
         public_updates_channel: undefined.UndefinedNoneOr[
-            snowflake.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1351,19 +1351,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_guild(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> None:
+    async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_channels(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels.GuildChannel]:
         ...
 
     @abc.abstractmethod
     async def create_guild_text_channel(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -1373,7 +1373,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildTextChannel:
         ...
@@ -1381,7 +1381,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_guild_news_channel(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -1391,7 +1391,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildNewsChannel:
         ...
@@ -1399,7 +1399,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_guild_voice_channel(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -1408,7 +1408,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflake.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels.GuildVoiceChannel:
         ...
@@ -1416,7 +1416,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_guild_category(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         name: str,
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -1430,37 +1430,37 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def reposition_channels(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, typing.Union[snowflake.SnowflakeishOr[channels.GuildChannel]]],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, typing.Union[snowflakes.SnowflakeishOr[channels.GuildChannel]]],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def fetch_member(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], user: snowflake.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.Member:
         ...
 
     @abc.abstractmethod
     def fetch_members(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> iterators.LazyIterator[guilds.Member]:
         ...
 
     @abc.abstractmethod
     async def edit_member(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         voice_channel: undefined.UndefinedNoneOr[
-            snowflake.SnowflakeishOr[channels.GuildVoiceChannel]
+            snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1469,7 +1469,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_my_nick(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.Guild],
+        guild: snowflakes.SnowflakeishOr[guilds.Guild],
         nick: typing.Optional[str],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1479,9 +1479,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def add_role_to_member(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
-        role: snowflake.SnowflakeishOr[guilds.PartialRole],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1490,9 +1490,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def remove_role_from_member(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
-        role: snowflake.SnowflakeishOr[guilds.PartialRole],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1501,8 +1501,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def kick_user(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1514,8 +1514,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def ban_user(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1528,8 +1528,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def unban_user(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflake.SnowflakeishOr[users.PartialUser],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1540,24 +1540,24 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], user: snowflake.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.GuildMemberBan:
         ...
 
     @abc.abstractmethod
     async def fetch_bans(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         ...
 
     @abc.abstractmethod
-    async def fetch_roles(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
         ...
 
     @abc.abstractmethod
     async def create_role(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -1572,16 +1572,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def reposition_roles(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflake.SnowflakeishOr[guilds.PartialRole]],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def edit_role(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        role: snowflake.SnowflakeishOr[guilds.PartialRole],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -1595,30 +1595,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_role(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild], role: snowflake.SnowflakeishOr[guilds.PartialRole],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
     ) -> None:
         ...
 
     @abc.abstractmethod
     async def estimate_guild_prune_count(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
     ) -> int:
         """Estimate the guild prune count.
 
         Parameters
         ----------
-        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to estimate the guild prune count for. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedOr[builtins.int]
+        days : hikari.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
-        include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole][
+        include_roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole][
             If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
@@ -1646,12 +1648,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def begin_guild_prune(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         compute_prune_count: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflake.SnowflakeishOr[guilds.PartialRole]]
+            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Optional[int]:
@@ -1659,20 +1661,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to begin the guild prune in. This may be a guild object,
             or the ID of an existing channel.
-        days : hikari.utilities.undefined.UndefinedOr[builtins.int]
+        days : hikari.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
-        compute_prune_count: hikari.utilities.snowflake.SnowflakeishOr[builtins.bool]
+        compute_prune_count: hikari.snowflakes.SnowflakeishOr[builtins.bool]
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
-        include_roles : hikari.utilities.undefined.UndefinedOr[typing.Collection[hikari.utilities.snowflake.SnowflakeishOr[hikari.models.guilds.PartialRole]]]
+        include_roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
             If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
             the count.
-        reason : hikari.utilities.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
 
         Returns
@@ -1697,27 +1699,27 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_invites(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         ...
 
     @abc.abstractmethod
     async def fetch_integrations(
-        self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Integration]:
         ...
 
     @abc.abstractmethod
     async def edit_integration(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflake.SnowflakeishOr[guilds.Integration],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflakes.SnowflakeishOr[guilds.Integration],
         *,
         expire_behaviour: undefined.UndefinedOr[guilds.IntegrationExpireBehaviour] = undefined.UNDEFINED,
         expire_grace_period: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
@@ -1729,8 +1731,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_integration(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflake.SnowflakeishOr[guilds.Integration],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflakes.SnowflakeishOr[guilds.Integration],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -1739,26 +1741,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def sync_integration(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflake.SnowflakeishOr[guilds.Integration],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        integration: snowflakes.SnowflakeishOr[guilds.Integration],
     ) -> None:
         ...
 
     @abc.abstractmethod
-    async def fetch_widget(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
+    async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         ...
 
     @abc.abstractmethod
     async def edit_widget(
         self,
-        guild: snowflake.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        channel: undefined.UndefinedNoneOr[snowflake.SnowflakeishOr[channels.GuildChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildChannel]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildWidget:
         ...
 
     @abc.abstractmethod
-    async def fetch_vanity_url(self, guild: snowflake.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
+    async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         ...

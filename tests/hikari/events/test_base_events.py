@@ -22,8 +22,8 @@ import attr
 import mock
 import pytest
 
+from hikari import intents
 from hikari.events import base_events
-from hikari.models import intents
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)

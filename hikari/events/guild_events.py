@@ -43,21 +43,21 @@ import typing
 
 import attr
 
+from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.models import intents
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import channels as channels_
+    from hikari import emojis as emojis_
+    from hikari import guilds
+    from hikari import presences as presences_
+    from hikari import snowflakes
     from hikari import traits
+    from hikari import users
+    from hikari import voices
     from hikari.api import shard as gateway_shard
-    from hikari.models import channels as channels_
-    from hikari.models import emojis as emojis_
-    from hikari.models import guilds
-    from hikari.models import presences as presences_
-    from hikari.models import users
-    from hikari.models import voices
-    from hikari.utilities import snowflake
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -69,12 +69,12 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event relates to.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild that relates to this event.
         """
 
@@ -116,66 +116,66 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     Returns
     -------
-    hikari.models.guilds.Guild
+    hikari.guilds.Guild
         The guild that relates to this event.
     """
 
-    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
     """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
         The emojis in the guild.
     """
 
-    roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.ib(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Role]
         The roles in the guild.
     """
 
-    channels: typing.Mapping[snowflake.Snowflake, channels_.GuildChannel] = attr.ib(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.ib(repr=False)
     """Mapping of channel IDs to the channels in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.channels.GuildChannel]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
         The channels in the guild.
     """
 
-    members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.ib(repr=False)
     """Mapping of user IDs to the members in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
         The members in the guild.
     """
 
-    presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
     """Mapping of user IDs to the include_presences for the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
         The member include_presences in the guild.
     """
 
-    voice_states: typing.Mapping[snowflake.Snowflake, voices.VoiceState] = attr.ib(repr=False)
+    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.ib(repr=False)
     """Mapping of user IDs to the voice states active in this guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.voices.VoiceState]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
         The voice states active in the guild.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
 
@@ -195,7 +195,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
 
@@ -211,7 +211,7 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
 
@@ -232,30 +232,30 @@ class GuildUpdateEvent(GuildEvent):
 
     Returns
     -------
-    hikari.models.guilds.Guild
+    hikari.guilds.Guild
         The guild that relates to this event.
     """
 
-    emojis: typing.Mapping[snowflake.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(repr=False)
     """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.emojis.KnownCustomEmoji]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
         The emojis in the guild.
     """
 
-    roles: typing.Mapping[snowflake.Snowflake, guilds.Role] = attr.ib(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.ib(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Role]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Role]
         The roles in the guild.
     """
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
 
@@ -272,7 +272,7 @@ class BanEvent(GuildEvent, abc.ABC):
 
         Returns
         -------
-        hikari.models.users.User
+        hikari.users.User
             The user that this event concerns.
         """
 
@@ -289,7 +289,7 @@ class BanCreateEvent(BanEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
@@ -308,7 +308,7 @@ class BanDeleteEvent(BanEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
@@ -327,7 +327,7 @@ class EmojisUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
@@ -364,7 +364,7 @@ class IntegrationsUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ShardEvent>>.
 
 
@@ -396,7 +396,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    hikari.models.include_presences.MemberPresence
+    hikari.include_presences.MemberPresence
         Presence for the user in this guild.
     """
 
@@ -412,28 +412,28 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    typing.Optional[hikari.models.users.PartialUser]
+    typing.Optional[hikari.users.PartialUser]
         The partial user containing the updated fields.
     """
 
     @property
-    def user_id(self) -> snowflake.Snowflake:
+    def user_id(self) -> snowflakes.Snowflake:
         """User ID of the user that updated their presence.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             ID of the user the event concerns.
         """
         return self.presence.user_id
 
     @property
-    def guild_id(self) -> snowflake.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake:
         """Guild ID that the presence was updated in.
 
         Returns
         -------
-        hikari.utilities.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             ID of the guild the event occurred in.
         """
         return self.presence.guild_id
@@ -450,15 +450,15 @@ class MemberChunkEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    guild_id: snowflake.Snowflake = attr.ib(repr=True)
+    guild_id: snowflakes.Snowflake = attr.ib(repr=True)
     # <<docstring inherited from ShardEvent>>.
 
-    members: typing.Mapping[snowflake.Snowflake, guilds.Member] = attr.ib(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.ib(repr=False)
     """Mapping of user IDs to the objects of the members in this chunk.
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.guilds.Member]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
         Mapping of user IDs to corresponding member objects.
     """
 
@@ -480,7 +480,7 @@ class MemberChunkEvent(shard_events.ShardEvent):
         Total number of chunks to be expected.
     """
 
-    not_found: typing.Sequence[snowflake.Snowflake] = attr.ib(repr=True)
+    not_found: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=True)
     """Sequence of the snowflakes that were not found while making this request.
 
     This is only applicable when user IDs are specified while making the
@@ -488,11 +488,11 @@ class MemberChunkEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    typing.Sequence[hikari.utilities.snowflake.Snowflake]
+    typing.Sequence[hikari.snowflakes.Snowflake]
         Sequence of user IDs that were not found.
     """
 
-    presences: typing.Mapping[snowflake.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no include_presences are found or `include_presences` is not passed as
@@ -500,7 +500,7 @@ class MemberChunkEvent(shard_events.ShardEvent):
 
     Returns
     -------
-    typing.Mapping[hikari.utilities.snowflake.Snowflake, hikari.models.include_presences.MemberPresence]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
         Mapping of user IDs to corresponding include_presences.
     """
 
