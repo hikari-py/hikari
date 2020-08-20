@@ -12,9 +12,5 @@ updates:
       - "Nekokatt"
       - "FasterSpeeding"
       - "Davfsa"
-    labels:
-      - "automerge"
-    rebase-strategy:
-      - auto
-    target-branch:
-      - master
+    rebase-strategy: auto
+    target-branch: master
