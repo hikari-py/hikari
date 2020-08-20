@@ -54,6 +54,7 @@ from hikari.files import LazyByteIteratorish
 from hikari.files import Pathish
 from hikari.files import Rawish
 from hikari.files import Resourceish
+from hikari.guilds import *
 from hikari.impl.bot import BotApp as Bot
 from hikari.impl.rest import RESTApp as REST
 from hikari.intents import *
