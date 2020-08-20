@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+    assignees:
+      - "Nekokatt"
+      - "FasterSpeeding"
+      - "Davfsa"
+    reviewers:
+      - "Nekokatt"
+      - "FasterSpeeding"
+      - "Davfsa"
+    labels:
+      - "automerge"
+    rebase-strategy:
+      - auto
+    target-branch:
+      - master
