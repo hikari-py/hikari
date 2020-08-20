@@ -1,0 +1,14 @@
+public/
+.nox/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+.idea/
+.vs/
+vs/
+.vscode/
+vscode/
