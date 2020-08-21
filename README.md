@@ -1,10 +1,12 @@
-**Note:** this API is still under active daily development, and is in a
-**alpha** stage. If you are looking to give feedback, or want to help us
-out, then feel free to join our [Discord server](https://discord.gg/Jx4cNGG) and
-chat to us. Any help is greatly appreciated, no matter what your experience
-level may be! :-)
+[![hikarivers](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
+[![pyvers](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
+[![codecov](https://img.shields.io/codecov/c/github/nekokatt/hikari)](https://codecov.io/gh/nekokatt/hikari)
+[![prs](https://img.shields.io/github/issues-pr/nekokatt/hikari)](https://github.com/nekokatt/hikari/pulls)
+[![issues](https://img.shields.io/github/issues-raw/nekokatt/hikari)](https://github.com/nekokatt/hikari/issues)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
+[![mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
 
----
+[![Discord](https://discord.com/api/guilds/81384788765712384/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
 # _hikari_
 
@@ -81,3 +83,11 @@ to get started.
 
 Once this is complete, you can run `nox` without any arguments to ensure
 everything builds and is correct.
+
+### Where can I start?
+
+Check out the issues tab on GitHub. If you are nervous, look for issues
+marked as ![good-first-issue-badge](https://img.shields.io/github/labels/nekokatt/hikari/good%20first%20issue) for
+ something easy to start with!
+
+[![good-first-issues](https://img.shields.io/github/issues/nekokatt/hikari/good%20first%20issue)](https://github.com/nekokatt/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
