@@ -636,7 +636,9 @@ class PartialGuild(snowflakes.Unique):
         """
         try:
             # This is only sensible if there is a shard.
-            return (self.id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+            shard_count = getattr(self.app, "shard_count")
+            assert isinstance(shard_count, int)
+            return (self.id >> 22) % shard_count
         except (TypeError, AttributeError, NameError):
             return None
 

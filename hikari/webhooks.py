@@ -270,11 +270,12 @@ class Webhook(snowflakes.Unique):
             If `use_token` is passed as `builtins.True` when `Webhook.token` is
             `builtins.None`.
         """
-        if use_token and self.token is None:
-            raise ValueError("This webhook's token is unknown, so cannot be used.")
-
-        token: undefined.UndefinedOr[str]
-        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used.")
+            token: undefined.UndefinedOr[str] = self.token
+        else:
+            token = undefined.UNDEFINED
 
         await self.app.rest.delete_webhook(self.id, token=token)
 
@@ -329,11 +330,12 @@ class Webhook(snowflakes.Unique):
         builtins.ValueError
             If `use_token` is passed as `builtins.True` when `Webhook.token` is `builtins.None`.
         """  # noqa: E501 - Line too long
-        if use_token and self.token is None:
-            raise ValueError("This webhook's token is unknown, so cannot be used.")
-
-        token: undefined.UndefinedOr[str]
-        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used.")
+            token: undefined.UndefinedOr[str] = self.token
+        else:
+            token = undefined.UNDEFINED
 
         return await self.app.rest.edit_webhook(
             self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
@@ -388,11 +390,12 @@ class Webhook(snowflakes.Unique):
             If `use_token` is passed as `builtins.True` when `Webhook.token`
             is `builtins.None`.
         """
-        if use_token and not self.token:
-            raise ValueError("This webhook's token is unknown, so cannot be used.")
-
-        token: undefined.UndefinedOr[str]
-        token = typing.cast(str, self.token) if use_token else undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used.")
+            token: undefined.UndefinedOr[str] = self.token
+        else:
+            token = undefined.UNDEFINED
 
         return await self.app.rest.fetch_webhook(self.id, token=token)
 

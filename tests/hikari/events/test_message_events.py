@@ -23,6 +23,8 @@ import mock
 import pytest
 
 from hikari import messages
+from hikari import snowflakes
+from hikari import users
 from hikari.events import message_events
 
 
@@ -54,22 +56,22 @@ class TestMessageUpdateEvent:
     def event(self):
         class MessageUpdateEvent(message_events.MessageUpdateEvent):
             app = None
-            message = mock.Mock(messages.Message)
+            message = mock.Mock(spec_set=messages.Message, author=mock.Mock(spec_set=users.PartialUser,))
             shard = object()
 
         return MessageUpdateEvent()
 
     def test_message_id_property(self, event):
-        event.message.id = 123
-        assert event.message_id == 123
+        event.message.id = snowflakes.Snowflake(123)
+        assert event.message_id == snowflakes.Snowflake(123)
 
     def test_channel_id_property(self, event):
-        event.message.channel_id = 123
-        assert event.channel_id == 123
+        event.message.channel_id = snowflakes.Snowflake(456)
+        assert event.channel_id == snowflakes.Snowflake(456)
 
     def test_author_id_property(self, event):
-        event.message.author.id = 123
-        assert event.author_id == 123
+        event.message.author.id = snowflakes.Snowflake(911)
+        assert event.author_id == snowflakes.Snowflake(911)
 
 
 class TestMessageDeleteEvent:
@@ -94,28 +96,37 @@ class TestMessageDeleteEvent:
 class TestGuildMessageCreateEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageCreateEvent(app=None, message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageCreateEvent(
+            app=None,
+            message=mock.Mock(spec_set=messages.Message, guild_id=snowflakes.Snowflake(998866)),
+            shard=object(),
+        )
 
     def test_guild_id_property(self, event):
-        event.message.guild_id = 123
-        assert event.guild_id == 123
+        assert event.guild_id == snowflakes.Snowflake(998866)
 
 
 class TestGuildMessageUpdateEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageUpdateEvent(app=None, message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageUpdateEvent(
+            app=None,
+            message=mock.Mock(spec_set=messages.Message, guild_id=snowflakes.Snowflake(9182736)),
+            shard=object(),
+        )
 
     def test_guild_id_property(self, event):
-        event.message.guild_id = 123
-        assert event.guild_id == 123
+        assert event.guild_id == snowflakes.Snowflake(9182736)
 
 
 class TestGuildMessageDeleteEvent:
     @pytest.fixture
     def event(self):
-        return message_events.GuildMessageDeleteEvent(app=None, message=mock.Mock(messages.Message), shard=object())
+        return message_events.GuildMessageDeleteEvent(
+            app=None,
+            message=mock.Mock(spec_set=messages.Message, guild_id=snowflakes.Snowflake(9182736)),
+            shard=object(),
+        )
 
     def test_guild_id_property(self, event):
-        event.message.guild_id = 123
-        assert event.guild_id == 123
+        assert event.guild_id == snowflakes.Snowflake(9182736)

@@ -81,7 +81,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
-    return typing.cast(typing.Collection[typing.Any], getattr(event_type, REQUIRED_INTENTS_ATTR, ()))
+    return typing.cast("typing.Collection[typing.Any]", getattr(event_type, REQUIRED_INTENTS_ATTR, ()))
 
 
 def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.Callable[[T], T]:
@@ -141,7 +141,7 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
 
 def is_no_recursive_throw_event(obj: typing.Union[T, typing.Type[T]]) -> bool:
     """Return True if this event is marked as `___norecursivethrow___`."""
-    return typing.cast(bool, getattr(obj, NO_RECURSIVE_THROW_ATTR, False))
+    return typing.cast("bool", getattr(obj, NO_RECURSIVE_THROW_ATTR, False))
 
 
 FailedEventT = typing.TypeVar("FailedEventT", bound=Event)
