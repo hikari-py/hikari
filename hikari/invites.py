@@ -136,13 +136,13 @@ class InviteGuild(guilds.PartialGuild):
         """Splash for the guild, if set."""
         return self.format_splash()
 
-    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's splash image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -162,7 +162,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
         )
 
     @property
@@ -170,13 +170,13 @@ class InviteGuild(guilds.PartialGuild):
         """Banner for the guild, if set."""
         return self.format_banner()
 
-    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_banner(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -196,7 +196,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext,
         )
 
 
