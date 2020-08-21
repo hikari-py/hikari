@@ -70,6 +70,10 @@ class Cache(abc.ABC):
     The implementation may choose to use a simple in-memory collection of
     objects, or may decide to use a distributed system such as a Redis cache
     for cross-process bots.
+
+    !!! note
+        For a stateless implementation of this cache getting methods will always
+        return empty resources (e.g `builtins.None` and empty cache views).
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -531,6 +535,12 @@ class MutableCache(Cache, abc.ABC):
 
     This is only exposed to internal components. There is no guarantee the
     user-facing cache will provide these methods or not.
+
+    !!! note
+        For a "stateless" implementation of this getting methods will always
+        return empty resources (e.g `builtins.None` and empty cache views) while
+        modifying methods will always raise `builtins.NotImplementedError` when
+        they are called.
     """
 
     @abc.abstractmethod
@@ -542,6 +552,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.PrivateTextChannel]
             The cache view of user IDs to the private text channel objects that
             were removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -561,6 +576,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.channels.PrivateTextChannel]
             The object of the private text channel that was removed from the
             cache if found, else `builtins.None`
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -571,6 +591,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         channel : hikari.channels.PrivateTextChannel
             The object of the private text channel to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -590,6 +615,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached private text channel if found
             (else `builtins.None`) and the new cached private text channel if it
             could be cached (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -605,6 +635,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
             A cache view of emoji IDs to objects of the emojis that were
             removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -628,6 +663,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
             A view of emoji IDs to objects of the emojis that were removed
             from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -648,6 +688,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.emojis.KnownCustomEmoji]
             The object of the emoji that was removed from the cache or
             `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -658,6 +703,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         emoji : hikari.emojis.KnownCustomEmoji
             The object of the known custom emoji to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -677,6 +727,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached emoji object if found (else `builtins.None`)
             and the new cached emoji object if it could be cached (else
             `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -688,6 +743,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
             The cache view of guild IDs to guild objects that were removed from
             the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -704,6 +764,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.guilds.GatewayGuild]
             The object of the guild that was removed from the cache, will be
             `builtins.None` if not found.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -714,6 +779,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         guild : hikari.guilds.GatewayGuild
             The object of the guild to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -726,6 +796,11 @@ class MutableCache(Cache, abc.ABC):
             The ID of the guild to set the availability for.
         is_available : builtins.bool
             The availability to set for the guild.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -749,6 +824,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached guild object if found (else `builtins.None`)
             and the object of the guild that was added to the cache if it could
             be added (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -760,6 +840,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -778,6 +863,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -793,7 +883,12 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The object of the guild channel that was removed from the cache if
-            found, else `builtins.None`.ww
+            found, else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -804,6 +899,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         channel : hikari.channels.GuildChannel
             The guild channel based object to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -823,6 +923,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached guild channel if found (else `builtins.None`)
             and the new cached guild channel if it could be cached
             (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -834,6 +939,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[builtins.str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -850,6 +960,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[builtins.str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified guild.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -870,6 +985,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[builtins.str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified channel.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -886,6 +1006,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.invites.InviteWithMetaData]
             The object of the invite that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -896,6 +1021,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         invite : hikari.invites.InviteWithMetadata
             The object of the invite to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -915,6 +1045,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else
             `builtins.None`) and the new cached invite object if it could be
             cached (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -926,6 +1061,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.users.OwnUser]
             The own user object that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -936,6 +1076,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         user : hikari.users.OwnUser
             The own user object to set in the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -955,6 +1100,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached own user object if found (else
             `builtins.None`) and the new cached own user object if it could be
             cached, else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -966,6 +1116,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -988,6 +1143,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]
             The view of user IDs to the member objects that were removed from
             the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1013,6 +1173,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.guilds.Member]
             The object of the member that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1023,6 +1188,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         member : hikari.guilds.Member
             The object of the member to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1042,6 +1212,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached member object if found (else `builtins.None`)
             and the new cached member object if it could be cached (else
             `builtins.None`)
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1055,6 +1230,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]]
             A view of guild IDs to views of user IDs to objects of the include_presences
             that were removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -1073,6 +1253,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
             A view of user IDs to objects of the include_presences that were removed
             from the cache for the specified guild.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1093,6 +1278,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.include_presences.MemberPresence]
             The object of the presence that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1103,6 +1293,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         presence : hikari.presences.MemberPresence
             The object of the presence to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1122,6 +1317,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else `builtins.None`
             and the new cached invite object if it could be cached ( else
             `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -1133,6 +1333,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
             A view of role IDs to objects of the roles that were removed from
             the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1149,6 +1354,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
             A view of role IDs to objects of the roles that were removed from
             the cache for the specific guild.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1165,6 +1375,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.guilds.Role]
             The object of the role that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1175,6 +1390,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         role : hikari.guilds.Role
             The object of the role to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1194,6 +1414,11 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached role object if found (else `builtins.None`
             and the new cached role object if it could be cached (else
             `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1210,6 +1435,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.users.User]
             The view of user IDs to the user objects that were removed from the
             cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1231,6 +1461,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.users.User]
             The object of the user that was removed from the cache if found,
             else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1241,6 +1476,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         user : hikari.users.User
             The object of the user to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1259,6 +1499,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Tuple[typing.Optional[hikari.users.User], typing.Optional[hikari.users.User]]
             A tuple of the old cached user if found (else `builtins.None`) and
             the newly cached user if it could be cached (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1270,6 +1515,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were removed from the states.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """  # noqa E501: - Line too long
 
     @abc.abstractmethod
@@ -1288,6 +1538,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
             A view of user IDs to the voice state objects that were removed from
             the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1308,6 +1563,11 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
             A view of user IDs to objects of the voice state that were removed
             from the cache for the specified channel.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1328,6 +1588,11 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.voices.VoiceState]
             The object of the voice state that was removed from the cache if
             found, else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1338,6 +1603,11 @@ class MutableCache(Cache, abc.ABC):
         ----------
         voice_state : hikari.voices.VoiceState
             The object of the voice state to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
 
     @abc.abstractmethod
@@ -1357,4 +1627,9 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached voice state if found (else `builtins.None`)
             and the new cached voice state object if it could be cached
             (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
         """
