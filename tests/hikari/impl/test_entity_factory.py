@@ -1929,7 +1929,6 @@ class TestEntityFactoryImpl:
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
-        assert guild.my_permissions == permission_models.Permissions(66_321_471)
         assert guild.region == "eu-central"
         assert guild.afk_channel_id == 99998888777766
         assert guild.afk_timeout == datetime.timedelta(seconds=1200)
@@ -2036,7 +2035,6 @@ class TestEntityFactoryImpl:
         assert guild.max_presences is None
         assert guild.max_video_channel_users is None
         assert guild.member_count is None
-        assert guild.my_permissions is None
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None

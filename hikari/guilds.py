@@ -1102,13 +1102,6 @@ class RESTGuild(Guild):
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
-    my_permissions: typing.Optional[permissions_.Permissions] = attr.ib(eq=False, hash=False, repr=False)
-    """The guild-level permissions that apply to the bot user.
-
-    This will not take into account permission overwrites or implied
-    permissions (for example, `ADMINISTRATOR` implies all other permissions).
-    """
-
     joined_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The date and time that the bot user joined this guild.
 

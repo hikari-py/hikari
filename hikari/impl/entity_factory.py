@@ -1206,7 +1206,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
-        my_permissions = permission_models.Permissions(payload["permissions"]) if "permissions" in payload else None
         is_large = payload["large"] if "large" in payload else None
         joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
         member_count = int(payload["member_count"]) if "member_count" in payload else None
@@ -1243,7 +1242,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
-            my_permissions=my_permissions,
             is_large=is_large,
             joined_at=joined_at,
             member_count=member_count,
