@@ -48,15 +48,4 @@ echo "===== SENDING WEBHOOK ====="
 python scripts/deploy_webhook.py
 
 echo "===== DEPLOYING PAGES ====="
-git config user.name "Nekokatt"
-git config user.email "69713762+nekokatt@users.noreply.github.com"
-
-mkdir public || true
-nox --sessions pdoc pages
-cd public || exit 1
-git init
-git remote add origin https://nekokatt:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
-git checkout -B gh-pages
-git add -Av .
-git commit -am "Deployed documentation for ${VERSION}"
-git push origin gh-pages --force
+source scripts/deploy-pages.sh

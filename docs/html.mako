@@ -79,6 +79,27 @@ SOFTWARE.
 
         <%include file="body.mako" />
 
+        <!-- Search script and dependencies -->
+        <script>
+            const input = document.getElementById('lunr-search');
+            input.disabled = false;
+            input.form.addEventListener('submit', (ev) => {
+                ev.preventDefault();
+                const url = new URL(window.location);
+                url.searchParams.set('q', input.value);
+                history.replaceState({}, null, url.toString());
+                search(input.value);
+            });
+            ## On page load
+            const query = new URL(window.location).searchParams.get('q');
+            if (query)
+                search(query);
+            function search(query) {
+                const url = '${'../' * (module.url().count('/') - 1)}search.html#' + encodeURIComponent(query);
+                window.location.href = url;
+            };
+        </script>
+
         ## Script dependencies for Bootstrap.
         <script src="https://code.jquery.com/jquery-${jquery_version}.slim.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@${popperjs_version}/dist/umd/popper.min.js"></script>

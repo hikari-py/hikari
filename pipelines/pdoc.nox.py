@@ -38,7 +38,7 @@ from pipelines import nox
 def pdoc(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
     session.install("-r", "requirements.txt")
-    session.install("pdoc3")
+    session.install("git+https://github.com/davfsa/pdoc@task/offline-search-lunr")
     session.install("sphobjinv")
     session.env["PDOC3_GENERATING"] = "1"
 
