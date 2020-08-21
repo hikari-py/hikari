@@ -413,7 +413,6 @@ class Webhook(snowflakes.Unique):
         """
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(constants.CDN_URL, discriminator=0, file_format="png",)
 
-    # noinspection PyShadowingBuiltins
     def format_avatar(self, format: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
 

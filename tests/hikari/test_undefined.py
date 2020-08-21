@@ -35,7 +35,6 @@ class TestUndefined:
     def test_bool(self):
         assert bool(undefined.UNDEFINED) is False
 
-    # noinspection PyComparisonWithNone
     def test_singleton_behaviour(self):
         assert undefined.UNDEFINED is undefined.UNDEFINED
         assert undefined.UNDEFINED == undefined.UNDEFINED

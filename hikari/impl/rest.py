@@ -1100,7 +1100,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if isinstance(emoji, str) and (custom_mention_match := self._CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
             # False positive in PyCharm, yet again.
-            # noinspection PyUnboundLocalVariable
             return custom_mention_match.group(1)
 
         return str(emoji)

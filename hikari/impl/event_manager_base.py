@@ -223,7 +223,6 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
             if cls in self._waiters:
                 for predicate, future in self._waiters[cls]:
-                    # noinspection PyTypeChecker
                     tasks.append(self._test_waiter(event, predicate, future))  # type: ignore[misc]
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()

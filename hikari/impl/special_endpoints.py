@@ -527,7 +527,6 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         if not chunk:
             return None
 
-        # noinspection PyTypeChecker
         self._first_id = chunk[-1]["user"]["id"]
 
         return (self._entity_factory.deserialize_member(m, guild_id=self._guild_id) for m in chunk)

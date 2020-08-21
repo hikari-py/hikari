@@ -34,7 +34,6 @@ from hikari.utilities import art
 
 def main() -> None:
     """Print package info and exit."""
-    # noinspection PyTypeChecker
     if "--pretty" in sys.argv[1:] or "-p" in sys.argv[1:]:
         sys.stdout.write(art.get_banner() + "\n")
     else:

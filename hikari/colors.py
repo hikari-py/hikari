@@ -229,7 +229,6 @@ class Color(int):
             raise ValueError("green must be in the inclusive range of 0 and 255")
         if not 0 <= blue <= 0xFF:
             raise ValueError("blue must be in the inclusive range of 0 and 255")
-        # noinspection PyTypeChecker
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
@@ -264,7 +263,6 @@ class Color(int):
             raise ValueError("green must be in the inclusive range of 0 and 1.")
         if not 0 <= blue <= 1:
             raise ValueError("blue must be in the inclusive range of 0 and 1.")
-        # noinspection PyTypeChecker
         return cls.from_rgb(int(red * 0xFF), int(green * 0xFF), int(blue * 0xFF))
 
     @classmethod
@@ -302,7 +300,6 @@ class Color(int):
         if len(hex_code) == 3:
             # Web-safe
             r, g, b = (c << 4 | c for c in (int(c, 16) for c in hex_code))
-            # noinspection PyTypeChecker
             return cls.from_rgb(r, g, b)
 
         if len(hex_code) == 6:

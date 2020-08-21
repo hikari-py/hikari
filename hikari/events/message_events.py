@@ -52,6 +52,8 @@ from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    # Do NOT remove the users import here. It **is** required, even if PyCharm
+    # tries to assure you otherwise.
     from hikari import messages
     from hikari import snowflakes
     from hikari import traits

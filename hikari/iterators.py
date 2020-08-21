@@ -692,7 +692,6 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         # We are our own async iterator.
         return self
 
-    # noinspection PyTypeChecker
     def __iter__(self) -> LazyIterator[ValueT]:
         # This iterator is async only.
         cls = type(self)

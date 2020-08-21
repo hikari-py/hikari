@@ -77,7 +77,6 @@ class TestRESTBucketManager:
         buckets_array = [MockBucket() for _ in range(30)]
 
         mgr = buckets.RESTBucketManager()
-        # noinspection PyFinal
         mgr.real_hashes_to_buckets = {f"blah{i}": bucket for i, bucket in enumerate(buckets_array)}
 
         mgr.close()
@@ -207,7 +206,6 @@ class TestRESTBucketManager:
             route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
             # This isn't a coroutine; why would I await it?
-            # noinspection PyAsyncCall
             mgr.acquire(route)
 
             assert "UNKNOWN;bobs" in mgr.real_hashes_to_buckets
@@ -220,7 +218,6 @@ class TestRESTBucketManager:
             route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
 
             # This isn't a coroutine; why would I await it?
-            # noinspection PyAsyncCall
             mgr.acquire(route)
 
             assert mgr.routes_to_hashes[route.route] == "UNKNOWN"
@@ -235,7 +232,6 @@ class TestRESTBucketManager:
             mgr.real_hashes_to_buckets["eat pant;1234"] = bucket
 
             # This isn't a coroutine; why would I await it?
-            # noinspection PyAsyncCall
             mgr.acquire(route)
 
             # yes i test this twice, sort of. no, there isn't another way to verify this. sue me.

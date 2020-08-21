@@ -717,7 +717,6 @@ class GatewayShardImplV6(shard.GatewayShard):
             self._close_ws(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
         )
         await asyncio.sleep(0.1)
-        # noinspection PyProtectedMember
         self._ws._response.close()  # type: ignore[union-attr]
         try:
             await close_task

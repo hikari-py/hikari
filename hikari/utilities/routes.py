@@ -130,7 +130,6 @@ class Route:
     major_param: typing.Optional[str] = attr.ib(hash=False, eq=False)
     """The optional major parameter name."""
 
-    # noinspection RegExpRedundantEscape
     _MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")
 
     def __init__(self, method: str, path_template: str) -> None:

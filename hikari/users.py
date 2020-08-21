@@ -243,7 +243,6 @@ class User(PartialUser, abc.ABC):
         """Avatar for the user, or the default avatar if not set."""
         return self.format_avatar() or self.default_avatar
 
-    # noinspection PyShadowingBuiltins
     def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar for this user, if set.
 

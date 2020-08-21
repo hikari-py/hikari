@@ -93,7 +93,6 @@ setattr(_UndefinedSentinel, "__new__", lambda _: UNDEFINED)
 del _UndefinedSentinel
 
 
-# noinspection PyTypeChecker
 UNDEFINED: typing.Final[typing.Literal[UndefinedType.UNDEFINED_VALUE]] = UndefinedType.UNDEFINED_VALUE
 """Undefined sentinel value.
 

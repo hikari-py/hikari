@@ -333,7 +333,6 @@ class Team(snowflakes.Unique):
         """
         return self.format_icon()
 
-    # noinspection PyShadowingBuiltins
     def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this team if set.
 
@@ -454,7 +453,6 @@ class Application(snowflakes.Unique):
         """
         return self.format_icon()
 
-    # noinspection PyShadowingBuiltins
     def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this application.
 
@@ -496,7 +494,6 @@ class Application(snowflakes.Unique):
         """
         return self.format_cover_image()
 
-    # noinspection PyShadowingBuiltins
     def format_cover_image(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the cover image used in the store, if set.
 

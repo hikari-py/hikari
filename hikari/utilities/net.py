@@ -48,7 +48,6 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     if response.status == http.HTTPStatus.NOT_FOUND:
         return errors.NotFoundError(real_url, response.headers, raw_body)
 
-    # noinspection PyArgumentList
     status = http.HTTPStatus(response.status)
 
     cls: typing.Type[errors.HikariError]

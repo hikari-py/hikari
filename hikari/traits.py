@@ -56,8 +56,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
-
-    # noinspection PyUnresolvedReferences
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 

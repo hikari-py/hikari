@@ -38,7 +38,6 @@ class RequestContextStub:
         pass
 
     def __await__(self) -> aiohttp.ClientResponse:
-        # noinspection PyUnreachableCode
         if False:
             yield  # Turns this into a generator.
         self.await_count += 1
