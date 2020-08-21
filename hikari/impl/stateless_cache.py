@@ -31,6 +31,7 @@ __all__: typing.Final[typing.List[str]] = ["StatelessCacheImpl"]
 import typing
 
 from hikari.api import cache
+from hikari.utilities import cache as cache_utilities
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -62,12 +63,6 @@ class StatelessCacheImpl(cache.MutableCache):
     def __init__(self) -> None:
         self._me: typing.Optional[users.OwnUser] = None
 
-    def get_me(self) -> typing.Optional[users.OwnUser]:
-        return self._me
-
-    def set_me(self, user: users.OwnUser, /) -> None:
-        self._me = user
-
     @staticmethod
     def _no_cache() -> NotImplementedError:
         return NotImplementedError("This application is stateless, cache operations are not implemented.")
@@ -83,10 +78,10 @@ class StatelessCacheImpl(cache.MutableCache):
     def get_private_text_channel(
         self, user_id: snowflakes.Snowflake, /
     ) -> typing.Optional[channels.PrivateTextChannel]:
-        raise self._no_cache()
+        return None
 
     def get_private_text_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
         raise self._no_cache()
@@ -108,15 +103,15 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_emoji(self, emoji_id: snowflakes.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
-        raise self._no_cache()
+        return None
 
     def get_emojis_view(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_emojis_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
         raise self._no_cache()
@@ -133,10 +128,10 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
-        raise self._no_cache()
+        return None
 
     def get_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
         raise self._no_cache()
@@ -164,15 +159,15 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_guild_channel(self, channel_id: snowflakes.Snowflake, /) -> typing.Optional[channels.GuildChannel]:
-        raise self._no_cache()
+        return None
 
     def get_guild_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_guild_channels_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
         raise self._no_cache()
@@ -199,20 +194,20 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
-        raise self._no_cache()
+        return None
 
     def get_invites_view(self) -> cache.CacheView[str, invites.InviteWithMetadata]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_invites_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_invites_view_for_channel(
         self, guild_id: snowflakes.Snowflake, channel_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
         raise self._no_cache()
@@ -223,12 +218,22 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def delete_me(self) -> typing.Optional[users.OwnUser]:
-        raise self._no_cache()
+        cached_me = self._me
+        self._me = None
+        return cached_me
+
+    def get_me(self) -> typing.Optional[users.OwnUser]:
+        return self._me
+
+    def set_me(self, user: users.OwnUser, /) -> None:
+        self._me = user
 
     def update_me(
         self, user: users.OwnUser, /
     ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
-        raise self._no_cache()
+        cached_me = self.get_me()
+        self.set_me(user)
+        return cached_me, self.get_me()
 
     def clear_members(
         self,
@@ -248,17 +253,17 @@ class StatelessCacheImpl(cache.MutableCache):
     def get_member(
         self, guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake, /
     ) -> typing.Optional[guilds.Member]:
-        raise self._no_cache()
+        return None
 
     def get_members_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_member(self, member: guilds.Member, /) -> None:
         raise self._no_cache()
@@ -286,17 +291,17 @@ class StatelessCacheImpl(cache.MutableCache):
     def get_presence(
         self, guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake, /
     ) -> typing.Optional[presences.MemberPresence]:
-        raise self._no_cache()
+        return None
 
     def get_presences_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_presences_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_presence(self, presence: presences.MemberPresence, /) -> None:
         raise self._no_cache()
@@ -318,15 +323,15 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_role(self, role_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.Role]:
-        raise self._no_cache()
+        return None
 
     def get_roles_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_roles_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_role(self, role: guilds.Role, /) -> None:
         raise self._no_cache()
@@ -343,10 +348,10 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def get_user(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[users.User]:
-        raise self._no_cache()
+        return None
 
     def get_users_view(self) -> cache.CacheView[snowflakes.Snowflake, users.User]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_user(self, user: users.User, /) -> None:
         raise self._no_cache()
@@ -379,22 +384,22 @@ class StatelessCacheImpl(cache.MutableCache):
     def get_voice_state(
         self, guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake, /
     ) -> typing.Optional[voices.VoiceState]:
-        raise self._no_cache()
+        return None
 
     def get_voice_states_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, voices.VoiceState]]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_voice_states_view_for_channel(
         self, guild_id: snowflakes.Snowflake, channel_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def get_voice_states_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        raise self._no_cache()
+        return cache_utilities.EmptyCacheView()
 
     def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
         raise self._no_cache()
