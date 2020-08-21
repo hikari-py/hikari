@@ -33,6 +33,7 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -41,7 +42,6 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels
     from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
@@ -94,7 +94,9 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         hikari.channels.TextChannel
             The channel.
         """
-        return typing.cast("channels.TextChannel", await self.app.rest.fetch_channel(self.channel_id))
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.TextChannel)
+        return channel
 
     async def fetch_user(self) -> users.User:
         """Perform an API call to fetch an up-to-date image of this user.

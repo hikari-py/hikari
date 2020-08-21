@@ -109,7 +109,4 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
         for op in self.pipeline:
             result = op(result)
 
-        if self.invert_all:
-            return typing.cast(ReturnValueT, not result)
-        else:
-            return typing.cast(ReturnValueT, result)
+        return typing.cast("ReturnValueT", (not result) if self.invert_all else result)

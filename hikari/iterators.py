@@ -655,7 +655,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             young grasshopper.
         """
         # Not type safe. Can I make this type safe?
-        return _AwaitingLazyIterator(typing.cast(LazyIterator[typing.Awaitable[ValueT]], self), window_size)
+        return _AwaitingLazyIterator(typing.cast("LazyIterator[typing.Awaitable[ValueT]]", self), window_size)
 
     @staticmethod
     def _map_predicates_and_attr_getters(
@@ -755,7 +755,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     __slots__: typing.Sequence[str] = ("_buffer",)
 
     def __init__(self) -> None:
-        empty_genexp = typing.cast(typing.Generator[ValueT, None, None], (_ for _ in ()))
+        empty_genexp = typing.cast("typing.Generator[ValueT, None, None]", (_ for _ in ()))
         self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = empty_genexp
 
     @abc.abstractmethod

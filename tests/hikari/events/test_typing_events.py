@@ -22,6 +22,8 @@
 import mock
 import pytest
 
+from hikari import channels
+from hikari import users
 from hikari.events import typing_events
 
 
@@ -39,12 +41,17 @@ class TestTypingEvent:
         return StubEvent()
 
     async def test_fetch_channel(self, event):
-        await event.fetch_channel()
+        mock_channel = mock.Mock(spec_set=channels.TextChannel)
+        event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+        assert await event.fetch_channel() is mock_channel
 
         event.app.rest.fetch_channel.assert_awaited_once_with(123)
 
     async def test_fetch_user(self, event):
-        await event.fetch_user()
+        mock_user = mock.Mock(spec_set=users.User)
+        event.app.rest.fetch_user = mock.AsyncMock(return_value=mock_user)
+
+        assert await event.fetch_user() is mock_user
 
         event.app.rest.fetch_user.assert_awaited_once_with(456)
 

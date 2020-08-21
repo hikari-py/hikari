@@ -37,7 +37,8 @@ def main() -> None:
     if "--pretty" in sys.argv[1:] or "-p" in sys.argv[1:]:
         sys.stdout.write(art.get_banner() + "\n")
     else:
-        sourcefile = typing.cast(str, inspect.getsourcefile(_about))
+        sourcefile = inspect.getsourcefile(_about)
+        assert isinstance(sourcefile, str)
         path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
         sha1: typing.Final[str] = _about.__git_sha1__
         version: typing.Final[str] = _about.__version__

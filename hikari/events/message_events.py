@@ -47,6 +47,8 @@ import typing
 import attr
 
 from hikari import intents
+from hikari import snowflakes
+from hikari import users
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
@@ -55,9 +57,7 @@ if typing.TYPE_CHECKING:
     # Do NOT remove the users import here. It **is** required, even if PyCharm
     # tries to assure you otherwise.
     from hikari import messages
-    from hikari import snowflakes
     from hikari import traits
-    from hikari import users
     from hikari.api import shard as gateway_shard
 
 
@@ -195,7 +195,9 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
             The ID of the author that triggered this event concerns.
         """
         # Looks like `author` is always present in this event variant.
-        return typing.cast("users.PartialUser", self.message.author).id
+        author = self.message.author
+        assert isinstance(author, users.PartialUser)
+        return author.id
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -300,7 +302,9 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
+        guild_id = self.message.guild_id
+        assert isinstance(guild_id, snowflakes.Snowflake)
+        return guild_id
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)

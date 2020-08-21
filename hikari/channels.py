@@ -526,7 +526,9 @@ class GuildChannel(PartialChannel):
         This may be `builtins.None` if the shard count is not known.
         """
         try:
-            return (self.guild_id >> 22) % typing.cast(int, getattr(self.app, "shard_count"))
+            shard_count = getattr(self.app, "shard_count")
+            assert isinstance(shard_count, int)
+            return (self.guild_id >> 22) % shard_count
         except (TypeError, AttributeError, NameError):
             pass
 
