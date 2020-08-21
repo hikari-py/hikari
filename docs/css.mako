@@ -229,3 +229,9 @@ a.dotted, abbr {
     background-color: rgb(67, 12, 17);
     border-color: rgb(104, 18, 27);
 }
+
+mark {
+    background-color: #333333;
+    border-radius: 0.1em;
+    color: #DB61D9;
+}

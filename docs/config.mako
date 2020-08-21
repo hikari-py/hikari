@@ -39,10 +39,8 @@ SOFTWARE.
 
     hljs_style = "atom-one-dark"
 
-    if "dev" in _version.LooseVersion(_hikari.__version__).version:
-        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.github.io/hikari/hikari"
-    else:  # TODO: "hikari/staging/hikari" temporarily changed to "hikari/hikari" for staging site search link.
-        search_query = "inurl:github.com/nekokatt/hikari  site:nekokatt.github.io/hikari/hikari"
+    lunr_search = {"fuzziness": 0}
+
 
     site_accent = "#ff029a"
     site_logo = "https://nekokatt.github.io/hikari/logo.png"

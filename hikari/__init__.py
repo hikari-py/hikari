@@ -29,6 +29,8 @@ the REST API.
 
 from __future__ import annotations
 
+import os as _os
+
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
@@ -73,3 +75,9 @@ from hikari.undefined import UndefinedType
 from hikari.users import *
 from hikari.voices import *
 from hikari.webhooks import *
+
+# Only expose this during documentation, as we need it to make anything visible.
+if _os.getenv("PDOC3_GENERATING") == "1":
+    __all__: typing.List[str] = [
+        name for name in dir() if not name.startswith("_")
+    ]

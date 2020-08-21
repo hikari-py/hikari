@@ -649,25 +649,17 @@
     %>
     <dt>
         % if redirect:
-            <h4 id="${c.refname}"><small class='text-muted'>reference to </small>${link(c, with_prefixes=True, simple_names=True)}</h4>
+            <h4 id="${c.refname}"><small class='text-muted'>reference to </small>${link(c, with_prefixes=True)}</h4>
         % else:
             <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
         % endif
     </dt>
     <dd>
         % if redirect:
-            <details>
-                <summary>
-                    <span>Expand signature</span>
-                </summary>
-        % endif
-                <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
-
-        % if redirect:
-            </details>
-            ${show_desc(c, short=True)}
-            <strong>This class is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+            <small>${show_desc(c, short=True)}</small>
         % else:
+            <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
+
             ${show_desc(c)}
             <div class="sep"></div>
             ${show_source(c)}
@@ -834,32 +826,32 @@
                 % endif
 
                 % if classes:
-                    % for c in classes:
-                        ## Purposely using one item per list for layout reasons.
-                        <ul class="list-unstyled text-truncate">
-                            <li class="monospaced">
-                                <%
-                                    if c.module.name != c.obj.__module__:
-                                        try:
-                                            ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
-                                            redirect = True
-                                        except KeyError:
-                                            redirect = False
-                                    else:
+                    <ul class="list-unstyled text-truncate">
+                        % for c in classes:
+                            <%
+                                if c.module.name != c.obj.__module__:
+                                    try:
+                                        ref = pdoc._global_context[c.obj.__module__ + "." + c.obj.__qualname__]
+                                        redirect = True
+                                    except KeyError:
                                         redirect = False
+                                else:
+                                    redirect = False
 
-                                    members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
+                                members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
 
-                                    if list_class_variables_in_index:
-                                        members += (c.instance_variables(sort=sort_identifiers) + c.class_variables(sort=sort_identifiers))
+                                if list_class_variables_in_index:
+                                    members += (c.instance_variables(sort=sort_identifiers) + c.class_variables(sort=sort_identifiers))
 
-                                    if not show_inherited_members:
-                                        members = [i for i in members if not i.inherits]
+                                if not show_inherited_members:
+                                    members = [i for i in members if not i.inherits]
 
-                                    if sort_identifiers:
-                                        members = sorted(members)
-                                %>
+                                if sort_identifiers:
+                                    members = sorted(members)
+                            %>
 
+                            ## Purposely using one item per list for layout reasons.
+                            <li class="monospaced">
                                 ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}
 
                                 <ul class="list-unstyled nested text-truncate">
@@ -870,11 +862,11 @@
                                             </li>
                                         % endfor
                                     % endif
+                                    <br />
                                 </ul>
-
                             </li>
-                        </ul>
-                    % endfor
+                        % endfor
+                    </ul>
                 % endif
             <!--</nav>-->
         </div>
