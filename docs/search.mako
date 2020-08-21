@@ -70,8 +70,8 @@
             async function build_index() {
                 return lunr(function () {
                     this.ref('i');
-                    this.field('ref', {boost: 5});
-                    this.field('name', {boost: 10});
+                    this.field('ref', {boost: 10});
+                    this.field('name', {boost: 5});
                     this.field('doc');
                     this.metadataWhitelist = ['position'];
                     INDEX.forEach((doc, i) => {
@@ -119,9 +119,8 @@
                             .filter(({doc}) => doc !== undefined)
                             .map(({doc: {position}}) => {
                                 return position.map(([start, length]) => {
-                                    const PAD_CHARS = 30
+                                    const PAD_CHARS = 30;
                                     const end = start + length;
-                                    ## TODO: merge overlapping matches
                                     return [
                                         start,
                                         (start - PAD_CHARS > 0 ? '…' : '') +

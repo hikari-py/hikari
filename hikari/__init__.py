@@ -78,6 +78,4 @@ from hikari.webhooks import *
 
 # Only expose this during documentation, as we need it to make anything visible.
 if _os.getenv("PDOC3_GENERATING") == "1":
-    __all__: typing.List[str] = [
-        name for name in dir() if not name.startswith("_")
-    ]
+    __all__ = [name for name in dir() if not name.startswith("_")]
