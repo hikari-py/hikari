@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["Colour", "Colourish"]
 
-# noinspection PyUnresolvedReferences
 import typing
 
 from hikari.colors import Color as Colour

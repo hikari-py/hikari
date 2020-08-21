@@ -25,7 +25,6 @@ import pytest
 from hikari.utilities import reflect
 
 
-# noinspection PyUnusedLocal
 class TestResolveSignature:
     def test_handles_normal_references(self):
         def foo(bar: str, bat: int) -> str:

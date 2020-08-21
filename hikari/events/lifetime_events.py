@@ -29,7 +29,6 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["StartingEvent", "StartedEvent", "StoppingEvent", "StoppedEvent"]
 
-# noinspection PyUnresolvedReferences
 import typing
 
 import attr

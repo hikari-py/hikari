@@ -158,7 +158,6 @@ class PermissionOverwrite(snowflakes.Unique):
     @property
     def unset(self) -> permissions.Permissions:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
-        # noinspection PyArgumentList
         return permissions.Permissions(~(self.allow | self.deny))
 
 
@@ -455,7 +454,6 @@ class GroupPrivateTextChannel(PrivateChannel):
         """Icon for this DM channel, if set."""
         return self.format_icon()
 
-    # noinspection PyShadowingBuiltins
     def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this DM, if set.
 

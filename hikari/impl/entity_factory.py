@@ -403,7 +403,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 for change_payload in change_payloads:
                     key: typing.Union[audit_log_models.AuditLogChangeKey, str]
                     try:
-                        # noinspection PyArgumentList
                         key = audit_log_models.AuditLogChangeKey(change_payload["key"])
                     except ValueError:
                         key = change_payload["key"]
@@ -426,7 +425,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             action_type: typing.Union[audit_log_models.AuditLogEventType, int]
             try:
-                # noinspection PyArgumentList
                 action_type = audit_log_models.AuditLogEventType(entry_payload["action_type"])
             except ValueError:
                 action_type = entry_payload["action_type"]
@@ -465,7 +463,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channel_models.PermissionOverwrite:
-        # noinspection PyArgumentList
         return channel_models.PermissionOverwrite(
             id=snowflakes.Snowflake(payload["id"]),
             type=channel_models.PermissionOverwriteType(payload["type"]),
@@ -693,10 +690,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> channel_models.PartialChannel:
         channel_type = payload["type"]
         if channel_model := self._guild_channel_type_mapping.get(channel_type):
-            # noinspection PyArgumentList
             return channel_model(payload, guild_id=guild_id)
 
-        # noinspection PyArgumentList
         return self._dm_channel_type_mapping[channel_type](payload)
 
     ################
@@ -1074,7 +1069,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         features = []
         for feature in payload["features"]:
             try:
-                # noinspection PyArgumentList
                 features.append(guild_models.GuildFeature(feature))
             except ValueError:
                 features.append(feature)
@@ -1338,7 +1332,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             channel_id = snowflakes.Snowflake(payload["channel_id"])
 
-        # noinspection PyArgumentList
         target_user_type = (
             invite_models.TargetUserType(payload["target_user_type"]) if "target_user_type" in payload else None
         )

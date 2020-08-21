@@ -26,8 +26,6 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["Permissions"]
 
 import enum
-
-# noinspection PyUnresolvedReferences
 import typing
 
 from hikari.utilities import flag

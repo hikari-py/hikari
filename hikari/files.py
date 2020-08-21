@@ -777,7 +777,6 @@ class MultiprocessingFileReader(FileReader):
         self.mimetype = None
 
     def _read_all(self) -> bytes:
-        # noinspection PyTypeChecker
         with open(self.path, "rb") as fp:
             return fp.read()
 
@@ -849,7 +848,6 @@ class File(Resource[FileReader]):
         # so this is safe enough to do.:
         is_threaded = executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor)
         impl = ThreadedFileReader if is_threaded else MultiprocessingFileReader
-        # noinspection PyArgumentList
         return _NoOpAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))
 
 

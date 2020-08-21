@@ -368,7 +368,6 @@ class Member(users.User):
     def avatar(self) -> files.URL:
         return self.user.avatar
 
-    # noinspection PyShadowingBuiltins
     def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.format_avatar(format=format, size=size)
 

@@ -296,6 +296,8 @@ class EventFactoryImpl(event_factory.EventFactory):
             role_id=snowflakes.Snowflake(payload["role_id"]),
         )
 
+    # TODO: fix test case for this method. I managed to indent the return into the
+    # `if(user_payload) > 1` without any tests failing!
     def deserialize_presence_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.PresenceUpdateEvent:
@@ -322,8 +324,6 @@ class EventFactoryImpl(event_factory.EventFactory):
                 is_system=user_payload.get("system", undefined.UNDEFINED),
                 flags=flags,
             )
-            # noinspection PyArgumentList
-
         return guild_events.PresenceUpdateEvent(app=self._app, shard=shard, presence=presence, user=user)
 
     ##################
