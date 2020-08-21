@@ -84,7 +84,7 @@
             }
             function search(query) {
                 _search(query).catch(err => {
-                    $("#title-banner").text("Malformed query.");
+                    $("#title-banner").text(err.message || "Malformed query");
                     throw err
                 });
             }
