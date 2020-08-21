@@ -413,7 +413,7 @@ class Webhook(snowflakes.Unique):
         """
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(constants.CDN_URL, discriminator=0, file_format="png",)
 
-    def format_avatar(self, format: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
+    def format_avatar(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
 
         If no avatar is specified, return `None`. In this case, you should
@@ -421,8 +421,8 @@ class Webhook(snowflakes.Unique):
 
         Parameters
         ----------
-        format : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg`, `webp`. This will be ignored for
             default avatars which can only be `png`.
         size : builtins.int
@@ -445,5 +445,5 @@ class Webhook(snowflakes.Unique):
             return None
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=format,
+            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext,
         )

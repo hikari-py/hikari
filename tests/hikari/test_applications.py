@@ -80,7 +80,7 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(format="jpeg", size=1) is None
+            assert model.format_icon(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -88,7 +88,7 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(format="jpeg", size=1) == "file"
+            assert model.format_icon(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             constants.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
@@ -114,7 +114,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(format="jpeg", size=1) is None
+            assert model.format_icon(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -122,7 +122,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(format="jpeg", size=1) == "file"
+            assert model.format_icon(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             constants.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
@@ -141,7 +141,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_cover_image(format="jpeg", size=1) is None
+            assert model.format_cover_image(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -149,7 +149,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_cover_image(format="jpeg", size=1) == "file"
+            assert model.format_cover_image(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             constants.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"

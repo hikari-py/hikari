@@ -454,13 +454,13 @@ class GroupPrivateTextChannel(PrivateChannel):
         """Icon for this DM channel, if set."""
         return self.format_icon()
 
-    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this DM, if set.
 
         Parameters
         ----------
-        format : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -480,7 +480,7 @@ class GroupPrivateTextChannel(PrivateChannel):
             return None
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
-            constants.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+            constants.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
         )
 
 

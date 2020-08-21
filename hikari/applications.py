@@ -333,13 +333,13 @@ class Team(snowflakes.Unique):
         """
         return self.format_icon()
 
-    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this team if set.
 
         Parameters
         ----------
-        format : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`. Can be any power
@@ -360,7 +360,7 @@ class Team(snowflakes.Unique):
             return None
 
         return routes.CDN_TEAM_ICON.compile_to_file(
-            constants.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+            constants.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
         )
 
 
@@ -453,13 +453,13 @@ class Application(snowflakes.Unique):
         """
         return self.format_icon()
 
-    def format_icon(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this application.
 
         Parameters
         ----------
-        format : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -480,7 +480,7 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
-            constants.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=format,
+            constants.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
         )
 
     @property
@@ -494,13 +494,13 @@ class Application(snowflakes.Unique):
         """
         return self.format_cover_image()
 
-    def format_cover_image(self, *, format: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_cover_image(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the cover image used in the store, if set.
 
         Parameters
         ----------
-        format : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -521,5 +521,5 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            constants.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=format,
+            constants.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext,
         )

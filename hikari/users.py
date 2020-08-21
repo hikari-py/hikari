@@ -239,11 +239,11 @@ class User(PartialUser, abc.ABC):
         """
 
     @property
-    def avatar(self) -> files.URL:
+    def avatar_url(self) -> files.URL:
         """Avatar for the user, or the default avatar if not set."""
         return self.format_avatar() or self.default_avatar
 
-    def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar for this user, if set.
 
         If no custom avatar is set, this returns `builtins.None`. You can then
@@ -252,14 +252,14 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        format : typing.Optional[builtins.str]
-            The format to use for this URL, defaults to `png` or `gif`.
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
 
-            If `builtins.None`, then the correct default format is determined
-            based on whether the icon is animated or not.
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the icon is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -278,16 +278,14 @@ class User(PartialUser, abc.ABC):
         if self.avatar_hash is None:
             return None
 
-        if format is None:
+        if ext is None:
             if self.avatar_hash.startswith("a_"):
-                # Ignore the fact this shadows `format`, as it is the parameter
-                # name, which shadows it anyway.
-                format = "gif"  # noqa: A001 shadowing builtin
+                ext = "gif"
             else:
-                format = "png"  # noqa: A001 shadowing builtin
+                ext = "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=format,
+            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext,
         )
 
     @property

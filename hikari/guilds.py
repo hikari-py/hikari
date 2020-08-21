@@ -365,11 +365,11 @@ class Member(users.User):
         return self.user.flags
 
     @property
-    def avatar(self) -> files.URL:
-        return self.user.avatar
+    def avatar_url(self) -> files.URL:
+        return self.user.avatar_url
 
-    def format_avatar(self, *, format: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        return self.user.format_avatar(format=format, size=size)
+    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.format_avatar(ext=ext, size=size)
 
     @property
     def default_avatar(self) -> files.URL:
@@ -644,18 +644,18 @@ class PartialGuild(snowflakes.Unique):
         """Icon for the guild, if set; otherwise `builtins.None`."""
         return self.format_icon()
 
-    def format_icon(self, *, format_: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def format_icon(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's icon, if set.
 
         Parameters
         ----------
-        format_ : typing.Optional[builtins.str]
-            The format to use for this URL, defaults to `png` or `gif`.
+        ext : typing.Optional[builtins.str]
+            The extension to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `builtins.None`, then the correct default format is determined
-            based on whether the icon is animated or not.
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the icon is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -673,14 +673,14 @@ class PartialGuild(snowflakes.Unique):
         if self.icon_hash is None:
             return None
 
-        if format_ is None:
+        if ext is None:
             if self.icon_hash.startswith("a_"):
-                format_ = "gif"
+                ext = "gif"
             else:
-                format_ = "png"
+                ext = "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
         )
 
 
@@ -711,13 +711,13 @@ class GuildPreview(PartialGuild):
         """Splash for the guild, if set."""
         return self.format_splash()
 
-    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's splash image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -737,21 +737,21 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
         )
 
     @property
-    def discovery_splash(self) -> typing.Optional[files.URL]:
+    def discovery_splash_url(self) -> typing.Optional[files.URL]:
         """Discovery splash for the guild, if set."""
         return self.format_discovery_splash()
 
-    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_discovery_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -771,7 +771,7 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext,
         )
 
 
@@ -951,13 +951,13 @@ class Guild(PartialGuild, abc.ABC):
         """Splash for the guild, if set."""
         return self.format_splash()
 
-    def format_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's splash image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -977,21 +977,21 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
         )
 
     @property
-    def discovery_splash(self) -> typing.Optional[files.URL]:
+    def discovery_splash_url(self) -> typing.Optional[files.URL]:
         """Discovery splash for the guild, if set."""
         return self.format_discovery_splash()
 
-    def format_discovery_splash(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_discovery_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's discovery splash image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -1011,21 +1011,21 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext,
         )
 
     @property
-    def banner(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> typing.Optional[files.URL]:
         """Banner for the guild, if set."""
         return self.format_banner()
 
-    def format_banner(self, *, format_: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def format_banner(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image, if set.
 
         Parameters
         ----------
-        format_ : builtins.str
-            The format to use for this URL, defaults to `png`.
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
@@ -1045,7 +1045,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=format_,
+            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext,
         )
 
 

@@ -154,7 +154,7 @@ def test_GroupDMChannel_icon_url():
 
 def test_GroupDMChannel_format_icon():
     mock_channel = mock.Mock(channels.GroupPrivateTextChannel, id=123, icon_hash="456abc")
-    assert channels.GroupPrivateTextChannel.format_icon(mock_channel, format="jpeg", size=16) == files.URL(
+    assert channels.GroupPrivateTextChannel.format_icon(mock_channel, ext="jpeg", size=16) == files.URL(
         "https://cdn.discordapp.com/channel-icons/123/456abc.jpeg?size=16"
     )
 
