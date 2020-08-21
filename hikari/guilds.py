@@ -1254,6 +1254,22 @@ class GatewayGuild(Guild):
         """
         return self.app.cache.get_member(self.id, snowflakes.Snowflake(user))
 
+    def get_my_member(self) -> typing.Optional[Member]:
+        """Return the cached member for the bot user in this guild, if known.
+
+        Returns
+        -------
+        typing.Optional[Member]
+            The cached member for this guild, or `builtins.None` if not known.
+            This will be sent on each `hikari.GuildCreateEvent`, as well as any
+            presence updates if you have opted into them.
+        """
+        me = self.app.me
+        if me is None:
+            return None
+
+        return self.get_member(me.id)
+
     def get_presence(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[presences_.MemberPresence]:
         """Get a cached presence that belongs to the guild by it's user ID or object.
 

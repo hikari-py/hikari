@@ -86,6 +86,17 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
             UTC timestamp of when the user started typing.
         """
 
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.TextChannel]:
+        """Get the cached channel, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextChannel]
+            The channel, if known.
+        """
+
     async def fetch_channel(self) -> channels.TextChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
@@ -148,20 +159,20 @@ class GuildTypingEvent(TypingEvent):
         Member of the user who triggered this typing event.
     """
 
+    @property
+    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
+        # <<inherited docstring from TypingEvent>>.
+        return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
+
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        # <<inherited docstring from TypingEvent>>.
+        return self.app.cache.get_guild(self.guild_id)
+
     if typing.TYPE_CHECKING:
 
         async def fetch_channel(self) -> channels.GuildTextChannel:
             ...
-
-    async def fetch_member(self) -> guilds.Member:
-        """Perform an API call to fetch an up-to-date image of this member.
-
-        Returns
-        -------
-        hikari.guilds.Member
-            The member.
-        """
-        return await self.app.rest.fetch_member(self.guild_id, self.user_id)
 
     async def fetch_guild(self) -> guilds.Guild:
         """Perform an API call to fetch an up-to-date image of this guild.
@@ -182,6 +193,16 @@ class GuildTypingEvent(TypingEvent):
             The guild.
         """
         return await self.app.rest.fetch_guild_preview(self.guild_id)
+
+    async def fetch_member(self) -> guilds.Member:
+        """Perform an API call to fetch an up-to-date image of this member.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            The member.
+        """
+        return await self.app.rest.fetch_member(self.guild_id, self.user_id)
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
@@ -204,6 +225,17 @@ class PrivateTypingEvent(TypingEvent):
 
     timestamp: datetime.datetime = attr.ib(repr=False)
     # <<inherited docstring from TypingEvent>>.
+
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+        """Get the cached channel, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PrivateTextChannel]
+            The channel, if known.
+        """
+        return self.app.cache.get_private_text_channel(self.user_id)
 
     if typing.TYPE_CHECKING:
 
