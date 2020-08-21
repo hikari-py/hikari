@@ -341,10 +341,10 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     detail is left to each implementation of this class to define.
     """
 
-    filename: str = attr.ib()
+    filename: str = attr.ib(repr=True)
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str] = attr.ib()
+    mimetype: typing.Optional[str] = attr.ib(repr=True)
     """The mimetype of the resource. May be `builtins.None` if not known."""
 
     async def data_uri(self) -> str:
@@ -418,6 +418,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
     def filename(self) -> str:
         """Filename of the resource."""
 
+    @property
+    def extension(self) -> typing.Optional[str]:
+        """File extension, if there is one."""
+        _, _, ext = self.filename.rpartition(".")
+        return ext if ext != self.filename else None
+
     @abc.abstractmethod
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
@@ -433,7 +439,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         head_only : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then the
             implementation may only retrieve HEAD information if supported.
-            This currently only has any effect for web requests.
+            This currently only has any effect for web requests. This will
+            fetch the headers for the HTTP resource this object points to
+            without downloading the entire content, which can be significantly
+            faster if you are scanning file types in messages, for example.
 
         Returns
         -------
@@ -465,10 +474,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 class WebReader(AsyncReader):
     """Asynchronous reader to use to read data from a web resource."""
 
-    stream: aiohttp.StreamReader = attr.ib()
+    stream: aiohttp.StreamReader = attr.ib(repr=False)
     """The `aiohttp.StreamReader` to read the content from."""
 
-    url: str = attr.ib()
+    url: str = attr.ib(repr=False)
     """The URL being read from."""
 
     status: int = attr.ib()
