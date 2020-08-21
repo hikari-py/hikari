@@ -642,7 +642,7 @@ class BotApp(
             await self._connector_factory.close()
             self._global_ratelimit.close()
 
-    def run(self, *, close_loop: bool = True) -> None:
+    def run(self) -> None:
         """Run this application on the current thread in an event loop.
 
         This will use the event loop that is set for the current thread, or
@@ -658,16 +658,6 @@ class BotApp(
 
         The application is always guaranteed to be shut down before this
         function completes or propagates any exception.
-
-        Parameters
-        ----------
-        close_loop : builtins.bool
-            If `builtins.True` (per the default), then the event loop will
-            be explicitly closed once the application has closed. If
-            `builtins.False`, this behaviour will not occur.
-
-            Setting this to `builtins.False` may be desirable if you wish
-            to continue using the event loop after the application has closed.
         """
         try:
             loop = asyncio.get_event_loop()
@@ -696,9 +686,6 @@ class BotApp(
 
         finally:
             self._map_signal_handlers(loop.remove_signal_handler)
-            if close_loop and not loop.is_closed():
-                _LOGGER.info("closing event loop")
-                loop.close()
 
     async def join(self) -> None:
         """Wait for the application to finish running.
