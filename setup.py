@@ -72,8 +72,6 @@ setuptools.setup(
         "Discord": metadata.discord_invite,
         "Issue Tracker": metadata.issue_tracker,
         "CI": metadata.ci,
-        "Codecov": metadata.mirror_url,
-        "Source (GitLab mirror)": metadata.mirror_url,
     },
     packages=setuptools.find_namespace_packages(include=[name + "*"]),
     python_requires=">=3.8.0,<3.10",
