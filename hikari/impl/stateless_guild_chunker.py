@@ -31,6 +31,7 @@ from hikari.api import chunker
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari.events import shard_events
 
 
 class StatelessGuildChunkerImpl(chunker.GuildChunker):
@@ -45,6 +46,9 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
     __slots__: typing.Sequence[str] = ()
 
     async def request_guild_chunk(self, guild: guilds.GatewayGuild) -> None:
+        raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
+
+    async def handle_guild_chunk(self, event: shard_events.MemberChunkEvent) -> None:
         raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
     def close(self) -> None:

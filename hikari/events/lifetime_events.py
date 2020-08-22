@@ -27,7 +27,13 @@ be used to initialize other resources, fetch information, and perform checks.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StartingEvent", "StartedEvent", "StoppingEvent", "StoppedEvent"]
+__all__: typing.Final[typing.List[str]] = [
+    "StartingEvent",
+    "StartedEvent",
+    "StoppingEvent",
+    "StoppedEvent",
+    "StateReadyEvent",
+]
 
 import typing
 
@@ -147,6 +153,26 @@ class StoppedEvent(base_events.Event):
     `StartingEvent`
     `StartedEvent`
     `StoppingEvent`
+    """
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class StateReadyEvent(base_events.Event):
+    """Event that is triggered when the state is ready.
+
+    !!! warning
+        This will never get triggered if chunks are not
+        requested for the guilds.
+
+    !!! warning
+        This doesn't mean that all the information is ready,
+        this just means that discord hasn't sent us more information.
+
+        There might still be unavailable guilds and missing chunks.
     """
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

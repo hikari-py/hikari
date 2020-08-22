@@ -248,6 +248,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for presence in event.presences.values():
             self._cache.set_presence(presence)
 
+        await self._app.chunker.handle_guild_chunk(event)
+
         await self.dispatch(event)
 
     async def on_guild_role_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:

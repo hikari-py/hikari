@@ -30,6 +30,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari.events import shard_events
 
 
 class GuildChunker(abc.ABC):
@@ -47,5 +48,16 @@ class GuildChunker(abc.ABC):
             The guild to request chunk for.
         """
 
+    @abc.abstractmethod
+    async def handle_guild_chunk(self, event: shard_events.MemberChunkEvent) -> None:
+        """Handle a guild chunk.
+
+        Parameters
+        ----------
+        event: hikari.shard_events.MemberChunkEvent
+            The guild chunk to handle.
+        """
+
+    @abc.abstractmethod
     def close(self) -> None:
         """Close the guild chunker."""
