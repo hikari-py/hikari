@@ -659,7 +659,7 @@ class EventFactory(typing.Protocol):
 
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> guild_events.MemberChunkEvent:
+    ) -> shard_events.MemberChunkEvent:
         """Parse a raw payload from Discord into a member chunk event object.
 
         Parameters

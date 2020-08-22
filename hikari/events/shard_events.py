@@ -30,6 +30,7 @@ __all__: typing.Final[typing.List[str]] = [
     "ShardDisconnectedEvent",
     "ShardReadyEvent",
     "ShardResumedEvent",
+    "MemberChunkEvent",
 ]
 
 import abc
@@ -41,6 +42,8 @@ from hikari.events import base_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import presences as presences_
     from hikari import snowflakes
     from hikari import traits
     from hikari import users
@@ -156,3 +159,80 @@ class ShardResumedEvent(ShardStateEvent):
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class MemberChunkEvent(ShardEvent):
+    """Event fired when a member chunk payload is received on a gateway shard."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.ib(repr=True)
+    # <<docstring inherited from ShardEvent>>.
+
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.ib(repr=False)
+    """Mapping of user IDs to the objects of the members in this chunk.
+
+    Returns
+    -------
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
+        Mapping of user IDs to corresponding member objects.
+    """
+
+    index: int = attr.ib(repr=True)
+    """Zero-indexed position of this within the queued up chunks for this request.
+
+    Returns
+    -------
+    builtins.int
+        The sequence index for this chunk.
+    """
+
+    count: int = attr.ib(repr=True)
+    """Total number of expected chunks for the request this is associated with.
+
+    Returns
+    -------
+    builtins.int
+        Total number of chunks to be expected.
+    """
+
+    not_found: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=True)
+    """Sequence of the snowflakes that were not found while making this request.
+
+    This is only applicable when user IDs are specified while making the
+    member request the chunk is associated with.
+
+    Returns
+    -------
+    typing.Sequence[hikari.snowflakes.Snowflake]
+        Sequence of user IDs that were not found.
+    """
+
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    """Mapping of user IDs to found member presence objects.
+
+    This will be empty if no include_presences are found or `include_presences` is not passed as
+    `True` while requesting the member chunks.
+
+    Returns
+    -------
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
+        Mapping of user IDs to corresponding include_presences.
+    """
+
+    nonce: typing.Optional[str] = attr.ib(repr=True)
+    """String nonce used to identify the request member chunks are associated with.
+
+    This is the nonce value passed while requesting member chunks.
+
+    Returns
+    -------
+    typing.Optional[builtins.str]
+        The request nonce if specified, or `builtins.None` otherwise.
+    """
