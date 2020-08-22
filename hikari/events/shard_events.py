@@ -217,13 +217,13 @@ class MemberChunkEvent(ShardEvent):
     presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
     """Mapping of user IDs to found member presence objects.
 
-    This will be empty if no include_presences are found or `include_presences` is not passed as
+    This will be empty if no presences are found or `include_presences` is not passed as
     `True` while requesting the member chunks.
 
     Returns
     -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
-        Mapping of user IDs to corresponding include_presences.
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
+        Mapping of user IDs to corresponding presences.
     """
 
     nonce: typing.Optional[str] = attr.ib(repr=True)
