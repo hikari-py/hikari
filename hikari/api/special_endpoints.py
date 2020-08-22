@@ -212,13 +212,13 @@ class GuildBuilder(abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any values set in the guild builder are invalid.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are already in 10 guilds.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -353,7 +353,7 @@ class GuildBuilder(abc.ABC):
             become a child channel of that category.
         topic : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the topic to set on the channel.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.date.TimeSpan]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.date.Intervalish]
             If specified, the time to wait between allowing consecutive messages
             to be sent. If not specified, this will not be enabled.
 

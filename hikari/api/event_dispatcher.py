@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
 class EventDispatcher(abc.ABC):
     """Base interface for event dispatcher implementations.
 
-    This is a consumer of a `hikari.events.base.Event` object, and is
+    This is a consumer of a `hikari.events.base_events.Event` object, and is
     expected to invoke one or more corresponding event listeners where
     appropriate.
     """
@@ -55,13 +55,13 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event : hikari.events.base.Event
+        event : hikari.events.base_events.Event
             The event to dispatch.
 
         Example
         -------
         We can dispatch custom events by first defining a class that
-        derives from `hikari.events.base.Event`.
+        derives from `hikari.events.base_events.Event`.
 
         ```py
         import attr
@@ -107,7 +107,7 @@ class EventDispatcher(abc.ABC):
         ```
 
         This event can be listened to elsewhere by subscribing to it with
-        `IEventDispatcherBase.subscribe`.
+        `EventDispatcher.subscribe`.
 
         ```py
         @bot.listen(EveryoneMentionedEvent)
@@ -125,8 +125,8 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
+        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -144,7 +144,7 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[T]
             The event type to listen for. This will also listen for any
             subclasses of the given type.
-            `T` must be a subclass of `hikari.events.base.Event`.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
         callback
             Must be a coroutine function to invoke. This should
             consume an instance of the given event, or an instance of a valid
@@ -171,8 +171,8 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Listen: `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
-        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
+        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -188,7 +188,7 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[T]
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
-            `T` must derive from `hikari.events.base.Event`.
+            `T` must derive from `hikari.events.base_events.Event`.
         callback
             The callback to unsubscribe.
 
@@ -217,7 +217,7 @@ class EventDispatcher(abc.ABC):
         ----------
         event_type : typing.Type[T]
             The event type to look for.
-            `T` must be a subclass of `hikari.events.base.Event`.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
         polymorphic : builtins.bool
             If `builtins.True`, this will return `builtins.True` if a subclass
             of the given event type has a listener registered. If
@@ -230,11 +230,11 @@ class EventDispatcher(abc.ABC):
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
 
-            `T` must be a subclass of `hikari.events.base.Event`.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
 
         See Also
         --------
-        Has listener: `hikari.api.event_dispatcher.IEventDispatcherBase.has_listener`
+        Has listener: `hikari.api.event_dispatcher.EventDispatcher.has_listener`
         """
 
     @abc.abstractmethod
@@ -252,21 +252,21 @@ class EventDispatcher(abc.ABC):
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
 
-            `T` must be a subclass of `hikari.events.base.Event`.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
 
         Returns
         -------
         typing.Callable[[T], T]
             A decorator for a coroutine function that passes it to
-            `IEventDispatcherBase.subscribe` before returning the function
+            `EventDispatcher.subscribe` before returning the function
             reference.
 
         See Also
         --------
-        Dispatch: `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
-        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        Unsubscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.unsubscribe`
-        Wait for: `hikari.api.event_dispatcher.IEventDispatcherBase.wait_for`
+        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
+        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
+        Unsubscribe: `hikari.api.event_dispatcher.EventDispatcher.unsubscribe`
+        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
         """
 
     @abc.abstractmethod
@@ -281,7 +281,7 @@ class EventDispatcher(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base.Event]
+        event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
         predicate
@@ -299,7 +299,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        hikari.events.base.Event
+        hikari.events.base_events.Event
             The event that was provided.
 
         Raises
@@ -310,7 +310,7 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Listen: `hikari.api.event_dispatcher.IEventDispatcherBase.listen`
-        Subscribe: `hikari.api.event_dispatcher.IEventDispatcherBase.subscribe`
-        Dispatch: `hikari.api.event_dispatcher.IEventDispatcherBase.dispatch`
+        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
+        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
+        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
         """

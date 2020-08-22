@@ -116,13 +116,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to access the channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -180,15 +180,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to edit the channel
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -204,13 +204,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to delete the channel in a guild.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
         !!! note
@@ -283,16 +283,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         builtins.TypeError
             If `target_type` is unset and we were unable to determine the type
             from `target`.
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to edit the permission overwrites.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -316,13 +316,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to delete the permission overwrite.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -345,13 +345,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to view the invites for the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found in any guilds you are a member of.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -398,16 +398,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to create the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
             if specified.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -449,14 +449,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to read messages or send messages in the
             text channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
         !!! note
@@ -484,14 +484,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to read messages or send messages in the
             text channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -514,14 +514,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to pin messages in the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -544,14 +544,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to pin messages in the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -596,14 +596,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         builtins.TypeError
             If you specify more than one of `before`, `after`, `about`.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to read message history in the given
             channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
         !!! note
@@ -637,15 +637,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to read message history in the given
             channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -703,14 +703,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -752,7 +752,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
@@ -760,13 +760,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
             being mentioned in the message content.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to send messages in the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
@@ -829,7 +829,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -839,7 +839,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -881,7 +881,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
-            else will result in a `hikari.errors.Forbidden` being raised.
+            else will result in a `hikari.errors.ForbiddenError` being raised.
 
         Returns
         -------
@@ -890,23 +890,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
             in them, embeds that exceed one of the many embed
             limits; invalid image URLs in embeds; users in `user_mentions` not
             being mentioned in the message content; roles in `role_mentions` not
             being mentioned in the message content.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to send messages in the given channel; if
             you try to change the contents of another user's message; or if you
             try to edit the flags on another user's message without the
             permissions to manage messages_.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -925,14 +925,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack the permissions to manage messages, and the message is
             not composed by your associated user.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -999,16 +999,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If an invalid unicode emoji is given, or if the given custom emoji
             does not exist.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to add reactions to messages.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -1029,14 +1029,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If an invalid unicode emoji is given, or if the given custom emoji
             does not exist.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
@@ -1633,15 +1633,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack the `KICK_MEMBERS` permission.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the guild is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
@@ -1685,15 +1685,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack the `KICK_MEMBERS` permission.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the guild is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 

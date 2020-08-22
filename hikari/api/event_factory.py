@@ -321,7 +321,7 @@ class EventFactory(typing.Protocol):
 
         Returns
         -------
-        hikari.events.guild_events.EmojiUpdateEvent
+        hikari.events.guild_events.EmojisUpdateEvent
             The parsed guild emojis update event object.
         """
 

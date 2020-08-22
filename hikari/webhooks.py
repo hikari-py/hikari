@@ -191,14 +191,14 @@ class Webhook(snowflakes.Unique):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -213,16 +213,16 @@ class Webhook(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the current webhook is not found.
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This can be raised if the file is too large; if the embed exceeds
             the defined limits; if the message content is specified only and
             empty or greater than `2000` characters; if neither content, file
             or embeds are specified.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         builtins.ValueError
             If either `Webhook.token` is `builtins.None` or more than 100 unique
@@ -261,9 +261,9 @@ class Webhook(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If this webhook is not found.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
         builtins.ValueError
@@ -317,15 +317,15 @@ class Webhook(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If either the webhook or the channel aren't found.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you either lack the `MANAGE_WEBHOOKS` permission or
             aren't a member of the guild this webhook belongs to.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         builtins.ValueError
             If `use_token` is passed as `builtins.True` when `Webhook.token` is `builtins.None`.
@@ -351,9 +351,9 @@ class Webhook(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you don't have access to the channel this webhook belongs to.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel this message was created in does not exist.
         """
         return await self.app.rest.fetch_channel(self.channel_id)
@@ -376,15 +376,15 @@ class Webhook(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the webhook is not found.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you're not in the guild that owns this webhook or
             lack the `MANAGE_WEBHOOKS` permission.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         builtins.ValueError
             If `use_token` is passed as `builtins.True` when `Webhook.token`

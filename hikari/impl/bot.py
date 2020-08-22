@@ -128,7 +128,7 @@ class BotApp(
     large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    logging_level : typing.Optional[builtins.str or builtins.int]
+    logging_level : builtins.str or builtins.int or builtins.None
         If not `builtins.None`, then this will be the logging level set if you
         have not enabled logging already. In this case, it should be a valid
         `logging` level that can be passed to `logging.basicConfig`. If you have
@@ -740,7 +740,7 @@ class BotApp(
         !!! note
             If you want to set presences per shard, access the shard you wish
             to update (e.g. by using `BotApp.shards`), and call
-            `hikari.api.shard.IGatewayShard.update_presence` on that shard.
+            `hikari.api.shard.GatewayShard.update_presence` on that shard.
 
             This method is simply a facade to make performing this in bulk
             simpler.
