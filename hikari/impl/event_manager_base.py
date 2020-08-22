@@ -95,15 +95,18 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         *,
         _nested: int = 0,
     ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
+        if not issubclass(event_type, base_events.Event):
+            raise TypeError("Cannot subscribe to a non-Event type")
+
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_intents(event_type, _nested)
 
-        if event_type not in self._listeners:
-            self._listeners[event_type] = []
-
         if not asyncio.iscoroutinefunction(callback):
             raise TypeError("Event callbacks must be coroutine functions (`async def')")
+
+        if event_type not in self._listeners:
+            self._listeners[event_type] = []
 
         _LOGGER.debug(
             "subscribing callback 'async def %s%s' to event-type %s.%s",
@@ -195,9 +198,6 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
                 event_type = event_param.annotation
-
-                if not isinstance(event_type, type) or not issubclass(event_type, base_events.Event):
-                    raise TypeError("Event type must derive from Event")
 
             self.subscribe(event_type, callback, _nested=1)
             return callback
