@@ -1,5 +1,7 @@
 language: ruby
 
+if: branch = task/ci/docker-containers
+
 env:
   global:
     - DOCKER_DRIVER="overlay2"
