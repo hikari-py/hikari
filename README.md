@@ -5,6 +5,7 @@
 [![issues](https://img.shields.io/github/issues-raw/nekokatt/hikari)](https://github.com/nekokatt/hikari/issues)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
+[![docs](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://nekokatt.github.io/hikari/hikari)
 
 [![Discord](https://discord.com/api/guilds/81384788765712384/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
