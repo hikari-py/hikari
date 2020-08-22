@@ -96,8 +96,15 @@ jobs:
       arch: amd64
       stage: test
       script:
-        - docker build . --file scripts/stackless3.8.0-test.dockerfile --tag nekokatt/stackless3.8.0-test.hikari --force-rm
-        - docker run -it nekokatt/stackless3.8.0-test.hikari /bin/bash -c "nox --sessions pytest && bash <(curl -s https://codecov.io/bash)"
+        - >
+          docker run -it \
+              --mount type=bind,src=$(pwd),dst=/hikari \
+              nekokatt/stackless-python-hikari:3.8.0b3 \
+              /bin/bash -c "
+                  cd /hikari
+                  && pip install nox
+                  && nox --sessions pytest
+                  && bash <(curl -s https://codecov.io/bash)"
 
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
