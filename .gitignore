@@ -1,0 +1,59 @@
+# Python cached sources
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv*/
+venv*/
+
+# CI pages, coverage reports, etc
+public/
+
+# PyCharm/IntelliJ-generated files
+*.iml
+.idea/
+
+# Visual Studio Code-generated files
+.settings/
+.project
+.vscode/
+.vs/
+
+# Secrets
+.pypirc
+
+# Setuptools/twine-generated files, compiled sources.
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+*.so
+*.o
+*.pyd
+
+# Tox/Nox-generated files
+.[nt]ox/
+
+# Coverage-generated files
+.coverage*
+coverage.xml
+**/*,cover*
+
+# PyTest-generated files
+.pytest/
+.pytest_cache/
+
+# Container logs
+**.container.log
+
+# Docker secrets
+credentials.env
+
+# Mypy Cache
+.mypy_cache/
+
+# Profiling in pytest
+prof/
+
+# Generated stubs for MyPy --strict hackfixes.
+hikari/**/__init__.pyi
