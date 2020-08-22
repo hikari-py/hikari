@@ -140,7 +140,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         """Get the cached guild this event corresponds to, if known.
 
         !!! note
-            You will need `hikari.Intents.GUILDS` enabled to receive this
+            You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 
         Returns
@@ -259,7 +259,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
             Furthermore, this partial message will represent a message that no
             longer exists. Thus, attempting to edit/delete/react or un-react to
             this message or attempting to fetch the full version will result
-            in a `hikari.errors.NotFound` being raised.
+            in a `hikari.errors.NotFoundError` being raised.
 
         Returns
         -------
@@ -476,7 +476,7 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
         """Get the cached guild this event corresponds to, if known.
 
         !!! note
-            You will need `hikari.Intents.GUILDS` enabled to receive this
+            You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 
         Returns

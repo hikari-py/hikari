@@ -643,19 +643,19 @@ class WebResource(Resource[WebReader], abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If a 400 is returned.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If a 401 is returned.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If a 403 is returned.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If a 404 is returned.
-        hikari.errors.ClientHTTPErrorResponse
+        hikari.errors.ClientHTTPResponseError
             If any other 4xx is returned.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If any other 5xx is returned.
-        hikari.errors.HTTPErrorResponse
+        hikari.errors.HTTPResponseError
             If any other unexpected response code is returned.
         """
         return _WebReaderAsyncReaderContextManagerImpl(self, head_only)

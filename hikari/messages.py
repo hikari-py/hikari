@@ -375,12 +375,12 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you don't have access to the channel this message belongs to.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel this message was created in does not exist.
         """
         return await self.app.rest.fetch_channel(self.channel_id)
@@ -425,7 +425,7 @@ class PartialMessage(snowflakes.Unique):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -435,7 +435,7 @@ class PartialMessage(snowflakes.Unique):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -468,7 +468,7 @@ class PartialMessage(snowflakes.Unique):
         !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
-            else will result in a `hikari.errors.Forbidden` being raised.
+            else will result in a `hikari.errors.ForbiddenError` being raised.
 
         Returns
         -------
@@ -477,23 +477,23 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
             in them, embeds that exceed one of the many embed
             limits; invalid image URLs in embeds; users in `user_mentions` not
             being mentioned in the message content; roles in `role_mentions` not
             being mentioned in the message content.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to send messages in the given channel; if
             you try to change the contents of another user's message; or if you
             try to edit the flags on another user's message without the
             permissions to manage messages.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
         return await self.app.rest.edit_message(
@@ -557,14 +557,14 @@ class PartialMessage(snowflakes.Unique):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -606,7 +606,7 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
@@ -614,13 +614,13 @@ class PartialMessage(snowflakes.Unique):
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
             being mentioned in the message content.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to send messages in the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
@@ -650,10 +650,10 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel this message was created in is not found, or if the
             message has already been deleted.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack the permissions to delete the message.
         """
         await self.app.rest.delete_message(self.channel_id, self.id)
@@ -693,13 +693,13 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If the emoji is invalid, unknown, or formatted incorrectly.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
             found.
 
@@ -745,17 +745,17 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If the emoji is invalid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If this is the first reaction using this specific emoji on this
             message and you lack the `ADD_REACTIONS` permission. If you lack
             `READ_MESSAGE_HISTORY`, this may also raise this error. If you
             remove the reaction of another user without `MANAGE_MESSAGES`, this
             will be raised.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
             found.
         """
@@ -788,13 +788,13 @@ class PartialMessage(snowflakes.Unique):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_MESSAGES` permission, or the
             permission to view the channel
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
             found.
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             If the emoji is invalid, unknown, or formatted incorrectly.
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.

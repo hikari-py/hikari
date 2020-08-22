@@ -488,7 +488,7 @@ class InviteCreateEvent(InviteEvent):
 
     Returns
     -------
-    hikari.invites.InviteWithMetaData
+    hikari.invites.InviteWithMetadata
         The created invite object.
     """
 

@@ -363,7 +363,7 @@ class PartialUserImpl(PartialUser):
 
         Raises
         ------
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the user is not found.
         """
         return await self.app.rest.fetch_user(user=self.id)

@@ -370,7 +370,7 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
         Returns
         -------
-        typing.Optional[hikari.intents.Intent]
+        typing.Optional[hikari.intents.Intents]
             The intents registered on this application.
         """
         raise NotImplementedError

@@ -21,8 +21,8 @@
 # SOFTWARE.
 """Implementation of a V6 and V7 compatible HTTP API for Discord.
 
-This also includes implementations of `hikari.api.app.IApp` designed towards
-providing RESTful functionality.
+This also includes implementations designed towards providing
+RESTful functionality.
 """
 
 from __future__ import annotations
@@ -133,7 +133,7 @@ class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    `hikari.api.rest.IRESTApp` instances for specific credentials acquired
+    `RESTClientImpl` instances for specific credentials acquired
     from it.
 
     Parameters

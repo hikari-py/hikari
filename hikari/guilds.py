@@ -700,7 +700,7 @@ class GuildPreview(PartialGuild):
     """The mapping of IDs to the emojis this guild provides."""
 
     approximate_presence_count: int = attr.ib(eq=False, hash=False, repr=True)
-    """The approximate amount of include_presences in guild."""
+    """The approximate amount of presences in this guild."""
 
     approximate_member_count: int = attr.ib(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
@@ -854,7 +854,7 @@ class Guild(PartialGuild, abc.ABC):
     """
 
     max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of include_presences for the guild.
+    """The maximum number of presences for the guild.
 
     If this is `builtins.None`, then the default value is used (currently 25000).
     """
@@ -1162,10 +1162,10 @@ class GatewayGuild(Guild):
 
     @property
     def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
-        """Get the include_presences cached for the guild.
+        """Get the presences cached for the guild.
 
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]
-            A mapping of user IDs to objects of the include_presences cached for the
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
+            A mapping of user IDs to objects of the presences cached for the
             guild.
         """
         return self.app.cache.get_presences_view_for_guild(self.id)
@@ -1237,7 +1237,7 @@ class GatewayGuild(Guild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakkeisOr[hikari.users.User]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.User]
             The object or ID of the user to get the cached member for.
 
         Returns
@@ -1254,8 +1254,8 @@ class GatewayGuild(Guild):
         -------
         typing.Optional[Member]
             The cached member for this guild, or `builtins.None` if not known.
-            This will be sent on each `hikari.GuildCreateEvent`, as well as any
-            presence updates if you have opted into them.
+            This will be sent on each `hikari.events.guild_events.GuildAvailableEvent`,
+            as well as any presence updates if you have opted into them.
         """
         me = self.app.me
         if me is None:
@@ -1273,7 +1273,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        typing.Optional[hikari.include_presences.MemberPresence]
+        typing.Optional[hikari.presences.MemberPresence]
             The cached presence object if found, else `builtins.None`.
         """
         return self.app.cache.get_presence(self.id, snowflakes.Snowflake(user))
@@ -1288,7 +1288,7 @@ class GatewayGuild(Guild):
 
         Returns
         -------
-        typing.Optional[hikari.voice.VoiceState]
+        typing.Optional[hikari.voices.VoiceState]
             The cached voice state object if found, else `builtins.None`.
         """
         return self.app.cache.get_voice_state(self.id, snowflakes.Snowflake(user))

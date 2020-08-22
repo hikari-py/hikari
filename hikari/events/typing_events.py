@@ -114,7 +114,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.users.user
+        hikari.users.User
             The user.
         """
         return await self.app.rest.fetch_user(self.user_id)

@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = []
+__all__: typing.Final[typing.List[str]] = ["VoiceComponentImpl"]
 
 import asyncio
 import logging

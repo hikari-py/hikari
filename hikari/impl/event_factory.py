@@ -501,7 +501,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         nonce = typing.cast("typing.Optional[str]", payload.get("nonce"))
 
-        if (presence_payloads := payload.get("include_presences")) is not None:
+        if (presence_payloads := payload.get("presences")) is not None:
             presences = {
                 snowflakes.Snowflake(p["user"]["id"]): self._app.entity_factory.deserialize_member_presence(
                     p, guild_id=guild_id

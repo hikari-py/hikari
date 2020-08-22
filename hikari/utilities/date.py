@@ -200,7 +200,7 @@ def timespan_to_int(value: Intervalish, /) -> int:
 
     Parameters
     ----------
-    value : TimeSpan
+    value : Intervalish
         The number of seconds.
 
     Returns

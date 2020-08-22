@@ -128,7 +128,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.emoji.KnownCustomEmoji]
+        CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
             A view of emoji IDs to objects of the known custom emojis found in
             the cache.
         """
@@ -231,7 +231,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.invites.InvteWithMetadata]
+        typing.Optional[hikari.invites.InviteWithMetadata]
             The object of the invite that was found in the cache or `builtins.None`.
         """
 
@@ -354,7 +354,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.include_presences.MemberPresence]
+        typing.Optional[hikari.presences.MemberPresence]
             The object of the presence that was found in the cache or
             `builtins.None`.
         """
@@ -368,7 +368,7 @@ class Cache(abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake]]
-            A view of guild IDs to views of user IDs to objects of the include_presences
+            A view of guild IDs to views of user IDs to objects of the presences
             found in the cache.
         """
 
@@ -486,7 +486,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.voice.VoiceState]]
+        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were found in the cache,
         """  # noqa E501: - Line too long
@@ -506,7 +506,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.voice.VoiceState]
+        CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
             A view of user IDs to objects of the voice states found cached for
             the specified channel.
         """
@@ -524,7 +524,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.voice.VoiceState]
+        CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
             A view of user IDs to objects of the voice states found cached for
             the specified guild.
         """
@@ -1003,7 +1003,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.invites.InviteWithMetaData]
+        typing.Optional[hikari.invites.InviteWithMetadata]
             The object of the invite that was removed from the cache if found,
             else `builtins.None`.
 
@@ -1223,12 +1223,12 @@ class MutableCache(Cache, abc.ABC):
     def clear_presences(
         self,
     ) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
-        """Remove all the include_presences in the cache.
+        """Remove all the presences in the cache.
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.include_presences.MemberPresence]]
-            A view of guild IDs to views of user IDs to objects of the include_presences
+        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]]
+            A view of guild IDs to views of user IDs to objects of the presences
             that were removed from the cache.
 
         Raises
@@ -1241,17 +1241,17 @@ class MutableCache(Cache, abc.ABC):
     def clear_presences_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> CacheView[snowflakes.Snowflake, presences.MemberPresence]:
-        """Remove the include_presences in the cache for a specific guild.
+        """Remove the presences in the cache for a specific guild.
 
         Parameters
         ----------
         guild_id : hikari.snowflakes.Snowflake
-            The ID of the guild to remove include_presences for.
+            The ID of the guild to remove presences for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-            A view of user IDs to objects of the include_presences that were removed
+            A view of user IDs to objects of the presences that were removed
             from the cache for the specified guild.
 
         Raises
@@ -1275,7 +1275,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.include_presences.MemberPresence]
+        typing.Optional[hikari.presences.MemberPresence]
             The object of the presence that was removed from the cache if found,
             else `builtins.None`.
 
@@ -1313,7 +1313,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Tuple[typing.Optional[hikari.presence.MemberPresence], typing.Optional[hikari.presence.MemberPresence]]
+        typing.Tuple[typing.Optional[hikari.presences.MemberPresence], typing.Optional[hikari.presences.MemberPresence]]
             A tuple of the old cached invite object if found (else `builtins.None`
             and the new cached invite object if it could be cached ( else
             `builtins.None`).

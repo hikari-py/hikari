@@ -29,6 +29,7 @@ __all__: typing.Final[typing.List[str]] = [
     "PermissionOverwriteType",
     "PartialChannel",
     "TextChannel",
+    "PrivateChannel",
     "PrivateTextChannel",
     "GroupPrivateTextChannel",
     "GuildCategory",
@@ -242,14 +243,14 @@ class TextChannel(PartialChannel, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser] or builtins.bool]
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole] or builtins.bool]
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -291,7 +292,7 @@ class TextChannel(PartialChannel, abc.ABC):
 
         Raises
         ------
-        hikari.errors.BadRequest
+        hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
@@ -299,13 +300,13 @@ class TextChannel(PartialChannel, abc.ABC):
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
             being mentioned in the message content.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to send messages in the given channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
@@ -367,14 +368,14 @@ class TextChannel(PartialChannel, abc.ABC):
         ------
         builtins.TypeError
             If you specify more than one of `before`, `after`, `about`.
-        hikari.errors.Unauthorized
+        hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you lack permissions to read message history in the given
             channel.
-        hikari.errors.NotFound
+        hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.ServerHTTPErrorResponse
+        hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
         !!! note

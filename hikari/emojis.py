@@ -91,7 +91,7 @@ class UnicodeEmoji(Emoji):
         Discord's implementation and official Twemoji bindings is very flaky.
         Responsible implementations relying on this behaviour will be
         implemented to expect this behaviour in the form of
-        `hikari.errors.NotFound` exceptions being raised when a mismatch may
+        `hikari.errors.NotFoundError` exceptions being raised when a mismatch may
         occur. It is also likely that this will change in the future without
         notice, so you will likely be relying on flaky behaviour.
 

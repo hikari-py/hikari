@@ -77,13 +77,13 @@ class GatewayGuildDefinition:
     """
 
     presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.ib()
-    """Mapping of user IDs to the include_presences that are active in the guild.
+    """Mapping of user IDs to the presences that are active in the guild.
 
     Will be `builtins.None` when returned by guild update gateway events rather
     than create.
 
     !!! note
-        This may be a partial mapping of include_presences active in the guild.
+        This may be a partial mapping of presences active in the guild.
     """
 
     roles: typing.Mapping[snowflakes.Snowflake, guild_models.Role] = attr.ib()
@@ -747,12 +747,12 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.guilds.Guild ...]
+        GatewayGuildDefinition
             The deserialized guild object and the internal collections as
             maps of `hikari.snowflakes.Snowflake` mapping to
             `hikari.channels.GuildChannel`,
             `hikari.guilds.Member`,
-            `hikari.include_presences.MemberPresence`,
+            `hikari.presences.MemberPresence`,
             `hikari.guilds.Role`, and
             `hikari.emojis.KnownCustomEmoji`. This is provided in
             several components to allow separate caching and linking
@@ -865,7 +865,7 @@ class EntityFactory(abc.ABC):
 
         !!! note
             At the time of writing, the only place where `guild_id` will be
-            mandatory is when parsing include_presences sent in a `GUILD_CREATE` event
+            mandatory is when parsing presences sent in a `GUILD_CREATE` event
             from Discord, since the `guild_id` attribute in the payload will
             have been omitted for redundancy.
 
