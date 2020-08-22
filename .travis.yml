@@ -102,9 +102,9 @@ jobs:
               nekokatt/stackless-python-hikari:3.8.0b3 \
               /bin/bash -c "
                   cd /hikari
-                  && pip install nox
-                  && nox --sessions pytest
-                  && bash <(curl -s https://codecov.io/bash)"
+                  pip install nox
+                  nox --sessions pytest
+                  bash <(curl -s https://codecov.io/bash)"
 
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
