@@ -79,7 +79,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
-    async def consume_raw_event(
+    def consume_raw_event(
         self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         try:
@@ -87,7 +87,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         except AttributeError:
             _LOGGER.debug("ignoring unknown event %s", event_name)
         else:
-            await callback(shard, payload)
+            asyncio.create_task(callback(shard, payload))
 
     def subscribe(
         self,

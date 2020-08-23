@@ -75,11 +75,11 @@ class GatewayShardImplV6(shard.GatewayShard):
         logs. If `builtins.False`, only the fact that data has been
         sent/received will be logged.
     event_consumer
-        A coroutine function consuming a `GatewayShardImplV6`,
+        A non-coroutine function consuming a `GatewayShardImplV6`,
         a `builtins.str` event name, and a
         `hikari.utilities.data_binding.JSONObject` event object as parameters.
-        This should return `builtins.None`, and will be called asynchronously
-        with each event that fires.
+        This should return `builtins.None`, and will be called with each event
+        that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
     initial_activity : typing.Optional[hikari.presences.Activity]
@@ -216,9 +216,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
         data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
-        event_consumer: typing.Callable[
-            [shard.GatewayShard, str, data_binding.JSONObject], typing.Coroutine[None, None, None]
-        ],
+        event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
         http_settings: config.HTTPSettings,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
@@ -590,7 +588,7 @@ class GatewayShardImplV6(shard.GatewayShard):
 
         # Technically we are connected after the hello, but this ensures we can send and receive
         # before firing that event.
-        self._dispatch("CONNECTED", {})
+        self._event_consumer(self, "CONNECTED", {})
 
         try:
 
@@ -613,12 +611,12 @@ class GatewayShardImplV6(shard.GatewayShard):
             finally:
                 heartbeat.cancel()
         finally:
-            self._dispatch("DISCONNECTED", {})
+            self._event_consumer(self, "DISCONNECTED", {})
             self._connected_at = None
 
     async def _close_ws(self, code: int, message: str) -> None:
         self._logger.debug("sending close frame with code %s and message %r", int(code), message)
-        # None if the websocket error'ed on initialization.
+        # None if the websocket error on initialization.
         if self._ws is not None:
             await self._ws.close(code=code, message=bytes(message, "utf-8"))
 
@@ -751,7 +749,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                     self._logger.info("shard has resumed [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
 
-                self._dispatch(event, data)
+                self._event_consumer(self, event, data)
 
             elif op == self._Opcode.HEARTBEAT:
                 self._logger.debug("received HEARTBEAT; sending HEARTBEAT ACK")
@@ -863,11 +861,6 @@ class GatewayShardImplV6(shard.GatewayShard):
         message = data_binding.dump_json(payload)
         self._log_debug_payload(message, "sending json payload [op:%s]", payload.get("op"))
         await self._ws.send_str(message)  # type: ignore[union-attr]
-
-    def _dispatch(self, event_name: str, event: data_binding.JSONObject) -> asyncio.Task[None]:
-        return asyncio.create_task(
-            self._event_consumer(self, event_name, event), name=f"gateway shard {self._shard_id} dispatch {event_name}",
-        )
 
     def _log_debug_payload(self, payload: str, message: str, *args: typing.Any) -> None:
         # Prevent logging these payloads if logging is not enabled. This aids performance a little.
