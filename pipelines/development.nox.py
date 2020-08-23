@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import pathlib
+import platform
 import shutil
 
 from pipelines import nox
@@ -42,28 +43,36 @@ def init(session: nox.Session) -> None:
                 print("rm", potential_venv)
                 shutil.rmtree(potential_venv.absolute())
 
+    platform_name = platform.uname().system
+
     print("Creating venv")
     session.run("virtualenv", ".venv", "--prompt=[hikari] ")
 
     print("Activating venv")
-    posix_path = pathlib.Path() / ".venv" / "bin" / "activate_this.py"
-    win32_path = pathlib.Path() / ".venv" / "Scripts" / "activate_this.py"
-    if posix_path.is_file():
-        session.run("python", str(posix_path.absolute()))
+    posix_path = pathlib.Path() / ".venv" / "bin" / "pip"
+    win32_path = pathlib.Path() / ".venv" / "Scripts" / "pip.exe"
+    if platform_name == "Windows":
+        base_install_args = str(win32_path.absolute()), "install"
     else:
-        session.run("python", str(win32_path.absolute()))
+        base_install_args = str(posix_path.absolute()), "install"
 
     print("Installing nox in venv")
-    session.install("nox")
+    session.run(*base_install_args, "nox", external=True)
 
     print("Installing API dependencies")
-    session.install("-Ur", "requirements.txt")
+    session.run(*base_install_args, "-Ur", "requirements.txt", external=True)
 
     print("Installing test dependencies")
-    session.install("-Ur", "dev-requirements.txt")
+    session.run(*base_install_args, "-Ur", "dev-requirements.txt", external=True)
 
     print("Installing MyPy dependencies")
-    session.install("-Ur", "mypy-requirements.txt")
+    session.run(*base_install_args, "-Ur", "mypy-requirements.txt", external=True)
 
     print("Installing Flake8 dependencies")
-    session.install("-Ur", "flake8-requirements.txt")
+    session.run(*base_install_args, "-Ur", "flake8-requirements.txt", external=True)
+
+    print("\nFinished setting up venv, to activate it run ", end="")
+    if platform_name == "Windows":
+        print("an activate script in .venv/scripts/")
+    else:
+        print("'source .venv/bin/activate'")
