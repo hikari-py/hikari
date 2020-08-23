@@ -33,6 +33,7 @@ REFORMATING_PATHS = [
     "pipelines",
     "setup.py",
     "noxfile.py",
+    os.path.join(".idea", "fileTemplates"),
 ]
 
 GIT = shutil.which("git")
@@ -155,7 +156,7 @@ def remove_trailing_whitespaces_for_file(file) -> bool:
 
         if GIT is not None:
             result = subprocess.check_call(
-                [GIT, "add", file, "-v"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None
+                [GIT, "add", file, "-vf"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None
             )
             assert result == 0, f"`git add {file} -v' exited with code {result}"
             return True
