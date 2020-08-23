@@ -219,10 +219,10 @@ class EventDispatcher(abc.ABC):
             The event type to look for.
             `T` must be a subclass of `hikari.events.base_events.Event`.
         polymorphic : builtins.bool
-            If `builtins.True`, this will return `builtins.True` if a subclass
-            of the given event type has a listener registered. If
-            `builtins.False`, then only listeners for this class specifically
-            are returned. The default is `builtins.True`.
+            If `builtins.True`, this will also return the listeners of the
+            subclasses of the given event type. If `builtins.False`, then
+            only listeners for this class specifically are returned. The
+            default is `builtins.True`.
 
         Returns
         -------
