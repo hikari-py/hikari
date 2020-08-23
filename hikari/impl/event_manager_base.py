@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = ["EventManagerBase"]
 
 import asyncio
+import inspect
 import logging
 import typing
 import warnings
@@ -95,15 +96,15 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         *,
         _nested: int = 0,
     ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
-        if not issubclass(event_type, base_events.Event):
+        if not asyncio.iscoroutinefunction(callback):
+            raise TypeError("Event callbacks must be coroutine functions (`async def')")
+
+        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_intents(event_type, _nested)
-
-        if not asyncio.iscoroutinefunction(callback):
-            raise TypeError("Event callbacks must be coroutine functions (`async def')")
 
         if event_type not in self._listeners:
             self._listeners[event_type] = []
@@ -144,6 +145,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     def get_listeners(
         self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
     ) -> typing.Collection[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]]:
+        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
+            raise TypeError(f"Can only get listeners for subclasses of {base_events.Event.__name__}")
+
         if polymorphic:
             listeners: typing.List[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
@@ -250,9 +254,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         self, callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
     ) -> None:
         try:
-            result = callback(event)
-            if asyncio.iscoroutine(result):
-                await result
+            await callback(event)
 
         except Exception as ex:
             # Skip the first frame in logs, we don't care for it.
