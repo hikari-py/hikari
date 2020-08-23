@@ -57,6 +57,7 @@ from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
 from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
+from hikari.utilities import aio
 from hikari.utilities import art
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -642,7 +643,12 @@ class BotApp(
             await self._connector_factory.close()
             self._global_ratelimit.close()
 
-    def run(self) -> None:
+    def run(
+        self,
+        *,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        slow_callback_duration: typing.Optional[float] = None,
+    ) -> None:
         """Run this application on the current thread in an event loop.
 
         This will use the event loop that is set for the current thread, or
@@ -658,19 +664,47 @@ class BotApp(
 
         The application is always guaranteed to be shut down before this
         function completes or propagates any exception.
+
+        Parameters
+        ----------
+        loop : typing.Optional[asyncio.AbstractEventLoop]
+            Event loop to run on. This defaults to `builtins.None`.
+
+            If `builtins.None`, the event loop set for the current thread will
+            be used. If the thread does not have an event loop, then one will
+            be created first and registered to the running thread.
+
+            It is advisable to only have one event loop per thread. Generally
+            you should not have a need to specify this.
+        slow_callback_duration : typing.Optional[builtins.float]
+            How long a coroutine should block for in seconds before it shows a
+            warning.
+
+            This defaults to being `builtins.None`, which will disable the
+            feature (since it may cause a small increase in execution latency).
+            If specified as a number, it will be enabled.
         """
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            _LOGGER.debug("no event loop registered on this thread; now creating one...")
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        if loop is None:
+            try:
+                loop = asyncio.get_event_loop()
+                _LOGGER.debug("using default thread's event loop")
+            except RuntimeError:
+                _LOGGER.debug("no event loop registered on this thread; now creating one...")
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+        # We always expect this to be populated by now.
+        loop: asyncio.AbstractEventLoop
+
+        if slow_callback_duration and slow_callback_duration > 0:
+            aio.patch_slow_callback_detection(slow_callback_duration)
 
         try:
             self._map_signal_handlers(
                 loop.add_signal_handler,
                 lambda *_: loop.create_task(self.close(), name="signal interrupt shutting down application"),
             )
+            _LOGGER.debug("using default thread's event loop", loop)
             loop.run_until_complete(self._shard_management_lifecycle())
 
         except KeyboardInterrupt as ex:
