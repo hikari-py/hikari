@@ -219,36 +219,20 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
+        # Right now, we do not do anything to
         for cls in mro[: mro.index(base_events.Event) + 1]:
-
             if cls in self._listeners:
                 for callback in self._listeners[cls]:
                     tasks.append(self._invoke_callback(callback, event))
 
             if cls in self._waiters:
                 for predicate, future in self._waiters[cls]:
-                    tasks.append(self._test_waiter(event, predicate, future))  # type: ignore[misc]
+                    tasks.append(self._test_waiter(cls, event, predicate, future))  # type: ignore[arg-type]
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    @staticmethod
-    async def _test_waiter(
-        event: event_dispatcher.EventT_inv,
-        predicate: event_dispatcher.PredicateT[event_dispatcher.EventT_inv],
-        future: asyncio.Future[event_dispatcher.EventT_inv],
-    ) -> None:
-        try:
-            result = predicate(event)
-            if asyncio.iscoroutine(result):
-                result = await result  # type: ignore
-
-            if not result:
-                return
-
-        except Exception as ex:
-            future.set_exception(ex)
-        else:
-            future.set_result(event)
+        # DO NOT REFACTOR THIS INTO A SYNC FUNCTION EVER. THIS WILL RESULT IN RACY CODE
+        # IN DISPATCH WITHOUT IMMEDIATE SYNCHRONIZATION IF YOU DO THIS.
 
     async def _invoke_callback(
         self, callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
@@ -279,6 +263,44 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                 log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
                 await self.dispatch(exception_event)
 
+    # DO NOT REFACTOR THIS INTO A SYNC FUNCTION EVER. THIS WILL RESULT IN RACY CODE
+    # IN DISPATCH WITHOUT IMMEDIATE SYNCHRONIZATION IF YOU DO THIS.
+    async def _test_waiter(
+        self,
+        cls: typing.Type[base_events.Event],
+        event: event_dispatcher.EventT_inv,
+        predicate: event_dispatcher.PredicateT[event_dispatcher.EventT_inv],
+        future: asyncio.Future[event_dispatcher.EventT_inv],
+    ) -> None:
+        # If the waiter is done, it is just waiting to be popped. This may
+        # occur in some edge cases, but just detecting it is cheaper than using
+        # a lock here.
+        if not future.done():
+            try:
+                result = predicate(event)
+                if asyncio.iscoroutine(result):
+                    result = await result  # type: ignore
+
+                if not result:
+                    return
+
+            except Exception as ex:
+                future.set_exception(ex)
+            else:
+                future.set_result(event)
+
+        # If a KeyError occurs, we are just hitting an unfortunate race
+        # condition, so just drop it. This is much more performant than using
+        # a lock for each type of event and each entry in said event's MRO, both
+        # computationally and in terms of memory space complexity.
+        try:
+            waiter_set = self._waiters[cls]
+            waiter_set.remove((predicate, future))  # type: ignore[arg-type]
+            if not waiter_set:
+                del self._waiters[cls]
+        except KeyError:
+            pass
+
     async def wait_for(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
@@ -304,13 +326,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         waiter_set.add(pair)  # type: ignore[arg-type]
 
-        try:
-            if timeout is not None:
-                return await asyncio.wait_for(future, timeout=timeout)
-            else:
-                return await future
-
-        finally:
-            waiter_set.remove(pair)  # type: ignore[arg-type]
-            if not waiter_set:
-                del self._waiters[event_type]
+        if timeout is not None:
+            return await asyncio.wait_for(future, timeout=timeout)
+        else:
+            return await future
