@@ -98,6 +98,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         if not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
+        if not inspect.iscoroutinefunction(callback):
+            raise TypeError("Cannot subscribe a non-coroutine function callback")
+
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_intents(event_type, _nested)
@@ -212,14 +215,13 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        # Right now, we do not do anything to
         for cls in mro[: mro.index(base_events.Event) + 1]:
             if cls in self._listeners:
                 for callback in self._listeners[cls]:
                     tasks.append(self._invoke_callback(callback, event))
 
             if cls in self._waiters:
-                for predicate, future in self._waiters[cls]:
+                for predicate, future in tuple(self._waiters[cls]):
                     try:
                         result = predicate(event)
                         if not result:
@@ -233,9 +235,6 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                     waiter_set.remove((predicate, future))
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
-
-        # DO NOT REFACTOR THIS INTO A SYNC FUNCTION EVER. THIS WILL RESULT IN RACY CODE
-        # IN DISPATCH WITHOUT IMMEDIATE SYNCHRONIZATION IF YOU DO THIS.
 
     async def _invoke_callback(
         self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
