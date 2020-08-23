@@ -36,7 +36,6 @@ from hikari import intents as intents_
 from hikari import traits
 from hikari.api import event_dispatcher
 from hikari.events import base_events
-from hikari.events import shard_events
 from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import reflect
@@ -50,7 +49,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 if typing.TYPE_CHECKING:
     ListenerMapT = typing.MutableMapping[
         typing.Type[event_dispatcher.EventT_co],
-        typing.MutableSequence[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
+        typing.MutableSequence[event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
     ]
     WaiterT = typing.Tuple[
         event_dispatcher.PredicateT[event_dispatcher.EventT_co], asyncio.Future[event_dispatcher.EventT_co]
@@ -92,14 +91,11 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     def subscribe(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
         *,
         _nested: int = 0,
-    ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
-        if not asyncio.iscoroutinefunction(callback):
-            raise TypeError("Event callbacks must be coroutine functions (`async def')")
-
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
+    ) -> event_dispatcher.CallbackT[event_dispatcher.EventT_co]:
+        if not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
         # `_nested` is used to show the correct source code snippet if an intent
@@ -144,12 +140,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def get_listeners(
         self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]]:
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
-            raise TypeError(f"Can only get listeners for subclasses of {base_events.Event.__name__}")
-
+    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
         if polymorphic:
-            listeners: typing.List[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]] = []
+            listeners: typing.List[event_dispatcher.CallbackT[event_dispatcher.EventT_co]] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
                 if issubclass(subscribed_event_type, event_type):
                     listeners += subscribed_listeners
@@ -164,7 +157,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     def unsubscribe(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ) -> None:
         if event_type in self._listeners:
             _LOGGER.debug(
@@ -181,12 +174,12 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     def listen(
         self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
-        event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
+        event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ]:
         def decorator(
-            callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
-        ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
+            callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
+        ) -> event_dispatcher.CallbackT[event_dispatcher.EventT_co]:
             nonlocal event_type
 
             signature = reflect.resolve_signature(callback)
@@ -227,7 +220,17 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
             if cls in self._waiters:
                 for predicate, future in self._waiters[cls]:
-                    tasks.append(self._test_waiter(cls, event, predicate, future))  # type: ignore[arg-type]
+                    try:
+                        result = predicate(event)
+                        if not result:
+                            continue
+                    except Exception as ex:
+                        future.set_exception(ex)
+                    else:
+                        future.set_result(event)
+
+                    waiter_set = self._waiters[cls]
+                    waiter_set.remove((predicate, future))
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -235,11 +238,10 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         # IN DISPATCH WITHOUT IMMEDIATE SYNCHRONIZATION IF YOU DO THIS.
 
     async def _invoke_callback(
-        self, callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
+        self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
     ) -> None:
         try:
             await callback(event)
-
         except Exception as ex:
             # Skip the first frame in logs, we don't care for it.
             trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
@@ -252,54 +254,12 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                 )
             else:
                 exception_event = base_events.ExceptionEvent(
-                    app=self._app,
-                    shard=getattr(event, "shard") if isinstance(event, shard_events.ShardEvent) else None,
-                    exception=ex,
-                    failed_event=event,
-                    failed_callback=callback,
+                    exception=ex, failed_event=event, failed_callback=callback,
                 )
 
                 log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
                 log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
                 await self.dispatch(exception_event)
-
-    # DO NOT REFACTOR THIS INTO A SYNC FUNCTION EVER. THIS WILL RESULT IN RACY CODE
-    # IN DISPATCH WITHOUT IMMEDIATE SYNCHRONIZATION IF YOU DO THIS.
-    async def _test_waiter(
-        self,
-        cls: typing.Type[base_events.Event],
-        event: event_dispatcher.EventT_inv,
-        predicate: event_dispatcher.PredicateT[event_dispatcher.EventT_inv],
-        future: asyncio.Future[event_dispatcher.EventT_inv],
-    ) -> None:
-        # If the waiter is done, it is just waiting to be popped. This may
-        # occur in some edge cases, but just detecting it is cheaper than using
-        # a lock here.
-        if not future.done():
-            try:
-                result = predicate(event)
-                if asyncio.iscoroutine(result):
-                    result = await result  # type: ignore
-
-                if not result:
-                    return
-
-            except Exception as ex:
-                future.set_exception(ex)
-            else:
-                future.set_result(event)
-
-        # If a KeyError occurs, we are just hitting an unfortunate race
-        # condition, so just drop it. This is much more performant than using
-        # a lock for each type of event and each entry in said event's MRO, both
-        # computationally and in terms of memory space complexity.
-        try:
-            waiter_set = self._waiters[cls]
-            waiter_set.remove((predicate, future))  # type: ignore[arg-type]
-            if not waiter_set:
-                del self._waiters[cls]
-        except KeyError:
-            pass
 
     async def wait_for(
         self,

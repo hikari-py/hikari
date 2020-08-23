@@ -162,21 +162,6 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """Shard that received the event.
-
-    Returns
-    -------
-    hikari.api.shard.GatewayShard
-        Shard that raised this exception.
-
-        This may be `builtins.None` if no specific shard was the cause of this
-        exception (e.g. when starting up or shutting down).
-    """
-
     exception: Exception = attr.ib()
     """Exception that was raised.
 
@@ -200,6 +185,28 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     # To get around this, we make this attribute hidden and make a property that casts it
     # for us to remove this effect. This functionally changes nothing but it helps MyPy.
     _failed_callback: FailedCallbackT[FailedEventT] = attr.ib()
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.failed_event.app
+
+    @property
+    def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
+        """Shard that received the event, if there was one associated.
+
+        Returns
+        -------
+        typing.Optional[hikari.api.shard.GatewayShard]
+            Shard that raised this exception.
+
+            This may be `builtins.None` if no specific shard was the cause of this
+            exception (e.g. when starting up or shutting down).
+        """
+        shard = getattr(self.failed_event, "shard", None)
+        if isinstance(shard, gateway_shard.GatewayShard):
+            return shard
+        return None
 
     @property
     def failed_callback(self) -> FailedCallbackT[FailedEventT]:

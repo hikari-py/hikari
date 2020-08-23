@@ -575,30 +575,30 @@ class BotApp(
     def listen(
         self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]],
-        event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
+        event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ]:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.listen(event_type)
 
     def get_listeners(
         self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]]:
+    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.get_listeners(event_type, polymorphic=polymorphic)
 
     def subscribe(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
-    ) -> event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co]:
+        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
+    ) -> event_dispatcher.CallbackT[event_dispatcher.EventT_co]:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.subscribe(event_type, callback)
 
     def unsubscribe(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_co],
+        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ) -> None:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.unsubscribe(event_type, callback)
