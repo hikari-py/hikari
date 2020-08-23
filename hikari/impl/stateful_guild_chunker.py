@@ -64,11 +64,9 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
 
     __slots__: typing.Sequence[str] = (
         "_app",
-        "_buffer",
-        "_finished",
+        "_queue",
         "_guild_id",
         "_include_presences",
-        "_last_chunk",
         "_limit",
         "_missing_chunks",
         "_nonce",
@@ -84,45 +82,39 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
         guild_id: snowflakes.Snowflake,
         *,
         timeout: int,
+        buffer_limit: int = 0,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        limit: int = 0,
+        query_limit: int = 0,
         query: str = "",
         user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
     ) -> None:
         self._app = app
-        self._buffer: typing.MutableSequence[shard_events.MemberChunkEvent] = []
-        self._finished = False
         self._guild_id = guild_id
         self._include_presences = include_presences
-        self._last_chunk: typing.Optional[int] = None
-        self._limit = limit
+        self._limit = query_limit
         self._missing_chunks: typing.Optional[typing.MutableSequence[int]] = None
         self._nonce = date.uuid()
         self._query = query
+        self._queue: asyncio.Queue[shard_events.MemberChunkEvent] = asyncio.Queue(buffer_limit)
         self._requested = False
         self._timeout = timeout
         self._user_ids = user_ids
-
-    def _process_chunk(self, event: shard_events.MemberChunkEvent) -> None:
-        if self._missing_chunks is None:
-            self._missing_chunks = list(range(event.chunk_count))
-
-        self._missing_chunks.remove(event.chunk_index)
-        self._buffer.append(event)
-
-        if not self._missing_chunks:
-            self._finished = True
-
-    def _wait_for_predicate(self, event: shard_events.MemberChunkEvent) -> bool:
-        return event.nonce == self._nonce
 
     async def _listen_for_chunks(self, event: shard_events.MemberChunkEvent) -> None:
         if event.nonce != self._nonce:
             return
 
-        self._process_chunk(event)
+        if self._missing_chunks is None:
+            self._missing_chunks = list(range(event.chunk_count))
 
-        if self._finished:
+        self._missing_chunks.remove(event.chunk_index)
+
+        try:
+            self._queue.put_nowait(event)
+        except asyncio.QueueFull:
+            pass
+
+        if not self._missing_chunks:
             self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
 
     async def _request(self) -> None:
@@ -138,41 +130,19 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
 
     async def __anext__(self) -> shard_events.MemberChunkEvent:
         if not self._requested:
-            # TODO: should we just raise here and force the user to use async with to avoid any edge case issues?
-            await self._request()
+            raise TypeError("stream must be started with `await with` before entering it")
 
-        try:
-            return self._buffer.pop(0)
-        except IndexError:
-            pass
-
-        if self._finished is True:
+        if self._queue.empty() and not self._missing_chunks and self._missing_chunks is not None:
             raise StopAsyncIteration from None
 
-        # This behaviour is technically undocumented and impl detail but sure.
-        try:  # TODO: remove the try, except here if we force async with
-            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
-        except ValueError:
-            pass
-
         try:
-            chunk = await self._app.dispatcher.wait_for(
-                shard_events.MemberChunkEvent, timeout=self._timeout, predicate=self._wait_for_predicate
-            )
+            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
         except asyncio.TimeoutError:
             raise StopAsyncIteration from None
 
-        self._process_chunk(chunk)
-
-        if not self._finished:
-            self._app.dispatcher.subscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
-
-        return self._buffer.pop(0)
-
     async def __aenter__(self) -> ChunkStream:
         if not self._requested:
-            await self._request()
-            self._app.dispatcher.subscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
+            await self.open()
 
         return self
 
@@ -191,8 +161,7 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
 
     async def _await_all(self) -> typing.Sequence[shard_events.MemberChunkEvent]:
         if not self._requested:
-            await self._request()
-            self._app.dispatcher.subscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
+            await self.open()
 
         result = [event async for event in self]
         self.close()
@@ -206,6 +175,10 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
             self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
         except ValueError:
             pass
+
+    async def open(self) -> None:
+        await self._request()
+        self._app.dispatcher.subscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
 
 
 @attr.s(init=True, kw_only=True, hash=False, eq=True, slots=True, weakref_slot=False)
@@ -278,7 +251,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             guild_id=guild_id,
             timeout=timeout,
             include_presences=self._verify_include_presences(guild_id, include_presences),
-            limit=limit,
+            query_limit=limit,
             query=query,
             user_ids=user_ids,
         )
