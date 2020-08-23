@@ -1,2 +1,1 @@
 mypy==0.782
-lxml==4.5.2    # HTML reporting.

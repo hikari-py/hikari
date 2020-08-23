@@ -59,7 +59,6 @@ def init(session: nox.Session) -> None:
     print("Installing nox in venv")
     session.run(*base_install_args, "nox", external=True)
 
-    # base_install_args = *posix_path, "install"
     print("Installing API dependencies")
     session.run(*base_install_args, "-Ur", "requirements.txt", external=True)
 
