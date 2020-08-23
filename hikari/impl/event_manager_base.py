@@ -250,9 +250,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         self, callback: event_dispatcher.AsyncCallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
     ) -> None:
         try:
-            result = callback(event)
-            if asyncio.iscoroutine(result):
-                await result
+            await callback(event)
 
         except Exception as ex:
             # Skip the first frame in logs, we don't care for it.
@@ -292,9 +290,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         future: asyncio.Future[event_dispatcher.EventT_co] = asyncio.get_event_loop().create_future()
 
-        try:
+        if event_type in self._waiters:
             waiter_set = self._waiters[event_type]
-        except KeyError:
+        else:
             waiter_set = set()
             self._waiters[event_type] = waiter_set
 
