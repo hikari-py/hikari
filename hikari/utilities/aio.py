@@ -23,14 +23,59 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["completed_future", "is_async_iterator", "is_async_iterable"]
+__all__: typing.Final[typing.List[str]] = [
+    "patch_slow_callback_detection",
+    "completed_future",
+    "is_async_iterator",
+    "is_async_iterable",
+]
 
 import asyncio
 import inspect
+import logging
 import typing
+
+from hikari.utilities import date
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
+
+
+@typing.no_type_check
+def patch_slow_callback_detection(duration: float = 0.5) -> None:
+    """Patches some asyncio internals to allow detection of slow callbacks.
+
+    Any callbacks that take more than the given `duration` will be logged.
+
+    Parameters
+    ----------
+    duration : float
+        The duration to wait for before classifying a task as being "slow".
+    """
+    _LOGGER.debug("setting slow callback duration for loop to %.0fms", duration * 1_000)
+
+    original_run = getattr(asyncio.Handle, "_run")
+
+    def stringify(self: asyncio.Handle) -> str:
+        if _LOGGER.isEnabledFor(logging.WARNING):
+            if isinstance(getattr(self._callback, "__self__", None), asyncio.Task):
+                return repr(self._callback.__self__)
+            return str(self._callback)
+        return ""
+
+    def run(self: asyncio.Handle) -> None:
+        """Instrumented runner."""
+        start = date.monotonic()
+        try:
+            original_run(self)
+        finally:
+            period = date.monotonic() - start
+            if period >= duration:
+                _LOGGER.warning("Callback %s blocked for %.1fms!", stringify(self), period * 1_000)
+
+    setattr(asyncio.Handle, "_run", run)
 
 
 def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future[typing.Optional[T_inv]]:

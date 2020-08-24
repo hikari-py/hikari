@@ -35,8 +35,8 @@ if typing.TYPE_CHECKING:
 
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
-    PredicateT = typing.Callable[[EventT_co], typing.Union[bool, typing.Coroutine[typing.Any, typing.Any, bool]]]
-    AsyncCallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
+    PredicateT = typing.Callable[[EventT_co], bool]
+    CallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
 class EventDispatcher(abc.ABC):
@@ -134,9 +134,7 @@ class EventDispatcher(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def subscribe(
-        self, event_type: typing.Type[typing.Any], callback: AsyncCallbackT[typing.Any]
-    ) -> AsyncCallbackT[typing.Any]:
+    def subscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> CallbackT[typing.Any]:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -180,7 +178,7 @@ class EventDispatcher(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: AsyncCallbackT[typing.Any]) -> None:
+    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
         Parameters
@@ -210,7 +208,7 @@ class EventDispatcher(abc.ABC):
     @abc.abstractmethod
     def get_listeners(
         self, event_type: typing.Type[EventT_co], *, polymorphic: bool = True,
-    ) -> typing.Collection[AsyncCallbackT[EventT_co]]:
+    ) -> typing.Collection[CallbackT[EventT_co]]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
@@ -240,7 +238,7 @@ class EventDispatcher(abc.ABC):
     @abc.abstractmethod
     def listen(
         self, event_type: typing.Optional[typing.Type[EventT_co]] = None,
-    ) -> typing.Callable[[AsyncCallbackT[EventT_co]], AsyncCallbackT[EventT_co]]:
+    ) -> typing.Callable[[CallbackT[EventT_co]], CallbackT[EventT_co]]:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
@@ -285,11 +283,13 @@ class EventDispatcher(abc.ABC):
             The event type to listen for. This will listen for subclasses of
             this type additionally.
         predicate
-            A function or coroutine taking the event as the single parameter.
+            A function taking the event as the single parameter.
             This should return `builtins.True` if the event is one you want to
             return, or `builtins.False` if the event should not be returned.
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
+
+            ASYNC PREDICATES ARE NOT SUPPORTED.
         timeout : typing.Optional[builtins.float or builtins.int]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If

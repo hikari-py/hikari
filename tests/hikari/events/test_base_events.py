@@ -23,12 +23,13 @@ import mock
 import pytest
 
 from hikari import intents
+from hikari.api import shard as gateway_shard
 from hikari.events import base_events
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class DummyGuildEVent(base_events.Event):
+class DummyGuildEvent(base_events.Event):
     pass
 
 
@@ -46,7 +47,7 @@ class ErrorEvent(base_events.Event):
 
 
 @attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
-class DummyGuildDerivedEvent(DummyGuildEVent):
+class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
 
@@ -58,12 +59,12 @@ class DummyPresenceDerivedEvent(DummyPresenceEvent):
 def test_is_no_recursive_throw_event_marked():
     assert base_events.is_no_recursive_throw_event(DummyPresenceEvent)
     assert base_events.is_no_recursive_throw_event(ErrorEvent)
-    assert not base_events.is_no_recursive_throw_event(DummyGuildEVent)
+    assert not base_events.is_no_recursive_throw_event(DummyGuildEvent)
     assert not base_events.is_no_recursive_throw_event(DummyGuildDerivedEvent)
 
 
 def test_requires_intents():
-    assert list(base_events.get_required_intents_for(DummyGuildEVent)) == [intents.Intents.GUILDS]
+    assert list(base_events.get_required_intents_for(DummyGuildEvent)) == [intents.Intents.GUILDS]
     assert list(base_events.get_required_intents_for(DummyPresenceEvent)) == [intents.Intents.GUILD_PRESENCES]
     assert list(base_events.get_required_intents_for(ErrorEvent)) == []
 
@@ -90,12 +91,22 @@ class TestExceptionEvent:
     @pytest.fixture
     def event(self, error):
         return base_events.ExceptionEvent(
-            app=object(),
-            shard=object(),
-            exception=error,
-            failed_event=mock.Mock(base_events.Event),
-            failed_callback=mock.AsyncMock(),
+            exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock(),
         )
+
+    def test_app_property(self, event):
+        app = mock.Mock()
+        event.failed_event.app = app
+        assert event.app is app
+
+    @pytest.mark.parametrize("has_shard", [True, False])
+    def test_shard_property(self, has_shard, event):
+        shard = mock.Mock(spec_set=gateway_shard.GatewayShard)
+        if has_shard:
+            event.failed_event.shard = shard
+            assert event.shard is shard
+        else:
+            assert event.shard is None
 
     def test_failed_callback_property(self, event):
         stub_callback = object()

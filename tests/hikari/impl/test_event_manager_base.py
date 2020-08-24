@@ -45,18 +45,20 @@ class TestEventManagerBase:
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_AttributeError(self, event_manager):
         with mock.patch.object(event_manager_base, "_LOGGER") as logger:
-            await event_manager.consume_raw_event(None, "UNEXISTING_EVENT", {})
+            event_manager.consume_raw_event(None, "UNEXISTING_EVENT", {})
 
         logger.debug.assert_called_once_with("ignoring unknown event %s", "UNEXISTING_EVENT")
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
-        event_manager.on_existing_event = mock.AsyncMock()
+        event_manager.on_existing_event = mock.Mock()
         shard = object()
 
-        await event_manager.consume_raw_event(shard, "EXISTING_EVENT", {})
+        with mock.patch("asyncio.create_task") as create_task:
+            event_manager.consume_raw_event(shard, "EXISTING_EVENT", {})
 
-        event_manager.on_existing_event.assert_awaited_once_with(shard, {})
+        event_manager.on_existing_event.assert_called_once_with(shard, {})
+        create_task.assert_called_once_with(event_manager.on_existing_event(shard, {}))
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
         def test():
@@ -143,8 +145,7 @@ class TestEventManagerBase:
         )
 
     def test_get_listeners_when_not_event(self, event_manager):
-        with pytest.raises(TypeError):
-            event_manager.get_listeners("test")
+        assert len(event_manager.get_listeners("test")) == 0
 
     def test_get_listeners_polimorphic(self, event_manager):
         event_manager._listeners = {

@@ -48,3 +48,4 @@ def main() -> None:
         sys.stderr.write(f"hikari v{version} {sha1}\n")
         sys.stderr.write(f"located at {path}\n")
         sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
+        sys.stderr.write(" ".join(frag.strip() for frag in platform.uname() if frag and frag.strip()) + "\n")

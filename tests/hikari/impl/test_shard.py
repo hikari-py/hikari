@@ -292,10 +292,9 @@ class TestRunOnceShielded:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once_shielded", "_InvalidSession", "_Reconnect", "_SocketClosed", "_dispatch", "_Opcode",),
-            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger"],
+            except_=("_run_once_shielded", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger", "_event_consumer"],
         )
-        client._dispatch = mock.AsyncMock()
         # Disable backoff checking by making the condition a negative tautology.
         client._RESTART_RATELIMIT_WINDOW = -1
         return client
@@ -458,7 +457,7 @@ class TestRunOnce:
         client = hikari_test_helpers.mock_methods_on(
             client,
             except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
-            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger",],
+            also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger", "_event_consumer"],
         )
         # Disable backoff checking by making the condition a negative tautology.
         client._RESTART_RATELIMIT_WINDOW = -1
@@ -617,7 +616,7 @@ class TestRunOnce:
         with pytest.raises(Error):
             await client._run_once(client_session)
 
-        client._dispatch.assert_any_call("CONNECTED", {})
+        client._event_consumer.assert_any_call(client, "CONNECTED", {})
 
     @hikari_test_helpers.timeout()
     async def test_heartbeat_is_not_started_before_handshake_completes(self, client, client_session):
@@ -665,14 +664,14 @@ class TestRunOnce:
 
     async def test_dispatches_disconnect_if_connected(self, client, client_session):
         await client._run_once(client_session)
-        client._dispatch.assert_any_call("CONNECTED", {})
-        client._dispatch.assert_any_call("DISCONNECTED", {})
+        client._event_consumer.assert_any_call(client, "CONNECTED", {})
+        client._event_consumer.assert_any_call(client, "DISCONNECTED", {})
 
     async def test_no_dispatch_disconnect_if_not_connected(self, client, client_session):
         client_session.ws_connect = mock.Mock(side_effect=RuntimeError)
         with pytest.raises(RuntimeError):
             await client._run_once(client_session)
-        client._dispatch.assert_not_called()
+        client._event_consumer.assert_not_called()
 
     async def test_connected_at_reset_to_None_on_exit(self, client, client_session):
         await client._run_once(client_session)
@@ -1034,14 +1033,13 @@ class TestPollEvents:
             "s": 101,
         }
         client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
-        client._dispatch = mock.Mock()
         timestamp = datetime.datetime.now()
 
         with mock.patch.object(hikari_date, "monotonic", return_value=timestamp):
             with pytest.raises(exit_error):
                 await client._poll_events()
 
-        client._dispatch.assert_called_once_with("READY", data_payload)
+        client._event_consumer.assert_any_call(client, "READY", data_payload)
         assert client._handshake_event.is_set()
         assert client._session_id == 123
         assert client._seq == 101
@@ -1057,12 +1055,11 @@ class TestPollEvents:
             "s": 101,
         }
         client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
-        client._dispatch = mock.Mock()
 
         with pytest.raises(exit_error):
             await client._poll_events()
 
-        client._dispatch.assert_called_once_with("RESUME", "some data")
+        client._event_consumer.assert_any_call(client, "RESUME", "some data")
         assert client._handshake_event.is_set()
 
     @hikari_test_helpers.timeout()
@@ -1074,12 +1071,11 @@ class TestPollEvents:
             "s": 101,
         }
         client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
-        client._dispatch = mock.Mock()
 
         with pytest.raises(exit_error):
             await client._poll_events()
 
-        client._dispatch.assert_called_once_with("UNKNOWN", "some data")
+        client._event_consumer.assert_any_call(client, "UNKNOWN", "some data")
 
     @hikari_test_helpers.timeout()
     async def test_when_opcode_is_HEARTBEAT(self, client, exit_error):
@@ -1282,21 +1278,6 @@ class TestSendJson:
 
         client._ratelimiter.acquire.assert_awaited_once_with()
         client._ws.send_str.assert_awaited_once_with('{"some": "payload"}')
-
-
-class TestDispatch:
-    def test_dispatch(self, client):
-        mock_task = object()
-        mock_coroutine = object()
-        client._app = mock.Mock()
-        client._event_consumer = mock.Mock(return_value=mock_coroutine)
-        client._shard_id = 123
-
-        with mock.patch.object(asyncio, "create_task", return_value=mock_task) as create_task:
-            assert client._dispatch("MESSAGE_CREATE", {"some": "payload"}) == mock_task
-
-        client._event_consumer.assert_called_once_with(client, "MESSAGE_CREATE", {"some": "payload"})
-        create_task.assert_called_once_with(mock_coroutine, name="gateway shard 123 dispatch MESSAGE_CREATE")
 
 
 class TestLogDebugPayload:
