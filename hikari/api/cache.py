@@ -445,7 +445,8 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.users.User]
-            The object of the user that was found in the cache else `builtins.None`.
+            The object of the user that was found in the cache, else
+            `builtins.None`.
         """
 
     @abc.abstractmethod

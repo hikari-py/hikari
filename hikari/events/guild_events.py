@@ -43,6 +43,7 @@ import typing
 import attr
 
 from hikari import intents
+from hikari import undefined
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
@@ -76,6 +77,39 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         hikari.snowflakes.Snowflake
             The ID of the guild that relates to this event.
         """
+
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild that this event relates to, if known.
+
+        If not known, this will return `builtins.None` instead.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The guild this event relates to, or `builtins.None` if not known.
+        """
+        return self.app.cache.get_guild(self.guild_id)
+
+    async def fetch_guild(self) -> guilds.RESTGuild:
+        """Perform an API call to get the guild that this event relates to.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The guild this event occurred in.
+        """
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    async def fetch_guild_preview(self) -> guilds.GuildPreview:
+        """Perform an API call to get the preview of the event's guild.
+
+        Returns
+        -------
+        hikari.guilds.GuildPreview
+            The preview of the guild this event occurred in.
+        """
+        return await self.app.rest.fetch_guild_preview(self.guild_id)
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -197,6 +231,11 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
+    if typing.TYPE_CHECKING:
+        # This should always fail.
+        async def fetch_guild(self) -> typing.NoReturn:
+            ...
+
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -275,6 +314,15 @@ class BanEvent(GuildEvent, abc.ABC):
             The user that this event concerns.
         """
 
+    async def fetch_user(self) -> users.User:
+        """Perform an API call to fetch the user this ban event affects.
+
+        Returns
+        -------
+        hikari.users.User
+            The user affected by this event.
+        """
+
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -294,6 +342,29 @@ class BanCreateEvent(BanEvent):
     user: users.User = attr.ib()
     # <<inherited docstring from BanEvent>>.
 
+    async def fetch_ban(self) -> guilds.GuildMemberBan:
+        """Perform an API call to fetch the details about this ban.
+
+        This will include the optionally defined audit log reason for the
+        ban.
+
+        Returns
+        -------
+        hikari.guilds.GuildMemberBan
+            The ban details.
+        """
+
+    async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
+        """Perform an API call to unban this member.
+
+        Parameters
+        ----------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            The optional reason to add to the audit log for why the user
+            was unbanned. Can be left undefined.
+        """
+        return await self.app.rest.unban_user(self.guild_id, self.user)
+
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -312,6 +383,21 @@ class BanDeleteEvent(BanEvent):
 
     user: users.User = attr.ib()
     # <<inherited docstring from BanEvent>>.
+
+    # Sure, I could allow delete_message_days here, but... is there any point?
+    # TODO: do I want this call or is it dumb?
+    # I'm not sure if I want to keep this call or whether it promotes API abuse.
+    # I'll have a think about it.
+    async def reban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
+        """Perform an API call to re-ban this member.
+
+        Parameters
+        ----------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            The optional reason to add to the audit log for why the user
+            was rebanned. Can be left undefined.
+        """
+        return await self.app.rest.unban_user(self.guild_id, self.user)
 
 
 @attr_extensions.with_copy
@@ -337,6 +423,16 @@ class EmojisUpdateEvent(GuildEvent):
     typing.Sequence[emojis_.KnownCustomEmoji]
         All emojis in the guild.
     """
+
+    async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
+        """Perform an API call to retrieve an up-to-date view of the emojis.
+
+        Returns
+        -------
+        typing.Sequence[emojis_.KnownCustomEmoji]
+            All emojis in the guild.
+        """
+        return await self.app.rest.fetch_guild_emojis(self.guild_id)
 
 
 @attr_extensions.with_copy
@@ -365,6 +461,24 @@ class IntegrationsUpdateEvent(GuildEvent):
 
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from ShardEvent>>.
+
+    async def fetch_integrations(self) -> typing.Sequence[guilds.Integration]:
+        """Perform an API call to fetch some number of guild integrations.
+
+        !!! warning
+            The results of this are not clearly defined by Discord. The current
+            behaviour appears to be that only the first 50 integrations actually
+            get returned. Discord have made it clear that they are not willing
+            to fix this in
+            https://github.com/discord/discord-api-docs/issues/1990.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Integration]
+            Some possibly random subset of the integrations in a guild,
+            probably.
+        """
+        return await self.app.rest.fetch_integrations(self.guild_id)
 
 
 @attr_extensions.with_copy
@@ -436,3 +550,24 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
             ID of the guild the event occurred in.
         """
         return self.presence.guild_id
+
+    # TODO: make this nicer, as it is inconsistent with stuff elsewhere I guess.
+    def get_cached_user(self) -> typing.Optional[users.User]:
+        """Get the full cached user, if it is available.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.User]
+            The full cached user, or `builtins.None` if not cached.
+        """
+        return self.app.cache.get_user(self.user_id)
+
+    async def fetch_user(self) -> users.User:
+        """Perform an API call to fetch the user this event concerns.
+
+        Returns
+        -------
+        hikari.users.User
+            The user affected by this event.
+        """
+        return await self.app.rest.fetch_user(self.user_id)
