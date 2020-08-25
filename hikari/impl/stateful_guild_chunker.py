@@ -23,10 +23,12 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatefulGuildChunkerImpl"]
+__all__: typing.Final[typing.List[str]] = ["StatefulGuildChunkerImpl", "ChunkStream"]
 
 import asyncio
+import base64
 import copy
+import random
 import time
 import typing
 
@@ -40,11 +42,10 @@ from hikari.api import chunker
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 from hikari.utilities import date
+from hikari.utilities import event_stream
 from hikari.utilities import mapping
 
 if typing.TYPE_CHECKING:
-    import types
-
     from hikari import guilds
     from hikari import traits
     from hikari import users
@@ -60,88 +61,13 @@ def _get_shard_id(app: traits.ShardAware, guild_id: snowflakes.Snowflake) -> int
     return (guild_id >> 22) % app.shard_count
 
 
-EventT = typing.TypeVar("EventT", bound="base_events.Event")
+def _random_nonce() -> str:
+    head = time.perf_counter_ns().to_bytes(8, "big")
+    tail = random.getrandbits(92).to_bytes(12, "big")
+    return base64.b64encode(head + tail).decode("ascii")
 
 
-class GenericEventStream(iterators.LazyIterator[EventT]):
-    """A lazy iterator class used for streaming gateway events."""
-
-    __slots__ = ("_active", "_app", "_event_type", "_filters", "_queue", "_timeout")
-
-    def __init__(self, app: traits.BotAware, event_type: typing.Type[EventT], *, timeout: int, limit: int = 0) -> None:
-        self._app = app
-        self._active = False
-        self._event_type = event_type
-        self._filters: typing.MutableSequence[iterators.All[EventT]] = []
-        self._queue: asyncio.Queue[EventT] = asyncio.Queue(limit)
-        self._timeout = timeout
-
-    async def _listener(self, event: EventT) -> None:
-        if not all(filter_(event) for filter_ in self._filters):
-            return
-
-        try:
-            self._queue.put_nowait(event)
-        except asyncio.QueueFull:
-            pass
-
-    async def __aenter__(self) -> GenericEventStream[EventT]:
-        await self.open()
-        return self
-
-    def __enter__(self) -> typing.NoReturn:
-        # This is async only.
-        cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        await self.close()
-
-    async def __anext__(self) -> EventT:
-        if not self._active:
-            raise TypeError("stream must be started with `await with` before entering it")
-
-        try:
-            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
-        except asyncio.TimeoutError:
-            raise StopAsyncIteration from None
-
-    async def _await_all(self) -> typing.Sequence[EventT]:
-        await self.open()
-        result = [event async for event in self]
-        await self.close()
-        return result
-
-    def __await__(self) -> typing.Generator[None, None, typing.Sequence[EventT]]:
-        return self._await_all().__await__()
-
-    async def close(self) -> None:
-        self._active = False
-        try:
-            self._app.dispatcher.unsubscribe(self._event_type, self._listener)
-        except ValueError:
-            pass
-
-    def filter(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
-        **attrs: typing.Any,
-    ) -> GenericEventStream[EventT]:
-        self._filters.append(self._map_predicates_and_attr_getters("filter", *predicates, **attrs))
-        return self
-
-    async def open(self) -> None:
-        if not self._active:
-            self._app.dispatcher.subscribe(self._event_type, self._listener)
-            self._active = True
-
-
-class ChunkStream(GenericEventStream[shard_events.MemberChunkEvent]):
+class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
     """A specialised event stream used for triggering and streaming chunk events."""
 
     __slots__: typing.Sequence[str] = (
@@ -159,8 +85,8 @@ class ChunkStream(GenericEventStream[shard_events.MemberChunkEvent]):
         app: traits.BotAware,
         guild_id: snowflakes.Snowflake,
         *,
-        timeout: int,
-        limit: int = 0,
+        timeout: typing.Union[int, float, None],
+        limit: typing.Optional[int] = None,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
@@ -174,9 +100,10 @@ class ChunkStream(GenericEventStream[shard_events.MemberChunkEvent]):
         self._nonce = date.uuid()
         self._query = query
         self._user_ids = user_ids
+        self.filter(lambda event: event.nonce == self._nonce)
 
     async def _listener(self, event: shard_events.MemberChunkEvent) -> None:
-        if event.nonce != self._nonce or not all(filter_(event) for filter_ in self._filters):
+        if not self._filters(event):
             return
 
         if self._missing_chunks is None:
@@ -205,6 +132,7 @@ class ChunkStream(GenericEventStream[shard_events.MemberChunkEvent]):
             raise StopAsyncIteration from None
 
     async def open(self) -> None:
+        # as super().open will possibly flip self.started, we want to have its state when this was originally called.
         started = self._active
         await super().open()
 
@@ -259,19 +187,14 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         self._app = app
         self._tracked: typing.MutableMapping[int, typing.Dict[str, _TrackedChunks]] = mapping.CMRIMutableMapping(limit)
 
-    def _verify_include_presences(
+    def _default_include_presences(
         self, guild_id: snowflakes.Snowflake, include_presences: undefined.UndefinedOr[bool]
-    ) -> undefined.UndefinedOr[bool]:
-        shard = self._app.shards[_get_shard_id(self._app, guild_id)]
-
-        if (
-            include_presences is False
-            or shard.intents is None
-            or bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
-        ):
+    ) -> bool:
+        if include_presences is not undefined.UNDEFINED:
             return include_presences
 
-        raise ValueError(f"cannot include presences with current intents declared {shard.intents}") from None
+        shard = self._app.shards[_get_shard_id(self._app, guild_id)]
+        return shard.intents is None or bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
 
     def fetch_members_for_guild(
         self,
@@ -288,14 +211,19 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             app=self._app,
             guild_id=guild_id,
             timeout=timeout,
-            include_presences=self._verify_include_presences(guild_id, include_presences),
+            include_presences=self._default_include_presences(guild_id, include_presences),
             query_limit=limit,
             query=query,
             user_ids=user_ids,
         )
 
-    async def get_chunk_status(self, shard_id: int, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
-        return copy.copy(self._tracked[shard_id].get(nonce)) if shard_id in self._tracked else None
+    async def get_chunk_status(self, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
+        try:
+            shard_id = int(nonce.split(".", 1)[0])
+        except ValueError:
+            return None
+        else:
+            return copy.copy(self._tracked[shard_id].get(nonce)) if shard_id in self._tracked else None
 
     async def list_chunk_statuses_for_shard(
         self, shard: typing.Union[gateway_shard.GatewayShard, int]
@@ -343,7 +271,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
     ) -> str:
         guild_id = snowflakes.Snowflake(guild)
         shard_id = _get_shard_id(self._app, guild_id)
-        nonce = date.uuid()
+        nonce = f"{shard_id}.{_random_nonce()}"
         if shard_id not in self._tracked:
             self._tracked[shard_id] = {}
 
@@ -351,7 +279,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         self._tracked[shard_id][nonce] = tracker
         await self._app.shards[shard_id].request_guild_members(
             guild=guild_id,
-            include_presences=self._verify_include_presences(guild_id, include_presences),
+            include_presences=self._default_include_presences(guild_id, include_presences),
             limit=limit,
             nonce=nonce,
             query=query,

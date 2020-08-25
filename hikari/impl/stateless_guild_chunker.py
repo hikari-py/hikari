@@ -61,7 +61,7 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
     ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
         return iterators.FlatLazyIterator([])
 
-    async def get_chunk_status(self, shard_id: int, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
+    async def get_chunk_status(self, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
         return None
 
     async def list_chunk_statuses_for_shard(self, shard_id: int) -> typing.Sequence[chunker.ChunkInformation]:

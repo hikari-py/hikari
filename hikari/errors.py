@@ -404,7 +404,7 @@ class VoiceError(HikariError):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class MissingIntentError(HikariError):
+class MissingIntentError(HikariError, ValueError):
     """Error raised when you try to perform an action without an intent.
 
     This is usually raised when querying the cache for something that is

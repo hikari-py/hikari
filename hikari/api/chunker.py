@@ -104,7 +104,7 @@ class GuildChunker(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def get_chunk_status(self, shard_id: int, nonce: str) -> typing.Optional[ChunkInformation]:
+    async def get_chunk_status(self, nonce: str) -> typing.Optional[ChunkInformation]:
         ...
 
     @abc.abstractmethod

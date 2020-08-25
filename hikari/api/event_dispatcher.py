@@ -32,6 +32,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from hikari.events import base_events
+    from hikari.utilities import event_stream
 
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
@@ -126,6 +127,7 @@ class EventDispatcher(abc.ABC):
         See Also
         --------
         Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
+        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
         Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
         """
 
@@ -170,6 +172,7 @@ class EventDispatcher(abc.ABC):
         See Also
         --------
         Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
+        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
         Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
         """
 
@@ -266,6 +269,73 @@ class EventDispatcher(abc.ABC):
         See Also
         --------
         Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
+        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
+        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
+        Unsubscribe: `hikari.api.event_dispatcher.EventDispatcher.unsubscribe`
+        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
+        """
+
+    @abc.abstractmethod
+    def stream(
+        self,
+        event_type: typing.Type[EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> event_stream.Streamer[EventT_co]:
+        """Return a stream iterator for the given event and sub-events.
+
+        Parameters
+        ----------
+        event_type : typing.Type[hikari.events.base_events.Event]
+            The event type to listen for. This will listen for subclasses of
+            this type additionally.
+        timeout : typing.Optional[builtins.int or builtins.float]
+            How long this streamer should wait for the next event before
+            ending the iteration. If `builtins.None` then this will continue
+            until explicitly broken from.
+        limit : typing.Optional[builtins.int]
+            The limit for how many events this should cache in it's queue at one
+            time, leave this as `builtins.None` for the cache size to be
+            unlimited.
+
+        Returns
+        -------
+        hikari.utilities.event_stream.Streamer[hikari.events.base_events.Event]
+            The async iterator to handle streamed events. This must be started
+            with `async with stream:` or `await stream.open()` before
+            asynchronously iterating over it.
+
+        !!! warning
+            If you use `await stream.open()` to start the stream then you must
+            also close it with `await stream.close()` otherwise it may queue
+            events in memory indefinitely.
+
+        Examples
+        --------
+
+        ```py
+        async with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+            async for user_id in stream.map("user_id").limit(50):
+                ...
+        ```
+
+        or using await open() and wait close()
+
+        ```py
+        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+        await stream.open()
+
+        async for user_id in stream.map("user_id").limit(50)
+            ...
+
+        await stream.close()
+        ```
+
+        See Also
+        --------
+        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
+        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
         Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
         Unsubscribe: `hikari.api.event_dispatcher.EventDispatcher.unsubscribe`
         Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
@@ -315,6 +385,7 @@ class EventDispatcher(abc.ABC):
         See Also
         --------
         Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
+        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
         Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
         Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
         """

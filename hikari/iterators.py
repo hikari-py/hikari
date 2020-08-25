@@ -102,11 +102,20 @@ class All(typing.Generic[ValueT]):
     def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
         self.conditions = conditions
 
+    def __bool__(self) -> bool:
+        return bool(self.conditions)
+
     def __call__(self, item: ValueT) -> bool:
         return all(condition(item) for condition in self.conditions)
 
     def __invert__(self) -> typing.Callable[[ValueT], bool]:
         return lambda item: not self(item)
+
+    def __or__(self, other: All[ValueT]) -> All[ValueT]:
+        if not isinstance(other, All):
+            raise TypeError(f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}")
+
+        return All((self, other))
 
 
 class AttrComparator(typing.Generic[ValueT]):

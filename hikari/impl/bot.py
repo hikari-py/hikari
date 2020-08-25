@@ -69,6 +69,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import chunker as guild_chunker_
     from hikari.events import base_events
     from hikari.impl import event_manager_base
+    from hikari.utilities import event_stream
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -605,6 +606,16 @@ class BotApp(
     ) -> None:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.unsubscribe(event_type, callback)
+
+    def stream(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+        # <<inherited docstring from event_dispatcher.EventDispatcher>>
+        return self.dispatcher.stream(event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,
