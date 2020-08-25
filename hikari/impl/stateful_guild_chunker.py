@@ -49,6 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
     from hikari.api import shard as gateway_shard
+    from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 
 EXPIRY_TIME = 5000
@@ -59,91 +60,33 @@ def _get_shard_id(app: traits.ShardAware, guild_id: snowflakes.Snowflake) -> int
     return (guild_id >> 22) % app.shard_count
 
 
-class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
-    """A lazy iterator used for requesting guild members and collecting the results."""
+EventT = typing.TypeVar("EventT", bound="base_events.Event")
 
-    __slots__: typing.Sequence[str] = (
-        "_app",
-        "_queue",
-        "_guild_id",
-        "_include_presences",
-        "_limit",
-        "_missing_chunks",
-        "_nonce",
-        "_query",
-        "_requested",
-        "_timeout",
-        "_user_ids",
-    )
 
-    def __init__(
-        self,
-        app: traits.BotAware,
-        guild_id: snowflakes.Snowflake,
-        *,
-        timeout: int,
-        buffer_limit: int = 0,
-        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        query_limit: int = 0,
-        query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
-    ) -> None:
+class GenericEventStream(iterators.LazyIterator[EventT]):
+    """A lazy iterator class used for streaming gateway events."""
+
+    __slots__ = ("_active", "_app", "_event_type", "_filters", "_queue", "_timeout")
+
+    def __init__(self, app: traits.BotAware, event_type: typing.Type[EventT], *, timeout: int, limit: int = 0) -> None:
         self._app = app
-        self._guild_id = guild_id
-        self._include_presences = include_presences
-        self._limit = query_limit
-        self._missing_chunks: typing.Optional[typing.MutableSequence[int]] = None
-        self._nonce = date.uuid()
-        self._query = query
-        self._queue: asyncio.Queue[shard_events.MemberChunkEvent] = asyncio.Queue(buffer_limit)
-        self._requested = False
+        self._active = False
+        self._event_type = event_type
+        self._filters: typing.MutableSequence[iterators.All[EventT]] = []
+        self._queue: asyncio.Queue[EventT] = asyncio.Queue(limit)
         self._timeout = timeout
-        self._user_ids = user_ids
 
-    async def _listen_for_chunks(self, event: shard_events.MemberChunkEvent) -> None:
-        if event.nonce != self._nonce:
+    async def _listener(self, event: EventT) -> None:
+        if not all(filter_(event) for filter_ in self._filters):
             return
-
-        if self._missing_chunks is None:
-            self._missing_chunks = list(range(event.chunk_count))
-
-        self._missing_chunks.remove(event.chunk_index)
 
         try:
             self._queue.put_nowait(event)
         except asyncio.QueueFull:
             pass
 
-        if not self._missing_chunks:
-            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
-
-    async def _request(self) -> None:
-        await self._app.shards[_get_shard_id(self._app, self._guild_id)].request_guild_members(
-            guild=self._guild_id,
-            include_presences=self._include_presences,
-            query=self._query,
-            limit=self._limit,
-            user_ids=self._user_ids,
-            nonce=self._nonce,
-        )
-        self._requested = True
-
-    async def __anext__(self) -> shard_events.MemberChunkEvent:
-        if not self._requested:
-            raise TypeError("stream must be started with `await with` before entering it")
-
-        if self._queue.empty() and not self._missing_chunks and self._missing_chunks is not None:
-            raise StopAsyncIteration from None
-
-        try:
-            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
-        except asyncio.TimeoutError:
-            raise StopAsyncIteration from None
-
-    async def __aenter__(self) -> ChunkStream:
-        if not self._requested:
-            await self.open()
-
+    async def __aenter__(self) -> GenericEventStream[EventT]:
+        await self.open()
         return self
 
     def __enter__(self) -> typing.NoReturn:
@@ -157,28 +100,123 @@ class ChunkStream(iterators.LazyIterator[shard_events.MemberChunkEvent]):
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
-        self.close()
+        await self.close()
 
-    async def _await_all(self) -> typing.Sequence[shard_events.MemberChunkEvent]:
-        if not self._requested:
-            await self.open()
+    async def __anext__(self) -> EventT:
+        if not self._active:
+            raise TypeError("stream must be started with `await with` before entering it")
 
+        try:
+            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
+        except asyncio.TimeoutError:
+            raise StopAsyncIteration from None
+
+    async def _await_all(self) -> typing.Sequence[EventT]:
+        await self.open()
         result = [event async for event in self]
-        self.close()
+        await self.close()
         return result
 
-    def __await__(self) -> typing.Generator[None, None, typing.Sequence[shard_events.MemberChunkEvent]]:
+    def __await__(self) -> typing.Generator[None, None, typing.Sequence[EventT]]:
         return self._await_all().__await__()
 
-    def close(self) -> None:
+    async def close(self) -> None:
+        self._active = False
         try:
-            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
+            self._app.dispatcher.unsubscribe(self._event_type, self._listener)
         except ValueError:
             pass
 
+    def filter(
+        self,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
+        **attrs: typing.Any,
+    ) -> GenericEventStream[EventT]:
+        self._filters.append(self._map_predicates_and_attr_getters("filter", *predicates, **attrs))
+        return self
+
     async def open(self) -> None:
-        await self._request()
-        self._app.dispatcher.subscribe(shard_events.MemberChunkEvent, self._listen_for_chunks)
+        if not self._active:
+            self._app.dispatcher.subscribe(self._event_type, self._listener)
+            self._active = True
+
+
+class ChunkStream(GenericEventStream[shard_events.MemberChunkEvent]):
+    """A specialised event stream used for triggering and streaming chunk events."""
+
+    __slots__: typing.Sequence[str] = (
+        "_guild_id",
+        "_include_presences",
+        "_limit",
+        "_missing_chunks",
+        "_nonce",
+        "_query",
+        "_user_ids",
+    )
+
+    def __init__(
+        self,
+        app: traits.BotAware,
+        guild_id: snowflakes.Snowflake,
+        *,
+        timeout: int,
+        limit: int = 0,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        query_limit: int = 0,
+        query: str = "",
+        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+    ) -> None:
+        super().__init__(app=app, event_type=shard_events.MemberChunkEvent, limit=limit, timeout=timeout)
+        self._guild_id = guild_id
+        self._include_presences = include_presences
+        self._limit = query_limit
+        self._missing_chunks: typing.Optional[typing.MutableSequence[int]] = None
+        self._nonce = date.uuid()
+        self._query = query
+        self._user_ids = user_ids
+
+    async def _listener(self, event: shard_events.MemberChunkEvent) -> None:
+        if event.nonce != self._nonce or not all(filter_(event) for filter_ in self._filters):
+            return
+
+        if self._missing_chunks is None:
+            self._missing_chunks = list(range(event.chunk_count))
+
+        self._missing_chunks.remove(event.chunk_index)
+
+        try:
+            self._queue.put_nowait(event)
+        except asyncio.QueueFull:
+            pass
+
+        if not self._missing_chunks:
+            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listener)
+
+    async def __anext__(self) -> shard_events.MemberChunkEvent:
+        if not self._active:
+            raise TypeError("stream must be started with `await with` before entering it")
+
+        if self._queue.empty() and not self._missing_chunks and self._missing_chunks is not None:
+            raise StopAsyncIteration from None
+
+        try:
+            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
+        except asyncio.TimeoutError:
+            raise StopAsyncIteration from None
+
+    async def open(self) -> None:
+        started = self._active
+        await super().open()
+
+        if not started:
+            await self._app.shards[_get_shard_id(self._app, self._guild_id)].request_guild_members(
+                guild=self._guild_id,
+                include_presences=self._include_presences,
+                query=self._query,
+                limit=self._limit,
+                user_ids=self._user_ids,
+                nonce=self._nonce,
+            )
 
 
 @attr.s(init=True, kw_only=True, hash=False, eq=True, slots=True, weakref_slot=False)
