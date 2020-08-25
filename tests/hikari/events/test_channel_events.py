@@ -26,32 +26,11 @@ from hikari.events import channel_events
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.mark.asyncio
-class TestChannelEvent:
-    @pytest.fixture
-    def event(self):
-        class StubEvent(channel_events.ChannelEvent):
-            channel_id = 123
-            shard = None
-            app = mock.Mock(rest=mock.AsyncMock())
-
-        return StubEvent()
-
-    async def test_fetch_channel(self, event):
-        await event.fetch_channel()
-
-        event.app.rest.fetch_channel.assert_awaited_once_with(123)
-
-
 class TestChannelCreateEvent:
     @pytest.fixture
     def event(self):
-        class StubEvent(channel_events.ChannelCreateEvent):
-            channel = mock.Mock()
-            shard = None
-            app = None
-
-        return StubEvent()
+        cls = hikari_test_helpers.mock_class_namespace(channel_events.ChannelCreateEvent)
+        return cls()
 
     def test_channel_id_property(self, event):
         event.channel.id = 123
@@ -71,12 +50,7 @@ class TestGuildChannelCreateEvent:
 class TestChannelUpdateEvent:
     @pytest.fixture
     def event(self):
-        class StubEvent(channel_events.ChannelUpdateEvent):
-            channel = mock.Mock()
-            shard = None
-            app = None
-
-        return StubEvent()
+        return hikari_test_helpers.mock_class_namespace(channel_events.ChannelUpdateEvent)()
 
     def test_channel_id_property(self, event):
         event.channel.id = 123
@@ -96,12 +70,7 @@ class TestGuildChannelUpdateEvent:
 class TestChannelDeleteEvent:
     @pytest.fixture
     def event(self):
-        class StubEvent(channel_events.ChannelDeleteEvent):
-            channel = mock.Mock()
-            shard = None
-            app = None
-
-        return StubEvent()
+        return hikari_test_helpers.mock_class_namespace(channel_events.ChannelDeleteEvent)()
 
     def test_channel_id_property(self, event):
         event.channel.id = 123
@@ -122,16 +91,12 @@ class TestGuildChannelDeleteEvent:
 class TestInviteEvent:
     @pytest.fixture
     def event(self):
-        class StubEvent(channel_events.InviteEvent):
-            code = "Jx4cNGG"
-            shard = None
-            channel_id = None
-            guild_id = None
-            app = mock.Mock(rest=mock.AsyncMock())
-
-        return StubEvent()
+        return hikari_test_helpers.mock_class_namespace(channel_events.InviteEvent, slots=False)()
 
     async def test_fetch_invite(self, event):
+        event.app.rest.fetch_invite = mock.AsyncMock()
+        event.code = "Jx4cNGG"
+
         await event.fetch_invite()
 
         event.app.rest.fetch_invite.assert_awaited_once_with("Jx4cNGG")
