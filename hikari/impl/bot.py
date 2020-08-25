@@ -646,6 +646,7 @@ class BotApp(
     def run(
         self,
         *,
+        finalize_loop_on_close: bool = True,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
         slow_callback_duration: typing.Optional[float] = None,
     ) -> None:
@@ -667,6 +668,13 @@ class BotApp(
 
         Parameters
         ----------
+        finalize_loop_on_close : builtins.bool
+            If `builtins.True`, as the default, then the event loop is finalized
+            when the task finishes. This will result in all remaining async
+            generators being terminated, and the event loop being closed
+            once `aiohttp` has had a chance to finalize itself. If no loop
+            exists on the current thread at all, then this will be treated as
+            `builtins.True` regardless of what you provide here.
         loop : typing.Optional[asyncio.AbstractEventLoop]
             Event loop to run on. This defaults to `builtins.None`.
 
@@ -684,6 +692,8 @@ class BotApp(
             feature (since it may cause a small increase in execution latency).
             If specified as a number, it will be enabled.
         """
+        kill_signals = [*self._find_signals("SIGINT", "SIGQUIT", "SIGTERM")]
+
         if loop is None:
             try:
                 loop = asyncio.get_event_loop()
@@ -691,35 +701,55 @@ class BotApp(
             except RuntimeError:
                 _LOGGER.debug("no event loop registered on this thread; now creating one...")
                 loop = asyncio.new_event_loop()
+                finalize_loop_on_close = True
                 asyncio.set_event_loop(loop)
 
         # We always expect this to be populated by now.
         loop: asyncio.AbstractEventLoop
 
+        _LOGGER.debug(
+            "loop: %s, task factory: %s, policy: %s", loop, loop.get_task_factory(), asyncio.get_event_loop_policy(),
+        )
+
         if slow_callback_duration and slow_callback_duration > 0:
             aio.patch_slow_callback_detection(slow_callback_duration)
 
+        def die() -> None:
+            _LOGGER.info("received signal to shut down client")
+            asyncio.ensure_future(self.close())
+
+        for signum in kill_signals:
+            # Windows is dumb and doesn't support signals properly.
+            with contextlib.suppress(NotImplementedError):
+                loop.add_signal_handler(signum, die)
         try:
-            self._map_signal_handlers(
-                loop.add_signal_handler,
-                lambda *_: loop.create_task(self.close(), name="signal interrupt shutting down application"),
-            )
-            _LOGGER.debug("using default thread's event loop", loop)
-            loop.run_until_complete(self._shard_management_lifecycle())
-
-        except KeyboardInterrupt as ex:
-            _LOGGER.info("received OS signal to shut down client")
-            if self._debug:
-                raise
-            # The user will not care where this gets raised from, unless we are
-            # debugging. It just causes a lot of confusing spam.
-            raise ex.with_traceback(None) from None
-
-        except errors.GatewayClientClosedError:
-            _LOGGER.info("client shut itself down")
-
+            try:
+                loop.run_until_complete(self._shard_management_lifecycle())
+            except (KeyboardInterrupt, SystemExit):
+                die()
+            finally:
+                loop.run_until_complete(self.join())
+        except errors.GatewayClientClosedError as ex:
+            _LOGGER.info(str(ex))
         finally:
-            self._map_signal_handlers(loop.remove_signal_handler)
+            for signum in kill_signals:
+                # Windows is dumb and doesn't support signals properly.
+                with contextlib.suppress(NotImplementedError):
+                    loop.remove_signal_handler(signum)
+
+            if finalize_loop_on_close:
+                _LOGGER.debug("closing asyncgens for event loop %s", loop)
+                loop.run_until_complete(loop.shutdown_asyncgens())
+
+                remaining_tasks = asyncio.all_tasks(loop)
+                if remaining_tasks:
+                    _LOGGER.warning("forcefully stopping %s remaining tasks", len(remaining_tasks))
+                    for task in remaining_tasks:
+                        task.cancel()
+                else:
+                    _LOGGER.debug("no tasks are running, congratulations on writing a tidy application")
+
+                loop.close()
 
     async def join(self) -> None:
         """Wait for the application to finish running.
@@ -900,22 +930,16 @@ class BotApp(
         await self.join()
 
     @staticmethod
-    def _map_signal_handlers(
-        mapping_function: typing.Callable[..., None], *args: typing.Callable[[], typing.Any]
-    ) -> None:
-        """Register/deregister a given signal handler to all signals."""
-        valid_interrupts = signal.valid_signals()
-        # We must getattr on these, or we risk an exception occurring on Windows.
-        for interrupt_name in ("SIGQUIT", "SIGTERM"):
-            interrupt = getattr(signal, interrupt_name, None)
-            if interrupt in valid_interrupts:
-                with contextlib.suppress(NotImplementedError):
-                    mapping_function(interrupt, *args)
-
-    @staticmethod
     def _dump_banner(banner_package: str) -> None:
         """Dump the banner art and wait for it to flush before continuing."""
         sys.stdout.write(art.get_banner(banner_package) + "\n")
         sys.stdout.flush()
         # Give the TTY time to flush properly.
         time.sleep(0.05)
+
+    @staticmethod
+    def _find_signals(*names: str) -> typing.Iterator[int]:
+        valid_signals = signal.valid_signals()
+        for name in names:
+            if (signum := getattr(signal, name, None)) in valid_signals:
+                yield signum
