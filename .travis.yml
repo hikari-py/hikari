@@ -101,6 +101,7 @@ jobs:
               --mount type=bind,src=$(pwd),dst=/hikari \
               nekokatt/stackless-python-hikari:3.8.0b3 \
               /bin/bash -c "
+                  set -e
                   cd /hikari
                   pip install nox
                   nox --sessions pytest
