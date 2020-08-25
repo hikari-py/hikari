@@ -3,11 +3,17 @@ stages:
   - deploy
   - webhooks
 
+# Default settings.
+arch: amd64
+dist: focal  # 20.04.x; see https://releases.ubuntu.com/ for codenames
+language: python
+os: linux
+python: "3.8.5"
+
 cache: pip
 
 _test_job: &test_job
-  install:
-    - ${PYTHON_COMMAND} -m pip install nox
+  install: ${PYTHON_COMMAND} -m pip install nox
   before_script:
     - mkdir public > /dev/null 2>&1 || true
     - ${PYTHON_COMMAND} -V
@@ -21,15 +27,12 @@ _test_job: &test_job
 _windows_test_job: &windows_test_job
   os: windows
   language: shell
-  before_install:
-    - choco install --no-progress python --version=${PYTHON_VERSION} -y
+  before_install: choco install --no-progress python --version=${PYTHON_VERSION} -y
   env:
     - PYTHON_COMMAND="py -3"
   <<: *test_job
 
 _linux_test_job: &linux_test_job
-  os: linux
-  language: python
   env:
     - PYTHON_COMMAND=python
   <<: *test_job
@@ -38,64 +41,53 @@ jobs:
   include:
     # Linting
     - name: "Linting"
-      language: python
-      python: "3.8.5"
-      os: linux
-      arch: amd64
       install: "pip install nox"
-      stage: test
-      script:
-        - python -m nox --sessions safety mypy flake8
+      script: python -m nox --sessions safety mypy flake8
 
     - name: "Twemoji Mapping Verification"
-      language: python
-      python: "3.8.5"
-      os: linux
-      arch: amd64
-      install: "pip install nox"
+      install: pip install nox
       stage: test
-      script:
-        - python -m nox --sessions twemoji-test
+      script: python -m nox --sessions twemoji-test
 
     - name: "Windows 10 CPython 3.8.5 AMD64 Tests"
       env: PYTHON_VERSION="3.8.5"
-      arch: amd64
       stage: test
       <<: *windows_test_job
 
     - name: "Windows 10 CPython 3.9 Dev AMD64 Tests"
       env: PYTHON_VERSION="3.9.0-rc1 --pre"
-      arch: amd64
       stage: test
       <<: *windows_test_job
 
     - name: "Linux CPython 3.8.5 AMD64 Tests"
       python: "3.8.5"
-      arch: amd64
-      stage: test
       <<: *linux_test_job
 
     - name: "Linux CPython 3.9 Dev AMD64 Tests"
       python: "3.9-dev"
-      arch: amd64
-      stage: test
       <<: *linux_test_job
 
     - name: "Linux CPython 3.8.5 ARM64 Tests"
       python: "3.8.5"
       arch: arm64
-      stage: test
       <<: *linux_test_job
 
     - name: "Linux CPython 3.9 Dev ARM64 Tests"
       python: "3.9-dev"
       arch: arm64
-      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython Nightly AMD64 Tests"
+      python: "nightly"
+      <<: *linux_test_job
+
+    - name: "Linux CPython Nightly ARM64 Tests"
+      python: "nightly"
+      arch: arm64
       <<: *linux_test_job
 
     - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
       language: ruby
-      arch: amd64
       stage: test
       script:
         - >
