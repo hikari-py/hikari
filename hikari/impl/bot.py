@@ -57,7 +57,6 @@ from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
 from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
-from hikari.utilities import aio
 from hikari.utilities import art
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -499,19 +498,6 @@ class BotApp(
         self._started_at_monotonic = date.monotonic()
         self._started_at_timestamp = date.local_datetime()
 
-        if self._debug is True:
-            _LOGGER.warning("debug mode is enabled, performance may be affected")
-
-            # If possible, set the coroutine origin tracking depth to a larger value.
-            # This feature is provisional, so don't hold your breath if it doesn't
-            # exist.
-            with contextlib.suppress(AttributeError, NameError):
-                # noinspection PyUnresolvedReferences
-                sys.set_coroutine_origin_tracking_depth(40)  # type: ignore[attr-defined]
-
-            # Set debugging on the event loop.
-            asyncio.get_event_loop().set_debug(True)
-
         self._tasks.clear()
         self._shard_gather_task = None
 
@@ -552,18 +538,12 @@ class BotApp(
 
         finally:
             if len(self._tasks) != len(self._shards):
-                _LOGGER.warning(
-                    "application aborted midway through initialization, will begin shutting down %s shard(s)",
-                    len(self._tasks),
-                )
-                await self._abort_shards()
-
-                # We know an error occurred if this condition is met, so re-raise it.
-                raise
+                _LOGGER.warning("application was aborted midway through initialization, so never managed to start")
+                raise errors.GatewayClientClosedError("Client was aborted midway through initialization")
 
             finish_time = date.monotonic()
             self._shard_gather_task = asyncio.create_task(
-                self._gather_shard_lifecycles(), name=f"zookeeper for {len(self._shards)} shard(s)"
+                self._gather_shard_lifecycles(), name=f"gatherer for {len(self._shards)} shard(s)"
             )
 
             # Don't bother logging this if we are single sharded. It is useless information.
@@ -626,18 +606,20 @@ class BotApp(
         self._guild_chunker.close()
 
         try:
-            if self._tasks:
-                # This way if we cancel the stopping task, we still shut down properly.
-                self._request_close_event.set()
+            # This way if we cancel the stopping task, we still shut down properly.
+            self._request_close_event.set()
+            _LOGGER.info("stopping %s shard(s)", len(self._shards))
 
-                _LOGGER.info("stopping %s shard(s)", len(self._tasks))
-
-                try:
+            try:
+                if self._shards:
                     await self.dispatch(lifetime_events.StoppingEvent(app=self))
                     await self._abort_shards()
-                finally:
-                    self._tasks.clear()
-                    await self.dispatch(lifetime_events.StoppedEvent(app=self))
+            finally:
+                # The starting event occurs before the bot starts, regardless of if
+                # it had started or not, so it seems sensible stopped event has the
+                # same semantics.
+                self._tasks.clear()
+                await self.dispatch(lifetime_events.StoppedEvent(app=self))
         finally:
             await self._rest.close()
             await self._connector_factory.close()
@@ -646,6 +628,7 @@ class BotApp(
     def run(
         self,
         *,
+        coroutine_origin_tracking_depth: typing.Optional[int] = None,
         finalize_loop_on_close: bool = True,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
         slow_callback_duration: typing.Optional[float] = None,
@@ -668,6 +651,18 @@ class BotApp(
 
         Parameters
         ----------
+        coroutine_origin_tracking_depth : typing.Optional[int]
+            Optional depth to track the origin of coroutines for, if your
+            Python implementation allows it.
+
+            This can be useful for tracking down the origin of non-awaited
+            coroutines, and other missed artifacts.
+
+            The default is `builtins.None`.
+
+            Unless you set the `debug` flag to `builtins.True` in the
+            constructor for this class, this will be ignored for performance
+            reasons.
         finalize_loop_on_close : builtins.bool
             If `builtins.True`, as the default, then the event loop is finalized
             when the task finishes. This will result in all remaining async
@@ -688,9 +683,13 @@ class BotApp(
             How long a coroutine should block for in seconds before it shows a
             warning.
 
-            This defaults to being `builtins.None`, which will disable the
-            feature (since it may cause a small increase in execution latency).
-            If specified as a number, it will be enabled.
+            This defaults to being `builtins.None`, which will use the default
+            setting for asyncio.
+
+            These warnings will only appear if the event loop has debug mode
+            enabled, for performance reasons. If you set the `debug` flag to
+            `builtins.True` in the constructor for this class, you will already
+            have this enabled.
         """
         kill_signals = [*self._find_signals("SIGINT", "SIGQUIT", "SIGTERM")]
 
@@ -707,12 +706,27 @@ class BotApp(
         # We always expect this to be populated by now.
         loop: asyncio.AbstractEventLoop
 
+        if self._debug is True:
+            _LOGGER.warning("debug mode is enabled, performance may be affected")
+
+            # If possible, set the coroutine origin tracking depth to a larger value.
+            # This feature is provisional, so don't hold your breath if it doesn't
+            # exist.
+            with contextlib.suppress(AttributeError, NameError):
+                if coroutine_origin_tracking_depth is not None:
+                    set_depth = sys.set_coroutine_origin_tracking_depth  # type: ignore[attr-defined]
+                    set_depth(coroutine_origin_tracking_depth)
+
+            # Set debugging on the event loop.
+            asyncio.get_event_loop().set_debug(True)
+
         _LOGGER.debug(
             "loop: %s, task factory: %s, policy: %s", loop, loop.get_task_factory(), asyncio.get_event_loop_policy(),
         )
 
         if slow_callback_duration and slow_callback_duration > 0:
-            aio.patch_slow_callback_detection(slow_callback_duration)
+            # Don't bother showing the slow callbacks, asyncio can do it for us.
+            loop.slow_callback_duration = slow_callback_duration
 
         def die() -> None:
             _LOGGER.info("received signal to shut down client")
@@ -746,6 +760,11 @@ class BotApp(
                     _LOGGER.warning("forcefully stopping %s remaining tasks", len(remaining_tasks))
                     for task in remaining_tasks:
                         task.cancel()
+
+                        # Don't warn that these were never retrieved.
+                        with contextlib.suppress(asyncio.InvalidStateError):
+                            task.exception()
+
                 else:
                     _LOGGER.debug("no tasks are running, congratulations on writing a tidy application")
 
@@ -905,7 +924,7 @@ class BotApp(
 
     async def _abort_shards(self) -> None:
         """Close all shards and wait for them to terminate."""
-        for shard_id in self._tasks:
+        for shard_id in self._shards:
             if self._shards[shard_id].is_alive:
                 _LOGGER.debug("stopping shard %s", shard_id)
                 await self._shards[shard_id].close()
