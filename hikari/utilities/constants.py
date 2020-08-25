@@ -65,7 +65,7 @@ LIBRARY_VERSION: typing.Final[str] = f"hikari {_about.__version__}"
 SYSTEM_TYPE: typing.Final[str] = f"{platform.system()} {platform.architecture()[0]}"
 HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({_about.__url__}, {_about.__version__}) {_about.__author__} "
-    f"Aiohttp/{aiohttp.__version__} "
+    f"AIOHTTP/{aiohttp.__version__} "
     f"{platform.python_implementation()}/{platform.python_version()} {SYSTEM_TYPE}"
 )
 PYTHON_PLATFORM_VERSION: typing.Final[str] = (
