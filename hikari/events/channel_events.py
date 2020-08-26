@@ -52,6 +52,7 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import intents
 from hikari import traits
 from hikari.events import base_events
@@ -61,8 +62,9 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels
+    from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import snowflakes
     from hikari import webhooks
     from hikari.api import shard as gateway_shard
@@ -84,6 +86,24 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
             The ID of the channel this event relates to.
         """
 
+    # Annoyingly, looks like we'll have to keep re-overriding this prototype
+    # with more documentation if we want the docstring to match the typehint
+    # using inherited specialization patterns. Sad.
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.PartialChannel]:
+        """Get the cached channel that this event relates to, if known.
+
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+
+    @abc.abstractmethod
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -98,7 +118,6 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
             type will vary depending on the type of channel this event
             concerns.
         """
-        return await self.app.rest.fetch_channel(self.channel_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
@@ -117,20 +136,99 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             The ID of the guild that relates to this event.
         """
 
-    if typing.TYPE_CHECKING:
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild that this event relates to, if known.
 
-        async def fetch_channel(self) -> channels.GuildChannel:
-            ...
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The gateway guild this event relates to, if known. Otherwise
+            this will return `builtins.None`.
+        """
+        return self.app.cache.get_guild(self.guild_id)
+
+    async def fetch_guild(self) -> guilds.RESTGuild:
+        """Perform an API call to fetch the guild that this event relates to.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The guild that this event occurred in.
+        """
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    @property
+    def channel(self) -> typing.Optional[channels.GuildChannel]:
+        """Get the cached channel that this event relates to, if known.
+
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+        return self.app.cache.get_guild_channel(self.channel_id)
+
+    async def fetch_channel(self) -> channels.GuildChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        !!! note
+            For `ChannelDeleteEvent`-derived events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.channels.GuildChannel
+            A derivative of `hikari.channels.GuildChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.GuildChannel)
+        return channel
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PrivateChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
 
-    if typing.TYPE_CHECKING:
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateChannel]:
+        """Get the cached channel that this event relates to, if known.
 
-        async def fetch_channel(self) -> channels.PrivateChannel:
-            ...
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PrivateChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+        # TODO: link up to cache once I have a way of accessing a private channel by its ID.
+        return None
+
+    async def fetch_channel(self) -> channels.PrivateChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        !!! note
+            For `ChannelDeleteEvent`-derived events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.channels.PrivateChannel
+            A derivative of `hikari.channels.PrivateChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.PrivateChannel)
+        return channel
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
@@ -382,10 +480,41 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
             or `builtins.None` if no pins are available.
         """
 
-    if typing.TYPE_CHECKING:
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.TextChannel]:
+        """Get the cached channel that this event relates to, if known.
 
-        async def fetch_channel(self) -> channels.TextChannel:
-            ...
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+
+    @abc.abstractmethod
+    async def fetch_channel(self) -> channels.TextChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        Returns
+        -------
+        hikari.channels.TextChannel
+            A derivative of `hikari.channels.TextChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+
+    async def fetch_pins(self) -> typing.Sequence[messages.Message]:
+        """Perform an API call to fetch the pinned messages in this channel.
+
+        Returns
+        -------
+        typing.Sequence[hikari.messages.Message]
+            The pinned messages in this channel.
+        """
+        return await self.app.rest.fetch_pins(self.channel_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
@@ -409,10 +538,35 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
-    if typing.TYPE_CHECKING:
+    @property
+    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
+        """Get the cached channel that this event relates to, if known.
 
-        async def fetch_channel(self) -> channels.GuildTextChannel:
-            ...
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert isinstance(channel, channels.GuildTextChannel)
+        return channel
+
+    async def fetch_channel(self) -> channels.GuildTextChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        Returns
+        -------
+        hikari.channels.GuildTextChannel
+            A derivative of `hikari.channels.GuildTextChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.GuildTextChannel)
+        return channel
 
 
 # TODO: This is not documented as having an intent, is this right? The guild version requires GUILDS intent.
@@ -433,10 +587,34 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
-    if typing.TYPE_CHECKING:
+    @property
+    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+        """Get the cached channel that this event relates to, if known.
 
-        async def fetch_channel(self) -> channels.PrivateTextChannel:
-            ...
+        If not, return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The cached channel this event relates to. If not known, this
+            will return `builtins.None` instead.
+        """
+        # TODO: implement when there is a way to find private channels by ID in cache.
+        return None
+
+    async def fetch_channel(self) -> channels.PrivateTextChannel:
+        """Perform an API call to fetch the details about this channel.
+
+        Returns
+        -------
+        hikari.channels.PrivateTextChannel
+            A derivative of `hikari.channels.PrivateTextChannel`. The actual
+            type will vary depending on the type of channel this event
+            concerns.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.PrivateTextChannel)
+        return channel
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
@@ -454,11 +632,6 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
         builtins.str
             The invite code.
         """
-
-    if typing.TYPE_CHECKING:
-
-        async def fetch_channel(self) -> channels.GuildTextChannel:
-            ...
 
     async def fetch_invite(self) -> invites.Invite:
         """Perform an API call to retrieve an up-to-date image of this invite.
@@ -580,8 +753,3 @@ class WebhookUpdateEvent(GuildChannelEvent):
             The webhooks in this guild.
         """
         return await self.app.rest.fetch_guild_webhooks(self.guild_id)
-
-    if typing.TYPE_CHECKING:
-
-        async def fetch_channel(self) -> channels.GuildTextChannel:
-            ...

@@ -85,6 +85,20 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         """
         return self.user.id
 
+    @property
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached view of the guild this member event occurred in.
+
+        If the guild itself is not cached, this will return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The guild that this event occurred in, if known, else
+            `builtins.None`.
+        """
+        return self.app.cache.get_guild(self.guild_id)
+
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)

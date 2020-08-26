@@ -407,7 +407,7 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     @property
     def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
         # <<inherited from MessageEvent>>.
-        # TODO: fix it so we can look this up without user ID.
+        # TODO: implement when we can find cached private channel by ID
         return None
 
 

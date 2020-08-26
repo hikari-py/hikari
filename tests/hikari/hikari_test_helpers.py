@@ -134,13 +134,36 @@ def stub_class(klass, **kwargs: typing.Any):
     return new_klass(kwargs)
 
 
-def mock_class_namespace(klass, *, init: bool = True, slots: typing.Optional[bool] = None, **namespace: typing.Any):
+def mock_class_namespace(
+    klass,
+    *,
+    init: bool = True,
+    slots: typing.Optional[bool] = None,
+    implement_abstract_methods: bool = True,
+    **namespace: typing.Any,
+):
     """Get a version of a class with the provided namespace fields set as class attributes."""
     if slots or slots is None and hasattr(klass, "__slots__"):
         namespace["__slots__"] = ()
 
     if init is False:
         namespace["__init__"] = lambda _: None
+
+    if implement_abstract_methods:
+        for method_name in getattr(klass, "__abstractmethods__", ()):
+            if method_name in namespace:
+                continue
+
+            attr = getattr(klass, method_name)
+
+            if inspect.isdatadescriptor(attr) or inspect.isgetsetdescriptor(attr):
+                namespace[method_name] = mock.MagicMock(__isabstractmethod__=False)
+            elif asyncio.iscoroutinefunction(attr):
+                namespace[method_name] = mock.AsyncMock(spec_set=attr, __isabstractmethod__=False)
+            else:
+                namespace[method_name] = mock.Mock(spec_set=attr, __isabstractmethod__=False)
+
+        namespace.setdefault("__abstractmethods__", frozenset())
 
     return type("Mock" + klass.__name__, (klass,), namespace)
 
