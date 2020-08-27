@@ -58,9 +58,14 @@ def client_session():
         yield stub
 
 
+@pytest.fixture(scope="module")
+def unslotted_client_type():
+    return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)
+
+
 @pytest.fixture()
-def client(http_settings, proxy_settings):
-    return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
+def client(http_settings, proxy_settings, unslotted_client_type):
+    return unslotted_client_type(
         url="wss://gateway.discord.gg",
         token="lol",
         event_consumer=mock.Mock(),
@@ -241,6 +246,60 @@ class TestClose:
 
 @pytest.mark.asyncio
 class TestRun:
+    @hikari_test_helpers.timeout()
+    async def test_aiohttp_ClientSession_is_initialized(self, unslotted_client_type):
+        verify_ssl = True
+        acquire_and_connect = 3.3
+        request_socket_read = None
+        request_socket_connect = 1.2
+        total = 4.5
+        max_redirects = 0
+        allow_redirects = True
+        trust_env = True
+        event_consumer = lambda s, n, pl: None
+
+        client = unslotted_client_type(
+            event_consumer=event_consumer,
+            token="shh",
+            url="http://localhost:0",
+            http_settings=config.HTTPSettings(
+                verify_ssl=verify_ssl,
+                timeouts=config.HTTPTimeoutSettings(
+                    acquire_and_connect=acquire_and_connect,
+                    request_socket_read=request_socket_read,
+                    request_socket_connect=request_socket_connect,
+                    total=total,
+                ),
+                max_redirects=max_redirects,
+                allow_redirects=allow_redirects,
+            ),
+            proxy_settings=config.ProxySettings(trust_env=trust_env),
+        )
+
+        client._run_once = mock.AsyncMock()
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(errors.GatewayClientClosedError))
+        client_session = stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
+        tcp_connector = stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
+        timeout = stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
+
+        with stack:
+            await client._run()
+
+        client_session.assert_called_once_with(
+            connector_owner=True,
+            connector=tcp_connector(verify_ssl=verify_ssl, limit=1, limit_per_host=1, force_close=True),
+            version=aiohttp.HttpVersion11,
+            timeout=timeout(
+                total=total,
+                connect=acquire_and_connect,
+                sock_read=request_socket_read,
+                sock_connect=request_socket_connect,
+            ),
+            trust_env=trust_env,
+        )
+
     @hikari_test_helpers.timeout()
     async def test_repeatedly_invokes_run_once_shielded_while_request_close_event_not_set(self, client):
         i = 0

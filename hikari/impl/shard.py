@@ -460,6 +460,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                 # big sharded bots and waste a lot of time, so theres no reason to bother.
                 limit=1,
                 limit_per_host=1,
+                force_close=True,
             ),
             version=aiohttp.HttpVersion11,
             timeout=aiohttp.ClientTimeout(
