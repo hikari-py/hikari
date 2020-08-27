@@ -161,9 +161,8 @@ class BotApp(
         If `builtins.True`, the bot will not implement a cache, and will be
         considered stateless. If `builtins.False`, then a cache will be used.
 
-        While the cache components are a WIP, this will default to
-        `builtins.True`. This should be expected to be changed to
-        `builtins.False` before the first non-development release is made.
+        This defaults to `builtins.False`, meaning your bot will retain an
+        in-memory cache of the known gateway state.
     token : builtins.str
         The bot token to use. This should not start with a prefix such as
         `Bot `, but instead only contain the token itself.
@@ -255,7 +254,7 @@ class BotApp(
         rest_url: typing.Optional[str] = None,
         shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
-        stateless: bool = True,
+        stateless: bool = False,
         token: str,
     ) -> None:
         if undefined.count(shard_ids, shard_count) == 1:
