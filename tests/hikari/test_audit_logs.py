@@ -87,7 +87,12 @@ class TestAuditLog:
 
     def test_get_item_with_ivalid_type(self):
         try:
-            audit_logs.AuditLog(entries=[object(), object()], integrations={}, users={}, webhooks={},)["OK"]
+            audit_logs.AuditLog(
+                entries=[object(), object()],
+                integrations={},
+                users={},
+                webhooks={},
+            )["OK"]
         except TypeError:
             pass
         else:

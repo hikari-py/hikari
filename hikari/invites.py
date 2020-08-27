@@ -162,7 +162,11 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.splash_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
@@ -196,7 +200,11 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.banner_hash,
+            size=size,
+            file_format=ext,
         )
 
 

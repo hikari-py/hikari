@@ -91,7 +91,9 @@ class TestExceptionEvent:
     @pytest.fixture
     def event(self, error):
         return base_events.ExceptionEvent(
-            exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock(),
+            exception=error,
+            failed_event=mock.Mock(base_events.Event),
+            failed_callback=mock.AsyncMock(),
         )
 
     def test_app_property(self, event):

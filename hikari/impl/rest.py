@@ -1111,7 +1111,9 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
+            emoji=self._transform_emoji_to_url_format(emoji),
+            channel=channel,
+            message=message,
         )
         await self._request(route)
 
@@ -1122,7 +1124,9 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
+            emoji=self._transform_emoji_to_url_format(emoji),
+            channel=channel,
+            message=message,
         )
         await self._request(route)
 
@@ -1133,7 +1137,9 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message,
+            emoji=self._transform_emoji_to_url_format(emoji),
+            channel=channel,
+            message=message,
         )
         await self._request(route)
 
@@ -1145,7 +1151,10 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=self._transform_emoji_to_url_format(emoji), channel=channel, message=message, user=user,
+            emoji=self._transform_emoji_to_url_format(emoji),
+            channel=channel,
+            message=message,
+            user=user,
         )
         await self._request(route)
 
@@ -1210,7 +1219,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
-        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        self,
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         raw_response = await self._request(route)
@@ -1218,7 +1228,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -1887,7 +1898,9 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route, json=body)
 
     async def fetch_member(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.Member:
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
         raw_response = await self._request(route)
@@ -2007,7 +2020,9 @@ class RESTClientImpl(rest_api.RESTClient):
     unban_member = unban_user
 
     async def fetch_ban(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.GuildMemberBan:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
         raw_response = await self._request(route)
@@ -2022,7 +2037,10 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_guild_member_ban)
 
-    async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+    ) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
@@ -2146,7 +2164,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return int(pruned) if pruned is not None else None
 
     async def fetch_guild_voice_regions(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2154,7 +2173,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
 
     async def fetch_guild_invites(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         raw_response = await self._request(route)
@@ -2162,7 +2182,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
 
     async def fetch_integrations(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         raw_response = await self._request(route)

@@ -290,7 +290,9 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     nickname: undefined.UndefinedNoneOr[str] = attr.ib(
-        eq=False, hash=False, repr=True,
+        eq=False,
+        hash=False,
+        repr=True,
     )
     """This member's nickname.
 
@@ -682,7 +684,11 @@ class PartialGuild(snowflakes.Unique):
                 ext = "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
         )
 
 
@@ -739,7 +745,11 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.splash_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
@@ -773,7 +783,11 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=ext,
         )
 
 
@@ -979,7 +993,11 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.splash_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
@@ -1013,7 +1031,11 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
@@ -1047,7 +1069,11 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            guild_id=self.id,
+            hash=self.banner_hash,
+            size=size,
+            file_format=ext,
         )
 
 
@@ -1216,7 +1242,8 @@ class GatewayGuild(Guild):
         return self.app.cache.get_emoji(snowflakes.Snowflake(emoji))
 
     def get_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
     ) -> typing.Optional[channels_.GuildChannel]:
         """Get a cached channel that belongs to the guild by it's ID or object.
 

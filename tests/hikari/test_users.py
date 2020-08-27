@@ -82,7 +82,11 @@ class TestUser:
             assert obj.format_avatar(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, user_id=123, hash="a_18dnf8dfbakfdh", size=2, file_format="gif",
+            constants.CDN_URL,
+            user_id=123,
+            hash="a_18dnf8dfbakfdh",
+            size=2,
+            file_format="gif",
         )
 
     def test_format_avatar_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
@@ -94,7 +98,11 @@ class TestUser:
             assert obj.format_avatar(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, user_id=123, hash="18dnf8dfbakfdh", size=2, file_format="png",
+            constants.CDN_URL,
+            user_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="png",
         )
 
     def test_format_avatar_with_all_args(self, obj):
@@ -106,7 +114,11 @@ class TestUser:
             assert obj.format_avatar(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, user_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            user_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_default_avatar(self, obj):
@@ -118,7 +130,9 @@ class TestUser:
             assert obj.default_avatar == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, discriminator=1, file_format="png",
+            constants.CDN_URL,
+            discriminator=1,
+            file_format="png",
         )
 
 

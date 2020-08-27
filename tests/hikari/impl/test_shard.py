@@ -292,7 +292,13 @@ class TestRunOnceShielded:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once_shielded", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+            except_=(
+                "_run_once_shielded",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_Opcode",
+            ),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger", "_event_consumer"],
         )
         # Disable backoff checking by making the condition a negative tautology.
@@ -310,7 +316,12 @@ class TestRunOnceShielded:
 
     @pytest.mark.parametrize(
         ["zombied", "request_close", "expect_backoff_called"],
-        [(True, True, True), (True, False, True), (False, True, False), (False, False, False),],
+        [
+            (True, True, True),
+            (True, False, True),
+            (False, True, False),
+            (False, False, False),
+        ],
     )
     @hikari_test_helpers.timeout()
     async def test_socket_closed_resets_backoff(
@@ -349,7 +360,13 @@ class TestRunOnceShielded:
     @hikari_test_helpers.timeout()
     async def test_ClientConnectionError_is_restartable(self, client, client_session):
         key = aiohttp.client_reqrep.ConnectionKey(
-            host="localhost", port=6996, is_ssl=False, ssl=None, proxy=None, proxy_auth=None, proxy_headers_hash=69420,
+            host="localhost",
+            port=6996,
+            is_ssl=False,
+            ssl=None,
+            proxy=None,
+            proxy_auth=None,
+            proxy_headers_hash=69420,
         )
         error = aiohttp.ClientConnectorError(key, OSError())
 
@@ -456,7 +473,13 @@ class TestRunOnce:
         )
         client = hikari_test_helpers.mock_methods_on(
             client,
-            except_=("_run_once", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+            except_=(
+                "_run_once",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_Opcode",
+            ),
             also_mock=["_backoff", "_handshake_event", "_request_close_event", "_logger", "_event_consumer"],
         )
         # Disable backoff checking by making the condition a negative tautology.
@@ -688,7 +711,10 @@ class TestUpdatePresence:
         client._send_json = mock.AsyncMock()
 
         await client.update_presence(
-            idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None,
+            idle_since=datetime.datetime.now(),
+            afk=True,
+            status=presences.Status.IDLE,
+            activity=None,
         )
 
         if is_alive:
@@ -711,7 +737,14 @@ class TestUpdateVoiceState:
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client, except_=("update_voice_state", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+            client,
+            except_=(
+                "update_voice_state",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_Opcode",
+            ),
         )
 
     @pytest.mark.parametrize("channel", [12345, None])
@@ -746,7 +779,14 @@ class TestRequestGuildMembers:
             shard_count=17,
         )
         return hikari_test_helpers.mock_methods_on(
-            client, except_=("request_guild_members", "_InvalidSession", "_Reconnect", "_SocketClosed", "_Opcode",),
+            client,
+            except_=(
+                "request_guild_members",
+                "_InvalidSession",
+                "_Reconnect",
+                "_SocketClosed",
+                "_Opcode",
+            ),
         )
 
     async def test_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):

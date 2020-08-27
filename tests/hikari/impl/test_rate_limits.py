@@ -285,7 +285,12 @@ class TestWindowedBurstRateLimiter:
         await event_loop.run_in_executor(None, self._run_test_throttle_logic)
 
     def _run_test_throttle_logic(self):
-        threads = [threading.Thread(target=self._run_test_throttle_logic_on_this_thread,) for _ in range(20)]
+        threads = [
+            threading.Thread(
+                target=self._run_test_throttle_logic_on_this_thread,
+            )
+            for _ in range(20)
+        ]
 
         for thread in threads:
             thread.start()

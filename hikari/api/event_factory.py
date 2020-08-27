@@ -622,7 +622,9 @@ class EventFactory(typing.Protocol):
     ################
 
     def deserialize_ready_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject,
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
     ) -> shard_events.ShardReadyEvent:
         """Parse a raw payload from Discord into a ready event object.
 

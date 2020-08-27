@@ -62,7 +62,9 @@ async def _fetch_all_releases() -> typing.Sequence[distutils_version.LooseVersio
     # Make a client session, it is easier to stub.
     async with aiohttp.ClientSession() as cs:
         async with cs.get(
-            "https://pypi.org/pypi/hikari/json", raise_for_status=True, timeout=aiohttp.ClientTimeout(total=3.0),
+            "https://pypi.org/pypi/hikari/json",
+            raise_for_status=True,
+            timeout=aiohttp.ClientTimeout(total=3.0),
         ) as resp:
             data: data_binding.JSONObject = await resp.json()
 
@@ -105,7 +107,11 @@ async def fetch_version_info_from_pypi() -> VersionInfo:
 
     latest_compatible = max(same_compatible_releases)
 
-    return VersionInfo(this=this, latest_compatible=latest_compatible, latest=latest,)
+    return VersionInfo(
+        this=this,
+        latest_compatible=latest_compatible,
+        latest=latest,
+    )
 
 
 async def log_available_updates(logger: logging.Logger) -> None:

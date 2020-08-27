@@ -432,7 +432,12 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         self, target: typing.Type[invites.InviteWithMetadata], **kwargs: typing.Any
     ) -> invites.InviteWithMetadata:
         return super().build_entity(
-            target, approximate_member_count=None, approximate_presence_count=None, channel=None, guild=None, **kwargs,
+            target,
+            approximate_member_count=None,
+            approximate_presence_count=None,
+            channel=None,
+            guild=None,
+            **kwargs,
         )
 
     @classmethod
@@ -598,7 +603,9 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         )
 
     def build_entity(
-        self, target: typing.Type[presences.MemberPresence], **kwargs: typing.Any,
+        self,
+        target: typing.Type[presences.MemberPresence],
+        **kwargs: typing.Any,
     ) -> presences.MemberPresence:
         presence_kwargs = kwargs.pop("presence_kwargs")
         activities = [

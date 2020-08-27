@@ -259,7 +259,10 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = value
 
     def put_snowflake_array(
-        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /,
+        self,
+        key: str,
+        values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]],
+        /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 

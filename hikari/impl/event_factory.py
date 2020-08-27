@@ -118,7 +118,12 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> channel_events.WebhookUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         channel_id = snowflakes.Snowflake(payload["channel_id"])
-        return channel_events.WebhookUpdateEvent(app=self._app, shard=shard, channel_id=channel_id, guild_id=guild_id,)
+        return channel_events.WebhookUpdateEvent(
+            app=self._app,
+            shard=shard,
+            channel_id=channel_id,
+            guild_id=guild_id,
+        )
 
     def deserialize_typing_start_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -248,7 +253,9 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationsUpdateEvent:
         return guild_events.IntegrationsUpdateEvent(
-            app=self._app, shard=shard, guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
 
     def deserialize_guild_member_add_event(
@@ -274,7 +281,8 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> role_events.RoleCreateEvent:
         role = self._app.entity_factory.deserialize_role(
-            payload["role"], guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            payload["role"],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
         return role_events.RoleCreateEvent(app=self._app, shard=shard, role=role)
 
@@ -282,7 +290,8 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> role_events.RoleUpdateEvent:
         role = self._app.entity_factory.deserialize_role(
-            payload["role"], guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            payload["role"],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
         return role_events.RoleUpdateEvent(app=self._app, shard=shard, role=role)
 
@@ -385,12 +394,22 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_id = snowflakes.Snowflake(payload["guild_id"])
             member = self._app.entity_factory.deserialize_member(payload["member"], guild_id=guild_id)
             return reaction_events.GuildReactionAddEvent(
-                app=self._app, shard=shard, member=member, channel_id=channel_id, message_id=message_id, emoji=emoji,
+                app=self._app,
+                shard=shard,
+                member=member,
+                channel_id=channel_id,
+                message_id=message_id,
+                emoji=emoji,
             )
 
         user_id = snowflakes.Snowflake(payload["user_id"])
         return reaction_events.PrivateReactionAddEvent(
-            app=self._app, shard=shard, channel_id=channel_id, message_id=message_id, user_id=user_id, emoji=emoji,
+            app=self._app,
+            shard=shard,
+            channel_id=channel_id,
+            message_id=message_id,
+            user_id=user_id,
+            emoji=emoji,
         )
 
     def deserialize_message_reaction_remove_event(
@@ -413,7 +432,12 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
 
         return reaction_events.PrivateReactionDeleteEvent(
-            app=self._app, shard=shard, user_id=user_id, channel_id=channel_id, message_id=message_id, emoji=emoji,
+            app=self._app,
+            shard=shard,
+            user_id=user_id,
+            channel_id=channel_id,
+            message_id=message_id,
+            emoji=emoji,
         )
 
     def deserialize_message_reaction_remove_all_event(
@@ -433,7 +457,10 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         # TODO: check if this can even occur.
         return reaction_events.PrivateReactionDeleteAllEvent(
-            app=self._app, shard=shard, channel_id=channel_id, message_id=message_id,
+            app=self._app,
+            shard=shard,
+            channel_id=channel_id,
+            message_id=message_id,
         )
 
     def deserialize_message_reaction_remove_emoji_event(
@@ -455,7 +482,11 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         # TODO: check if this can even occur.
         return reaction_events.PrivateReactionDeleteEmojiEvent(
-            app=self._app, shard=shard, emoji=emoji, channel_id=channel_id, message_id=message_id,
+            app=self._app,
+            shard=shard,
+            emoji=emoji,
+            channel_id=channel_id,
+            message_id=message_id,
         )
 
     ################

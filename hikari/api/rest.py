@@ -1098,13 +1098,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
-        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        self,
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
         ...
 
@@ -1437,7 +1439,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_member(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.Member:
         ...
 
@@ -1540,18 +1544,24 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.GuildMemberBan:
         ...
 
     @abc.abstractmethod
     async def fetch_bans(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         ...
 
     @abc.abstractmethod
-    async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+    ) -> typing.Sequence[guilds.Role]:
         ...
 
     @abc.abstractmethod
@@ -1699,19 +1709,22 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         ...
 
     @abc.abstractmethod
     async def fetch_guild_invites(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         ...
 
     @abc.abstractmethod
     async def fetch_integrations(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Integration]:
         ...
 

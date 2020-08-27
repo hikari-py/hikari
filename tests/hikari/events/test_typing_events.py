@@ -63,7 +63,13 @@ class TestGuildTypingEvent:
     @pytest.fixture
     def event(self):
         return typing_events.GuildTypingEvent(
-            app=mock.AsyncMock(), shard=None, channel_id=123, user_id=456, guild_id=789, timestamp=None, member=None,
+            app=mock.AsyncMock(),
+            shard=None,
+            channel_id=123,
+            user_id=456,
+            guild_id=789,
+            timestamp=None,
+            member=None,
         )
 
     async def test_fetch_channel(self, event):

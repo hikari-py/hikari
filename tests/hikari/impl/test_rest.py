@@ -260,7 +260,12 @@ def _file_resource():
         async def __aenter__(self):
             return self
 
-        async def __aexit__(self, exc_type, exc, exc_tb,) -> None:
+        async def __aexit__(
+            self,
+            exc_type,
+            exc,
+            exc_tb,
+        ) -> None:
             pass
 
     class FileResource(files.Resource):
@@ -699,7 +704,9 @@ class TestRESTClientImpl:
             assert rest_client.fetch_members(guild) == stub_iterator
 
             iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory, request_call=rest_client._request, guild=guild,
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
             )
 
     def test_kick_member(self, rest_client):
@@ -1960,7 +1967,11 @@ class TestRESTClientImplAsync:
         rest_client._create_guild_channel = mock.AsyncMock(return_value=category)
 
         returned = await rest_client.create_guild_category(
-            guild, "general", position=1, permission_overwrites=[overwrite1, overwrite2], reason="because we need one",
+            guild,
+            "general",
+            position=1,
+            permission_overwrites=[overwrite1, overwrite2],
+            reason="because we need one",
         )
         assert returned == category
         rest_client._create_guild_channel.assert_awaited_once_with(
@@ -2070,7 +2081,9 @@ class TestRESTClientImplAsync:
             reason="because i can",
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json=expected_json, reason="because i can",
+            expected_route,
+            json=expected_json,
+            reason="because i can",
         )
 
     async def test_edit_member_without_optionals(self, rest_client):

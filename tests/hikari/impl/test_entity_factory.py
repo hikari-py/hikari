@@ -1645,7 +1645,9 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def deserialize_rest_guild_payload(
-        self, known_custom_emoji_payload, guild_role_payload,
+        self,
+        known_custom_emoji_payload,
+        guild_role_payload,
     ):
         return {
             "afk_channel_id": "99998888777766",
@@ -1992,7 +1994,8 @@ class TestEntityFactoryImpl:
                 voice_state_payload,
                 guild_id=snowflakes.Snowflake(265828729970753537),
                 member=entity_factory_impl.deserialize_member(
-                    member_payload, guild_id=snowflakes.Snowflake(265828729970753537),
+                    member_payload,
+                    guild_id=snowflakes.Snowflake(265828729970753537),
                 ),
             )
         }
@@ -2532,7 +2535,10 @@ class TestEntityFactoryImpl:
         assert message.nonce == "171000788183678976"
 
     def test_deserialize_message_with_null_and_unset_fields(
-        self, entity_factory_impl, mock_app, user_payload,
+        self,
+        entity_factory_impl,
+        mock_app,
+        user_payload,
     ):
         message_payload = {
             "id": "123",
@@ -2719,7 +2725,13 @@ class TestEntityFactoryImpl:
                 "game": None,
                 "guild_id": "44004040",
                 "status": "dnd",
-                "activities": [{"name": "an activity", "type": 1, "created_at": 1584996792798,}],
+                "activities": [
+                    {
+                        "name": "an activity",
+                        "type": 1,
+                        "created_at": 1584996792798,
+                    }
+                ],
                 "client_status": {},
             }
         )
@@ -2751,7 +2763,10 @@ class TestEntityFactoryImpl:
                         "type": 1,
                         "url": None,
                         "created_at": 1584996792798,
-                        "timestamps": {"start": 1584996792798, "end": 1999999792798,},
+                        "timestamps": {
+                            "start": 1584996792798,
+                            "end": 1999999792798,
+                        },
                         "application_id": "40404040404040",
                         "details": None,
                         "state": None,

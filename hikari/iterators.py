@@ -221,7 +221,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _ChunkedLazyIterator(self, chunk_size)
 
     def map(
-        self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
+        self,
+        transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
     ) -> LazyIterator[AnotherValueT]:
         """Map the values to a different value.
 
@@ -912,7 +913,9 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
     __slots__: typing.Sequence[str] = ("_iterator", "_transformation")
 
     def __init__(
-        self, iterator: LazyIterator[AnotherValueT], transformation: typing.Callable[[AnotherValueT], ValueT],
+        self,
+        iterator: LazyIterator[AnotherValueT],
+        transformation: typing.Callable[[AnotherValueT], ValueT],
     ) -> None:
         self._iterator = iterator
         self._transformation = transformation

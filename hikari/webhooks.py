@@ -338,7 +338,12 @@ class Webhook(snowflakes.Unique):
             token = undefined.UNDEFINED
 
         return await self.app.rest.edit_webhook(
-            self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason,
+            self.id,
+            token=token,
+            name=name,
+            avatar=avatar,
+            channel=channel,
+            reason=reason,
         )
 
     async def fetch_channel(self) -> channels_.PartialChannel:
@@ -414,7 +419,11 @@ class Webhook(snowflakes.Unique):
 
         This is used if no avatar is set.
         """
-        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(constants.CDN_URL, discriminator=0, file_format="png",)
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
+            constants.CDN_URL,
+            discriminator=0,
+            file_format="png",
+        )
 
     def format_avatar(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
@@ -448,5 +457,9 @@ class Webhook(snowflakes.Unique):
             return None
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            user_id=self.id,
+            hash=self.avatar_hash,
+            size=size,
+            file_format=ext,
         )

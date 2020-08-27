@@ -201,7 +201,11 @@ class TestPartialGuild:
             assert obj.format_icon(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=1234567890, hash="a_18dnf8dfbakfdh", size=2, file_format="gif",
+            constants.CDN_URL,
+            guild_id=1234567890,
+            hash="a_18dnf8dfbakfdh",
+            size=2,
+            file_format="gif",
         )
 
     def test_format_icon_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
@@ -213,7 +217,11 @@ class TestPartialGuild:
             assert obj.format_icon(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=1234567890, hash="18dnf8dfbakfdh", size=2, file_format="png",
+            constants.CDN_URL,
+            guild_id=1234567890,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="png",
         )
 
     def test_format_icon_with_all_args(self, obj):
@@ -225,7 +233,11 @@ class TestPartialGuild:
             assert obj.format_icon(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=1234567890, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=1234567890,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
 
@@ -249,7 +261,11 @@ class TestGuildPreview:
             assert obj.format_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_format_splash_when_no_hash(self, obj):
@@ -270,7 +286,11 @@ class TestGuildPreview:
             assert obj.format_discovery_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_format_discovery_splash_when_no_hash(self, obj):
@@ -305,7 +325,11 @@ class TestGuild:
             assert obj.format_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_format_splash_when_no_hash(self, obj):
@@ -326,7 +350,11 @@ class TestGuild:
             assert obj.format_discovery_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_format_discovery_splash_when_no_hash(self, obj):
@@ -347,7 +375,11 @@ class TestGuild:
             assert obj.format_banner(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url",
+            constants.CDN_URL,
+            guild_id=123,
+            hash="18dnf8dfbakfdh",
+            size=2,
+            file_format="url",
         )
 
     def test_format_banner_when_no_hash(self, obj):

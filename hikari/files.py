@@ -426,7 +426,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        head_only: bool = False,
     ) -> AsyncReaderContextManager[ReaderImplT]:
         """Produce a stream of data for the resource.
 
@@ -594,7 +597,10 @@ class WebResource(Resource[WebReader], abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        head_only: bool = False,
     ) -> AsyncReaderContextManager[WebReader]:
         """Start streaming the content into memory by downloading it.
 
@@ -834,7 +840,10 @@ class File(Resource[FileReader]):
         return self._filename
 
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        head_only: bool = False,
     ) -> AsyncReaderContextManager[FileReader]:
         """Start streaming the resource using a thread pool executor.
 
@@ -961,7 +970,11 @@ class Bytes(Resource[IteratorReader]):
     """The provided mimetype, if specified. Otherwise `builtins.None`."""
 
     def __init__(
-        self, data: typing.Union[Rawish, LazyByteIteratorish], filename: str, /, mimetype: typing.Optional[str] = None,
+        self,
+        data: typing.Union[Rawish, LazyByteIteratorish],
+        filename: str,
+        /,
+        mimetype: typing.Optional[str] = None,
     ) -> None:
         if isinstance(data, RAWISH_TYPES):
             data = unwrap_bytes(data)
@@ -987,7 +1000,10 @@ class Bytes(Resource[IteratorReader]):
         return self._filename
 
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        head_only: bool = False,
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks.
 
