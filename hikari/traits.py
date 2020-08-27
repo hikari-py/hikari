@@ -409,3 +409,5 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 @typing.runtime_checkable
 class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing.Protocol):
     """Structural supertype for a component that is aware of all internals."""
+
+    __slots__: typing.Sequence[str] = ()

@@ -1,3 +1,7 @@
+################
+# UNIT TESTING #
+################
+
 # Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
 mock~=4.0.2
 
@@ -12,3 +16,22 @@ coverage~=5.2.1
 
 # Other stuff
 async-timeout~=3.0.1  # Used for timeouts in some test cases.
+
+#################
+# DOCUMENTATION #
+#################
+
+pdoc3~=0.9.1
+sphobjinv~=2.0.1
+
+#################
+# TYPE CHECKING #
+#################
+
+mypy==0.782
+
+#######################
+# DEPENDENCY CHECKING #
+#######################
+
+safety~=1.9.0
