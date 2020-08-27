@@ -374,6 +374,18 @@ class TestRunOnceShielded:
         assert await client._run_once_shielded(client_session) is True
 
     @hikari_test_helpers.timeout()
+    async def test_WSServerHandshakeError_is_restartable(self, client, client_session):
+        error = aiohttp.WSServerHandshakeError(
+            mock.Mock(spec_set=aiohttp.RequestInfo),
+            history=(mock.Mock(spec_set=aiohttp.ClientResponse),),
+            status=520,
+            message="Discord returned a 520 which means they are broken",
+        )
+
+        client._run_once = mock.AsyncMock(side_effect=error)
+        assert await client._run_once_shielded(client_session) is True
+
+    @hikari_test_helpers.timeout()
     async def test_invalid_session_is_restartable(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=shard.GatewayShardImpl._InvalidSession())
         assert await client._run_once_shielded(client_session) is True
