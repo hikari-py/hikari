@@ -112,7 +112,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         _LOGGER.debug(
             "subscribing callback 'async def %s%s' to event-type %s.%s",
             getattr(callback, "__name__", "<anon>"),
-            reflect.resolve_signature(callback),
+            inspect.signature(callback),
             event_type.__module__,
             event_type.__qualname__,
         )
@@ -170,7 +170,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
-                reflect.resolve_signature(callback),
+                inspect.signature(callback),
                 event_type.__module__,
                 event_type.__qualname__,
             )

@@ -32,7 +32,7 @@ class TestStatelessGuildChunkerImpl:
     @pytest.mark.asyncio
     async def test_request_guild_chunk_raises_NotImplementedError(self, component):
         with pytest.raises(NotImplementedError):
-            await component.request_guild_chunk(object())
+            await component.request_guild_members(object())
 
     def test_close(self, component):
         component.close()

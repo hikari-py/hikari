@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import intents as intents_
     from hikari import presences
     from hikari import snowflakes
-    from hikari import users
+    from hikari import users as users_
 
 
 @enum.unique
@@ -359,7 +359,7 @@ class GatewayShard(abc.ABC):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Request for a guild chunk.
@@ -374,7 +374,7 @@ class GatewayShard(abc.ABC):
             If not `builtins.None`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
-        user_ids: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
             If specified, the users to request for.
         nonce: hikari.undefined.UndefinedOr[builtins.str]
             If specified, the nonce to be sent with guild chunks.

@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import iterators
     from hikari import snowflakes
-    from hikari import users
+    from hikari import users as users_
     from hikari.events import shard_events
 
 
@@ -99,7 +99,7 @@ class GuildChunker(abc.ABC):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
         ...
 
@@ -120,14 +120,14 @@ class GuildChunker(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def request_guild_chunk(
+    async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         /,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> str:
         """Request for a guild chunk.
 

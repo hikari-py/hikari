@@ -27,7 +27,9 @@ __all__: typing.Final[typing.List[str]] = ["EventStream"]
 
 import abc
 import asyncio
+import logging
 import typing
+import weakref
 
 from hikari import iterators
 
@@ -39,6 +41,7 @@ if typing.TYPE_CHECKING:
 
 
 EventT = typing.TypeVar("EventT", bound="base_events.Event")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 class Streamer(iterators.LazyIterator[EventT], abc.ABC):
@@ -122,6 +125,21 @@ class Streamer(iterators.LazyIterator[EventT], abc.ABC):
         return
 
 
+def _generate_weak_listener(
+    reference: weakref.WeakMethod,
+) -> typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
+    async def call_weak_method(event: EventT) -> None:
+        method = reference()
+        if method is None:
+            raise TypeError(
+                "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
+            )
+
+        await method(event)
+
+    return call_weak_method
+
+
 class EventStream(Streamer[EventT]):
     """An implementation of an event `Streamer` class.
 
@@ -132,7 +150,7 @@ class EventStream(Streamer[EventT]):
         to the streamer.
     """
 
-    __slots__ = ("_active", "_app", "_event_type", "_filters", "_queue", "_timeout")
+    __slots__ = ("_active", "_app", "_event_type", "_filters", "_queue", "_registered_listener", "_timeout")
 
     def __init__(
         self,
@@ -149,6 +167,10 @@ class EventStream(Streamer[EventT]):
         # We accept `None` to represent unlimited here to be consistent with how `None` is already used to represent
         # unlimited for timeout in other places.
         self._queue: asyncio.Queue[EventT] = asyncio.Queue(limit or 0)
+        self._registered_listener: typing.Optional[
+            typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
+        ] = None
+        # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
     async def _listener(self, event: EventT) -> None:
@@ -178,18 +200,29 @@ class EventStream(Streamer[EventT]):
     def __await__(self) -> typing.Generator[None, None, typing.Sequence[EventT]]:
         return self._await_all().__await__()
 
+    def __del__(self) -> None:
+        # For the sake of protecting highly intelligent people who forget to close this, we register the event listener
+        # with a weakref then try to close this on deletion. While this may lead to their consoles being spammed, this
+        # is a small price to pay as it'll be way more obvious what's wrong than if we just left them with a vague
+        # ominous memory leak.
+        if self._active:
+            _LOGGER.warning("active %r streamer fell out of scope before being closed", self._event_type.__name__)
+            asyncio.ensure_future(self.close())
+
     async def close(self) -> None:
         self._active = False
-        try:
-            self._app.dispatcher.unsubscribe(self._event_type, self._listener)
-        except ValueError:
-            pass
+
+        if self._registered_listener is not None:
+            try:
+                self._app.dispatcher.unsubscribe(self._event_type, self._registered_listener)
+            except ValueError:
+                pass
 
     def filter(
         self,
         *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
         **attrs: typing.Any,
-    ) -> iterators.LazyIterator[EventT]:
+    ) -> typing.Union[EventStream[EventT], iterators.LazyIterator[EventT]]:
         if self._active:
             return super().filter(*predicates, **attrs)
 
@@ -203,5 +236,12 @@ class EventStream(Streamer[EventT]):
 
     async def open(self) -> None:
         if not self._active:
-            self._app.dispatcher.subscribe(self._event_type, self._listener)
+            # For the sake of protecting highly intelligent people who forget to close this, we register the event
+            # listener with a weakref then try to close this on deletion. While this may lead to their consoles being
+            # spammed, this is a small price to pay as it'll be way more obvious what's wrong than if we just left them
+            # with a vague ominous memory leak.
+            reference = weakref.WeakMethod(self._listener)  # type: ignore[arg-type]
+            listener = _generate_weak_listener(reference)
+            self._registered_listener = listener
+            self._app.dispatcher.subscribe(self._event_type, listener)
             self._active = True

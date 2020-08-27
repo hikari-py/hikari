@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import config
     from hikari import guilds
-    from hikari import users
+    from hikari import users as users_
 
 
 @typing.final
@@ -430,7 +430,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
@@ -440,13 +440,13 @@ class GatewayShardImplV6(shard.GatewayShard):
             if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
-        if user_ids is not undefined.UNDEFINED and (query or limit):
+        if users is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
 
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if user_ids is not undefined.UNDEFINED and len(user_ids) > 100:
+        if users is not undefined.UNDEFINED and len(users) > 100:
             raise ValueError("'users' is limited to 100 users")
 
         message = "requesting guild members for guild %s"
@@ -459,7 +459,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         payload.put("presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
-        payload.put_snowflake_array("user_ids", user_ids)
+        payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
         await self._send_json({"op": self._Opcode.REQUEST_GUILD_MEMBERS, "d": payload})

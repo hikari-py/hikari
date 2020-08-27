@@ -868,7 +868,7 @@ class TestRequestGuildMembers:
         client._intents = intents.Intents.GUILD_INTEGRATIONS
 
         with pytest.raises(ValueError, match="Cannot specify limit/query with users"):
-            await client.request_guild_members(123, user_ids=[], **kwargs)
+            await client.request_guild_members(123, users=[], **kwargs)
 
     @pytest.mark.parametrize("limit", [-1, 101])
     async def test_when_limit_under_0_or_over_100(self, client, limit):
@@ -881,7 +881,7 @@ class TestRequestGuildMembers:
         client._intents = None
 
         with pytest.raises(ValueError, match="'users' is limited to 100 users"):
-            await client.request_guild_members(123, user_ids=range(101))
+            await client.request_guild_members(123, users=range(101))
 
     async def test_request_guild_members(self, client):
         client._intents = None

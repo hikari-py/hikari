@@ -35,7 +35,6 @@ import typing
 import attr
 
 from hikari import intents as intents_
-from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import chunker
@@ -48,7 +47,7 @@ from hikari.utilities import mapping
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import traits
-    from hikari import users
+    from hikari import users as users_
     from hikari.api import shard as gateway_shard
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
@@ -77,7 +76,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         "_missing_chunks",
         "_nonce",
         "_query",
-        "_user_ids",
+        "_users",
     )
 
     def __init__(
@@ -90,7 +89,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(app=app, event_type=shard_events.MemberChunkEvent, limit=limit, timeout=timeout)
         self._guild_id = guild_id
@@ -99,7 +98,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         self._missing_chunks: typing.Optional[typing.MutableSequence[int]] = None
         self._nonce = date.uuid()
         self._query = query
-        self._user_ids = user_ids
+        self._users = users
         self.filter(lambda event: event.nonce == self._nonce)
 
     async def _listener(self, event: shard_events.MemberChunkEvent) -> None:
@@ -117,7 +116,10 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
             pass
 
         if not self._missing_chunks:
-            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._listener)
+            # While it is tempting to just close the stream here, that'd lead to a type error being
+            # raised the next time they try to iterate over it.
+            assert self._registered_listener is not None
+            self._app.dispatcher.unsubscribe(shard_events.MemberChunkEvent, self._registered_listener)
 
     async def __anext__(self) -> shard_events.MemberChunkEvent:
         if not self._active:
@@ -137,12 +139,13 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         await super().open()
 
         if not started:
-            await self._app.shards[_get_shard_id(self._app, self._guild_id)].request_guild_members(
+            shard_id = _get_shard_id(self._app, self._guild_id)
+            await self._app.shards[shard_id].request_guild_members(
                 guild=self._guild_id,
                 include_presences=self._include_presences,
                 query=self._query,
                 limit=self._limit,
-                user_ids=self._user_ids,
+                users=self._users,
                 nonce=self._nonce,
             )
 
@@ -159,8 +162,8 @@ class _TrackedChunks:
 
     def __copy__(self) -> _TrackedChunks:
         chunks = attr_extensions.copy_attrs(self)
-        chunks.missing_chunks = list(chunks.missing_chunks) if chunks.missing_chunks is not None else None
-        chunks.not_found = list(chunks.not_found)
+        chunks.missing_chunks = list(self.missing_chunks) if self.missing_chunks is not None else None
+        chunks.not_found = list(self.not_found)
         return chunks
 
     @property
@@ -193,7 +196,8 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         if include_presences is not undefined.UNDEFINED:
             return include_presences
 
-        shard = self._app.shards[_get_shard_id(self._app, guild_id)]
+        shard_id = _get_shard_id(self._app, guild_id)
+        shard = self._app.shards[shard_id]
         return shard.intents is None or bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
 
     def fetch_members_for_guild(
@@ -204,8 +208,8 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+    ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
         guild_id = snowflakes.Snowflake(guild)
         return ChunkStream(
             app=self._app,
@@ -214,7 +218,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             include_presences=self._default_include_presences(guild_id, include_presences),
             query_limit=limit,
             query=query,
-            user_ids=user_ids,
+            users=users,
         )
 
     async def get_chunk_status(self, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
@@ -260,14 +264,14 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         event_tracker.missing_chunks.remove(event.chunk_index)
         event_tracker.last_received = time.monotonic_ns()
 
-    async def request_guild_chunk(
+    async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         /,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> str:
         guild_id = snowflakes.Snowflake(guild)
         shard_id = _get_shard_id(self._app, guild_id)
@@ -283,7 +287,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             limit=limit,
             nonce=nonce,
             query=query,
-            user_ids=user_ids,
+            users=users,
         )
         return nonce
 

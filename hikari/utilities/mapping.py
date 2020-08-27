@@ -49,20 +49,14 @@ class MRUMutableMapping(typing.MutableMapping[KeyT, ValueT]):
     ----------
     expiry : datetime.timedelta
         The timedelta of how long entries should be stored for before removal.
-    empty_callback : typing.Callable[[], builtins.None] or builtins.None
-        A function to call when this mapping is left empty by a garbage collection
-        sweep that takes no arguments or `builtins.None`.
     """
 
-    __slots__ = ("_data", "_expiry", "_empty_callback")
+    __slots__ = ("_data", "_expiry")
 
-    def __init__(
-        self, expiry: datetime.timedelta, *, empty_callback: typing.Optional[typing.Callable[[], None]] = None,
-    ) -> None:
+    def __init__(self, expiry: datetime.timedelta,) -> None:
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 
-        self._empty_callback = empty_callback
         self._expiry: float = expiry.total_seconds()
         self._data: typing.Dict[KeyT, typing.Tuple[float, ValueT]] = {}
 
@@ -82,11 +76,9 @@ class MRUMutableMapping(typing.MutableMapping[KeyT, ValueT]):
         return self._data[key][1]
 
     def __iter__(self) -> typing.Iterator[KeyT]:
-        self._garbage_collect()
         return iter(self._data)
 
     def __len__(self) -> int:
-        self._garbage_collect()
         return len(self._data)
 
     def __setitem__(self, key: KeyT, value: ValueT) -> None:

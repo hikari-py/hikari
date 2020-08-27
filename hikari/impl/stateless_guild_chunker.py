@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import iterators
     from hikari import snowflakes
-    from hikari import users
+    from hikari import users as users_
     from hikari.events import shard_events
 
 
@@ -57,7 +57,7 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
         return iterators.FlatLazyIterator([])
 
@@ -73,14 +73,14 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
     async def on_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
         return None
 
-    async def request_guild_chunk(
+    async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         /,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> typing.NoReturn:
         raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
