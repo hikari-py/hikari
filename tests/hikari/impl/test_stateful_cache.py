@@ -170,7 +170,9 @@ class TestStatefulCacheImpl:
         assert cache_impl.get_private_text_channel(snowflakes.Snowflake(561243)) is None
 
     def test_get_private_text_channel_view(self, cache_impl):
-        mock_channel_data_1 = mock.Mock(hikari.utilities.cache.PrivateTextChannelData,)
+        mock_channel_data_1 = mock.Mock(
+            hikari.utilities.cache.PrivateTextChannelData,
+        )
         mock_channel_data_2 = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
         mock_channel_1 = mock.Mock(channels.PrivateTextChannel)
         mock_channel_2 = mock.Mock(channels.PrivateTextChannel)
@@ -979,7 +981,11 @@ class TestStatefulCacheImpl:
             target_user_id=snowflakes.Snowflake(5341231),
             inviter_id=snowflakes.Snowflake(12354123),
         )
-        mock_invite_data_2 = mock.Mock(hikari.utilities.cache.InviteData, target_user_id=None, inviter_id=None,)
+        mock_invite_data_2 = mock.Mock(
+            hikari.utilities.cache.InviteData,
+            target_user_id=None,
+            inviter_id=None,
+        )
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
         mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=5)
@@ -1024,7 +1030,11 @@ class TestStatefulCacheImpl:
             target_user_id=snowflakes.Snowflake(5341231),
             inviter_id=snowflakes.Snowflake(12354123),
         )
-        mock_invite_data_2 = mock.Mock(hikari.utilities.cache.InviteData, target_user_id=None, inviter_id=None,)
+        mock_invite_data_2 = mock.Mock(
+            hikari.utilities.cache.InviteData,
+            target_user_id=None,
+            inviter_id=None,
+        )
         mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
@@ -1137,7 +1147,10 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
         assert cache_impl.clear_invites_for_channel(
             snowflakes.Snowflake(999888777), snowflakes.Snowflake(34123123)
-        ) == {"oeoeoeoeooe": mock_invite_1, "owowowowoowowow": mock_invite_2,}
+        ) == {
+            "oeoeoeoeooe": mock_invite_1,
+            "owowowowoowowow": mock_invite_2,
+        }
         assert cache_impl._guild_entries[snowflakes.Snowflake(999888777)].invites == ["oeoeoeoeoeoeoe"]
         assert cache_impl._invite_entries == {
             "oeoeoeoeoeoeoe": mock_other_invite_data,
@@ -1434,7 +1447,10 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
         assert cache_impl.get_invites_view_for_channel(
             snowflakes.Snowflake(83452134), snowflakes.Snowflake(987987)
-        ) == {"blamBang": mock_invite_1, "bingBong": mock_invite_2,}
+        ) == {
+            "blamBang": mock_invite_1,
+            "bingBong": mock_invite_2,
+        }
         cache_impl._build_invite.assert_has_calls(
             [
                 mock.call(

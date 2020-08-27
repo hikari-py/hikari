@@ -207,7 +207,9 @@ def test_generate_deep_copier():
     memo = {123: object()}
 
     with mock.patch.object(
-        stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo, copied_end, copied_blam],
+        stdlib_copy,
+        "deepcopy",
+        side_effect=[copied_recursor, copied_field, copied_foo, copied_end, copied_blam],
     ):
         attr_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
@@ -243,7 +245,9 @@ def test_generate_deep_copier_with_only_init_attributes():
     memo = {123: object()}
 
     with mock.patch.object(
-        stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo],
+        stdlib_copy,
+        "deepcopy",
+        side_effect=[copied_recursor, copied_field, copied_foo],
     ):
         attr_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
@@ -275,12 +279,17 @@ def test_generate_deep_copier_with_only_non_init_attributes():
     memo = {123: object()}
 
     with mock.patch.object(
-        stdlib_copy, "deepcopy", side_effect=[copied_end, copied_blam],
+        stdlib_copy,
+        "deepcopy",
+        side_effect=[copied_end, copied_blam],
     ):
         attr_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
         stdlib_copy.deepcopy.assert_has_calls(
-            [mock.call(old_model_fields.end, memo), mock.call(old_model_fields._blam, memo),]
+            [
+                mock.call(old_model_fields.end, memo),
+                mock.call(old_model_fields._blam, memo),
+            ]
         )
 
     assert model.end is copied_end
@@ -296,7 +305,9 @@ def test_generate_deep_copier_with_no_attributes():
     memo = {123: object()}
 
     with mock.patch.object(
-        stdlib_copy, "deepcopy", side_effect=NotImplementedError,
+        stdlib_copy,
+        "deepcopy",
+        side_effect=NotImplementedError,
     ):
         attr_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 

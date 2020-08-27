@@ -183,7 +183,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     @staticmethod
     def _init_state_update_predicate(
-        guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake,
+        guild_id: snowflakes.Snowflake,
+        user_id: snowflakes.Snowflake,
     ) -> typing.Callable[[voice_events.VoiceStateUpdateEvent], bool]:
         def predicate(event: voice_events.VoiceStateUpdateEvent) -> bool:
             return event.state.guild_id == guild_id and event.state.user_id == user_id
@@ -206,7 +207,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
             # Leave the voice channel explicitly, otherwise we will just appear to
             # not leave properly.
             await self._app.shards[connection.shard_id].update_voice_state(
-                guild=connection.guild_id, channel=None,
+                guild=connection.guild_id,
+                channel=None,
             )
 
             _LOGGER.debug(

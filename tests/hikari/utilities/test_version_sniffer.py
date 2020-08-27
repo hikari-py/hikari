@@ -57,7 +57,10 @@ class TestFetchAllReleases:
     async def test_request_is_made(self, client_session_mock):
         await version_sniffer._fetch_all_releases()
         client_session_mock.request.assert_called_once_with(
-            "get", "https://pypi.org/pypi/hikari/json", raise_for_status=True, timeout=aiohttp.ClientTimeout(total=3.0),
+            "get",
+            "https://pypi.org/pypi/hikari/json",
+            raise_for_status=True,
+            timeout=aiohttp.ClientTimeout(total=3.0),
         )
 
     async def test_response_is_populated_with_loose_versions(self, client_session_mock):

@@ -47,7 +47,10 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
     __slots__: typing.Sequence[str] = ("_cache",)
 
     def __init__(
-        self, app: traits.BotAware, cache: cache_.MutableCache, intents: typing.Optional[intents_.Intents],
+        self,
+        app: traits.BotAware,
+        cache: cache_.MutableCache,
+        intents: typing.Optional[intents_.Intents],
     ) -> None:
         self._cache = cache
         super().__init__(app=app, intents=intents)

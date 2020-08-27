@@ -139,7 +139,10 @@ class PermissionOverwrite(snowflakes.Unique):
     """
 
     id: snowflakes.Snowflake = attr.ib(
-        converter=snowflakes.Snowflake, eq=True, hash=True, repr=True,
+        converter=snowflakes.Snowflake,
+        eq=True,
+        hash=True,
+        repr=True,
     )
     """The ID of this entity."""
 
@@ -147,7 +150,11 @@ class PermissionOverwrite(snowflakes.Unique):
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attr.ib(
-        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False,
+        converter=permissions.Permissions,
+        default=permissions.Permissions.NONE,
+        eq=False,
+        hash=False,
+        repr=False,
     )
     """The permissions this overwrite allows."""
 
@@ -481,7 +488,11 @@ class GroupPrivateTextChannel(PrivateChannel):
             return None
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
-            constants.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            channel_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
         )
 
 

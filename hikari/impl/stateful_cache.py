@@ -117,7 +117,8 @@ class StatefulCacheImpl(cache.MutableCache):
         # This is a purely internal cache used for handling the caching and de-duplicating of the unknown custom emojis
         # found attached to cached presence activities.
         self._unknown_custom_emoji_entries: typing.MutableMapping[
-            snowflakes.Snowflake, cache_utility.GenericRefWrapper[emojis.CustomEmoji],
+            snowflakes.Snowflake,
+            cache_utility.GenericRefWrapper[emojis.CustomEmoji],
         ] = {}
         self._user_entries: typing.MutableMapping[
             snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]
@@ -188,7 +189,8 @@ class StatefulCacheImpl(cache.MutableCache):
         cached_channels = cache_utility.copy_mapping(self._private_text_channel_entries)
         cached_users = {user_id: self._user_entries[user_id] for user_id in cached_channels}
         return cache_utility.StatefulCacheMappingView(
-            cached_channels, builder=lambda channel: self._build_private_text_channel(channel, cached_users),
+            cached_channels,
+            builder=lambda channel: self._build_private_text_channel(channel, cached_users),
         )
 
     def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
@@ -242,7 +244,8 @@ class StatefulCacheImpl(cache.MutableCache):
         return emoji.has_been_deleted is True and emoji.ref_count < 1
 
     def _clear_emojis(
-        self, guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        self,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         emoji_ids: typing.Iterable[snowflakes.Snowflake]
         if guild_id is undefined.UNDEFINED:
@@ -577,7 +580,8 @@ class StatefulCacheImpl(cache.MutableCache):
         )
 
     def _clear_invites(  # TODO: split out into two cases (global and specific guild)
-        self, guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        self,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         invite_codes: typing.Iterable[str]
         if guild_id is not undefined.UNDEFINED:
@@ -727,7 +731,10 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._get_invites_view(guild_id=guild_id)
 
     def get_invites_view_for_channel(
-        self, guild_id: snowflakes.Snowflake, channel_id: snowflakes.Snowflake, /,
+        self,
+        guild_id: snowflakes.Snowflake,
+        channel_id: snowflakes.Snowflake,
+        /,
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         guild_entry = self._guild_entries.get(guild_id)
         if guild_entry is None or guild_entry.invites is None:

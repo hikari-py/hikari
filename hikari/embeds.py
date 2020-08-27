@@ -76,7 +76,10 @@ class EmbedResource(files.Resource[AsyncReaderT]):
         return self.resource.filename
 
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False,
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        head_only: bool = False,
     ) -> files.AsyncReaderContextManager[AsyncReaderT]:
         """Produce a stream of data for the resource.
 
@@ -525,7 +528,9 @@ class Embed:
         )
 
         warnings.warn(
-            message, category=errors.HikariWarning, stacklevel=3,
+            message,
+            category=errors.HikariWarning,
+            stacklevel=3,
         )
 
     @property

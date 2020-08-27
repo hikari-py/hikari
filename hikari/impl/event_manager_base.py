@@ -142,7 +142,10 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                     )
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        *,
+        polymorphic: bool = True,
     ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
         if polymorphic:
             listeners: typing.List[event_dispatcher.CallbackT[event_dispatcher.EventT_co]] = []
@@ -175,7 +178,8 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                 del self._listeners[event_type]
 
     def listen(
-        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
+        self,
+        event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
         [event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
         event_dispatcher.CallbackT[event_dispatcher.EventT_co],
@@ -253,7 +257,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                 )
             else:
                 exception_event = base_events.ExceptionEvent(
-                    exception=ex, failed_event=event, failed_callback=callback,
+                    exception=ex,
+                    failed_event=event,
+                    failed_callback=callback,
                 )
 
                 log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error

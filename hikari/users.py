@@ -285,14 +285,20 @@ class User(PartialUser, abc.ABC):
                 ext = "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            user_id=self.id,
+            hash=self.avatar_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
     def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
         """Placeholder default avatar for the user if no avatar is set."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            constants.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png",
+            constants.CDN_URL,
+            discriminator=int(self.discriminator) % 5,
+            file_format="png",
         )
 
 

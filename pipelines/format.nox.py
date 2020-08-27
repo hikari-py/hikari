@@ -84,18 +84,22 @@ LINE_ENDING_PATHS = {
     ".github",
 }
 
+# Black updates (namely 20.8b1), can occasionally result in mass reformats, so
+# we baseline a specific version of black to prevent this from happening.
+BLACK_VERSION = "20.8b1"
+
 
 @nox.session(reuse_venv=True)
 def reformat_code(session: nox.Session) -> None:
     """Remove trailing whitespace in source, run isort and then run black code formatter."""
     remove_trailing_whitespaces()
 
-    # Isort
+    # isort
     session.install("isort")
     session.run("isort", *REFORMATING_PATHS)
 
-    # Black
-    session.install("black")
+    # black
+    session.install("-U", f"black=={BLACK_VERSION}")
     session.run("black", *REFORMATING_PATHS)
 
 

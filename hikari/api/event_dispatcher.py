@@ -207,7 +207,10 @@ class EventDispatcher(abc.ABC):
 
     @abc.abstractmethod
     def get_listeners(
-        self, event_type: typing.Type[EventT_co], *, polymorphic: bool = True,
+        self,
+        event_type: typing.Type[EventT_co],
+        *,
+        polymorphic: bool = True,
     ) -> typing.Collection[CallbackT[EventT_co]]:
         """Get the listeners for a given event type, if there are any.
 
@@ -237,7 +240,8 @@ class EventDispatcher(abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self, event_type: typing.Optional[typing.Type[EventT_co]] = None,
+        self,
+        event_type: typing.Optional[typing.Type[EventT_co]] = None,
     ) -> typing.Callable[[CallbackT[EventT_co]], CallbackT[EventT_co]]:
         """Generate a decorator to subscribe a callback to an event type.
 

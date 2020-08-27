@@ -266,7 +266,10 @@ class Cache(abc.ABC):
 
     @abc.abstractmethod
     def get_invites_view_for_channel(
-        self, guild_id: snowflakes.Snowflake, channel_id: snowflakes.Snowflake, /,
+        self,
+        guild_id: snowflakes.Snowflake,
+        channel_id: snowflakes.Snowflake,
+        /,
     ) -> CacheView[str, invites.InviteWithMetadata]:
         """Get a view of the invite objects in the cache for a specified channel.
 
@@ -1548,7 +1551,9 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def clear_voice_states_for_channel(
-        self, guild_id: snowflakes.Snowflake, channel_id: snowflakes.Snowflake,
+        self,
+        guild_id: snowflakes.Snowflake,
+        channel_id: snowflakes.Snowflake,
     ) -> CacheView[snowflakes.Snowflake, voices.VoiceState]:
         """Remove the voice state objects cached for a specific channel.
 

@@ -360,7 +360,11 @@ class Team(snowflakes.Unique):
             return None
 
         return routes.CDN_TEAM_ICON.compile_to_file(
-            constants.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            team_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
         )
 
 
@@ -373,7 +377,9 @@ class Application(snowflakes.Unique):
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.ib(
-        eq=True, hash=True, repr=True,
+        eq=True,
+        hash=True,
+        repr=True,
     )
     """The ID of this entity."""
 
@@ -480,7 +486,11 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
-            constants.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            application_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
         )
 
     @property
@@ -521,5 +531,9 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            constants.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext,
+            constants.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=ext,
         )

@@ -57,7 +57,12 @@ class TestMessageUpdateEvent:
     def event(self):
         class MessageUpdateEvent(message_events.MessageUpdateEvent):
             app = None
-            message = mock.Mock(spec_set=messages.Message, author=mock.Mock(spec_set=users.PartialUser,))
+            message = mock.Mock(
+                spec_set=messages.Message,
+                author=mock.Mock(
+                    spec_set=users.PartialUser,
+                ),
+            )
             shard = object()
             channel = object()
 

@@ -61,7 +61,10 @@ class TestFlag:
         # All present
         assert val.has_any(TestFlagType.FOO, TestFlagType.BAR, TestFlagType.BAZ, TestFlagType.BORK)
         # One present, one not
-        assert val.has_any(TestFlagType.FOO, TestFlagType.QUX,)
+        assert val.has_any(
+            TestFlagType.FOO,
+            TestFlagType.QUX,
+        )
 
     def test_has_any_negative_case(self):
         class TestFlagType(flag.Flag):
@@ -134,7 +137,10 @@ class TestFlag:
         # All present
         assert not val.has_none(TestFlagType.FOO, TestFlagType.BAR, TestFlagType.BAZ, TestFlagType.BORK)
         # One present, one not
-        assert not val.has_none(TestFlagType.FOO, TestFlagType.QUX,)
+        assert not val.has_none(
+            TestFlagType.FOO,
+            TestFlagType.QUX,
+        )
 
     def test_add_operator(self):
         class TestFlagType(flag.Flag):

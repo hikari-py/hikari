@@ -553,7 +553,8 @@ class BotApp(
             await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     def listen(
-        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
+        self,
+        event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
     ) -> typing.Callable[
         [event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
         event_dispatcher.CallbackT[event_dispatcher.EventT_co],
@@ -562,7 +563,10 @@ class BotApp(
         return self.dispatcher.listen(event_type)
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True,
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        *,
+        polymorphic: bool = True,
     ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
         # <<inherited docstring from event_dispatcher.EventDispatcher>>
         return self.dispatcher.get_listeners(event_type, polymorphic=polymorphic)
@@ -721,7 +725,10 @@ class BotApp(
             asyncio.get_event_loop().set_debug(True)
 
         _LOGGER.debug(
-            "loop: %s, task factory: %s, policy: %s", loop, loop.get_task_factory(), asyncio.get_event_loop_policy(),
+            "loop: %s, task factory: %s, policy: %s",
+            loop,
+            loop.get_task_factory(),
+            asyncio.get_event_loop_policy(),
         )
 
         if slow_callback_duration and slow_callback_duration > 0:

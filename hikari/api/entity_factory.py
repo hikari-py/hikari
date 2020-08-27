@@ -642,7 +642,10 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_role(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake,
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: snowflakes.Snowflake,
     ) -> guild_models.Role:
         """Parse a raw payload from Discord into a role object.
 

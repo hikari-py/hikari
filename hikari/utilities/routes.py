@@ -183,7 +183,10 @@ class CDNRoute:
     """Template string for this endpoint."""
 
     valid_formats: typing.AbstractSet[str] = attr.ib(
-        converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False,
+        converter=_cdn_valid_formats_converter,
+        eq=False,
+        hash=False,
+        repr=False,
     )
     """Valid file formats for this endpoint."""
 
@@ -196,7 +199,12 @@ class CDNRoute:
     """`builtins.True` if a `size` param can be specified, or `builtins.False` otherwise."""
 
     def compile(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any,
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        size: typing.Optional[int] = None,
+        **kwargs: typing.Any,
     ) -> str:
         """Generate a full CDN url from this endpoint.
 
@@ -258,7 +266,12 @@ class CDNRoute:
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any,
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        size: typing.Optional[int] = None,
+        **kwargs: typing.Any,
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a `files.URL`."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))

@@ -530,7 +530,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _set_guild_channel_attributes(
-        self, payload: data_binding.JSONObject, *, guild_id: undefined.UndefinedOr[snowflakes.Snowflake],
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake],
     ) -> _GuildChannelFields:
         if guild_id is undefined.UNDEFINED:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -748,7 +751,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 )
 
             author = embed_models.EmbedAuthor(
-                name=author_payload.get("name"), url=author_payload.get("url"), icon=icon,
+                name=author_payload.get("name"),
+                url=author_payload.get("url"),
+                icon=icon,
             )
 
         footer: typing.Optional[embed_models.EmbedFooter] = None
@@ -766,7 +771,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             fields = []
             for field_payload in fields_array:
                 field = embed_models.EmbedField(
-                    name=field_payload["name"], value=field_payload["value"], inline=field_payload.get("inline", False),
+                    name=field_payload["name"],
+                    value=field_payload["value"],
+                    inline=field_payload.get("inline", False),
                 )
                 fields.append(field)
 
@@ -786,7 +793,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def serialize_embed(  # noqa: C901
-        self, embed: embed_models.Embed,
+        self,
+        embed: embed_models.Embed,
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
 
         payload: data_binding.JSONObject = {}
@@ -949,7 +957,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_concurrency=max(session_start_limit_payload.get("max_concurrency", 0), 1),
         )
         return gateway_models.GatewayBot(
-            url=payload["url"], shard_count=int(payload["shards"]), session_start_limit=session_start_limit,
+            url=payload["url"],
+            shard_count=int(payload["shards"]),
+            session_start_limit=session_start_limit,
         )
 
     ################
@@ -999,7 +1009,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_role(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake,
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: snowflakes.Snowflake,
     ) -> guild_models.Role:
         return guild_models.Role(
             app=self._app,
@@ -1020,7 +1033,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         account_payload = payload["account"]
         account = guild_models.IntegrationAccount(id=account_payload["id"], name=account_payload["name"])
         return _IntegrationFields(
-            id=snowflakes.Snowflake(payload["id"]), name=payload["name"], type=payload["type"], account=account,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            type=payload["type"],
+            account=account,
         )
 
     def deserialize_partial_integration(self, payload: data_binding.JSONObject) -> guild_models.PartialIntegration:
@@ -1074,7 +1090,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 features.append(feature)
 
         return _PartialGuildFields(
-            id=snowflakes.Snowflake(payload["id"]), name=payload["name"], icon_hash=payload["icon"], features=features,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=features,
         )
 
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:

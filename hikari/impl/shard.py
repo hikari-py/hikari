@@ -382,7 +382,10 @@ class GatewayShardImplV6(shard.GatewayShard):
         status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
         presence_payload = self._serialize_and_store_presence_payload(
-            idle_since=idle_since, afk=afk, activity=activity, status=status,
+            idle_since=idle_since,
+            afk=afk,
+            activity=activity,
+            status=status,
         )
         payload: data_binding.JSONObject = {"op": self._Opcode.PRESENCE_UPDATE, "d": presence_payload}
 
@@ -489,7 +492,10 @@ class GatewayShardImplV6(shard.GatewayShard):
         except aiohttp.ClientConnectorError as ex:
             # TODO: will I need to reset the session_id and seq ever here? I don't think I do, but I should check
             self._logger.error(
-                "failed to connect to Discord because %s.%s: %s", type(ex).__module__, type(ex).__qualname__, str(ex),
+                "failed to connect to Discord because %s.%s: %s",
+                type(ex).__module__,
+                type(ex).__qualname__,
+                str(ex),
             )
 
         except self._InvalidSession as ex:
@@ -524,7 +530,9 @@ class GatewayShardImplV6(shard.GatewayShard):
         except errors.GatewayServerClosedConnectionError as ex:
             if ex.can_reconnect:
                 self._logger.warning(
-                    "server closed the connection with %s (%s), will attempt to reconnect", ex.code, ex.reason,
+                    "server closed the connection with %s (%s), will attempt to reconnect",
+                    ex.code,
+                    ex.reason,
                 )
             else:
                 self._seq = None
@@ -740,7 +748,10 @@ class GatewayShardImplV6(shard.GatewayShard):
                     self._user_id = snowflakes.Snowflake(user_id)
                     tag = user_pl["username"] + "#" + user_pl["discriminator"]
                     self._logger.info(
-                        "shard is ready [session:%s, user_id:%s, tag:%s]", self._session_id, user_id, tag,
+                        "shard is ready [session:%s, user_id:%s, tag:%s]",
+                        self._session_id,
+                        user_id,
+                        tag,
                     )
                     self._handshake_event.set()
                     self._session_started_at = date.monotonic()
@@ -790,7 +801,11 @@ class GatewayShardImplV6(shard.GatewayShard):
             n, string = await self._receive_zlib_message(message.data)
             payload = data_binding.load_json(string)  # type: ignore[assignment]
             self._log_debug_payload(
-                string, "received %s zlib encoded packets [t:%s, op:%s]", n, payload.get("t"), payload.get("op"),
+                string,
+                "received %s zlib encoded packets [t:%s, op:%s]",
+                n,
+                payload.get("t"),
+                payload.get("op"),
             )
             return payload
 
