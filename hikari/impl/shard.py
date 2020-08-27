@@ -31,6 +31,7 @@ __all__: typing.Final[typing.List[str]] = [
 import asyncio
 import datetime
 import enum
+import http
 import logging
 import random
 import typing
@@ -490,12 +491,23 @@ class GatewayShardImplV6(shard.GatewayShard):
             return False
 
         except aiohttp.ClientConnectorError as ex:
-            # TODO: will I need to reset the session_id and seq ever here? I don't think I do, but I should check
             self._logger.error(
                 "failed to connect to Discord because %s.%s: %s",
                 type(ex).__module__,
                 type(ex).__qualname__,
                 str(ex),
+            )
+
+        except aiohttp.WSServerHandshakeError as ex:
+            reason = (
+                http.HTTPStatus(ex.status) if ex.status in http.HTTPStatus.__members__.values() else "Unknown Status"
+            )
+
+            self._logger.error(
+                "Discord produced a %s %s response when attempting to upgrade to a websocket: %r",
+                ex.status,
+                reason,
+                ex.message,
             )
 
         except self._InvalidSession as ex:
