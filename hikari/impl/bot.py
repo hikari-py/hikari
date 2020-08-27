@@ -110,15 +110,17 @@ class BotApp(
         The initial time to show as being idle since, or `builtins.None` if not
         idle, for each shard. Defaults to `builtins.None`.
     initial_is_afk : builtins.bool
-        If `builtins.True`, each shard will appear as being AFK on startup. If `builtins.False`,
-        each shard will appear as _not_ being AFK. Defaults to `builtins.False`
+        If `builtins.True`, each shard will appear as being AFK on startup. If
+        `builtins.False`, each shard will appear as _not_ being AFK. Defaults to
+        `builtins.False`.
     intents : typing.Optional[hikari.intents.Intents]
-        The intents to use for each shard. If `builtins.None`, then no intents
-        are passed. Note that on the version `7` gateway, this will cause an
-        immediate connection close with an error code.
+        The intents to use for each shard. The default for this is to enable
+        all intents that do not require opting-in to privileged intents.
 
-        The default for this is to enable all intents that do not require
-        privileges.
+        Using `builtins.None` will disable the use of intents, but this is now
+        deprecated behaviour, and will be removed in a future release. Opting
+        out of intents will also prevent you from using anything newer than the
+        V6 gateway API.
 
         !!! warning
             Enabling privileged intents without enabling the intent
@@ -311,6 +313,12 @@ class BotApp(
         self._cache: cache_.MutableCache
         self._guild_chunker: guild_chunker_.GuildChunker
         self._event_manager: event_manager_base.EventManagerBase
+
+        if intents is None:
+            _LOGGER.warning(
+                "Disabling intents is deprecated behaviour, and will be removed in a future release. "
+                "Please consider updating your application to use intents for future compatibility."
+            )
 
         self._stateless = stateless
         if stateless:
@@ -710,7 +718,7 @@ class BotApp(
         # We always expect this to be populated by now.
         loop: asyncio.AbstractEventLoop
 
-        if self._debug is True:
+        if self._debug:
             _LOGGER.warning("debug mode is enabled, performance may be affected")
 
             # If possible, set the coroutine origin tracking depth to a larger value.
