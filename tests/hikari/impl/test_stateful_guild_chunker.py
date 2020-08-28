@@ -18,7 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import contextlib
 import copy
 import time
 
@@ -181,52 +180,161 @@ class TestStatefulGuildChunkerImpl:
         mock_app.shards[1].intents = intents.Intents.GUILD_MEMBERS | intents.Intents.GUILD_MESSAGES
         assert mock_chunker._default_include_presences(574921006817476608, undefined.UNDEFINED) is False
 
+    @pytest.mark.skip("TODO")
     def test_fetch_members_for_guild(self):
-        ...
-
-    def test_get_chunk_status_for_invalid_nonce(self):
-        ...
-
-    def test_get_chunk_status_for_unknown_shard(self):
-        ...
-
-    def test_get_chunk_status_for_unknown_nonce(self):
-        ...
-
-    def test_get_chunk_status_for_known_nonce(self):
-        ...
-
-    def test_list_chunk_statuses_for_shard_for_known_shard(self):
-        ...
-
-    def test_list_chunk_statuses_for_shard_for_unknown_shard(self):
-        ...
-
-    def test_list_chunk_statuses_for_guild_for_unknown_shard(self):
-        ...
-
-    def test_list_chunk_statuses_for_guild_for_known_shard(self):
-        ...
+        ...  # FIXME: don't forget about this
 
     @pytest.mark.asyncio
-    def test_on_chunk_event_for_unknown_shard(self):
-        ...
+    async def test_get_chunk_status_for_invalid_nonce(self, mock_chunker):
+        assert await mock_chunker.get_chunk_status("nOTMKLSDKJiol435iukj54393") is None
 
     @pytest.mark.asyncio
-    def test_on_chunk_event_for_unknown_nonce(self):
-        ...
+    async def test_get_chunk_status_for_unknown_shard(self, mock_chunker):
+        assert await mock_chunker.get_chunk_status("69420.Godieformeokokok") is None
 
     @pytest.mark.asyncio
-    def test_on_chunk_event_when_initial_tracking_information_not_set(self):
-        ...
+    async def test_get_chunk_status_for_unknown_nonce(self, mock_chunker):
+        mock_chunker._tracked = {1: {"okok": object()}}
+        assert await mock_chunker.get_chunk_status("1.asioodsksoosaoso") is None
 
     @pytest.mark.asyncio
-    def test_on_chunk_event_when_initial_tracking_information_set(self):
-        ...
+    async def test_get_chunk_status_for_known_nonce(self, mock_chunker):
+        mock_tracked_info = mock.MagicMock()
+        mock_chunker._tracked = {1: {"1.okokokokokok": mock_tracked_info}}
+        result = await mock_chunker.get_chunk_status("1.okokokokokok")
+        assert result == mock_tracked_info
+        assert result is not mock_tracked_info
 
     @pytest.mark.asyncio
-    async def test_request_guild_members_when_shard_not_previously_tracked_without_optionals(self, mock_chunker, mock_app):
-        mock_app.shards[2].intents= intents.Intents.GUILD_MESSAGES
+    async def test_list_chunk_statuses_for_shard_for_known_shard(self, mock_chunker):
+        mock_tracked_info_0 = mock.MagicMock()
+        mock_tracked_info_1 = mock.MagicMock()
+        mock_tracked_info_2 = mock.MagicMock()
+        mock_chunker._tracked = {
+            4: {"4.okok": mock_tracked_info_0, "4.blampow": mock_tracked_info_1, "4.byebye": mock_tracked_info_2}
+        }
+        result = await mock_chunker.list_chunk_statuses_for_shard(4)
+
+        assert result == (mock_tracked_info_0, mock_tracked_info_1, mock_tracked_info_2)
+        assert result[0] is not mock_tracked_info_0
+        assert result[1] is not mock_tracked_info_1
+        assert result[2] is not mock_tracked_info_2
+
+    @pytest.mark.asyncio
+    async def test_list_chunk_statuses_for_shard_for_unknown_shard(self, mock_chunker):
+        assert await mock_chunker.list_chunk_statuses_for_shard(696969) == ()
+
+    @pytest.mark.asyncio
+    async def test_list_chunk_statuses_for_guild_for_unknown_shard(self, mock_chunker):
+        assert await mock_chunker.list_chunk_statuses_for_guild(379953393319542784) == ()
+
+    @pytest.mark.asyncio
+    async def test_list_chunk_statuses_for_guild_for_known_shard(self, mock_chunker):
+        mock_tracked_info_0 = mock.MagicMock(
+            stateful_guild_chunker._TrackedChunks, guild_id=snowflakes.Snowflake(379953393319542784)
+        )
+        mock_tracked_info_1 = mock.MagicMock(
+            stateful_guild_chunker._TrackedChunks, guild_id=snowflakes.Snowflake(379953393319542784)
+        )
+        mock_chunker._tracked = {
+            0: {
+                "0.owowo": mock_tracked_info_0,
+                "0.game": mock.Mock(stateful_guild_chunker._TrackedChunks, guild_id=snowflakes.Snowflake(45123)),
+                "0.blam": mock_tracked_info_1,
+                "0.pow": mock.Mock(stateful_guild_chunker._TrackedChunks, guild_id=snowflakes.Snowflake(53123)),
+            }
+        }
+        result = await mock_chunker.list_chunk_statuses_for_guild(379953393319542784)
+        assert result == (mock_tracked_info_0, mock_tracked_info_1)
+        assert result[0] is not mock_tracked_info_0
+        assert result[1] is not mock_tracked_info_1
+
+    @pytest.mark.asyncio
+    async def test_on_chunk_event_for_unknown_shard(self, mock_chunker):
+        event = hikari_test_helpers.stub_class(
+            shard_events.MemberChunkEvent, shard=mock.Mock(shard.GatewayShardImpl, id=42), nonce="42.hiebye"
+        )
+        assert await mock_chunker.on_chunk_event(event) is None
+        assert mock_chunker._tracked == {}
+
+    @pytest.mark.asyncio
+    async def test_on_chunk_event_for_unknown_nonce(self, mock_chunker):
+        event = hikari_test_helpers.stub_class(
+            shard_events.MemberChunkEvent, shard=mock.Mock(shard.GatewayShardImpl, id=42), nonce="42.hiebye"
+        )
+        mock_tracker = object()
+        mock_chunker._tracked = {42: {"42.BYE": mock_tracker}}
+
+        assert await mock_chunker.on_chunk_event(event) is None
+        assert mock_chunker._tracked == {42: {"42.BYE": mock_tracker}}
+
+    @pytest.mark.asyncio
+    async def test_on_chunk_event_when_initial_tracking_information_not_set(self, mock_chunker, mock_app):
+        event = shard_events.MemberChunkEvent(
+            app=mock_app,
+            shard=mock.Mock(shard.GatewayShardImpl, id=2),
+            guild_id=snowflakes.Snowflake(115590097100865541),
+            members={id_: object() for id_ in range(1, 101)},
+            chunk_index=5,
+            chunk_count=10,
+            not_found=[snowflakes.Snowflake(43234)],
+            presences={},
+            nonce="2.billnye",
+        )
+        tracker = stateful_guild_chunker._TrackedChunks(
+            nonce="4.hiebye", guild_id=snowflakes.Snowflake(140502780547694592)
+        )
+        mock_chunker._tracked = {2: {"2.blbll": object(), "2.billnye": tracker}}
+
+        with mock.patch.object(time, "monotonic_ns", return_value=4242):
+            assert await mock_chunker.on_chunk_event(event) is None
+            time.monotonic_ns.assert_called_once()
+
+        assert mock_chunker._tracked[2]["2.billnye"].average_chunk_size == 100
+        assert mock_chunker._tracked[2]["2.billnye"].chunk_count == 10
+        assert mock_chunker._tracked[2]["2.billnye"].missing_chunks == [0, 1, 2, 3, 4, 6, 7, 8, 9]
+        assert mock_chunker._tracked[2]["2.billnye"].last_received == 4242
+        assert mock_chunker._tracked[2]["2.billnye"].not_found == [snowflakes.Snowflake(43234)]
+
+    @pytest.mark.asyncio
+    async def test_on_chunk_event_when_initial_tracking_information_set(self, mock_chunker):
+        event = hikari_test_helpers.stub_class(
+            shard_events.MemberChunkEvent,
+            shard=mock.Mock(shard.GatewayShardImpl, id=4),
+            nonce="4.hiebye",
+            not_found=[snowflakes.Snowflake(54123123), snowflakes.Snowflake(65234)],
+            chunk_index=6,
+        )
+        tracker = stateful_guild_chunker._TrackedChunks(
+            nonce="4.hiebye",
+            guild_id=snowflakes.Snowflake(140502780547694592),
+            average_chunk_size=150,
+            chunk_count=11,
+            last_received=53123123,
+            missing_chunks=[2, 5, 6, 7, 8, 9],
+            not_found=[snowflakes.Snowflake(54123)],
+        )
+        mock_chunker._tracked[4] = {"4.hiebye": tracker, "4.eee": object()}
+
+        with mock.patch.object(time, "monotonic_ns", return_value=5555555555):
+            assert await mock_chunker.on_chunk_event(event) is None
+            time.monotonic_ns.assert_called_once()
+
+        assert mock_chunker._tracked[4]["4.hiebye"].average_chunk_size == 150
+        assert mock_chunker._tracked[4]["4.hiebye"].chunk_count == 11
+        assert mock_chunker._tracked[4]["4.hiebye"].missing_chunks == [2, 5, 7, 8, 9]
+        assert mock_chunker._tracked[4]["4.hiebye"].last_received == 5555555555
+        assert mock_chunker._tracked[4]["4.hiebye"].not_found == [
+            snowflakes.Snowflake(54123),
+            snowflakes.Snowflake(54123123),
+            snowflakes.Snowflake(65234),
+        ]
+
+    @pytest.mark.asyncio
+    async def test_request_guild_members_when_shard_not_previously_tracked_without_optionals(
+        self, mock_chunker, mock_app
+    ):
+        mock_app.shards[2].intents = intents.Intents.GUILD_MESSAGES
 
         with mock.patch.object(stateful_guild_chunker, "_random_nonce", return_value="NonceNonceNonceNonce"):
             result = await mock_chunker.request_guild_members(
@@ -245,24 +353,27 @@ class TestStatefulGuildChunkerImpl:
             limit=0,
             nonce="2.NonceNonceNonceNonce",
             query="",
-            users=undefined.UNDEFINED
+            users=undefined.UNDEFINED,
         )
 
     @pytest.mark.parametrize(
         ("guild"),
-        [hikari_test_helpers.stub_class(guilds.GatewayGuild, id=snowflakes.Snowflake(43123)), 43123, "43123", snowflakes.Snowflake(43123)]
+        [
+            hikari_test_helpers.stub_class(guilds.GatewayGuild, id=snowflakes.Snowflake(43123)),
+            43123,
+            "43123",
+            snowflakes.Snowflake(43123),
+        ],
     )
     @pytest.mark.asyncio
-    async def test_request_guild_members_when_shard_previously_tracked_with_optionals(self, mock_chunker, mock_app, guild):
+    async def test_request_guild_members_when_shard_previously_tracked_with_optionals(
+        self, mock_chunker, mock_app, guild
+    ):
         mock_chunker._tracked[0] = {"randomNonce": object()}
 
         with mock.patch.object(stateful_guild_chunker, "_random_nonce", return_value="AvEryCrYpToGraPhIcNoNcE"):
             result = await mock_chunker.request_guild_members(
-                guild,
-                include_presences=True,
-                limit=53,
-                query="Kiss",
-                users=[snowflakes.Snowflake(1235432)]
+                guild, include_presences=True, limit=53, query="Kiss", users=[snowflakes.Snowflake(1235432)]
             )
 
             stateful_guild_chunker._random_nonce.assert_called_once()
@@ -277,10 +388,8 @@ class TestStatefulGuildChunkerImpl:
             limit=53,
             nonce="0.AvEryCrYpToGraPhIcNoNcE",
             query="Kiss",
-            users=[snowflakes.Snowflake(1235432)]
+            users=[snowflakes.Snowflake(1235432)],
         )
-
-
 
     @pytest.mark.asyncio
     async def test_close(self, mock_chunker):

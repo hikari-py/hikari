@@ -53,7 +53,7 @@ class MRUMutableMapping(typing.MutableMapping[KeyT, ValueT]):
 
     __slots__ = ("_data", "_expiry")
 
-    def __init__(self, expiry: datetime.timedelta,) -> None:
+    def __init__(self, expiry: datetime.timedelta) -> None:
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 

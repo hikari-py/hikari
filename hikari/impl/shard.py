@@ -131,6 +131,7 @@ class GatewayShardImplV6(shard.GatewayShard):
     __slots__: typing.Sequence[str] = (
         "_activity",
         "_backoff",
+        "_chunk_request_ratelimiter",
         "_closing",
         "_compression",
         "_connected_at",
@@ -235,6 +236,11 @@ class GatewayShardImplV6(shard.GatewayShard):
     ) -> None:
         self._activity: undefined.UndefinedNoneOr[presences.Activity] = initial_activity
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        # We limit member chunk requests to a stricter ratelimit of 60 requests per minute as to ensure that chunk
+        # requests don't single-handedly exhaust the request limit when being triggered on mass.
+        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(
+            f"chunking guilds on shard {shard_id}", 60, 60
+        )
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._closing = False
@@ -366,6 +372,9 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def close(self) -> None:
         """Close the websocket."""
+        self._ratelimiter.close()
+        self._chunk_request_ratelimiter.close()
+
         if not self._request_close_event.is_set():
             if self.is_alive:
                 self._logger.info("received request to shut down shard")
@@ -433,6 +442,8 @@ class GatewayShardImplV6(shard.GatewayShard):
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        await self._chunk_request_ratelimiter.acquire()
+
         if self._intents is not None:
             if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)

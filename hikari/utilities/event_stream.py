@@ -210,13 +210,15 @@ class EventStream(Streamer[EventT]):
             asyncio.ensure_future(self.close())
 
     async def close(self) -> None:
-        self._active = False
-
-        if self._registered_listener is not None:
+        if self._active and self._registered_listener is not None:
             try:
                 self._app.dispatcher.unsubscribe(self._event_type, self._registered_listener)
             except ValueError:
                 pass
+
+            self._registered_listener = None
+
+        self._active = False
 
     def filter(
         self,
