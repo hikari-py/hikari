@@ -77,6 +77,15 @@ T = typing.TypeVar("T")
 
 
 def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:
+    """Decorate a callable and profile each invocation of it.
+
+    Profile results are dumped to stdout.
+
+    !!! warning
+        This is NOT part of the public API. It should be considered to be
+        internal detail and will likely be removed without prior warning in
+        the future. You have been warned!
+    """
     import cProfile
 
     if inspect.iscoroutinefunction(call):
@@ -86,7 +95,7 @@ def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:
 
     @functools.wraps(call)
     def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-        print("Profiling", call.__module__ + "." + call.__qualname__)
+        print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T001 print disallowed.
         cProfile.runctx(invoker, globals=globals(), locals=locals(), filename=None, sort=1)
         return locals()["result"]
 

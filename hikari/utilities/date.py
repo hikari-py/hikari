@@ -40,10 +40,11 @@ __all__: typing.Final[typing.List[str]] = [
 
 import datetime
 import email.utils
-import re
 import time
 import typing
 import uuid as uuid_
+
+import ciso8601
 
 Intervalish = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
@@ -65,9 +66,7 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-_ISO_8601_DATE: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
-_ISO_8601_TIME: typing.Final[typing.Pattern[str]] = re.compile(r"T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?", re.I)
-_ISO_8601_TZ: typing.Final[typing.Pattern[str]] = re.compile(r"([+-])(\d{2}):(\d{2})$")
+_ISO_8601_FORMAT: typing.Final[str] = "%Y-%m-%dT%H:%M:%s"
 
 
 def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
@@ -92,42 +91,10 @@ def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
     return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
 
 
-def iso8601_datetime_string_to_datetime(date_string: str, /) -> datetime.datetime:
-    """Parse an ISO 8601 date string into a `datetime.datetime` object.
-
-    Parameters
-    ----------
-    date_string : builtins.str
-        The ISO-8601 compliant date string to parse.
-
-    Returns
-    -------
-    datetime.datetime
-        The ISO-8601 date string as a datetime object.
-
-    References
-    ----------
-    * [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)
-    """
-    year, month, day = map(int, _ISO_8601_DATE.findall(date_string)[0])
-
-    time_part = _ISO_8601_TIME.findall(date_string)[0]
-    hour, minute, second, partial = time_part
-
-    # Pad the millisecond part if it is not in microseconds, otherwise Python will complain.
-    partial = partial + (6 - len(partial)) * "0"
-    hour, minute, second, partial = int(hour), int(minute), int(second), int(partial)
-    if date_string.endswith(("Z", "z")):
-        timezone = datetime.timezone.utc
-    else:
-        sign, tz_hour, tz_minute = _ISO_8601_TZ.findall(date_string)[0]
-        tz_hour, tz_minute = int(tz_hour), int(tz_minute)
-        offset = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
-        if sign == "-":
-            offset = -offset
-        timezone = datetime.timezone(offset)
-
-    return datetime.datetime(year, month, day, hour, minute, second, partial, timezone)
+# Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
+# but somewhat of a subset with some edge cases.
+# See https://tools.ietf.org/html/rfc3339#section-5.6
+iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
