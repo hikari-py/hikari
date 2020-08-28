@@ -107,6 +107,16 @@ jobs:
                   nox --sessions pytest
                   bash <(curl -s https://codecov.io/bash)"
 
+    - name: "Test building pages"
+      if: tag IS NOT present
+      stage: test
+      language: python
+      python: "3.8.5"
+      arch: amd64
+      os: linux
+      install: pip install nox
+      script: nox --sessions pdoc3 pages
+
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
       stage: deploy
@@ -114,8 +124,7 @@ jobs:
       python: "3.8.5"
       arch: amd64
       os: linux
-      script:
-        - bash scripts/deploy.sh
+      script: bash scripts/deploy.sh
       env:
         - secure: "ICEfUzrf35MnvzctBV7t54a98zF08Csx4BR2d+oNZsgNcUyDZu9EwyixaI60/tLYNJU5B7O2EpJI5gcLjFbbdcxFy9SRl7bU/TlmNFMZIFcW/6pfZEt/kXQLenV56WYgKVVoDucejVTrlNaPtJ5bLXPdTAOIyhmA48AzjvxP20gbcsmf11kkd6kCPYWbSK8GGgN4oFAjnD7iDtnaV44VgQ67g9EgbegwlhkInMlQt/xCxlWoRNdBmCFNp20Oh9IzqxlRXdcwif/DJybIXutvmcQh5QeYeB9Kc/uX67BS+qDGmXT5IaAoUh13mXu4B7lOeziQ6I4mLsBPfq3U7sbyi1V8P54n49kuOfyFun97+X01TsaO40LJU0I7sfA4Z97djF8nnbjSpQW80dciOWlzNmNfz3e5aKF8Mn9V9wW7KXz0dEXqwu49oRKTDpRTdzHx17H8FbkUIMPOoV/lEE8pvWRH/QTtmnes9/VsXHYhBQWxtTJwGSgQ314lpboBdOSnBVW+lq1qI6sGnduutb9BYO9nOREANFwuriX4eBMl9DN+JtdpcEEKX7xJ6352gJUO7rKMDio1NUWlY5H+yKLqkHlxfpfpRc2IJrl0Wz0M6lEDy5gLVVx/dVbSOcudRdSxtbwNTrrXQu1TcV4tomgMLYitzSQxkqCakn8NQsSCOYE="  # tu
         - secure: "pI5dipgdH406T7E4rylGI61COcAsNPjCW3gIQ++FEZH8knlqoSWMVAPXy5+NcNMvjnvIqy/N4bIpCjTcZx6CzX6UrpJJLejrclgYgH5wO/ntxFBpnmhUtA34qUjiomQLZb13qL2Fhs8ukLHnjhJJ0gsu3PAiOGxhLWSU2G8Rdh6BTtMPWd2zhM6HLE6odzYFvEQqDEgpQSGylbN/ah32H/HrvCP9X2bcBmHB8zLBtVRfZD96YeJ+/wyHI6RraBUh2tggw3WvUmXsOzknBjjRs0/IewNH0v78jWCZaOIRG9M4MT2COaNpgIi/iVDmN3P5CVzersoZBXa6c7PcuqEceMO4XYpeQ5h6i70c0Cs39SOi2roPlgx9FLfR2H9o93dyYz0vACJikFq4B9COXphIAXU28sA5ZZv/kEyFXr65flP7wVidEqN8T1U23wGrPz3s6k/nLi8F+6etwFG8bSy3heQe2MAtSkeKsOXqrHKC1d+DYPYxZabLJIKM87qVRceNGJ3BReyEQ4Ifw+c3PF/z4E6r9GOMiMqs73VCvDJ9CnMmwvq79tTK1avNsdnyQYBPRDbq45J98RTNFgQCTkjuQY6d7hxqXJaYEW8J1kpmRHE9tIEI6f41Cy2rUCvfzZzPtg14cX0iyK23hyaWWqX0IiEi/A2GS2+1cvFnmD/Ldh0="  # tp

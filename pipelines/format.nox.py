@@ -87,6 +87,7 @@ LINE_ENDING_PATHS = {
 # Black updates (namely 20.8b1), can occasionally result in mass reformats, so
 # we baseline a specific version of black to prevent this from happening.
 BLACK_VERSION = "20.8b1"
+ISORT_VERSION = "5.4.2"
 
 
 @nox.session(reuse_venv=True)
@@ -95,7 +96,7 @@ def reformat_code(session: nox.Session) -> None:
     remove_trailing_whitespaces()
 
     # isort
-    session.install("isort")
+    session.install(f"isort=={ISORT_VERSION}")
     session.run("isort", *REFORMATING_PATHS)
 
     # black

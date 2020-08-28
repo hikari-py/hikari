@@ -3,7 +3,7 @@ git config user.email "69713762+nekokatt@users.noreply.github.com"
 
 rm public -Rf || true
 mkdir public
-nox --sessions pdoc pages
+nox --sessions pdoc3 pages
 cd public || exit 1
 git init
 
