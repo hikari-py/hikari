@@ -27,6 +27,7 @@ __all__: typing.Final[typing.List[str]] = [
     "resolve_signature",
 ]
 
+import functools
 import inspect
 import typing
 
@@ -70,3 +71,23 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
         return_annotation = None
 
     return signature.replace(parameters=params, return_annotation=return_annotation)
+
+
+T = typing.TypeVar("T")
+
+
+def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:
+    import cProfile
+
+    if inspect.iscoroutinefunction(call):
+        raise TypeError("cannot profile async calls")
+
+    invoker = compile("result = call(*args, **kwargs)", filename=call.__module__, mode="exec", optimize=1)
+
+    @functools.wraps(call)
+    def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+        print("Profiling", call.__module__ + "." + call.__qualname__)
+        cProfile.runctx(invoker, globals=globals(), locals=locals(), filename=None, sort=1)
+        return locals()["result"]
+
+    return wrapped
