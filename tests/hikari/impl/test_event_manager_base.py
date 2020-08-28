@@ -58,7 +58,7 @@ class TestEventManagerBase:
             event_manager.consume_raw_event(shard, "EXISTING_EVENT", {})
 
         event_manager.on_existing_event.assert_called_once_with(shard, {})
-        create_task.assert_called_once_with(event_manager.on_existing_event(shard, {}))
+        create_task.assert_called_once_with(event_manager.on_existing_event(shard, {}), name="EXISTING_EVENT")
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
         def test():

@@ -86,7 +86,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         except AttributeError:
             _LOGGER.debug("ignoring unknown event %s", event_name)
         else:
-            asyncio.create_task(callback(shard, payload))
+            asyncio.create_task(callback(shard, payload), name=event_name)
 
     def subscribe(
         self,
