@@ -129,6 +129,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
         if self.throttle_task is not None:
             self.throttle_task.cancel()
+            asyncio.shield(self.throttle_task)
 
         failed_tasks = 0
         while self.queue:

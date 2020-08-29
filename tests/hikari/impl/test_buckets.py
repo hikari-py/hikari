@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import asyncio
 import datetime
 import time
 
@@ -299,7 +300,7 @@ class TestRESTBucketManager:
                 mgr.update_rate_limits(route, "123", 22, 23, date, reset_at)
                 bucket.update_rate_limit.assert_called_once_with(22, 23, expect_reset_at_monotonic)
 
-    @pytest.mark.parametrize(("gc_task", "is_started"), [(None, False), (object(), True)])
+    @pytest.mark.parametrize(("gc_task", "is_started"), [(None, False), (mock.Mock(spec_set=asyncio.Task), True)])
     def test_is_started(self, gc_task, is_started):
         with buckets.RESTBucketManager() as mgr:
             mgr.gc_task = gc_task
