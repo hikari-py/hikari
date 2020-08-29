@@ -611,9 +611,12 @@ class BotApp(
     async def close(self) -> None:
         """Request that all shards disconnect and the application shuts down.
 
-        This will close all shards that are running, and then close any
-        REST components and connectors.
+        This will occur some time soon after this coroutine returns.
         """
+        self._request_close_event.set()
+
+    async def abort(self) -> None:
+        """Immediately destroy all shards that are running and stop."""
         self._guild_chunker.close()
 
         try:
@@ -635,6 +638,8 @@ class BotApp(
             await self._rest.close()
             await self._connector_factory.close()
             self._global_ratelimit.close()
+            self._shard_gather_task = None
+            self._request_close_event.clear()
 
     def run(
         self,
@@ -771,14 +776,14 @@ class BotApp(
 
                 remaining_tasks = asyncio.all_tasks(loop)
                 if remaining_tasks:
-                    _LOGGER.warning("forcefully stopping %s remaining tasks", len(remaining_tasks))
+                    _LOGGER.debug("forcefully stopping %s remaining tasks", len(remaining_tasks))
+
                     for task in remaining_tasks:
                         task.cancel()
 
                         # Don't warn that these were never retrieved.
-                        with contextlib.suppress(asyncio.InvalidStateError):
-                            task.exception()
-
+                        with contextlib.suppress(asyncio.CancelledError):
+                            loop.run_until_complete(task)
                 else:
                     _LOGGER.debug("no tasks are running, congratulations on writing a tidy application")
 
@@ -950,12 +955,22 @@ class BotApp(
         Ensure shards are requested to close before the coroutine function
         completes.
         """
+        _LOGGER.debug("gathering shards")
+        gatherer = asyncio.gather(*self._tasks.values())
+        waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
+
         try:
-            _LOGGER.debug("gathering shards")
-            await asyncio.gather(*self._tasks.values())
+            await asyncio.wait([gatherer, waiter], return_when=asyncio.FIRST_COMPLETED)
+
+            if not waiter.done():
+                waiter.cancel()
         finally:
             _LOGGER.debug("gather terminated, shutting down shard(s)")
-            await asyncio.shield(self.close())
+            aborter = asyncio.shield(self.abort())
+            try:
+                await gatherer
+            finally:
+                await aborter
 
     async def _shard_management_lifecycle(self) -> None:
         """Start all shards and then wait for them to finish."""

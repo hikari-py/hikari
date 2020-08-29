@@ -371,7 +371,7 @@ class GatewayShardImplV6(shard.GatewayShard):
             self._request_close_event.set()
 
             if self._ws is not None:
-                self._logger.warning("gateway client closed, will not attempt to restart")
+                self._logger.info("gateway client closed, will not attempt to restart")
                 await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
 
     async def update_presence(
