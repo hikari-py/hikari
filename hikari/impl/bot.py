@@ -47,7 +47,6 @@ from hikari.api import shard as gateway_shard
 from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
-from hikari.impl import rate_limits
 from hikari.impl import rest as rest_client_impl
 from hikari.impl import shard as gateway_shard_impl
 from hikari.impl import stateful_cache as cache_impl
@@ -208,7 +207,6 @@ class BotApp(
         "_event_manager",
         "_event_factory",
         "_executor",
-        "_global_ratelimit",
         "_http_settings",
         "_initial_activity",
         "_initial_idle_since",
@@ -274,7 +272,6 @@ class BotApp(
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(app=self)
         self._event_factory = event_factory_impl.EventFactoryImpl(app=self)
         self._executor = executor
-        self._global_ratelimit = rate_limits.ManualRateLimiter()
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._initial_activity = initial_activity
         self._initial_idle_since = initial_idle_since
@@ -639,7 +636,6 @@ class BotApp(
         await self.dispatch(lifetime_events.StoppedEvent(app=self))
         await self._rest.close()
         await self._connector_factory.close()
-        self._global_ratelimit.close()
         self._shard_gather_task = None
         self._request_close_event.clear()
 
