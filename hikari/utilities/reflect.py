@@ -76,7 +76,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 T = typing.TypeVar("T")
 
 
-def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:
+def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:  # pragma: no cover
     """Decorate a callable and profile each invocation of it.
 
     Profile results are dumped to stdout.
