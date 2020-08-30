@@ -200,13 +200,13 @@ class BotApp(
 
     __slots__: typing.Sequence[str] = (
         "_cache",
-        "_guild_chunker",
         "_connector_factory",
         "_debug",
         "_entity_factory",
         "_event_manager",
         "_event_factory",
         "_executor",
+        "_guild_chunker",
         "_http_settings",
         "_initial_activity",
         "_initial_idle_since",
