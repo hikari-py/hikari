@@ -372,6 +372,7 @@ class GatewayShardImplV6(shard.GatewayShard):
             else:
                 self._logger.debug("shard marked as closed when it was not running")
 
+            self._ratelimiter.close()
             if self._ws is not None:
                 self._closing = True
                 # If anything interrupts this task, aiohttp will just refuse to send the close frame
@@ -380,7 +381,6 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._logger.info("gateway client closed, will not attempt to restart")
 
             self._request_close_event.set()
-            self._ratelimiter.close()
 
     async def update_presence(
         self,

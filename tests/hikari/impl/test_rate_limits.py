@@ -82,9 +82,11 @@ class TestBurstRateLimiter:
         assert True, "passed successfully"
 
     def test_close_cancels_throttle_task_if_running(self, event_loop, mock_burst_limiter):
-        mock_burst_limiter.throttle_task = event_loop.create_future()
+        task = event_loop.create_future()
+        mock_burst_limiter.throttle_task = task
         mock_burst_limiter.close()
-        assert mock_burst_limiter.throttle_task.cancelled(), "throttle_task is not cancelled"
+        assert mock_burst_limiter.throttle_task is None, "task was not overwritten with None"
+        assert task.cancelled(), "throttle_task is not cancelled"
 
     def test_close_when_closed(self, mock_burst_limiter):
         # Double-running shouldn't do anything adverse.
