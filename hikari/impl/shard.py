@@ -144,8 +144,8 @@ class GatewayShardImplV6(shard.GatewayShard):
         "_intents",
         "_is_afk",
         "_large_threshold",
+        "_last_heartbeat_ack_received",
         "_last_heartbeat_sent",
-        "_last_message_received",
         "_last_run_started_at",
         "_logger",
         "_proxy_settings",
@@ -247,8 +247,8 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._intents: typing.Optional[intents_.Intents] = intents
         self._is_afk: undefined.UndefinedOr[bool] = initial_is_afk
         self._large_threshold = large_threshold
+        self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
-        self._last_message_received = float("nan")
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
@@ -371,8 +371,8 @@ class GatewayShardImplV6(shard.GatewayShard):
             self._request_close_event.set()
 
             if self._ws is not None:
-                self._logger.info("gateway client closed, will not attempt to restart")
                 await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
+                self._logger.info("gateway client closed, will not attempt to restart")
 
             self._ratelimiter.close()
 
@@ -463,7 +463,6 @@ class GatewayShardImplV6(shard.GatewayShard):
                 # big sharded bots and waste a lot of time, so theres no reason to bother.
                 limit=1,
                 limit_per_host=1,
-                force_close=True,
             ),
             version=aiohttp.HttpVersion11,
             timeout=aiohttp.ClientTimeout(
@@ -476,8 +475,11 @@ class GatewayShardImplV6(shard.GatewayShard):
         ) as client_session:
             try:
                 # This may be set if we are stuck in a reconnect loop.
-                while not self._request_close_event.is_set() and await self._run_once_shielded(client_session):
-                    pass
+                while True:
+                    if self._request_close_event.is_set():
+                        break
+                    if not await self._run_once_shielded(client_session):
+                        break
 
                 # Allow zookeepers to stop gathering tasks for each shard.
                 raise errors.GatewayClientClosedError
@@ -485,11 +487,34 @@ class GatewayShardImplV6(shard.GatewayShard):
                 # This is set to ensure that the `start' waiter does not deadlock if
                 # we cannot connect successfully. It is a hack, but it works.
                 self._handshake_event.set()
+                await self.close()
 
     async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
         # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
         # Wraps the runner logic in the standard exception handling mechanisms.
         try:
+            self._zombied = False
+            self._last_heartbeat_ack_received = date.monotonic()
+
+            if date.monotonic() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
+                # Interrupt sleep immediately if a request to close is fired.
+                wait_task = asyncio.create_task(
+                    self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
+                )
+                try:
+                    backoff = next(self._backoff)
+                    self._logger.debug("backing off for %ss", backoff)
+                    await asyncio.wait_for(wait_task, timeout=backoff)
+
+                    # If this line gets reached, the wait didn't time out, meaning
+                    # the user told the client to shut down gracefully before the
+                    # backoff completed. We should not restart.
+                    return False
+                except asyncio.TimeoutError:
+                    pass
+
+            # Do this after. It prevents backing off on the first try.
+            self._last_run_started_at = date.monotonic()
             await self._run_once(client_session)
             return False
 
@@ -534,6 +559,7 @@ class GatewayShardImplV6(shard.GatewayShard):
             # The socket has already closed, so no need to close it again.
             if self._zombied:
                 self._backoff.reset()
+                return True
 
             if not self._request_close_event.is_set():
                 self._logger.warning("unexpected socket closure, will attempt to resume")
@@ -568,36 +594,12 @@ class GatewayShardImplV6(shard.GatewayShard):
         return True
 
     async def _run_once(self, client_session: aiohttp.ClientSession) -> None:
-        # Physical runner logic without error handling.
-        self._request_close_event.clear()
-
-        self._zombied = False
-
-        if date.monotonic() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
-            # Interrupt sleep immediately if a request to close is fired.
-            wait_task = asyncio.create_task(
-                self._request_close_event.wait(), name=f"gateway shard {self._shard_id} backing off"
-            )
-            try:
-                backoff = next(self._backoff)
-                self._logger.debug("backing off for %ss", backoff)
-                await asyncio.wait_for(wait_task, timeout=backoff)
-
-                # If this line gets reached, the wait didn't time out, meaning
-                # the user told the client to shut down gracefully before the
-                # backoff completed.
-                return
-            except asyncio.TimeoutError:
-                pass
-
-        # Do this after. It prevents backing off on the first try.
-        self._last_run_started_at = date.monotonic()
-
         self._logger.debug("creating websocket connection to %s", self.url)
         self._ws = await client_session.ws_connect(
             url=self.url,
             autoping=True,
             autoclose=True,
+            heartbeat=10,
             proxy=self._proxy_settings.url,
             proxy_headers=self._proxy_settings.all_headers,
             verify_ssl=self._http_settings.verify_ssl,
@@ -636,12 +638,17 @@ class GatewayShardImplV6(shard.GatewayShard):
         finally:
             self._event_consumer(self, "DISCONNECTED", {})
             self._connected_at = None
+            self._last_heartbeat_ack_received = float("nan")
+            self._last_heartbeat_sent = float("nan")
 
     async def _close_ws(self, code: int, message: str) -> None:
         self._logger.debug("sending close frame with code %s and message %r", int(code), message)
         # None if the websocket error on initialization.
         if self._ws is not None:
-            await self._ws.close(code=code, message=bytes(message, "utf-8"))
+            try:
+                await asyncio.wait_for(self._ws.close(code=code, message=bytes(message, "utf-8")), timeout=5)
+            except asyncio.TimeoutError:
+                self._logger.debug("could not send close frame successfully, perhaps there is a connection issue?")
 
     async def _handshake(self) -> None:
         hello = await self._expect_opcode(self._Opcode.HELLO)
@@ -679,6 +686,9 @@ class GatewayShardImplV6(shard.GatewayShard):
             await self._send_json(payload)
 
     async def _heartbeat_keepalive(self) -> None:
+        def send_heartbeat() -> typing.Coroutine[typing.Any, typing.Any, None]:
+            return self._send_json({"op": self._Opcode.HEARTBEAT, "d": self._seq})
+
         # Wait a random offset between 0ms and <heartbeat_interval>ms before
         # sending the first heartbeat. This helps not overload the gateway
         # after recovering from an outage.
@@ -686,64 +696,39 @@ class GatewayShardImplV6(shard.GatewayShard):
         # S311 - Dont use random for security/cryptographic purposes
         offset = random.random() * self._heartbeat_interval  # noqa: S311
         await asyncio.sleep(offset)
+        await send_heartbeat()
+        self._last_heartbeat_sent = date.monotonic()
 
         try:
             while not self._request_close_event.is_set():
-                now = date.monotonic()
-                time_since_message = now - self._last_message_received
-                time_since_heartbeat_sent = now - self._last_heartbeat_sent
-
-                if self._heartbeat_interval < time_since_message:
-                    self._logger.error(
-                        "connection is a zombie, haven't received any message for %ss, last heartbeat sent %ss ago",
-                        time_since_message,
-                        time_since_heartbeat_sent,
-                    )
-                    await self._close_zombie()
-                    return
-
-                self._logger.debug(
-                    "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self._heartbeat_interval
-                )
-                await self._send_json({"op": self._Opcode.HEARTBEAT, "d": self._seq})
-                self._last_heartbeat_sent = date.monotonic()
-
                 try:
                     await asyncio.wait_for(self._request_close_event.wait(), timeout=self._heartbeat_interval)
                 except asyncio.TimeoutError:
                     pass
 
+                now = date.monotonic()
+                last_heartbeat_sent = self._last_heartbeat_sent
+                last_ack_received = self._last_heartbeat_ack_received
+
+                # Inverted condition allows us to detect nan properly.
+                if last_ack_received > last_heartbeat_sent:
+                    self._logger.debug(
+                        "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, self._heartbeat_interval
+                    )
+                    await send_heartbeat()
+                    self._last_heartbeat_sent = date.monotonic()
+                else:
+                    self._logger.error(
+                        "connection is a zombie, last heartbeat sent %ss ago",
+                        now - last_heartbeat_sent,
+                    )
+                    await self._close_ws(errors.ShardCloseCode.PROTOCOL_ERROR, "zombie")
+                    self._zombied = True
+                    return
+
         except asyncio.CancelledError:
             # This happens if the poll task has stopped. It is not a problem we need to report.
             pass
-
-    async def _close_zombie(self) -> None:
-        # https://gitlab.com/nekokatt/hikari/-/issues/462
-        #
-        # aiohttp has a little "race condition" where it will try to wait for the close frame to be
-        # sent before it physically proceeds to close the aiohttp.ClientResponse. This is a bit
-        # annoying for us, since when we are zombied, this frame will probably never be able to be
-        # sent (if the network went down). However, to feed a socket closure message into the
-        # message receive loop, we need to make this call.
-        #
-        # Thus, the best solution here is to make a task to perform this call in the background,
-        # and await for a short amount of time to let it feed the close message before it proceeds.
-        # After this, we manually close the internal aiohttp ClientResponse to force that close frame
-        # to fail to send immediately, before proceeding to await the original close task from then
-        # on.
-        #
-        # Probably should file a bug report at some point... if I remember.
-        self._zombied = True
-        close_task = asyncio.create_task(
-            self._close_ws(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
-        )
-        await asyncio.sleep(0.1)
-        self._ws._response.close()  # type: ignore[union-attr]
-        try:
-            await close_task
-        finally:
-            # Discard any exception, I don't care, as this is broken anyway.
-            return
 
     async def _poll_events(self) -> None:
         while not self._request_close_event.is_set():
@@ -782,7 +767,9 @@ class GatewayShardImplV6(shard.GatewayShard):
                 await self._send_json({"op": self._Opcode.HEARTBEAT_ACK})
 
             elif op == self._Opcode.HEARTBEAT_ACK:
-                self._heartbeat_latency = date.monotonic() - self._last_heartbeat_sent
+                now = date.monotonic()
+                self._last_heartbeat_ack_received = now
+                self._heartbeat_latency = now - self._last_heartbeat_sent
                 self._logger.debug("received HEARTBEAT ACK [latency:%ss]", self._heartbeat_latency)
 
             elif op == self._Opcode.RECONNECT:
@@ -853,7 +840,6 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def _receive_raw(self) -> aiohttp.WSMessage:
         message: aiohttp.WSMessage = await self._ws.receive()  # type: ignore[union-attr]
-        self._last_message_received = date.monotonic()
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)

@@ -508,7 +508,11 @@ class BotApp(
         self._tasks.clear()
         self._shard_gather_task = None
 
-        await self._init()
+        try:
+            await self._init()
+        except Exception:
+            await self._abort()
+            raise
 
         self._request_close_event.clear()
 
@@ -546,6 +550,7 @@ class BotApp(
         finally:
             if len(self._tasks) != len(self._shards):
                 _LOGGER.warning("application was aborted midway through initialization, so never managed to start")
+                await self._abort()
                 raise errors.GatewayClientClosedError("Client was aborted midway through initialization")
 
             finish_time = date.monotonic()
@@ -615,7 +620,7 @@ class BotApp(
         """
         self._request_close_event.set()
 
-    async def abort(self) -> None:
+    async def _abort(self) -> None:
         """Immediately destroy all shards that are running and stop."""
         self._guild_chunker.close()
 
@@ -749,7 +754,7 @@ class BotApp(
 
         def die() -> None:
             _LOGGER.info("received signal to shut down client")
-            asyncio.ensure_future(self.close())
+            asyncio.ensure_future(self._abort())
 
         for signum in kill_signals:
             # Windows is dumb and doesn't support signals properly.
@@ -944,9 +949,8 @@ class BotApp(
     async def _abort_shards(self) -> None:
         """Close all shards and wait for them to terminate."""
         for shard_id in self._shards:
-            if self._shards[shard_id].is_alive:
-                _LOGGER.debug("stopping shard %s", shard_id)
-                await self._shards[shard_id].close()
+            _LOGGER.debug("stopping shard %s", shard_id)
+            await self._shards[shard_id].close()
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
     async def _gather_shard_lifecycles(self) -> None:
@@ -966,7 +970,7 @@ class BotApp(
                 waiter.cancel()
         finally:
             _LOGGER.debug("gather terminated, shutting down shard(s)")
-            aborter = asyncio.shield(self.abort())
+            aborter = asyncio.shield(self._abort())
             try:
                 await gatherer
             finally:
