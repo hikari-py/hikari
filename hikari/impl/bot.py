@@ -215,6 +215,7 @@ class BotApp(
         "_initial_is_afk",
         "_initial_status",
         "_intents",
+        "_has_aborted",
         "_large_threshold",
         "_max_concurrency",
         "_proxy_settings",
@@ -280,6 +281,7 @@ class BotApp(
         self._initial_is_afk = initial_is_afk
         self._initial_status = initial_status
         self._intents = intents
+        self._has_aborted = False
         self._large_threshold = large_threshold
         self._max_concurrency = 1
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
@@ -511,7 +513,7 @@ class BotApp(
         try:
             await self._init()
         except Exception:
-            await self._abort()
+            await self.close()
             raise
 
         self._request_close_event.clear()
@@ -541,7 +543,15 @@ class BotApp(
                     window[shard_id] = asyncio.create_task(shard_obj.start(), name=f"start gateway shard {shard_id}")
 
                 # Wait for the group to start.
-                await asyncio.gather(*window.values())
+                gatherer = asyncio.gather(*window.values())
+                waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
+
+                await asyncio.wait([gatherer, waiter], return_when=asyncio.FIRST_COMPLETED)
+
+                if not waiter.done():
+                    waiter.cancel()
+                else:
+                    gatherer.cancel()
 
                 # Store the keep-alive tasks and continue.
                 for shard_id, start_task in window.items():
@@ -550,7 +560,7 @@ class BotApp(
         finally:
             if len(self._tasks) != len(self._shards):
                 _LOGGER.warning("application was aborted midway through initialization, so never managed to start")
-                await self._abort()
+                await self.close()
                 raise errors.GatewayClientClosedError("Client was aborted midway through initialization")
 
             finish_time = date.monotonic()
@@ -614,37 +624,24 @@ class BotApp(
         return self.dispatcher.dispatch(event)
 
     async def close(self) -> None:
-        """Request that all shards disconnect and the application shuts down.
-
-        This will occur some time soon after this coroutine returns.
-        """
+        """Immediately destroy all shards that are running and stop."""
         self._request_close_event.set()
 
-    async def _abort(self) -> None:
-        """Immediately destroy all shards that are running and stop."""
+        # Prevent calling this multiple times.
+        if self._has_aborted:
+            return
+
+        self._has_aborted = True
         self._guild_chunker.close()
-
-        try:
-            # This way if we cancel the stopping task, we still shut down properly.
-            self._request_close_event.set()
-            _LOGGER.info("stopping %s shard(s)", len(self._shards))
-
-            try:
-                if self._shards:
-                    await self.dispatch(lifetime_events.StoppingEvent(app=self))
-                    await self._abort_shards()
-            finally:
-                # The starting event occurs before the bot starts, regardless of if
-                # it had started or not, so it seems sensible stopped event has the
-                # same semantics.
-                self._tasks.clear()
-                await self.dispatch(lifetime_events.StoppedEvent(app=self))
-        finally:
-            await self._rest.close()
-            await self._connector_factory.close()
-            self._global_ratelimit.close()
-            self._shard_gather_task = None
-            self._request_close_event.clear()
+        await self.dispatch(lifetime_events.StoppingEvent(app=self))
+        await self._abort_shards()
+        self._tasks.clear()
+        await self.dispatch(lifetime_events.StoppedEvent(app=self))
+        await self._rest.close()
+        await self._connector_factory.close()
+        self._global_ratelimit.close()
+        self._shard_gather_task = None
+        self._request_close_event.clear()
 
     def run(
         self,
@@ -754,7 +751,7 @@ class BotApp(
 
         def die() -> None:
             _LOGGER.info("received signal to shut down client")
-            asyncio.ensure_future(self._abort())
+            self._request_close_event.set()
 
         for signum in kill_signals:
             # Windows is dumb and doesn't support signals properly.
@@ -768,7 +765,7 @@ class BotApp(
             finally:
                 loop.run_until_complete(self.join())
         except errors.GatewayClientClosedError as ex:
-            _LOGGER.info(str(ex))
+            _LOGGER.info("client closed with reason: %s", ex)
         finally:
             for signum in kill_signals:
                 # Windows is dumb and doesn't support signals properly.
@@ -776,22 +773,25 @@ class BotApp(
                     loop.remove_signal_handler(signum)
 
             if finalize_loop_on_close:
-                _LOGGER.debug("closing asyncgens for event loop %s", loop)
-                loop.run_until_complete(loop.shutdown_asyncgens())
+                remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.done()]
 
-                remaining_tasks = asyncio.all_tasks(loop)
                 if remaining_tasks:
                     _LOGGER.debug("forcefully stopping %s remaining tasks", len(remaining_tasks))
 
                     for task in remaining_tasks:
                         task.cancel()
+                    loop.run_until_complete(asyncio.gather(*remaining_tasks, return_exceptions=True))
 
-                        # Don't warn that these were never retrieved.
-                        with contextlib.suppress(asyncio.CancelledError):
-                            loop.run_until_complete(task)
+                    for task in remaining_tasks:
+                        if not task.cancelled():
+                            ex = task.exception()
+                            if ex is not None:
+                                _LOGGER.warning("unhandled exception during shutdown", exc_info=ex)
                 else:
                     _LOGGER.debug("no tasks are running, congratulations on writing a tidy application")
 
+                _LOGGER.debug("closing asyncgens for event loop %s", loop)
+                loop.run_until_complete(loop.shutdown_asyncgens())
                 loop.close()
 
     async def join(self) -> None:
@@ -970,7 +970,7 @@ class BotApp(
                 waiter.cancel()
         finally:
             _LOGGER.debug("gather terminated, shutting down shard(s)")
-            aborter = asyncio.shield(self._abort())
+            aborter = asyncio.shield(self.close())
             try:
                 await gatherer
             finally:

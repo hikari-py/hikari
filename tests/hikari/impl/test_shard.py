@@ -21,6 +21,7 @@
 import asyncio
 import contextlib
 import datetime
+import time
 
 import aiohttp.client_reqrep
 import mock
@@ -1052,51 +1053,76 @@ class TestHandshake:
 @pytest.mark.asyncio
 class TestHeartbeatKeepalive:
     @hikari_test_helpers.timeout()
-    async def test_when_not_zombie(self, client):
-        client._last_message_received = 5
-        client._heartbeat_interval = 5
-        client._last_heartbeat_sent = 2
-        client._seq = 123
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=False))
+    async def test_random_jitter_from_start(self, client):
+        client._send_json = mock.AsyncMock(spec_set=client._send_json)
+        stack = contextlib.ExitStack()
+        random = stack.enter_context(mock.patch("random.random", return_value=1234))
+        sleep = stack.enter_context(mock.patch("asyncio.sleep"))
+        client._heartbeat_interval = 1235
 
-        with mock.patch.object(hikari_date, "monotonic", side_effect=[10, 10, asyncio.CancelledError]):
-            with mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError):
-                with mock.patch.object(asyncio, "sleep"):
-                    await client._heartbeat_keepalive()
-
-        client._close_zombie.assert_not_called()
-        client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT, "d": 123})
-        assert client._last_heartbeat_sent == 10
-
-    @hikari_test_helpers.timeout()
-    async def test_when_zombie(self, client):
-        client._last_message_received = 1
-        client._heartbeat_interval = 5
-        client._last_heartbeat_sent = 2
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-
-        with mock.patch.object(hikari_date, "monotonic", return_value=10):
-            with mock.patch.object(asyncio, "sleep"):
-                await client._heartbeat_keepalive()
-
-        client._close_zombie.assert_awaited_once_with()
-        client._send_json.assert_not_called()
-
-    @hikari_test_helpers.timeout()
-    async def test_when_request_close_event_set(self, client):
-        client._heartbeat_interval = 5
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=True))
-
-        with mock.patch.object(asyncio, "sleep"):
+        # Don't repeat forever.
+        client._send_json = mock.Mock(side_effect=RuntimeError)
+        stack.enter_context(contextlib.suppress(RuntimeError))
+        with stack:
             await client._heartbeat_keepalive()
 
-        client._close_zombie.assert_not_called()
-        client._send_json.assert_not_called()
+        random.assert_called_once_with()
+        sleep.assert_awaited_once_with(1234 * 1235)
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_before_sleep(self, client):
+        client._send_json = mock.AsyncMock(spec_set=client._send_json)
+        client._heartbeat_interval = 0
+        client._request_close_event.set()
+
+        await client._heartbeat_keepalive()
+        client._send_json.assert_awaited_once_with({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq})
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_repeatedly_until_closure(self, client):
+        i = 0
+
+        def side_effect(*_, **__):
+            nonlocal i
+            if i < 10:
+                i += 1
+                client._last_heartbeat_ack_received = time.perf_counter() + 0.5
+            else:
+                client._request_close_event.set()
+
+        client._send_json = mock.AsyncMock(spec_set=client._send_json, wraps=side_effect)
+        client._heartbeat_interval = 0.01
+
+        await client._heartbeat_keepalive()
+
+        expected_calls = [
+            mock.call({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq}) for _ in range(11)
+        ]
+
+        assert client._send_json.mock_calls == expected_calls
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_repeatedly_until_zombification(self, client):
+        i = 0
+
+        def side_effect(*_, **__):
+            nonlocal i
+            if i < 10:
+                i += 1
+                client._last_heartbeat_ack_received = time.perf_counter() + 0.5
+            else:
+                client._last_heartbeat_ack_received = time.perf_counter() - 100_000
+
+        client._send_json = mock.AsyncMock(spec_set=client._send_json, wraps=side_effect)
+        client._heartbeat_interval = 0.01
+
+        await client._heartbeat_keepalive()
+
+        expected_calls = [
+            mock.call({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq}) for _ in range(11)
+        ]
+
+        assert client._send_json.mock_calls == expected_calls
 
 
 @pytest.mark.asyncio

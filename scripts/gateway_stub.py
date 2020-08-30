@@ -55,7 +55,7 @@ def v6_get_gateway(_):
 
 
 @route_table.get("/api/v6/gateway/bot")
-def v6_get_gateway(_):
+def v6_get_gateway_bot(_):
     return web.json_response(
         {
             "url": gateway_uri_v6,

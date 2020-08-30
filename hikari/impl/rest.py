@@ -105,7 +105,7 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
 
     def acquire(self) -> aiohttp.BaseConnector:
         if self.connector is None:
-            self.connector = aiohttp.TCPConnector(**self.connector_kwargs)
+            self.connector = aiohttp.TCPConnector(**self.connector_kwargs, force_close=True, enable_cleanup_closed=True)
 
         return self.connector
 
@@ -424,6 +424,7 @@ class RESTClientImpl(rest_api.RESTClient):
         """Close the HTTP client and any open HTTP connections."""
         if self._client_session is not None:
             await self._client_session.close()
+        await self._connector_factory.close()
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
@@ -444,9 +445,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if self._client_session is None:
             self._closed_event.clear()
             self._client_session = aiohttp.ClientSession(
-                # Should not need a lock, since we don't technically await anything.
                 connector=self._connector_factory.acquire(),
-                connector_owner=self._connector_owner,
+                connector_owner=False,
                 version=aiohttp.HttpVersion11,
                 timeout=aiohttp.ClientTimeout(
                     total=self._http_settings.timeouts.total,

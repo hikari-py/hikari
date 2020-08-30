@@ -131,6 +131,7 @@ class GatewayShardImplV6(shard.GatewayShard):
     __slots__: typing.Sequence[str] = (
         "_activity",
         "_backoff",
+        "_closing",
         "_compression",
         "_connected_at",
         "_data_format",
@@ -236,6 +237,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
+        self._closing = False
         self._data_format = data_format.lower()
         self._debug = debug
         self._event_consumer = event_consumer
@@ -353,6 +355,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         run_task = asyncio.create_task(self._run(), name=f"shard {self._shard_id} keep-alive")
         handshake_future = asyncio.ensure_future(self._handshake_event.wait())
         await asyncio.wait([run_task, handshake_future], return_when=asyncio.FIRST_COMPLETED)  # type: ignore
+        handshake_future.cancel()
 
         # Ensure we propagate a startup error without joining the run task first.
         # We should not need to kill the handshake event, that should be done for us.
@@ -368,11 +371,15 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._logger.info("received request to shut down shard")
             else:
                 self._logger.debug("shard marked as closed when it was not running")
-            self._request_close_event.set()
 
             if self._ws is not None:
-                await self._close_ws(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
+                # If anything interrupts this task, aiohttp will just refuse to send the close frame
+                # and we will never know anything about it.
+                self._closing = True
+                await asyncio.shield(self._close_ws(errors.ShardCloseCode.GOING_AWAY, "client shut down"))
                 self._logger.info("gateway client closed, will not attempt to restart")
+
+            self._request_close_event.set()
 
             self._ratelimiter.close()
 
@@ -455,15 +462,19 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def _run(self) -> None:
         """Start the shard and wait for it to shut down."""
+        connector = aiohttp.TCPConnector(
+            enable_cleanup_closed=True,
+            force_close=True,
+            verify_ssl=self._http_settings.verify_ssl,
+            # We are never going to want more than one connection. This will be spammy on
+            # big sharded bots and waste a lot of time, so theres no reason to bother.
+            limit=1,
+            limit_per_host=1,
+        )
+
         async with aiohttp.ClientSession(
-            connector_owner=True,
-            connector=aiohttp.TCPConnector(
-                verify_ssl=self._http_settings.verify_ssl,
-                # We are never going to want more than one connection. This will be spammy on
-                # big sharded bots and waste a lot of time, so theres no reason to bother.
-                limit=1,
-                limit_per_host=1,
-            ),
+            connector_owner=False,
+            connector=connector,
             version=aiohttp.HttpVersion11,
             timeout=aiohttp.ClientTimeout(
                 total=self._http_settings.timeouts.total,
@@ -488,12 +499,14 @@ class GatewayShardImplV6(shard.GatewayShard):
                 # we cannot connect successfully. It is a hack, but it works.
                 self._handshake_event.set()
                 await self.close()
+                await connector.close()
 
     async def _run_once_shielded(self, client_session: aiohttp.ClientSession) -> bool:
         # Returns `builtins.True` if we can reconnect, or `builtins.False` otherwise.
         # Wraps the runner logic in the standard exception handling mechanisms.
         try:
             self._zombied = False
+            self._closing = False
             self._last_heartbeat_ack_received = date.monotonic()
 
             if date.monotonic() - self._last_run_started_at < self._RESTART_RATELIMIT_WINDOW:
@@ -561,7 +574,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._backoff.reset()
                 return True
 
-            if not self._request_close_event.is_set():
+            if not self._request_close_event.is_set() and not self._closing:
                 self._logger.warning("unexpected socket closure, will attempt to resume")
             else:
                 self._session_started_at = None
@@ -646,9 +659,12 @@ class GatewayShardImplV6(shard.GatewayShard):
         # None if the websocket error on initialization.
         if self._ws is not None:
             try:
-                await asyncio.wait_for(self._ws.close(code=code, message=bytes(message, "utf-8")), timeout=5)
-            except asyncio.TimeoutError:
-                self._logger.debug("could not send close frame successfully, perhaps there is a connection issue?")
+                could_close = await asyncio.wait_for(self._ws.close(), timeout=5)
+                self._logger.debug("closed shard %s", "successfully" if could_close else "unsuccessfully")
+            except Exception as ex:
+                self._logger.debug(
+                    "could not send close frame successfully, perhaps there is a connection issue?", exc_info=ex
+                )
 
     async def _handshake(self) -> None:
         hello = await self._expect_opcode(self._Opcode.HELLO)
