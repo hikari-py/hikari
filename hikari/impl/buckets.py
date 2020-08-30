@@ -398,7 +398,6 @@ class RESTBucketManager:
 
         if self.gc_task is not None:
             self.gc_task.cancel()
-            asyncio.shield(self.gc_task)
 
     # Ignore docstring not starting in an imperative mood
     async def gc(self, poll_period: float, expire_after: float) -> None:  # noqa: D401
