@@ -373,14 +373,13 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._logger.debug("shard marked as closed when it was not running")
 
             if self._ws is not None:
+                self._closing = True
                 # If anything interrupts this task, aiohttp will just refuse to send the close frame
                 # and we will never know anything about it.
-                self._closing = True
                 await asyncio.shield(self._close_ws(errors.ShardCloseCode.GOING_AWAY, "client shut down"))
                 self._logger.info("gateway client closed, will not attempt to restart")
 
             self._request_close_event.set()
-
             self._ratelimiter.close()
 
     async def update_presence(
@@ -659,7 +658,9 @@ class GatewayShardImplV6(shard.GatewayShard):
         # None if the websocket error on initialization.
         if self._ws is not None:
             try:
-                could_close = await asyncio.wait_for(self._ws.close(), timeout=5)
+                could_close = await asyncio.wait_for(
+                    self._ws.close(code=code, message=bytes(message, "utf-8")), timeout=5
+                )
                 self._logger.debug("closed shard %s", "successfully" if could_close else "unsuccessfully")
             except Exception as ex:
                 self._logger.debug(
