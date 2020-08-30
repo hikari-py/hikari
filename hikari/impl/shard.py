@@ -254,7 +254,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
-        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(str(shard_id), 60.0, 120)
+        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(f"shard {shard_id}", 60.0, 120)
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[int] = None
         self._session_id: typing.Optional[str] = None
