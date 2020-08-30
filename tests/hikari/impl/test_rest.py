@@ -56,14 +56,13 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture
 def connector_factory():
-    return rest.BasicLazyCachedTCPConnectorFactory()
+    return rest.BasicLazyCachedTCPConnectorFactory(test=123)
 
 
 class TestBasicLazyCachedTCPConnectorFactory:
     def test_acquire_when_connector_is_None(self, connector_factory):
         connector_mock = object()
         connector_factory.connector = None
-        connector_factory.connector_kwargs = {"test": 123}
 
         with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
             assert connector_factory.acquire() is connector_mock

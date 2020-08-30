@@ -546,7 +546,7 @@ class BotApp(
                 gatherer = asyncio.gather(*window.values())
                 waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
 
-                await asyncio.wait([gatherer, waiter], return_when=asyncio.FIRST_COMPLETED)
+                await asyncio.wait((gatherer, waiter), return_when=asyncio.FIRST_COMPLETED)
 
                 if not waiter.done():
                     waiter.cancel()
@@ -784,9 +784,9 @@ class BotApp(
 
                     for task in remaining_tasks:
                         if not task.cancelled():
-                            ex = task.exception()
-                            if ex is not None:
-                                _LOGGER.warning("unhandled exception during shutdown", exc_info=ex)
+                            exception = task.exception()
+                            if exception is not None:
+                                _LOGGER.warning("unhandled exception during shutdown", exc_info=exception)
                 else:
                     _LOGGER.debug("no tasks are running, congratulations on writing a tidy application")
 
