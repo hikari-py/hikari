@@ -129,6 +129,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
         if self.throttle_task is not None:
             self.throttle_task.cancel()
+            self.throttle_task = None
 
         failed_tasks = 0
         while self.queue:

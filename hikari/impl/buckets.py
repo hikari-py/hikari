@@ -382,7 +382,7 @@ class RESTBucketManager:
             as the rate limit has reset. Defaults to `10` seconds.
         """
         if not self.gc_task:
-            self.gc_task = asyncio.get_running_loop().create_task(self.gc(poll_period, expire_after))
+            self.gc_task = asyncio.create_task(self.gc(poll_period, expire_after))
 
     def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits.
@@ -395,6 +395,10 @@ class RESTBucketManager:
             bucket.close()
         self.real_hashes_to_buckets.clear()
         self.routes_to_hashes.clear()
+
+        if self.gc_task is not None:
+            self.gc_task.cancel()
+            self.gc_task = None
 
     # Ignore docstring not starting in an imperative mood
     async def gc(self, poll_period: float, expire_after: float) -> None:  # noqa: D401

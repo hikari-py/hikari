@@ -21,6 +21,7 @@
 import asyncio
 import contextlib
 import datetime
+import time
 
 import aiohttp.client_reqrep
 import mock
@@ -224,12 +225,14 @@ class TestClose:
         client.__dict__["_is_alive"] = is_alive
         client._request_close_event = mock.MagicMock(asyncio.Event)
         client._request_close_event.is_set = mock.Mock(return_value=False)
-        client._close_ws = mock.AsyncMock()
+        client._close_ws = mock.Mock()
         client._ws = mock.Mock()
 
-        await client.close()
+        with mock.patch.object(asyncio, "shield", new=mock.AsyncMock()) as shield:
+            await client.close()
 
-        client._close_ws.assert_awaited_once_with(errors.ShardCloseCode.NORMAL_CLOSURE, "client shut down")
+        client._close_ws.assert_called_once_with(errors.ShardCloseCode.GOING_AWAY, "client shut down")
+        shield.assert_awaited_once_with(client._close_ws())
 
     @pytest.mark.parametrize("is_alive", [True, False])
     async def test_websocket_not_closed_if_None(self, client, is_alive):
@@ -278,18 +281,19 @@ class TestRun:
 
         client._run_once = mock.AsyncMock()
 
+        tcp_connector_mock = mock.Mock(close=mock.AsyncMock())
         stack = contextlib.ExitStack()
         stack.enter_context(pytest.raises(errors.GatewayClientClosedError))
         client_session = stack.enter_context(mock.patch.object(aiohttp, "ClientSession"))
-        tcp_connector = stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
+        tcp_connector = stack.enter_context(mock.patch.object(aiohttp, "TCPConnector", return_value=tcp_connector_mock))
         timeout = stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
 
         with stack:
             await client._run()
 
         client_session.assert_called_once_with(
-            connector_owner=True,
-            connector=tcp_connector(verify_ssl=verify_ssl, limit=1, limit_per_host=1, force_close=True),
+            connector_owner=False,
+            connector=tcp_connector_mock,
             version=aiohttp.HttpVersion11,
             timeout=timeout(
                 total=total,
@@ -298,6 +302,10 @@ class TestRun:
                 sock_connect=request_socket_connect,
             ),
             trust_env=trust_env,
+        )
+
+        tcp_connector.assert_called_once_with(
+            verify_ssl=verify_ssl, limit=1, limit_per_host=1, force_close=True, enable_cleanup_closed=True
         )
 
     @hikari_test_helpers.timeout()
@@ -363,6 +371,97 @@ class TestRunOnceShielded:
         # Disable backoff checking by making the condition a negative tautology.
         client._RESTART_RATELIMIT_WINDOW = -1
         return client
+
+    @hikari_test_helpers.timeout()
+    async def test_resets_zombie_status(self, client, client_session):
+        client._zombied = True
+
+        await client._run_once_shielded(client_session)
+
+        assert client._zombied is False
+
+    @hikari_test_helpers.timeout()
+    async def test_backoff_and_waits_if_restarted_too_quickly(self, client, client_session):
+        client._RESTART_RATELIMIT_WINDOW = 30
+        client._last_run_started_at = 40
+        client._backoff.__next__ = mock.Mock(return_value=24.37)
+
+        # We mock create_task, so this will never be awaited if not.
+        client._heartbeat_keepalive = mock.Mock()
+
+        stack = contextlib.ExitStack()
+        wait_for = stack.enter_context(mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError))
+        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        stack.enter_context(mock.patch.object(hikari_date, "monotonic", return_value=60))
+
+        with stack:
+            await client._run_once_shielded(client_session)
+
+        client._backoff.__next__.assert_called_once_with()
+        create_task.assert_any_call(client._request_close_event.wait(), name="gateway shard 3 backing off")
+        wait_for.assert_called_once_with(create_task(), timeout=24.37)
+
+    @hikari_test_helpers.timeout()
+    async def test_closing_bot_during_backoff_immediately_interrupts_it(self, client, client_session):
+        client._RESTART_RATELIMIT_WINDOW = 30
+        client._last_run_started_at = 40
+        client._backoff.__next__ = mock.Mock(return_value=24.37)
+        client._request_close_event = asyncio.Event()
+
+        # use 60s since it is outside the 30s backoff window.
+        with mock.patch.object(hikari_date, "monotonic", return_value=60.0):
+            task = asyncio.create_task(client._run_once_shielded(client_session))
+
+            try:
+                # Let the backoff spin up and start waiting in the background.
+                await hikari_test_helpers.idle()
+
+                # Should be pretty much immediate.
+                with hikari_test_helpers.ensure_occurs_quickly():
+                    assert task.done() is False
+                    client._request_close_event.set()
+                    await task
+
+                # The false instructs the caller to not restart again, but to just
+                # drop everything and stop execution.
+                assert task.result() is False
+
+            finally:
+                task.cancel()
+
+    @hikari_test_helpers.timeout()
+    async def test_backoff_does_not_trigger_if_not_restarting_in_small_window(self, client, client_session):
+        with mock.patch.object(hikari_date, "monotonic", return_value=60):
+            client._last_run_started_at = 40
+            client._backoff.__next__ = mock.Mock(
+                side_effect=AssertionError(
+                    "backoff was incremented, but this is not expected to occur in this test case scenario!"
+                )
+            )
+
+            # We mock create_task, so this will never be awaited if not.
+            client._heartbeat_keepalive = mock.Mock()
+
+            stack = contextlib.ExitStack()
+            stack.enter_context(mock.patch.object(asyncio, "wait_for"))
+            stack.enter_context(mock.patch.object(asyncio, "create_task"))
+
+            with stack:
+                # This will raise an assertion error if the backoff is incremented.
+                await client._run_once_shielded(client_session)
+
+    @hikari_test_helpers.timeout()
+    async def test_last_run_started_at_set_to_current_time(self, client, client_session):
+        # Windows does some batshit crazy stuff in perf_counter, like only
+        # returning process time elapsed rather than monotonic time since
+        # startup, so I guess I will put this random value here to show the
+        # code doesn't really care what this value is contextually.
+        client._last_run_started_at = -100_000
+
+        with mock.patch.object(hikari_date, "monotonic", return_value=1.0):
+            await client._run_once_shielded(client_session)
+
+        assert client._last_run_started_at == 1.0
 
     @hikari_test_helpers.timeout()
     async def test_invokes_run_once_shielded(self, client, client_session):
@@ -564,98 +663,6 @@ class TestRunOnce:
         client._request_close_event.clear.assert_called_with()
 
     @hikari_test_helpers.timeout()
-    async def test_resets_zombie_status(self, client, client_session):
-        client._zombied = True
-
-        await client._run_once(client_session)
-
-        assert client._zombied is False
-
-    @hikari_test_helpers.timeout()
-    async def test_backoff_and_waits_if_restarted_too_quickly(self, client, client_session):
-        client._RESTART_RATELIMIT_WINDOW = 30
-        client._last_run_started_at = 40
-        client._backoff.__next__ = mock.Mock(return_value=24.37)
-
-        # We mock create_task, so this will never be awaited if not.
-        client._heartbeat_keepalive = mock.Mock()
-
-        stack = contextlib.ExitStack()
-        wait_for = stack.enter_context(mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError))
-        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
-        stack.enter_context(mock.patch.object(hikari_date, "monotonic", return_value=60))
-
-        with stack:
-            await client._run_once(client_session)
-
-        client._backoff.__next__.assert_called_once_with()
-        create_task.assert_any_call(client._request_close_event.wait(), name="gateway shard 3 backing off")
-        wait_for.assert_called_once_with(create_task(), timeout=24.37)
-
-    @hikari_test_helpers.timeout()
-    async def test_closing_bot_during_backoff_immediately_interrupts_it(self, client, client_session):
-        client._RESTART_RATELIMIT_WINDOW = 30
-        client._last_run_started_at = 40
-        client._backoff.__next__ = mock.Mock(return_value=24.37)
-        client._request_close_event = asyncio.Event()
-
-        # use 60s since it is outside the 30s backoff window.
-        with mock.patch.object(hikari_date, "monotonic", return_value=60.0):
-            task = asyncio.create_task(client._run_once(client_session))
-
-            try:
-                # Let the backoff spin up and start waiting in the background.
-                await hikari_test_helpers.idle()
-
-                # Should be pretty much immediate.
-                with hikari_test_helpers.ensure_occurs_quickly():
-                    assert task.done() is False
-                    client._request_close_event.set()
-                    await task
-
-                # The false instructs the caller to not restart again, but to just
-                # drop everything and stop execution.
-                # We never return a value on this task anymore.
-                assert task.result() is None
-
-            finally:
-                task.cancel()
-
-    @hikari_test_helpers.timeout()
-    async def test_backoff_does_not_trigger_if_not_restarting_in_small_window(self, client, client_session):
-        with mock.patch.object(hikari_date, "monotonic", return_value=60):
-            client._last_run_started_at = 40
-            client._backoff.__next__ = mock.Mock(
-                side_effect=AssertionError(
-                    "backoff was incremented, but this is not expected to occur in this test case scenario!"
-                )
-            )
-
-            # We mock create_task, so this will never be awaited if not.
-            client._heartbeat_keepalive = mock.Mock()
-
-            stack = contextlib.ExitStack()
-            stack.enter_context(mock.patch.object(asyncio, "wait_for"))
-            stack.enter_context(mock.patch.object(asyncio, "create_task"))
-
-            with stack:
-                # This will raise an assertion error if the backoff is incremented.
-                await client._run_once(client_session)
-
-    @hikari_test_helpers.timeout()
-    async def test_last_run_started_at_set_to_current_time(self, client, client_session):
-        # Windows does some batshit crazy stuff in perf_counter, like only
-        # returning process time elapsed rather than monotonic time since
-        # startup, so I guess I will put this random value here to show the
-        # code doesn't really care what this value is contextually.
-        client._last_run_started_at = -100_000
-
-        with mock.patch.object(hikari_date, "monotonic", return_value=1.0):
-            await client._run_once(client_session)
-
-        assert client._last_run_started_at == 1.0
-
-    @hikari_test_helpers.timeout()
     async def test_ws_gets_created(self, client, client_session):
         proxy_settings = config.ProxySettings(
             url="http://my-proxy.net",
@@ -672,6 +679,7 @@ class TestRunOnce:
             url=client.url,
             autoping=True,
             autoclose=True,
+            heartbeat=10,
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.all_headers,
             verify_ssl=http_settings.verify_ssl,
@@ -907,11 +915,13 @@ class TestRequestGuildMembers:
 class TestCloseWs:
     async def test_when_connected(self, client):
         client._ws = mock.Mock(spec_set=aiohttp.ClientWebSocketResponse)
-        client._ws.close = mock.AsyncMock()
+        client._ws.close = mock.Mock()
 
-        await client._close_ws(6969420, "you got yeeted")
+        with mock.patch.object(asyncio, "wait_for", new=mock.AsyncMock()) as wait_for:
+            await client._close_ws(6969420, "you got yeeted")
 
-        client._ws.close.assert_awaited_once_with(code=6969420, message=b"you got yeeted")
+        client._ws.close.assert_called_once_with(code=6969420, message=b"you got yeeted")
+        wait_for.assert_awaited_once_with(client._ws.close(), timeout=5)
 
     async def test_when_disconnected(self, client):
         client._ws = None
@@ -1052,77 +1062,76 @@ class TestHandshake:
 @pytest.mark.asyncio
 class TestHeartbeatKeepalive:
     @hikari_test_helpers.timeout()
-    async def test_when_not_zombie(self, client):
-        client._last_message_received = 5
-        client._heartbeat_interval = 5
-        client._last_heartbeat_sent = 2
-        client._seq = 123
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=False))
+    async def test_random_jitter_from_start(self, client):
+        client._send_json = mock.AsyncMock(spec_set=client._send_json)
+        stack = contextlib.ExitStack()
+        random = stack.enter_context(mock.patch("random.random", return_value=1234))
+        sleep = stack.enter_context(mock.patch("asyncio.sleep"))
+        client._heartbeat_interval = 1235
 
-        with mock.patch.object(hikari_date, "monotonic", side_effect=[10, 10, asyncio.CancelledError]):
-            with mock.patch.object(asyncio, "wait_for", side_effect=asyncio.TimeoutError):
-                with mock.patch.object(asyncio, "sleep"):
-                    await client._heartbeat_keepalive()
-
-        client._close_zombie.assert_not_called()
-        client._send_json.assert_awaited_once_with({"op": client._Opcode.HEARTBEAT, "d": 123})
-        assert client._last_heartbeat_sent == 10
-
-    @hikari_test_helpers.timeout()
-    async def test_when_zombie(self, client):
-        client._last_message_received = 1
-        client._heartbeat_interval = 5
-        client._last_heartbeat_sent = 2
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-
-        with mock.patch.object(hikari_date, "monotonic", return_value=10):
-            with mock.patch.object(asyncio, "sleep"):
-                await client._heartbeat_keepalive()
-
-        client._close_zombie.assert_awaited_once_with()
-        client._send_json.assert_not_called()
-
-    @hikari_test_helpers.timeout()
-    async def test_when_request_close_event_set(self, client):
-        client._heartbeat_interval = 5
-        client._close_zombie = mock.AsyncMock()
-        client._send_json = mock.AsyncMock()
-        client._request_close_event = mock.Mock(is_set=mock.Mock(return_value=True))
-
-        with mock.patch.object(asyncio, "sleep"):
+        # Don't repeat forever.
+        client._send_json = mock.Mock(side_effect=RuntimeError)
+        stack.enter_context(contextlib.suppress(RuntimeError))
+        with stack:
             await client._heartbeat_keepalive()
 
-        client._close_zombie.assert_not_called()
-        client._send_json.assert_not_called()
+        random.assert_called_once_with()
+        sleep.assert_awaited_once_with(1234 * 1235)
 
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_before_sleep(self, client):
+        client._send_json = mock.AsyncMock(spec_set=client._send_json)
+        client._heartbeat_interval = 0
+        client._request_close_event.set()
 
-@pytest.mark.asyncio
-class TestCloseZombie:
-    async def test_close_zombie(self, client):
-        class AsyncMock:
-            def __init__(self):
-                self.await_count = 0
+        await client._heartbeat_keepalive()
+        client._send_json.assert_awaited_once_with({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq})
 
-            def __await__(self):
-                self.await_count += 1
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_repeatedly_until_closure(self, client):
+        i = 0
 
-        client._close_ws = mock.Mock()
-        client._ws = mock.Mock()
-        client._zombied = False
-        mock_task = AsyncMock()
+        def side_effect(*_, **__):
+            nonlocal i
+            if i < 10:
+                i += 1
+                client._last_heartbeat_ack_received = time.perf_counter() + 0.5
+            else:
+                client._request_close_event.set()
 
-        with mock.patch.object(asyncio, "create_task", return_value=mock_task) as create_task:
-            with mock.patch.object(asyncio, "sleep") as sleep:
-                await client._close_zombie()
+        client._send_json = mock.AsyncMock(spec_set=client._send_json, wraps=side_effect)
+        client._heartbeat_interval = 0.01
 
-        assert client._zombied is True
-        client._close_ws.assert_called_once_with(code=errors.ShardCloseCode.PROTOCOL_ERROR, message="heartbeat timeout")
-        create_task.assert_called_once_with(client._close_ws())
-        assert mock_task.await_count == 1
-        sleep.assert_awaited_once_with(0.1)
+        await client._heartbeat_keepalive()
+
+        expected_calls = [
+            mock.call({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq}) for _ in range(11)
+        ]
+
+        assert client._send_json.mock_calls == expected_calls
+
+    @hikari_test_helpers.timeout()
+    async def test_heartbeat_is_sent_repeatedly_until_zombification(self, client):
+        i = 0
+
+        def side_effect(*_, **__):
+            nonlocal i
+            if i < 10:
+                i += 1
+                client._last_heartbeat_ack_received = time.perf_counter() + 0.5
+            else:
+                client._last_heartbeat_ack_received = time.perf_counter() - 100_000
+
+        client._send_json = mock.AsyncMock(spec_set=client._send_json, wraps=side_effect)
+        client._heartbeat_interval = 0.01
+
+        await client._heartbeat_keepalive()
+
+        expected_calls = [
+            mock.call({"op": shard.GatewayShardImpl._Opcode.HEARTBEAT, "d": client._seq}) for _ in range(11)
+        ]
+
+        assert client._send_json.mock_calls == expected_calls
 
 
 @pytest.mark.asyncio
@@ -1350,10 +1359,7 @@ class TestReceiveRaw:
         message = StubResponse(aiohttp.WSMsgType.TEXT, "some text")
         client._ws = mock.Mock(receive=mock.AsyncMock(return_value=message))
 
-        with mock.patch.object(hikari_date, "monotonic", return_value=123):
-            assert await client._receive_raw() == message
-
-        assert client._last_message_received == 123
+        assert await client._receive_raw() == message
 
     @pytest.mark.parametrize(
         ("received", "expected_error"),
@@ -1372,11 +1378,8 @@ class TestReceiveRaw:
         client._ws.receive = mock.AsyncMock(return_value=received)
         client._ws.exception = mock.Mock(return_value=RuntimeError)
 
-        with mock.patch.object(hikari_date, "monotonic", return_value=123):
-            with pytest.raises(expected_error):
-                await client._receive_raw()
-
-        assert client._last_message_received == 123
+        with pytest.raises(expected_error):
+            await client._receive_raw()
 
 
 @pytest.mark.asyncio

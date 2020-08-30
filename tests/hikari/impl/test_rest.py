@@ -56,19 +56,18 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture
 def connector_factory():
-    return rest.BasicLazyCachedTCPConnectorFactory()
+    return rest.BasicLazyCachedTCPConnectorFactory(test=123)
 
 
 class TestBasicLazyCachedTCPConnectorFactory:
     def test_acquire_when_connector_is_None(self, connector_factory):
         connector_mock = object()
         connector_factory.connector = None
-        connector_factory.connector_kwargs = {"test": 123}
 
         with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
             assert connector_factory.acquire() is connector_mock
             assert connector_factory.connector is connector_mock
-        tcp_connector.assert_called_once_with(test=123)
+        tcp_connector.assert_called_once_with(test=123, force_close=True, enable_cleanup_closed=True)
 
     def test_acquire_when_connector_is_not_None(self, connector_factory):
         connector_mock = object()
@@ -976,6 +975,7 @@ class TestRESTClientImplAsync:
 
     async def test_close_when__client_session_is_None(self, rest_client):
         rest_client._client_session = None
+        rest_client._connector_factory = mock.AsyncMock()
         rest_client.buckets = mock.Mock()
 
         await rest_client.close()
@@ -984,6 +984,7 @@ class TestRESTClientImplAsync:
 
     async def test_close_when__client_session_is_not_None(self, rest_client):
         rest_client._client_session = mock.AsyncMock()
+        rest_client._connector_factory = mock.AsyncMock()
         rest_client.buckets = mock.Mock()
 
         await rest_client.close()
