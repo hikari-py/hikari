@@ -1620,7 +1620,7 @@ class TestEntityFactoryImpl:
             )
         }
         assert guild_preview.approximate_member_count == 69
-        assert guild_preview.approximate_presence_count == 42
+        assert guild_preview.approximate_active_member_count == 42
         assert guild_preview.description == "A DESCRIPTION."
         assert isinstance(guild_preview, guild_models.GuildPreview)
 
@@ -1778,14 +1778,14 @@ class TestEntityFactoryImpl:
                 "verification_level": 4,
                 "max_presences": 8,
                 "max_members": 9,
+                "approximate_member_count": 42,
+                "approximate_presence_count": 9,
             }
         )
         assert guild.max_video_channel_users is None
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None
-        assert guild.approximate_active_member_count is None
-        assert guild.approximate_active_member_count is None
 
     def test_deserialize_rest_guild_with_null_fields(self, entity_factory_impl):
         guild = entity_factory_impl.deserialize_rest_guild(
@@ -2178,19 +2178,24 @@ class TestEntityFactoryImpl:
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
         assert invite.target_user_type == invite_models.TargetUserType.STREAM
         assert invite.approximate_member_count == 84
-        assert invite.approximate_presence_count == 42
+        assert invite.approximate_active_member_count == 42
         assert isinstance(invite, invite_models.Invite)
 
     def test_deserialize_invite_with_null_and_unset_fields(self, entity_factory_impl, partial_channel_payload):
-        invite = entity_factory_impl.deserialize_invite({"code": "aCode", "channel_id": "43123123"})
+        invite = entity_factory_impl.deserialize_invite(
+            {
+                "code": "aCode",
+                "channel_id": "43123123",
+                "approximate_member_count": 231,
+                "approximate_presence_count": 9,
+            }
+        )
         assert invite.channel is None
         assert invite.channel_id == 43123123
         assert invite.guild is None
         assert invite.inviter is None
         assert invite.target_user is None
         assert invite.target_user_type is None
-        assert invite.approximate_presence_count is None
-        assert invite.approximate_member_count is None
 
     def test_deserialize_invite_with_guild_and_channel_ids_without_objects(self, entity_factory_impl):
         invite = entity_factory_impl.deserialize_invite({"code": "aCode", "guild_id": "42", "channel_id": "202020"})
@@ -2255,7 +2260,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
         assert invite_with_metadata.target_user_type == invite_models.TargetUserType.STREAM
         assert invite_with_metadata.approximate_member_count == 84
-        assert invite_with_metadata.approximate_presence_count == 42
+        assert invite_with_metadata.approximate_active_member_count == 42
         assert invite_with_metadata.uses == 3
         assert invite_with_metadata.max_uses == 8
         assert invite_with_metadata.max_age == datetime.timedelta(seconds=239349393)
@@ -2277,14 +2282,14 @@ class TestEntityFactoryImpl:
                 "max_age": 0,
                 "temporary": True,
                 "created_at": "2015-04-26T06:26:56.936000+00:00",
+                "approximate_presence_count": 4,
+                "approximate_member_count": 9,
             }
         )
         assert invite_with_metadata.guild is None
         assert invite_with_metadata.inviter is None
         assert invite_with_metadata.target_user is None
         assert invite_with_metadata.target_user_type is None
-        assert invite_with_metadata.approximate_presence_count is None
-        assert invite_with_metadata.approximate_member_count is None
 
     def test_max_age_when_zero(self, entity_factory_impl, invite_with_metadata_payload):
         invite_with_metadata_payload["max_age"] = 0

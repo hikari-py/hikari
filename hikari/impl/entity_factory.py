@@ -143,7 +143,7 @@ class _InviteFields:
     inviter: typing.Optional[user_models.User] = attr.ib()
     target_user: typing.Optional[user_models.User] = attr.ib()
     target_user_type: typing.Optional[invite_models.TargetUserType] = attr.ib()
-    approximate_presence_count: typing.Optional[int] = attr.ib()
+    approximate_active_member_count: typing.Optional[int] = attr.ib()
     approximate_member_count: typing.Optional[int] = attr.ib()
 
 
@@ -1110,7 +1110,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             splash_hash=payload["splash"],
             discovery_splash_hash=payload["discovery_splash"],
             emojis=emojis,
-            approximate_presence_count=int(payload["approximate_presence_count"]),
+            approximate_active_member_count=int(payload["approximate_presence_count"]),
             approximate_member_count=int(payload["approximate_member_count"]),
             description=payload["description"],
         )
@@ -1165,12 +1165,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         guild_fields = self._set_guild_attributes(payload)
-        approximate_member_count = (
-            int(payload["approximate_member_count"]) if "approximate_member_count" in payload else None
-        )
-        approximate_active_member_count = (
-            int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
-        )
+        approximate_member_count = int(payload["approximate_member_count"])
+        approximate_active_member_count = int(payload["approximate_presence_count"])
         max_members = int(payload["max_members"])
 
         raw_max_presences = payload["max_presences"]
@@ -1353,7 +1349,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         target_user_type = (
             invite_models.TargetUserType(payload["target_user_type"]) if "target_user_type" in payload else None
         )
-        approximate_presence_count = (
+        approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
         approximate_member_count = (
@@ -1368,7 +1364,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             inviter=self.deserialize_user(payload["inviter"]) if "inviter" in payload else None,
             target_user=self.deserialize_user(payload["target_user"]) if "target_user" in payload else None,
             target_user_type=target_user_type,
-            approximate_presence_count=approximate_presence_count,
+            approximate_active_member_count=approximate_active_member_count,
             approximate_member_count=approximate_member_count,
         )
 
@@ -1385,7 +1381,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_user=invite_fields.target_user,
             target_user_type=invite_fields.target_user_type,
             approximate_member_count=invite_fields.approximate_member_count,
-            approximate_presence_count=invite_fields.approximate_presence_count,
+            approximate_active_member_count=invite_fields.approximate_active_member_count,
         )
 
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_models.InviteWithMetadata:
@@ -1402,7 +1398,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_user=invite_fields.target_user,
             target_user_type=invite_fields.target_user_type,
             approximate_member_count=invite_fields.approximate_member_count,
-            approximate_presence_count=invite_fields.approximate_presence_count,
+            approximate_active_member_count=invite_fields.approximate_active_member_count,
             uses=int(payload["uses"]),
             max_uses=int(payload["max_uses"]),
             max_age=datetime.timedelta(seconds=max_age) if max_age > 0 else None,

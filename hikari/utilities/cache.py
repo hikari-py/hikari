@@ -434,7 +434,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         return super().build_entity(
             target,
             approximate_member_count=None,
-            approximate_presence_count=None,
+            approximate_active_member_count=None,
             channel=None,
             guild=None,
             **kwargs,

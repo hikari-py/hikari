@@ -939,7 +939,7 @@ class TestStatefulCacheImpl:
         assert invite.inviter is not mock_inviter
         assert invite.target_user is not mock_target_user
         assert invite.target_user_type is invites.TargetUserType.STREAM
-        assert invite.approximate_presence_count is None
+        assert invite.approximate_active_member_count is None
         assert invite.approximate_member_count is None
         assert invite.uses == 42
         assert invite.max_uses == 999
