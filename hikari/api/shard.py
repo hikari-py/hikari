@@ -391,4 +391,4 @@ class GatewayShard(abc.ABC):
         hikari.errors.MissingIntentError
             When trying to request presences without the `GUILD_MEMBERS` or when trying to
             request the full list of members without `GUILD_PRESENCES`.
-        """  # noqa: E501 - Line too long
+        """

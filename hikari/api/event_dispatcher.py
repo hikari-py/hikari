@@ -295,9 +295,9 @@ class EventDispatcher(abc.ABC):
             ending the iteration. If `builtins.None` then this will continue
             until explicitly broken from.
         limit : typing.Optional[builtins.int]
-            The limit for how many events this should cache in it's queue at one
-            time, leave this as `builtins.None` for the cache size to be
-            unlimited.
+            The limit for how many events this should queue at one time before
+            dropping extra incoming events, leave this as `builtins.None` for
+            the cache size to be unlimited.
 
         Returns
         -------
@@ -320,7 +320,7 @@ class EventDispatcher(abc.ABC):
                 ...
         ```
 
-        or using await open() and wait close()
+        or using await `open()` and await `close()`
 
         ```py
         stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))

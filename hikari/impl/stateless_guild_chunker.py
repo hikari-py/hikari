@@ -29,13 +29,27 @@ import typing
 
 from hikari import undefined
 from hikari.api import chunker
+from hikari.utilities import event_stream
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
-    from hikari import iterators
     from hikari import snowflakes
     from hikari import users as users_
+    from hikari.api import shard as gateway_shard
     from hikari.events import shard_events
+
+
+class _EmptyStream(event_stream.Streamer["shard_events.MemberChunkEvent"]):
+    """An empty stream implementation used by the stateless chunker impl."""
+
+    async def close(self) -> None:
+        return None
+
+    async def open(self) -> None:
+        return None
+
+    async def __anext__(self) -> typing.NoReturn:
+        raise StopAsyncIteration
 
 
 class StatelessGuildChunkerImpl(chunker.GuildChunker):
@@ -53,25 +67,30 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         *,
-        timeout: int,
+        timeout: typing.Union[int, float, None],
+        limit: typing.Optional[int] = None,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        limit: int = 0,
+        query_limit: int = 0,
         query: str = "",
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[shard_events.MemberChunkEvent]:
-        return iterators.FlatLazyIterator([])
+    ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
+        return _EmptyStream()
 
-    async def get_chunk_status(self, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
+    async def get_request_status(self, nonce: str) -> typing.Optional[chunker.RequestInformation]:
         return None
 
-    async def list_chunk_statuses_for_shard(self, shard_id: int) -> typing.Sequence[chunker.ChunkInformation]:
+    async def list_requests_for_shard(
+        self, shard: typing.Union[gateway_shard.GatewayShard, int]
+    ) -> typing.Sequence[chunker.RequestInformation]:
         return ()
 
-    async def list_chunk_statuses_for_guild(self, guild_id: int) -> typing.Sequence[chunker.ChunkInformation]:
+    async def list_requests_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild]
+    ) -> typing.Sequence[chunker.RequestInformation]:
         return ()
 
-    async def on_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
-        return None
+    async def consume_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> typing.NoReturn:
+        raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
     async def request_guild_members(
         self,

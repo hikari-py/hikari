@@ -887,10 +887,13 @@ class TestRequestGuildMembers:
         client._intents = None
         client._send_json = mock.AsyncMock()
 
-        await client.request_guild_members(123)
+        await client.request_guild_members(123, include_presences=True)
 
         client._send_json.assert_awaited_once_with(
-            {"op": client._Opcode.REQUEST_GUILD_MEMBERS, "d": {"guild_id": "123", "query": "", "limit": 0}}
+            {
+                "op": client._Opcode.REQUEST_GUILD_MEMBERS,
+                "d": {"guild_id": "123", "query": "", "presences": True, "limit": 0},
+            }
         )
 
 

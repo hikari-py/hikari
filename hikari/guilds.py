@@ -639,7 +639,7 @@ class PartialGuild(snowflakes.Unique):
             # This is only sensible if there is a shard.
             shard_count = getattr(self.app, "shard_count")
             assert isinstance(shard_count, int)
-            return (self.id >> 22) % shard_count
+            return snowflakes.calculate_shard_id(shard_count, self.id)
         except (TypeError, AttributeError, NameError):
             return None
 

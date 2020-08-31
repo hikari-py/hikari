@@ -238,9 +238,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         # We limit member chunk requests to a stricter ratelimit of 60 requests per minute as to ensure that chunk
         # requests don't single-handedly exhaust the request limit when being triggered on mass.
-        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(
-            f"chunking guilds on shard {shard_id}", 60, 60
-        )
+        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(f"guild chunking on {shard_id}", 60, 60)
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._closing = False
@@ -372,9 +370,6 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     async def close(self) -> None:
         """Close the websocket."""
-        self._ratelimiter.close()
-        self._chunk_request_ratelimiter.close()
-
         if not self._request_close_event.is_set():
             if self.is_alive:
                 self._logger.info("received request to shut down shard")
@@ -382,6 +377,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._logger.debug("shard marked as closed when it was not running")
 
             self._ratelimiter.close()
+            self._chunk_request_ratelimiter.close()
             if self._ws is not None:
                 self._closing = True
                 # If anything interrupts this task, aiohttp will just refuse to send the close frame

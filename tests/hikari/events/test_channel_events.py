@@ -91,11 +91,12 @@ class TestGuildChannelDeleteEvent:
 class TestInviteEvent:
     @pytest.fixture()
     def event(self):
-        return hikari_test_helpers.mock_class_namespace(channel_events.InviteEvent, slots=False)()
+        return hikari_test_helpers.mock_class_namespace(
+            channel_events.InviteEvent, slots=False, code=mock.PropertyMock(return_value="Jx4cNGG")
+        )()
 
     async def test_fetch_invite(self, event):
         event.app.rest.fetch_invite = mock.AsyncMock()
-        event.code = "Jx4cNGG"
 
         await event.fetch_invite()
 

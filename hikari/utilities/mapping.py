@@ -25,7 +25,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = [
     "KeyT",
     "ValueT",
-    "MRUMutableMapping",
+    "MRIMutableMapping",
     "get_index_or_slice",
 ]
 
@@ -40,10 +40,10 @@ ValueT = typing.TypeVar("ValueT")
 """Type-hint A type hint used for the type of a mapping's value."""
 
 
-class MRUMutableMapping(typing.MutableMapping[KeyT, ValueT]):
-    """A most recently used mutable mapping implementation.
+class MRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
+    """A most-recently-inserted limited mutable mapping implementation.
 
-    This will remove entries
+    This will remove entries on modification as as they pass the expiry limit.
 
     Parameters
     ----------
@@ -92,16 +92,16 @@ class MRUMutableMapping(typing.MutableMapping[KeyT, ValueT]):
 
 
 class CMRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
-    """Implementation of a capacity most recently used mutable mapping.
+    """Implementation of a capacity-limited most-recently-inserted mapping.
 
     This will start removing the oldest entries after it's maximum capacity is
-    meet as new entries are added.
+    reached as new entries are added.
 
     Parameters
     ----------
     limit : int
-        The limit for how many objects should be stored by this cache before it
-        starts removing the oldest entries.
+        The limit for how many objects should be stored by this mapping before
+        it starts removing the oldest entries.
     """
 
     __slots__ = ("_data", "_limit")
@@ -152,7 +152,7 @@ def get_index_or_slice(
     Raises
     ------
     TypeError
-        If `index_or_slice` isn't a `buildings.slice` or `builtins.int`.
+        If `index_or_slice` isn't a `builtins.slice` or `builtins.int`.
     IndexError
         If `index_or_slice` is an int and is outside the range of the mapping's
         contents.

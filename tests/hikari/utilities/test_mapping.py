@@ -29,20 +29,20 @@ from hikari.utilities import mapping
 class TestMRUMutableMapping:
     def test___init___raises_value_error_on_invalid_expiry(self):
         with pytest.raises(ValueError):
-            mapping.MRUMutableMapping(datetime.timedelta(seconds=0))
+            mapping.MRIMutableMapping(datetime.timedelta(seconds=0))
 
         with pytest.raises(ValueError):
-            mapping.MRUMutableMapping(datetime.timedelta(seconds=-50))
+            mapping.MRIMutableMapping(datetime.timedelta(seconds=-50))
 
     def test___delitem__(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map.update({"ok": "no", "ayanami": "rei qt"})
         del mock_map["ok"]
         assert mock_map == {"ayanami": "rei qt"}
 
     @pytest.mark.asyncio
     async def test___delitem___garbage_collection(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=0.2))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=0.2))
         mock_map.update({"nyaa": "see", "awwo": "awoo2"})
         await asyncio.sleep(0.1)
         assert mock_map == {"nyaa": "see", "awwo": "awoo2"}
@@ -53,36 +53,36 @@ class TestMRUMutableMapping:
         assert mock_map == {"rei": "aww"}
 
     def test___getitem___for_valid_entry(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map["OK"] = 42
         mock_map["blam"] = 8
         assert mock_map["OK"] == 42
 
     def test___getitem___for_unknown_entry(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map["blam"] = 8
 
         with pytest.raises(KeyError):
             assert not mock_map["OK"]
 
     def test___iter__(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map.update({"o": "k", "k": "o", "awoo": "blam", "hikari": "rei"})
         assert list(mock_map) == ["o", "k", "awoo", "hikari"]
 
     def test___len__(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map.update({"o": "k", "boop": "bop", "k": "o", "awoo": "blam", "rei": "cute", "hikari": "rei"})
         assert len(mock_map) == 6
 
     def test___setitem__(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=100))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
         mock_map["blat"] = 42
         assert mock_map == {"blat": 42}
 
     @pytest.mark.asyncio
     async def test___setitem___garbage_collection(self):
-        mock_map = mapping.MRUMutableMapping(datetime.timedelta(seconds=0.25))
+        mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=0.25))
         mock_map.update({"OK": "no", "blam": "booga"})
         await asyncio.sleep(0.1)
         assert mock_map == {"OK": "no", "blam": "booga"}

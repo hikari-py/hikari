@@ -45,6 +45,8 @@ from hikari.utilities import event_stream
 from hikari.utilities import mapping
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds
     from hikari import traits
     from hikari import users as users_
@@ -52,12 +54,8 @@ if typing.TYPE_CHECKING:
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 
-EXPIRY_TIME = 5000
+EXPIRY_TIME: typing.Final[int] = 5000
 """How long a chunk event should wait until it's considered expired in miliseconds."""
-
-
-def _get_shard_id(app: traits.ShardAware, guild_id: snowflakes.Snowflake) -> int:
-    return (guild_id >> 22) % app.shard_count
 
 
 def _random_nonce() -> str:
@@ -67,7 +65,12 @@ def _random_nonce() -> str:
 
 
 class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
-    """A specialised event stream used for triggering and streaming chunk events."""
+    """A specialised event stream used for triggering and streaming chunk events.
+
+    See Also
+    --------
+    Event Stream: `hikari.utilities.event_stream.EventStream`
+    """
 
     __slots__: typing.Sequence[str] = (
         "_guild_id",
@@ -139,7 +142,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         await super().open()
 
         if not started:
-            shard_id = _get_shard_id(self._app, self._guild_id)
+            shard_id = snowflakes.calculate_shard_id(self._app, self._guild_id)
             await self._app.shards[shard_id].request_guild_members(
                 guild=self._guild_id,
                 include_presences=self._include_presences,
@@ -151,19 +154,26 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
 
 
 @attr.s(init=True, kw_only=True, hash=False, eq=True, slots=True, weakref_slot=False)
-class _TrackedChunks:
+class _TrackedRequests:
+    """`hikari.api.chunker.RequestInformation` implementation."""
+
+    __slots__: typing.Sequence[str]
+
     average_chunk_size: typing.Optional[int] = attr.ib(default=None)
     chunk_count: typing.Optional[int] = attr.ib(default=None)
     guild_id: snowflakes.Snowflake = attr.ib()
-    last_received: typing.Optional[int] = attr.ib(default=None)
-    missing_chunks: typing.Optional[typing.MutableSequence[int]] = attr.ib(default=None)
+    last_received: typing.Optional[datetime.datetime] = attr.ib(default=None)
+    _mono_last_received: typing.Optional[int] = attr.ib(default=None)
+    missing_chunk_indexes: typing.Optional[typing.MutableSequence[int]] = attr.ib(default=None)
     nonce: str = attr.ib()
-    not_found: typing.MutableSequence[snowflakes.Snowflake] = attr.ib(factory=list)
+    not_found_ids: typing.MutableSequence[snowflakes.Snowflake] = attr.ib(factory=list)
 
-    def __copy__(self) -> _TrackedChunks:
+    def __copy__(self) -> _TrackedRequests:
         chunks = attr_extensions.copy_attrs(self)
-        chunks.missing_chunks = list(self.missing_chunks) if self.missing_chunks is not None else None
-        chunks.not_found = list(self.not_found)
+        chunks.missing_chunk_indexes = (
+            list(self.missing_chunk_indexes) if self.missing_chunk_indexes is not None else None
+        )
+        chunks.not_found_ids = list(self.not_found_ids)
         return chunks
 
     @property
@@ -171,24 +181,46 @@ class _TrackedChunks:
         if self.received_chunks == self.chunk_count:
             return True
 
-        return self.last_received is not None and time.monotonic_ns() - self.last_received > EXPIRY_TIME
+        return self._mono_last_received is not None and time.monotonic_ns() - self._mono_last_received > EXPIRY_TIME
 
     @property
     def received_chunks(self) -> int:
-        if self.chunk_count is None or self.missing_chunks is None:
+        if self.chunk_count is None or self.missing_chunk_indexes is None:
             return 0
 
-        return self.chunk_count - len(self.missing_chunks)
+        return self.chunk_count - len(self.missing_chunk_indexes)
+
+    def update(self, event: shard_events.MemberChunkEvent) -> None:
+        if self.missing_chunk_indexes is None:
+            self.average_chunk_size = len(event.members)
+            self.chunk_count = event.chunk_count
+            self.missing_chunk_indexes = list(range(event.chunk_count))
+
+        self.not_found_ids.extend(event.not_found)
+        self.missing_chunk_indexes.remove(event.chunk_index)
+        self._mono_last_received = time.monotonic_ns()
+        self.last_received = date.utc_datetime()
 
 
 class StatefulGuildChunkerImpl(chunker.GuildChunker):
-    """Guild chunker implementation."""
+    """Guild chunker implementation.
+
+    Parameters
+    ----------
+    app: hikari.traits.BotAware
+        The object of the bot aware app this is bound to.
+    limit: builtins.int
+        The maximum amount of requests that this chunker should store information
+        about for each shard.
+    """
 
     __slots__: typing.Sequence[str] = ("_app", "_tracked")
 
     def __init__(self, app: traits.BotAware, limit: int = 200) -> None:
         self._app = app
-        self._tracked: typing.MutableMapping[int, typing.Dict[str, _TrackedChunks]] = mapping.CMRIMutableMapping(limit)
+        self._tracked: typing.MutableMapping[int, typing.Dict[str, _TrackedRequests]] = mapping.CMRIMutableMapping(
+            limit
+        )
 
     def _default_include_presences(
         self, guild_id: snowflakes.Snowflake, include_presences: undefined.UndefinedOr[bool]
@@ -196,7 +228,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         if include_presences is not undefined.UNDEFINED:
             return include_presences
 
-        shard_id = _get_shard_id(self._app, guild_id)
+        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         shard = self._app.shards[shard_id]
         return shard.intents is None or bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
 
@@ -204,9 +236,10 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         *,
-        timeout: int,
+        timeout: typing.Union[int, float, None],
+        limit: typing.Optional[int],
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        limit: int = 0,
+        query_limit: int = 0,
         query: str = "",
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
@@ -215,13 +248,14 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             app=self._app,
             guild_id=guild_id,
             timeout=timeout,
+            limit=limit,
             include_presences=self._default_include_presences(guild_id, include_presences),
-            query_limit=limit,
+            query_limit=query_limit,
             query=query,
             users=users,
         )
 
-    async def get_chunk_status(self, nonce: str) -> typing.Optional[chunker.ChunkInformation]:
+    async def get_request_status(self, nonce: str) -> typing.Optional[chunker.RequestInformation]:
         try:
             shard_id = int(nonce.split(".", 1)[0])
         except ValueError:
@@ -229,9 +263,9 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         else:
             return copy.copy(self._tracked[shard_id].get(nonce)) if shard_id in self._tracked else None
 
-    async def list_chunk_statuses_for_shard(
+    async def list_requests_for_shard(
         self, shard: typing.Union[gateway_shard.GatewayShard, int]
-    ) -> typing.Sequence[chunker.ChunkInformation]:
+    ) -> typing.Sequence[chunker.RequestInformation]:
         shard_id = shard if isinstance(shard, int) else shard.id
 
         if shard_id in self._tracked:
@@ -239,30 +273,21 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
 
         return ()
 
-    async def list_chunk_statuses_for_guild(
+    async def list_requests_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild]
-    ) -> typing.Sequence[chunker.ChunkInformation]:
+    ) -> typing.Sequence[chunker.RequestInformation]:
         guild_id = snowflakes.Snowflake(guild)
-        shard_id = _get_shard_id(self._app, guild_id)
+        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         if shard_id not in self._tracked:
             return ()
 
         return tuple(copy.copy(event) for event in self._tracked[shard_id].values() if event.guild_id == guild_id)
 
-    async def on_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
+    async def consume_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
         if event.shard.id not in self._tracked or event.nonce not in self._tracked[event.shard.id]:
             return
 
-        event_tracker = self._tracked[event.shard.id][event.nonce]
-
-        if event_tracker.missing_chunks is None:
-            event_tracker.average_chunk_size = len(event.members)
-            event_tracker.chunk_count = event.chunk_count
-            event_tracker.missing_chunks = list(range(event.chunk_count))
-
-        event_tracker.not_found.extend(event.not_found)
-        event_tracker.missing_chunks.remove(event.chunk_index)
-        event_tracker.last_received = time.monotonic_ns()
+        self._tracked[event.shard.id][event.nonce].update(event)
 
     async def request_guild_members(
         self,
@@ -274,12 +299,12 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
     ) -> str:
         guild_id = snowflakes.Snowflake(guild)
-        shard_id = _get_shard_id(self._app, guild_id)
+        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         nonce = f"{shard_id}.{_random_nonce()}"
         if shard_id not in self._tracked:
             self._tracked[shard_id] = {}
 
-        tracker = _TrackedChunks(guild_id=guild_id, nonce=nonce)
+        tracker = _TrackedRequests(guild_id=guild_id, nonce=nonce)
         self._tracked[shard_id][nonce] = tracker
         await self._app.shards[shard_id].request_guild_members(
             guild=guild_id,

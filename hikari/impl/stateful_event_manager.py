@@ -162,7 +162,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
             members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
             presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
-        # When intents are enabled discord will only send most member objects on the guild create
+        # When intents are enabled discord will only send other member objects on the guild create
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
         if (event.guild.is_large or not presences_declared) and members_declared:
@@ -261,7 +261,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for presence in event.presences.values():
             self._cache.set_presence(presence)
 
-        await self._app.chunker.on_chunk_event(event)
+        await self._app.chunker.consume_chunk_event(event)
         await self.dispatch(event)
 
     async def on_guild_role_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
