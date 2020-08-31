@@ -867,18 +867,6 @@ class Guild(PartialGuild, abc.ABC):
     If the `GuildFeature.PUBLIC` feature is not defined, then this is `builtins.None`.
     """
 
-    max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild.
-
-    If this is `builtins.None`, then the default value is used (currently 25000).
-    """
-
-    max_members: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of members allowed in this guild.
-
-    This information may not be present, in which case, it will be `builtins.None`.
-    """
-
     max_video_channel_users: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
@@ -1102,6 +1090,12 @@ class RESTGuild(Guild):
     a bot account is in. For all other purposes, this should be expected to
     remain `builtins.None`.
     """
+
+    max_presences: int = attr.ib(eq=False, hash=False, repr=False)
+    """The maximum number of presences for the guild."""
+
+    max_members: int = attr.ib(eq=False, hash=False, repr=False)
+    """The maximum number of members allowed in this guild."""
 
     @property
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:

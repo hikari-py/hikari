@@ -51,6 +51,7 @@ from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
 from hikari.utilities import attr_extensions
+from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
 
@@ -121,8 +122,6 @@ class _GuildFields(_PartialGuildFields):
     is_widget_enabled: typing.Optional[bool] = attr.ib()
     system_channel_flags: guild_models.GuildSystemChannelFlag = attr.ib()
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
-    max_presences: typing.Optional[int] = attr.ib()
-    max_members: typing.Optional[int] = attr.ib()
     max_video_channel_users: typing.Optional[int] = attr.ib()
     vanity_url_code: typing.Optional[str] = attr.ib()
     description: typing.Optional[str] = attr.ib()
@@ -1126,7 +1125,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         widget_channel_id = payload.get("widget_channel_id")
         system_channel_id = payload["system_channel_id"]
         rules_channel_id = payload["rules_channel_id"]
-        max_presences = payload.get("max_presences")
         max_video_channel_users = (
             int(payload["max_video_channel_users"]) if "max_video_channel_users" in payload else None
         )
@@ -1155,8 +1153,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_widget_enabled=payload["widget_enabled"] if "widget_enabled" in payload else None,
             system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
             rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
-            max_presences=int(max_presences) if max_presences is not None else None,
-            max_members=int(payload["max_members"]) if "max_members" in payload else None,
             max_video_channel_users=max_video_channel_users,
             vanity_url_code=payload["vanity_url_code"],
             description=payload["description"],
@@ -1175,6 +1171,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
         )
+        max_members = int(payload["max_members"])
+
+        raw_max_presences = payload["max_presences"]
+        if raw_max_presences is None:
+            max_presences = constants.DEFAULT_MAX_PRESENCES
+        else:
+            max_presences = int(raw_max_presences)
 
         roles = {
             snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild_fields.id)
@@ -1206,8 +1209,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_widget_enabled=guild_fields.is_widget_enabled,
             system_channel_flags=guild_fields.system_channel_flags,
             rules_channel_id=guild_fields.rules_channel_id,
-            max_presences=guild_fields.max_presences,
-            max_members=guild_fields.max_members,
+            max_presences=max_presences,
+            max_members=max_members,
             max_video_channel_users=guild_fields.max_video_channel_users,
             vanity_url_code=guild_fields.vanity_url_code,
             description=guild_fields.description,
@@ -1251,8 +1254,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_widget_enabled=guild_fields.is_widget_enabled,
             system_channel_flags=guild_fields.system_channel_flags,
             rules_channel_id=guild_fields.rules_channel_id,
-            max_presences=guild_fields.max_presences,
-            max_members=guild_fields.max_members,
             max_video_channel_users=guild_fields.max_video_channel_users,
             vanity_url_code=guild_fields.vanity_url_code,
             description=guild_fields.description,

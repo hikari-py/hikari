@@ -43,6 +43,7 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
+from hikari.utilities import constants
 
 
 def test__deserialize_seconds_timedelta():
@@ -1775,10 +1776,10 @@ class TestEntityFactoryImpl:
                 "system_channel_id": "19216801",
                 "vanity_url_code": "loool",
                 "verification_level": 4,
+                "max_presences": 8,
+                "max_members": 9,
             }
         )
-        assert guild.max_members is None
-        assert guild.max_presences is None
         assert guild.max_video_channel_users is None
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
@@ -1836,7 +1837,7 @@ class TestEntityFactoryImpl:
         assert guild.widget_channel_id is None
         assert guild.system_channel_id is None
         assert guild.rules_channel_id is None
-        assert guild.max_presences is None
+        assert guild.max_presences is constants.DEFAULT_MAX_PRESENCES
         assert guild.vanity_url_code is None
         assert guild.description is None
         assert guild.banner_hash is None
@@ -1947,8 +1948,6 @@ class TestEntityFactoryImpl:
         assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert guild.is_large is False
         assert guild.member_count == 14
-        assert guild.max_presences == 250
-        assert guild.max_members == 25000
         assert guild.max_video_channel_users == 25
         assert guild.vanity_url_code == "loool"
         assert guild.description == "This is a server I guess, its a bit crap though"
@@ -2034,8 +2033,6 @@ class TestEntityFactoryImpl:
         guild = guild_definition.guild
         assert guild.joined_at is None
         assert guild.is_large is None
-        assert guild.max_members is None
-        assert guild.max_presences is None
         assert guild.max_video_channel_users is None
         assert guild.member_count is None
         assert guild.premium_subscription_count is None
@@ -2103,7 +2100,6 @@ class TestEntityFactoryImpl:
         assert guild.widget_channel_id is None
         assert guild.system_channel_id is None
         assert guild.rules_channel_id is None
-        assert guild.max_presences is None
         assert guild.vanity_url_code is None
         assert guild.description is None
         assert guild.banner_hash is None
