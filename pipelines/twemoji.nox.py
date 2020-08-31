@@ -24,5 +24,5 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".", "requests")
+    session.install("-U", "-e", ".", "requests")
     session.run("python", "scripts/test_twemoji_mapping.py")

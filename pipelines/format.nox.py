@@ -100,7 +100,7 @@ def reformat_code(session: nox.Session) -> None:
     session.run("isort", *REFORMATING_PATHS)
 
     # black
-    session.install("-U", f"black=={BLACK_VERSION}")
+    session.install(f"black=={BLACK_VERSION}")
     session.run("black", *REFORMATING_PATHS)
 
 
