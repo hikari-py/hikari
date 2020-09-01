@@ -22,7 +22,6 @@ import asyncio
 import contextlib
 import logging
 import math
-import queue
 import statistics
 import threading
 import time
@@ -47,7 +46,7 @@ class TestBaseRateLimiter:
 
 
 class TestBurstRateLimiter:
-    @pytest.fixture
+    @pytest.fixture()
     def mock_burst_limiter(self):
         class Impl(rate_limits.BurstRateLimiter):
             def acquire(self, *args, **kwargs) -> asyncio.Future:
@@ -180,7 +179,7 @@ class TestManualRateLimiter:
 
 
 class TestWindowedBurstRateLimiter:
-    @pytest.fixture
+    @pytest.fixture()
     def ratelimiter(self):
         inst = hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 3, 3)
         yield inst
@@ -337,7 +336,8 @@ class TestWindowedBurstRateLimiter:
             len(completion_times) == total_requests
         ), f"expected {total_requests} completions but got {len(completion_times)}"
 
-        windows = [completion_times[i : i + limit] for i in range(0, total_requests, limit)]
+        # E203 - Whitespace before ":". Black reformats it
+        windows = [completion_times[i : i + limit] for i in range(0, total_requests, limit)]  # noqa: E203
 
         for i, window in enumerate(windows):
             logger.info("window %s %s", i, window)
@@ -407,7 +407,7 @@ class TestExponentialBackOff:
         eb.reset()
         assert eb.increment == 0
 
-    @pytest.mark.parametrize(["iteration", "backoff"], enumerate((1, 2, 4, 8, 16, 32)))
+    @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_linear(self, iteration, backoff):
         eb = rate_limits.ExponentialBackOff(2, 64, 0)
 
@@ -423,13 +423,10 @@ class TestExponentialBackOff:
         for _ in range(iterations):
             next(eb)
 
-        try:
+        with pytest.raises(asyncio.TimeoutError):
             next(eb)
-            assert False, ":("
-        except asyncio.TimeoutError:
-            assert True
 
-    @pytest.mark.parametrize(["iteration", "backoff"], enumerate((1, 2, 4, 8, 16, 32)))
+    @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_jitter(self, iteration, backoff):
         abs_tol = 1
         eb = rate_limits.ExponentialBackOff(2, 64, abs_tol)

@@ -27,7 +27,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestCompiledRoute:
-    @pytest.fixture
+    @pytest.fixture()
     def compiled_route(self):
         return routes.CompiledRoute(
             major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"
@@ -47,7 +47,7 @@ class TestCompiledRoute:
 
 
 class TestRoute:
-    @pytest.fixture
+    @pytest.fixture()
     def route(self):
         return routes.Route(method="GET", path_template="/some/endpoint/{channel}")
 
@@ -61,7 +61,7 @@ class TestRoute:
 
 class TestCDNRoute:
     def test_zero_formats_results_in_error(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="/foo/bar must have at least one valid format set"):
             routes.CDNRoute("/foo/bar", set())
 
     @hikari_test_helpers.assert_does_not_raise(ValueError)
@@ -102,7 +102,7 @@ class TestCDNRoute:
         assert hash(route3) != hash(route4)
 
     @pytest.mark.parametrize(
-        ["input_file_format", "expected_file_format"],
+        ("input_file_format", "expected_file_format"),
         [
             ("jpg", "jpg"),
             ("JPG", "jpg"),
@@ -175,13 +175,19 @@ class TestCDNRoute:
     @pytest.mark.parametrize("size", [*range(17, 32)])
     def test_passing_non_power_of_2_sizes_to_sizable_raises_ValueError(self, size):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=True)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
-    @pytest.mark.parametrize("size", [int(2 ** size) for size in [*range(-4, 4)] + [*range(13, 15)]])
+    @pytest.mark.parametrize("size", [int(2 ** size) for size in [1, *range(17, 25)]])
     def test_passing_invalid_magnitude_sizes_to_sizable_raises_ValueError(self, size):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, sizable=True)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
+            route.compile("http://example.com", file_format="png", hash="boooob", size=size)
+
+    @pytest.mark.parametrize("size", [*range(-10, 0)])
+    def test_passing_negative_sizes_to_sizable_raises_ValueError(self, size):
+        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, sizable=True)
+        with pytest.raises(ValueError, match="size must be positive"):
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
     @pytest.mark.parametrize("size", [int(2 ** size) for size in range(4, 13)])
@@ -206,7 +212,7 @@ class TestCDNRoute:
         assert "?size=" not in compiled_url, f"compiled_url={compiled_url}"
 
     @pytest.mark.parametrize(
-        ["base_url", "template", "format", "size_kwds", "foo", "bar", "expected_url"],
+        ("base_url", "template", "format", "size_kwds", "foo", "bar", "expected_url"),
         [
             (
                 "http://example.com",

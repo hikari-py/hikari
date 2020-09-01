@@ -29,7 +29,7 @@ from hikari.events import message_events
 
 
 class TestMessageCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         class MessageCreateEvent(message_events.MessageCreateEvent):
             app = None
@@ -53,7 +53,7 @@ class TestMessageCreateEvent:
 
 
 class TestMessageUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         class MessageUpdateEvent(message_events.MessageUpdateEvent):
             app = None
@@ -82,7 +82,7 @@ class TestMessageUpdateEvent:
 
 
 class TestMessageDeleteEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         class MessageDeleteEvent(message_events.MessageDeleteEvent):
             app = None
@@ -102,7 +102,7 @@ class TestMessageDeleteEvent:
 
 
 class TestGuildMessageCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return message_events.GuildMessageCreateEvent(
             app=None,
@@ -115,7 +115,7 @@ class TestGuildMessageCreateEvent:
 
 
 class TestGuildMessageUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return message_events.GuildMessageUpdateEvent(
             app=None,
@@ -128,7 +128,7 @@ class TestGuildMessageUpdateEvent:
 
 
 class TestGuildMessageDeleteEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return message_events.GuildMessageDeleteEvent(
             app=None,

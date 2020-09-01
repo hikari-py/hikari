@@ -54,7 +54,7 @@ from tests.hikari import hikari_test_helpers
 ######################################
 
 
-@pytest.fixture
+@pytest.fixture()
 def connector_factory():
     return rest.BasicLazyCachedTCPConnectorFactory(test=123)
 
@@ -96,7 +96,7 @@ class TestBasicLazyCachedTCPConnectorFactoryAsync:
 
 
 class TestRestProvider:
-    @pytest.fixture
+    @pytest.fixture()
     def rest_client(self):
         class StubRestClient:
             http_settings = object()
@@ -104,7 +104,7 @@ class TestRestProvider:
 
         return StubRestClient()
 
-    @pytest.fixture
+    @pytest.fixture()
     def rest_provider(self, rest_client):
         return rest._RESTProvider(lambda: rest_client)
 
@@ -123,7 +123,7 @@ class TestRestProvider:
 ###########
 
 
-@pytest.fixture
+@pytest.fixture()
 def rest_app():
     return hikari_test_helpers.unslot_class(rest.RESTApp)(
         connector_factory=mock.Mock(),
@@ -227,7 +227,7 @@ def rest_client_class():
     return hikari_test_helpers.unslot_class(rest.RESTClientImpl)
 
 
-@pytest.fixture
+@pytest.fixture()
 def rest_client(rest_client_class):
     obj = rest_client_class(
         connector_factory=mock.Mock(),
@@ -247,8 +247,8 @@ def rest_client(rest_client_class):
     return obj
 
 
-@pytest.fixture
-def _file_resource():
+@pytest.fixture()
+def file_resource():
     class Stream:
         def __init__(self, data):
             self.data = data
@@ -280,9 +280,9 @@ def _file_resource():
     return FileResource
 
 
-@pytest.fixture
-def file_resource(_file_resource):
-    resource = _file_resource("some data")
+@pytest.fixture()
+def file_resource_patch(file_resource):
+    resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
         yield resource
 
@@ -424,7 +424,7 @@ class TestRESTClientImpl:
             assert rest_client._acquire_client_session() is client_session_mock
 
     @pytest.mark.parametrize(
-        ["function_input", "expected_output"],
+        ("function_input", "expected_output"),
         [
             ((True, True, True), {"parse": ["everyone", "users", "roles"]}),
             ((False, False, False), {"parse": []}),
@@ -449,7 +449,7 @@ class TestRESTClientImpl:
 
         assert returned == expected_output
 
-    @pytest.mark.parametrize(
+    @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),
         [
             (emojis.CustomEmoji(id=123, name="rooYay", app=object(), is_animated=False), "rooYay:123"),
@@ -720,7 +720,7 @@ class TestRESTClientImpl:
 
 @pytest.mark.asyncio
 class TestRESTClientImplAsync:
-    @pytest.fixture
+    @pytest.fixture()
     def exit_exception(self):
         class ExitException(Exception):
             ...
@@ -1221,7 +1221,7 @@ class TestRESTClientImplAsync:
         ...  # TODO: Implement
 
     async def test_create_message_when_attachment_and_attachments_given(self, rest_client):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="You may only specify one of 'attachment' or 'attachments', not both"):
             await rest_client.create_message(StubModel(123), attachment=object(), attachments=object())
 
     @pytest.mark.skip("TODO")
@@ -1313,7 +1313,7 @@ class TestRESTClientImplAsync:
         await rest_client.delete_all_reactions(StubModel(123), StubModel(456))
         rest_client._request.assert_awaited_once_with(expected_route)
 
-    async def test_create_webhook(self, rest_client, file_resource):
+    async def test_create_webhook(self, rest_client, file_resource_patch):
         webhook = StubModel(456)
         expected_route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
@@ -1428,7 +1428,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._entity_factory.deserialize_webhook.assert_called_once_with({"id": "456"})
 
-    async def test_edit_webhook_when_avatar_is_file(self, rest_client, file_resource):
+    async def test_edit_webhook_when_avatar_is_file(self, rest_client, file_resource_patch):
         webhook = StubModel(456)
         expected_route = routes.PATCH_WEBHOOK.compile(webhook=123)
         expected_json = {"avatar": "some data"}
@@ -1461,11 +1461,11 @@ class TestRESTClientImplAsync:
         ...  # TODO: Implement
 
     async def test_execute_webhook_when_attachment_and_attachments_given(self, rest_client):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="You may only specify one of 'attachment' or 'attachments', not both"):
             await rest_client.execute_webhook(StubModel(123), "token", attachment=object(), attachments=object())
 
     async def test_execute_webhook_when_embed_and_embeds_given(self, rest_client):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="You may only specify one of 'embed' or 'embeds', not both"):
             await rest_client.execute_webhook(StubModel(123), "token", embed=object(), embeds=object())
 
     async def test_fetch_gateway_url(self, rest_client):
@@ -1538,7 +1538,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
 
-    async def test_edit_my_user_when_avatar_is_file(self, rest_client, file_resource):
+    async def test_edit_my_user_when_avatar_is_file(self, rest_client, file_resource_patch):
         user = StubModel(123)
         expected_route = routes.PATCH_MY_USER.compile()
         expected_json = {"username": "new username", "avatar": "some data"}
@@ -1678,7 +1678,7 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
 
-    async def test_create_emoji(self, rest_client, file_resource):
+    async def test_create_emoji(self, rest_client, file_resource_patch):
         emoji = StubModel(234)
         expected_route = routes.POST_GUILD_EMOJIS.compile(guild=123)
         expected_json = {"name": "rooYay", "image": "some data", "roles": ["456", "789"]}
@@ -1751,10 +1751,10 @@ class TestRESTClientImplAsync:
         await rest_client.delete_guild(StubModel(123))
         rest_client._request.assert_awaited_once_with(expected_route)
 
-    async def test_edit_guild(self, rest_client, _file_resource):
-        icon_resource = _file_resource("icon data")
-        splash_resource = _file_resource("splash data")
-        banner_resource = _file_resource("banner data")
+    async def test_edit_guild(self, rest_client, file_resource):
+        icon_resource = file_resource("icon data")
+        splash_resource = file_resource("splash data")
+        banner_resource = file_resource("banner data")
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",

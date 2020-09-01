@@ -658,7 +658,8 @@ class TestStatefulCacheImpl:
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
         assert cache_impl.set_emoji(emoji) is None
-        assert 65234 in cache_impl._guild_entries and cache_impl._guild_entries[snowflakes.Snowflake(65234)].emojis
+        assert 65234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflakes.Snowflake(65234)].emojis
         assert 5123123 in cache_impl._guild_entries[snowflakes.Snowflake(65234)].emojis
         assert 5123123 in cache_impl._emoji_entries
         emoji_data = cache_impl._emoji_entries[snowflakes.Snowflake(5123123)]
@@ -803,13 +804,9 @@ class TestStatefulCacheImpl:
             snowflakes.Snowflake(54234123): hikari.utilities.cache.GuildRecord(),
             snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(guild=mock_guild, is_available=False),
         }
-        try:
+
+        with pytest.raises(errors.UnavailableGuildError):
             cache_impl.get_guild(snowflakes.Snowflake(543123))
-            assert False, "Excepted unavailable guild error to be raised"
-        except errors.UnavailableGuildError:
-            pass
-        except Exception as exc:
-            assert False, f"Expected unavailable guild error but got {exc}"
 
     def test_get_guild_for_unknown_guild(self, cache_impl):
         cache_impl._guild_entries = {
@@ -1485,7 +1482,7 @@ class TestStatefulCacheImpl:
         )
         cache_impl._build_invite.assert_not_called()
 
-    def test_get_invites_view_for_guild_unknown_record(self, cache_impl):
+    def test_get_invites_view_for_channel_unknown_record(self, cache_impl):
         cache_impl._invite_entries = {
             "okok": mock.Mock(hikari.utilities.cache.InviteData),
             "dsaytert": mock.Mock(hikari.utilities.cache.InviteData),

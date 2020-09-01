@@ -39,7 +39,7 @@ ROOT_INDEX_SOURCE = "index.html"
 LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
-FLAKE8_TXT = "public/flake8.txt"
+FLAKE8_REPORT = "public/flake8"
 MYPY_INI = "mypy.ini"
 PYTEST_INI = "pytest.ini"
 COVERAGE_INI = "coverage.ini"

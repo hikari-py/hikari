@@ -28,7 +28,7 @@ from hikari import intents
 
 
 class TestGatewayError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.GatewayError("some reason")
 
@@ -37,7 +37,7 @@ class TestGatewayError:
 
 
 class TestGatewayClientClosedError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.GatewayClientClosedError("some reason")
 
@@ -46,7 +46,7 @@ class TestGatewayClientClosedError:
 
 
 class TestGatewayServerClosedConnectionError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.GatewayServerClosedConnectionError("some reason", 123)
 
@@ -55,7 +55,7 @@ class TestGatewayServerClosedConnectionError:
 
 
 class TestHTTPResponseError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.HTTPResponseError("https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body")
 
@@ -68,7 +68,7 @@ class TestHTTPResponseError:
 
 
 class TestBulkDeleteError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.BulkDeleteError(range(10), range(10))
 
@@ -77,7 +77,7 @@ class TestBulkDeleteError:
 
 
 class TestMissingIntentError:
-    @pytest.fixture
+    @pytest.fixture()
     def error(self):
         return errors.MissingIntentError(intents.Intents.GUILD_BANS | intents.Intents.GUILD_EMOJIS)
 

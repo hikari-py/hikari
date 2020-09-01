@@ -85,7 +85,7 @@ def mock_methods_on(obj, except_=(), also_mock=()):
     for expr in also_mock:
         owner, _, attr = ("copy_." + expr).rpartition(".")
         # sue me.
-        owner = eval(owner)
+        owner = eval(owner)  # noqa: S307 - Dont use `eval`
         setattr(owner, attr, mock.Mock())
 
     assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
@@ -177,7 +177,7 @@ def retry(max_retries):
             ex = None
             for i in range(max_retries + 1):
                 if i:
-                    print("retry", i, "of", max_retries)
+                    print("retry", i, "of", max_retries)  # noqa: T001 - Print found
                 try:
                     await func(*args, **kwargs)
                     return

@@ -88,7 +88,7 @@ class TestExceptionEvent:
         except RuntimeError as ex:
             return ex
 
-    @pytest.fixture
+    @pytest.fixture()
     def event(self, error):
         return base_events.ExceptionEvent(
             exception=error,

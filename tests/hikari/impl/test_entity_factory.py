@@ -437,7 +437,7 @@ class TestEntityFactoryImpl:
             "token": "ueoqrialsdfaKJLKfajslkdf",
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def audit_log_payload(self, audit_log_entry_payload, user_payload, webhook_payload, partial_integration_payload):
         return {
             "audit_log_entries": [audit_log_entry_payload],
@@ -992,7 +992,7 @@ class TestEntityFactoryImpl:
     # EMBED MODELS #
     ################
 
-    @pytest.fixture
+    @pytest.fixture()
     def embed_payload(self):
         return {
             "title": "embed title",
@@ -1347,7 +1347,7 @@ class TestEntityFactoryImpl:
         assert emoji.is_animated is False
 
     @pytest.mark.parametrize(
-        ["payload", "expected_type"],
+        ("payload", "expected_type"),
         [({"name": "🤷"}, emoji_models.UnicodeEmoji), ({"id": "1234", "name": "test"}, emoji_models.CustomEmoji)],
     )
     def test_deserialize_emoji_returns_expected_type(self, entity_factory_impl, payload, expected_type):

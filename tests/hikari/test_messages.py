@@ -28,8 +28,8 @@ from tests.hikari import hikari_test_helpers
 
 
 def test_MessageType_str_operator():
-    type = messages.MessageType(10)
-    assert str(type) == "USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2"
+    message_type = messages.MessageType(10)
+    assert str(message_type) == "USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2"
 
 
 def test_MessageFlag_str_operator():
@@ -38,8 +38,8 @@ def test_MessageFlag_str_operator():
 
 
 def test_MessageActivityType_str_operator():
-    type = messages.MessageActivityType(5)
-    assert str(type) == "JOIN_REQUEST"
+    activity_type = messages.MessageActivityType(5)
+    assert str(activity_type) == "JOIN_REQUEST"
 
 
 def test_Attachment_str_operator():
@@ -54,7 +54,7 @@ def test_Reaction_str_operator():
     assert str(reaction) == "\N{OK HAND SIGN}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def message():
     return hikari_test_helpers.stub_class(messages.Message, app=mock.Mock(rest=mock.AsyncMock()))
 
