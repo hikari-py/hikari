@@ -23,7 +23,6 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
-    "copy_mapping",
     "IDTable",
     "StatefulCacheMappingView",
     "EmptyCacheView",
@@ -68,6 +67,7 @@ from hikari import voices
 from hikari.api import cache
 from hikari.utilities import attr_extensions
 from hikari.utilities import date
+from hikari.utilities import mapping
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
@@ -75,23 +75,6 @@ KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint for mapping keys."""
 ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
-
-
-def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
-    """Logic for copying mappings that targets impl specific copy impls (e.g. dict.copy).
-
-    We use this to cover 2 main cases in the cache, one where we copy a mapping
-    before iterating over it to avoid any errors that would be raised by it
-    being mutated during this process and the other to make sure that the
-    mappings we pass through to cache views are snapshots that won't be further
-    modified by the cache.
-    """
-    # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
-    # try to use this where possible.
-    try:
-        return mapping.copy()  # type: ignore[attr-defined, no-any-return]
-    except (AttributeError, TypeError):
-        raise NotImplementedError("provided mapping doesn't implement a copy method") from None
 
 
 class IDTable(typing.MutableSet[snowflakes.Snowflake]):
@@ -737,7 +720,7 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in mapping.copy_mapping(channel.permission_overwrites).items()
     }
     return channel
 

@@ -290,7 +290,7 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        timeout : typing.Optional[builtins.int or builtins.float]
+        timeout : typing.Optional[builtins.int, builtins.float]
             How long this streamer should wait for the next event before
             ending the iteration. If `builtins.None` then this will continue
             until explicitly broken from.

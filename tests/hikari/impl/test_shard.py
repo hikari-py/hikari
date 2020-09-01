@@ -883,6 +883,12 @@ class TestRequestGuildMembers:
         with pytest.raises(ValueError, match="'users' is limited to 100 users"):
             await client.request_guild_members(123, users=range(101))
 
+    async def test_when_nonce_over_32_chars(self, client):
+        client._intents = None
+
+        with pytest.raises(ValueError, match="'nonce' can be no longer than 32 byte characters long."):
+            await client.request_guild_members(123, nonce="x" * 33)
+
     async def test_request_guild_members(self, client):
         client._intents = None
         client._send_json = mock.AsyncMock()

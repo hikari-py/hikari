@@ -142,13 +142,13 @@ class Unique(abc.ABC):
 
 
 def calculate_shard_id(
-    app_or_count: typing.Union[traits.ShardAware, int, str], guild: SnowflakeishOr["guilds.PartialGuild"]
+    app_or_count: typing.Union[traits.ShardAware, int], guild: SnowflakeishOr["guilds.PartialGuild"]
 ) -> int:
     """Calculate the shard ID for a guild based on it's shard aware app or shard count.
 
     Parameters
     ----------
-    app_or_count : typing.Union[hikari.traits.ShardAware, builtins.int, builtins.str]
+    app_or_count : typing.Union[hikari.traits.ShardAware, builtins.int]
         The shard aware app of the current application or the integer count of
         the current app's shards.
     guild : SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -159,7 +159,7 @@ def calculate_shard_id(
     builtins.int
         The zero-indexed integer ID of the shard that should cover this guild.
     """
-    shard_count = int(app_or_count) if isinstance(app_or_count, (int, str)) else app_or_count.shard_count
+    shard_count = app_or_count if isinstance(app_or_count, int) else app_or_count.shard_count
     return (int(guild) >> 22) % shard_count
 
 

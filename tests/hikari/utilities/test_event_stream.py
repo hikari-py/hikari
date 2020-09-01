@@ -34,25 +34,29 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestStreamer:
+    @pytest.fixture(scope="module")
+    def stub_streamer(self):
+        return hikari_test_helpers.mock_class_namespace(event_stream.Streamer)
+
     @pytest.mark.asyncio
-    async def test___aenter___and___aexit__(self):
-        mock_streamer = hikari_test_helpers.mock_class_namespace(event_stream.Streamer)
-        async with mock_streamer():
-            mock_streamer.open.assert_called_once()
-            mock_streamer.close.assert_not_called()
+    async def test___aenter___and___aexit__(self, stub_streamer):
+        async with stub_streamer():
+            stub_streamer.open.assert_awaited_once()
+            stub_streamer.close.assert_not_called()
 
-        mock_streamer.open.assert_called_once()
-        mock_streamer.close.assert_called_once()
+        stub_streamer.open.assert_awaited_once()
+        stub_streamer.close.assert_awaited_once()
 
-    def test___enter__(self):
-        mock_streamer = hikari_test_helpers.mock_class_namespace(event_stream.Streamer)
-
+    def test___enter__(self, stub_streamer):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
-            mock_streamer().__enter__()
+            stub_streamer().__enter__()
 
-    def test___exit__(self):
-        hikari_test_helpers.mock_class_namespace(event_stream.Streamer)().__exit__(object(), object(), object())
+    def test___exit__(self, stub_streamer):
+        try:
+            stub_streamer().__exit__(object(), object(), object())
+        except AttributeError as exc:
+            pytest.fail(exc)
 
 
 @pytest.fixture()
@@ -65,7 +69,7 @@ class TestEventStream:
     async def test__listener_when_filter_returns_false(self, mock_app):
         stream = event_stream.EventStream(mock_app, events.Event, timeout=None)
         stream.filter(lambda _: False)
-        mock_event = mock.Mock(events.Event)
+        mock_event = object()
 
         assert await stream._listener(mock_event) is None
         assert stream._queue.qsize() == 0
@@ -76,7 +80,7 @@ class TestEventStream:
         stream._queue.put_nowait(object())
         stream._queue.put_nowait(object())
         stream.filter(lambda _: True)
-        mock_event = mock.Mock(events.Event)
+        mock_event = object()
 
         assert await stream._listener(mock_event) is None
         assert stream._queue.qsize() == 2
@@ -89,7 +93,7 @@ class TestEventStream:
         stream._queue.put_nowait(object())
         stream._queue.put_nowait(object())
         stream.filter(lambda _: True)
-        mock_event = mock.Mock(events.Event)
+        mock_event = object()
 
         assert await stream._listener(mock_event) is None
         assert stream._queue.qsize() == 3
@@ -171,8 +175,8 @@ class TestEventStream:
         )()
         streamer._active = False
         assert await streamer == [mock_event_0, mock_event_1, mock_event_2]
-        streamer.open.assert_called_once()
-        streamer.close.assert_called_once()
+        streamer.open.assert_awaited_once()
+        streamer.close.assert_awaited_once()
 
     def test___del___for_active_stream(self):
         mock_coroutine = object()
@@ -191,7 +195,7 @@ class TestEventStream:
 
             asyncio.ensure_future.assert_called_once_with(mock_coroutine)
 
-        close_method.assert_called_once()
+        close_method.assert_called_once_with()
 
     def test___del___for_inactive_stream(self):
         close_method = mock.Mock()

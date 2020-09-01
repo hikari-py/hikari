@@ -207,9 +207,9 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
 
     Parameters
     ----------
-    app: hikari.traits.BotAware
+    app : hikari.traits.BotAware
         The object of the bot aware app this is bound to.
-    limit: builtins.int
+    limit : builtins.int
         The maximum amount of requests that this chunker should store information
         about for each shard.
     """
@@ -269,7 +269,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         shard_id = shard if isinstance(shard, int) else shard.id
 
         if shard_id in self._tracked:
-            return tuple(copy.copy(chunk) for chunk in tuple(self._tracked[shard_id].values()))
+            return tuple(copy.copy(chunk) for chunk in mapping.copy_mapping(self._tracked[shard_id]).values())
 
         return ()
 

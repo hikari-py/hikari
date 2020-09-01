@@ -128,9 +128,8 @@ class TestUnique:
     ("guild_id", "expected_id"),
     [(140502780547694592, 2), ("655288690192416778", 1), (snowflakes.Snowflake(105785483455418368), 3)],
 )
-@pytest.mark.parametrize("shard_count", [4, "4"])
-def test_calculate_shard_id_with_shard_count(guild_id, expected_id, shard_count):
-    assert snowflakes.calculate_shard_id(shard_count, guild_id) == expected_id
+def test_calculate_shard_id_with_shard_count(guild_id, expected_id):
+    assert snowflakes.calculate_shard_id(4, guild_id) == expected_id
 
 
 @pytest.mark.parametrize(

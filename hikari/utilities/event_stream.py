@@ -122,7 +122,7 @@ class Streamer(iterators.LazyIterator[EventT], abc.ABC):
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
     def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
-        return
+        return None
 
 
 def _generate_weak_listener(
@@ -207,7 +207,10 @@ class EventStream(Streamer[EventT]):
         # ominous memory leak.
         if self._active:
             _LOGGER.warning("active %r streamer fell out of scope before being closed", self._event_type.__name__)
-            asyncio.ensure_future(self.close())
+            try:
+                asyncio.ensure_future(self.close())
+            except RuntimeError:
+                pass
 
     async def close(self) -> None:
         if self._active and self._registered_listener is not None:

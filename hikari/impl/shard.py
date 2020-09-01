@@ -238,7 +238,9 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
         # We limit member chunk requests to a stricter ratelimit of 60 requests per minute as to ensure that chunk
         # requests don't single-handedly exhaust the request limit when being triggered on mass.
-        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(f"guild chunking on {shard_id}", 60, 60)
+        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(
+            f"guild chunking rate-limit on {shard_id}", 60, 60
+        )
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._closing = False
@@ -258,7 +260,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
-        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(f"shard {shard_id}", 60.0, 120)
+        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(f"shard rate-limit {shard_id}", 60.0, 120)
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[int] = None
         self._session_id: typing.Optional[str] = None
@@ -438,8 +440,6 @@ class GatewayShardImplV6(shard.GatewayShard):
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        await self._chunk_request_ratelimiter.acquire()
-
         if self._intents is not None:
             if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
@@ -456,6 +456,10 @@ class GatewayShardImplV6(shard.GatewayShard):
         if users is not undefined.UNDEFINED and len(users) > 100:
             raise ValueError("'users' is limited to 100 users")
 
+        if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
+            raise ValueError("'nonce' can be no longer than 32 byte characters long.")
+
+        await self._chunk_request_ratelimiter.acquire()
         message = "requesting guild members for guild %s"
         if include_presences:
             message += " with presences"

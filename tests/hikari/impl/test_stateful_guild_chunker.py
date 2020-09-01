@@ -221,7 +221,7 @@ class TestChunkStream:
 
             patched_super.assert_called_once()
 
-        mock_app.shards[2].request_guild_members.assert_called_once_with(
+        mock_app.shards[2].request_guild_members.assert_awaited_once_with(
             guild=snowflakes.Snowflake(35412312312),
             include_presences=True,
             query="a query",
@@ -391,7 +391,7 @@ class TestStatefulGuildChunkerImpl:
 
         await stream.open()
 
-        mock_app.shards[2].request_guild_members.assert_called_once_with(
+        mock_app.shards[2].request_guild_members.assert_awaited_once_with(
             guild=snowflakes.Snowflake(312312354),
             include_presences=True,
             query="a qUeRy",
@@ -579,7 +579,7 @@ class TestStatefulGuildChunkerImpl:
         assert len(mock_chunker._tracked[2]) == 1
         assert mock_chunker._tracked[2]["2.NonceNonceNonceNonce"].guild_id == snowflakes.Snowflake(745181921625243730)
         assert mock_chunker._tracked[2]["2.NonceNonceNonceNonce"].nonce == "2.NonceNonceNonceNonce"
-        mock_app.shards[2].request_guild_members.assert_called_once_with(
+        mock_app.shards[2].request_guild_members.assert_awaited_once_with(
             guild=snowflakes.Snowflake(745181921625243730),
             include_presences=False,
             limit=0,
@@ -614,7 +614,7 @@ class TestStatefulGuildChunkerImpl:
         assert len(mock_chunker._tracked[0]) == 2
         assert mock_chunker._tracked[0]["0.AvEryCrYpToGraPhIcNoNcE"].guild_id == snowflakes.Snowflake(43123)
         assert mock_chunker._tracked[0]["0.AvEryCrYpToGraPhIcNoNcE"].nonce == "0.AvEryCrYpToGraPhIcNoNcE"
-        mock_app.shards[0].request_guild_members.assert_called_once_with(
+        mock_app.shards[0].request_guild_members.assert_awaited_once_with(
             guild=snowflakes.Snowflake(43123),
             include_presences=True,
             limit=53,

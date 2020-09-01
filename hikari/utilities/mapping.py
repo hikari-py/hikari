@@ -159,10 +159,28 @@ def get_index_or_slice(
     """
     if isinstance(index_or_slice, slice):
         return tuple(itertools.islice(mapping.values(), index_or_slice.start, index_or_slice.stop, index_or_slice.step))
-    elif isinstance(index_or_slice, int):
+
+    if isinstance(index_or_slice, int):
         try:
             return next(itertools.islice(mapping.values(), index_or_slice, None))
         except StopIteration:
             raise IndexError(index_or_slice) from None
-    else:
-        raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
+
+    raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
+
+
+# As a note, copy_mapping is primarily used to cover 2 main cases in the cache,
+# one where we copy a mapping before iterating over it to avoid any errors that
+# would be raised by it being mutated during this process and the other to make
+# sure that the mappings we pass through to cache views are snapshots that won't
+# be further modified by the cache.
+
+
+def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
+    """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy)."""
+    # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
+    # try to use this where possible.
+    try:
+        return mapping.copy()  # type: ignore[attr-defined, no-any-return]
+    except (AttributeError, TypeError):
+        raise NotImplementedError("provided mapping doesn't implement a copy method") from None
