@@ -57,5 +57,5 @@ def pytest(session: nox.Session) -> None:
 @nox.session(reuse_venv=False)
 def coveralls(session: nox.Session) -> None:
     """Run coveralls. This has little effect outside TravisCI."""
-    session.install("python-coveralls")
+    session.install("-U", "python-coveralls")
     session.run("coveralls")

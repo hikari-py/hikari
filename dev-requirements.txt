@@ -3,7 +3,7 @@
 ################
 
 # Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
-mock~=4.0.2
+mock==4.0.2
 
 # Py.test stuff.
 pytest==6.0.1
@@ -12,17 +12,17 @@ pytest-cov==2.10.1
 pytest-randomly==3.4.1
 
 # Coverage testing.
-coverage~=5.2.1
+coverage==5.2.1
 
 # Other stuff
-async-timeout~=3.0.1  # Used for timeouts in some test cases.
+async-timeout==3.0.1  # Used for timeouts in some test cases.
 
 #################
 # DOCUMENTATION #
 #################
 
-pdoc3~=0.9.1
-sphobjinv~=2.0.1
+pdoc3==0.9.1
+sphobjinv==2.0.1
 
 #################
 # TYPE CHECKING #

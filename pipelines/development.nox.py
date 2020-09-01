@@ -29,7 +29,7 @@ from pipelines import nox
 @nox.session()
 def init(session: nox.Session) -> None:
     """Initialize a development environment."""
-    session.install("virtualenv")
+    session.install("-U", "virtualenv")
 
     other_venvs = [pathlib.Path() / "venv"]
 
