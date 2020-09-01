@@ -23,8 +23,8 @@ from hikari import presences
 
 
 def test_ActivityType_str_operator():
-    type = presences.ActivityType(4)
-    assert str(type) == "CUSTOM"
+    activity_type = presences.ActivityType(4)
+    assert str(activity_type) == "CUSTOM"
 
 
 def test_ActivityFlag_str_operator():

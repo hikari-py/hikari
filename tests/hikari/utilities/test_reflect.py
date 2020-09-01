@@ -20,8 +20,6 @@
 # SOFTWARE.
 import typing
 
-import pytest
-
 from hikari.utilities import reflect
 
 

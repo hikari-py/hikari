@@ -24,8 +24,8 @@ from hikari import webhooks
 
 
 def test_WebhookType_str_operator():
-    type = webhooks.WebhookType(1)
-    assert str(type) == "INCOMING"
+    webhook_type = webhooks.WebhookType(1)
+    assert str(webhook_type) == "INCOMING"
 
 
 def test_Webhook_str_operator():

@@ -34,12 +34,12 @@ def test_UserFlag_str_operator():
 
 
 def test_PremiumType_str_operator():
-    type = users.PremiumType(1)
-    assert str(type) == "NITRO_CLASSIC"
+    premium_type = users.PremiumType(1)
+    assert str(premium_type) == "NITRO_CLASSIC"
 
 
 class TestUser:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         class StubUser(users.User):
             app = None
@@ -137,7 +137,7 @@ class TestUser:
 
 
 class TestPartialUserImpl:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return hikari_test_helpers.stub_class(
             users.PartialUserImpl, id=123, username="thomm.o", discriminator="8637", app=mock.Mock()
@@ -163,7 +163,7 @@ class TestPartialUserImpl:
 
 @pytest.mark.asyncio
 class TestOwnUser:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return hikari_test_helpers.stub_class(users.OwnUser, app=mock.Mock())
 

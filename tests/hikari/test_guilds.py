@@ -87,7 +87,7 @@ def test_Role_colour_property():
 
 
 class TestMember:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return hikari_test_helpers.stub_class(
             guilds.Member,
@@ -163,7 +163,7 @@ class TestMember:
 
 
 class TestPartialGuild:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return hikari_test_helpers.stub_class(
             guilds.PartialGuild, name="hikari", id=1234567890, app=mock.Mock(shard_count=4), icon_hash=None
@@ -242,7 +242,7 @@ class TestPartialGuild:
 
 
 class TestGuildPreview:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         return hikari_test_helpers.stub_class(guilds.GuildPreview, id=123, splash_hash=None, discovery_splash_hash=None)
 
@@ -298,7 +298,7 @@ class TestGuildPreview:
 
 
 class TestGuild:
-    @pytest.fixture
+    @pytest.fixture()
     def obj(self):
         class StubGuild(guilds.Guild):
             emojis = None

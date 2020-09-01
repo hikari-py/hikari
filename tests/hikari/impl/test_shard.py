@@ -77,7 +77,7 @@ def client(http_settings, proxy_settings, unslotted_client_type):
 
 class TestInit:
     @pytest.mark.parametrize(
-        ["v", "compression", "expect"],
+        ("v", "compression", "expect"),
         [
             (6, None, "v=6&encoding=json"),
             (6, "payload_zlib_stream", "v=6&encoding=json&compress=zlib-stream"),
@@ -99,7 +99,7 @@ class TestInit:
 
         assert g.url == f"wss://gaytewhuy.discord.meh?{expect}"
 
-    @pytest.mark.parametrize(["v", "use_compression"], [(6, False), (6, True), (7, False), (7, True)])
+    @pytest.mark.parametrize(("v", "use_compression"), [(6, False), (6, True), (7, False), (7, True)])
     def test_using_etf_is_unsupported(self, v, use_compression, http_settings, proxy_settings):
         compression = "payload_zlib_stream" if use_compression else None
 
@@ -187,7 +187,7 @@ class TestStart:
 
 @pytest.mark.asyncio
 class TestClose:
-    @pytest.fixture
+    @pytest.fixture()
     def client(self):
         class GatewayStub(shard.GatewayShardImpl):
             @property
@@ -259,7 +259,9 @@ class TestRun:
         max_redirects = 0
         allow_redirects = True
         trust_env = True
-        event_consumer = lambda s, n, pl: None
+
+        def event_consumer(s, n, pl):
+            return None
 
         client = unslotted_client_type(
             event_consumer=event_consumer,
@@ -346,7 +348,7 @@ class TestRun:
 
 @pytest.mark.asyncio
 class TestRunOnceShielded:
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, http_settings=http_settings, proxy_settings=proxy_settings):
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
@@ -473,7 +475,7 @@ class TestRunOnceShielded:
         assert await client._run_once_shielded(client_session) is False
 
     @pytest.mark.parametrize(
-        ["zombied", "request_close", "expect_backoff_called"],
+        ("zombied", "request_close", "expect_backoff_called"),
         [
             (True, True, True),
             (True, False, True),
@@ -487,9 +489,9 @@ class TestRunOnceShielded:
     ):
         client._request_close_event.is_set = mock.Mock(return_value=request_close)
 
-        def run_once():
+        def run_once(_):
             client._zombied = zombied
-            raise shard.GatewayShardImpl._SocketClosed()
+            raise shard.GatewayShardImpl._SocketClosed
 
         client._run_once = mock.AsyncMock(wraps=run_once)
         await client._run_once_shielded(client_session)
@@ -595,28 +597,6 @@ class TestRunOnceShielded:
         assert client._session_id is None
         client._backoff.reset.assert_called_once_with()
 
-    @pytest.mark.parametrize(
-        ["zombied", "request_close", "expect_backoff_called"],
-        [(True, True, True), (True, False, True), (False, True, False), (False, False, False)],
-    )
-    @hikari_test_helpers.timeout()
-    async def test_socket_closed_resets_backoff(
-        self, client, zombied, request_close, expect_backoff_called, client_session
-    ):
-        client._request_close_event.is_set = mock.Mock(return_value=request_close)
-
-        def run_once(_):
-            client._zombied = zombied
-            raise shard.GatewayShardImpl._SocketClosed()
-
-        client._run_once = mock.AsyncMock(wraps=run_once)
-        await client._run_once_shielded(client_session)
-
-        if expect_backoff_called:
-            client._backoff.reset.assert_called_once_with()
-        else:
-            client._backoff.reset.assert_not_called()
-
     async def test_other_exception_closes_websocket(self, client, client_session):
         client._run_once = mock.AsyncMock(side_effect=RuntimeError())
 
@@ -630,7 +610,7 @@ class TestRunOnceShielded:
 
 @pytest.mark.asyncio
 class TestRunOnce:
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, http_settings, proxy_settings):
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
@@ -753,13 +733,16 @@ class TestRunOnce:
 
     @hikari_test_helpers.timeout()
     async def test_heartbeat_is_stopped_when_poll_events_stops(self, client, client_session):
+        class SpecificError(Exception):
+            ...
+
         client._heartbeat_keepalive = mock.Mock()
-        client._poll_events = mock.AsyncMock(side_effect=Exception)
+        client._poll_events = mock.AsyncMock(side_effect=SpecificError)
 
         task = mock.Mock(spec_set=asyncio.Task)
 
         with mock.patch.object(asyncio, "create_task", return_value=task):
-            with pytest.raises(Exception):
+            with pytest.raises(SpecificError):
                 await client._run_once(client_session)
 
         task.cancel.assert_called_once_with()
@@ -804,7 +787,7 @@ class TestUpdatePresence:
 
 @pytest.mark.asyncio
 class TestUpdateVoiceState:
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, proxy_settings, http_settings):
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
@@ -846,7 +829,7 @@ class TestUpdateVoiceState:
 
 @pytest.mark.asyncio
 class TestRequestGuildMembers:
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, proxy_settings, http_settings):
         client = hikari_test_helpers.unslot_class(shard.GatewayShardImpl)(
             url="wss://gateway.discord.gg",
@@ -884,20 +867,20 @@ class TestRequestGuildMembers:
     async def test_when_specifiying_users_with_limit_or_query(self, client, kwargs):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Cannot specify limit/query with users"):
             await client.request_guild_members(123, user_ids=[], **kwargs)
 
     @pytest.mark.parametrize("limit", [-1, 101])
     async def test_when_limit_under_0_or_over_100(self, client, limit):
         client._intents = None
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="'limit' must be between 0 and 100, both inclusive"):
             await client.request_guild_members(123, limit=limit)
 
     async def test_when_users_over_100(self, client):
         client._intents = None
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="'users' is limited to 100 users"):
             await client.request_guild_members(123, user_ids=range(101))
 
     async def test_request_guild_members(self, client):
@@ -1136,7 +1119,7 @@ class TestHeartbeatKeepalive:
 
 @pytest.mark.asyncio
 class TestPollEvents:
-    @pytest.fixture
+    @pytest.fixture()
     def exit_error(self):
         class ExitError(BaseException):
             ...

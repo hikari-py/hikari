@@ -24,8 +24,8 @@ from hikari import invites
 
 
 def test_TargetUserType_str_operator():
-    type = invites.TargetUserType(1)
-    assert str(type) == "STREAM"
+    invite_type = invites.TargetUserType(1)
+    assert str(invite_type) == "STREAM"
 
 
 def test_VanityURL_str_operator():

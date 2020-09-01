@@ -176,7 +176,7 @@ def test_GuildChannel_shard_id_property_when_guild_id_is_None():
     assert channel.shard_id is None
 
 
-@pytest.mark.parametrize("error", (TypeError, AttributeError, NameError))
+@pytest.mark.parametrize("error", [TypeError, AttributeError, NameError])
 def test_GuildChannel_shard_id_property_when_guild_id_error_raised(error):
     channel = hikari_test_helpers.stub_class(channels.GuildChannel, guild_id=mock.Mock(side_effect=error))
     assert channel.shard_id is None

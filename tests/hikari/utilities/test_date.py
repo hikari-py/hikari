@@ -125,7 +125,7 @@ def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
 
 
 @pytest.mark.parametrize(
-    ["input_value", "expected_result"],
+    ("input_value", "expected_result"),
     [
         (5, 5),
         (2.718281828459045, 2),

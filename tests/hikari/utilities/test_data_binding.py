@@ -78,7 +78,7 @@ class TestStringMapBuilder:
         assert dict(mapping) == {"yeet": "42069"}
 
     @pytest.mark.parametrize(
-        ["name", "input_val", "expect"], [("a", True, "true"), ("b", False, "false"), ("c", None, "null")]
+        ("name", "input_val", "expect"), [("a", True, "true"), ("b", False, "false"), ("c", None, "null")]
     )
     def test_put_py_singleton(self, name, input_val, expect):
         mapping = data_binding.StringMapBuilder()

@@ -26,7 +26,7 @@ from hikari.events import member_events
 
 
 class TestMemberEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         class StubEvent(member_events.MemberEvent):
             guild_id = 123
@@ -41,7 +41,7 @@ class TestMemberEvent:
 
 
 class TestMemberCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return member_events.MemberCreateEvent(app=None, shard=None, member=mock.Mock())
 
@@ -56,7 +56,7 @@ class TestMemberCreateEvent:
 
 
 class TestMemberUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return member_events.MemberUpdateEvent(app=None, shard=None, member=mock.Mock())
 

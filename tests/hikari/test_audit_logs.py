@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import pytest
 
 from hikari import audit_logs
 from hikari import snowflakes
@@ -86,17 +87,13 @@ class TestAuditLog:
         assert audit_log[1:5:2] == (entry_1, entry_2)
 
     def test_get_item_with_ivalid_type(self):
-        try:
+        with pytest.raises(TypeError):
             audit_logs.AuditLog(
                 entries=[object(), object()],
                 integrations={},
                 users={},
                 webhooks={},
             )["OK"]
-        except TypeError:
-            pass
-        else:
-            assert False, "Expect TypeError but got no exception"
 
     def test_len(self):
         audit_log = audit_logs.AuditLog(

@@ -27,7 +27,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestChannelCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(channel_events.ChannelCreateEvent)
         return cls()
@@ -38,7 +38,7 @@ class TestChannelCreateEvent:
 
 
 class TestGuildChannelCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return channel_events.GuildChannelCreateEvent(app=None, channel=mock.Mock(), shard=None)
 
@@ -48,7 +48,7 @@ class TestGuildChannelCreateEvent:
 
 
 class TestChannelUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return hikari_test_helpers.mock_class_namespace(channel_events.ChannelUpdateEvent)()
 
@@ -58,7 +58,7 @@ class TestChannelUpdateEvent:
 
 
 class TestGuildChannelUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return channel_events.GuildChannelUpdateEvent(app=None, channel=mock.Mock(), shard=None)
 
@@ -68,7 +68,7 @@ class TestGuildChannelUpdateEvent:
 
 
 class TestChannelDeleteEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return hikari_test_helpers.mock_class_namespace(channel_events.ChannelDeleteEvent)()
 
@@ -78,7 +78,7 @@ class TestChannelDeleteEvent:
 
 
 class TestGuildChannelDeleteEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return channel_events.GuildChannelDeleteEvent(app=None, channel=mock.Mock(), shard=None)
 
@@ -89,7 +89,7 @@ class TestGuildChannelDeleteEvent:
 
 @pytest.mark.asyncio
 class TestInviteEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return hikari_test_helpers.mock_class_namespace(channel_events.InviteEvent, slots=False)()
 
@@ -104,7 +104,7 @@ class TestInviteEvent:
 
 @pytest.mark.asyncio
 class TestInviteCreateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return channel_events.InviteCreateEvent(app=None, shard=None, invite=mock.Mock)
 
@@ -123,7 +123,7 @@ class TestInviteCreateEvent:
 
 @pytest.mark.asyncio
 class TestWebhookUpdateEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         obj = hikari_test_helpers.unslot_class(channel_events.WebhookUpdateEvent)(
             app=mock.AsyncMock(), shard=None, channel_id=123, guild_id=456

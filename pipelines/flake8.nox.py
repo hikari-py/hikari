@@ -18,9 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import os
-import shutil
-
 from pipelines import config
 from pipelines import nox
 
@@ -29,12 +26,13 @@ from pipelines import nox
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
     session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
-    shutil.rmtree(config.FLAKE8_TXT, ignore_errors=True)
     session.run(
         "flake8",
-        f"--output-file={config.FLAKE8_TXT}",
+        "--format=html",
+        f"--htmldir={config.FLAKE8_REPORT}",
         "--statistics",
         "--show-source",
         "--tee",
         config.MAIN_PACKAGE,
+        config.TEST_PACKAGE,
     )

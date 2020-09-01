@@ -235,7 +235,7 @@ class CDNRoute:
 
         builtins.ValueError
             If `size` is specified, but is not an integer power of `2` between
-            `16` and `4096` inclusive.
+            `16` and `4096` inclusive or is negative.
         """
         file_format = file_format.lower()
 
@@ -256,12 +256,15 @@ class CDNRoute:
             if not self.sizable:
                 raise TypeError("This asset cannot be resized.")
 
+            if size < 0:
+                raise ValueError("size must be positive")
+
             size_power = math.log2(size)
-            if size_power.is_integer() and 4 <= size_power <= 12:
+            if size_power.is_integer() and 2 <= size_power <= 16:
                 url += "?"
                 url += urllib.parse.urlencode({"size": str(size)})
             else:
-                raise ValueError("size, if specified, must be an integer power of 2 between 16 and 4096 inclusive")
+                raise ValueError("size must be an integer power of 2 between 16 and 4096 inclusive")
 
         return url
 

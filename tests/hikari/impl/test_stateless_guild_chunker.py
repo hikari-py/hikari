@@ -25,7 +25,7 @@ from hikari.impl import stateless_guild_chunker
 
 
 class TestStatelessGuildChunkerImpl:
-    @pytest.fixture
+    @pytest.fixture()
     def component(self):
         return stateless_guild_chunker.StatelessGuildChunkerImpl()
 

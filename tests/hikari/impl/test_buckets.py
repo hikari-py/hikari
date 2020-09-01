@@ -32,11 +32,11 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestRESTBucket:
-    @pytest.fixture
+    @pytest.fixture()
     def template(self):
         return routes.Route("GET", "/foo/bar")
 
-    @pytest.fixture
+    @pytest.fixture()
     def compiled_route(self, template):
         return routes.CompiledRoute("/foo/bar", template, "1a2b3c")
 

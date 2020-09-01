@@ -26,7 +26,7 @@ from hikari.utilities import constants
 
 
 class TestBasicAuthHeader:
-    @pytest.fixture
+    @pytest.fixture()
     def config(self):
         return config_.BasicAuthHeader(username="davfsa", password="securepassword123")
 

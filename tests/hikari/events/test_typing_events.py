@@ -29,7 +29,7 @@ from hikari.events import typing_events
 
 @pytest.mark.asyncio
 class TestTypingEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         class StubEvent(typing_events.TypingEvent):
             channel_id = 123
@@ -60,7 +60,7 @@ class TestTypingEvent:
 
 @pytest.mark.asyncio
 class TestGuildTypingEvent:
-    @pytest.fixture
+    @pytest.fixture()
     def event(self):
         return typing_events.GuildTypingEvent(
             app=mock.AsyncMock(),

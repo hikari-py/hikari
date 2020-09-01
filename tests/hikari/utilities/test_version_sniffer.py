@@ -32,7 +32,7 @@ from tests.hikari import client_session_stub
 
 @pytest.mark.asyncio
 class TestFetchAllReleases:
-    @pytest.fixture
+    @pytest.fixture()
     def pypi_update_payload(self):
         return {
             "info": ...,
@@ -46,7 +46,7 @@ class TestFetchAllReleases:
             },
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def client_session_mock(self, pypi_update_payload):
         stub = client_session_stub.ClientSessionStub()
         stub.response_stub.json = mock.AsyncMock(return_value=pypi_update_payload)

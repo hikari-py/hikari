@@ -35,7 +35,7 @@ def test__default_predicate_returns_True():
 
 
 class TestEventManagerBase:
-    @pytest.fixture
+    @pytest.fixture()
     def event_manager(self):
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None

@@ -62,7 +62,7 @@ def test_Application_str_operator():
 
 
 class TestTeam:
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         klass = hikari_test_helpers.unslot_class(applications.Team)
         return hikari_test_helpers.stub_class(klass, id=123, icon_hash="ahashicon")
@@ -96,7 +96,7 @@ class TestTeam:
 
 
 class TestApplication:
-    @pytest.fixture
+    @pytest.fixture()
     def model(self):
         klass = hikari_test_helpers.unslot_class(applications.Application)
         return hikari_test_helpers.stub_class(klass, id=123, icon_hash="ahashicon", cover_image_hash="ahashcover")

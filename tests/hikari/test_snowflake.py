@@ -92,7 +92,7 @@ class TestSnowflake:
 
 
 class TestUnique:
-    @pytest.fixture
+    @pytest.fixture()
     def neko_unique(self, neko_snowflake):
         class NekoUnique(snowflakes.Unique):
             id = neko_snowflake
