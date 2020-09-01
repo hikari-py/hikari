@@ -169,9 +169,9 @@ class RESTApp(traits.ExecutorAware):
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
-    url : str or hikari.undefined.UndefinedType
+    url : typing.Optional[builtins.str]
         The base URL for the API. You can generally leave this as being
-        `undefined` and the correct default API base URL will be generated.
+        `builtins.None` and the correct default API base URL will be generated.
     version : builtins.int
         The Discord API version to use. Can be `6` (stable, default), or `7`
         (undocumented development release).

@@ -228,12 +228,7 @@ class EventStream(Streamer[EventT]):
         if self._active:
             return super().filter(*predicates, **attrs)
 
-        new_conditions = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
-        if self._filters:
-            self._filters |= new_conditions
-        else:
-            self._filters = new_conditions
-
+        self._filters |= self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         return self
 
     async def open(self) -> None:

@@ -326,7 +326,7 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log."""
 
     entries: typing.Mapping[snowflakes.Snowflake, AuditLogEntry] = attr.ib(repr=False)
-    """A sequence of the audit log's entries."""
+    """A mapping of snowflake IDs to the audit log's entries."""
 
     integrations: typing.Mapping[snowflakes.Snowflake, guilds.PartialIntegration] = attr.ib(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""

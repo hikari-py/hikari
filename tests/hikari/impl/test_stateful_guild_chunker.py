@@ -153,7 +153,7 @@ class TestChunkStream:
             assert event is mock_chunk
             return
 
-        assert False, "stream should've yielded something"
+        pytest.fail("stream should've yielded something")
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout(0.5)
@@ -163,7 +163,7 @@ class TestChunkStream:
         )
 
         async for _ in stream:
-            assert False, "stream shouldn't have returned anything."
+            pytest.fail("stream shouldn't have returned anything.")
 
     @pytest.mark.asyncio
     async def test___anext___waits_for_initial_chunk(self):
@@ -182,7 +182,7 @@ class TestChunkStream:
             assert event is mock_chunk
             return
 
-        assert False, "stream should have yielded an event"
+        pytest.fail("stream should have yielded an event")
 
     @pytest.mark.asyncio
     async def test___anext___when_chunks_depleted(self):
@@ -191,15 +191,15 @@ class TestChunkStream:
         )
 
         async for _ in stream:
-            assert False, "stream shouldn't have yielded anything."
+            pytest.fail("stream shouldn't have yielded anything.")
 
     @pytest.mark.asyncio
     async def test___anext___when_stream_not_active(self):
         stream = hikari_test_helpers.stub_class(stateful_guild_chunker.ChunkStream, _active=False)
 
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
-            async for _ in stream:
-                pass
+            await stream.__anext__()
 
     @pytest.mark.asyncio
     async def test_open_for_inactive_stream(self, mock_app):

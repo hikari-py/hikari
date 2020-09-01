@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
 
 
 class _EmptyStream(event_stream.Streamer["shard_events.MemberChunkEvent"]):
-    """An empty stream implementation used by the stateless chunker impl."""
+    """An empty stream implementation used by the stateless chunker."""
 
     async def close(self) -> None:
         return None
@@ -76,16 +76,16 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
     ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
         return _EmptyStream()
 
-    async def get_request_status(self, nonce: str) -> typing.Optional[chunker.RequestInformation]:
+    async def get_request_status(self, nonce: str, /) -> typing.Optional[chunker.RequestInformation]:
         return None
 
     async def list_requests_for_shard(
-        self, shard: typing.Union[gateway_shard.GatewayShard, int]
+        self, shard: typing.Union[gateway_shard.GatewayShard, int], /
     ) -> typing.Sequence[chunker.RequestInformation]:
         return ()
 
     async def list_requests_for_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild], /
     ) -> typing.Sequence[chunker.RequestInformation]:
         return ()
 

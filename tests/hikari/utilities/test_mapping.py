@@ -28,10 +28,10 @@ from hikari.utilities import mapping
 
 class TestMRUMutableMapping:
     def test___init___raises_value_error_on_invalid_expiry(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="expiry time must be greater than 0 microseconds."):
             mapping.MRIMutableMapping(datetime.timedelta(seconds=0))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="expiry time must be greater than 0 microseconds."):
             mapping.MRIMutableMapping(datetime.timedelta(seconds=-50))
 
     def test___delitem__(self):
@@ -63,7 +63,7 @@ class TestMRUMutableMapping:
         mock_map["blam"] = 8
 
         with pytest.raises(KeyError):
-            assert not mock_map["OK"]
+            mock_map["OK"]
 
     def test___iter__(self):
         mock_map = mapping.MRIMutableMapping(datetime.timedelta(seconds=100))
@@ -113,7 +113,7 @@ class TestCMRIMutableMapping:
     def test___getitem___for_non_existing_entry(self):
         mock_map = mapping.CMRIMutableMapping(limit=50)
         with pytest.raises(KeyError):
-            assert mock_map["CIA"]
+            mock_map["CIA"]
 
     def test___iter___(self):
         mock_map = mapping.CMRIMutableMapping(limit=50)
@@ -147,7 +147,7 @@ def test_get_index_or_slice_with_index_within_range():
 
 def test_get_index_or_slice_with_index_outside_range():
     with pytest.raises(IndexError):
-        assert not mapping.get_index_or_slice({"i": "e", "n": "o", "b": "a", "hikari": "noa"}, 77)
+        mapping.get_index_or_slice({"i": "e", "n": "o", "b": "a", "hikari": "noa"}, 77)
 
 
 def test_get_index_or_slice_with_slice():
@@ -157,4 +157,4 @@ def test_get_index_or_slice_with_slice():
 
 def test_get_index_or_slice_with_invalid_type():
     with pytest.raises(TypeError):
-        assert mapping.get_index_or_slice({}, object())
+        mapping.get_index_or_slice({}, object())

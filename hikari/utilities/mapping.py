@@ -134,7 +134,7 @@ class CMRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
 def get_index_or_slice(
     mapping: typing.Mapping[KeyT, ValueT], index_or_slice: typing.Union[int, slice]
 ) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
-    """Get a dict entry at a given index as if it's a sequence of it's values.
+    """Get a mapping's entry at a given index as if it's a sequence of it's values.
 
     Parameters
     ----------

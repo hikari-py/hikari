@@ -371,7 +371,7 @@ class GatewayShard(abc.ABC):
         include_presences: hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether to request presences.
         query: builtins.str
-            If not `builtins.None`, request the members which username starts with the string.
+            If not `""`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
         users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
@@ -380,8 +380,8 @@ class GatewayShard(abc.ABC):
             If specified, the nonce to be sent with guild chunks.
 
         !!! note
-            To request the full list of members, set `query` to `builtins.None` or `""`
-            (empty string) and `limit` to 0.
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
 
         Raises
         ------

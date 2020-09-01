@@ -56,7 +56,7 @@ class RequestInformation(typing.Protocol):
 
         Returns
         -------
-        builtins.int or builtins.None
+        typing.Optional[builtins.int]
             The `builtins.int` average size of each chunk for this request
             or `builtins.None` if we haven't received a response to pull
             information from yet.
@@ -68,7 +68,7 @@ class RequestInformation(typing.Protocol):
 
         Returns
         -------
-        builtins.int or builtins.None
+        typing.Optional[builtins.int]
             The `builtins.int` count of how many chunk events should be received
             for this request or `builtins.None` if we haven't received a
             response to pull information from yet.
@@ -103,7 +103,7 @@ class RequestInformation(typing.Protocol):
 
         Returns
         -------
-        datetime.datetime or builtins.None
+        typing.Optional[datetime.datetime]
             A datetime object of when we last received a chunk event for this
             request or `builtins.None` if we haven't received any chunk events
             in response to this request yet.
@@ -115,7 +115,7 @@ class RequestInformation(typing.Protocol):
 
         Returns
         -------
-        typing.Sequence[builtins.int] or builtins.None
+        typing.Optional[typing.Sequence[builtins.int]]
             A sequence of `builtins.int` indexes of the chunk events we haven't
             received for this request or `builtins.None` if we haven't received
             a response to pull information from yet.
@@ -176,28 +176,28 @@ class GuildChunker(abc.ABC):
 
         Parameters
         ----------
-        guild: hikari.guilds.Guild
+        guild : hikari.guilds.Guild
             The guild to request chunk for.
-        timeout: builtins.int or builtins.float or builtins.None
+        timeout : typing.Union[builtins.int, builtins.float, builtins.None]
             The maximum amount of time the returned stream should spend waiting
             for the next chunk event to be received before ending the iteration.
             If `builtins.None` then this will never timeout between events.
-        limit: builtins.int or builtins.None
+        limit : typing.Optional[builtins.int]
             The limit for how many events the streamer should queue before
             dropping extra received events. Leave as `builtins.None` for this to
             be unlimited.
-        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
+        include_presences : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether to request presences.
-        query: builtins.str
-            If not `builtins.None`, request the members which username starts with the string.
-        query_limit: builtins.int
+        query : builtins.str
+            If not `""`, request the members which username starts with the string.
+        query_limit : builtins.int
             Maximum number of members to send matching the query.
-        users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users : hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
             If specified, the users to request for.
 
         !!! note
-            To request the full list of members, set `query` to `builtins.None` or `""`
-            (empty string) and `limit` to 0.
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
 
         !!! note
             The chunk request will not be sent off until the returned stream is
@@ -215,12 +215,12 @@ class GuildChunker(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_request_status(self, nonce: str) -> typing.Optional[RequestInformation]:
+    async def get_request_status(self, nonce: str, /) -> typing.Optional[RequestInformation]:
         """Return the status of a request.
 
         Parameters
         ----------
-        nonce: str
+        nonce : str
             The unique identifier for the tracked request to get.
 
         Returns
@@ -231,13 +231,13 @@ class GuildChunker(abc.ABC):
 
     @abc.abstractmethod
     async def list_requests_for_shard(
-        self, shard: typing.Union[gateway_shard.GatewayShard, int]
+        self, shard: typing.Union[gateway_shard.GatewayShard, int], /
     ) -> typing.Sequence[RequestInformation]:
         """List the statuses of requests made for a specific shard.
 
         Parameters
         ----------
-        shard: hikari.api.shard.GatewayShard or builtins.int
+        shard : typing.Union[hikari.api.shard.GatewayShard, builtins.int]
             The object or ID of the shard to get the tracked requests for.
 
         Returns
@@ -249,7 +249,7 @@ class GuildChunker(abc.ABC):
 
     @abc.abstractmethod
     async def list_requests_for_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild], /
     ) -> typing.Sequence[RequestInformation]:
         """List the statuses of requests made for a specific guild.
 
@@ -271,7 +271,7 @@ class GuildChunker(abc.ABC):
 
         Parameters
         ----------
-        event: hikari.events.shard_events.MemberChunkEvent
+        event : hikari.events.shard_events.MemberChunkEvent
             The object of the chunk event that's being consumed.
         """
 
@@ -294,20 +294,20 @@ class GuildChunker(abc.ABC):
 
         Parameters
         ----------
-        guild: hikari.guilds.Guild
+        guild : hikari.guilds.Guild
             The guild to request chunk for.
-        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
+        include_presences : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether to request presences.
-        query: builtins.str
-            If not `builtins.None`, request the members which username starts with the string.
-        limit: builtins.int
+        query : builtins.str
+            If not `""`, request the members which username starts with the string.
+        limit : builtins.int
             Maximum number of members to send matching the query.
-        users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users : hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
             If specified, the users to request for.
 
         !!! note
-            To request the full list of members, set `query` to `builtins.None` or `""`
-            (empty string) and `limit` to 0.
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
 
         Returns
         -------

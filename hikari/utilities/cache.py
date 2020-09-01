@@ -147,16 +147,16 @@ class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[Key
 
     Parameters
     ----------
-    items : typing.Mapping[KeyT, ValueT or DataT or GenericRefWrapper[ValueT]
+    items : typing.Union[typing.Mapping[KeyT, ValueT], DataT, GenericRefWrapper[ValueT]]
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
-    builder : typing.Callable[[DataT], ValueT] or builtins.None
+    builder : typing.Optional[typing.Callable[[DataT], ValueT]]
         The callable used to build entities before they're returned by the
         mapping. This is used to cover the case when items stores `DataT` objects.
     unpack : bool
         Whether to unpack items from their ref wrappers or not before returning
         them. This accounts for when `items` is `GenericRefWrapper[ValueT]`.
-    predicate : typing.Callable[[typing.Any], bool] or builtins.None
+    predicate : typing.Optional[typing.Callable[[typing.Any], bool]]
         A callable to use to determine whether entries should be returned or hidden,
         this should take in whatever raw type was passed for the value in `items`.
         This may be `builtins.None` if all entries should be exposed.

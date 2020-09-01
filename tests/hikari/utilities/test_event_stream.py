@@ -44,12 +44,15 @@ class TestStreamer:
         mock_streamer.open.assert_called_once()
         mock_streamer.close.assert_called_once()
 
-    def test___enter___and___exit__(self):
+    def test___enter__(self):
         mock_streamer = hikari_test_helpers.mock_class_namespace(event_stream.Streamer)
 
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
-            with mock_streamer():
-                ...
+            mock_streamer().__enter__()
+
+    def test___exit__(self):
+        hikari_test_helpers.mock_class_namespace(event_stream.Streamer)().__exit__(object(), object(), object())
 
 
 @pytest.fixture()
@@ -98,9 +101,9 @@ class TestEventStream:
     async def test___anext___when_stream_closed(self):
         streamer = hikari_test_helpers.stub_class(event_stream.EventStream, _active=False)
 
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
-            async for _ in streamer:
-                break
+            await streamer.__anext__()
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout(0.5)
@@ -110,7 +113,7 @@ class TestEventStream:
         )
 
         async for _ in streamer:
-            assert False, "streamer shouldn't have yielded anything"
+            pytest.fail("streamer shouldn't have yielded anything")
         else:
             # Ensure we don't get a warning or error on del
             streamer._active = False
@@ -135,7 +138,7 @@ class TestEventStream:
             streamer._active = False
             return
 
-        assert False, "streamer should've yielded something"
+        pytest.fail("streamer should've yielded something")
 
     @pytest.mark.asyncio
     async def test___anext__(self):
@@ -152,7 +155,7 @@ class TestEventStream:
             streamer._active = False
             return
 
-        assert False, "streamer should've yielded something"
+        pytest.fail("streamer should've yielded something")
 
     @pytest.mark.asyncio
     async def test___await__(self):

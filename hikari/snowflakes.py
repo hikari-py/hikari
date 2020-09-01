@@ -148,7 +148,7 @@ def calculate_shard_id(
 
     Parameters
     ----------
-    app_or_count : hikari.traits.ShardAware or builtins.int or builtins.str
+    app_or_count : typing.Union[hikari.traits.ShardAware, builtins.int, builtins.str]
         The shard aware app of the current application or the integer count of
         the current app's shards.
     guild : SnowflakeishOr[hikari.guilds.PartialGuild]

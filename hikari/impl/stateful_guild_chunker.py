@@ -255,7 +255,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             users=users,
         )
 
-    async def get_request_status(self, nonce: str) -> typing.Optional[chunker.RequestInformation]:
+    async def get_request_status(self, nonce: str, /) -> typing.Optional[chunker.RequestInformation]:
         try:
             shard_id = int(nonce.split(".", 1)[0])
         except ValueError:
@@ -264,7 +264,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             return copy.copy(self._tracked[shard_id].get(nonce)) if shard_id in self._tracked else None
 
     async def list_requests_for_shard(
-        self, shard: typing.Union[gateway_shard.GatewayShard, int]
+        self, shard: typing.Union[gateway_shard.GatewayShard, int], /
     ) -> typing.Sequence[chunker.RequestInformation]:
         shard_id = shard if isinstance(shard, int) else shard.id
 
@@ -274,7 +274,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         return ()
 
     async def list_requests_for_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild]
+        self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild], /
     ) -> typing.Sequence[chunker.RequestInformation]:
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
