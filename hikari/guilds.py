@@ -705,7 +705,7 @@ class GuildPreview(PartialGuild):
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
     """The mapping of IDs to the emojis this guild provides."""
 
-    approximate_presence_count: int = attr.ib(eq=False, hash=False, repr=True)
+    approximate_active_member_count: int = attr.ib(eq=False, hash=False, repr=True)
     """The approximate amount of presences in this guild."""
 
     approximate_member_count: int = attr.ib(eq=False, hash=False, repr=True)
@@ -865,18 +865,6 @@ class Guild(PartialGuild, abc.ABC):
     `features` display rules and guidelines.
 
     If the `GuildFeature.PUBLIC` feature is not defined, then this is `builtins.None`.
-    """
-
-    max_presences: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild.
-
-    If this is `builtins.None`, then the default value is used (currently 25000).
-    """
-
-    max_members: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The maximum number of members allowed in this guild.
-
-    This information may not be present, in which case, it will be `builtins.None`.
     """
 
     max_video_channel_users: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
@@ -1087,21 +1075,17 @@ class RESTGuild(Guild):
     _emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.ib(eq=False, hash=False, repr=False)
     """A mapping of emoji IDs to the objects of the emojis this guild provides."""
 
-    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild.
+    approximate_member_count: int = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild."""
 
-    This information will be provided by HTTP API calls fetching the guilds that
-    a bot account is in. For all other purposes, this should be expected to
-    remain `builtins.None`.
-    """
+    approximate_active_member_count: int = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild that are not offline."""
 
-    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild that are not offline.
+    max_presences: int = attr.ib(eq=False, hash=False, repr=False)
+    """The maximum number of presences for the guild."""
 
-    This information will be provided by HTTP API calls fetching the guilds that
-    a bot account is in. For all other purposes, this should be expected to
-    remain `builtins.None`.
-    """
+    max_members: int = attr.ib(eq=False, hash=False, repr=False)
+    """The maximum number of members allowed in this guild."""
 
     @property
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:

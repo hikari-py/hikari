@@ -251,7 +251,7 @@ class Invite(InviteCode):
     target_user_type: typing.Optional[TargetUserType] = attr.ib(eq=False, hash=False, repr=False)
     """The type of user target this invite is, if applicable."""
 
-    approximate_presence_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.
 
     This is only present when `with_counts` is passed as `builtins.True` to the GET

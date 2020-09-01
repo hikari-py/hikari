@@ -81,4 +81,7 @@ CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
 TWEMOJI_SVG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/svg/"
 
+# Miscellaneous
+DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
+
 __all__: typing.Final[typing.List[str]] = [attr for attr in globals() if not any(c.islower() for c in attr)]
