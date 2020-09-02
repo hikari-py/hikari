@@ -56,6 +56,7 @@ from hikari.impl import stateless_cache as stateless_cache_impl
 from hikari.impl import stateless_event_manager
 from hikari.impl import stateless_guild_chunker as stateless_guild_chunker_impl
 from hikari.impl import voice
+from hikari.utilities import aio
 from hikari.utilities import art
 from hikari.utilities import constants
 from hikari.utilities import date
@@ -199,41 +200,6 @@ class BotApp(
         If sharding information is provided, but is unfeasible or invalid.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_cache",
-        "_connector_factory",
-        "_debug",
-        "_entity_factory",
-        "_event_manager",
-        "_event_factory",
-        "_executor",
-        "_guild_chunker",
-        "_http_settings",
-        "_initial_activity",
-        "_initial_idle_since",
-        "_initial_is_afk",
-        "_initial_status",
-        "_intents",
-        "_has_aborted",
-        "_large_threshold",
-        "_max_concurrency",
-        "_proxy_settings",
-        "_request_close_event",
-        "_rest",
-        "_shard_count",
-        "_shard_gather_task",
-        "_shard_ids",
-        "_shards",
-        "_started_at_monotonic",
-        "_started_at_timestamp",
-        "_stateless",
-        "_tasks",
-        "_token",
-        "_version",
-        "_voice",
-        "_start_count",
-    )
-
     def __init__(
         self,
         *,
@@ -303,7 +269,6 @@ class BotApp(
         self._shards: typing.Dict[int, gateway_shard.GatewayShard] = {}
         self._started_at_monotonic: typing.Optional[float] = None
         self._started_at_timestamp: typing.Optional[datetime.datetime] = None
-        self._tasks: typing.Dict[int, asyncio.Task[typing.Any]] = {}
         self._token = token
         self._version = gateway_version
         # This should always be last so that we don't get an extra error when failed to initialize
@@ -505,7 +470,6 @@ class BotApp(
         self._started_at_monotonic = date.monotonic()
         self._started_at_timestamp = date.local_datetime()
 
-        self._tasks.clear()
         self._shard_gather_task = None
 
         try:
@@ -520,57 +484,41 @@ class BotApp(
 
         start_time = date.monotonic()
 
-        try:
-            for i, shard_ids in enumerate(self._max_concurrency_chunker()):
-                if self._request_close_event.is_set():
-                    break
+        for i, shard_ids in enumerate(self._max_concurrency_chunker()):
+            if self._request_close_event.is_set():
+                break
 
-                if i > 0:
-                    _LOGGER.info("backing off for 5 seconds")
-                    completed, _ = await asyncio.wait(
-                        self._tasks.values(), timeout=5, return_when=asyncio.FIRST_COMPLETED
+            if i > 0:
+                _LOGGER.info("backing off for 5 seconds")
+
+                try:
+                    await aio.first_completed(
+                        *map(asyncio.ensure_future, self._shards.values()),
+                        timeout=5,
                     )
+                except asyncio.TimeoutError:
+                    pass
 
-                    while completed:
-                        if (ex := completed.pop().exception()) is not None:
-                            raise ex
+            window = {}
+            for shard_id in shard_ids:
+                shard_obj = self._shards[shard_id]
+                window[shard_id] = asyncio.create_task(shard_obj.start(), name=f"start gateway shard {shard_id}")
 
-                window = {}
-                for shard_id in shard_ids:
-                    shard_obj = self._shards[shard_id]
-                    window[shard_id] = asyncio.create_task(shard_obj.start(), name=f"start gateway shard {shard_id}")
+            # Wait for the group to start.
+            gatherer = asyncio.gather(*window.values())
+            waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
+            await aio.first_completed(gatherer, waiter)
 
-                # Wait for the group to start.
-                gatherer = asyncio.gather(*window.values())
-                waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
-
-                await asyncio.wait((gatherer, waiter), return_when=asyncio.FIRST_COMPLETED)
-
-                if not waiter.done():
-                    waiter.cancel()
-                else:
-                    gatherer.cancel()
-
-                # Store the keep-alive tasks and continue.
-                for shard_id, start_task in window.items():
-                    self._tasks[shard_id] = start_task.result()
-
-        finally:
-            if len(self._tasks) != len(self._shards):
-                _LOGGER.warning("application was aborted midway through initialization, so never managed to start")
-                await self.close()
-                raise errors.GatewayClientClosedError("Client was aborted midway through initialization")
-
-            finish_time = date.monotonic()
+            await self.dispatch(lifetime_events.StartedEvent(app=self))
             self._shard_gather_task = asyncio.create_task(
                 self._gather_shard_lifecycles(), name=f"gatherer for {len(self._shards)} shard(s)"
             )
 
+            finish_time = date.monotonic()
+
             # Don't bother logging this if we are single sharded. It is useless information.
             if len(self._shard_ids) > 1:
                 _LOGGER.info("started %s shard(s) in approx %.2fs", len(self._shards), finish_time - start_time)
-
-            await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     def listen(
         self,
@@ -640,10 +588,9 @@ class BotApp(
             return
 
         self._has_aborted = True
-        self._guild_chunker.close()
         await self.dispatch(lifetime_events.StoppingEvent(app=self))
+        await self._guild_chunker.close()
         await self._abort_shards()
-        self._tasks.clear()
         await self.dispatch(lifetime_events.StoppedEvent(app=self))
         await self._rest.close()
         await self._connector_factory.close()
@@ -769,10 +716,7 @@ class BotApp(
                 loop.run_until_complete(self._shard_management_lifecycle())
             except (KeyboardInterrupt, SystemExit):
                 die()
-            finally:
-                loop.run_until_complete(self.join())
-        except errors.GatewayClientClosedError as ex:
-            _LOGGER.info("client closed with reason: %s", ex)
+
         finally:
             for signum in kill_signals:
                 # Windows is dumb and doesn't support signals properly.
@@ -958,7 +902,7 @@ class BotApp(
         for shard_id in self._shards:
             _LOGGER.debug("stopping shard %s", shard_id)
             await self._shards[shard_id].close()
-        await asyncio.gather(*self._tasks.values(), return_exceptions=True)
+        await asyncio.gather(*map(asyncio.ensure_future, self._shards.values()))
 
     async def _gather_shard_lifecycles(self) -> None:
         """Await all shards.
@@ -967,21 +911,14 @@ class BotApp(
         completes.
         """
         _LOGGER.debug("gathering shards")
-        gatherer = asyncio.gather(*self._tasks.values())
-        waiter = asyncio.create_task(self._request_close_event.wait(), name="listen for bot closure events")
 
-        try:
-            await asyncio.wait([gatherer, waiter], return_when=asyncio.FIRST_COMPLETED)
+        await aio.first_completed(
+            *map(asyncio.ensure_future, self._shards.values()),
+            asyncio.create_task(self._request_close_event.wait(), name="wait for close event to be set on bot"),
+        )
 
-            if not waiter.done():
-                waiter.cancel()
-        finally:
-            _LOGGER.debug("gather terminated, shutting down shard(s)")
-            aborter = asyncio.shield(self.close())
-            try:
-                await gatherer
-            finally:
-                await aborter
+        _LOGGER.debug("gather terminated, shutting down shard(s)")
+        await asyncio.shield(self.close())
 
     async def _shard_management_lifecycle(self) -> None:
         """Start all shards and then wait for them to finish."""
