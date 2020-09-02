@@ -25,6 +25,7 @@ import time
 import pytest
 
 from hikari.utilities import mapping
+from tests.hikari import hikari_test_helpers
 
 
 class TestDictionaryCollection:
@@ -147,13 +148,15 @@ class TestMRIMutableMapping:
 
     @pytest.mark.asyncio
     async def test___delitem___garbage_collection(self):
-        mock_map = mapping.MRIMutableMapping(expiry=datetime.timedelta(seconds=0.2))
+        mock_map = mapping.MRIMutableMapping(
+            expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
+        )
         mock_map.update({"nyaa": "see", "awwo": "awoo2"})
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
         assert mock_map == {"nyaa": "see", "awwo": "awoo2"}
         mock_map.update({"ayanami": "shinji", "rei": "aww"})
         assert mock_map == {"nyaa": "see", "awwo": "awoo2", "ayanami": "shinji", "rei": "aww"}
-        await asyncio.sleep(0.15)
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
         del mock_map["ayanami"]
         assert mock_map == {"rei": "aww"}
 
@@ -199,13 +202,15 @@ class TestMRIMutableMapping:
 
     @pytest.mark.asyncio
     async def test___setitem___garbage_collection(self):
-        mock_map = mapping.MRIMutableMapping(expiry=datetime.timedelta(seconds=0.25))
+        mock_map = mapping.MRIMutableMapping(
+            expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
+        )
         mock_map.update({"OK": "no", "blam": "booga"})
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
         assert mock_map == {"OK": "no", "blam": "booga"}
         mock_map.update({"ayanami": "rei", "owo": "awoo"})
         assert mock_map == {"OK": "no", "blam": "booga", "ayanami": "rei", "owo": "awoo"}
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
         mock_map.update({"nyaa": "qt"})
         assert mock_map == {"ayanami": "rei", "owo": "awoo", "nyaa": "qt"}
 

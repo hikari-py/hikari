@@ -141,9 +141,14 @@ class TestChunkStream:
         )
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test___anext___uses_queue_entry(self):
         stream = hikari_test_helpers.stub_class(
-            stateful_guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=None, _timeout=0.3
+            stateful_guild_chunker.ChunkStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _missing_chunks=None,
+            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
         )
         mock_chunk = object()
         stream._queue.put_nowait(mock_chunk)
@@ -155,24 +160,33 @@ class TestChunkStream:
         pytest.fail("stream should've yielded something")
 
     @pytest.mark.asyncio
-    @hikari_test_helpers.timeout(0.5)
+    @hikari_test_helpers.timeout()
     async def test___anext___handles_time_out(self):
         stream = hikari_test_helpers.stub_class(
-            stateful_guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=None, _timeout=0.3
+            stateful_guild_chunker.ChunkStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _missing_chunks=None,
+            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
         )
 
         async for _ in stream:
             pytest.fail("stream shouldn't have returned anything.")
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test___anext___waits_for_initial_chunk(self):
         stream = hikari_test_helpers.stub_class(
-            stateful_guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=None, _timeout=0.3
+            stateful_guild_chunker.ChunkStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _missing_chunks=None,
+            _timeout=hikari_test_helpers.REASONABLE_SLEEP_TIME * 2,
         )
         mock_chunk = object()
 
         async def add_chunk():
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
             stream._queue.put_nowait(mock_chunk)
 
         asyncio.create_task(add_chunk())
@@ -361,11 +375,12 @@ class TestStatefulGuildChunkerImpl:
         assert mock_chunker._default_include_presences(574921006817476608, undefined.UNDEFINED) is False
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test_fetch_members_for_guild(self, mock_app):
         chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app)
         stream = chunker.fetch_members_for_guild(
             guild=snowflakes.Snowflake(312312354),
-            timeout=0.2,
+            timeout=hikari_test_helpers.REASONABLE_SLEEP_TIME * 3,
             limit=8,
             include_presences=True,
             query_limit=42,
@@ -398,10 +413,10 @@ class TestStatefulGuildChunkerImpl:
 
         await listener(chunk_0)
         asyncio.gather(
-            add_entry(0.1, chunk_1),
-            add_entry(0.1, mock.Mock()),
-            add_entry(0.2, chunk_2),
-            add_entry(0.5, mock.Mock(nonce=nonce)),
+            add_entry(hikari_test_helpers.REASONABLE_SLEEP_TIME, chunk_1),
+            add_entry(hikari_test_helpers.REASONABLE_SLEEP_TIME * 1.5, mock.Mock()),
+            add_entry(hikari_test_helpers.REASONABLE_SLEEP_TIME * 1.5, chunk_2),
+            add_entry(hikari_test_helpers.REASONABLE_SLEEP_TIME * 6, mock.Mock(nonce=nonce)),
         )
 
         assert await stream == [chunk_0, chunk_1, chunk_2]

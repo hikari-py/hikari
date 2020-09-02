@@ -110,10 +110,13 @@ class TestEventStream:
             await streamer.__anext__()
 
     @pytest.mark.asyncio
-    @hikari_test_helpers.timeout(0.5)
+    @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
         streamer = hikari_test_helpers.stub_class(
-            event_stream.EventStream, _active=True, _queue=asyncio.Queue(), _timeout=0.3
+            event_stream.EventStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
         )
 
         async for _ in streamer:
@@ -123,14 +126,18 @@ class TestEventStream:
             streamer._active = False
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
         streamer = hikari_test_helpers.stub_class(
-            event_stream.EventStream, _active=True, _queue=asyncio.Queue(), _timeout=0.3
+            event_stream.EventStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _timeout=hikari_test_helpers.REASONABLE_SLEEP_TIME * 3,
         )
 
         async def add_event():
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
             streamer._queue.put_nowait(mock_event)
 
         asyncio.create_task(add_event())
@@ -145,10 +152,14 @@ class TestEventStream:
         pytest.fail("streamer should've yielded something")
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test___anext__(self):
         mock_event = object()
         streamer = hikari_test_helpers.stub_class(
-            event_stream.EventStream, _active=True, _queue=asyncio.Queue(), _timeout=0.3
+            event_stream.EventStream,
+            _active=True,
+            _queue=asyncio.Queue(),
+            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
         )
         streamer._queue.put_nowait(mock_event)
 
