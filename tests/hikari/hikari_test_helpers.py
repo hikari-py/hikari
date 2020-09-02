@@ -93,14 +93,6 @@ def mock_methods_on(obj, except_=(), also_mock=()):
     return copy_
 
 
-def fqn1(obj_):
-    return obj_.__module__ + "." + obj_.__qualname__
-
-
-def fqn2(module, item_identifier):
-    return module.__name__ + "." + item_identifier
-
-
 _unslotted_classes = {}
 
 
@@ -213,8 +205,16 @@ def timeout(time_period=REASONABLE_TIMEOUT_AFTER):
     return decorator
 
 
-def stupid_windows_please_stop_breaking_my_tests(test):
-    return pytest.mark.skipif(os.name == "nt", reason="This test will not pass on Windows :(")(test)
+def skip_on_system(os_name: str):
+    """Skip a test on certain systems.
+
+    The valid system names are based on `os.system`
+    """
+
+    def decorator(test):
+        return pytest.mark.skipif(os.name == os_name, reason=f"This test will not pass on {os_name} systems")(test)
+
+    return decorator
 
 
 def has_sem_open_impl():
