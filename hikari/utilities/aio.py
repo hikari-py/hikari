@@ -27,6 +27,7 @@ __all__: typing.Final[typing.List[str]] = [
     "completed_future",
     "is_async_iterator",
     "is_async_iterable",
+    "first_completed",
 ]
 
 import asyncio
@@ -36,6 +37,7 @@ import typing
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
+U_co = typing.TypeVar("U_co", covariant=True)
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
@@ -89,3 +91,45 @@ def is_async_iterable(obj: typing.Any) -> bool:
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)
+
+
+async def first_completed(
+    f1: asyncio.Future[typing.Any],
+    f2: asyncio.Future[typing.Any],
+    *fs: asyncio.Future[typing.Any],
+    timeout: typing.Optional[float] = None,
+) -> None:
+    """Wait for the first of two or more futures to complete.
+
+    The futures that don't complete first will be cancelled.
+
+    Completion is defined as having a result or an exception set. Thus,
+    cancelling any of the futures will also result in the others being
+    cancelled.
+
+    If the first future raises an exception, then that exception will be
+    propagated.
+
+    Parameters
+    ----------
+    f1 : asyncio.Future[typing.Any]
+        The first future to wait for.
+    f2 : asyncio.Future[typing.Any]
+        The second future to wait for.
+    *fs : asyncio.Future[typing.Any]
+        Additional futures to wait for.
+    timeout : typing.Optional[float]
+        Optional timeout to wait for, or `builtins.None` to not use one.
+        If the timeout is reached, all futures are cancelled immediately.
+
+    !!! note
+        If more than one future is completed before entering this call, then
+        the first future is always returned.
+    """
+    iterator = asyncio.as_completed([f1, f2, *fs], timeout=timeout)
+    try:
+        await next(iterator)
+    finally:
+        for f in [f1, f2, *fs]:
+            if not f.done() and not f.cancelled():
+                f.cancel()

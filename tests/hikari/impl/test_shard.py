@@ -1210,7 +1210,7 @@ class TestPollEvents:
             "d": "some data",
         }
         client._receive_json = mock.AsyncMock(side_effect=[payload, exit_error])
-        client._last_heartbeat_sent = 5
+        client._last_sent = 5
 
         with mock.patch.object(hikari_date, "monotonic", return_value=13):
             with pytest.raises(exit_error):

@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import asyncio
 
 import pytest
 
@@ -192,3 +193,103 @@ class TestIsAsyncIterable:
                 return ...
 
         assert not aio.is_async_iterable(AsyncIterator)
+
+
+@pytest.mark.asyncio
+class TestFirstCompleted:
+    @hikari_test_helpers.timeout()
+    async def test_first_future_completes(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        f1.set_result(None)
+        await aio.first_completed(f1, f2, f3)
+        assert f1.done()
+        assert f2.cancelled()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_second_future_completes(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        f2.set_result(None)
+        await aio.first_completed(f1, f2, f3)
+        assert f1.cancelled()
+        assert f2.done()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_timeout_propagates(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        with pytest.raises(asyncio.TimeoutError):
+            await aio.first_completed(f1, f2, f3, timeout=0.01)
+
+        assert f1.cancelled()
+        assert f2.cancelled()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_cancelled_propagates(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+        f1.cancel()
+        f2.cancel()
+        f3.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await aio.first_completed(f1, f2, f3)
+
+        assert f1.cancelled()
+        assert f2.cancelled()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_single_cancelled_propagates(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+        f1.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await aio.first_completed(f1, f2, f3)
+
+        assert f1.cancelled()
+        assert f2.cancelled()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_result_propagates(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+        f3.set_result(22)
+
+        await aio.first_completed(f1, f2, f3)
+
+        assert f1.cancelled()
+        assert f2.cancelled()
+        assert f3.done()
+        assert not f3.cancelled()
+
+    @hikari_test_helpers.timeout()
+    async def test_exception_propagates(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        error = FileExistsError("aaaa")
+        f2.set_exception(error)
+
+        with pytest.raises(FileExistsError):
+            await aio.first_completed(f1, f2, f3)
+
+        assert f1.cancelled()
+        assert f2.done()
+        assert f3.cancelled()
