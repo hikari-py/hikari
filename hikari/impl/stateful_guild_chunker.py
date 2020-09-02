@@ -214,13 +214,12 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         about for each shard.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_tracked")
+    __slots__: typing.Sequence[str] = ("_app", "_limit", "_tracked")
 
     def __init__(self, app: traits.BotAware, limit: int = 200) -> None:
         self._app = app
-        self._tracked: typing.MutableMapping[int, typing.Dict[str, _TrackedRequests]] = mapping.CMRIMutableMapping(
-            limit
-        )
+        self._limit = limit
+        self._tracked: typing.MutableMapping[int, mapping.CMRIMutableMapping[str, _TrackedRequests]] = {}
 
     def _default_include_presences(
         self, guild_id: snowflakes.Snowflake, include_presences: undefined.UndefinedOr[bool]
@@ -268,10 +267,10 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
     ) -> typing.Sequence[chunker.RequestInformation]:
         shard_id = shard if isinstance(shard, int) else shard.id
 
-        if shard_id in self._tracked:
-            return tuple(copy.copy(chunk) for chunk in mapping.copy_mapping(self._tracked[shard_id]).values())
+        if shard_id not in self._tracked:
+            return ()
 
-        return ()
+        return tuple(copy.copy(chunk) for chunk in self._tracked[shard_id].copy().values())
 
     async def list_requests_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild], /
@@ -284,7 +283,11 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         return tuple(copy.copy(event) for event in self._tracked[shard_id].values() if event.guild_id == guild_id)
 
     async def consume_chunk_event(self, event: shard_events.MemberChunkEvent, /) -> None:
-        if event.shard.id not in self._tracked or event.nonce not in self._tracked[event.shard.id]:
+        if (
+            event.shard.id not in self._tracked
+            or event.nonce is None
+            or event.nonce not in self._tracked[event.shard.id]
+        ):
             return
 
         self._tracked[event.shard.id][event.nonce].update(event)
@@ -302,7 +305,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         nonce = f"{shard_id}.{_random_nonce()}"
         if shard_id not in self._tracked:
-            self._tracked[shard_id] = {}
+            self._tracked[shard_id] = mapping.CMRIMutableMapping(limit=self._limit)
 
         tracker = _TrackedRequests(guild_id=guild_id, nonce=nonce)
         self._tracked[shard_id][nonce] = tracker

@@ -250,10 +250,14 @@ class GuildRecord:
     channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
     emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
     invites: typing.Optional[typing.MutableSequence[str]] = attr.ib(default=None)
-    members: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
-    presences: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(default=None)
+    members: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
+    presences: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
+        default=None
+    )
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
-    voice_states: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, VoiceStateData]] = attr.ib(default=None)
+    voice_states: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
+        default=None
+    )
 
     def __bool__(self) -> bool:  # TODO: should "is_available" keep this alive?
         return any(
@@ -649,7 +653,7 @@ class GenericRefWrapper(typing.Generic[ValueT]):
     ref_count: int = attr.ib(default=0)
 
 
-class PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflakes.Snowflake, PrivateTextChannelData]):
+class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, PrivateTextChannelData]):
     """A specialised Most-recently-used limited mapping for private text channels.
 
     This allows us to stop the private message cached from growing
@@ -671,14 +675,23 @@ class PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflakes.Snowf
 
     __slots__: typing.Sequence[str] = ("_channels", "_expiry")
 
-    def __init__(self, *, expiry: datetime.timedelta) -> None:
+    def __init__(
+        self,
+        source: typing.Optional[typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]] = None,
+        /,
+        *,
+        expiry: datetime.timedelta,
+    ) -> None:
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 
-        self._channels: typing.Dict[snowflakes.Snowflake, PrivateTextChannelData] = {}
+        self._channels = source or {}
         self._expiry = expiry
 
-    def copy(self) -> typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]:
+    def copy(self) -> PrivateTextChannelMRUMutableMapping:
+        return PrivateTextChannelMRUMutableMapping(self._channels.copy(), expiry=self._expiry)
+
+    def freeze(self) -> typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]:
         return self._channels.copy()
 
     def _garbage_collect(self) -> None:

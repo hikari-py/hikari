@@ -36,7 +36,6 @@ from hikari.impl import shard
 from hikari.impl import stateful_guild_chunker
 from hikari.utilities import attr_extensions
 from hikari.utilities import event_stream
-from hikari.utilities import mapping
 from tests.hikari import hikari_test_helpers
 
 
@@ -342,15 +341,9 @@ class TestStatefulGuildChunkerImpl:
         return stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app)
 
     def test__init__(self, mock_app):
-        mock_mapping = mock.Mock(mapping.CMRIMutableMapping)
-
-        with mock.patch.object(mapping, "CMRIMutableMapping", return_value=mock_mapping):
-            chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app, 500)
-
-            mapping.CMRIMutableMapping.assert_called_once_with(500)
-
+        chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app, 500)
         assert chunker._app is mock_app
-        assert chunker._tracked is mock_mapping
+        assert chunker._tracked == {}
 
     def test__default_include_presences_when_include_presences_already_set(self, mock_chunker):
         assert mock_chunker._default_include_presences(54234, True) is True

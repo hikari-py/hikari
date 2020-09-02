@@ -23,24 +23,129 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = [
+    "MapT",
     "KeyT",
     "ValueT",
+    "MappedCollection",
+    "DictionaryCollection",
     "MRIMutableMapping",
+    "CMRIMutableMapping",
     "get_index_or_slice",
+    "copy_mapping",
 ]
 
+import abc
 import datetime
 import itertools
 import time
 import typing
 
+MapT = typing.TypeVar("MapT", bound="MappedCollection[typing.Any, typing.Any]")
+"""Type-hint A type hint used for mapped collection objects."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint A type hint used for the type of a mapping's key."""
 ValueT = typing.TypeVar("ValueT")
 """Type-hint A type hint used for the type of a mapping's value."""
 
 
-class MRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
+class MappedCollection(typing.MutableMapping[KeyT, ValueT], abc.ABC):
+    """The abstract class of mutable mappings used within hikari.
+
+    This extends `typing.MutableMapping` with "copy" and "freeze" methods.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def copy(self: MapT) -> MapT:
+        """Return a copy of this mapped collection.
+
+        Unlike simply doing `dict(mapping)`, this may rely on internal detail
+        around how the data is being stored to allow for a more efficient copy.
+        This may look like calling `dict.copy` and wrapping the result in a
+        mapped collection.
+
+        !!! note
+            Any removal policy on this mapped collection will be copied over.
+
+        Returns
+        -------
+        MapT[KeyT, ValueT]
+            A copy of this mapped collection.
+        """
+
+    @abc.abstractmethod
+    def freeze(self) -> typing.MutableMapping[KeyT, ValueT]:
+        """Return a frozen mapping view of the items in this mapped collection.
+
+        Unlike simply doing `dict(mapping)`, this may rely on internal detail
+        around how the data is being stored to allow for a more efficient copy.
+        This may look like calling `dict.copy`.
+
+        !!! note
+            Unlike `MappedCollection.copy`, this should return a pure mapping
+            with no removal policy at all.
+
+        Returns
+        -------
+        typing.MutableMapping[KeyT, ValueT]
+            A frozen mapping view of the items in this mapped collection.
+        """
+
+
+class DictionaryCollection(MappedCollection[KeyT, ValueT]):
+    """A basic mapped collection that acts like a dictionary."""
+
+    __slots__ = ("_data",)
+
+    def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /) -> None:
+        self._data = source or {}
+
+    def copy(self) -> DictionaryCollection[KeyT, ValueT]:
+        return DictionaryCollection(self._data.copy())
+
+    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+        return self._data.copy()
+
+    def __delitem__(self, key: KeyT) -> None:
+        del self._data[key]
+
+    def __getitem__(self, key: KeyT) -> ValueT:
+        return self._data[key]
+
+    def __iter__(self) -> typing.Iterator[KeyT]:
+        return iter(self._data)
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __setitem__(self, key: KeyT, value: ValueT) -> None:
+        self._data[key] = value
+
+
+class _FrozenMRIMapping(typing.MutableMapping[KeyT, ValueT]):
+    __slots__ = ("_source",)
+
+    def __init__(self, source: typing.Dict[KeyT, typing.Tuple[float, ValueT]], /) -> None:
+        self._source = source
+
+    def __getitem__(self, key: KeyT) -> ValueT:
+        return self._source[key][1]
+
+    def __iter__(self) -> typing.Iterator[KeyT]:
+        return iter(self._source)
+
+    def __len__(self) -> int:
+        return len(self._source)
+
+    def __delitem__(self, key: KeyT) -> None:
+        del self._source[key]
+
+    def __setitem__(self, key: KeyT, value: ValueT) -> None:
+        self._source[key] = (0.0, value)
+
+
+class MRIMutableMapping(MappedCollection[KeyT, ValueT]):
     """A most-recently-inserted limited mutable mapping implementation.
 
     This will remove entries on modification as as they pass the expiry limit.
@@ -49,16 +154,32 @@ class MRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
     ----------
     expiry : datetime.timedelta
         The timedelta of how long entries should be stored for before removal.
+    source : typing.Optional[typing.Dict[KeyT, typing.Tuple[builtins.float, ValueT]]
+        A source dictionary of keys to tuples of float timestamps and values to
+        create this from.
     """
 
     __slots__ = ("_data", "_expiry")
 
-    def __init__(self, expiry: datetime.timedelta) -> None:
+    def __init__(
+        self,
+        source: typing.Optional[typing.Dict[KeyT, typing.Tuple[float, ValueT]]] = None,
+        /,
+        *,
+        expiry: datetime.timedelta,
+    ) -> None:
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 
         self._expiry: float = expiry.total_seconds()
-        self._data: typing.Dict[KeyT, typing.Tuple[float, ValueT]] = {}
+        self._data = source or {}
+        self._garbage_collect()
+
+    def copy(self) -> MRIMutableMapping[KeyT, ValueT]:
+        return MRIMutableMapping(self._data.copy(), expiry=datetime.timedelta(seconds=self._expiry))
+
+    def freeze(self) -> typing.MutableMapping[KeyT, ValueT]:
+        return _FrozenMRIMapping(self._data.copy())
 
     def _garbage_collect(self) -> None:
         current_time = time.perf_counter()
@@ -91,7 +212,7 @@ class MRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
         self._garbage_collect()
 
 
-class CMRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
+class CMRIMutableMapping(MappedCollection[KeyT, ValueT]):
     """Implementation of a capacity-limited most-recently-inserted mapping.
 
     This will start removing the oldest entries after it's maximum capacity is
@@ -102,13 +223,22 @@ class CMRIMutableMapping(typing.MutableMapping[KeyT, ValueT]):
     limit : int
         The limit for how many objects should be stored by this mapping before
         it starts removing the oldest entries.
+    source : typing.Optional[typing.Dict[KeyT, ValueT]]
+        A source dictionary of keys to values to create this from.
     """
 
     __slots__ = ("_data", "_limit")
 
-    def __init__(self, limit: int) -> None:
-        self._data: typing.Dict[KeyT, ValueT] = {}
+    def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /, *, limit: int) -> None:
+        self._data: typing.Dict[KeyT, ValueT] = source or {}
         self._limit = limit
+        self._garbage_collect()
+
+    def copy(self) -> CMRIMutableMapping[KeyT, ValueT]:
+        return CMRIMutableMapping(self._data.copy(), limit=self._limit)
+
+    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+        return self._data.copy()
 
     def _garbage_collect(self) -> None:
         while len(self._data) > self._limit:
@@ -169,15 +299,12 @@ def get_index_or_slice(
     raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
 
 
-# As a note, copy_mapping is primarily used to cover 2 main cases in the cache,
-# one where we copy a mapping before iterating over it to avoid any errors that
-# would be raised by it being mutated during this process and the other to make
-# sure that the mappings we pass through to cache views are snapshots that won't
-# be further modified by the cache.
-
-
 def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
-    """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy)."""
+    """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy).
+
+    .. deprecated::
+        `MappedCollection` should be preferred over this.
+    """
     # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
     # try to use this where possible.
     try:
