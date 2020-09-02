@@ -215,7 +215,7 @@ class CDNRoute:
             this.
         file_format : builtins.str
             The file format to use for the asset.
-        size : builtins.int or buitlins.None
+        size : typing.Optional[builtins.int]
             The custom size query parameter to set. If `builtins.None`,
             it is not passed.
         **kwargs : typing.Any

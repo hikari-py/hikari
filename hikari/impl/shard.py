@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import config
     from hikari import guilds
-    from hikari import users
+    from hikari import users as users_
 
 
 @typing.final
@@ -131,6 +131,7 @@ class GatewayShardImplV6(shard.GatewayShard):
     __slots__: typing.Sequence[str] = (
         "_activity",
         "_backoff",
+        "_chunk_request_ratelimiter",
         "_closing",
         "_compression",
         "_connected_at",
@@ -235,6 +236,11 @@ class GatewayShardImplV6(shard.GatewayShard):
     ) -> None:
         self._activity: undefined.UndefinedNoneOr[presences.Activity] = initial_activity
         self._backoff = rate_limits.ExponentialBackOff(base=1.85, maximum=600, initial_increment=2)
+        # We limit member chunk requests to a stricter ratelimit of 60 requests per minute as to ensure that chunk
+        # requests don't single-handedly exhaust the request limit when being triggered on mass.
+        self._chunk_request_ratelimiter = rate_limits.WindowedBurstRateLimiter(
+            f"guild chunking rate-limit on {shard_id}", 60, 60
+        )
         self._compression = compression.lower() if compression is not None else None
         self._connected_at: typing.Optional[float] = None
         self._closing = False
@@ -254,7 +260,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         self._last_run_started_at = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
-        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(f"shard {shard_id}", 60.0, 120)
+        self._ratelimiter = rate_limits.WindowedBurstRateLimiter(f"shard rate-limit {shard_id}", 60.0, 120)
         self._request_close_event = asyncio.Event()
         self._seq: typing.Optional[int] = None
         self._session_id: typing.Optional[str] = None
@@ -373,6 +379,7 @@ class GatewayShardImplV6(shard.GatewayShard):
                 self._logger.debug("shard marked as closed when it was not running")
 
             self._ratelimiter.close()
+            self._chunk_request_ratelimiter.close()
             if self._ws is not None:
                 self._closing = True
                 # If anything interrupts this task, aiohttp will just refuse to send the close frame
@@ -430,7 +437,7 @@ class GatewayShardImplV6(shard.GatewayShard):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        user_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if self._intents is not None:
@@ -440,21 +447,30 @@ class GatewayShardImplV6(shard.GatewayShard):
             if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
                 raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
-        if user_ids is not undefined.UNDEFINED and (query or limit):
+        if users is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
 
         if not 0 <= limit <= 100:
             raise ValueError("'limit' must be between 0 and 100, both inclusive")
 
-        if user_ids is not undefined.UNDEFINED and len(user_ids) > 100:
+        if users is not undefined.UNDEFINED and len(users) > 100:
             raise ValueError("'users' is limited to 100 users")
+
+        if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
+            raise ValueError("'nonce' can be no longer than 32 byte characters long.")
+
+        await self._chunk_request_ratelimiter.acquire()
+        message = "requesting guild members for guild %s"
+        if include_presences:
+            message += " with presences"
+        self._logger.debug(message, int(guild))
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
         payload.put("presences", include_presences)
         payload.put("query", query)
         payload.put("limit", limit)
-        payload.put_snowflake_array("user_ids", user_ids)
+        payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
         await self._send_json({"op": self._Opcode.REQUEST_GUILD_MEMBERS, "d": payload})

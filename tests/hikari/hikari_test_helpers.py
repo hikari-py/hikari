@@ -141,21 +141,22 @@ def mock_class_namespace(
     if init is False:
         namespace["__init__"] = lambda _: None
 
-    if implement_abstract_methods:
-        for method_name in getattr(klass, "__abstractmethods__", ()):
+    if implement_abstract_methods and hasattr(klass, "__abstractmethods__"):
+        for method_name in klass.__abstractmethods__:
             if method_name in namespace:
                 continue
 
             attr = getattr(klass, method_name)
 
             if inspect.isdatadescriptor(attr) or inspect.isgetsetdescriptor(attr):
-                namespace[method_name] = mock.MagicMock(__isabstractmethod__=False)
+                namespace[method_name] = mock.PropertyMock(__isabstractmethod__=False)
             elif asyncio.iscoroutinefunction(attr):
                 namespace[method_name] = mock.AsyncMock(spec_set=attr, __isabstractmethod__=False)
             else:
                 namespace[method_name] = mock.Mock(spec_set=attr, __isabstractmethod__=False)
 
-        namespace.setdefault("__abstractmethods__", frozenset())
+    for attribute in namespace.keys():
+        assert hasattr(klass, attribute), f"invalid namespace attribute {attribute!r} provided"
 
     return type("Mock" + klass.__name__, (klass,), namespace)
 

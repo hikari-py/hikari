@@ -91,8 +91,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         guild_id = snowflakes.Snowflake(guild)
-        # TODO: this and the same logic in channels.py and guilds.py logic should go in a file somewhere
-        shard_id = (guild_id >> 22) % self._app.shard_count
+        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
 
         if shard_id is None:
             raise errors.VoiceError(

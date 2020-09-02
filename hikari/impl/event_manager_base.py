@@ -38,6 +38,7 @@ from hikari.api import event_dispatcher
 from hikari.events import base_events
 from hikari.utilities import aio
 from hikari.utilities import data_binding
+from hikari.utilities import event_stream
 from hikari.utilities import reflect
 
 if typing.TYPE_CHECKING:
@@ -111,7 +112,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         _LOGGER.debug(
             "subscribing callback 'async def %s%s' to event-type %s.%s",
             getattr(callback, "__name__", "<anon>"),
-            reflect.resolve_signature(callback),
+            inspect.signature(callback),
             event_type.__module__,
             event_type.__qualname__,
         )
@@ -169,7 +170,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
-                reflect.resolve_signature(callback),
+                inspect.signature(callback),
                 event_type.__module__,
                 event_type.__qualname__,
             )
@@ -266,6 +267,16 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                 log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
                 await self.dispatch(exception_event)
 
+    def stream(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+        self._check_intents(event_type, 1)
+        return event_stream.EventStream(self._app, event_type, timeout=timeout, limit=limit)
+
     async def wait_for(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
@@ -290,8 +301,4 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         pair = (predicate, future)
 
         waiter_set.add(pair)  # type: ignore[arg-type]
-
-        if timeout is not None:
-            return await asyncio.wait_for(future, timeout=timeout)
-        else:
-            return await future
+        return await asyncio.wait_for(future, timeout=timeout)

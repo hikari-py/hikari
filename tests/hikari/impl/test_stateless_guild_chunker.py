@@ -30,9 +30,32 @@ class TestStatelessGuildChunkerImpl:
         return stateless_guild_chunker.StatelessGuildChunkerImpl()
 
     @pytest.mark.asyncio
+    async def test_fetch_members_for_guild_returns_empty_streamer(self, component):
+        async with component.fetch_members_for_guild(31234, timeout=None) as streamer:
+            assert await streamer == []
+
+    @pytest.mark.asyncio
+    async def test_get_request_status(self, component):
+        assert await component.get_request_status("ofkfkf") is None
+
+    @pytest.mark.asyncio
+    async def test_list_requests_for_shard(self, component):
+        assert await component.list_requests_for_shard(4) == ()
+
+    @pytest.mark.asyncio
+    async def test_list_requests_for_guild(self, component):
+        assert await component.list_requests_for_guild(53421134123) == ()
+
+    @pytest.mark.asyncio
+    async def test_consume_chunk_event(self, component):
+        with pytest.raises(NotImplementedError):
+            assert await component.consume_chunk_event(object())
+
+    @pytest.mark.asyncio
     async def test_request_guild_chunk_raises_NotImplementedError(self, component):
         with pytest.raises(NotImplementedError):
-            await component.request_guild_chunk(object())
+            await component.request_guild_members(object())
 
-    def test_close(self, component):
-        component.close()
+    @pytest.mark.asyncio
+    async def test_close(self, component):
+        assert await component.close() is None

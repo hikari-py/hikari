@@ -23,7 +23,6 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
-    "copy_mapping",
     "IDTable",
     "StatefulCacheMappingView",
     "EmptyCacheView",
@@ -68,6 +67,7 @@ from hikari import voices
 from hikari.api import cache
 from hikari.utilities import attr_extensions
 from hikari.utilities import date
+from hikari.utilities import mapping
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
@@ -75,23 +75,6 @@ KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint for mapping keys."""
 ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
-
-
-def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
-    """Logic for copying mappings that targets impl specific copy impls (e.g. dict.copy).
-
-    We use this to cover 2 main cases in the cache, one where we copy a mapping
-    before iterating over it to avoid any errors that would be raised by it
-    being mutated during this process and the other to make sure that the
-    mappings we pass through to cache views are snapshots that won't be further
-    modified by the cache.
-    """
-    # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
-    # try to use this where possible.
-    try:
-        return mapping.copy()  # type: ignore[attr-defined, no-any-return]
-    except (AttributeError, TypeError):
-        raise NotImplementedError("provided mapping doesn't implement a copy method") from None
 
 
 class IDTable(typing.MutableSet[snowflakes.Snowflake]):
@@ -147,16 +130,16 @@ class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[Key
 
     Parameters
     ----------
-    items : typing.Mapping[KeyT, ValueT or DataT or GenericRefWrapper[ValueT]
+    items : typing.Union[typing.Mapping[KeyT, ValueT], DataT, GenericRefWrapper[ValueT]]
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
-    builder : typing.Callable[[DataT], ValueT] or builtins.None
+    builder : typing.Optional[typing.Callable[[DataT], ValueT]]
         The callable used to build entities before they're returned by the
         mapping. This is used to cover the case when items stores `DataT` objects.
     unpack : bool
         Whether to unpack items from their ref wrappers or not before returning
         them. This accounts for when `items` is `GenericRefWrapper[ValueT]`.
-    predicate : typing.Callable[[typing.Any], bool] or builtins.None
+    predicate : typing.Optional[typing.Callable[[typing.Any], bool]]
         A callable to use to determine whether entries should be returned or hidden,
         this should take in whatever raw type was passed for the value in `items`.
         This may be `builtins.None` if all entries should be exposed.
@@ -267,10 +250,14 @@ class GuildRecord:
     channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
     emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
     invites: typing.Optional[typing.MutableSequence[str]] = attr.ib(default=None)
-    members: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
-    presences: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(default=None)
+    members: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
+    presences: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
+        default=None
+    )
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
-    voice_states: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, VoiceStateData]] = attr.ib(default=None)
+    voice_states: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
+        default=None
+    )
 
     def __bool__(self) -> bool:  # TODO: should "is_available" keep this alive?
         return any(
@@ -666,7 +653,7 @@ class GenericRefWrapper(typing.Generic[ValueT]):
     ref_count: int = attr.ib(default=0)
 
 
-class PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflakes.Snowflake, PrivateTextChannelData]):
+class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, PrivateTextChannelData]):
     """A specialised Most-recently-used limited mapping for private text channels.
 
     This allows us to stop the private message cached from growing
@@ -688,14 +675,23 @@ class PrivateTextChannelMRUMutableMapping(typing.MutableMapping[snowflakes.Snowf
 
     __slots__: typing.Sequence[str] = ("_channels", "_expiry")
 
-    def __init__(self, *, expiry: datetime.timedelta) -> None:
+    def __init__(
+        self,
+        source: typing.Optional[typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]] = None,
+        /,
+        *,
+        expiry: datetime.timedelta,
+    ) -> None:
         if expiry <= datetime.timedelta():
             raise ValueError("expiry time must be greater than 0 microseconds.")
 
-        self._channels: typing.Dict[snowflakes.Snowflake, PrivateTextChannelData] = {}
+        self._channels = source or {}
         self._expiry = expiry
 
-    def copy(self) -> typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]:
+    def copy(self) -> PrivateTextChannelMRUMutableMapping:
+        return PrivateTextChannelMRUMutableMapping(self._channels.copy(), expiry=self._expiry)
+
+    def freeze(self) -> typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]:
         return self._channels.copy()
 
     def _garbage_collect(self) -> None:
@@ -737,7 +733,7 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in mapping.copy_mapping(channel.permission_overwrites).items()
     }
     return channel
 

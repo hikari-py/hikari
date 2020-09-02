@@ -78,7 +78,7 @@ class TestAsyncMessage:
     async def test_fetch_channel(self, message):
         message.channel_id = 123
         await message.fetch_channel()
-        message.app.rest.fetch_channel.assert_called_once_with(123)
+        message.app.rest.fetch_channel.assert_awaited_once_with(123)
 
     async def test_edit(self, message):
         message.id = 123
@@ -93,7 +93,7 @@ class TestAsyncMessage:
             role_mentions=roles,
             flags=messages.MessageFlag.URGENT,
         )
-        message.app.rest.edit_message.assert_called_once_with(
+        message.app.rest.edit_message.assert_awaited_once_with(
             message=123,
             channel=456,
             content="test content",
@@ -122,7 +122,7 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
         )
-        message.app.rest.create_message.assert_called_once_with(
+        message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
             content="test content",
             embed=embed,
@@ -139,35 +139,35 @@ class TestAsyncMessage:
         message.id = 123
         message.channel_id = 456
         await message.delete()
-        message.app.rest.delete_message.assert_called_once_with(456, 123)
+        message.app.rest.delete_message.assert_awaited_once_with(456, 123)
 
     async def test_add_reaction(self, message):
         message.id = 123
         message.channel_id = 456
         await message.add_reaction("👌")
-        message.app.rest.add_reaction.assert_called_once_with(channel=456, message=123, emoji="👌")
+        message.app.rest.add_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌")
 
     async def test_remove_reaction(self, message):
         message.id = 123
         message.channel_id = 456
         await message.remove_reaction("👌")
-        message.app.rest.delete_my_reaction.assert_called_once_with(channel=456, message=123, emoji="👌")
+        message.app.rest.delete_my_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌")
 
     async def test_remove_reaction_with_user(self, message):
         user = object()
         message.id = 123
         message.channel_id = 456
         await message.remove_reaction("👌", user=user)
-        message.app.rest.delete_reaction.assert_called_once_with(channel=456, message=123, emoji="👌", user=user)
+        message.app.rest.delete_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌", user=user)
 
     async def test_remove_all_reactions(self, message):
         message.id = 123
         message.channel_id = 456
         await message.remove_all_reactions()
-        message.app.rest.delete_all_reactions.assert_called_once_with(channel=456, message=123)
+        message.app.rest.delete_all_reactions.assert_awaited_once_with(channel=456, message=123)
 
     async def test_remove_all_reactions_with_emoji(self, message):
         message.id = 123
         message.channel_id = 456
         await message.remove_all_reactions("👌")
-        message.app.rest.delete_all_reactions_for_emoji.assert_called_once_with(channel=456, message=123, emoji="👌")
+        message.app.rest.delete_all_reactions_for_emoji.assert_awaited_once_with(channel=456, message=123, emoji="👌")

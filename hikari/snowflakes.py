@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "Snowflake",
     "Unique",
+    "calculate_shard_id",
     "Snowflakeish",
     "SearchableSnowflakeish",
     "SnowflakeishOr",
@@ -37,6 +38,10 @@ import datetime
 import typing
 
 from hikari.utilities import date
+
+if typing.TYPE_CHECKING:
+    from hikari import guilds
+    from hikari import traits
 
 
 @typing.final
@@ -134,6 +139,28 @@ class Unique(abc.ABC):
 
     def __eq__(self, other: typing.Any) -> bool:
         return type(self) is type(other) and self.id == other.id
+
+
+def calculate_shard_id(
+    app_or_count: typing.Union[traits.ShardAware, int], guild: SnowflakeishOr["guilds.PartialGuild"]
+) -> int:
+    """Calculate the shard ID for a guild based on it's shard aware app or shard count.
+
+    Parameters
+    ----------
+    app_or_count : typing.Union[hikari.traits.ShardAware, builtins.int]
+        The shard aware app of the current application or the integer count of
+        the current app's shards.
+    guild : SnowflakeishOr[hikari.guilds.PartialGuild]
+        The object or ID of the guild to get the shard ID of.
+
+    Returns
+    -------
+    builtins.int
+        The zero-indexed integer ID of the shard that should cover this guild.
+    """
+    shard_count = app_or_count if isinstance(app_or_count, int) else app_or_count.shard_count
+    return (int(guild) >> 22) % shard_count
 
 
 Snowflakeish = typing.Union[Snowflake, int, str]

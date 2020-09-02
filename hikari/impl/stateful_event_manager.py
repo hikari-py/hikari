@@ -152,11 +152,21 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for presence in event.presences.values():
             self._cache.set_presence(presence)
 
+        self._cache.clear_voice_states_for_guild(event.guild.id)
         for voice_state in event.voice_states.values():
             self._cache.set_voice_state(voice_state)
 
-        if event.guild.is_large and (self._intents is None or self._intents & intents_.Intents.GUILD_MEMBERS):
-            await self._app.chunker.request_guild_chunk(event.guild)
+        members_declared: int = True
+        presences_declared: int = True
+        if self._intents is not None:
+            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
+            presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
+
+        # When intents are enabled discord will only send other member objects on the guild create
+        # payload if presence intents are also declared, so if this isn't the case then we also want
+        # to chunk small guilds.
+        if (event.guild.is_large or not presences_declared) and members_declared:
+            await shard.request_guild_members(event.guild)
 
         await self.dispatch(event)
 
@@ -251,6 +261,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for presence in event.presences.values():
             self._cache.set_presence(presence)
 
+        await self._app.chunker.consume_chunk_event(event)
         await self.dispatch(event)
 
     async def on_guild_role_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:

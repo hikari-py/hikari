@@ -346,7 +346,7 @@ class Embed:
 
         Returns
         -------
-        builtins.str or bultins.None
+        typing.Optional[builtins.str]
             The title of the embed.
         """
         return self._title
@@ -363,7 +363,7 @@ class Embed:
 
         Returns
         -------
-        builtins.str or bultins.None
+        typing.Optional[builtins.str]
             The description of the embed.
         """
         return self._description
@@ -380,7 +380,7 @@ class Embed:
 
         Returns
         -------
-        builtins.str or bultins.None
+        typing.Optional[builtins.str]
             The URL of the embed title
         """
         return self._url

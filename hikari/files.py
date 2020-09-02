@@ -801,7 +801,7 @@ class File(Resource[FileReader]):
 
     Parameters
     ----------
-    path : builtins.str or os.PathLike or pathlib.Path
+    path : typing.Union[builtins.str, os.PathLike or pathlib.Path]
         The path to use.
 
         !!! note
@@ -951,7 +951,7 @@ class Bytes(Resource[IteratorReader]):
 
     Parameters
     ----------
-    data : Rawish or LazyByteIteratorish
+    data : typing.Union[Rawish, LazyByteIteratorish]
         The raw data.
     filename : builtins.str
         The filename to use.

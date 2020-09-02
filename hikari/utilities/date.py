@@ -139,7 +139,7 @@ def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: boo
 
     Parameters
     ----------
-    epoch : builtins.int or builtins.float
+    epoch : typing.Union[builtins.int, builtins.float]
         Number of seconds/milliseconds since `1/1/1970 00:00:00 UTC`.
     is_millis : builtins.bool
         `builtins.True` by default, indicates the input timestamp is measured in

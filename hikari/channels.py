@@ -540,7 +540,7 @@ class GuildChannel(PartialChannel):
         try:
             shard_count = getattr(self.app, "shard_count")
             assert isinstance(shard_count, int)
-            return (self.guild_id >> 22) % shard_count
+            return snowflakes.calculate_shard_id(shard_count, self.guild_id)
         except (TypeError, AttributeError, NameError):
             pass
 
