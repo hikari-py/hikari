@@ -242,20 +242,23 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             raised = True
                             raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
                         finally:
-                            if not ws.closed:
-                                if raised:
-                                    await ws.close(
-                                        code=errors.ShardCloseCode.UNEXPECTED_CONDITION,
-                                        message=b"unexpected fatal client error :-(",
-                                    )
-                                else:
-                                    # We use a special close code here that prevents Discord
-                                    # randomly invalidating our session. Undocumented behaviour is
-                                    # nice like that...
-                                    await ws.close(
-                                        code=_RESUME_CLOSE_CODE,
-                                        message=b"client is shutting down",
-                                    )
+                            if ws.closed:
+                                return
+
+                            if raised:
+                                await ws.close(
+                                    code=errors.ShardCloseCode.UNEXPECTED_CONDITION,
+                                    message=b"unexpected fatal client error :-(",
+                                )
+                                return
+
+                            # We use a special close code here that prevents Discord
+                            # randomly invalidating our session. Undocumented behaviour is
+                            # nice like that...
+                            await ws.close(
+                                code=_RESUME_CLOSE_CODE,
+                                message=b"client is shutting down",
+                            )
 
                 except aiohttp.ClientConnectionError as ex:
                     message = f"Failed to connect to Discord: {ex!r}"
