@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventStream"]
+__all__: typing.Final[typing.List[str]] = ["Streamer", "EventStream"]
 
 import abc
 import asyncio

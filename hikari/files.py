@@ -801,7 +801,7 @@ class File(Resource[FileReader]):
 
     Parameters
     ----------
-    path : typing.Union[builtins.str, os.PathLike or pathlib.Path]
+    path : typing.Union[builtins.str, os.PathLike, pathlib.Path]
         The path to use.
 
         !!! note

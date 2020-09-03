@@ -265,10 +265,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to edit a permission overwrite in. This may be a
             channel object, or the ID of an existing channel.
-        target : hikari.users.PartialUser or hikari.guilds.PartialRole or hikari.channels.PermissionOverwrite or hikari.snowflakes.Snowflakeish
+        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
             The channel overwrite to edit. This may be a overwrite object, or the ID of an
             existing channel.
-        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType or builtins.str]
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, builtins.str]]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
@@ -311,7 +311,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to delete a permission overwrite in. This may be a
             channel object, or the ID of an existing channel.
-        target : hikari.users.PartialUser or hikari.guilds.PartialRole or hikari.channels.PermissionOverwrite or hikari.snowflakes.Snowflakeish
+        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
             The channel overwrite to delete.
 
         Raises
@@ -375,7 +375,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to create a invite for. This may be a channel object,
             or the ID of an existing channel.
-        max_age : hikari.undefined.UndefinedOr[datetime.timedelta or builtins.float or builtins.int]
+        max_age : hikari.undefined.UndefinedOr[typing.Union[datetime.timedelta, builtins.float, builtins.int]]
             If provided, the duration of the invite before expiry.
         max_uses : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the max uses the invite can have.
@@ -386,7 +386,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the target user id for this invite. This may be a
             user object, or the ID of an existing user.
-        target_user_type : hikari.undefined.UndefinedOr[hikari.invites.TargetUserType or builtins.int]
+        target_user_type : hikari.undefined.UndefinedOr[typing.Union[hikari.invites.TargetUserType, builtins.int]]
             If provided, the type of target user for this invite.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
@@ -704,14 +704,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -830,7 +830,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -840,7 +840,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -926,7 +926,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a `hikari.channels.TextChannel` or the ID of an existing
             channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
-            The message to delete. This may be a `hikari.message.Message` or
+            The message to delete. This may be a `hikari.messages.Message` or
             the ID of an existing message.
 
         Raises
@@ -959,7 +959,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             channel.
         *messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The messages to delete. This may be one or more
-            `hikari.message.Message` or the ID of existing messages.
+            `hikari.messages.Message` or the ID of existing messages.
 
         !!! note
             This API endpoint will only be able to delete 100 messages
@@ -1008,7 +1008,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to add a reaction to. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
         emoji : hikari.emojis.Emojiish
             The emoji to react to the message with.
 
@@ -1045,7 +1045,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to delete a reaction from. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
         emoji : hikari.emojis.Emojiish
             The emoji to remove your reaction from.
 
@@ -1079,7 +1079,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to delete a reactions from. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
         emoji : hikari.emojis.Emojiish
             The emoji to delete all reactions from.
 
@@ -1088,7 +1088,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BadRequestError
             If an invalid unicode emoji is given, or if the given custom emoji
             does not exist.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_MESSAGES` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1119,7 +1119,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to delete a reaction from. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
         emoji : hikari.emojis.Emojiish
             The emoji to delete all reactions from.
 
@@ -1128,7 +1128,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BadRequestError
             If an invalid unicode emoji is given, or if the given custom emoji
             does not exist.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_MESSAGES` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1154,14 +1154,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to delete all reaction from. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
 
         Raises
         ------
         hikari.errors.BadRequestError
             If an invalid unicode emoji is given, or if the given custom emoji
             does not exist.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_MESSAGES` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1188,7 +1188,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
             The message to delete all reaction from. This may be a
-            `hikari.message.Message` or the ID of an existing message.
+            `hikari.messages.Message` or the ID of an existing message.
         emoji : hikari.emojis.Emojiish
             The emoji to filter reactions by.
 
@@ -1248,7 +1248,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.BadRequestError
             If `name` doesnt follow the restrictions enforced by discord.
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1274,7 +1274,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             or the ID of an existing webhook.
         token : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the webhoook token that will be used to fetch
-            the webhook instead of the stored token.
+            the webhook instead of the token the client was initialized with.
 
         Returns
         -------
@@ -1283,7 +1283,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission when not
             using a token.
         hikari.errors.UnauthorizedError
@@ -1315,7 +1315,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1336,7 +1336,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to fetch the webhooks for This
-            may be a `hikari.channels.PartialGuild` or the ID of an
+            may be a `hikari.guilds.PartialGuild` or the ID of an
             existing guild.
 
         Returns
@@ -1346,7 +1346,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1376,7 +1376,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             or the ID of an existing webhook.
         token : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the webhoook token that will be used to edit
-            the webhook instead of the stored token.
+            the webhook instead of the token the client was initialized with.
         name : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the new webhook name.
         avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
@@ -1394,7 +1394,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission when not
             using a token.
         hikari.errors.UnauthorizedError
@@ -1421,11 +1421,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             or the ID of an existing webhook.
         token : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the webhoook token that will be used to delete
-            the webhook instead of the stored token.
+            the webhook instead of the token the client was initialized with.
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission when not
             using a token.
         hikari.errors.UnauthorizedError
@@ -1499,14 +1499,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
@@ -1585,11 +1585,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_gateway_bot(self) -> sessions.GatewayBot:
-        """Fetch the gateway sharding requirements for the bot user.
-
-        !!! note
-            The bot user is determined by the token used in the request.
-            Providing a non-`Bot` token will result in undefined behaviour.
+        """Fetch the gateway gateway info for the bot.
 
         Returns
         -------
@@ -1611,7 +1607,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         invite : hikari.invites.Inviteish
-            The invite to fetch.
+            The invite to fetch. This may be a `hikari.invites.Invite` or
+            the code of an existing invite.
 
         Returns
         -------
@@ -1635,11 +1632,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         invite : hikari.invites.Inviteish
-            The invite to delete.
+            The invite to delete. This may be a `hikari.invites.Invite` or
+            the code of an existing invite.
 
         Raises
         ------
-        hikari.errors.Forbidden
+        hikari.errors.ForbiddenError
             If you are missing the `MANAGE_GUILD` permission in the guild
             the invite is from or if you are missing the `MANAGE_CHANNELS`
             permission in the channel the invite is from.
@@ -1653,12 +1651,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_my_user(self) -> users.OwnUser:
-        """Fetch the token associated user.
+        """Fetch the token's associated user.
 
         Returns
         -------
         hikari.users.OwnUser
-            The token associated user.
+            The token's associated user.
 
         Raises
         ------
@@ -1675,7 +1673,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
-        """Edit the token associated user.
+        """Edit the token's associated user.
 
         Parameters
         ----------
@@ -1688,7 +1686,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.users.OwnUser
-            The edited token associated user.
+            The edited token's associated user.
 
         Raises
         ------
@@ -1700,7 +1698,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
-        ...
+        """Fetch the token's associated connections.
+
+        Returns
+        -------
+        hikari.applications.OwnConnection
+            The edited token's associated connections.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     def fetch_my_guilds(
@@ -1709,7 +1720,31 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         newest_first: bool = False,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
-        ...
+        """Fetch the token's associated guilds.
+
+        Parameters
+        ----------
+        newest_first : builtins.bool
+            Whether to fetch the newest first or the olders first.
+            Defaults to `builtins.False`.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[hikari.applications.OwnGuild]
+            The edited token's associated guilds.
+
+        !!! note
+           This call is not a coroutine function, it returns a special type of
+           lazy iterator that will perform API calls as you iterate across it.
+           See `hikari.iterators` for the full API for this iterator type.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def leave_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> None:

@@ -237,7 +237,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        transformation : typing.Callable[[ValueT], builtins.bool] or builtins.str
+        transformation : typing.Union[typing.Callable[[ValueT], builtins.bool], builtins.str]
             The function to use to map the attribute. This may alternatively
             be a string attribute name to replace the input value with. You
             can provide nested attributes using the `.` operator.
@@ -277,7 +277,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Callable[[ValueT], builtins.bool] or typing.Tuple[builtins.str, typing.Any]
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
             return `builtins.True` if it is of interest, or `builtins.False`
             otherwise. These may instead include 2-`builtins.tuple` objects
@@ -307,7 +307,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Callable[[ValueT], builtins.bool] or typing.Tuple[builtins.str, typing.Any]
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
             return `builtins.True` if it is of interest, or `builtins.False`
             otherwise. These may instead include 2-`builtins.tuple` objects
@@ -337,7 +337,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Callable[[ValueT], builtins.bool] or typing.Tuple[builtins.str, typing.Any]
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
             return `builtins.True` if it is of interest, or `builtins.False`
             otherwise. These may instead include 2-`builtins.tuple` objects
@@ -369,7 +369,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Callable[[ValueT], builtins.bool] or typing.Tuple[builtins.str, typing.Any]
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
             return `builtins.True` if it is of interest, or `builtins.False`
             otherwise. These may instead include 2-`builtins.tuple` objects
@@ -401,7 +401,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Callable[[ValueT], builtins.bool] or typing.Tuple[builtins.str, typing.Any]
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
             return `builtins.True` if it is of interest, or `builtins.False`
             otherwise. These may instead include 2-`builtins.tuple` objects

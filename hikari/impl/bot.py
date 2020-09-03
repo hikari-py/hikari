@@ -130,7 +130,7 @@ class BotApp(
     large_threshold : builtins.int
         The number of members that need to be in a guild for the guild to be
         considered large. Defaults to the maximum, which is `250`.
-    logging_level : builtins.str or builtins.int or builtins.None
+    logging_level : typing.Union[builtins.str, builtins.int, builtins.None]
         If not `builtins.None`, then this will be the logging level set if you
         have not enabled logging already. In this case, it should be a valid
         `logging` level that can be passed to `logging.basicConfig`. If you have

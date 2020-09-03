@@ -219,7 +219,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `include_presences` is not passed as
-    `True` while requesting the member chunks.
+    `builtins.True` while requesting the member chunks.
 
     Returns
     -------

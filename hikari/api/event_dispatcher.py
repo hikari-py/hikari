@@ -363,8 +363,9 @@ class EventDispatcher(abc.ABC):
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
 
-            ASYNC PREDICATES ARE NOT SUPPORTED.
-        timeout : typing.Optional[builtins.float or builtins.int]
+            !!! warn
+                ASYNC PREDICATES ARE NOT SUPPORTED.
+        timeout : typing.Union[builtins.float, builtins.int, builtins.None]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
             `builtins.None`, then no timeout will be waited for (no timeout can

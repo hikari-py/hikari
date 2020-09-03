@@ -189,13 +189,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put a JSON value.
 
-        If the value is undefined, then it will not be stored.
+        If the value is `hikari.undefined.UNDEFINED` it will not be stored.
 
         Parameters
         ----------
         key : builtins.str
             The key to give the element.
-        value : typing.Any or hikari.undefined.UndefinedType
+        value : hikari.undefined.UndefinedOr[typing.Any]
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
@@ -218,7 +218,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put a JSON array.
 
-        If the value is undefined, then it will not be stored.
+        If the value is `hikari.undefined.UNDEFINED` it will not be stored.
 
         If provided, a conversion will be applied to each item.
 
@@ -226,7 +226,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        values : typing.Iterable[T] or hikari.undefined.UndefinedType
+        values : hikari.undefined.UndefinedOr[typing.Iterable[T]]
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
@@ -243,6 +243,8 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         self, key: str, value: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[snowflakes.Unique]], /
     ) -> None:
         """Put a key with a snowflake value into the builder.
+
+        If the value is `hikari.undefined.UNDEFINED` it will not be stored.
 
         Parameters
         ----------
@@ -266,7 +268,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
-        If an undefined value is given, it is ignored.
+        If the value is `hikari.undefined.UNDEFINED` it will not be stored.
 
         Each snowflake should be castable to an `builtins.int`.
 
