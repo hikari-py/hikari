@@ -55,6 +55,11 @@ python -m pip install hikari -U --pre
 py -3 -m pip install hikari -U --pre
 ```
 
+If you have a C compiler (Microsoft VC++ Redis 14.0 or newer, or a modern copy
+of GCC/G++, Clang, etc), you can replace `hikari` with `hikari[speedups]` to
+download compiled versions of some dependencies in order to get a further
+performance boost.
+
 ----
 
 ## Additional libraries

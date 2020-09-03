@@ -44,8 +44,6 @@ import time
 import typing
 import uuid as uuid_
 
-import ciso8601
-
 Intervalish = typing.Union[int, float, datetime.timedelta]
 """Type hint representing a naive time period or time span.
 
@@ -91,10 +89,41 @@ def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
     return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
 
 
-# Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
-# but somewhat of a subset with some edge cases.
-# See https://tools.ietf.org/html/rfc3339#section-5.6
-iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339
+# Default to the standard lib parser, that isn't really ISO compliant but seems
+# to work for what we need.
+def iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.datetime:
+    """Parse an ISO-8601-like datestring into a datetime.
+
+    Parameters
+    ----------
+    datetime_str : builtins.str
+        The date string to parse.
+
+    Returns
+    -------
+    datetime.datetime
+        The corresponding date time.
+    """
+    if datetime_str.endswith(("z", "Z")):
+        # Python's parser cannot handle zulu time, it isn't a proper ISO-8601 compliant parser.
+        datetime_str = datetime_str[:-1] + "+00:00"
+    return datetime.datetime.fromisoformat(datetime_str)
+
+
+# MyPy complains if this is not present, so only do this if MyPy isn't running!
+if not typing.TYPE_CHECKING:
+    try:
+        # CISO8601 is around 600x faster than modules like dateutil, which is
+        # going to be noticable on big bots where you are parsing hundreds of
+        # thousands of "joined_at" fields on users on startup.
+        import ciso8601
+
+        # Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
+        # but somewhat of a subset with some edge cases.
+        # See https://tools.ietf.org/html/rfc3339#section-5.6
+        iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339  # noqa: F811 redefined function
+    except ImportError:
+        pass
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:

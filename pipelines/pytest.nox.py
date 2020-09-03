@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Py.test integration."""
+import os
 import shutil
 
 from pipelines import config
@@ -49,8 +50,19 @@ FLAGS = [
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage."""
     session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    _pytest(session)
+
+
+@nox.session(reuse_venv=True)
+def pytest_speedups(session: nox.Session) -> None:
+    """Run unit tests and measure code coverage, using speedup modules."""
+    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "-r", "dev-requirements.txt")
+    _pytest(session, "-OO")
+
+
+def _pytest(session: nox.Session, *py_flags: str) -> None:
     shutil.rmtree(".coverage", ignore_errors=True)
-    session.run("python", "-m", "pytest", *FLAGS, *session.posargs, config.TEST_PACKAGE)
+    session.run("python", *py_flags, "-m", "pytest", *FLAGS, *session.posargs, config.TEST_PACKAGE)
 
 
 @nox.inherit_environment_vars
