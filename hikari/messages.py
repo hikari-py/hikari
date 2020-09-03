@@ -425,7 +425,7 @@ class PartialMessage(snowflakes.Unique):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -435,7 +435,7 @@ class PartialMessage(snowflakes.Unique):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -557,14 +557,14 @@ class PartialMessage(snowflakes.Unique):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If specified, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
             If specified, and `builtins.True`, all mentions will be parsed.
             If specified, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of

@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GuildChunker"]
+__all__: typing.Final[typing.List[str]] = ["GuildChunker", "RequestInformation"]
 
 import abc
 import typing
@@ -80,7 +80,7 @@ class RequestInformation(typing.Protocol):
 
         Returns
         -------
-        hikari.snowflake.Snowflake
+        hikari.snowflakes.Snowflake
             The ID of the guild this request is for.
         """
 
@@ -210,7 +210,7 @@ class GuildChunker(abc.ABC):
 
         Returns
         -------
-        hikari.utiltiies.event_stream.Streamer[hikari.events.shard_events.MemberChunkEvent]
+        hikari.utilities.event_stream.Streamer[hikari.events.shard_events.MemberChunkEvent]
             A stream of chunk events for the generated request.
         """
 

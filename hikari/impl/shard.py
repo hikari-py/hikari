@@ -65,7 +65,7 @@ class GatewayShardImplV6(shard.GatewayShard):
 
     Parameters
     ----------
-    compression : buitlins.str or buitlins.None
+    compression : typing.Optional[buitlins.str]
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
     data_format : builtins.str

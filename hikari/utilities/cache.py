@@ -130,7 +130,7 @@ class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[Key
 
     Parameters
     ----------
-    items : typing.Union[typing.Mapping[KeyT, ValueT], DataT, GenericRefWrapper[ValueT]]
+    items : typing.Mapping[KeyT, typing.Union[ValueT, DataT, GenericRefWrapper[ValueT]]]
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
     builder : typing.Optional[typing.Callable[[DataT], ValueT]]

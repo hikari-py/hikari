@@ -51,7 +51,6 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users as users_
     from hikari.api import shard as gateway_shard
-    from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 
 EXPIRY_TIME: typing.Final[int] = 5000
