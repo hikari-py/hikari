@@ -119,7 +119,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to access the channel.
+            If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -185,7 +185,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to edit the channel
+            If you are missing permissions to edit the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -207,7 +207,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to delete the channel in a guild.
+            If you are missing the `MANAGE_CHANNEL` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -288,7 +288,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to edit the permission overwrites.
+            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
@@ -319,7 +319,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to delete the permission overwrite.
+            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
         hikari.errors.InternalServerError
@@ -348,7 +348,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to view the invites for the given channel.
+            If you are missing the `MANAGE_CHANNEL` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found in any guilds you are a member of.
         hikari.errors.InternalServerError
@@ -403,7 +403,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to create the given channel.
+            If you are missing the `MANAGE_CHANNELS` permission.
         hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
             if specified.
@@ -452,8 +452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to read messages or send messages in the
-            text channel.
+            If you are missing the `SEND_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -487,8 +486,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to read messages or send messages in the
-            text channel.
+            If you are missing the `READ_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -517,7 +515,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to pin messages in the given channel.
+            If you are missing the `MANAGE_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -547,7 +545,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to pin messages in the given channel.
+            If you are missing the `MANAGE_MESSAGES` permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -590,7 +588,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.iterators.LazyIterator[hikari.messages.Message]
-            A iterator to fetch the messages.
+            An iterator to fetch the messages.
+
+        !!! note
+           This call is not a coroutine function, it returns a special type of
+           lazy iterator that will perform API calls as you iterate across it.
+           See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -599,8 +602,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to read message history in the given
-            channel.
+            If you are missing the `READ_MESSAGE_HISTORY` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -640,8 +642,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to read message history in the given
-            channel.
+            If you are missing the `READ_MESSAGE_HISTORY` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -752,6 +753,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        builtins.ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        builtins.TypeError
+            If both `attachment` and `attachments` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -763,16 +769,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to send messages in the given channel.
+            If you are missing the `SEND_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
-        builtins.TypeError
-            If both `attachment` and `attachments` are specified.
 
         !!! warning
             You are expected to make a connection to the gateway and identify
@@ -900,10 +901,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to send messages in the given channel; if
-            you try to change the contents of another user's message; or if you
-            try to edit the flags on another user's message without the
-            permissions to manage messages_.
+            If you are missing the `SEND_MESSAGES` in the channel; if you try to
+            change the contents of another user's message; or if you try to edit
+            the flags on another user's message without the `MANAGE_MESSAGES`
+            permission.
         hikari.errors.NotFoundError
             If the channel or message is not found.
         hikari.errors.InternalServerError
@@ -920,16 +921,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel
-        message
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel to delete the message in. This may be
+            a `hikari.channels.TextChannel` or the ID of an existing
+            channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete. This may be a `hikari.message.Message` or
+            the ID of an existing message.
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack the permissions to manage messages, and the message is
-            not composed by your associated user.
+            If you are missing the `MANAGE_MESSAGES`, and the message is
+            not sent by you.
         hikari.errors.NotFoundError
             If the channel or message is not found.
         hikari.errors.InternalServerError
@@ -944,6 +950,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *messages: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         """Bulk-delete messages from the channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel to bulk delete the messages in. This may be
+            a `hikari.channels.TextChannel` or the ID of an existing
+            channel.
+        *messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The messages to delete. This may be one or more
+            `hikari.message.Message` or the ID of existing messages.
 
         !!! note
             This API endpoint will only be able to delete 100 messages
@@ -966,13 +982,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Specifying any messages more than 14 days old will cause the call
             to fail, potentially with partial completion.
 
-        Parameters
-        ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
-            The text channel, or text channel ID to delete messages from.
-        *messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
-            One or more messages
-
         Raises
         ------
         hikari.errors.BulkDeleteError
@@ -993,9 +1002,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel
-        message
-        emoji
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to add the reaction to is. This
+            may be a `hikari.channels.TextChannel` or the ID of an existing
+            channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to add a reaction to. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+        emoji : hikari.emojis.Emojiish
+            The emoji to react to the message with.
 
         Raises
         ------
@@ -1005,7 +1020,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack permissions to add reactions to messages.
+            If you are missing the `ADD_REACTIONS` (this is only necessary if you
+            are the first person to add the reaction).
         hikari.errors.NotFoundError
             If the channel or message is not found.
         hikari.errors.InternalServerError
@@ -1023,9 +1039,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel
-        message
-        emoji
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to delete the reaction from is.
+            This may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete a reaction from. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+        emoji : hikari.emojis.Emojiish
+            The emoji to remove your reaction from.
 
         Raises
         ------
@@ -1047,7 +1069,34 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> None:
-        ...
+        """Delete all reactions for a single emoji on a given message.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to delete the reactions from is.
+            This may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete a reactions from. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+        emoji : hikari.emojis.Emojiish
+            The emoji to delete all reactions from.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_MESSAGES` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel or message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def delete_reaction(
@@ -1057,7 +1106,37 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> None:
-        ...
+        """Delete a reaction from a message.
+
+        If you are looking to delete your own applications reaction, use
+        `delete_my_reaction`.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to delete the reaction from is.
+            This may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete a reaction from. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+        emoji : hikari.emojis.Emojiish
+            The emoji to delete all reactions from.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_MESSAGES` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel or message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def delete_all_reactions(
@@ -1065,7 +1144,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
-        ...
+        """Delete all reactions from a message.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to delete all reactions from is.
+            This may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete all reaction from. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_MESSAGES` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel or message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     def fetch_reactions_for_emoji(
@@ -1074,7 +1178,42 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
-        ...
+        """Fetch reactions for an emoji from a message.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the message to delete all reactions from is.
+            This may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The message to delete all reaction from. This may be a
+            `hikari.message.Message` or the ID of an existing message.
+        emoji : hikari.emojis.Emojiish
+            The emoji to filter reactions by.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[hikari.users.User]
+            An iterator to fetch the users.
+
+        !!! note
+           This call is not a coroutine function, it returns a special type of
+           lazy iterator that will perform API calls as you iterate across it.
+           See `hikari.iterators` for the full API for this iterator type.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid unicode emoji is given, or if the given custom emoji
+            does not exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel or message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def create_webhook(
@@ -1085,7 +1224,39 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar: typing.Optional[files.Resourceish] = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        ...
+        """Create webhook in a channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel where the webhook will be created. This may be
+            a `hikari.channels.TextChannel` or the ID of an existing
+            channel.
+        name : str
+            The name for the webhook. This cannnot be `clyde`.
+        avatar : typing.Optional[hikari.files.Resourceish]
+            If specified, the avatar for the webhook.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+
+        Returns
+        -------
+        hikari.webhooks.Webhook
+            The created webhook.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If `name` doesnt follow the restrictions enforced by discord.
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_webhook(
@@ -1094,21 +1265,96 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        ...
+        """Fetch an existing webhook.
+
+        Parameters
+        ----------
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+            The webhook to fetch. This may be a `hikari.webhooks.Webhook`
+            or the ID of an existing webhook.
+        token : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the webhoook token that will be used to fetch
+            the webhook instead of the stored token.
+
+        Returns
+        -------
+        hikari.webhooks.Webhook
+            The requested webhook.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission when not
+            using a token.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
-        ...
+        """Fetch all channel webhooks.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            The channel to fetch the webhooks for. This
+            may be a `hikari.channels.TextChannel` or the ID of an
+            existing channel.
+
+        Returns
+        -------
+        typing.Sequence[hikari.webhooks.Webhook]
+            The fetched webhooks.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
-        ...
+        """Fetch all guild webhooks.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to fetch the webhooks for This
+            may be a `hikari.channels.PartialGuild` or the ID of an
+            existing guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.webhooks.Webhook]
+            The fetched webhooks.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def edit_webhook(
@@ -1121,7 +1367,43 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
-        ...
+        """Edit a webhook.
+
+        Parameters
+        ----------
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+            The webhook to edit. This may be a `hikari.webhooks.Webhook`
+            or the ID of an existing webhook.
+        token : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the webhoook token that will be used to edit
+            the webhook instead of the stored token.
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the new webhook name.
+        avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If specified, the new webhook avatar. If `builtins.None`, will
+            remove the webhook avatar.
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
+            If specified, the text channel to move the webhook to.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+
+        Returns
+        -------
+        hikari.webhooks.Webhook
+            The edited webhook.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission when not
+            using a token.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def delete_webhook(
@@ -1130,7 +1412,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        ...
+        """Delete a webhook.
+
+        Parameters
+        ----------
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+            The webhook to delete. This may be a `hikari.webhooks.Webhook`
+            or the ID of an existing webhook.
+        token : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the webhoook token that will be used to delete
+            the webhook instead of the stored token.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_WEBHOOKS` permission when not
+            using a token.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhoook is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def execute_webhook(
@@ -1154,27 +1458,215 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        ...
+        """Execute a webhook.
+
+        Parameters
+        ----------
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+            The webhook to execute. This may be a `hikari.webhooks.Webhook`
+            or the ID of an existing webhook
+        token: builtins.str
+            The webhook token.
+        content : hikari.undefined.UndefinedOr[typing.Any]
+            If specified, the message contents. If
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.embeds.Embed` and no `embed` nor
+            no `embeds` kwarg is provided, then this will instead
+            update the embed. This allows for simpler syntax when
+            sending an embed alone.
+
+            Likewise, if this is a `hikari.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If specified, the message embed.
+        embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If specified, the message embeds.
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+            If specified, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+            If specified, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
+        tts : hikari.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message will be TTS (Text To Speech).
+        nonce : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, a nonce that can be used for optimistic message
+            sending.
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+            If specified, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]] or builtins.bool
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.undefined.UndefinedType or typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]] or builtins.bool
+            If specified, and `builtins.True`, all mentions will be parsed.
+            If specified, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
+
+        !!! note
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created message.
+
+        Raises
+        ------
+        builtins.ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        builtins.TypeError
+            If both `attachment` and `attachments` are specified or if both
+            `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def fetch_gateway_url(self) -> str:
-        ...
+        """Fetch the gateway url.
+
+        !!! note
+            This endpoint does not require any valid authorization.
+
+        Raises
+        ------
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_gateway_bot(self) -> sessions.GatewayBot:
-        ...
+        """Fetch the gateway sharding requirements for the bot user.
+
+        !!! note
+            The bot user is determined by the token used in the request.
+            Providing a non-`Bot` token will result in undefined behaviour.
+
+        Returns
+        -------
+        hikari.sessions.GatewayBot
+            The gateway bot.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
-        ...
+        """Fetch an existing invite.
+
+        Parameters
+        ----------
+        invite : hikari.invites.Inviteish
+            The invite to fetch.
+
+        Returns
+        -------
+        hikari.invites.Invite
+            The requested invite.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def delete_invite(self, invite: invites.Inviteish) -> None:
-        ...
+        """Delete an existing invite.
+
+        Parameters
+        ----------
+        invite : hikari.invites.Inviteish
+            The invite to delete.
+
+        Raises
+        ------
+        hikari.errors.Forbidden
+            If you are missing the `MANAGE_GUILD` permission in the guild
+            the invite is from or if you are missing the `MANAGE_CHANNELS`
+            permission in the channel the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_my_user(self) -> users.OwnUser:
-        ...
+        """Fetch the token associated user.
+
+        Returns
+        -------
+        hikari.users.OwnUser
+            The token associated user.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def edit_my_user(
@@ -1183,7 +1675,28 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
-        ...
+        """Edit the token associated user.
+
+        Parameters
+        ----------
+        username : undefined.UndefinedOr[builtins.str]
+            If specified, the new username.
+        avatar : undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If specified, the new avatar. If `builtins.None`,
+            the avatar will be removed.
+
+        Returns
+        -------
+        hikari.users.OwnUser
+            The edited token associated user.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
@@ -1648,7 +2161,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack the `KICK_MEMBERS` permission.
+            If you are missing the `KICK_MEMBERS` permission.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.InternalServerError
@@ -1700,7 +2213,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you lack the `KICK_MEMBERS` permission.
+            If you are missing the `KICK_MEMBERS` permission.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.InternalServerError
