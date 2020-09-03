@@ -407,7 +407,7 @@ class RESTBucketManager:
         This is designed to run in the background and manage removing unused
         _route references from the rate-limiter collection to save memory.
 
-        This will run forever until `RESTBucketManager. closed_event` is set.
+        This will run forever until `RESTBucketManager.closed_event` is set.
         This will invoke `RESTBucketManager.do_gc_pass` periodically.
 
         Parameters
