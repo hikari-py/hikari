@@ -13,6 +13,8 @@ _test_job: &test_job
     - ${PYTHON_COMMAND} -V
   script:
     - ${PYTHON_COMMAND} -m nox --sessions pytest
+    # Use --cov-append to make sure coverage covers speedup and non-speedup execution paths equally.
+    - ${PYTHON_COMMAND} -m nox --sessions pytest-speedups -- --cov-append
   after_script:
     - bash <(curl -s https://codecov.io/bash)
 

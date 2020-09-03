@@ -76,6 +76,9 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(include=[name + "*"]),
     python_requires=">=3.8.0,<3.10",
     install_requires=parse_requirements_file("requirements.txt"),
+    extras_require={
+        "speedups": parse_requirements_file("speedup-requirements.txt"),
+    },
     include_package_data=True,
     test_suite="tests",
     zip_safe=False,
