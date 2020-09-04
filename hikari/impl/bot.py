@@ -716,8 +716,7 @@ class BotApp(
                 loop.run_until_complete(self._shard_management_lifecycle())
             except (KeyboardInterrupt, SystemExit):
                 die()
-            finally:
-                loop.run_until_complete(self.join())
+
         finally:
             for signum in kill_signals:
                 # Windows is dumb and doesn't support signals properly.
@@ -902,8 +901,8 @@ class BotApp(
         """Close all shards and wait for them to terminate."""
         for shard_id in self._shards:
             _LOGGER.debug("stopping shard %s", shard_id)
-            self._shards[shard_id].close()
-        await asyncio.gather(*map(asyncio.ensure_future, self._shards.values()), return_exceptions=True)
+            await self._shards[shard_id].close()
+        await asyncio.gather(*map(asyncio.ensure_future, self._shards.values()))
 
     async def _gather_shard_lifecycles(self) -> None:
         """Await all shards.

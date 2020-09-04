@@ -147,7 +147,7 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    def close(self) -> None:
+    async def close(self) -> None:
         """Close the websocket if it is connected, otherwise do nothing."""
 
     @abc.abstractmethod

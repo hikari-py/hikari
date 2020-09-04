@@ -133,3 +133,8 @@ async def first_completed(
         for f in [f1, f2, *fs]:
             if not f.done() and not f.cancelled():
                 f.cancel()
+                # Asyncio Gathering Futures complain if not awaited after cancellation
+                try:
+                    await f
+                except asyncio.CancelledError:
+                    pass

@@ -108,7 +108,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         self._zlib = zlib.decompressobj()
 
     def close(self, *, code: int = 1000, message: bytes = b"") -> typing.Coroutine[typing.Any, typing.Any, bool]:
-        if not self._closing:
+        if not self._closed and not self._closing:
             self._logger.debug("sending close frame with code %s and message %s", code, message)
         return super().close(code=code, message=message)
 
@@ -252,13 +252,14 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                                 )
                                 return
 
-                            # We use a special close code here that prevents Discord
-                            # randomly invalidating our session. Undocumented behaviour is
-                            # nice like that...
-                            await ws.close(
-                                code=_RESUME_CLOSE_CODE,
-                                message=b"client is shutting down",
-                            )
+                            if not ws._closed and not ws._closing:
+                                # We use a special close code here that prevents Discord
+                                # randomly invalidating our session. Undocumented behaviour is
+                                # nice like that...
+                                await ws.close(
+                                    code=_RESUME_CLOSE_CODE,
+                                    message=b"client is shutting down",
+                                )
 
                 except aiohttp.ClientConnectionError as ex:
                     message = f"Failed to connect to Discord: {ex!r}"
@@ -441,8 +442,10 @@ class GatewayShardImpl(shard.GatewayShard):
     def shard_count(self) -> int:
         return self._shard_count
 
-    def close(self) -> None:
+    async def close(self) -> None:
         if not self._closing.is_set():
+            if self._ws is not None:
+                await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
             self._closing.set()
 
     async def get_user_id(self) -> snowflakes.Snowflake:
@@ -507,7 +510,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         run_task = asyncio.create_task(self._run(), name=f"run shard {self._shard_id}")
         waiter = asyncio.create_task(self._handshake_completed.wait(), name=f"wait for shard {self._shard_id} to start")
-        done, remaining = await asyncio.wait((run_task, waiter))
+        done, _ = await asyncio.wait((run_task, waiter))
 
         # We don't care about this anymore.
         waiter.cancel()
@@ -611,11 +614,12 @@ class GatewayShardImpl(shard.GatewayShard):
 
         while True:
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
+                # Gateway is zombie
                 return True
 
             self._logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval)
 
-            # Could this error, or can I just assume any other receiver will die first?
+            # TODO: Could this error, or can I just assume any other receiver will die first?
             await self._send_heartbeat()
 
             try:
@@ -700,6 +704,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
 
                 if self._closing.is_set():
+                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
                 try:
@@ -741,6 +746,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     # to always kill our connection if it dies.
                     # We return True if zombied
                     if await heartbeat_task:
+                        now = date.monotonic()
                         self._logger.error(
                             "connection is a zombie, last heartbeat sent %ss ago",
                             now - self._last_heartbeat_sent,
