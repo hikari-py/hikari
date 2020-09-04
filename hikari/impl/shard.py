@@ -509,14 +509,16 @@ class GatewayShardImpl(shard.GatewayShard):
             raise RuntimeError("Cannot run more than one instance of one shard concurrently")
 
         run_task = asyncio.create_task(self._run(), name=f"run shard {self._shard_id}")
+        self._run_task = run_task
         waiter = asyncio.create_task(self._handshake_completed.wait(), name=f"wait for shard {self._shard_id} to start")
-        done, _ = await asyncio.wait((run_task, waiter))
-
-        # We don't care about this anymore.
+        done, _ = await asyncio.wait((waiter, run_task), return_when=asyncio.FIRST_COMPLETED)
         waiter.cancel()
 
         if done and waiter not in done:
             # This might throw an error, or it might not, depending on what we do with it.
+            # This occurs if the run task finished before the handshake completion event,
+            # which implies the shard died before it could become ready/resume...
+            self._run_task = None
             run_task.result()
             raise asyncio.CancelledError(f"Shard {self._shard_id} was closed before it could start successfully")
 

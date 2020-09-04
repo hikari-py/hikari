@@ -29,23 +29,19 @@ import sys
 import typing
 
 from hikari import _about
-from hikari.utilities import art
 
 
 def main() -> None:
     """Print package info and exit."""
-    if "--pretty" in sys.argv[1:] or "-p" in sys.argv[1:]:
-        sys.stdout.write(art.get_banner() + "\n")
-    else:
-        sourcefile = inspect.getsourcefile(_about)
-        assert isinstance(sourcefile, str)
-        path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
-        sha1: typing.Final[str] = _about.__git_sha1__
-        version: typing.Final[str] = _about.__version__
-        py_impl: typing.Final[str] = platform.python_implementation()
-        py_ver: typing.Final[str] = platform.python_version()
-        py_compiler: typing.Final[str] = platform.python_compiler()
-        sys.stderr.write(f"hikari v{version} {sha1}\n")
-        sys.stderr.write(f"located at {path}\n")
-        sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
-        sys.stderr.write(" ".join(frag.strip() for frag in platform.uname() if frag and frag.strip()) + "\n")
+    sourcefile = inspect.getsourcefile(_about)
+    assert isinstance(sourcefile, str)
+    path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
+    sha1: typing.Final[str] = _about.__git_sha1__
+    version: typing.Final[str] = _about.__version__
+    py_impl: typing.Final[str] = platform.python_implementation()
+    py_ver: typing.Final[str] = platform.python_version()
+    py_compiler: typing.Final[str] = platform.python_compiler()
+    sys.stderr.write(f"hikari v{version} {sha1}\n")
+    sys.stderr.write(f"located at {path}\n")
+    sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
+    sys.stderr.write(" ".join(frag.strip() for frag in platform.uname() if frag and frag.strip()) + "\n")
