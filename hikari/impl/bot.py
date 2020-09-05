@@ -150,7 +150,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._voice = voice_impl.VoiceComponentImpl(self, self._debug, self._events)
 
         # RESTful API.
-        self._rest = rest_impl.RESTClientImpl(  # noqa: S106 hardcoded password false positive.
+        self._rest = rest_impl.RESTClientImpl(
             debug=debug,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(),
             connector_owner=True,
@@ -160,7 +160,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,
-            token_type="Bot",
+            token_type=constants.BOT_TOKEN,
             version=6,
         )
 
@@ -235,136 +235,23 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def rest(self) -> rest_.RESTClient:
         return self._rest
 
-    async def close(self, wait: bool = False) -> None:
-        self._closing_event.set()
-
-        _LOGGER.debug("BotApp#close(%s) invoked", wait)
-
-        if wait:
-            try:
-                await self.join()
-            finally:
-                # Discard any exception that occurred from shutting down.
-                return
-
-    def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
-        return self._events.dispatch(event)
-
-    def get_listeners(
-        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True
-    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
-        return self._events.get_listeners(event_type, polymorphic=polymorphic)
-
-    async def join(self, until_close: bool = True) -> None:
-        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(self._shards.values())
-        if until_close:
-            awaitables.append(self._closing_event.wait())
-
-        await aio.first_completed(*awaitables)
-
-    def listen(
-        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None
-    ) -> typing.Callable[
-        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]], event_dispatcher.CallbackT[event_dispatcher.EventT_co]
-    ]:
-        return self._events.listen(event_type)
-
-    def run(
-        self,
-        *,
-        asyncio_debug: typing.Optional[bool] = None,
-        activity: typing.Optional[presences.Activity] = None,
-        afk: bool = False,
-        close_executor: bool = False,
-        close_loop: bool = True,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: bool = True,
-        idle_since: typing.Optional[datetime.datetime] = None,
-        shard_ids: typing.Optional[typing.Set[int]] = None,
-        shard_count: typing.Optional[int] = None,
-        status: presences.Status = presences.Status.ONLINE,
-    ) -> None:
-        loop = asyncio.get_event_loop()
-        signals = ("SIGINT", "SIGQUIT", "SIGTERM")
-
-        if asyncio_debug:
-            loop.set_debug(True)
-
-        if coroutine_tracking_depth is not None:
-            try:
-                # Provisionally defined in CPython, may be removed without notice.
-                loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
-            except AttributeError:
-                _LOGGER.warning("Cannot set coroutine tracking depth for %s")
-
-        def signal_handler(signum: int) -> None:
-            raise errors.HikariInterrupt(signum, signal.strsignal(signum))
-
-        if enable_signal_handlers:
-            for sig in signals:
-                try:
-                    signum = getattr(signal, sig)
-                    loop.add_signal_handler(signum, signal_handler, signum)
-                except (NotImplementedError, AttributeError):
-                    # Windows doesn't use signals (NotImplementedError);
-                    # Some OSs may decide to not implement some signals either...
-                    pass
-
-        try:
-            loop.run_until_complete(
-                self.start(
-                    activity=activity,
-                    afk=afk,
-                    idle_since=idle_since,
-                    shard_ids=shard_ids,
-                    shard_count=shard_count,
-                    status=status,
-                )
-            )
-
-            try:
-                loop.run_until_complete(self.join(until_close=False))
-            finally:
-                try:
-                    loop.run_until_complete(self.terminate(close_executor=close_executor))
-                finally:
-                    if enable_signal_handlers:
-                        for sig in signals:
-                            try:
-                                signum = getattr(signal, sig)
-                                loop.remove_signal_handler(signum)
-                            except (NotImplementedError, AttributeError):
-                                # Windows doesn't use signals (NotImplementedError);
-                                # Some OSs may decide to not implement some signals either...
-                                pass
-
-                    if close_loop:
-                        self._destroy_loop(loop)
-
-        except errors.HikariInterrupt as interrupt:
-            _LOGGER.info(
-                "bot has shut down after receiving %s (%s)",
-                interrupt.description or str(interrupt.signum),
-                interrupt.signum,
-            )
-
-    # TODO: implement fully, this is just a stub for testing only.
     async def start(
         self,
         *,
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
         idle_since: typing.Optional[datetime.datetime] = None,
+        status: presences.Status = presences.Status.ONLINE,
+        large_threshold: int = 250,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
-        status: presences.Status = presences.Status.ONLINE,
     ) -> None:
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
-        asyncio.create_task(ux.check_for_updates())
+        asyncio.create_task(ux.check_for_updates(), name="check for package updates")
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
         await self.dispatch(lifetime_events.StartingEvent(app=self))
         requirements = await requirements_task
@@ -420,9 +307,10 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                         activity=activity,
                         afk=afk,
                         idle_since=idle_since,
+                        status=status,
+                        large_threshold=large_threshold,
                         shard_id=candidate_shard_id,
                         shard_count=shard_count,
-                        status=status,
                         url=requirements.url,
                     )
                     for candidate_shard_id in window
@@ -435,19 +323,105 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
-    def stream(
-        self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
-        /,
-        timeout: typing.Union[float, int, None],
-        limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
-        return self._events.stream(event_type, timeout=timeout, limit=limit)
+    async def join(self, until_close: bool = True) -> None:
+        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(self._shards.values())
+        if until_close:
+            awaitables.append(self._closing_event.wait())
 
-    def subscribe(
-        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
-    ) -> event_dispatcher.CallbackT[typing.Any]:
-        return self._events.subscribe(event_type, callback)
+        await aio.first_completed(*awaitables)
+
+    async def close(self, wait: bool = False) -> None:
+        self._closing_event.set()
+
+        _LOGGER.debug("BotApp#close(%s) invoked", wait)
+
+        if wait:
+            try:
+                await self.join()
+            finally:
+                # Discard any exception that occurred from shutting down.
+                return
+
+    def run(
+        self,
+        *,
+        asyncio_debug: typing.Optional[bool] = None,
+        close_executor: bool = False,
+        close_loop: bool = True,
+        coroutine_tracking_depth: typing.Optional[int] = None,
+        enable_signal_handlers: bool = True,
+        activity: typing.Optional[presences.Activity] = None,
+        afk: bool = False,
+        idle_since: typing.Optional[datetime.datetime] = None,
+        status: presences.Status = presences.Status.ONLINE,
+        large_threshold: int = 250,
+        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_count: typing.Optional[int] = None,
+    ) -> None:
+        loop = asyncio.get_event_loop()
+        signals = ("SIGINT", "SIGQUIT", "SIGTERM")
+
+        if asyncio_debug:
+            loop.set_debug(True)
+
+        if coroutine_tracking_depth is not None:
+            try:
+                # Provisionally defined in CPython, may be removed without notice.
+                loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+            except AttributeError:
+                _LOGGER.warning("Cannot set coroutine tracking depth for %s")
+
+        def signal_handler(signum: int) -> None:
+            raise errors.HikariInterrupt(signum, signal.strsignal(signum))
+
+        if enable_signal_handlers:
+            for sig in signals:
+                try:
+                    signum = getattr(signal, sig)
+                    loop.add_signal_handler(signum, signal_handler, signum)
+                except (NotImplementedError, AttributeError):
+                    # Windows doesn't use signals (NotImplementedError);
+                    # Some OSs may decide to not implement some signals either...
+                    pass
+
+        try:
+            loop.run_until_complete(
+                self.start(
+                    activity=activity,
+                    afk=afk,
+                    idle_since=idle_since,
+                    status=status,
+                    large_threshold=large_threshold,
+                    shard_ids=shard_ids,
+                    shard_count=shard_count,
+                )
+            )
+
+            try:
+                loop.run_until_complete(self.join(until_close=False))
+            finally:
+                try:
+                    loop.run_until_complete(self.terminate(close_executor=close_executor))
+                finally:
+                    if enable_signal_handlers:
+                        for sig in signals:
+                            try:
+                                signum = getattr(signal, sig)
+                                loop.remove_signal_handler(signum)
+                            except (NotImplementedError, AttributeError):
+                                # Windows doesn't use signals (NotImplementedError);
+                                # Some OSs may decide to not implement some signals either...
+                                pass
+
+                    if close_loop:
+                        self._destroy_loop(loop)
+
+        except errors.HikariInterrupt as interrupt:
+            _LOGGER.info(
+                "bot has shut down after receiving %s (%s)",
+                interrupt.description or str(interrupt.signum),
+                interrupt.signum,
+            )
 
     async def terminate(self, close_executor: bool = False) -> None:
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
@@ -487,10 +461,39 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             self._executor.shutdown(wait=True)
             self._executor = None
 
+    def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
+        return self._events.dispatch(event)
+
+    def get_listeners(
+        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True
+    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
+        return self._events.get_listeners(event_type, polymorphic=polymorphic)
+
+    def listen(
+        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None
+    ) -> typing.Callable[
+        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]], event_dispatcher.CallbackT[event_dispatcher.EventT_co]
+    ]:
+        return self._events.listen(event_type)
+
+    def subscribe(
+        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
+    ) -> event_dispatcher.CallbackT[typing.Any]:
+        return self._events.subscribe(event_type, callback)
+
     def unsubscribe(
         self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
     ) -> None:
         self._events.unsubscribe(event_type, callback)
+
+    def stream(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+        return self._events.stream(event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,
@@ -499,16 +502,17 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
     ) -> event_dispatcher.EventT_co:
-        pass
+        return await self._events.wait_for(event_type, timeout=timeout, predicate=predicate)
 
     async def _start_one_shard(
         self,
         activity: typing.Optional[presences.Activity],
         afk: bool,
         idle_since: typing.Optional[datetime.datetime],
+        status: presences.Status,
+        large_threshold: int,
         shard_id: int,
         shard_count: int,
-        status: presences.Status,
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
@@ -519,6 +523,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             initial_is_afk=afk,
             initial_idle_since=idle_since,
             initial_status=status,
+            large_threshold=large_threshold,
             intents=self._intents,
             proxy_settings=self._proxy_settings,
             shard_id=shard_id,
