@@ -78,11 +78,11 @@ performing nicely.
 ### Python optimisation flags
 
 CPython and Stackless Python provide two optimisation flags that remove internal
-safety checks that are useful for development, and change other internal 
+safety checks that are useful for development, and change other internal
 settings in the interpreter.
 
 - `python bot.py` - no optimisation - this is the default.
-- `python -O bot.py` - first level optimisation - features such as internal 
+- `python -O bot.py` - first level optimisation - features such as internal
     assertions will be disabled.
 - `python -OO bot.py` - second level optimisation - more features (**including
     all docstrings**) will be removed from the loaded code at runtime.
@@ -90,8 +90,8 @@ settings in the interpreter.
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redis 14.0 or newer, or a modern copy
-of GCC/G++, Clang, etc), you can install hikari using 
-`pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,  and 
+of GCC/G++, Clang, etc), you can install hikari using
+`pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,  and
 `ciso8601`, which will provide you with a small performance boost.
 
 ### `uvloop`
@@ -116,7 +116,7 @@ bot = hikari.Bot(...)
 
 ### Compiled extensions
 
-Eventually, we will start providing the option to use compiled components of 
+Eventually, we will start providing the option to use compiled components of
 this library over pure Python ones if it suits your use case. This should also
 enable further scalability of your application, should
 [_PEP 554 -- Multiple Interpreters in the Stdlib_](https://www.python.org/dev/peps/pep-0554/#abstract)

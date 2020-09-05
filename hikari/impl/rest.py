@@ -430,6 +430,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
+        # We have to sleep to allow aiohttp time to close SSL transports...
+        # https://github.com/aio-libs/aiohttp/issues/1925
+        # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
+        await asyncio.sleep(0.25)
 
     async def __aenter__(self) -> RESTClientImpl:
         return self

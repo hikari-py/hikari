@@ -138,14 +138,14 @@ async def first_completed(
 async def all_of(
     *aws: typing.Awaitable[T_co],
     timeout: typing.Optional[float] = None,
-) -> typing.Tuple[T_co, ...]:
+) -> typing.Sequence[T_co]:
     """Await the completion of all the given awaitable items.
 
     If any fail or time out, then they are all cancelled.
 
     Parameters
     ----------
-    *aws : typing.Awaitable[typing.Any]
+    *aws : typing.Awaitable[T_co]
         Awaitables to wait for.
     timeout : typing.Optional[float]
         Optional timeout to wait for, or `builtins.None` to not use one.
@@ -153,7 +153,7 @@ async def all_of(
 
     Returns
     -------
-    typing.Tuple[typing.Any, ...]
+    typing.Sequence[T_co]
         The results of each awaitable in the order they were provided invoked
         in.
     """

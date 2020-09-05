@@ -28,6 +28,8 @@ import concurrent.futures
 import datetime
 import logging
 import math
+import signal
+import sys
 import types
 import typing
 
@@ -59,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import chunker
     from hikari.api import rest as rest_
     from hikari.api import shard
+    from hikari.impl import event_manager_base
 
 LoggerLevel = typing.Union[
     typing.Literal["DEBUG"],
@@ -109,10 +112,9 @@ class BotApp(traits.BotAware):
         self._cache: cache.Cache
         self._chunker: chunker.GuildChunker
         self._events: event_dispatcher.EventDispatcher
+        events_obj: event_manager_base.EventManagerBase
 
         if enable_cache:
-            self._is_stateless = False
-
             from hikari.impl import stateful_cache
             from hikari.impl import stateful_event_manager
             from hikari.impl import stateful_guild_chunker
@@ -125,8 +127,6 @@ class BotApp(traits.BotAware):
             self._raw_event_consumer = events_obj.consume_raw_event
             self._events = events_obj
         else:
-            self._is_stateless = True
-
             from hikari.impl import stateless_cache
             from hikari.impl import stateless_event_manager
             from hikari.impl import stateless_guild_chunker
@@ -145,10 +145,10 @@ class BotApp(traits.BotAware):
         self._event_factory = event_factory_impl.EventFactoryImpl(self)
 
         # Voice subsystem
-        self._voice = voice_impl.VoiceComponentImpl(self, self._events)
+        self._voice = voice_impl.VoiceComponentImpl(self, self._debug, self._events)
 
         # RESTful API.
-        self._rest = rest_impl.RESTClientImpl(
+        self._rest = rest_impl.RESTClientImpl(   # noqa: S106 hardcoded password false positive.
             debug=debug,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(),
             connector_owner=True,
@@ -208,10 +208,6 @@ class BotApp(traits.BotAware):
         return self._intents
 
     @property
-    def is_stateless(self) -> bool:
-        return self._is_stateless
-
-    @property
     def me(self) -> typing.Optional[users.OwnUser]:
         return self._cache.get_me()
 
@@ -240,6 +236,8 @@ class BotApp(traits.BotAware):
     async def close(self, wait: bool = False) -> None:
         self._closing_event.set()
 
+        _LOGGER.debug("BotApp#close(%s) invoked", wait)
+
         if wait:
             try:
                 await self.join()
@@ -247,19 +245,92 @@ class BotApp(traits.BotAware):
                 # Discard any exception that occurred from shutting down.
                 return
 
-    async def join(self) -> None:
-        await aio.first_completed(*self._shards.values())
+    async def join(self, until_close: bool = True) -> None:
+        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(self._shards.values())
+        if until_close:
+            awaitables.append(self._closing_event.wait())
+
+        await aio.first_completed(*awaitables)
 
     # TODO: implement fully, this is just a stub for testing only.
-    def run(self) -> None:
+    def run(
+        self,
+        *,
+        asyncio_debug: typing.Optional[bool] = None,
+        activity: typing.Optional[presences.Activity] = None,
+        afk: bool = False,
+        close_executor: bool = False,
+        close_loop: bool = True,
+        coroutine_tracking_depth: typing.Optional[int] = None,
+        enable_signal_handlers: bool = True,
+        idle_since: typing.Optional[datetime.datetime] = None,
+        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_count: typing.Optional[int] = None,
+        status: presences.Status = presences.Status.ONLINE,
+    ) -> None:
         loop = asyncio.get_event_loop()
+        signals = ("SIGINT", "SIGQUIT", "SIGTERM")
 
-        loop.run_until_complete(self.start())
+        if asyncio_debug:
+            loop.set_debug(True)
+
+        if coroutine_tracking_depth is not None:
+            try:
+                # Provisionally defined in CPython, may be removed without notice.
+                loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+            except AttributeError:
+                _LOGGER.warning("Cannot set coroutine tracking depth for %s")
+
+        def signal_handler(signum: int) -> None:
+            raise errors.HikariInterrupt(signum, signal.strsignal(signum))
+
+        if enable_signal_handlers:
+            for sig in signals:
+                try:
+                    signum = getattr(signal, sig)
+                    loop.add_signal_handler(signum, signal_handler, signum)
+                except (NotImplementedError, AttributeError):
+                    # Windows doesn't use signals (NotImplementedError);
+                    # Some OSs may decide to not implement some signals either...
+                    pass
 
         try:
-            loop.run_until_complete(self.join())
-        finally:
-            loop.run_until_complete(self.terminate())
+            loop.run_until_complete(
+                self.start(
+                    activity=activity,
+                    afk=afk,
+                    idle_since=idle_since,
+                    shard_ids=shard_ids,
+                    shard_count=shard_count,
+                    status=status,
+                )
+            )
+
+            try:
+                loop.run_until_complete(self.join(until_close=False))
+            finally:
+                try:
+                    loop.run_until_complete(self.terminate(close_executor=close_executor))
+                finally:
+                    if enable_signal_handlers:
+                        for sig in signals:
+                            try:
+                                signum = getattr(signal, sig)
+                                loop.remove_signal_handler(signum)
+                            except (NotImplementedError, AttributeError):
+                                # Windows doesn't use signals (NotImplementedError);
+                                # Some OSs may decide to not implement some signals either...
+                                pass
+
+                    if close_loop:
+                        self._destroy_loop(loop)
+
+        except errors.HikariInterrupt as interrupt:
+            _LOGGER.info(
+                "bot has shut down after receiving %s (%s)",
+                interrupt.description or str(interrupt.signum),
+                interrupt.signum,
+            )
 
     async def start(
         self,
@@ -342,7 +413,7 @@ class BotApp(traits.BotAware):
             for started_shard in started_shards:
                 self._shards[started_shard.id] = started_shard
 
-    async def terminate(self) -> None:
+    async def terminate(self, close_executor: bool = False) -> None:
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
             future = asyncio.ensure_future(awaitable)
 
@@ -368,6 +439,11 @@ class BotApp(traits.BotAware):
 
         for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
             await coro
+
+        if close_executor and self._executor is not None:
+            _LOGGER.debug("shutting down executor %s", self._executor)
+            self._executor.shutdown(wait=True)
+            self._executor = None
 
     async def _start_one_shard(
         self,
@@ -404,3 +480,41 @@ class BotApp(traits.BotAware):
             return new_shard
 
         raise errors.GatewayError(f"Shard {shard_id} shut down immediately when starting")
+
+    @staticmethod
+    def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
+        async def murder(future: asyncio.Future[typing.Any]) -> None:
+            # These include _GatheringFuture which must be awaited if the children
+            # throw an asyncio.CancelledError, otherwise it will spam logs with warnings
+            # about exceptions not being retrieved before GC.
+            try:
+                future.cancel()
+                await future
+            except asyncio.CancelledError:
+                pass
+            except Exception as ex:
+                loop.call_exception_handler(
+                    {
+                        "message": "Future raised unexpected exception after requesting cancellation",
+                        "exception": ex,
+                        "future": future,
+                    }
+                )
+
+        remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.cancelled() and not t.done()]
+
+        if remaining_tasks:
+            _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
+            loop.run_until_complete(asyncio.gather(*(murder(task) for task in remaining_tasks)))
+        else:
+            _LOGGER.debug("No remaining tasks exist, good job!")
+
+        if sys.version_info >= (3, 9):
+            _LOGGER.debug("shutting down default executor")
+            loop.run_until_complete(loop.shutdown_default_executor())
+
+        _LOGGER.debug("shutting down asyncgens")
+        loop.run_until_complete(loop.shutdown_asyncgens())
+
+        _LOGGER.debug("closing event loop")
+        loop.close()

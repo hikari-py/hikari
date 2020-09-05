@@ -55,10 +55,11 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
+    __slots__: typing.Sequence[str] = ("_app", "_debug", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.BotApp, dispatcher: event_dispatcher.EventDispatcher) -> None:
+    def __init__(self, app: bot.BotApp, debug: bool, dispatcher: event_dispatcher.EventDispatcher) -> None:
         self._app = app
+        self._debug = debug
         self._dispatcher = dispatcher
         self._connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection] = {}
         self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
@@ -121,7 +122,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.debug("attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        user_id = await shard.get_user_id()
+        user = self._app.cache.get_me()
+        if user is None:
+            user = await self._app.rest.fetch_my_user()
+
         await asyncio.wait_for(shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=5.0)
 
         _LOGGER.debug(
@@ -134,7 +138,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
                 self._dispatcher.wait_for(
                     voice_events.VoiceStateUpdateEvent,
                     timeout=None,
-                    predicate=self._init_state_update_predicate(guild_id, user_id),
+                    predicate=self._init_state_update_predicate(guild_id, user.id),
                 ),
                 # Server update:
                 self._dispatcher.wait_for(
@@ -159,7 +163,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         try:
             voice_connection = await voice_connection_type.initialize(
                 channel_id=snowflakes.Snowflake(channel),
-                debug=self._app.is_debug_enabled,
+                debug=self._debug,
                 endpoint=server_event.endpoint,
                 guild_id=guild_id,
                 on_close=self._on_connection_close,
@@ -167,7 +171,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
                 session_id=state_event.state.session_id,
                 shard_id=shard_id,
                 token=server_event.token,
-                user_id=user_id,
+                user_id=user.id,
                 **kwargs,
             )
         except Exception:

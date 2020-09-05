@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "HikariError",
     "HikariWarning",
+    "HikariInterrupt",
     "NotFoundError",
     "UnauthorizedError",
     "ForbiddenError",
@@ -84,6 +85,18 @@ class HikariWarning(RuntimeWarning):
     !!! note
         You should never initialize this warning directly.
     """
+
+
+@attr_extensions.with_copy
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class HikariInterrupt(KeyboardInterrupt, HikariError):
+    """Exception raised when a kill signal is handled internally."""
+
+    signum: int = attr.ib()
+    """The signal number that was raised."""
+
+    description: typing.Optional[str] = attr.ib()
+    """Signal description."""
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)

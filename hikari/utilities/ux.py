@@ -33,9 +33,10 @@ import platform
 import re
 import string
 import sys
+import typing
 
 import aiohttp
-import colorlog
+import colorlog  # type: ignore[import]
 
 from hikari import _about as about
 
@@ -95,8 +96,8 @@ def init_logging(
 
     if isinstance(flavor, str):
         # Apparently this makes logging even more efficient!
-        logging.logThreads = 0
-        logging.logProcesses = 0
+        logging.logThreads = False
+        logging.logProcesses = False
         if supports_color(allow_color, force_color):
             colorlog.basicConfig(
                 level=flavor,
@@ -115,7 +116,7 @@ def init_logging(
 
 
 def print_banner(package: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
-    """Prints a banner of choice to `sys.stdout`.
+    """Print a banner of choice to `sys.stdout`.
 
     Inspired by Spring Boot, we display an ASCII logo on startup. This is styled
     to grab the user's attention, and contains info such as the library version,
@@ -179,7 +180,7 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
-    """Return `buitlins.True` if the terminal device supports colour output.
+    """Return `builtins.True` if the terminal device supports colour output.
 
     Parameters
     ----------
@@ -197,7 +198,6 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
         `builtins.True` if colour is allowed on the output terminal, or
         `builtins.False` otherwise.
     """
-
     # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
     is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
@@ -225,13 +225,14 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
 class HikariVersion(distutils.version.StrictVersion):
     """Hikari-compatible strict version."""
 
-    version_re: typing.ClassVar[typing.Final[re.Pattern[str]]] = re.compile(
+    # Not typed correctly on distutils, so overriding it raises a false positive...
+    version_re: typing.ClassVar[typing.Final[re.Pattern[str]]] = re.compile(  # type: ignore[misc]
         r"^(\d+)\.(\d+)(\.(\d+))?(\.[a-z]+(\d+))?$", re.I
     )
 
 
 async def check_for_updates() -> None:
-    """Check for newer versions of the library"""
+    """Perform a check for newer versions of the library, logging any found."""
     try:
         async with aiohttp.request(
             "GET", "https://pypi.org/pypi/hikari/json", timeout=aiohttp.ClientTimeout(total=1.5), raise_for_status=True
