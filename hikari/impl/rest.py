@@ -641,6 +641,11 @@ class RESTClientImpl(rest_api.RESTClient):
         # top of a non-global one, but in this case this check will misbehave and
         # instead of erroring, will trigger a backoff that might be 10 minutes or
         # more...
+        #
+        # Seems Discord may raise this on some other undocumented cases, which
+        # is nice of them. Apparently some dude spamming slurs in the Python
+        # guild via a leaked webhook URL made people's clients exhibit this
+        # behaviour.
 
         # I realise remaining should never be less than zero, but quite frankly, I don't
         # trust that voodoo type stuff will not ever occur with that value from them...

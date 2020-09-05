@@ -280,8 +280,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     @staticmethod
     async def _handle_dispatch(
         callback: typing.Callable[
-            [gateway_shard.GatewayShard, data_binding.JSONObject],
-            typing.Coroutine[typing.Any, typing.Any, None]
+            [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
         ],
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
@@ -289,11 +288,13 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         try:
             await callback(shard, payload)
         except BaseException as ex:
-            asyncio.get_running_loop().call_exception_handler({
-                "message": "Exception occurred in internal event dispatch conduit",
-                "exception": ex,
-                "task": asyncio.current_task(),
-            })
+            asyncio.get_running_loop().call_exception_handler(
+                {
+                    "message": "Exception occurred in internal event dispatch conduit",
+                    "exception": ex,
+                    "task": asyncio.current_task(),
+                }
+            )
 
     async def _invoke_callback(
         self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv

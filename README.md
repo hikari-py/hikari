@@ -11,7 +11,7 @@
 
 # _hikari_
 
-An opinionated, static typed Discord API for Python3 and asyncio.
+An opinionated, static typed Discord microframework for Python3 and asyncio.
 
 Built on good intentions and the hope that it will be extendable and reusable,
 rather than an obstacle for future development.
@@ -55,14 +55,9 @@ python -m pip install hikari -U --pre
 py -3 -m pip install hikari -U --pre
 ```
 
-If you have a C compiler (Microsoft VC++ Redis 14.0 or newer, or a modern copy
-of GCC/G++, Clang, etc), you can replace `hikari` with `hikari[speedups]` to
-download compiled versions of some dependencies in order to get a further
-performance boost.
-
 ----
 
-## Additional libraries
+## Additional resources
 
 You may wish to use a command framework on top of Hikari so that you can start
 writing a bot quickly without implementing your own command handler.
@@ -74,6 +69,62 @@ a third party library to do it.
   use command framework for Hikari.
 
 ----
+
+## Making your application more efficient
+
+As your application scales, you may need to adjust some things to keep it
+performing nicely.
+
+### Python optimisation flags
+
+CPython and Stackless Python provide two optimisation flags that remove internal
+safety checks that are useful for development, and change other internal 
+settings in the interpreter.
+
+- `python bot.py` - no optimisation - this is the default.
+- `python -O bot.py` - first level optimisation - features such as internal 
+    assertions will be disabled.
+- `python -OO bot.py` - second level optimisation - more features (**including
+    all docstrings**) will be removed from the loaded code at runtime.
+
+### `hikari[speedups]`
+
+If you have a C compiler (Microsoft VC++ Redis 14.0 or newer, or a modern copy
+of GCC/G++, Clang, etc), you can install hikari using 
+`pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,  and 
+`ciso8601`, which will provide you with a small performance boost.
+
+### `uvloop`
+
+**If you use Linux**, you will get additional performance benefits from using
+a library called `uvloop`. This replaces the default `asyncio` event loop with
+one that uses `libuv` internally. You can run `pip install uvloop` and then
+amend your script to be something similar to the following example to utilise it
+in your application:
+
+```py
+import os
+import hikari
+
+if os.name != "nt":
+    import uvloop
+    uvloop.install()
+
+bot = hikari.Bot(...)
+...
+```
+
+### Compiled extensions
+
+Eventually, we will start providing the option to use compiled components of 
+this library over pure Python ones if it suits your use case. This should also
+enable further scalability of your application, should
+[_PEP 554 -- Multiple Interpreters in the Stdlib_](https://www.python.org/dev/peps/pep-0554/#abstract)
+be accepted.
+
+Currently, this functionality does not yet exist.
+
+---
 
 ## Developing Hikari
 
