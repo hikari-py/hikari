@@ -44,7 +44,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, typing.Dict[str, typing.Any]],
+    flavor: typing.Union[None, str, int, typing.Dict[str, typing.Any]],
     allow_color: bool,
     force_color: bool,
 ) -> None:
@@ -61,12 +61,12 @@ def init_logging(
 
         This can be `builtins.None` to not enable logging automatically.
 
-        If you pass a `builtins.str`, it is interpreted as the global logging
-        level to use, and should match one of `"DEBUG"`, `"INFO"`, `"WARNING"`,
-        `"ERROR"` or `"CRITICAL"`. The configuration will be set up to use
-        a `colorlog` coloured logger, and to use a sane logging format
-        strategy. The output will be written to `sys.stderr` using this
-        configuration.
+        If you pass a `builtins.str` or a `builtins.int`, it is interpreted as
+        the global logging level to use, and should match one of `"DEBUG"`,
+        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`, if `builtins.str`.
+        The configuration will be set up to use a `colorlog` coloured logger,
+        and to use a sane logging format strategy. The output will be written
+        to `sys.stderr` using this configuration.
 
         If you pass a `builtins.dict`, it is treated as the mapping to pass to
         `logging.config.dictConfig`.
@@ -94,25 +94,26 @@ def init_logging(
         # Skip, the user is using something else to configure their logging.
         return
 
-    if isinstance(flavor, str):
-        # Apparently this makes logging even more efficient!
-        logging.logThreads = False
-        logging.logProcesses = False
-        if supports_color(allow_color, force_color):
-            colorlog.basicConfig(
-                level=flavor,
-                format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
-                "%(thin)s%(message)s%(reset)s",
-                stream=sys.stderr,
-            )
-        else:
-            logging.basicConfig(
-                level=flavor,
-                format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
-                stream=sys.stderr,
-            )
-    else:
+    if isinstance(flavor, dict):
         logging.config.dictConfig(flavor)
+        return
+
+    # Apparently this makes logging even more efficient!
+    logging.logThreads = False
+    logging.logProcesses = False
+    if supports_color(allow_color, force_color):
+        colorlog.basicConfig(
+            level=flavor,
+            format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
+            "%(thin)s%(message)s%(reset)s",
+            stream=sys.stderr,
+        )
+    else:
+        logging.basicConfig(
+            level=flavor,
+            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
+            stream=sys.stderr,
+        )
 
 
 def print_banner(package: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
@@ -137,7 +138,6 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
         return `builtins.True` if the device supports colour output and the
         `allow_color` flag is not `builtins.False`.
     """
-
     if package is None:
         return
 

@@ -92,7 +92,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
-        logs: typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]] = "INFO",
+        logs: typing.Union[None, int, LoggerLevel, typing.Dict[str, typing.Any]] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: str = constants.REST_API_URL,
     ) -> None:
