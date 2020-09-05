@@ -687,7 +687,7 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _run_once(self) -> bool:
         self._closing.clear()
         self._handshake_completed.clear()
-        self._restart = False
+        dispatch_disconnect = False
         try:
             async with _V6GatewayTransport.connect(
                 debug=self._debug,
@@ -696,6 +696,10 @@ class GatewayShardImpl(shard.GatewayShard):
                 proxy_config=self._proxy_settings,
                 url=self._url,
             ) as self._ws:
+                # Dispatch CONNECTED synthetic event.
+                self._event_consumer(self, "CONNECTED", {})
+                dispatch_disconnect = True
+
                 # Expect HELLO.
                 payload = await self._ws.receive_json()
                 if payload["op"] != _HELLO:
@@ -756,9 +760,14 @@ class GatewayShardImpl(shard.GatewayShard):
                         return True
                     return False
                 finally:
+
                     heartbeat_task.cancel()
         finally:
             self._ws = None
+            if dispatch_disconnect:
+                # If we managed to connect, we must always send the DISCONNECT event
+                # afterwards.
+                self._event_consumer(self, "DISCONNECTED", {})
 
     async def _send_heartbeat(self) -> None:
         await self._ws.send_json({"op": _HEARTBEAT, "d": self._seq})  # type: ignore[union-attr]

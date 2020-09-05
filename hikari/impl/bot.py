@@ -46,6 +46,7 @@ from hikari.api import event_dispatcher
 from hikari.api import event_factory as event_factory_
 from hikari.api import shard as gateway_shard
 from hikari.api import voice as voice_
+from hikari.events import lifetime_events
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import rest as rest_impl
@@ -54,6 +55,7 @@ from hikari.impl import voice as voice_impl
 from hikari.utilities import aio
 from hikari.utilities import constants
 from hikari.utilities import date
+from hikari.utilities import event_stream
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
@@ -76,7 +78,7 @@ LoggerLevel = typing.Union[
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotApp(traits.BotAware):
+class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def __init__(
         self,
         token: str,
@@ -148,7 +150,7 @@ class BotApp(traits.BotAware):
         self._voice = voice_impl.VoiceComponentImpl(self, self._debug, self._events)
 
         # RESTful API.
-        self._rest = rest_impl.RESTClientImpl(   # noqa: S106 hardcoded password false positive.
+        self._rest = rest_impl.RESTClientImpl(  # noqa: S106 hardcoded password false positive.
             debug=debug,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(),
             connector_owner=True,
@@ -245,6 +247,14 @@ class BotApp(traits.BotAware):
                 # Discard any exception that occurred from shutting down.
                 return
 
+    def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
+        return self._events.dispatch(event)
+
+    def get_listeners(
+        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True
+    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
+        return self._events.get_listeners(event_type, polymorphic=polymorphic)
+
     async def join(self, until_close: bool = True) -> None:
         awaitables: typing.List[typing.Awaitable[typing.Any]] = list(self._shards.values())
         if until_close:
@@ -252,7 +262,13 @@ class BotApp(traits.BotAware):
 
         await aio.first_completed(*awaitables)
 
-    # TODO: implement fully, this is just a stub for testing only.
+    def listen(
+        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None
+    ) -> typing.Callable[
+        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]], event_dispatcher.CallbackT[event_dispatcher.EventT_co]
+    ]:
+        return self._events.listen(event_type)
+
     def run(
         self,
         *,
@@ -332,6 +348,7 @@ class BotApp(traits.BotAware):
                 interrupt.signum,
             )
 
+    # TODO: implement fully, this is just a stub for testing only.
     async def start(
         self,
         *,
@@ -342,12 +359,15 @@ class BotApp(traits.BotAware):
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
-        asyncio.create_task(ux.check_for_updates())
-
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
 
-        requirements = await self._rest.fetch_gateway_bot()
+        # Dispatch the update checker, the sharding requirements checker, and dispatch
+        # the starting event together to save a little time on startup.
+        asyncio.create_task(ux.check_for_updates())
+        requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
+        await self.dispatch(lifetime_events.StartingEvent(app=self))
+        requirements = await requirements_task
 
         if shard_count is None:
             shard_count = requirements.shard_count
@@ -413,6 +433,22 @@ class BotApp(traits.BotAware):
             for started_shard in started_shards:
                 self._shards[started_shard.id] = started_shard
 
+        await self.dispatch(lifetime_events.StartedEvent(app=self))
+
+    def stream(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+        return self._events.stream(event_type, timeout=timeout, limit=limit)
+
+    def subscribe(
+        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
+    ) -> event_dispatcher.CallbackT[typing.Any]:
+        return self._events.subscribe(event_type, callback)
+
     async def terminate(self, close_executor: bool = False) -> None:
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
             future = asyncio.ensure_future(awaitable)
@@ -430,6 +466,8 @@ class BotApp(traits.BotAware):
                     }
                 )
 
+        await self.dispatch(lifetime_events.StoppingEvent(app=self))
+
         calls = [
             ("rest", self._rest.close()),
             ("chunker", self._chunker.close()),
@@ -440,10 +478,28 @@ class BotApp(traits.BotAware):
         for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
             await coro
 
+        # Users may still require use of an executor once shut down, so we
+        # should do that after we do this.
+        await self.dispatch(lifetime_events.StoppedEvent(app=self))
+
         if close_executor and self._executor is not None:
             _LOGGER.debug("shutting down executor %s", self._executor)
             self._executor.shutdown(wait=True)
             self._executor = None
+
+    def unsubscribe(
+        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
+    ) -> None:
+        self._events.unsubscribe(event_type, callback)
+
+    async def wait_for(
+        self,
+        event_type: typing.Type[event_dispatcher.EventT_co],
+        /,
+        timeout: typing.Union[float, int, None],
+        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
+    ) -> event_dispatcher.EventT_co:
+        pass
 
     async def _start_one_shard(
         self,
