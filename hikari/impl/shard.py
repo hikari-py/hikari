@@ -356,6 +356,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_closed",
         "_closing",
         "_chunking_rate_limit",
         "_debug",
@@ -422,6 +423,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._activity = initial_activity
         self._closing = asyncio.Event()
+        self._closed = asyncio.Event()
         self._chunking_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} chunking rate limit",
             *_CHUNKING_RATELIMIT,
@@ -488,8 +490,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def join(self) -> None:
         """Wait for this shard to close, if running."""
-        if self._run_task and not self._run_task.done():
-            await self._run_task
+        await self._closed.wait()
 
     async def request_guild_members(
         self,
@@ -673,6 +674,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
     async def _run(self) -> None:
+        self._closed.clear()
         last_started_at = -float("nan")
 
         backoff = rate_limits.ExponentialBackOff(
@@ -681,40 +683,43 @@ class GatewayShardImpl(shard.GatewayShard):
             initial_increment=_BACKOFF_INCREMENT_START,
         )
 
-        while True:
-            if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
-                time = next(backoff)
-                self._logger.debug("backing off reconnecting for %.2fs to prevent spam", time)
+        try:
+            while True:
+                if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
+                    time = next(backoff)
+                    self._logger.debug("backing off reconnecting for %.2fs to prevent spam", time)
+
+                    try:
+                        await asyncio.wait_for(self._closing.wait(), timeout=time)
+                        # We were told to close.
+                        return
+                    except asyncio.TimeoutError:
+                        # We are going to run once.
+                        pass
 
                 try:
-                    await asyncio.wait_for(self._closing.wait(), timeout=time)
-                    # We were told to close.
-                    return
-                except asyncio.TimeoutError:
-                    # We are going to run once.
-                    pass
+                    if not await self._run_once():
+                        self._logger.debug("shard has shut down")
 
-            try:
-                if not await self._run_once():
-                    self._logger.debug("shard has shut down")
+                except errors.GatewayServerClosedConnectionError as ex:
+                    if not ex.can_reconnect:
+                        raise
 
-            except errors.GatewayServerClosedConnectionError as ex:
-                if not ex.can_reconnect:
+                    self._logger.info(
+                        "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
+                        ex.code,
+                        ex.reason,
+                    )
+
+                except errors.GatewayError as ex:
+                    self._logger.debug("encountered generic gateway error", exc_info=ex)
                     raise
 
-                self._logger.info(
-                    "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
-                    ex.code,
-                    ex.reason,
-                )
-
-            except errors.GatewayError as ex:
-                self._logger.debug("encountered generic gateway error", exc_info=ex)
-                raise
-
-            except Exception as ex:
-                self._logger.debug("encountered some unhandled error", exc_info=ex)
-                raise
+                except Exception as ex:
+                    self._logger.debug("encountered some unhandled error", exc_info=ex)
+                    raise
+        finally:
+            self._closed.set()
 
     async def _run_once(self) -> bool:
         self._closing.clear()
@@ -761,21 +766,28 @@ class GatewayShardImpl(shard.GatewayShard):
                         d = payload["d"]
 
                         if op == _DISPATCH:
+                            self._logger.debug("dispatching %s", payload["t"])
                             self._dispatch(payload["t"], payload["s"], d)
                         elif op == _HEARTBEAT:
                             await self._send_heartbeat_ack()
+                            self._logger.debug("sent HEARTBEAT")
                         elif op == _HEARTBEAT_ACK:
                             now = date.monotonic()
                             self._last_heartbeat_ack_received = now
                             self._heartbeat_latency = now - self._last_heartbeat_sent
+                            self._logger.debug("received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
                         elif op == _RECONNECT:
                             # We should be able to resume...
+                            self._logger.debug("received instruction to reconnect, will resume existing session")
                             return True
                         elif op == _INVALID_SESSION:
                             # We can resume if the payload was `true`.
                             if not d:
+                                self._logger.debug("received invalid session, will need to start a new session")
                                 self._seq = None
                                 self._session_id = None
+                            else:
+                                self._logger.debug("received invalid session, will resume existing session")
                             return True
                         else:
                             self._logger.debug("unknown opcode %s received, it will be ignored...", op)
