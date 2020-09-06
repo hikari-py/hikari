@@ -478,9 +478,13 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def close(self) -> None:
         if not self._closing.is_set():
-            if self._ws is not None:
-                await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
-            self._closing.set()
+            try:
+                if self._ws is not None:
+                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
+                self._closing.set()
+            finally:
+                self._chunking_rate_limit.close()
+                self._total_rate_limit.close()
 
     async def get_user_id(self) -> snowflakes.Snowflake:
         await self._handshake_completed.wait()
