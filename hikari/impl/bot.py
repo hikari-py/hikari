@@ -192,21 +192,22 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
     __slots__: typing.Sequence[str] = (
         "_banner",
+        "_cache",
+        "_chunker",
         "_closing_event",
         "_debug",
+        "_entity_factory",
+        "_events",
+        "_event_factory",
         "_executor",
         "_http_settings",
         "_intents",
         "_proxy_settings",
-        "_token",
-        "_cache",
-        "_chunker",
-        "_events",
-        "_entity_factory",
-        "_event_factory",
-        "_voice",
+        "_raw_event_consumer",
         "_rest",
         "_shards",
+        "_token",
+        "_voice",
     )
 
     def __init__(
