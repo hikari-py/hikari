@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Final[typing.List[str]] = [
     "HikariError",
     "HikariWarning",
+    "HikariInterrupt",
     "NotFoundError",
     "UnauthorizedError",
     "ForbiddenError",
@@ -37,7 +38,6 @@ __all__: typing.Final[typing.List[str]] = [
     "InternalServerError",
     "ShardCloseCode",
     "GatewayServerClosedConnectionError",
-    "GatewayClientClosedError",
     "GatewayError",
     "MissingIntentWarning",
     "MissingIntentError",
@@ -88,21 +88,21 @@ class HikariWarning(RuntimeWarning):
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class HikariInterrupt(KeyboardInterrupt, HikariError):
+    """Exception raised when a kill signal is handled internally."""
+
+    signum: int = attr.ib()
+    """The signal number that was raised."""
+
+    description: typing.Optional[str] = attr.ib()
+    """Signal description."""
+
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayError(HikariError):
     """A base exception type for anything that can be thrown by the Gateway."""
 
     reason: str = attr.ib()
-    """A string to explain the issue."""
-
-    def __str__(self) -> str:
-        return self.reason
-
-
-@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class GatewayClientClosedError(GatewayError):
-    """An exception raised when you programmatically shut down the bot."""
-
-    reason: str = attr.ib(default="The gateway client has been closed")
     """A string to explain the issue."""
 
     def __str__(self) -> str:

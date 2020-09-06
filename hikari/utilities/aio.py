@@ -27,17 +27,16 @@ __all__: typing.Final[typing.List[str]] = [
     "completed_future",
     "is_async_iterator",
     "is_async_iterable",
+    "first_completed",
+    "all_of",
 ]
 
 import asyncio
 import inspect
-import logging
 import typing
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future[typing.Optional[T_inv]]:
@@ -89,3 +88,87 @@ def is_async_iterable(obj: typing.Any) -> bool:
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)
+
+
+async def first_completed(
+    *aws: typing.Awaitable[typing.Any],
+    timeout: typing.Optional[float] = None,
+) -> None:
+    """Wait for the first awaitable to complete.
+
+    The awaitables that don't complete first will be cancelled.
+
+    Completion is defined as having a result or an exception set. Thus,
+    cancelling any of the awaitables will also result in the others being
+    cancelled.
+
+    If the first awaitable raises an exception, then that exception will be
+    propagated.
+
+    Parameters
+    ----------
+    *aws : typing.Awaitable[typing.Any]
+        Awaitables to wait for.
+    timeout : typing.Optional[float]
+        Optional timeout to wait for, or `builtins.None` to not use one.
+        If the timeout is reached, all awaitables are cancelled immediately.
+
+    !!! note
+        If more than one awaitable is completed before entering this call, then
+        the first future is always returned.
+    """
+    fs = list(map(asyncio.ensure_future, aws))
+    iterator = asyncio.as_completed(fs, timeout=timeout)
+    try:
+        await next(iterator)
+    finally:
+        for f in fs:
+            if not f.done() and not f.cancelled():
+                f.cancel()
+                # Asyncio gathering futures complain if not awaited after cancellation
+                try:
+                    await f
+                except asyncio.CancelledError:
+                    pass
+
+
+async def all_of(
+    *aws: typing.Awaitable[T_co],
+    timeout: typing.Optional[float] = None,
+) -> typing.Sequence[T_co]:
+    """Await the completion of all the given awaitable items.
+
+    If any fail or time out, then they are all cancelled.
+
+    Parameters
+    ----------
+    *aws : typing.Awaitable[T_co]
+        Awaitables to wait for.
+    timeout : typing.Optional[float]
+        Optional timeout to wait for, or `builtins.None` to not use one.
+        If the timeout is reached, all awaitables are cancelled immediately.
+
+    Returns
+    -------
+    typing.Sequence[T_co]
+        The results of each awaitable in the order they were provided invoked
+        in.
+    """
+    fs = list(map(asyncio.ensure_future, aws))
+    gatherer = asyncio.gather(*fs)
+    try:
+        return await asyncio.wait_for(gatherer, timeout=timeout)
+    finally:
+        for f in fs:
+            if not f.done() and not f.cancelled():
+                f.cancel()
+                # Asyncio gathering futures complain if not awaited after cancellation
+                try:
+                    await f
+                except asyncio.CancelledError:
+                    pass
+        try:
+            gatherer.cancel()
+            await gatherer
+        except asyncio.CancelledError:
+            pass

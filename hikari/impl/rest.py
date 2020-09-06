@@ -238,7 +238,7 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.RESTClient:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN_PREFIX) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
         if self._event_loop is None:
@@ -402,7 +402,7 @@ class RESTClientImpl(rest_api.RESTClient):
             full_token = None
         else:
             if token_type is None:
-                token_type = constants.BOT_TOKEN
+                token_type = constants.BOT_TOKEN_PREFIX
 
             full_token = f"{token_type.title()} {token}"
 
@@ -430,6 +430,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
+        # We have to sleep to allow aiohttp time to close SSL transports...
+        # https://github.com/aio-libs/aiohttp/issues/1925
+        # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
+        await asyncio.sleep(0.25)
 
     async def __aenter__(self) -> RESTClientImpl:
         return self
@@ -641,6 +645,11 @@ class RESTClientImpl(rest_api.RESTClient):
         # top of a non-global one, but in this case this check will misbehave and
         # instead of erroring, will trigger a backoff that might be 10 minutes or
         # more...
+        #
+        # Seems Discord may raise this on some other undocumented cases, which
+        # is nice of them. Apparently some dude spamming slurs in the Python
+        # guild via a leaked webhook URL made people's clients exhibit this
+        # behaviour.
 
         # I realise remaining should never be less than zero, but quite frankly, I don't
         # trust that voodoo type stuff will not ever occur with that value from them...

@@ -28,9 +28,6 @@ from pipelines import nox
 FLAGS = [
     "-c",
     config.PYTEST_INI,
-    "-r",
-    "a",
-    "--full-trace",
     "--cov",
     config.MAIN_PACKAGE,
     "--cov-config",

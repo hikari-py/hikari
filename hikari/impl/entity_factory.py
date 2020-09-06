@@ -1138,7 +1138,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             icon_hash=guild_fields.icon_hash,
             features=guild_fields.features,
             splash_hash=payload["splash"],
-            discovery_splash_hash=payload["discovery_splash"],
+            # This is documented as always being present, but we have found old guilds where this is
+            # not present. Quicker to just assume the documentation is wrong at this point than try
+            # to contest whether this is right or not with Discord.
+            discovery_splash_hash=payload.get("discovery_splash"),
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             region=payload["region"],
             afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,

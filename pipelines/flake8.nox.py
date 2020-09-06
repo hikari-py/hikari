@@ -28,10 +28,26 @@ def flake8(session: nox.Session) -> None:
     session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
     session.run(
         "flake8",
+        "--statistics",
+        "--show-source",
+        "--benchmark",
+        "--tee",
+        config.MAIN_PACKAGE,
+        config.TEST_PACKAGE,
+    )
+
+
+@nox.session(reuse_venv=True)
+def flake8_html(session: nox.Session) -> None:
+    """Run code linting, SAST, and analysis and generate an HTML report."""
+    session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
+    session.run(
+        "flake8",
         "--format=html",
         f"--htmldir={config.FLAKE8_REPORT}",
         "--statistics",
         "--show-source",
+        "--benchmark",
         "--tee",
         config.MAIN_PACKAGE,
         config.TEST_PACKAGE,

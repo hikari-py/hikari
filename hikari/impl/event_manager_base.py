@@ -87,7 +87,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         except AttributeError:
             _LOGGER.debug("ignoring unknown event %s", event_name)
         else:
-            asyncio.create_task(callback(shard, payload), name=event_name)
+            asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
@@ -241,32 +241,6 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
-    async def _invoke_callback(
-        self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
-    ) -> None:
-        try:
-            await callback(event)
-        except Exception as ex:
-            # Skip the first frame in logs, we don't care for it.
-            trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
-
-            if base_events.is_no_recursive_throw_event(event):
-                _LOGGER.error(
-                    "an exception occurred handling an event (%s), but it has been ignored",
-                    type(event).__name__,
-                    exc_info=trio,
-                )
-            else:
-                exception_event = base_events.ExceptionEvent(
-                    exception=ex,
-                    failed_event=event,
-                    failed_callback=callback,
-                )
-
-                log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
-                log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
-                await self.dispatch(exception_event)
-
     def stream(
         self,
         event_type: typing.Type[event_dispatcher.EventT_co],
@@ -302,3 +276,51 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         waiter_set.add(pair)  # type: ignore[arg-type]
         return await asyncio.wait_for(future, timeout=timeout)
+
+    @staticmethod
+    async def _handle_dispatch(
+        callback: typing.Callable[
+            [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
+        ],
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> None:
+        try:
+            await callback(shard, payload)
+        except asyncio.CancelledError:
+            # Skip cancelled errors, likely caused by the event loop being shut down.
+            pass
+        except BaseException as ex:
+            asyncio.get_running_loop().call_exception_handler(
+                {
+                    "message": "Exception occurred in internal event dispatch conduit",
+                    "exception": ex,
+                    "task": asyncio.current_task(),
+                }
+            )
+
+    async def _invoke_callback(
+        self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
+    ) -> None:
+        try:
+            await callback(event)
+        except Exception as ex:
+            # Skip the first frame in logs, we don't care for it.
+            trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
+
+            if base_events.is_no_recursive_throw_event(event):
+                _LOGGER.error(
+                    "an exception occurred handling an event (%s), but it has been ignored",
+                    type(event).__name__,
+                    exc_info=trio,
+                )
+            else:
+                exception_event = base_events.ExceptionEvent(
+                    exception=ex,
+                    failed_event=event,
+                    failed_callback=callback,
+                )
+
+                log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
+                log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
+                await self.dispatch(exception_event)

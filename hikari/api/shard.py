@@ -31,11 +31,9 @@ import typing
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-    import asyncio
     import datetime
 
     from hikari import channels
-    from hikari import config
     from hikari import guilds
     from hikari import intents as intents_
     from hikari import presences
@@ -75,64 +73,6 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def compression(self) -> typing.Optional[str]:
-        """Return the compression being used.
-
-        This may be one of `GatewayCompression`, or may be a custom
-        format for custom implementations in the future.
-
-        Returns
-        -------
-        typing.Optional[builtins.str]
-            The name of the compression method being used. Will be
-            `builtins.None` if no compression is being used.
-        """
-
-    @property
-    @abc.abstractmethod
-    def connection_uptime(self) -> float:
-        """Return the uptime of the connected shard.
-
-        If the shard is not yet connected, this will be 0.
-
-        This is measured as the time since the last disconnect, whether the
-        session has been kept alive or not.
-
-        Returns
-        -------
-        builtins.float
-            Uptime of this shard.
-        """
-
-    @property
-    @abc.abstractmethod
-    def data_format(self) -> str:
-        """Return name of the data format for inbound payloads.
-
-        This may be a value in `GatewayDataFormat`, or it may
-        be a custom name in custom implementations.
-
-        Returns
-        -------
-        builtins.str
-            The name of the data format being used on this shard.
-        """
-
-    @property
-    @abc.abstractmethod
-    def heartbeat_interval(self) -> float:
-        """Return the heartbeat interval for this shard.
-
-        Returns
-        -------
-        builtins.float
-            How often the shard will send a heartbeat in seconds. If the
-            information is not yet available, this returns `float('nan')`
-            instead.
-        """
-
-    @property
-    @abc.abstractmethod
     def heartbeat_latency(self) -> float:
         """Return the shard's most recent heartbeat latency.
 
@@ -141,17 +81,6 @@ class GatewayShard(abc.ABC):
         builtins.float
             Heartbeat latency measured in seconds. If the information is
             not yet available, then this will be `float('nan')` instead.
-        """
-
-    @property
-    @abc.abstractmethod
-    def http_settings(self) -> config.HTTPSettings:
-        """Return the HTTP settings in use for this shard.
-
-        Returns
-        -------
-        hikari.config.HTTPSettings
-            The HTTP settings in-use.
         """
 
     @property
@@ -195,56 +124,6 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def proxy_settings(self) -> config.ProxySettings:
-        """Return the proxy settings in use for this shard.
-
-        Returns
-        -------
-        hikari.config.ProxySettings
-            The proxy settings in-use.
-        """
-
-    @property
-    @abc.abstractmethod
-    def sequence(self) -> typing.Optional[int]:
-        """Return the sequence number for this shard.
-
-        This roughly corresponds to how many payloads have been
-        received since the current session started.
-
-        Returns
-        -------
-        typing.Optional[builtins.int]
-            The session sequence, or `builtins.None` if no session is active.
-        """
-
-    @property
-    @abc.abstractmethod
-    def session_id(self) -> typing.Optional[str]:
-        """Return the session ID for this shard.
-
-        Returns
-        -------
-        typing.Optional[builtins.str]
-            The session ID, or `builtins.None` if no session is active.
-        """
-
-    @property
-    @abc.abstractmethod
-    def session_uptime(self) -> float:
-        """Return the time that the session has been active for.
-
-        This will be measured in monotonic time.
-
-        Returns
-        -------
-        builtins.float
-            The session uptime, or `0` if no session is
-            active.
-        """
-
-    @property
-    @abc.abstractmethod
     def shard_count(self) -> int:
         """Return the total number of shards expected in the entire application.
 
@@ -252,17 +131,6 @@ class GatewayShard(abc.ABC):
         -------
         builtins.int
             A number of shards greater than or equal to 1.
-        """
-
-    @property
-    @abc.abstractmethod
-    def version(self) -> int:
-        """Return the gateway API version in use.
-
-        Returns
-        -------
-        builtins.int
-            The gateway API version being used.
         """
 
     @abc.abstractmethod
@@ -279,19 +147,20 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def start(self) -> asyncio.Task[None]:
-        """Start the shard, wait for it to become ready.
+    async def close(self) -> None:
+        """Close the websocket if it is connected, otherwise do nothing."""
 
-        Returns
-        -------
-        asyncio.Task[builtins.None]
-            The task containing the shard running logic. Awaiting this will
-            wait until the shard has shut down before returning.
+    @abc.abstractmethod
+    async def join(self) -> None:
+        """Wait indefinitely until the websocket closes permanently.
+
+        This can be placed in a task and cancelled without affecting the
+        websocket runtime itself.
         """
 
     @abc.abstractmethod
-    async def close(self) -> None:
-        """Close the websocket if it is connected, otherwise do nothing."""
+    async def start(self) -> None:
+        """Start the shard, wait for it to become ready."""
 
     @abc.abstractmethod
     async def update_presence(

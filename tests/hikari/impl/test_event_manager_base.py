@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import asyncio
 import warnings
 
 import mock
@@ -51,14 +52,64 @@ class TestEventManagerBase:
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
+        event_manager._handle_dispatch = mock.Mock()
         event_manager.on_existing_event = mock.Mock()
         shard = object()
 
         with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event(shard, "EXISTING_EVENT", {})
+            event_manager.consume_raw_event(shard, "EXISTING_EVENT", {"berp": "baz"})
 
-        event_manager.on_existing_event.assert_called_once_with(shard, {})
-        create_task.assert_called_once_with(event_manager.on_existing_event(shard, {}), name="EXISTING_EVENT")
+        event_manager._handle_dispatch.assert_called_once_with(event_manager.on_existing_event, shard, {"berp": "baz"})
+        create_task.assert_called_once_with(
+            event_manager._handle_dispatch(event_manager.on_existing_event, shard, {"berp": "baz"}),
+            name="dispatch EXISTING_EVENT",
+        )
+
+    @pytest.mark.asyncio
+    async def test_handle_dispatch_invokes_callback(self, event_manager, event_loop):
+        callback = mock.AsyncMock()
+        error_handler = mock.MagicMock()
+        event_loop.set_exception_handler(error_handler)
+        shard = object()
+        pl = {"foo": "bar"}
+
+        await event_manager._handle_dispatch(callback, shard, pl)
+
+        callback.assert_awaited_once_with(shard, pl)
+        error_handler.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager, event_loop):
+        callback = mock.AsyncMock(side_effect=asyncio.CancelledError)
+        error_handler = mock.MagicMock()
+        event_loop.set_exception_handler(error_handler)
+        shard = object()
+        pl = {"lorem": "ipsum"}
+
+        await event_manager._handle_dispatch(callback, shard, pl)
+
+        error_handler.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
+        exc = Exception("aaaa!")
+        callback = mock.AsyncMock(side_effect=exc)
+        error_handler = mock.MagicMock()
+        event_loop.set_exception_handler(error_handler)
+        shard = object()
+        pl = {"i like": "cats"}
+
+        with mock.patch.object(asyncio, "current_task") as current_task:
+            await event_manager._handle_dispatch(callback, shard, pl)
+
+        error_handler.assert_called_once_with(
+            event_loop,
+            {
+                "exception": exc,
+                "message": "Exception occurred in internal event dispatch conduit",
+                "task": current_task(),
+            },
+        )
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
         def test():

@@ -65,9 +65,6 @@ def init(session: nox.Session) -> None:
     print("Installing test dependencies")
     session.run(*base_install_args, "-Ur", "dev-requirements.txt", external=True)
 
-    print("Installing MyPy dependencies")
-    session.run(*base_install_args, "-Ur", "mypy-requirements.txt", external=True)
-
     print("Installing Flake8 dependencies")
     session.run(*base_install_args, "-Ur", "flake8-requirements.txt", external=True)
 
