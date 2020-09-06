@@ -438,25 +438,41 @@ class ExponentialBackOff:
     Parameters
     ----------
     base : builtins.float
-        The base to use. Defaults to `2`.
+        The base to use. Defaults to `2.0`.
     maximum : typing.Optional[builtins.float]
         If not `builtins.None`, then this is the max value the backoff can be
         in a single iteration before an `asyncio.TimeoutError` is raised.
-        Defaults to `64` seconds.
+        Defaults to `64.0` seconds.
     jitter_multiplier : builtins.float
-        The multiplier for the random jitter. Defaults to `1`.
+        The multiplier for the random jitter. Defaults to `1.0`.
         Set to `0` to disable jitter.
     initial_increment : builtins.int
         The initial increment to start at. Defaults to `0`.
+
+    Raises
+    ------
+    ValueError
+        If an `builtins.int` that's too big to be represented as a
+        `builtins.float` is passed in place of a field that's annotated as
+        `builtins.float` or if `initial_increment` is invalid for the provided
+        back-off rules (e.g. too large).
     """
 
-    __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
+    __slots__: typing.Sequence[str] = ("_is_frozen", "base", "increment", "maximum", "jitter_multiplier")
+
+    _is_frozen: bool
+    """Whether this should no longer increment due to float limitations."""
 
     base: typing.Final[float]
     """The base to use. Defaults to 2."""
 
     increment: int
-    """The current increment."""
+    """The current increment.
+
+    !!! note
+        This may stop incrementing if this back-off ever reaches a float limit
+        when `maximum` is `builtins.None`.
+    """
 
     maximum: typing.Optional[float]
     """If not `builtins.None`, then this is the max value the backoff can be in a
@@ -466,29 +482,56 @@ class ExponentialBackOff:
     jitter_multiplier: typing.Final[float]
     """The multiplier for the random jitter.
 
-    This defaults to `1`. Set to `0` to disable jitter.
+    This defaults to `1.0`. Set to `0.0` to disable jitter.
     """
 
     def __init__(
         self,
-        base: float = 2,
-        maximum: typing.Optional[float] = 64,
-        jitter_multiplier: float = 1,
+        base: float = 2.0,
+        maximum: typing.Optional[float] = 64.0,
+        jitter_multiplier: float = 1.0,
         initial_increment: int = 0,
     ) -> None:
-        self.base = base
-        self.maximum = maximum
+        # https://mypy.readthedocs.io/en/stable/duck_type_compatibility.html
+        # Mypy makes the assumption that ints will always be compatible with floats, this isn't the case and could lead
+        # to some edge cases that we'd be better off catching earlier on by ensuring these values are actually valid
+        # (most notably floats have a system based maximum size whereas integers theoretically don't with implicit
+        # conversion to a float raising an error if an integer that's too big to be a float is handled).
+        try:
+            self.base = float(base)
+            self.maximum = float(maximum) if maximum is not None else None
+            self.jitter_multiplier = float(jitter_multiplier)
+        except OverflowError:
+            raise ValueError("int too large to be represented as a float") from None
+
         self.increment = initial_increment
-        self.jitter_multiplier = jitter_multiplier
+        # We need to validate the first incrementation to prevent unexpected behaviour later on.
+        try:
+            (self.base ** self.increment) * self.jitter_multiplier
+        except OverflowError:
+            raise ValueError("provided increment is out of range for the provided back-off rules") from None
+
+        self._is_frozen = False
 
     def __next__(self) -> float:
         """Get the next back off to sleep by."""
-        value = self.base ** self.increment
+        try:
+            value = self.base ** self.increment
 
-        self.increment += 1
+        # If we hit a float limit then we want to freeze this to the previous increment.
+        # This will only ever happen when `maximum` is `None`.
+        except OverflowError:
+            self.increment -= 1
+            self._is_frozen = True
+            value = self.base ** self.increment
 
-        if self.maximum is not None and value >= self.maximum:
-            raise asyncio.TimeoutError
+        else:
+            if self.maximum is not None and value >= self.maximum:
+                raise asyncio.TimeoutError
+
+        if not self._is_frozen:
+            # This should only be incremented after we verify we haven't hit the maximum value.
+            self.increment += 1
 
         value += random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
         return value

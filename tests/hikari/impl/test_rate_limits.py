@@ -23,6 +23,7 @@ import contextlib
 import logging
 import math
 import statistics
+import sys
 import threading
 import time
 
@@ -401,6 +402,26 @@ class TestWindowedBurstRateLimiter:
 
 
 class TestExponentialBackOff:
+    def test___init___raises_on_too_large_int_base(self):
+        base = int(sys.float_info.max) + int(sys.float_info.max * 1 / 100)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(base=base)
+
+    def test___init___raises_on_too_large_int_maximum(self):
+        maximum = int(sys.float_info.max) + int(sys.float_info.max * 1 / 200)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(maximum=maximum)
+
+    def test___init___raises_on_too_large_int_jitter_multiplier(self):
+        jitter_multiplier = int(sys.float_info.max) + int(sys.float_info.max * 1 / 300)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(jitter_multiplier=jitter_multiplier)
+
+    def test___init___raises_on_out_of_range_initial_increment(self):
+        increment = math.log(int(sys.float_info.max), 6) + 1
+        with pytest.raises(ValueError, match="provided increment is out of range for the provided back-off rules"):
+            rate_limits.ExponentialBackOff(base=6, initial_increment=increment)
+
     def test_reset(self):
         eb = rate_limits.ExponentialBackOff()
         eb.increment = 10
@@ -416,6 +437,18 @@ class TestExponentialBackOff:
 
         assert next(eb) == backoff
 
+    def test_increment_freezes_on_numerical_limitation(self):
+        power = math.log(sys.float_info.max, 5) + 0.5
+        increment = power - 2
+        eb = rate_limits.ExponentialBackOff(base=5, maximum=None, jitter_multiplier=0.0, initial_increment=increment)
+
+        assert next(eb) == 5 ** (power - 2)
+        assert next(eb) == 5 ** (power - 1)
+        assert eb._is_frozen is False
+        assert next(eb) == 5 ** (power - 1)
+        assert eb._is_frozen is True
+        assert eb.increment == power - 1
+
     def test_increment_maximum(self):
         max_bound = 64
         eb = rate_limits.ExponentialBackOff(2, max_bound, 0)
@@ -425,6 +458,16 @@ class TestExponentialBackOff:
 
         with pytest.raises(asyncio.TimeoutError):
             next(eb)
+
+    def test_increment_does_not_increment_when_on_maximum(self):
+        eb = rate_limits.ExponentialBackOff(2, 32, initial_increment=5)
+
+        assert eb.increment == 5
+
+        with pytest.raises(asyncio.TimeoutError):
+            next(eb)
+
+        assert eb.increment == 5
 
     @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_jitter(self, iteration, backoff):
