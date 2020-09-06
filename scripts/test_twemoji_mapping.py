@@ -22,7 +22,6 @@
 by Discord emojis are actually legitimate URLs, since Discord
 does not map these on a 1-to-1 basis.
 """
-import os
 import pathlib
 import subprocess
 import sys
@@ -37,6 +36,7 @@ sys.path.append(".")
 from hikari import emojis
 
 TWEMOJI_REPO_BASE_URL = "https://github.com/twitter/twemoji.git"
+DISCORD_EMOJI_MAPPING_URL = "https://static.emzi0767.com/misc/discordEmojiMap.json"
 
 
 with tempfile.TemporaryDirectory() as tempdir:
@@ -44,12 +44,7 @@ with tempfile.TemporaryDirectory() as tempdir:
     valid_emojis = []
     invalid_emojis = []
 
-    try:
-        mapping_url = os.environ["DISCORD_EMOJI_MAPPING_URL"]
-    except KeyError:
-        raise RuntimeError("Please set the DISCORD_EMOJI_MAPPING_URL environment variable to the emoji map endpoint")
-
-    resp = requests.get(mapping_url)
+    resp = requests.get(DISCORD_EMOJI_MAPPING_URL)
     resp.encoding = "utf-8-sig"
     mapping = resp.json()["emojiDefinitions"]
 
