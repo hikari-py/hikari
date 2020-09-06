@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BotApp", "LoggerLevel"]
+__all__: typing.Final[typing.List[str]] = ["BotApp", "LoggerLevelT"]
 
 import asyncio
 import concurrent.futures
@@ -67,7 +67,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard
     from hikari.impl import event_manager_base
 
-LoggerLevel = typing.Union[
+LoggerLevelT = typing.Union[
     int,
     typing.Literal["DEBUG"],
     typing.Literal["INFO"],
@@ -223,7 +223,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
-        logs: typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]] = "INFO",
+        logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: str = constants.REST_API_URL,
     ) -> None:
