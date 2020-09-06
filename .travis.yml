@@ -53,6 +53,7 @@ jobs:
       os: linux
       arch: amd64
       install: "pip install nox"
+      if: env(DISCORD_EMOJI_MAPPING_URL) IS present
       env:
         - secure: "BjD5A9s8GCC/ighdYW143rLeKxs+ltNB6ibzMCEcKi+TffvMJ9oLbNM0q1jTs+Jw9YOzIr07d9hOTbc41IVQBqjwNzqBQo37dTp/JPLl1bI579gfOZJ5POg0AT+FX9VpM2qYVxNPYASX/2v03EVmtLEAVXdg37NnUzbx4H5BBjei9tcUOlhm7Mt0o5s4tx/XyNxfDNtUah4rg6FCvhaBza2oApiBxR/3dWEr4/pFLXXqh8fCtUfLtgv+zt8P4VZxgWn33hsfxuqqBattbK+aOaARHDvQe73p2xy9INWgmiKNcM1lgpiFGsgSa4HpfYo/oUqP/dLULUocloIPTqMHOpWcQSRHACd0UUkOv6ZiB63NahQOxAxOfPpIGLdf6JSb2huPNGgmg6gqewKHmRcqWghgJfnXoKKdKK3tFG8+jBbw0Rmi8NHg5xJVsfUDt8utkRceBb13WcirTdam9r/kWo5Ogy+jEdbDX5R8OFimq+uzDdsjnI+BuakphLScxW6wo+iibDOkIulsKk6xhgIXzCi1uT2KJkIBkX3zxNdRlMtZS7rC6uz3xgF4I9o756CiT85vlKBaQroBj/2fYfU+d2wYwVFtFVGopqVpTaSQidZaAVZzJNWTXov/aOAK/e55VwEssu22keS/p7g2+6dogUJjO+qswupB+dvcnVJlnNk="
       stage: test

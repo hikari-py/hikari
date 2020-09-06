@@ -23,6 +23,7 @@ import contextlib
 import logging
 import math
 import statistics
+import sys
 import threading
 import time
 
@@ -401,6 +402,33 @@ class TestWindowedBurstRateLimiter:
 
 
 class TestExponentialBackOff:
+    def test___init___raises_on_too_large_int_base(self):
+        base = int(sys.float_info.max) + int(sys.float_info.max * 1 / 100)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(base=base)
+
+    def test___init___raises_on_too_large_int_maximum(self):
+        maximum = int(sys.float_info.max) + int(sys.float_info.max * 1 / 200)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(maximum=maximum)
+
+    def test___init___raises_on_too_large_int_jitter_multiplier(self):
+        jitter_multiplier = int(sys.float_info.max) + int(sys.float_info.max * 1 / 300)
+        with pytest.raises(ValueError, match="int too large to be represented as a float"):
+            rate_limits.ExponentialBackOff(jitter_multiplier=jitter_multiplier)
+
+    def test___init___raises_on_not_finite_base(self):
+        with pytest.raises(ValueError, match="base must be a finite number"):
+            rate_limits.ExponentialBackOff(base=float("inf"))
+
+    def test___init___raises_on_not_finite_maximum(self):
+        with pytest.raises(ValueError, match="maximum must be a finite number"):
+            rate_limits.ExponentialBackOff(maximum=float("nan"))
+
+    def test___init___raises_on_not_finite_jitter_multiplier(self):
+        with pytest.raises(ValueError, match="jitter_multiplier must be a finite number"):
+            rate_limits.ExponentialBackOff(jitter_multiplier=float("inf"))
+
     def test_reset(self):
         eb = rate_limits.ExponentialBackOff()
         eb.increment = 10
@@ -416,6 +444,15 @@ class TestExponentialBackOff:
 
         assert next(eb) == backoff
 
+    def test_increment_raises_on_numerical_limitation(self):
+        power = math.log(sys.float_info.max, 5) + 0.5
+        eb = rate_limits.ExponentialBackOff(
+            base=5, maximum=sys.float_info.max, jitter_multiplier=0.0, initial_increment=power
+        )
+
+        with pytest.raises(asyncio.TimeoutError):
+            next(eb)
+
     def test_increment_maximum(self):
         max_bound = 64
         eb = rate_limits.ExponentialBackOff(2, max_bound, 0)
@@ -425,6 +462,16 @@ class TestExponentialBackOff:
 
         with pytest.raises(asyncio.TimeoutError):
             next(eb)
+
+    def test_increment_does_not_increment_when_on_maximum(self):
+        eb = rate_limits.ExponentialBackOff(2, 32, initial_increment=5)
+
+        assert eb.increment == 5
+
+        with pytest.raises(asyncio.TimeoutError):
+            next(eb)
+
+        assert eb.increment == 5
 
     @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
     def test_increment_jitter(self, iteration, backoff):
