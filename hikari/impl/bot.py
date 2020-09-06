@@ -283,22 +283,19 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 continue
             if self._shards:
                 close_waiter = asyncio.create_task(self._closing_event.wait())
-                shard_joiners = map(asyncio.create_task, self._shards.values())
+                shard_joiners = map(asyncio.create_task, (s.join() for s in self._shards.values()))
                 try:
                     await aio.all_of(close_waiter, *shard_joiners, timeout=5)
                     if close_waiter:
                         _LOGGER.info("requested to shut down during startup of shards")
                     else:
                         _LOGGER.critical("one or more shards shut down unexpectedly during bot startup")
-
-                    await self.terminate()
                     return
                 except asyncio.TimeoutError:
                     # new window starts.
                     pass
                 except Exception as ex:
                     _LOGGER.critical("an exception occurred in one of the started shards during bot startup: %r", ex)
-                    await self.terminate()
                     raise
 
             started_shards = await aio.all_of(
@@ -324,7 +321,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     async def join(self, until_close: bool = True) -> None:
-        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(self._shards.values())
+        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(s.join() for s in self._shards.values())
         if until_close:
             awaitables.append(self._closing_event.wait())
 
@@ -369,7 +366,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 # Provisionally defined in CPython, may be removed without notice.
                 loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
             except AttributeError:
-                _LOGGER.warning("Cannot set coroutine tracking depth for %s")
+                _LOGGER.debug("cannot set coroutine tracking depth for %s, no functionality exists for this", loop)
 
         def signal_handler(signum: int) -> None:
             raise errors.HikariInterrupt(signum, signal.strsignal(signum))
@@ -397,31 +394,31 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 )
             )
 
-            try:
-                loop.run_until_complete(self.join(until_close=False))
-            finally:
-                try:
-                    loop.run_until_complete(self.terminate(close_executor=close_executor))
-                finally:
-                    if enable_signal_handlers:
-                        for sig in signals:
-                            try:
-                                signum = getattr(signal, sig)
-                                loop.remove_signal_handler(signum)
-                            except (NotImplementedError, AttributeError):
-                                # Windows doesn't use signals (NotImplementedError);
-                                # Some OSs may decide to not implement some signals either...
-                                pass
-
-                    if close_loop:
-                        self._destroy_loop(loop)
+            loop.run_until_complete(self.join(until_close=False))
 
         except errors.HikariInterrupt as interrupt:
             _LOGGER.info(
-                "bot has shut down after receiving %s (%s)",
+                "received %s (%s), will proceed to shut down",
                 interrupt.description or str(interrupt.signum),
                 interrupt.signum,
             )
+
+        finally:
+            try:
+                loop.run_until_complete(self.terminate(close_executor=close_executor))
+            finally:
+                if enable_signal_handlers:
+                    for sig in signals:
+                        try:
+                            signum = getattr(signal, sig)
+                            loop.remove_signal_handler(signum)
+                        except (NotImplementedError, AttributeError):
+                            # Windows doesn't use signals (NotImplementedError);
+                            # Some OSs may decide to not implement some signals either...
+                            pass
+
+                if close_loop:
+                    self._destroy_loop(loop)
 
     async def terminate(self, close_executor: bool = False) -> None:
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:

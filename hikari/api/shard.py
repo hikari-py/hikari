@@ -257,6 +257,3 @@ class GatewayShard(abc.ABC):
             When trying to request presences without the `GUILD_MEMBERS` or when trying to
             request the full list of members without `GUILD_PRESENCES`.
         """
-
-    def __await__(self) -> typing.Generator[None, typing.Any, typing.Any]:
-        ...

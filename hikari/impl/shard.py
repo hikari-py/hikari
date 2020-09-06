@@ -829,6 +829,3 @@ class GatewayShardImpl(shard.GatewayShard):
             return None
 
         return int(dt.timestamp() * 1_000)
-
-    def __await__(self) -> typing.Generator[None, typing.Any, typing.Any]:
-        return self.join().__await__()

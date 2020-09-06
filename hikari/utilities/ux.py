@@ -263,4 +263,4 @@ async def check_for_updates() -> None:
             newest = max(newer_releases)
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest)
     except Exception as ex:
-        logging.debug("Failed to fetch hikari version details", exc_info=ex)
+        _LOGGER.debug("Failed to fetch hikari version details", exc_info=ex)

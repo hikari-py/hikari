@@ -28,18 +28,15 @@ __all__: typing.Final[typing.List[str]] = [
     "is_async_iterator",
     "is_async_iterable",
     "first_completed",
+    "all_of",
 ]
 
 import asyncio
 import inspect
-import logging
 import typing
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
-U_co = typing.TypeVar("U_co", covariant=True)
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger(__name__)
 
 
 def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future[typing.Optional[T_inv]]:
