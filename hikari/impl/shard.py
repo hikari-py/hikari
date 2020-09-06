@@ -724,6 +724,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     raise
         finally:
             self._closed.set()
+            self._logger.info("shard %s has shut down permanently", self._shard_id)
 
     async def _run_once(self) -> bool:
         self._closing.clear()

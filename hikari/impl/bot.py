@@ -598,6 +598,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 if close_loop:
                     self._destroy_loop(loop)
 
+                _LOGGER.info("application has successfully terminated")
+
     async def start(
         self,
         *,
