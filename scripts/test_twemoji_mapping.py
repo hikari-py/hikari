@@ -54,7 +54,7 @@ def run():
     resp.encoding = "utf-8-sig"
     mapping = resp.json()["emojiDefinitions"]
 
-    subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir}", shell=True)
+    subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
 
     for i, emoji in enumerate(mapping):
         try_fetch(i, len(mapping), emoji["surrogates"], emoji["primaryName"])
