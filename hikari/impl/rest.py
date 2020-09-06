@@ -238,7 +238,7 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN) -> rest_api.RESTClient:
+    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN_PREFIX) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
         if self._event_loop is None:
@@ -402,7 +402,7 @@ class RESTClientImpl(rest_api.RESTClient):
             full_token = None
         else:
             if token_type is None:
-                token_type = constants.BOT_TOKEN
+                token_type = constants.BOT_TOKEN_PREFIX
 
             full_token = f"{token_type.title()} {token}"
 

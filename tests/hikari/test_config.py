@@ -31,10 +31,10 @@ class TestBasicAuthHeader:
         return config_.BasicAuthHeader(username="davfsa", password="securepassword123")
 
     def test_header_property(self, config):
-        assert config.header == f"{constants.BASICAUTH_TOKEN} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
+        assert config.header == f"{constants.BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
     def test_str(self, config):
-        assert str(config) == f"{constants.BASICAUTH_TOKEN} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
+        assert str(config) == f"{constants.BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
 
 class TestProxySettings:

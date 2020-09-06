@@ -78,6 +78,26 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
+
+    __slots__: typing.Sequence[str] = (
+        "_banner",
+        "_closing_event",
+        "_debug",
+        "_executor",
+        "_http_settings",
+        "_intents",
+        "_proxy_settings",
+        "_token",
+        "_cache",
+        "_chunker",
+        "_events",
+        "_entity_factory",
+        "_event_factory",
+        "_voice",
+        "_rest",
+        "_shards",
+    )
+
     def __init__(
         self,
         token: str,
@@ -159,7 +179,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,
-            token_type=constants.BOT_TOKEN,
+            token_type=constants.BOT_TOKEN_PREFIX,
             version=6,
         )
 

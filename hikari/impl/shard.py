@@ -98,6 +98,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
+    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug")
+
     # Initialized from `connect'
     _zlib: zlib._Decompress
     _logger: logging.Logger
@@ -109,7 +111,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
 
     def close(self, *, code: int = 1000, message: bytes = b"") -> typing.Coroutine[typing.Any, typing.Any, bool]:
         if not self._closed and not self._closing:
-            self._logger.debug("sending close frame with code %s and message %s", code, message)
+            self._logger.debug("sending close frame with code %s and message %s", int(code), message)
         return super().close(code=code, message=message)
 
     async def receive_json(
@@ -131,7 +133,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     ) -> None:
         pl = dumps(data)
         self._log_debug_payload(pl, "sending")
-        await super().send_str(pl, compress)
+        await self.send_str(pl, compress)
 
     async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
         buff = bytearray()
@@ -301,7 +303,7 @@ class GatewayShardImpl(shard.GatewayShard):
         logs. If `builtins.False`, only the fact that data has been
         sent/received will be logged.
     event_consumer
-        A non-coroutine function consuming a `GatewayShardImplV6`,
+        A non-coroutine function consuming a `GatewayShardImpl`,
         a `builtins.str` event name, and a
         `hikari.utilities.data_binding.JSONObject` event object as parameters.
         This should return `builtins.None`, and will be called with each event
@@ -351,6 +353,35 @@ class GatewayShardImpl(shard.GatewayShard):
         these updates internally. All other calls to update the status of
         the shard will support partial updates.
     """
+
+    __slots__: typing.Sequence[str] = (
+        "_activity",
+        "_closing",
+        "_chunking_rate_limit",
+        "_debug",
+        "_event_consumer",
+        "_handshake_completed",
+        "_heartbeat_latency",
+        "_http_settings",
+        "_idle_since",
+        "_intents",
+        "_is_afk",
+        "_large_threshold",
+        "_last_heartbeat_ack_received",
+        "_last_heartbeat_sent",
+        "_logger",
+        "_proxy_settings",
+        "_run_task",
+        "_seq",
+        "_session_id",
+        "_shard_count",
+        "_shard_id" "_status",
+        "_token",
+        "_total_rate_limit",
+        "_url",
+        "_user_id",
+        "_ws",
+    )
 
     def __init__(
         self,

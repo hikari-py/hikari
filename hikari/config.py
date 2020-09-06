@@ -56,7 +56,7 @@ class BasicAuthHeader:
         """Generate the header value and return it."""
         raw_token = f"{self.username}:{self.password}".encode("ascii")
         token_part = base64.b64encode(raw_token).decode("ascii")
-        return f"{constants.BASICAUTH_TOKEN} {token_part}"
+        return f"{constants.BASICAUTH_TOKEN_PREFIX} {token_part}"
 
     def __str__(self) -> str:
         return self.header
