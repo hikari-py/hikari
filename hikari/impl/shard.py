@@ -820,7 +820,7 @@ class GatewayShardImpl(shard.GatewayShard):
         if status is presences.Status.OFFLINE:
             payload.put("status", "invisible")
         else:
-            payload.put("status", status, conversion=lambda s: typing.cast(str, s.value))
+            payload.put("status", status)
         return payload
 
     @staticmethod

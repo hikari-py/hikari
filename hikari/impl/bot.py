@@ -291,7 +291,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 continue
             if self._shards:
                 close_waiter = asyncio.create_task(self._closing_event.wait())
-
                 shard_joiners = [
                     asyncio.create_task(s.join(), name=f"wait for shard {s.id} to terminate")
                     for s in self._shards.values()
