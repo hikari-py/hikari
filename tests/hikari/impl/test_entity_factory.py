@@ -2900,7 +2900,7 @@ class TestEntityFactoryImpl:
             "locale": "en-US",
             "mfa_enabled": True,
             "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
-            "flags": int(user_models.UserFlag.DISCORD_PARTNER | user_models.UserFlag.DISCORD_EMPLOYEE),
+            "flags": int(user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE),
             "premium_type": 1,
         }
 
@@ -2917,7 +2917,7 @@ class TestEntityFactoryImpl:
         assert my_user.locale == "en-US"
         assert my_user.is_verified is True
         assert my_user.email == "blahblah@blah.blah"
-        assert my_user.flags == user_models.UserFlag.DISCORD_PARTNER | user_models.UserFlag.DISCORD_EMPLOYEE
+        assert my_user.flags == user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE
         assert my_user.premium_type is user_models.PremiumType.NITRO_CLASSIC
         assert isinstance(my_user, user_models.OwnUser)
 
@@ -2931,7 +2931,7 @@ class TestEntityFactoryImpl:
                 "locale": "en-US",
                 "mfa_enabled": True,
                 "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
-                "flags": int(user_models.UserFlag.DISCORD_PARTNER | user_models.UserFlag.DISCORD_EMPLOYEE),
+                "flags": int(user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE),
                 "premium_type": 1,
             }
         )
