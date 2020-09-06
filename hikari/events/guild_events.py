@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
+    "GuildEvent",
     "GuildVisibilityEvent",
     "GuildAvailableEvent",
     "GuildUnavailableEvent",
