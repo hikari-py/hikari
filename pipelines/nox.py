@@ -55,7 +55,7 @@ def inherit_environment_vars(func):
 
 def shell(arg, *args):
     command = " ".join((arg, *args))
-    print("\033[35mnox > shell >\033[0m", command)
+    print("nox > shell >", command)
     return subprocess.check_call(command, shell=True)
 
 
