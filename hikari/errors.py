@@ -87,7 +87,6 @@ class HikariWarning(RuntimeWarning):
     """
 
 
-@attr_extensions.with_copy
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HikariInterrupt(KeyboardInterrupt, HikariError):
     """Exception raised when a kill signal is handled internally."""
