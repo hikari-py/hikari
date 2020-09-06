@@ -74,7 +74,6 @@ LoggerLevel = typing.Union[
 ]
 """Type-hint for a valid logging level."""
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
@@ -241,10 +240,11 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
         idle_since: typing.Optional[datetime.datetime] = None,
-        status: presences.Status = presences.Status.ONLINE,
+        ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
+        status: presences.Status = presences.Status.ONLINE,
     ) -> None:
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
@@ -260,6 +260,14 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             shard_count = requirements.shard_count
         if shard_ids is None:
             shard_ids = set(range(shard_count))
+
+        if requirements.session_start_limit.remaining < len(shard_ids) and not ignore_session_start_limit:
+            _LOGGER.critical(
+                "would have started %s session(s), but you only have %s remaining until %s. Starting more sessions "
+                "than you are allowed to start may result in your token being reset. To skip this message, "
+                "use bot.run(..., ignore_session_start_limit=True) or bot.start(..., ignore_session_start_limit=True)"
+            )
+            raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         _LOGGER.info(
             "planning to start %s session%s... you can start %s session%s before the next window starts at %s",
@@ -349,16 +357,17 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def run(
         self,
         *,
+        activity: typing.Optional[presences.Activity] = None,
+        afk: bool = False,
         asyncio_debug: typing.Optional[bool] = None,
         close_executor: bool = False,
         close_loop: bool = True,
         coroutine_tracking_depth: typing.Optional[int] = None,
         enable_signal_handlers: bool = True,
-        activity: typing.Optional[presences.Activity] = None,
-        afk: bool = False,
         idle_since: typing.Optional[datetime.datetime] = None,
-        status: presences.Status = presences.Status.ONLINE,
+        ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
+        status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
@@ -394,10 +403,11 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     activity=activity,
                     afk=afk,
                     idle_since=idle_since,
-                    status=status,
+                    ignore_session_start_limit=ignore_session_start_limit,
                     large_threshold=large_threshold,
                     shard_ids=shard_ids,
                     shard_count=shard_count,
+                    status=status,
                 )
             )
 
