@@ -152,7 +152,11 @@ class GatewayShard(abc.ABC):
 
     @abc.abstractmethod
     async def join(self) -> None:
-        """Wait for the websocket to disconnect permanently."""
+        """Wait indefinitely until the websocket closes permanently.
+
+        This can be placed in a task and cancelled without affecting the
+        websocket runtime itself.
+        """
 
     @abc.abstractmethod
     async def start(self) -> None:

@@ -387,7 +387,11 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         return self._events.get_listeners(event_type, polymorphic=polymorphic)
 
     async def join(self, until_close: bool = True) -> None:
-        """Wait for the application to terminate, if running.
+        """Wait indefinitely until the application closes.
+
+        This can be placed in a task and cancelled without affecting the
+        application runtime itself. Any exceptions raised by shards will be
+        propagated to here.
 
         Other Parameters
         ----------------
@@ -690,6 +694,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 shard_joiners = [asyncio.ensure_future(s.join()) for s in self._shards.values()]
 
                 try:
+                    # Attempt to wait for all started shards, for 5 seconds, along with the close
+                    # waiter.
+                    # If the close flag is set (i.e. user invoked bot.close), or one or more shards
+                    # die in this time, we shut down immediately.
+                    # If we time out, the joining tasks get discarded and we spin up the next
+                    # block of shards, if applicable.
                     await aio.all_of(close_waiter, *shard_joiners, timeout=5)
                     if close_waiter:
                         _LOGGER.info("requested to shut down during startup of shards")
