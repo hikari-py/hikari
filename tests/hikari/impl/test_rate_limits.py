@@ -417,10 +417,17 @@ class TestExponentialBackOff:
         with pytest.raises(ValueError, match="int too large to be represented as a float"):
             rate_limits.ExponentialBackOff(jitter_multiplier=jitter_multiplier)
 
-    def test___init___raises_on_out_of_range_initial_increment(self):
-        increment = math.log(int(sys.float_info.max), 6) + 1
-        with pytest.raises(ValueError, match="provided increment is out of range for the provided back-off rules"):
-            rate_limits.ExponentialBackOff(base=6, initial_increment=increment)
+    def test___init___raises_on_not_finite_base(self):
+        with pytest.raises(ValueError, match="base must be a finite number"):
+            rate_limits.ExponentialBackOff(base=float("inf"))
+
+    def test___init___raises_on_not_finite_maximum(self):
+        with pytest.raises(ValueError, match="maximum must be a finite number"):
+            rate_limits.ExponentialBackOff(maximum=float("nan"))
+
+    def test___init___raises_on_not_finite_jitter_multiplier(self):
+        with pytest.raises(ValueError, match="jitter_multiplier must be a finite number"):
+            rate_limits.ExponentialBackOff(jitter_multiplier=float("inf"))
 
     def test_reset(self):
         eb = rate_limits.ExponentialBackOff()
@@ -437,17 +444,14 @@ class TestExponentialBackOff:
 
         assert next(eb) == backoff
 
-    def test_increment_freezes_on_numerical_limitation(self):
+    def test_increment_raises_on_numerical_limitation(self):
         power = math.log(sys.float_info.max, 5) + 0.5
-        increment = power - 2
-        eb = rate_limits.ExponentialBackOff(base=5, maximum=None, jitter_multiplier=0.0, initial_increment=increment)
+        eb = rate_limits.ExponentialBackOff(
+            base=5, maximum=sys.float_info.max, jitter_multiplier=0.0, initial_increment=power
+        )
 
-        assert next(eb) == 5 ** (power - 2)
-        assert next(eb) == 5 ** (power - 1)
-        assert eb._is_frozen is False
-        assert next(eb) == 5 ** (power - 1)
-        assert eb._is_frozen is True
-        assert eb.increment == power - 1
+        with pytest.raises(asyncio.TimeoutError):
+            next(eb)
 
     def test_increment_maximum(self):
         max_bound = 64

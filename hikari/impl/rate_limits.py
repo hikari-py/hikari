@@ -37,6 +37,7 @@ __all__: typing.Final[typing.List[str]] = [
 import abc
 import asyncio
 import logging
+import math
 import random
 import typing
 
@@ -439,10 +440,9 @@ class ExponentialBackOff:
     ----------
     base : builtins.float
         The base to use. Defaults to `2.0`.
-    maximum : typing.Optional[builtins.float]
-        If not `builtins.None`, then this is the max value the backoff can be
-        in a single iteration before an `asyncio.TimeoutError` is raised.
-        Defaults to `64.0` seconds.
+    maximum : builtins.float
+        The max value the backoff can be in a single iteration before an
+        `asyncio.TimeoutError` is raised. Defaults to `64.0` seconds.
     jitter_multiplier : builtins.float
         The multiplier for the random jitter. Defaults to `1.0`.
         Set to `0` to disable jitter.
@@ -453,30 +453,21 @@ class ExponentialBackOff:
     ------
     ValueError
         If an `builtins.int` that's too big to be represented as a
-        `builtins.float` is passed in place of a field that's annotated as
-        `builtins.float` or if `initial_increment` is invalid for the provided
-        back-off rules (e.g. too large).
+        `builtins.float` or a non-finite value is passed in place of a field
+        that's annotated as `builtins.float`.
     """
 
-    __slots__: typing.Sequence[str] = ("_is_frozen", "base", "increment", "maximum", "jitter_multiplier")
-
-    _is_frozen: bool
-    """Whether this should no longer increment due to float limitations."""
+    __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
 
     base: typing.Final[float]
-    """The base to use. Defaults to 2."""
+    """The base to use. Defaults to 2.0."""
 
     increment: int
-    """The current increment.
+    """The current increment."""
 
-    !!! note
-        This may stop incrementing if this back-off ever reaches a float limit
-        when `maximum` is `builtins.None`.
-    """
-
-    maximum: typing.Optional[float]
-    """If not `builtins.None`, then this is the max value the backoff can be in a
-    single iteration before an `asyncio.TimeoutError` is raised.
+    maximum: float
+    """This is the max value the backoff can be in a single iteration before an
+    `asyncio.TimeoutError` is raised.
     """
 
     jitter_multiplier: typing.Final[float]
@@ -488,7 +479,7 @@ class ExponentialBackOff:
     def __init__(
         self,
         base: float = 2.0,
-        maximum: typing.Optional[float] = 64.0,
+        maximum: float = 64.0,
         jitter_multiplier: float = 1.0,
         initial_increment: int = 0,
     ) -> None:
@@ -499,40 +490,35 @@ class ExponentialBackOff:
         # conversion to a float raising an error if an integer that's too big to be a float is handled).
         try:
             self.base = float(base)
-            self.maximum = float(maximum) if maximum is not None else None
+            self.maximum = float(maximum)
             self.jitter_multiplier = float(jitter_multiplier)
         except OverflowError:
             raise ValueError("int too large to be represented as a float") from None
 
-        self.increment = initial_increment
-        # We need to validate the first incrementation to prevent unexpected behaviour later on.
-        try:
-            (self.base ** self.increment) * self.jitter_multiplier
-        except OverflowError:
-            raise ValueError("provided increment is out of range for the provided back-off rules") from None
+        if not math.isfinite(self.base):
+            raise ValueError("base must be a finite number") from None
 
-        self._is_frozen = False
+        if not math.isfinite(self.maximum):
+            raise ValueError("maximum must be a finite number") from None
+
+        if not math.isfinite(self.jitter_multiplier):
+            raise ValueError("jitter_multiplier must be a finite number") from None
+
+        self.increment = initial_increment
 
     def __next__(self) -> float:
         """Get the next back off to sleep by."""
         try:
             value = self.base ** self.increment
-
-        # If we hit a float limit then we want to freeze this to the previous increment.
-        # This will only ever happen when `maximum` is `None`.
         except OverflowError:
-            self.increment -= 1
-            self._is_frozen = True
-            value = self.base ** self.increment
+            # If this happened then we can be sure that we've passed maximum.
+            raise asyncio.TimeoutError from None
 
-        else:
-            if self.maximum is not None and value >= self.maximum:
-                raise asyncio.TimeoutError
+        if value >= self.maximum:
+            raise asyncio.TimeoutError from None
 
-        if not self._is_frozen:
-            # This should only be incremented after we verify we haven't hit the maximum value.
-            self.increment += 1
-
+        # This should only be incremented after we verify we haven't hit the maximum value.
+        self.increment += 1
         value += random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
         return value
 
