@@ -287,6 +287,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     ) -> None:
         try:
             await callback(shard, payload)
+        except asyncio.CancelledError:
+            # Skip cancelled errors, likely caused by the event loop being shut down.
+            pass
         except BaseException as ex:
             asyncio.get_running_loop().call_exception_handler(
                 {

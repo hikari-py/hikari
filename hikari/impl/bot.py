@@ -283,7 +283,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 continue
             if self._shards:
                 close_waiter = asyncio.create_task(self._closing_event.wait())
-                shard_joiners = map(asyncio.create_task, (s.join() for s in self._shards.values()))
+
+                shard_joiners = [
+                    asyncio.create_task(s.join(), name=f"wait for shard {s.id} to terminate")
+                    for s in self._shards.values()
+                ]
+
                 try:
                     await aio.all_of(close_waiter, *shard_joiners, timeout=5)
                     if close_waiter:
@@ -291,9 +296,11 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     else:
                         _LOGGER.critical("one or more shards shut down unexpectedly during bot startup")
                     return
+
                 except asyncio.TimeoutError:
                     # new window starts.
                     pass
+
                 except Exception as ex:
                     _LOGGER.critical("an exception occurred in one of the started shards during bot startup: %r", ex)
                     raise
@@ -321,7 +328,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
     async def join(self, until_close: bool = True) -> None:
-        awaitables: typing.List[typing.Awaitable[typing.Any]] = list(s.join() for s in self._shards.values())
+        awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
         if until_close:
             awaitables.append(self._closing_event.wait())
 
