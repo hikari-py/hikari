@@ -293,3 +293,66 @@ class TestFirstCompleted:
         assert f1.cancelled()
         assert f2.done()
         assert f3.cancelled()
+
+
+@pytest.mark.asyncio
+class TestAllOf:
+    @hikari_test_helpers.timeout()
+    async def test_waits_for_all(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert not waiter.done()
+
+        f1.set_result(1)
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert not waiter.done()
+
+        f2.set_result(2)
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert not waiter.done()
+
+        f3.set_result(3)
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert waiter.done()
+
+    @hikari_test_helpers.timeout()
+    async def test_cancels_all_if_one_errors(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert not waiter.done()
+
+        f2.set_exception(FileNotFoundError("boop"))
+        await hikari_test_helpers.idle()
+
+        with pytest.raises(FileNotFoundError, match="boop"):
+            waiter.result()
+
+        assert f1.cancelled()
+        assert f3.cancelled()
+
+    @hikari_test_helpers.timeout(0.3)
+    async def test_cancels_all_if_timeout(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.1))
+        await hikari_test_helpers.idle()
+        assert not waiter.cancelled()
+        assert not waiter.done()
+
+        with pytest.raises(asyncio.TimeoutError):
+            await waiter

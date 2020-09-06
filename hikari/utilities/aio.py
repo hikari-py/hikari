@@ -154,10 +154,19 @@ async def all_of(
         The results of each awaitable in the order they were provided invoked
         in.
     """
-    gatherer = asyncio.gather(*aws)
+    fs = list(map(asyncio.ensure_future, aws))
+    gatherer = asyncio.gather(*fs)
     try:
         return await asyncio.wait_for(gatherer, timeout=timeout)
     finally:
+        for f in fs:
+            if not f.done() and not f.cancelled():
+                f.cancel()
+                # Asyncio gathering futures complain if not awaited after cancellation
+                try:
+                    await f
+                except asyncio.CancelledError:
+                    pass
         try:
             gatherer.cancel()
             await gatherer
