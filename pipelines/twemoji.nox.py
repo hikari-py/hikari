@@ -18,10 +18,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
 from pipelines import nox
 
 
 @nox.session(reuse_venv=True)
+@nox.inherit_environment_vars
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
     session.install("-U", "-e", ".", "requests")
