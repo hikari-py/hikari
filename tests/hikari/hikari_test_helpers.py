@@ -267,3 +267,8 @@ def assert_does_not_raise(type_=BaseException):
         return decorator(decorated_func)
     else:
         return decorator
+
+
+async def gather_all_tasks():
+    """Ensure all created tasks except the current are finished before asserting anything."""
+    await asyncio.gather(*(task for task in asyncio.all_tasks() if task is not asyncio.current_task()))
