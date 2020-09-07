@@ -421,6 +421,21 @@ class Member(users.User):
         """
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
+    @property
+    def top_role(self) -> Role:
+        """Returns the top role of the given member.
+
+        Returns
+        -------
+        hikari.guilds.Role
+            The highest role the member has.
+        """
+        roles = [r for r in self.app.cache.get_roles_view_for_guild(self.guild_id).values() if r.id in self.role_ids]
+        return max(
+            roles,
+            key=lambda r: r.position,
+        )
+
     def __str__(self) -> str:
         return str(self.user)
 

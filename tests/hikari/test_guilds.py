@@ -105,6 +105,7 @@ class TestMember:
                 flags="flags",
                 mention="<@123>",
                 __str__=mock.Mock(return_value="davfsa#0001"),
+                top_role=mock.Mock(return_value="Owner"),
             ),
             nickname="davb",
         )
@@ -160,6 +161,9 @@ class TestMember:
     def test_mention_property_when_no_nickname(self, obj):
         obj.nickname = None
         assert obj.mention == "<@123>"
+
+    def test_top_role(self, obj):
+        assert obj.top_role.guild_id == "Owner"
 
 
 class TestPartialGuild:
