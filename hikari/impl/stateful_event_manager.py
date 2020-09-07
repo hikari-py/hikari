@@ -168,7 +168,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         # to chunk small guilds.
         if (event.guild.is_large or not presences_declared) and members_declared:
             # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
-            asyncio.create_task(shard.request_guild_members(event.guild))
+            coroutine = shard.request_guild_members(event.guild)
+            asyncio.create_task(coroutine, name=f"{event.shard.id}:{event.guild.id} guild create members request")
 
         await self.dispatch(event)
 
