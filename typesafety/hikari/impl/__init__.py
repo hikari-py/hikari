@@ -18,21 +18,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from pipelines import config
-from pipelines import nox
-
-
-@nox.session(reuse_venv=True)
-def mypy(session: nox.Session) -> None:
-    """Perform static type analysis on Python source code."""
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
-    session.run(
-        "mypy",
-        "-p",
-        config.MAIN_PACKAGE,
-        "--config",
-        config.MYPY_INI,
-    )
-    print("Running MyPy typeshed tests")
-    session.run("pytest", "typesafety")

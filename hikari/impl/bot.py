@@ -39,7 +39,6 @@ from hikari import config
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
-from hikari import traits
 from hikari import users
 from hikari.api import cache as cache_
 from hikari.api import chunker as chunker_
@@ -85,7 +84,7 @@ or a capitalized string that matches one of `"DEBUG"`, `"INFO"`, `"WARNING"`,
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
+class BotApp(event_dispatcher.EventDispatcher):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot
@@ -155,14 +154,14 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-    logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
+    logs : typing.Union[builtins.None, LoggerLevelT, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
         If `builtins.None`, then the Python logging system is left uninitialized
         on startup, and you will need to configure it manually to view most
         logs that are output by components of this library.
 
-        If one of the valid values in a `LoggerLevel`, then this will match a
+        If one of the valid values in a `LoggerLevelT`, then this will match a
         call to `colorlog.basicConfig` (a facade for `logging.basicConfig` with
         additional conduit for enabling coloured logging levels) with the
         `level` kwarg matching this value.

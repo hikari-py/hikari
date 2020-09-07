@@ -29,6 +29,7 @@ from pipelines import nox
 REFORMATING_PATHS = [
     "hikari",
     "tests",
+    "typesafety",
     "scripts",
     "pipelines",
     "setup.py",

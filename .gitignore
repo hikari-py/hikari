@@ -51,6 +51,7 @@ credentials.env
 
 # Mypy Cache
 .mypy_cache/
+.dmypy.json
 
 # Profiling in pytest
 prof/
