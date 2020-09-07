@@ -247,7 +247,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
                         finally:
                             if ws.closed:
-                                ws._logger.debug("ws was already closed")
+                                logger.debug("ws was already closed")
 
                             elif raised:
                                 await ws.close(
