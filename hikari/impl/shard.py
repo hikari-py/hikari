@@ -247,16 +247,15 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
                         finally:
                             if ws.closed:
-                                return
+                                ws._logger.debug("ws was already closed")
 
-                            if raised:
+                            elif raised:
                                 await ws.close(
                                     code=errors.ShardCloseCode.UNEXPECTED_CONDITION,
                                     message=b"unexpected fatal client error :-(",
                                 )
-                                return
 
-                            if not ws._closing:
+                            elif not ws._closing:
                                 # We use a special close code here that prevents Discord
                                 # randomly invalidating our session. Undocumented behaviour is
                                 # nice like that...
