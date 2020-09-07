@@ -52,43 +52,43 @@ class UserFlag(flag.Flag):
     """None"""
 
     DISCORD_EMPLOYEE = 1 << 0
-    """Discord Employee"""
+    """Discord Employee."""
 
-    DISCORD_PARTNER = 1 << 1
-    """Discord Partner"""
+    PARTNERED_SERVER_OWNER = 1 << 1
+    """Owner of a partnered Discord server."""
 
     HYPESQUAD_EVENTS = 1 << 2
-    """HypeSquad Events"""
+    """HypeSquad Events."""
 
     BUG_HUNTER_LEVEL_1 = 1 << 3
-    """Bug Hunter Level 1"""
+    """Bug Hunter Level 1."""
 
-    HOUSE_BRAVERY = 1 << 6
-    """House of Bravery"""
+    HYPESQUAD_BRAVERY = 1 << 6
+    """House of Bravery."""
 
-    HOUSE_BRILLIANCE = 1 << 7
-    """House of Brilliance"""
+    HYPESQUAD_BRILLIANCE = 1 << 7
+    """House of Brilliance."""
 
-    HOUSE_BALANCE = 1 << 8
-    """House of Balance"""
+    HYPESQUAD_BALANCE = 1 << 8
+    """House of Balance."""
 
     EARLY_SUPPORTER = 1 << 9
-    """Early Supporter"""
+    """Early Supporter."""
 
     TEAM_USER = 1 << 10
-    """Team user"""
+    """Team user."""
 
     SYSTEM = 1 << 12
-    """System"""
+    """System user."""
 
     BUG_HUNTER_LEVEL_2 = 1 << 14
-    """Bug Hunter Level 2"""
+    """Bug Hunter Level 2."""
 
     VERIFIED_BOT = 1 << 16
-    """Verified Bot"""
+    """Verified Bot."""
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
-    """Verified Bot Developer.
+    """Early verified Bot Developer.
 
     Only applies to users that verified their account before 20th August 2019.
     """
