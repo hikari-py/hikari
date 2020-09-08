@@ -22,7 +22,7 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EntityFactory"]
+__all__: typing.Final[typing.List[str]] = ["EntityFactory", "GatewayGuildDefinition"]
 
 import abc
 import typing

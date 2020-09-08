@@ -40,6 +40,7 @@ from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
 from hikari import traits
+from hikari import undefined
 from hikari import users
 from hikari.api import cache as cache_
 from hikari.api import chunker as chunker_
@@ -822,6 +823,21 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
     ) -> event_dispatcher.EventT_co:
         return await self._events.wait_for(event_type, timeout=timeout, predicate=predicate)
+
+    async def update_presence(
+        self,
+        *,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        coros = [
+            s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
+            for s in self._shards.values()
+        ]
+
+        await aio.all_of(*coros)
 
     async def _start_one_shard(
         self,

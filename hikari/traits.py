@@ -42,11 +42,15 @@ __all__: typing.Final[typing.List[str]] = [
 
 import typing
 
+from hikari import undefined
+
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import datetime
 
     from hikari import config
     from hikari import intents as intents_
+    from hikari import presences
     from hikari import users
     from hikari.api import cache as cache_
     from hikari.api import chunker as chunker_
@@ -390,6 +394,51 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         -------
         builtins.int
             The number of shards in the total application.
+        """
+        raise NotImplementedError
+
+    async def update_presence(
+        self,
+        *,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
+        idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
+        afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        """Update the presence on all shards.
+
+        This call will patch the presence on each shard. This means that
+        unless you explicitly specify a parameter, the previous value will be
+        retained. This means you do not have to track the global presence
+        in your code.
+
+        Parameters
+        ----------
+        idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            The datetime that the user started being idle. If undefined, this
+            will not be changed.
+        afk : hikari.undefined.UndefinedOr[builtins.bool]
+            If `builtins.True`, the user is marked as AFK. If `builtins.False`,
+            the user is marked as being active. If undefined, this will not be
+            changed.
+        activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
+            The activity to appear to be playing. If undefined, this will not be
+            changed.
+        status : hikari.undefined.UndefinedOr[hikari.presences.Status]
+            The web status to show. If undefined, this will not be changed.
+
+        !!! note
+            This will only send the update payloads to shards that are alive.
+            Any shards that are not alive will cache the new presence for
+            when they do start.
+
+        !!! note
+            If you want to set presences per shard, access the shard you wish
+            to update (e.g. by using `BotApp.shards`), and call
+            `hikari.api.shard.GatewayShard.update_presence` on that shard.
+
+            This method is simply a facade to make performing this in bulk
+            simpler.
         """
         raise NotImplementedError
 
