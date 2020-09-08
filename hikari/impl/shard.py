@@ -31,6 +31,7 @@ import http
 import json
 import logging
 import platform
+import sys
 import typing
 import urllib.parse
 import zlib
@@ -58,6 +59,12 @@ if typing.TYPE_CHECKING:
     from hikari import config
     from hikari import guilds
     from hikari import users as users_
+
+# Important attributes
+_D: typing.Final[str] = sys.intern("d")
+_T: typing.Final[str] = sys.intern("t")
+_S: typing.Final[str] = sys.intern("s")
+_OP: typing.Final[str] = sys.intern("op")
 
 # Opcodes.
 _DISPATCH: typing.Final[int] = 0
@@ -570,7 +577,7 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
-        await self._ws.send_json({"op": _REQUEST_GUILD_MEMBERS, "d": payload})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})  # type: ignore[union-attr]
 
     async def start(self) -> None:
         if self._run_task is not None:
@@ -604,7 +611,7 @@ class GatewayShardImpl(shard.GatewayShard):
             activity=activity,
             status=status,
         )
-        payload: data_binding.JSONObject = {"op": _PRESENCE_UPDATE, "d": presence_payload}
+        payload: data_binding.JSONObject = {_OP: _PRESENCE_UPDATE, _D: presence_payload}
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
     async def update_voice_state(
@@ -617,8 +624,8 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
             {
-                "op": _VOICE_STATE_UPDATE,
-                "d": {
+                _OP: _VOICE_STATE_UPDATE,
+                _D: {
                     "guild_id": str(int(guild)),
                     "channel_id": str(int(channel)) if channel is not None else None,
                     "mute": self_mute,
@@ -655,8 +662,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _identify(self) -> None:
         payload: data_binding.JSONObject = {
-            "op": _IDENTIFY,
-            "d": {
+            _OP: _IDENTIFY,
+            _D: {
                 "token": self._token,
                 "compress": False,
                 "large_threshold": self._large_threshold,
@@ -670,9 +677,9 @@ class GatewayShardImpl(shard.GatewayShard):
         }
 
         if self._intents is not None:
-            payload["d"]["intents"] = self._intents
+            payload[_D]["intents"] = self._intents
 
-        payload["d"]["presence"] = self._serialize_and_store_presence_payload()
+        payload[_D]["presence"] = self._serialize_and_store_presence_payload()
 
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
@@ -703,8 +710,8 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _resume(self) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
             {
-                "op": _RESUME,
-                "d": {"token": self._token, "seq": self._seq, "session_id": self._session_id},
+                _OP: _RESUME,
+                _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id},
             }
         )
 
@@ -776,11 +783,11 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 # Expect HELLO.
                 payload = await self._ws.receive_json()
-                if payload["op"] != _HELLO:
+                if payload[_OP] != _HELLO:
                     await self._ws.close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-                    raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload['op']}")
+                    raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
 
-                heartbeat_latency = float(payload["d"]["heartbeat_interval"]) / 1_000.0
+                heartbeat_latency = float(payload[_D]["heartbeat_interval"]) / 1_000.0
                 heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
 
                 if self._closing.is_set():
@@ -799,12 +806,14 @@ class GatewayShardImpl(shard.GatewayShard):
                     # Event polling.
                     while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
                         payload = await self._ws.receive_json()
-                        op = payload["op"]
-                        d = payload["d"]
+                        op = payload[_OP]  # opcode int
+                        d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
 
                         if op == _DISPATCH:
-                            self._logger.debug("dispatching %s", payload["t"])
-                            self._dispatch(payload["t"], payload["s"], d)
+                            t = payload[_T]  # event name str
+                            s = payload[_S]  # seq int
+                            self._logger.debug("dispatching %s with seq %s", t, s)
+                            self._dispatch(t, s, d)
                         elif op == _HEARTBEAT:
                             await self._send_heartbeat_ack()
                             self._logger.debug("sent HEARTBEAT")
@@ -852,11 +861,11 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._event_consumer(self, "DISCONNECTED", {})
 
     async def _send_heartbeat(self) -> None:
-        await self._ws.send_json({"op": _HEARTBEAT, "d": self._seq})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _HEARTBEAT, _D: self._seq})  # type: ignore[union-attr]
         self._last_heartbeat_sent = date.monotonic()
 
     async def _send_heartbeat_ack(self) -> None:
-        await self._ws.send_json({"op": _HEARTBEAT_ACK, "d": None})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _HEARTBEAT_ACK, _D: None})  # type: ignore[union-attr]
 
     @staticmethod
     def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:
