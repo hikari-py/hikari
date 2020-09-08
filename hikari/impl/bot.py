@@ -572,7 +572,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 )
             )
 
-            loop.run_until_complete(self.join(until_close=False))
+            loop.run_until_complete(self.join())
 
         except errors.HikariInterrupt as interrupt:
             _LOGGER.info(
