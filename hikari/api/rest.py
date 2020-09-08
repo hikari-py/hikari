@@ -193,6 +193,43 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
+    async def follow_channel(
+        self,
+        origin_channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        target_channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+    ) -> channels.ChannelFollow:
+        """Follow a news channel to send messages to a target channel.
+
+        Parameters
+        ----------
+        origin_channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildNewsChannel]
+            The object or ID of the news channel to follow.
+        target_channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+            The object or ID of the channel to target.
+
+        Returns
+        -------
+        hikari.channels.ChannelFollow
+            Information about the created channel following.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If you try to follow a channel that's not a news channel or if the
+            target channel has reached it's webhook limit.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_WEBHOOKS` permission in the target
+            channel or are missing the `VIEW_CHANNEL` permission in the origin
+            channel.
+        hikari.errors.NotFoundError
+            If the origin or target channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]) -> None:
         """Delete a channel in a guild, or close a DM.
 
@@ -779,6 +816,43 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    async def crosspost_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
+    ) -> messages_.Message:
+        """Crosspost a message in a News Channel to following channels.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildNewsChannel]
+            The object or ID of the news channel to crosspost a message in.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.Message]
+            The object or ID of the message to crosspost.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message object that was crossposted.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If you tried to crosspost a message that's already been crossposted.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you try to crosspost a message by the current user without the
+            `SEND_MESSAGES` permission for the target news channel or try to
+            crosspost a message by another user without both the `SEND_MESSAGES`
+            and `MANAGE_MESSAGES` permissions for the target channel.
+        hikari.errors.NotFoundError
+            If the channel or message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def edit_message(

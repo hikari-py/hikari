@@ -178,6 +178,21 @@ class EntityFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
+    def deserialize_channel_follow(self, payload: data_binding.JSONObject) -> channel_models.ChannelFollow:
+        """Parse a raw payload from Discord into a channel follow object.
+
+        Parameters
+        ----------
+        payload : hikari.utilities.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.channels.ChannelFollow
+            The deserialized channel follow object.
+        """
+
+    @abc.abstractmethod
     def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channel_models.PermissionOverwrite:
         """Parse a raw payload from Discord into a permission overwrite object.
 

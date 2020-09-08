@@ -25,6 +25,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
     "ChannelType",
+    "ChannelFollow",
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
@@ -93,6 +94,18 @@ class ChannelType(enum.IntEnum):
 
     def __str__(self) -> str:
         return self.name
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class ChannelFollow:
+    """Represents a channel follow."""
+
+    channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of the news channel that's being followed."""
+
+    webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of the webhook for this follow."""
 
 
 @enum.unique

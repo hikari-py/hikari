@@ -462,6 +462,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # CHANNEL MODELS #
     ##################
 
+    def deserialize_channel_follow(self, payload: data_binding.JSONObject) -> channel_models.ChannelFollow:
+        return channel_models.ChannelFollow(
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            webhook_id=snowflakes.Snowflake(payload["webhook_id"]),
+        )
+
     def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channel_models.PermissionOverwrite:
         return channel_models.PermissionOverwrite(
             id=snowflakes.Snowflake(payload["id"]),

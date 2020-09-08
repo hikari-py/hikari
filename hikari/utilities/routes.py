@@ -291,12 +291,16 @@ GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
 PATCH_CHANNEL: typing.Final[Route] = Route(PATCH, "/channels/{channel}")
 DELETE_CHANNEL: typing.Final[Route] = Route(DELETE, "/channels/{channel}")
 
+POST_CHANNEL_FOLLOWERS: typing.Final[Route] = Route(POST, "/channels/{channel}/followers")
+
 GET_CHANNEL_INVITES: typing.Final[Route] = Route(GET, "/channels/{channel}/invites")
 POST_CHANNEL_INVITES: typing.Final[Route] = Route(POST, "/channels/{channel}/invites")
 
 GET_CHANNEL_MESSAGE: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}")
 PATCH_CHANNEL_MESSAGE: typing.Final[Route] = Route(PATCH, "/channels/{channel}/messages/{message}")
 DELETE_CHANNEL_MESSAGE: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}")
+
+POST_CHANNEL_CROSSPOST: typing.Final[Route] = Route(POST, "/channels/{channel}/messages/{message}/crosspost")
 
 GET_CHANNEL_MESSAGES: typing.Final[Route] = Route(GET, "/channels/{channel}/messages")
 POST_CHANNEL_MESSAGES: typing.Final[Route] = Route(POST, "/channels/{channel}/messages")

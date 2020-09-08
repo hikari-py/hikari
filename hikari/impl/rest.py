@@ -764,6 +764,22 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_channel(response)
 
+    async def follow_channel(
+        self,
+        origin_channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        target_channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels.ChannelFollow:
+        route = routes.POST_CHANNEL_FOLLOWERS.compile(channel=origin_channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("webhook_channel_id", target_channel)
+
+        raw_response = await self._request(route, json=body, reason=reason)
+
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_channel_follow(response)
+
     async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]) -> None:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
         await self._request(route)
@@ -1005,6 +1021,18 @@ class RESTClientImpl(rest_api.RESTClient):
                 await stack.aclose()
         else:
             raw_response = await self._request(route, json=body)
+
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_message(response)
+
+    async def crosspost_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_CROSSPOST.compile(channel=channel, message=message)
+
+        raw_response = await self._request(route)
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_message(response)
