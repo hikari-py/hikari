@@ -149,9 +149,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 self._logger.error("connection closed with code %s (%s)", close_code, reason)
 
                 can_reconnect = close_code < 4000 or close_code in (
+                    errors.ShardCloseCode.UNKNOWN_ERROR,
                     errors.ShardCloseCode.DECODE_ERROR,
                     errors.ShardCloseCode.INVALID_SEQ,
-                    errors.ShardCloseCode.UNKNOWN_ERROR,
                     errors.ShardCloseCode.SESSION_TIMEOUT,
                     errors.ShardCloseCode.RATE_LIMITED,
                 )
@@ -162,13 +162,18 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
                 raise asyncio.CancelledError("Socket closed")
 
+            elif len(buff) != 0 and message.type != aiohttp.WSMsgType.BINARY:
+                raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
+
             elif message.type == aiohttp.WSMsgType.BINARY:
-                buff += message.data
+                buff.extend(message.data)
 
                 if buff.endswith(b"\x00\x00\xff\xff"):
                     return self._zlib.decompress(buff).decode("utf-8")
+
             elif message.type == aiohttp.WSMsgType.TEXT:
                 return message.data  # type: ignore
+
             else:
                 # Assume exception for now.
                 ex = self.exception()
@@ -192,8 +197,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         *,
         debug: bool,
         http_config: config.HTTPSettings,
-        logger: logging.Logger,
         proxy_config: config.ProxySettings,
+        logger: logging.Logger,
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
         """Generate a single-use websocket connection.
@@ -810,9 +815,10 @@ class GatewayShardImpl(shard.GatewayShard):
                         )
                         return True
                     return False
-                finally:
 
+                finally:
                     heartbeat_task.cancel()
+
         finally:
             self._ws = None
             if dispatch_disconnect:

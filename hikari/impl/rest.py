@@ -1004,8 +1004,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_message(
         self,
-        channel: typing.Union[snowflakes.SnowflakeishOr[channels.TextChannel]],
-        message: typing.Union[snowflakes.SnowflakeishOr[messages_.Message]],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1902,7 +1902,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, typing.Union[snowflakes.SnowflakeishOr[channels.GuildChannel]]],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
     ) -> None:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]

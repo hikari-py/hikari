@@ -783,8 +783,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_message(
         self,
-        channel: typing.Union[snowflakes.SnowflakeishOr[channels.TextChannel]],
-        message: typing.Union[snowflakes.SnowflakeishOr[messages_.Message]],
+        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1981,7 +1981,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, typing.Union[snowflakes.SnowflakeishOr[channels.GuildChannel]]],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
     ) -> None:
         ...
 
