@@ -30,12 +30,14 @@ import contextlib
 import http
 import json
 import logging
+import platform
 import typing
 import urllib.parse
 import zlib
 
 import aiohttp
 
+from hikari import _about as about
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -43,7 +45,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
-from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
 
@@ -87,6 +88,20 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # Rate-limit for chunking requests (used to prevent saturating the entire
 # ratelimit window).
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
+# Supported gateway version
+_VERSION: int = 6
+
+
+def _log_filterer(token: str) -> typing.Callable[[str], str]:
+    def filterer(entry: str) -> str:
+        return entry.replace(token, "**REDACTED TOKEN**")
+
+    return filterer
+
+
+if typing.TYPE_CHECKING:
+    # noinspection PyProtectedMember,PyUnresolvedReferences
+    _ZlibDecompressor = zlib._Decompress
 
 
 @typing.final
@@ -100,13 +115,13 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
-    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_token")
+    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_log_filterer")
 
     # Initialized from `connect'
-    _zlib: zlib._Decompress
+    _zlib: _ZlibDecompressor
     _logger: logging.Logger
     _debug: bool
-    _token: str
+    _log_filterer: typing.Callable[[str], str]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -191,7 +206,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 "%s payload with size %s\n    %s",
                 message,
                 len(payload),
-                payload.replace(self._token, "**REDACTED TOKEN**"),
+                # False positive, MyPy expects a method.
+                self._log_filterer(payload),  # type: ignore
             )
         else:
             self._logger.debug("%s payload with size %s", message, len(payload))
@@ -205,7 +221,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         http_config: config.HTTPSettings,
         logger: logging.Logger,
         proxy_config: config.ProxySettings,
-        token: str,
+        log_filterer: typing.Callable[[str], str],
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
         """Generate a single-use websocket connection.
@@ -251,7 +267,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             ws._debug = debug
                             # We store this so we can remove it from debug logs
                             # which enables people to send me logs in issues safely.
-                            ws._token = token
+                            # Also MyPy raises a false positive about this...
+                            ws._log_filterer = log_filterer  # type: ignore
 
                             yield ws
                         except errors.GatewayError:
@@ -355,8 +372,6 @@ class GatewayShardImpl(shard.GatewayShard):
     url : builtins.str
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    version : builtins.int
-        Gateway API version to use.
 
     !!! note
         If all four of `initial_activity`, `initial_idle_since`,
@@ -646,9 +661,9 @@ class GatewayShardImpl(shard.GatewayShard):
                 "compress": False,
                 "large_threshold": self._large_threshold,
                 "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
+                    "$os": f"{platform.system()} {platform.architecture()[0]}",
+                    "$browser": f"aiohttp {aiohttp.__version__}",
+                    "$device": f"hikari {about.__version__}",
                 },
                 "shard": [self._shard_id, self._shard_count],
             },
@@ -750,9 +765,9 @@ class GatewayShardImpl(shard.GatewayShard):
             async with _V6GatewayTransport.connect(
                 debug=self._debug,
                 http_config=self._http_settings,
+                log_filterer=_log_filterer(self._token),
                 logger=self._logger,
                 proxy_config=self._proxy_settings,
-                token=self._token,
                 url=self._url,
             ) as self._ws:
                 # Dispatch CONNECTED synthetic event.

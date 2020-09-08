@@ -41,12 +41,15 @@ import http
 import logging
 import math
 import os
+import platform
 import re
+import sys
 import typing
 
 import aiohttp
 import attr
 
+from hikari import _about as about
 from hikari import channels
 from hikari import config
 from hikari import embeds as embeds_
@@ -58,13 +61,13 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
-from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import net
@@ -86,6 +89,27 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
+
+_APPLICATION_JSON: typing.Final[str] = "application/json"
+_APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
+_AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
+_BEARER_TOKEN_PREFIX: typing.Final[str] = "Bearer"  # nosec
+_BOT_TOKEN_PREFIX: typing.Final[str] = "Bot"  # nosec
+_DATE_HEADER: typing.Final[str] = sys.intern("Date")
+_HTTP_USER_AGENT: typing.Final[str] = (
+    f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
+    f"AIOHTTP/{aiohttp.__version__} "
+    f"{platform.python_implementation()}/{platform.python_version()} {platform.system()} {platform.architecture()[0]}"
+)
+_MILLISECOND_PRECISION: typing.Final[str] = "millisecond"
+_USER_AGENT_HEADER: typing.Final[str] = sys.intern("User-Agent")
+_X_AUDIT_LOG_REASON_HEADER: typing.Final[str] = sys.intern("X-Audit-Log-Reason")
+_X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
+_X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
+_X_RATELIMIT_PRECISION_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Precision")
+_X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
+_X_RATELIMIT_RESET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset")
+_X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 
 
 @typing.final
@@ -238,7 +262,7 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = constants.BEARER_TOKEN_PREFIX) -> rest_api.RESTClient:
+    def acquire(self, token: str, token_type: str = _BEARER_TOKEN_PREFIX) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
         if self._event_loop is None:
@@ -263,7 +287,6 @@ class RESTApp(traits.ExecutorAware):
             token=token,
             token_type=token_type,
             rest_url=self._url,
-            version=self._version,
         )
 
         return rest_client
@@ -328,20 +351,11 @@ class RESTClientImpl(rest_api.RESTClient):
     rest_url : builtins.str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
-    version : builtins.int
-        The API version to use. Currently only supports `6` and `7`.
-
-    !!! warning
-        The V7 API at the time of writing is considered to be experimental and
-        is undocumented. While currently almost identical in most places to the
-        V6 API, it should not be used unless you are sure you understand the
-        risk that it might break without warning.
     """
 
     __slots__: typing.Sequence[str] = (
         "buckets",
         "global_rate_limit",
-        "version",
         "_client_session",
         "_closed_event",
         "_connector_factory",
@@ -361,9 +375,6 @@ class RESTClientImpl(rest_api.RESTClient):
     global_rate_limit: rate_limits.ManualRateLimiter
     """Global ratelimiter."""
 
-    version: int
-    """API version in-use."""
-
     @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
         ...
@@ -379,14 +390,12 @@ class RESTClientImpl(rest_api.RESTClient):
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
-        token_type: typing.Optional[str],
+        token_type: typing.Optional[str] = None,
         rest_url: typing.Optional[str],
-        version: int,
     ) -> None:
         self.buckets = buckets.RESTBucketManager()
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
-        self.version = version
 
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._closed_event = asyncio.Event()
@@ -402,16 +411,13 @@ class RESTClientImpl(rest_api.RESTClient):
             full_token = None
         else:
             if token_type is None:
-                token_type = constants.BOT_TOKEN_PREFIX
+                token_type = _BOT_TOKEN_PREFIX
 
             full_token = f"{token_type.title()} {token}"
 
         self._token: typing.Optional[str] = full_token
 
-        if rest_url is None:
-            rest_url = constants.REST_API_URL
-
-        self._rest_url = rest_url.format(self)
+        self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -490,13 +496,13 @@ class RESTClientImpl(rest_api.RESTClient):
             self.buckets.start()
 
         headers = data_binding.StringMapBuilder()
-        headers.setdefault(constants.USER_AGENT_HEADER, constants.HTTP_USER_AGENT)
-        headers.put(constants.X_RATELIMIT_PRECISION_HEADER, constants.MILLISECOND_PRECISION)
+        headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
+        headers.put(_X_RATELIMIT_PRECISION_HEADER, _MILLISECOND_PRECISION)
 
         if self._token is not None and not no_auth:
-            headers[constants.AUTHORIZATION_HEADER] = self._token
+            headers[_AUTHORIZATION_HEADER] = self._token
 
-        headers.put(constants.X_AUDIT_LOG_REASON_HEADER, reason)
+        headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
         while True:
             try:
@@ -554,7 +560,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 # Handle the response.
                 if 200 <= response.status < 300:
-                    if response.content_type == constants.APPLICATION_JSON:
+                    if response.content_type == _APPLICATION_JSON:
                         # Only deserializing here stops Cloudflare shenanigans messing us around.
                         return data_binding.load_json(await response.read())
 
@@ -569,7 +575,7 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.final
     def _stringify_http_message(self, headers: data_binding.Headers, body: typing.Any) -> str:
         string = "\n".join(
-            f"    {name}: {value}" if name != constants.AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
+            f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
             for name, value in headers.items()
         )
 
@@ -591,13 +597,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         # Handle rate limiting.
         resp_headers = response.headers
-        limit = int(resp_headers.get(constants.X_RATELIMIT_LIMIT_HEADER, "1"))
-        remaining = int(resp_headers.get(constants.X_RATELIMIT_REMAINING_HEADER, "1"))
-        bucket = resp_headers.get(constants.X_RATELIMIT_BUCKET_HEADER, "None")
-        reset_at = float(resp_headers.get(constants.X_RATELIMIT_RESET_HEADER, "0"))
-        reset_after = float(resp_headers.get(constants.X_RATELIMIT_RESET_AFTER_HEADER, "0"))
+        limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
+        remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
+        bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER, "None")
+        reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
+        reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
-        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[constants.DATE_HEADER])
+        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[_DATE_HEADER])
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
 
@@ -613,7 +619,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if not is_rate_limited:
             return
 
-        if response.content_type != constants.APPLICATION_JSON:
+        if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
@@ -700,15 +706,15 @@ class RESTClientImpl(rest_api.RESTClient):
             parsed_mentions.append("users")
         elif isinstance(user_mentions, typing.Collection):
             # Duplicates will cause discord to error.
-            snowflakes = {str(int(u)) for u in user_mentions}
-            allowed_mentions["users"] = list(snowflakes)
+            ids = {str(int(u)) for u in user_mentions}
+            allowed_mentions["users"] = list(ids)
 
         if role_mentions is True:
             parsed_mentions.append("roles")
         elif isinstance(role_mentions, typing.Collection):
             # Duplicates will cause discord to error.
-            snowflakes = {str(int(r)) for r in role_mentions}
-            allowed_mentions["roles"] = list(snowflakes)
+            ids = {str(int(r)) for r in role_mentions}
+            allowed_mentions["roles"] = list(ids)
 
         return allowed_mentions
 
@@ -985,16 +991,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=constants.APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
             try:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
-                    form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
-                    )
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
 
                 raw_response = await self._request(route, form=form)
             finally:
@@ -1380,16 +1384,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=constants.APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
             stack = contextlib.AsyncExitStack()
 
             try:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
-                    form.add_field(
-                        f"file{i}", stream, filename=stream.filename, content_type=constants.APPLICATION_OCTET_STREAM
-                    )
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
 
                 raw_response = await self._request(route, query=query, form=form, no_auth=True)
             finally:

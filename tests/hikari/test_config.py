@@ -22,7 +22,6 @@
 import pytest
 
 from hikari import config as config_
-from hikari.utilities import constants
 
 
 class TestBasicAuthHeader:
@@ -31,10 +30,10 @@ class TestBasicAuthHeader:
         return config_.BasicAuthHeader(username="davfsa", password="securepassword123")
 
     def test_header_property(self, config):
-        assert config.header == f"{constants.BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
+        assert config.header == f"{config_._BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
     def test_str(self, config):
-        assert str(config) == f"{constants.BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
+        assert str(config) == f"{config_._BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
 
 class TestProxySettings:
@@ -44,7 +43,7 @@ class TestProxySettings:
 
     def test_all_headers_when_headers_is_None_and_auth_is_not_None(self):
         config = config_.ProxySettings(headers=None, auth="some auth")
-        assert config.all_headers == {constants.PROXY_AUTHENTICATION_HEADER: "some auth"}
+        assert config.all_headers == {config_._PROXY_AUTHENTICATION_HEADER: "some auth"}
 
     def test_all_headers_when_headers_is_not_None_and_auth_is_None(self):
         config = config_.ProxySettings(headers={"header1": "header1 info"}, auth=None)
@@ -52,4 +51,4 @@ class TestProxySettings:
 
     def test_all_headers_when_headers_and_auth_are_not_None(self):
         config = config_.ProxySettings(headers={"header1": "header1 info"}, auth="some auth")
-        assert config.all_headers == {"header1": "header1 info", constants.PROXY_AUTHENTICATION_HEADER: "some auth"}
+        assert config.all_headers == {"header1": "header1 info", config_._PROXY_AUTHENTICATION_HEADER: "some auth"}

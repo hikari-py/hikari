@@ -43,8 +43,8 @@ import attr
 from hikari import files
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import flag
 
 if typing.TYPE_CHECKING:
@@ -361,9 +361,8 @@ class PartialMessage(snowflakes.Unique):
         builtins.str
             The jump link to the message.
         """
-        if self.guild_id is None:
-            return f"{constants.BASE_URL}/channels/@me/{self.channel_id}/{self.id}"
-        return f"{constants.BASE_URL}/channels/{self.guild_id}/{self.channel_id}/{self.id}"
+        guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
+        return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the channel this message was created in.

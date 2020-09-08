@@ -43,7 +43,6 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
-from hikari.utilities import constants
 
 
 def test__deserialize_seconds_timedelta():
@@ -1837,7 +1836,7 @@ class TestEntityFactoryImpl:
         assert guild.widget_channel_id is None
         assert guild.system_channel_id is None
         assert guild.rules_channel_id is None
-        assert guild.max_presences is constants.DEFAULT_MAX_PRESENCES
+        assert guild.max_presences is entity_factory._DEFAULT_MAX_PRESENCES
         assert guild.vanity_url_code is None
         assert guild.description is None
         assert guild.banner_hash is None

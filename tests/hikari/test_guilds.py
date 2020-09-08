@@ -22,8 +22,8 @@ import mock
 import pytest
 
 from hikari import guilds
+from hikari import urls
 from hikari import users
-from hikari.utilities import constants
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
@@ -201,7 +201,7 @@ class TestPartialGuild:
             assert obj.format_icon(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=1234567890,
             hash="a_18dnf8dfbakfdh",
             size=2,
@@ -217,7 +217,7 @@ class TestPartialGuild:
             assert obj.format_icon(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=1234567890,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -233,7 +233,7 @@ class TestPartialGuild:
             assert obj.format_icon(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=1234567890,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -261,7 +261,7 @@ class TestGuildPreview:
             assert obj.format_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -286,7 +286,7 @@ class TestGuildPreview:
             assert obj.format_discovery_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -325,7 +325,7 @@ class TestGuild:
             assert obj.format_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -350,7 +350,7 @@ class TestGuild:
             assert obj.format_discovery_splash(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -375,7 +375,7 @@ class TestGuild:
             assert obj.format_banner(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=123,
             hash="18dnf8dfbakfdh",
             size=2,

@@ -33,8 +33,8 @@ import attr
 from hikari import files as files_
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -420,7 +420,7 @@ class Webhook(snowflakes.Unique):
         This is used if no avatar is set.
         """
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             discriminator=0,
             file_format="png",
         )
@@ -457,7 +457,7 @@ class Webhook(snowflakes.Unique):
             return None
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             user_id=self.id,
             hash=self.avatar_hash,
             size=size,

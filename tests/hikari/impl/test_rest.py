@@ -43,7 +43,6 @@ from hikari import users
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
-from hikari.utilities import constants
 from hikari.utilities import net
 from hikari.utilities import routes
 from tests.hikari import client_session_stub
@@ -181,7 +180,6 @@ class TestRESTApp:
             token="token",
             token_type="Type",
             rest_url=rest_app._url,
-            version=rest_app._version,
         )
 
     def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_app):
@@ -237,8 +235,7 @@ def rest_client(rest_client_class):
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
         token_type="tYpe",
-        rest_url="https://some.where/api/v{0.version}",
-        version=3,
+        rest_url="https://some.where/api/v3",
         executor=mock.Mock(),
         entity_factory=mock.Mock(),
     )
@@ -305,7 +302,6 @@ class TestRESTClientImpl:
             token=None,
             token_type=None,
             rest_url=None,
-            version=1,
             executor=None,
             entity_factory=None,
         )
@@ -321,7 +317,6 @@ class TestRESTClientImpl:
             token="some_token",
             token_type=None,
             rest_url=None,
-            version=1,
             executor=None,
             entity_factory=None,
         )
@@ -337,7 +332,6 @@ class TestRESTClientImpl:
             token="some_token",
             token_type="tYpe",
             rest_url=None,
-            version=1,
             executor=None,
             entity_factory=None,
         )
@@ -353,11 +347,10 @@ class TestRESTClientImpl:
             token=None,
             token_type=None,
             rest_url=None,
-            version=1,
             executor=None,
             entity_factory=None,
         )
-        assert obj._rest_url == "https://discord.com/api/v1"
+        assert obj._rest_url == "https://discord.com/api/v6"
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
@@ -368,8 +361,7 @@ class TestRESTClientImpl:
             proxy_settings=mock.Mock(),
             token=None,
             token_type=None,
-            rest_url="https://some.where/api/v{0.version}",
-            version=2,
+            rest_url="https://some.where/api/v2",
             executor=None,
             entity_factory=None,
         )
@@ -759,7 +751,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route)
 
             _, kwargs = mock_session.request.call_args_list[0]
-            assert constants.AUTHORIZATION_HEADER not in kwargs["headers"]
+            assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
 
     @hikari_test_helpers.timeout()
     async def test__request_when__token_is_not_None(self, rest_client, exit_exception):
@@ -773,7 +765,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route)
 
             _, kwargs = mock_session.request.call_args_list[0]
-            assert kwargs["headers"][constants.AUTHORIZATION_HEADER] == "token"
+            assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
 
     @hikari_test_helpers.timeout()
     async def test__request_when_no_auth_passed(self, rest_client, exit_exception):
@@ -787,7 +779,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route, no_auth=True)
 
             _, kwargs = mock_session.request.call_args_list[0]
-            assert constants.AUTHORIZATION_HEADER not in kwargs["headers"]
+            assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_NO_CONTENT(self, rest_client):
@@ -808,7 +800,7 @@ class TestRESTClientImplAsync:
     async def test__request_when_response_is_APPLICATION_JSON(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.OK
-            content_type = constants.APPLICATION_JSON
+            content_type = rest._APPLICATION_JSON
             reason = "cause why not"
             headers = {"HEADER": "value", "HEADER": "value"}
 
@@ -887,7 +879,7 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_not_ratelimited(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.OK
-            headers = {constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
 
             json = mock.AsyncMock()
 
@@ -899,8 +891,8 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
-            content_type = constants.APPLICATION_JSON
-            headers = {constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            content_type = rest._APPLICATION_JSON
+            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
 
             async def json(self):
                 raise exit_exception
@@ -913,7 +905,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = "text/html"
-            headers = {constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
             real_url = "https://some.url"
 
             async def read(self):
@@ -926,8 +918,8 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
-            content_type = constants.APPLICATION_JSON
-            headers = {constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            content_type = rest._APPLICATION_JSON
+            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
             real_url = "https://some.url"
 
             async def json(self):
@@ -942,10 +934,10 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_remaining_under_or_equal_to_0(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
-            content_type = constants.APPLICATION_JSON
+            content_type = rest._APPLICATION_JSON
             headers = {
-                constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
-                constants.X_RATELIMIT_REMAINING_HEADER: "0",
+                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
+                rest._X_RATELIMIT_REMAINING_HEADER: "0",
             }
             real_url = "https://some.url"
 
@@ -959,10 +951,10 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
-            content_type = constants.APPLICATION_JSON
+            content_type = rest._APPLICATION_JSON
             headers = {
-                constants.DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
-                constants.X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
+                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
+                rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
             }
             real_url = "https://some.url"
 

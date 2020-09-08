@@ -22,8 +22,8 @@ import mock
 import pytest
 
 from hikari import undefined
+from hikari import urls
 from hikari import users
-from hikari.utilities import constants
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
@@ -82,7 +82,7 @@ class TestUser:
             assert obj.format_avatar(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             user_id=123,
             hash="a_18dnf8dfbakfdh",
             size=2,
@@ -98,7 +98,7 @@ class TestUser:
             assert obj.format_avatar(ext=None, size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             user_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -114,7 +114,7 @@ class TestUser:
             assert obj.format_avatar(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             user_id=123,
             hash="18dnf8dfbakfdh",
             size=2,
@@ -130,7 +130,7 @@ class TestUser:
             assert obj.default_avatar == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL,
+            urls.CDN_URL,
             discriminator=1,
             file_format="png",
         )

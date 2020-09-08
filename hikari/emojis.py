@@ -33,13 +33,15 @@ import attr
 
 from hikari import files
 from hikari import snowflakes
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
+
+_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -161,7 +163,7 @@ class UnicodeEmoji(Emoji):
         -------
             https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
         """
-        return constants.TWEMOJI_PNG_BASE_URL + self.filename
+        return _TWEMOJI_PNG_BASE_URL + self.filename
 
     @property
     @typing.final
@@ -269,7 +271,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
 
-        return routes.CDN_CUSTOM_EMOJI.compile(constants.CDN_URL, emoji_id=self.id, file_format=ext)
+        return routes.CDN_CUSTOM_EMOJI.compile(urls.CDN_URL, emoji_id=self.id, file_format=ext)
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)

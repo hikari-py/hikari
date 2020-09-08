@@ -48,7 +48,6 @@ from hikari.utilities import mapping
 if typing.TYPE_CHECKING:
     from hikari import traits
 
-
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
 _ValueT = typing.TypeVar("_ValueT")

@@ -292,6 +292,7 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
+
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
@@ -314,6 +315,7 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
+
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
@@ -335,6 +337,7 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
+
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
@@ -359,6 +362,7 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
+
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
@@ -380,6 +384,7 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
+
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property
@@ -402,6 +407,7 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
+
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property

@@ -42,8 +42,8 @@ import attr
 from hikari import files
 from hikari import guilds
 from hikari import snowflakes
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -360,7 +360,7 @@ class Team(snowflakes.Unique):
             return None
 
         return routes.CDN_TEAM_ICON.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             team_id=self.id,
             hash=self.icon_hash,
             size=size,
@@ -486,7 +486,7 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             application_id=self.id,
             hash=self.icon_hash,
             size=size,
@@ -531,7 +531,7 @@ class Application(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             application_id=self.id,
             hash=self.cover_image_hash,
             size=size,

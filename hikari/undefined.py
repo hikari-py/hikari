@@ -92,13 +92,11 @@ class UndefinedType(_UndefinedSentinel, enum.Enum):
 setattr(_UndefinedSentinel, "__new__", lambda _: UNDEFINED)
 del _UndefinedSentinel
 
-
 UNDEFINED: typing.Final[typing.Literal[UndefinedType.UNDEFINED_VALUE]] = UndefinedType.UNDEFINED_VALUE
 """Undefined sentinel value.
 
 This will behave as a false value in conditions.
 """
-
 
 T = typing.TypeVar("T", covariant=True)
 UndefinedOr = typing.Union[T, UndefinedType]

@@ -58,7 +58,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import voice as voice_
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
-
 EventT_co = typing.TypeVar("EventT_co", bound="base_events.Event", covariant=True)
 """Type-hint for a covariant event implementation instance.
 
