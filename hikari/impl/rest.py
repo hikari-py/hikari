@@ -508,14 +508,8 @@ class RESTClientImpl(rest_api.RESTClient):
                 uuid = date.uuid()
 
                 if self._debug:
-                    headers_str = "\n".join(f"\t\t{name}:{value}" for name, value in headers.items())
                     _LOGGER.debug(
-                        "%s %s %s\n\theaders:\n%s\n\tbody:\n\t\t%r",
-                        uuid,
-                        compiled_route.method,
-                        url,
-                        headers_str,
-                        json,
+                        "%s %s %s\n%s", uuid, compiled_route.method, url, self._stringify_http_message(headers, json)
                     )
                 else:
                     _LOGGER.debug("%s %s %s", uuid, compiled_route.method, url)
@@ -539,17 +533,13 @@ class RESTClientImpl(rest_api.RESTClient):
                 time_taken = (date.monotonic() - start) * 1_000
 
                 if self._debug:
-                    headers_str = "\n".join(
-                        f"\t\t{name.decode('utf-8')}:{value.decode('utf-8')}" for name, value in response.raw_headers
-                    )
                     _LOGGER.debug(
-                        "%s %s %s in %sms\n\theaders:\n%s\n\tbody:\n\t\t%r",
+                        "%s %s %s in %sms\n%s",
                         uuid,
                         response.status,
                         response.reason,
                         time_taken,
-                        headers_str,
-                        await response.read(),
+                        self._stringify_http_message(response.headers, await response.read()),
                     )
                 else:
                     _LOGGER.debug("%s %s %s in %sms", uuid, response.status, response.reason, time_taken)
@@ -575,6 +565,19 @@ class RESTClientImpl(rest_api.RESTClient):
 
             except self._RetryRequest:
                 continue
+
+    @typing.final
+    def _stringify_http_message(self, headers: data_binding.Headers, body: typing.Any) -> str:
+        string = "\n".join(
+            f"    {name}: {value}" if name != constants.AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
+            for name, value in headers.items()
+        )
+
+        if body is not None:
+            string += "\n\n    "
+            string += body.decode("ascii") if isinstance(body, bytes) else str(body)
+
+        return string
 
     @staticmethod
     @typing.final

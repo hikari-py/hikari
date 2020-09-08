@@ -100,12 +100,13 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
-    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug")
+    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_token")
 
     # Initialized from `connect'
     _zlib: zlib._Decompress
     _logger: logging.Logger
     _debug: bool
+    _token: str
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -186,7 +187,12 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
 
     def _log_debug_payload(self, payload: str, message: str, /) -> None:
         if self._debug:
-            self._logger.debug("%s payload with size %s\n\t\t%s", message, len(payload), payload)
+            self._logger.debug(
+                "%s payload with size %s\n    %s",
+                message,
+                len(payload),
+                payload.replace(self._token, "**REDACTED TOKEN**"),
+            )
         else:
             self._logger.debug("%s payload with size %s", message, len(payload))
 
@@ -197,8 +203,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         *,
         debug: bool,
         http_config: config.HTTPSettings,
-        proxy_config: config.ProxySettings,
         logger: logging.Logger,
+        proxy_config: config.ProxySettings,
+        token: str,
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
         """Generate a single-use websocket connection.
@@ -242,6 +249,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             assert isinstance(ws, cls)
                             ws._logger = logger
                             ws._debug = debug
+                            # We store this so we can remove it from debug logs
+                            # which enables people to send me logs in issues safely.
+                            ws._token = token
 
                             yield ws
                         except errors.GatewayError:
@@ -742,6 +752,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 http_config=self._http_settings,
                 logger=self._logger,
                 proxy_config=self._proxy_settings,
+                token=self._token,
                 url=self._url,
             ) as self._ws:
                 # Dispatch CONNECTED synthetic event.
