@@ -41,8 +41,8 @@ import attr
 from hikari import files
 from hikari import guilds
 from hikari import snowflakes
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -162,7 +162,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.splash_hash,
             size=size,
@@ -200,7 +200,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.banner_hash,
             size=size,

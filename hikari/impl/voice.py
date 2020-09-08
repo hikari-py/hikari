@@ -41,9 +41,7 @@ from hikari.impl import bot
 if typing.TYPE_CHECKING:
     _VoiceEventCallbackT = typing.Callable[[voice_events.VoiceEvent], typing.Coroutine[None, typing.Any, None]]
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.voice.management")
-
 
 _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.VoiceConnection")
 

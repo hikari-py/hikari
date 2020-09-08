@@ -52,7 +52,6 @@ if typing.TYPE_CHECKING:
     from hikari import users as users_
     from hikari.api import shard as gateway_shard
 
-
 EXPIRY_TIME: typing.Final[int] = 5000
 """How long a chunk event should wait until it's considered expired in miliseconds."""
 

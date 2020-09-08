@@ -224,6 +224,7 @@ class PrivateTypingEvent(TypingEvent):
     # <<inherited docstring from TypingEvent>>.
 
     timestamp: datetime.datetime = attr.ib(repr=False)
+
     # <<inherited docstring from TypingEvent>>.
 
     @property

@@ -222,7 +222,6 @@ from hikari.utilities import routes
 if typing.TYPE_CHECKING:
     import types
 
-
 UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 """The hash used for an unknown bucket that has not yet been resolved."""
 

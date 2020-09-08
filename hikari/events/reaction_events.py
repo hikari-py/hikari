@@ -222,6 +222,7 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     # <<inherited docstring from ReactionEvent>>.
 
     emoji: emojis.Emoji = attr.ib()
+
     # <<inherited docstring from ReactionAddEvent>>.
 
     @property

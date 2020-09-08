@@ -22,8 +22,8 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import urls
 from hikari import users
-from hikari.utilities import constants
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 
@@ -91,7 +91,7 @@ class TestTeam:
             assert model.format_icon(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
+            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
         )
 
 
@@ -125,7 +125,7 @@ class TestApplication:
             assert model.format_icon(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
+            urls.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
         )
 
     def test_cover_image_url_property(self, model):
@@ -152,5 +152,5 @@ class TestApplication:
             assert model.format_cover_image(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            constants.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
+            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )

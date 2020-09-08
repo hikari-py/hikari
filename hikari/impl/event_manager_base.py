@@ -44,7 +44,6 @@ from hikari.utilities import reflect
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
-
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 if typing.TYPE_CHECKING:

@@ -34,7 +34,6 @@ from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import shard
-from hikari.utilities import constants
 from hikari.utilities import date as hikari_date
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
@@ -955,9 +954,9 @@ class TestHandshake:
                 "compress": False,
                 "large_threshold": 123,
                 "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
+                    "$os": "constants.SYSTEM_TYPE",
+                    "$browser": "constants.AIOHTTP_VERSION",
+                    "$device": "constants.LIBRARY_VERSION",
                 },
                 "shard": [0, 1],
                 "presence": {"since": None, "afk": False, "status": presences.Status.ONLINE, "game": None},
@@ -984,9 +983,9 @@ class TestHandshake:
                 "compress": False,
                 "large_threshold": 123,
                 "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
+                    "$os": "constants.SYSTEM_TYPE",
+                    "$browser": "constants.AIOHTTP_VERSION",
+                    "$device": "constants.LIBRARY_VERSION",
                 },
                 "shard": [0, 1],
                 "intents": intents.Intents.ALL_UNPRIVILEGED,
@@ -1034,9 +1033,9 @@ class TestHandshake:
                 "compress": False,
                 "large_threshold": 123,
                 "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
+                    "$os": "constants.SYSTEM_TYPE",
+                    "$browser": "constants.AIOHTTP_VERSION",
+                    "$device": "constants.LIBRARY_VERSION",
                 },
                 "shard": [0, 1],
                 "presence": {

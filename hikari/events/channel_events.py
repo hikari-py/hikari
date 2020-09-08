@@ -536,6 +536,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     # <<inherited docstring from GuildChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
+
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @property
@@ -585,6 +586,7 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     # <<inherited docstring from ChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
+
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @property
@@ -732,6 +734,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
     # <<inherited docstring from ChannelEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.ib()
+
     # <<inherited docstring from GuildChannelEvent>>.
 
     async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.Webhook]:

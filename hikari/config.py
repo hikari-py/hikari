@@ -36,8 +36,10 @@ import typing
 import attr
 
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import data_binding
+
+_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
+_PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
 @attr_extensions.with_copy
@@ -56,7 +58,7 @@ class BasicAuthHeader:
         """Generate the header value and return it."""
         raw_token = f"{self.username}:{self.password}".encode("ascii")
         token_part = base64.b64encode(raw_token).decode("ascii")
-        return f"{constants.BASICAUTH_TOKEN_PREFIX} {token_part}"
+        return f"{_BASICAUTH_TOKEN_PREFIX} {token_part}"
 
     def __str__(self) -> str:
         return self.header
@@ -101,11 +103,11 @@ class ProxySettings:
         if self.headers is None:
             if self.auth is None:
                 return None
-            return {constants.PROXY_AUTHENTICATION_HEADER: self.auth}
+            return {_PROXY_AUTHENTICATION_HEADER: self.auth}
 
         if self.auth is None:
             return self.headers
-        return {**self.headers, constants.PROXY_AUTHENTICATION_HEADER: self.auth}
+        return {**self.headers, _PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
 @attr_extensions.with_copy

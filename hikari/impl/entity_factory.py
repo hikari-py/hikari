@@ -51,9 +51,10 @@ from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
+
+_DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
 
 
 def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
@@ -1174,7 +1175,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         raw_max_presences = payload["max_presences"]
         if raw_max_presences is None:
-            max_presences = constants.DEFAULT_MAX_PRESENCES
+            max_presences = _DEFAULT_MAX_PRESENCES
         else:
             max_presences = int(raw_max_presences)
 

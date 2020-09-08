@@ -34,8 +34,8 @@ import attr
 from hikari import files
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import flag
 from hikari.utilities import routes
 
@@ -285,7 +285,7 @@ class User(PartialUser, abc.ABC):
                 ext = "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             user_id=self.id,
             hash=self.avatar_hash,
             size=size,
@@ -296,7 +296,7 @@ class User(PartialUser, abc.ABC):
     def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
         """Placeholder default avatar for the user if no avatar is set."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             discriminator=int(self.discriminator) % 5,
             file_format="png",
         )

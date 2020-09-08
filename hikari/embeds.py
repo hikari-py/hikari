@@ -51,7 +51,6 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
-
 AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 

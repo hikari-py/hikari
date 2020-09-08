@@ -39,7 +39,6 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
 
-
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
 

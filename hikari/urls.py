@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,29 +19,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import asyncio
-import sys
+"""API-wide URLs."""
 
-import pytest
+from __future__ import annotations
 
-sys.set_coroutine_origin_tracking_depth(100)
+__all__: typing.Final[typing.List[str]] = ["BASE_URL", "REST_API_URL", "OAUTH2_API_URL", "CDN_URL"]
 
+import typing
 
-class TestingPolicy(asyncio.DefaultEventLoopPolicy):
-    def set_event_loop(self, loop) -> None:
-        loop.set_debug(True)
-        super().set_event_loop(loop)
-
-
-asyncio.set_event_loop_policy(TestingPolicy())
-
-_pytest_parametrize = pytest.mark.parametrize
-
-
-def parametrize(*args, **kwargs):
-    # Force ids to be strified by default for readability.
-    kwargs.setdefault("ids", repr)
-    return _pytest_parametrize(*args, **kwargs)
-
-
-pytest.mark.parametrize = parametrize
+BASE_URL: typing.Final[str] = "https://discord.com"
+REST_API_URL: typing.Final[str] = f"{BASE_URL}/api/v6"
+OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
+CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"

@@ -50,9 +50,9 @@ from hikari import files
 from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -488,7 +488,7 @@ class GroupPrivateTextChannel(PrivateChannel):
             return None
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             channel_id=self.id,
             hash=self.icon_hash,
             size=size,

@@ -45,7 +45,6 @@ from hikari.utilities import attr_extensions
 if typing.TYPE_CHECKING:
     import types
 
-
 T = typing.TypeVar("T")
 REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"

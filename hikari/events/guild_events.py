@@ -341,6 +341,7 @@ class BanCreateEvent(BanEvent):
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
+
     # <<inherited docstring from BanEvent>>.
 
     async def fetch_ban(self) -> guilds.GuildMemberBan:
@@ -383,6 +384,7 @@ class BanDeleteEvent(BanEvent):
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
+
     # <<inherited docstring from BanEvent>>.
 
     # Sure, I could allow delete_message_days here, but... is there any point?
@@ -461,6 +463,7 @@ class IntegrationsUpdateEvent(GuildEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.ib()
+
     # <<inherited docstring from ShardEvent>>.
 
     async def fetch_integrations(self) -> typing.Sequence[guilds.Integration]:

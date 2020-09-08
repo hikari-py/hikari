@@ -57,9 +57,9 @@ import attr
 
 from hikari import files
 from hikari import snowflakes
+from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
-from hikari.utilities import constants
 from hikari.utilities import flag
 from hikari.utilities import routes
 
@@ -684,7 +684,7 @@ class PartialGuild(snowflakes.Unique):
                 ext = "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.icon_hash,
             size=size,
@@ -745,7 +745,7 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.splash_hash,
             size=size,
@@ -783,7 +783,7 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.discovery_splash_hash,
             size=size,
@@ -981,7 +981,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.splash_hash,
             size=size,
@@ -1019,7 +1019,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.discovery_splash_hash,
             size=size,
@@ -1057,7 +1057,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            constants.CDN_URL,
+            urls.CDN_URL,
             guild_id=self.id,
             hash=self.banner_hash,
             size=size,

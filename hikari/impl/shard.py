@@ -30,12 +30,15 @@ import contextlib
 import http
 import json
 import logging
+import platform
+import sys
 import typing
 import urllib.parse
 import zlib
 
 import aiohttp
 
+from hikari import _about as about
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -43,7 +46,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
-from hikari.utilities import constants
 from hikari.utilities import data_binding
 from hikari.utilities import date
 
@@ -57,6 +59,12 @@ if typing.TYPE_CHECKING:
     from hikari import config
     from hikari import guilds
     from hikari import users as users_
+
+# Important attributes
+_D: typing.Final[str] = sys.intern("d")
+_T: typing.Final[str] = sys.intern("t")
+_S: typing.Final[str] = sys.intern("s")
+_OP: typing.Final[str] = sys.intern("op")
 
 # Opcodes.
 _DISPATCH: typing.Final[int] = 0
@@ -87,6 +95,20 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # Rate-limit for chunking requests (used to prevent saturating the entire
 # ratelimit window).
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
+# Supported gateway version
+_VERSION: int = 6
+
+
+def _log_filterer(token: str) -> typing.Callable[[str], str]:
+    def filterer(entry: str) -> str:
+        return entry.replace(token, "**REDACTED TOKEN**")
+
+    return filterer
+
+
+if typing.TYPE_CHECKING:
+    # noinspection PyProtectedMember,PyUnresolvedReferences
+    _ZlibDecompressor = zlib._Decompress
 
 
 @typing.final
@@ -100,13 +122,13 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
-    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_token")
+    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_log_filterer")
 
     # Initialized from `connect'
-    _zlib: zlib._Decompress
+    _zlib: _ZlibDecompressor
     _logger: logging.Logger
     _debug: bool
-    _token: str
+    _log_filterer: typing.Callable[[str], str]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -191,7 +213,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 "%s payload with size %s\n    %s",
                 message,
                 len(payload),
-                payload.replace(self._token, "**REDACTED TOKEN**"),
+                # False positive, MyPy expects a method.
+                self._log_filterer(payload),  # type: ignore
             )
         else:
             self._logger.debug("%s payload with size %s", message, len(payload))
@@ -205,7 +228,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         http_config: config.HTTPSettings,
         logger: logging.Logger,
         proxy_config: config.ProxySettings,
-        token: str,
+        log_filterer: typing.Callable[[str], str],
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
         """Generate a single-use websocket connection.
@@ -251,7 +274,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             ws._debug = debug
                             # We store this so we can remove it from debug logs
                             # which enables people to send me logs in issues safely.
-                            ws._token = token
+                            # Also MyPy raises a false positive about this...
+                            ws._log_filterer = log_filterer  # type: ignore
 
                             yield ws
                         except errors.GatewayError:
@@ -355,8 +379,6 @@ class GatewayShardImpl(shard.GatewayShard):
     url : builtins.str
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    version : builtins.int
-        Gateway API version to use.
 
     !!! note
         If all four of `initial_activity`, `initial_idle_since`,
@@ -420,13 +442,12 @@ class GatewayShardImpl(shard.GatewayShard):
         shard_count: int = 1,
         token: str,
         url: str,
-        version: int = 6,
     ) -> None:
 
         if data_format != shard.GatewayDataFormat.JSON:
             raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
 
-        query = {"v": version, "encoding": data_format}
+        query = {"v": _VERSION, "encoding": data_format}
 
         if compression is not None:
             if compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
@@ -555,7 +576,7 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
-        await self._ws.send_json({"op": _REQUEST_GUILD_MEMBERS, "d": payload})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})  # type: ignore[union-attr]
 
     async def start(self) -> None:
         if self._run_task is not None:
@@ -589,7 +610,7 @@ class GatewayShardImpl(shard.GatewayShard):
             activity=activity,
             status=status,
         )
-        payload: data_binding.JSONObject = {"op": _PRESENCE_UPDATE, "d": presence_payload}
+        payload: data_binding.JSONObject = {_OP: _PRESENCE_UPDATE, _D: presence_payload}
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
     async def update_voice_state(
@@ -602,8 +623,8 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
             {
-                "op": _VOICE_STATE_UPDATE,
-                "d": {
+                _OP: _VOICE_STATE_UPDATE,
+                _D: {
                     "guild_id": str(int(guild)),
                     "channel_id": str(int(channel)) if channel is not None else None,
                     "mute": self_mute,
@@ -640,24 +661,24 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _identify(self) -> None:
         payload: data_binding.JSONObject = {
-            "op": _IDENTIFY,
-            "d": {
+            _OP: _IDENTIFY,
+            _D: {
                 "token": self._token,
                 "compress": False,
                 "large_threshold": self._large_threshold,
                 "properties": {
-                    "$os": constants.SYSTEM_TYPE,
-                    "$browser": constants.AIOHTTP_VERSION,
-                    "$device": constants.LIBRARY_VERSION,
+                    "$os": f"{platform.system()} {platform.architecture()[0]}",
+                    "$browser": f"aiohttp {aiohttp.__version__}",
+                    "$device": f"hikari {about.__version__}",
                 },
                 "shard": [self._shard_id, self._shard_count],
             },
         }
 
         if self._intents is not None:
-            payload["d"]["intents"] = self._intents
+            payload[_D]["intents"] = self._intents
 
-        payload["d"]["presence"] = self._serialize_and_store_presence_payload()
+        payload[_D]["presence"] = self._serialize_and_store_presence_payload()
 
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
@@ -688,8 +709,8 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _resume(self) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
             {
-                "op": _RESUME,
-                "d": {"token": self._token, "seq": self._seq, "session_id": self._session_id},
+                _OP: _RESUME,
+                _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id},
             }
         )
 
@@ -750,9 +771,9 @@ class GatewayShardImpl(shard.GatewayShard):
             async with _V6GatewayTransport.connect(
                 debug=self._debug,
                 http_config=self._http_settings,
+                log_filterer=_log_filterer(self._token),
                 logger=self._logger,
                 proxy_config=self._proxy_settings,
-                token=self._token,
                 url=self._url,
             ) as self._ws:
                 # Dispatch CONNECTED synthetic event.
@@ -761,11 +782,11 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 # Expect HELLO.
                 payload = await self._ws.receive_json()
-                if payload["op"] != _HELLO:
+                if payload[_OP] != _HELLO:
                     await self._ws.close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-                    raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload['op']}")
+                    raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
 
-                heartbeat_latency = float(payload["d"]["heartbeat_interval"]) / 1_000.0
+                heartbeat_latency = float(payload[_D]["heartbeat_interval"]) / 1_000.0
                 heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
 
                 if self._closing.is_set():
@@ -784,12 +805,14 @@ class GatewayShardImpl(shard.GatewayShard):
                     # Event polling.
                     while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
                         payload = await self._ws.receive_json()
-                        op = payload["op"]
-                        d = payload["d"]
+                        op = payload[_OP]  # opcode int
+                        d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
 
                         if op == _DISPATCH:
-                            self._logger.debug("dispatching %s", payload["t"])
-                            self._dispatch(payload["t"], payload["s"], d)
+                            t = payload[_T]  # event name str
+                            s = payload[_S]  # seq int
+                            self._logger.debug("dispatching %s with seq %s", t, s)
+                            self._dispatch(t, s, d)
                         elif op == _HEARTBEAT:
                             await self._send_heartbeat_ack()
                             self._logger.debug("sent HEARTBEAT")
@@ -837,11 +860,11 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._event_consumer(self, "DISCONNECTED", {})
 
     async def _send_heartbeat(self) -> None:
-        await self._ws.send_json({"op": _HEARTBEAT, "d": self._seq})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _HEARTBEAT, _D: self._seq})  # type: ignore[union-attr]
         self._last_heartbeat_sent = date.monotonic()
 
     async def _send_heartbeat_ack(self) -> None:
-        await self._ws.send_json({"op": _HEARTBEAT_ACK, "d": None})  # type: ignore[union-attr]
+        await self._ws.send_json({_OP: _HEARTBEAT_ACK, _D: None})  # type: ignore[union-attr]
 
     @staticmethod
     def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:

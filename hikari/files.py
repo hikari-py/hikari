@@ -68,10 +68,8 @@ if typing.TYPE_CHECKING:
 
 _MAGIC: typing.Final[int] = 50 * 1024
 
-
 ReaderImplT = typing.TypeVar("ReaderImplT", bound="AsyncReader")
 ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound="AsyncReader", covariant=True)
-
 
 Pathish = typing.Union["os.PathLike[str]", str]
 """Type hint representing a literal file or path.

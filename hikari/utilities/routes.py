@@ -431,7 +431,6 @@ GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
-
 PNG: typing.Final[str] = "png".casefold()
 JPEG: typing.Final[str] = "jpeg".casefold()
 WEBP: typing.Final[str] = "webp".casefold()

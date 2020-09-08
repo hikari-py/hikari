@@ -34,7 +34,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import snowflakes
 
-
 _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
 
