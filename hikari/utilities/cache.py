@@ -286,22 +286,8 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
     __slots__: typing.Sequence[str] = ()
 
-    @classmethod
     @abc.abstractmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        """Get the fields that should be automatically handled on the target entity.
-
-        !!! note
-            These fields should match up with both the target entity and the
-            data class itself.
-
-        Returns
-        -------
-        typing.Collection[builtins.str]
-            A collection of the names of fields to handle.
-        """
-
-    def build_entity(self, target: typing.Type[ValueT], **kwargs: typing.Any) -> ValueT:
+    def build_entity(self, **kwargs: typing.Any) -> ValueT:
         """Build an entity object from this data object.
 
         Parameters
@@ -316,33 +302,21 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
         -------
         The initialised entity object.
         """
-        for field in self.get_fields():
-            if field not in kwargs:
-                kwargs[field] = getattr(self, field)
-
-        return target(**kwargs)  # type: ignore[call-arg]
 
     @classmethod
-    def build_from_entity(cls: typing.Type[DataT], entity: ValueT, **kwargs: typing.Any) -> DataT:
+    @abc.abstractmethod
+    def build_from_entity(cls: typing.Type[DataT], entity: ValueT) -> DataT:
         """Build a data object from an initialised entity.
 
         Parameters
         ----------
         entity
             The entity object to build a data class from.
-        kwargs
-            Extra fields to add to the data class. Fields here will take
-            priority over fields on `entity`.
 
         Returns
         -------
         The built data class.
         """
-        for field in cls.get_fields():
-            if field not in kwargs:
-                kwargs[field] = getattr(entity, field)
-
-        return cls(**kwargs)  # type: ignore[call-arg]
 
     def replace(self: DataT, **kwargs: typing.Any) -> DataT:
         data = copy.copy(self)
@@ -368,20 +342,23 @@ class PrivateTextChannelData(BaseData[channels.PrivateTextChannel]):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     recipient_id: snowflakes.Snowflake = attr.ib()
 
-    @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return "id", "name", "last_message_id"
-
-    def build_entity(
-        self, target: typing.Type[channels.PrivateTextChannel], **kwargs: typing.Any
-    ) -> channels.PrivateTextChannel:
-        return super().build_entity(target, type=channels.ChannelType.PRIVATE_TEXT, **kwargs)
+    def build_entity(self, **kwargs: typing.Any) -> channels.PrivateTextChannel:
+        return channels.PrivateTextChannel(
+            id=self.id,
+            name=self.name,
+            last_message_id=self.last_message_id,
+            type=channels.ChannelType.PRIVATE_TEXT,
+            app=kwargs["app"],
+            recipient=kwargs["recipient"],
+        )
 
     @classmethod
     def build_from_entity(
-        cls: typing.Type[PrivateTextChannelData], entity: channels.PrivateTextChannel, **kwargs: typing.Any
+        cls: typing.Type[PrivateTextChannelData], entity: channels.PrivateTextChannel
     ) -> PrivateTextChannelData:
-        return super().build_from_entity(entity, **kwargs, recipient_id=entity.recipient.id)
+        return cls(
+            id=entity.id, name=entity.name, last_message_id=entity.last_message_id, recipient_id=entity.recipient.id
+        )
 
 
 @attr_extensions.with_copy
@@ -401,39 +378,38 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     is_temporary: bool = attr.ib()
     created_at: datetime.datetime = attr.ib()
 
-    @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return (
-            "code",
-            "guild_id",
-            "channel_id",
-            "target_user_type",
-            "uses",
-            "max_uses",
-            "max_age",
-            "is_temporary",
-            "created_at",
-        )
-
-    def build_entity(
-        self, target: typing.Type[invites.InviteWithMetadata], **kwargs: typing.Any
-    ) -> invites.InviteWithMetadata:
-        return super().build_entity(
-            target,
+    def build_entity(self, **kwargs: typing.Any) -> invites.InviteWithMetadata:
+        return invites.InviteWithMetadata(
+            code=self.code,
+            guild_id=self.guild_id,
+            channel_id=self.channel_id,
+            target_user_type=self.target_user_type,
+            uses=self.uses,
+            max_uses=self.max_uses,
+            max_age=self.max_age,
+            is_temporary=self.is_temporary,
+            created_at=self.created_at,
             approximate_member_count=None,
             approximate_active_member_count=None,
             channel=None,
             guild=None,
-            **kwargs,
+            app=kwargs["app"],
+            inviter=kwargs["inviter"],
+            target_user=kwargs["target_user"],
         )
 
     @classmethod
-    def build_from_entity(
-        cls: typing.Type[InviteData], entity: invites.InviteWithMetadata, **kwargs: typing.Any
-    ) -> InviteData:
-        return super().build_from_entity(
-            entity,
-            **kwargs,
+    def build_from_entity(cls: typing.Type[InviteData], entity: invites.InviteWithMetadata) -> InviteData:
+        return cls(
+            code=entity.code,
+            guild_id=entity.guild_id,
+            channel_id=entity.channel_id,
+            target_user_type=entity.target_user_type,
+            uses=entity.uses,
+            max_uses=entity.max_uses,
+            max_age=entity.max_age,
+            is_temporary=entity.is_temporary,
+            created_at=entity.created_at,
             inviter_id=entity.inviter.id if entity.inviter is not None else None,
             target_user_id=entity.target_user.id if entity.target_user is not None else None,
         )
@@ -448,7 +424,7 @@ class MemberData(BaseData[guilds.Member]):
     guild_id: snowflakes.Snowflake = attr.ib()
     nickname: undefined.UndefinedNoneOr[str] = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
-    joined_at: undefined.UndefinedOr[datetime.datetime] = attr.ib()
+    joined_at: datetime.datetime = attr.ib()
     premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib()
     is_deaf: undefined.UndefinedOr[bool] = attr.ib()
     is_mute: undefined.UndefinedOr[bool] = attr.ib()
@@ -457,13 +433,30 @@ class MemberData(BaseData[guilds.Member]):
     ref_count: int = attr.ib(default=0)
 
     @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return "guild_id", "nickname", "role_ids", "joined_at", "premium_since", "is_deaf", "is_mute"
+    def build_from_entity(cls: typing.Type[MemberData], entity: guilds.Member) -> MemberData:
+        return cls(
+            guild_id=entity.guild_id,
+            nickname=entity.nickname,
+            joined_at=entity.joined_at,
+            premium_since=entity.premium_since,
+            is_deaf=entity.is_deaf,
+            is_mute=entity.is_mute,
+            id=entity.user.id,
+            # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
+            role_ids=tuple(entity.role_ids),
+        )
 
-    @classmethod
-    def build_from_entity(cls: typing.Type[MemberData], entity: guilds.Member, **kwargs: typing.Any) -> MemberData:
-        # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
-        return super().build_from_entity(entity, **kwargs, id=entity.user.id, role_ids=tuple(entity.role_ids))
+    def build_entity(self, **kwargs: typing.Any) -> guilds.Member:
+        return guilds.Member(
+            guild_id=self.guild_id,
+            nickname=self.nickname,
+            role_ids=self.role_ids,
+            joined_at=self.joined_at,
+            premium_since=self.premium_since,
+            is_deaf=self.is_deaf,
+            is_mute=self.is_mute,
+            user=kwargs["user"],
+        )
 
 
 @attr_extensions.with_copy
@@ -473,7 +466,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
 
     id: snowflakes.Snowflake = attr.ib()
     name: typing.Optional[str] = attr.ib()
-    is_animated: typing.Optional[bool] = attr.ib()
+    is_animated: bool = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
     user_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
@@ -485,16 +478,34 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     ref_count: int = attr.ib(default=0)
 
     @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return "id", "name", "is_animated", "guild_id", "role_ids", "is_colons_required", "is_managed", "is_available"
-
-    @classmethod
     def build_from_entity(
-        cls: typing.Type[KnownCustomEmojiData], entity: emojis.KnownCustomEmoji, **kwargs: typing.Any
+        cls: typing.Type[KnownCustomEmojiData], entity: emojis.KnownCustomEmoji
     ) -> KnownCustomEmojiData:
-        # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
-        return super().build_from_entity(
-            entity, **kwargs, user_id=entity.user.id if entity.user else None, role_ids=tuple(entity.role_ids)
+        return cls(
+            id=entity.id,
+            name=entity.name,
+            is_animated=entity.is_animated,
+            guild_id=entity.guild_id,
+            is_colons_required=entity.is_colons_required,
+            is_managed=entity.is_managed,
+            is_available=entity.is_available,
+            user_id=entity.user.id if entity.user else None,
+            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
+            role_ids=tuple(entity.role_ids),
+        )
+
+    def build_entity(self, **kwargs: typing.Any) -> emojis.KnownCustomEmoji:
+        return emojis.KnownCustomEmoji(
+            id=self.id,
+            name=self.name,
+            is_animated=self.is_animated,
+            guild_id=self.guild_id,
+            role_ids=self.role_ids,
+            is_colons_required=self.is_colons_required,
+            is_managed=self.is_managed,
+            is_available=self.is_available,
+            app=kwargs["app"],
+            user=kwargs["user"],
         )
 
 
@@ -504,7 +515,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
 
     name: str = attr.ib()
-    url: str = attr.ib()
+    url: typing.Optional[str] = attr.ib()
     type: presences.ActivityType = attr.ib()
     created_at: datetime.datetime = attr.ib()
     timestamps: typing.Optional[presences.ActivityTimestamps] = attr.ib()
@@ -519,13 +530,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     flags: typing.Optional[presences.ActivityFlag] = attr.ib()
 
     @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return "name", "url", "type", "created_at", "application_id", "details", "state", "is_instance", "flags"
-
-    @classmethod
-    def build_from_entity(
-        cls: typing.Type[RichActivityData], entity: presences.RichActivity, **kwargs: typing.Any
-    ) -> RichActivityData:
+    def build_from_entity(cls: typing.Type[RichActivityData], entity: presences.RichActivity) -> RichActivityData:
         emoji_id_or_name: typing.Union[snowflakes.Snowflake, str, None]
         if entity.emoji is None:
             emoji_id_or_name = None
@@ -538,8 +543,16 @@ class RichActivityData(BaseData[presences.RichActivity]):
         party = copy.copy(entity.party) if entity.party is not None else None
         assets = copy.copy(entity.assets) if entity.assets is not None else None
         secrets = copy.copy(entity.secrets) if entity.secrets is not None else None
-        return super().build_from_entity(
-            entity,
+        return cls(
+            name=entity.name,
+            url=entity.url,
+            type=entity.type,
+            created_at=entity.created_at,
+            application_id=entity.application_id,
+            details=entity.details,
+            state=entity.state,
+            is_instance=entity.is_instance,
+            flags=entity.flags,
             emoji_id_or_name=emoji_id_or_name,
             timestamps=timestamps,
             party=party,
@@ -547,14 +560,22 @@ class RichActivityData(BaseData[presences.RichActivity]):
             secrets=secrets,
         )
 
-    def build_entity(self, target: typing.Type[presences.RichActivity], **kwargs: typing.Any) -> presences.RichActivity:
-        return super().build_entity(
-            target,
+    def build_entity(self, **kwargs: typing.Any) -> presences.RichActivity:
+        return presences.RichActivity(
+            name=self.name,
+            url=self.url,
+            type=self.type,
+            created_at=self.created_at,
+            application_id=self.application_id,
+            details=self.details,
+            is_instance=self.is_instance,
+            flags=self.flags,
+            state=self.state,
             timestamps=copy.copy(self.timestamps) if self.timestamps is not None else None,
             party=copy.copy(self.party) if self.party is not None else None,
             assets=copy.copy(self.assets) if self.assets is not None else None,
             secrets=copy.copy(self.secrets) if self.secrets is not None else None,
-            **kwargs,
+            emoji=kwargs["emoji"],
         )
 
 
@@ -565,7 +586,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
     user_id: snowflakes.Snowflake = attr.ib()
     role_ids: typing.Optional[typing.Tuple[snowflakes.Snowflake, ...]] = attr.ib()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.ib()
     visible_status: presences.Status = attr.ib()
     activities: typing.Tuple[RichActivityData, ...] = attr.ib()
     client_status: presences.ClientStatus = attr.ib()
@@ -573,17 +594,17 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     nickname: typing.Optional[str] = attr.ib()
 
     @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return "user_id", "role_ids", "guild_id", "visible_status", "premium_since", "nickname"
-
-    @classmethod
     def build_from_entity(
         cls: typing.Type[MemberPresenceData], entity: presences.MemberPresence, **kwargs: typing.Any
     ) -> MemberPresenceData:
         # role_ids and activities are special cases as may be mutable sequences, therefor we ant to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
-        return super().build_from_entity(
-            entity,
+        return cls(
+            user_id=entity.user_id,
+            guild_id=entity.guild_id,
+            visible_status=entity.visible_status,
+            premium_since=entity.premium_since,
+            nickname=entity.nickname,
             role_ids=tuple(entity.role_ids) if entity.role_ids is not None else None,
             activities=tuple(RichActivityData.build_from_entity(activity) for activity in entity.activities),
             client_status=copy.copy(entity.client_status),
@@ -591,16 +612,20 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
     def build_entity(
         self,
-        target: typing.Type[presences.MemberPresence],
         **kwargs: typing.Any,
     ) -> presences.MemberPresence:
-        presence_kwargs = kwargs.pop("presence_kwargs")
-        activities = [
-            activity.build_entity(presences.RichActivity, **kwargs_)
-            for activity, kwargs_ in zip(self.activities, presence_kwargs)
-        ]
-        return super().build_entity(
-            target, activities=activities, client_status=copy.copy(self.client_status), **kwargs
+        presence_kwargs = kwargs["presence_kwargs"]
+        activities = [activity.build_entity(**kwargs_) for activity, kwargs_ in zip(self.activities, presence_kwargs)]
+        return presences.MemberPresence(
+            user_id=self.user_id,
+            role_ids=self.role_ids,
+            guild_id=self.guild_id,
+            visible_status=self.visible_status,
+            premium_since=self.premium_since,
+            nickname=self.nickname,
+            app=kwargs["app"],
+            activities=activities,
+            client_status=copy.copy(self.client_status),
         )
 
 
@@ -621,20 +646,37 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     user_id: snowflakes.Snowflake = attr.ib()
     session_id: str = attr.ib()
 
+    def build_entity(self, **kwargs: typing.Any) -> voices.VoiceState:
+        return voices.VoiceState(
+            channel_id=self.channel_id,
+            guild_id=self.guild_id,
+            is_guild_deafened=self.is_guild_deafened,
+            is_guild_muted=self.is_guild_muted,
+            is_self_deafened=self.is_self_deafened,
+            is_self_muted=self.is_self_muted,
+            is_streaming=self.is_streaming,
+            is_suppressed=self.is_suppressed,
+            is_video_enabled=self.is_video_enabled,
+            user_id=self.user_id,
+            session_id=self.session_id,
+            app=kwargs["app"],
+            member=kwargs["member"],
+        )
+
     @classmethod
-    def get_fields(cls) -> typing.Collection[str]:
-        return (
-            "channel_id",
-            "guild_id",
-            "is_guild_deafened",
-            "is_guild_muted",
-            "is_self_deafened",
-            "is_self_muted",
-            "is_streaming",
-            "is_suppressed",
-            "is_video_enabled",
-            "user_id",
-            "session_id",
+    def build_from_entity(cls: typing.Type[VoiceStateData], entity: voices.VoiceState) -> VoiceStateData:
+        return cls(
+            channel_id=entity.channel_id,
+            guild_id=entity.guild_id,
+            is_self_deafened=entity.is_self_deafened,
+            is_self_muted=entity.is_self_muted,
+            is_guild_deafened=entity.is_guild_deafened,
+            is_guild_muted=entity.is_guild_muted,
+            is_streaming=entity.is_streaming,
+            is_suppressed=entity.is_suppressed,
+            is_video_enabled=entity.is_video_enabled,
+            user_id=entity.user_id,
+            session_id=entity.session_id,
         )
 
 
