@@ -810,7 +810,7 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.OK
             content_type = constants.APPLICATION_JSON
             reason = "cause why not"
-            raw_headers = ((b"HEADER", b"value"), (b"HEADER", b"value"))
+            headers = {"HEADER": "value", "HEADER": "value"}
 
             async def read(self):
                 return '{"something": null}'
