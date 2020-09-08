@@ -155,7 +155,7 @@ class StatefulCacheImpl(cache.MutableCache):
         else:
             recipient = copy.copy(self._user_entries[channel_data.recipient_id].object)
 
-        return channel_data.build_entity(channels.PrivateTextChannel, app=self._app, recipient=recipient)
+        return channel_data.build_entity(app=self._app, recipient=recipient)
 
     def clear_private_text_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
         if not self._private_text_channel_entries:
@@ -233,7 +233,7 @@ class StatefulCacheImpl(cache.MutableCache):
         elif emoji_data.user_id is not None:
             user = copy.copy(self._user_entries[emoji_data.user_id].object)
 
-        return emoji_data.build_entity(emojis.KnownCustomEmoji, app=self._app, user=user)
+        return emoji_data.build_entity(app=self._app, user=user)
 
     def _increment_emoji_ref_count(self, emoji_id: snowflakes.Snowflake, increment: int = 1) -> None:
         self._emoji_entries[emoji_id].ref_count += increment
@@ -587,9 +587,7 @@ class StatefulCacheImpl(cache.MutableCache):
         elif invite_data.target_user_id is not None:
             target_user = copy.copy(self._user_entries[invite_data.target_user_id].object)
 
-        return invite_data.build_entity(
-            invites.InviteWithMetadata, app=self._app, inviter=inviter, target_user=target_user
-        )
+        return invite_data.build_entity(app=self._app, inviter=inviter, target_user=target_user)
 
     def _clear_invites(  # TODO: split out into two cases (global and specific guild)
         self,
@@ -839,7 +837,7 @@ class StatefulCacheImpl(cache.MutableCache):
         else:
             user = copy.copy(cached_users[member_data.id].object)
 
-        return member_data.build_entity(guilds.Member, user=user)
+        return member_data.build_entity(user=user)
 
     @staticmethod
     def _can_remove_member(member: cache_utility.MemberData, guild_record: cache_utility.GuildRecord) -> bool:
@@ -1033,7 +1031,7 @@ class StatefulCacheImpl(cache.MutableCache):
             else:
                 presence_kwargs.append({"emoji": copy.copy(self._unknown_custom_emoji_entries[identifier].object)})
 
-        return presence_data.build_entity(presences.MemberPresence, app=self._app, presence_kwargs=presence_kwargs)
+        return presence_data.build_entity(app=self._app, presence_kwargs=presence_kwargs)
 
     def _garbage_collect_unknown_custom_emoji(self, emoji_id: snowflakes.Snowflake, decrement: int = 0) -> None:
         emoji = self._unknown_custom_emoji_entries.get(emoji_id)
@@ -1428,7 +1426,7 @@ class StatefulCacheImpl(cache.MutableCache):
             member_data = guild_record.members[voice_data.user_id]
             member = self._build_member(member_data, cached_users=cached_users)
 
-        return voice_data.build_entity(voices.VoiceState, app=self._app, member=member)
+        return voice_data.build_entity(app=self._app, member=member)
 
     def _chainable_remove_voice_state_assets(
         self,
