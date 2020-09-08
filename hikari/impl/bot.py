@@ -665,9 +665,14 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         if requirements.session_start_limit.remaining < len(shard_ids) and not ignore_session_start_limit:
             _LOGGER.critical(
-                "would have started %s session(s), but you only have %s remaining until %s. Starting more sessions "
-                "than you are allowed to start may result in your token being reset. To skip this message, "
-                "use bot.run(..., ignore_session_start_limit=True) or bot.start(..., ignore_session_start_limit=True)"
+                "would have started %s session%s, but you only have %s session%s remaining until %s. Starting more "
+                "sessions than you are allowed to start may result in your token being reset. To skip this message, "
+                "use bot.run(..., ignore_session_start_limit=True) or bot.start(..., ignore_session_start_limit=True)",
+                len(shard_ids),
+                "s" if len(shard_ids) != 1 else "",
+                requirements.session_start_limit.remaining,
+                "s" if requirements.session_start_limit.remaining != 1 else "",
+                requirements.session_start_limit.reset_at,
             )
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
