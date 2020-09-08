@@ -25,6 +25,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["StatefulEventManagerImpl"]
 
+import asyncio
 import typing
 
 from hikari import channels
@@ -166,7 +167,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
         if (event.guild.is_large or not presences_declared) and members_declared:
-            await shard.request_guild_members(event.guild)
+            # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
+            coroutine = shard.request_guild_members(event.guild)
+            asyncio.create_task(coroutine, name=f"{event.shard.id}:{event.guild.id} guild create members request")
 
         await self.dispatch(event)
 
