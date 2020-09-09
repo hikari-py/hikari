@@ -300,6 +300,8 @@ class Test_V6GatewayTransport:
             limit=1,
             use_dns_cache=False,
             verify_ssl=http_settings.verify_ssl,
+            enable_cleanup_closed=True,
+            force_close=True,
         )
         client_timeout.assert_called_once_with(
             total=http_settings.timeouts.total,

@@ -66,7 +66,7 @@ class TestBasicLazyCachedTCPConnectorFactory:
         with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
             assert connector_factory.acquire() is connector_mock
             assert connector_factory.connector is connector_mock
-        tcp_connector.assert_called_once_with(test=123)
+        tcp_connector.assert_called_once_with(test=123, force_close=True, enable_cleanup_closed=True)
 
     def test_acquire_when_connector_is_not_None(self, connector_factory):
         connector_mock = object()

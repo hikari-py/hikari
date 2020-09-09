@@ -198,6 +198,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_cache",
         "_chunker",
         "_closing_event",
+        "_closed",
         "_debug",
         "_entity_factory",
         "_events",
@@ -237,6 +238,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # Settings and state
         self._banner = banner
         self._closing_event = asyncio.Event()
+        self._closed = False
         self._debug = debug
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
@@ -367,17 +369,47 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def rest(self) -> rest_.RESTClient:
         return self._rest
 
-    async def close(self, wait: bool = False) -> None:
+    async def close(self, force: bool = True) -> None:
+        """Kill the application by shutting all components down."""
+        if not self._closing_event.is_set():
+            _LOGGER.info("bot requested to shutdown [force:%s]", force)
+
         self._closing_event.set()
 
-        _LOGGER.debug("BotApp#close(%s) invoked", wait)
+        if self._closed or not force:
+            return
 
-        if wait:
+        self._closed = True
+
+        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
+            future = asyncio.ensure_future(awaitable)
+
             try:
-                await self.join()
-            finally:
-                # Discard any exception that occurred from shutting down.
-                return
+                await future
+            except Exception as ex:
+                loop = asyncio.get_running_loop()
+
+                loop.call_exception_handler(
+                    {
+                        "message": f"{name} raised an exception during shutdown",
+                        "future": future,
+                        "exception": ex,
+                    }
+                )
+
+        await self.dispatch(lifetime_events.StoppingEvent(app=self))
+
+        calls = [
+            ("rest", self._rest.close()),
+            ("chunker", self._chunker.close()),
+            ("voice handler", self._voice.close()),
+            *((f"shard {s.id}", s.close()) for s in self._shards.values()),
+        ]
+
+        for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
+            await coro
+
+        await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
     def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
         return self._events.dispatch(event)
@@ -452,7 +484,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
         asyncio_debug: typing.Optional[bool] = None,
-        close_executor: bool = False,
+        close_passed_executor: bool = False,
         close_loop: bool = True,
         coroutine_tracking_depth: typing.Optional[int] = None,
         enable_signal_handlers: bool = True,
@@ -477,7 +509,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         asyncio_debug : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then debugging is
             enabled for the asyncio event loop in use.
-        close_executor : builtins.bool
+        close_passed_executor : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the
@@ -543,6 +575,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             The initial status to show for the user presence on startup.
             Defaults to `hikari.presences.Status.ONLINE`.
         """
+        if shard_ids is not None and shard_count is None:
+            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+
         loop = asyncio.get_event_loop()
         signals = ("SIGINT", "SIGTERM")
 
@@ -575,6 +610,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             # to `bot.close()`.
             nonlocal interrupt
             signame = signal.strsignal(signum)
+            assert signame is not None  # Will always be True
+
             interrupt = errors.HikariInterrupt(signum, signame)
             # The loop may or may not be running, depending on the state of the application when this occurs.
             # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
@@ -618,7 +655,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         finally:
             try:
-                loop.run_until_complete(self.terminate(close_executor=close_executor))
+                loop.run_until_complete(self.close())
+
+                if close_passed_executor and self._executor is not None:
+                    _LOGGER.debug("shutting down executor %s", self._executor)
+                    self._executor.shutdown(wait=True)
+                    self._executor = None
             finally:
                 if enable_signal_handlers:
                     for sig in signals:
@@ -790,57 +832,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
         return self._events.stream(event_type, timeout=timeout, limit=limit)
 
-    async def terminate(self, close_executor: bool = False) -> None:
-        """Kill the application by shutting all components down.
-
-        Other Parameters
-        ----------------
-        close_executor : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, any custom
-            `concurrent.futures.Executor` passed to the constructor will be
-            shut down when the application terminates. This does not affect the
-            default executor associated with the event loop, and will not
-            do anything if you do not provide a custom executor to the
-            constructor.
-        """
-
-        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
-            future = asyncio.ensure_future(awaitable)
-
-            try:
-                await future
-            except Exception as ex:
-                loop = asyncio.get_running_loop()
-
-                loop.call_exception_handler(
-                    {
-                        "message": f"{name} raised an exception during shutdown",
-                        "future": future,
-                        "exception": ex,
-                    }
-                )
-
-        await self.dispatch(lifetime_events.StoppingEvent(app=self))
-
-        calls = [
-            ("rest", self._rest.close()),
-            ("chunker", self._chunker.close()),
-            ("voice handler", self._voice.close()),
-            *((f"shard {s.id}", s.close()) for s in self._shards.values()),
-        ]
-
-        for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
-            await coro
-
-        # Users may still require use of an executor once shut down, so we
-        # should do that after we do this.
-        await self.dispatch(lifetime_events.StoppedEvent(app=self))
-
-        if close_executor and self._executor is not None:
-            _LOGGER.debug("shutting down executor %s", self._executor)
-            self._executor.shutdown(wait=True)
-            self._executor = None
-
     def subscribe(
         self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
     ) -> event_dispatcher.CallbackT[typing.Any]:
@@ -882,7 +873,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # run a coroutine function on the event loop from a completely different thread, so this is the safest
         # solution.
         _LOGGER.info("received interrupt %s (%s), will start shutting down shortly", signame, signum)
-        self._closing_event.set()
+
+        await self.close(force=False)
 
     async def _start_one_shard(
         self,
