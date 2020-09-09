@@ -579,6 +579,14 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 interrupt.signum,
             )
 
+        except KeyboardInterrupt:
+            # If signal handlers are not registered,
+            # we will get a KeyboardInterrupt instead.
+            # This just allows us to have a nicer shutdown
+            _LOGGER.info(
+                "received KeyboardInterrupt, will proceed to shut down",
+            )
+
         finally:
             try:
                 loop.run_until_complete(self.terminate(close_executor=close_executor))
