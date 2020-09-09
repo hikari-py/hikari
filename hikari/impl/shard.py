@@ -243,8 +243,6 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         try:
             async with aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(
-                    enable_cleanup_closed=True,
-                    force_close=True,
                     limit=1,
                     use_dns_cache=False,
                     verify_ssl=http_config.verify_ssl,

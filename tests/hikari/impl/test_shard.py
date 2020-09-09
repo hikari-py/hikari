@@ -297,8 +297,6 @@ class Test_V6GatewayTransport:
                 assert ws._debug is True
 
         tcp_connector.assert_called_once_with(
-            enable_cleanup_closed=True,
-            force_close=True,
             limit=1,
             use_dns_cache=False,
             verify_ssl=http_settings.verify_ssl,
