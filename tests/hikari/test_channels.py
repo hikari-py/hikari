@@ -45,7 +45,7 @@ def test_ChannelType_str_operator():
 class TestChannelFollow:
     @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_app):
-        mock_channel = mock.MagicMock(spec=channels.GuildChannel)
+        mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
         mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
         follow = channels.ChannelFollow(channel_id=snowflakes.Snowflake(9459234123), app=mock_app, webhook_id=3123123)
 
@@ -67,7 +67,7 @@ class TestChannelFollow:
 
     @pytest.mark.asyncio
     async def test_get_channel(self, mock_app):
-        mock_channel = object()
+        mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
         mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
         follow = channels.ChannelFollow(webhook_id=993883, app=mock_app, channel_id=snowflakes.Snowflake(696969))
 

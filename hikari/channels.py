@@ -111,31 +111,15 @@ class ChannelFollow:
     webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the webhook for this follow."""
 
-    async def fetch_channel(self) -> GuildChannel:
+    async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Fetch the object of the guild channel being followed.
 
         Returns
         -------
-        hikari.channels.PartialChannel
-            The channel being followed. This will be a _derivative_ of
-            `hikari.channels.PartialChannel`, depending on the type of
-            channel you request for.
-
-            This means that you may get one of
-            `hikari.channels.PrivateTextChannel`,
-            `hikari.channels.GroupPrivateTextChannel`,
-            `hikari.channels.GuildTextChannel`,
-            `hikari.channels.GuildVoiceChannel`,
-            `hikari.channels.GuildStoreChannel`,
-            `hikari.channels.GuildNewsChannel`.
-
-            Likewise, the `hikari.channels.GuildChannel` can be used to
-            determine if a channel is guild-bound, and
-            `hikari.channels.TextChannel` can be used to determine
-            if the channel provides textual functionality to the application.
-
-            You can check for these using the `builtins.isinstance`
-            builtin function.
+        typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
+            The channel being followed. While this will usually be
+            `GuildNewsChannel`, if the channel's news status has been removed
+            then this will be a `GuildTextChannel`
 
         Raises
         ------
@@ -149,7 +133,7 @@ class ChannelFollow:
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, GuildChannel)
+        assert isinstance(channel, (GuildTextChannel, GuildNewsChannel))
         return channel
 
     async def fetch_webhook(self) -> webhooks.Webhook:
@@ -174,16 +158,20 @@ class ChannelFollow:
         """
         return await self.app.rest.fetch_webhook(self.webhook_id)
 
-    def get_channel(self) -> typing.Optional[GuildChannel]:
+    def get_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Get the channel being followed from the cache.
 
         Returns
         -------
-        typing.Optional[hikari.channels.GuildChannel]
+        typing.Optional[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
             The object of the guild channel that was found in the cache or
-            `builtins.None`.
+            `builtins.None`. While this will usually be `GuildNewsChannel` or
+            `builtins.None`, if the channel referenced has since lost it's news
+            status then this will return a `GuildTextChannel`.
         """
-        return self.app.cache.get_guild_channel(self.channel_id)
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert isinstance(channel, (GuildNewsChannel, GuildTextChannel))
+        return channel
 
 
 @enum.unique
