@@ -444,6 +444,76 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
+        """Start the bot, wait for all shards to become ready, and then return.
+
+        Other Parameters
+        ----------------
+        activity : typing.Optional[hikari.presences.Activity]
+            The initial activity to display in the bot user presence, or
+            `builtins.None` (default) to not show any.
+        afk : builtins.bool
+            The initial AFK state to display in the bot user presence, or
+            `builtins.False` (default) to not show any.
+        asyncio_debug : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, then debugging is
+            enabled for the asyncio event loop in use.
+        close_executor : builtins.bool
+            Defaults to `builtins.False`. If `builtins.True`, any custom
+            `concurrent.futures.Executor` passed to the constructor will be
+            shut down when the application terminates. This does not affect the
+            default executor associated with the event loop, and will not
+            do anything if you do not provide a custom executor to the
+            constructor.
+        close_loop : builtins.bool
+            Defaults to `builtins.True`. If `builtins.True`, then once the bot
+            enters a state where all components have shut down permanently
+            during application shutdown, then all asyngens and background tasks
+            will be destroyed, and the event loop will be shut down.
+
+            This will wait until all `hikari`-owned `aiohttp` connectors have
+            had time to attempt to shut down correctly (around 250ms), and on
+            Python 3.9 and newer, will also shut down the default event loop
+            executor too.
+        coroutine_tracking_depth : typing.Optional[builtins.int]
+            Defaults to `builtins.None`. If an integer value and supported by
+            the interpreter, then this many nested coroutine calls will be
+            tracked with their call origin state. This allows you to determine
+            where non-awaited coroutines may originate from, but generally you
+            do not want to leave this enabled for performance reasons.
+        enable_signal_handlers : builtins.bool
+            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
+            support for kernel-level POSIX signals, then setting this to
+            `builtins.True` will allow treating keyboard interrupts and other
+            OS signals to safely shut down the application as calls to
+            shut down the application properly rather than just killing the
+            process in a dirty state immediately. You should leave this disabled
+            unless you plan to implement your own signal handling yourself.
+        idle_since : typing.Optional[datetime.datetime]
+            The `datetime.datetime` the user should be marked as being idle
+            since, or `builtins.None` (default) to not show this.
+        ignore_session_start_limit : builtins.bool
+            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            to start more sessions than you are allowed in a 24 hour window
+            will throw a `hikari.errors.GatewayError` rather than going ahead
+            and hitting the IDENTIFY limit, which may result in your token
+            being reset. Setting to `builtins.True` disables this behavior.
+        large_threshold : builtins.int
+            Threshold for members in a guild before it is treated as being
+            "large" and no longer sending member details in the `GUILD CREATE`
+            event. Defaults to `250`.
+        shard_ids : typing.Optional[typing.Set[builtins.int]]
+            The shard IDs to create shards for. If not `builtins.None`, then
+            a non-`None` `shard_count` must ALSO be provided. Defaults to
+            `builtins.None`, which means the Discord-recommended count is used
+            for your application instead.
+        shard_count : typing.Optional[builtins.int]
+            The number of shards to use in the entire distributed application.
+            Defaults to `builtins.None` which results in the count being
+            determined dynamically on startup.
+        status : hikari.presences.Status
+            The initial status to show for the user presence on startup.
+            Defaults to `hikari.presences.Status.ONLINE`.
+        """
         loop = asyncio.get_event_loop()
         signals = ("SIGINT", "SIGQUIT", "SIGTERM")
 

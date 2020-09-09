@@ -470,11 +470,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
         *,
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
-        asyncio_debug: typing.Optional[bool] = None,
         close_executor: bool = False,
-        close_loop: bool = True,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: bool = True,
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
@@ -492,9 +488,6 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
         afk : builtins.bool
             The initial AFK state to display in the bot user presence, or
             `builtins.False` (default) to not show any.
-        asyncio_debug : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then debugging is
-            enabled for the asyncio event loop in use.
         close_executor : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
@@ -502,30 +495,6 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
             default executor associated with the event loop, and will not
             do anything if you do not provide a custom executor to the
             constructor.
-        close_loop : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, then once the bot
-            enters a state where all components have shut down permanently
-            during application shutdown, then all asyngens and background tasks
-            will be destroyed, and the event loop will be shut down.
-
-            This will wait until all `hikari`-owned `aiohttp` connectors have
-            had time to attempt to shut down correctly (around 250ms), and on
-            Python 3.9 and newer, will also shut down the default event loop
-            executor too.
-        coroutine_tracking_depth : typing.Optional[builtins.int]
-            Defaults to `builtins.None`. If an integer value and supported by
-            the interpreter, then this many nested coroutine calls will be
-            tracked with their call origin state. This allows you to determine
-            where non-awaited coroutines may originate from, but generally you
-            do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
             since, or `builtins.None` (default) to not show this.
