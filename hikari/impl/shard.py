@@ -308,9 +308,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                     raise errors.GatewayError(message) from ex
 
                 except aiohttp.WSServerHandshakeError as ex:
-                    if ex.status in http.HTTPStatus.__members__.values():
-                        reason = str(http.HTTPStatus(ex.status))
-                    else:
+                    try:
+                        reason = http.HTTPStatus(ex.status).name
+                    except ValueError:
                         reason = "Unknown Reason"
 
                     message = (
@@ -335,21 +335,10 @@ class GatewayShardImpl(shard.GatewayShard):
     compression : typing.Optional[buitlins.str]
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
-    data_format : builtins.str
-        Data format to use for inbound data. Only supported format is
-        `"json"`.
     debug : builtins.bool
         If `builtins.True`, each sent and received payload is dumped to the
         logs. If `builtins.False`, only the fact that data has been
         sent/received will be logged.
-    event_consumer
-        A non-coroutine function consuming a `GatewayShardImpl`,
-        a `builtins.str` event name, and a
-        `hikari.utilities.data_binding.JSONObject` event object as parameters.
-        This should return `builtins.None`, and will be called with each event
-        that fires.
-    http_settings : hikari.config.HTTPSettings
-        The HTTP-related settings to use while negotiating a websocket.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
         `builtins.None` if no activity should be set initially. This is the
@@ -368,12 +357,25 @@ class GatewayShardImpl(shard.GatewayShard):
         all.
     large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
-    proxy_settings : hikari.config.ProxySettings
-        The proxy settings to use while negotiating a websocket.
     shard_id : builtins.int
         The shard ID.
     shard_count : builtins.int
         The shard count.
+    version : builtins.int
+        Gateway API version to use.
+    event_consumer
+        A non-coroutine function consuming a `GatewayShardImpl`,
+        a `builtins.str` event name, and a
+        `hikari.utilities.data_binding.JSONObject` event object as parameters.
+        This should return `builtins.None`, and will be called with each event
+        that fires.
+    http_settings : hikari.config.HTTPSettings
+        The HTTP-related settings to use while negotiating a websocket.
+    proxy_settings : hikari.config.ProxySettings
+        The proxy settings to use while negotiating a websocket.
+    data_format : builtins.str
+        Data format to use for inbound data. Only supported format is
+        `"json"`.
     token : builtins.str
         The bot token to use.
     url : builtins.str
@@ -427,19 +429,20 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         *,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
-        data_format: str = shard.GatewayDataFormat.JSON,
         debug: bool = False,
-        event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
-        http_settings: config.HTTPSettings,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: typing.Optional[intents_.Intents] = None,
         large_threshold: int = 250,
-        proxy_settings: config.ProxySettings,
         shard_id: int = 0,
         shard_count: int = 1,
+        version: int = 6,
+        event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
+        http_settings: config.HTTPSettings,
+        proxy_settings: config.ProxySettings,
+        data_format: str = shard.GatewayDataFormat.JSON,
         token: str,
         url: str,
     ) -> None:

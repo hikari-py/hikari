@@ -272,3 +272,25 @@ def assert_does_not_raise(type_=BaseException):
 async def gather_all_tasks():
     """Ensure all created tasks except the current are finished before asserting anything."""
     await asyncio.gather(*(task for task in asyncio.all_tasks() if task is not asyncio.current_task()))
+
+
+def raiser(ex, should_raise=True):
+    """Stop lints complaining about unreachable code."""
+    if should_raise:
+        raise ex
+
+
+class AsyncContextManagerMock:
+    aenter_count = 0
+    aexit_count = 0
+
+    async def __aenter__(self):
+        self.aenter_count += 1
+        return self
+
+    async def __aexit__(self, *args):
+        self.aexit_count += 1
+
+    def assert_used_once(self):
+        assert self.aenter_count == 1
+        assert self.aexit_count == 1
