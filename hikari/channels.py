@@ -64,6 +64,7 @@ if typing.TYPE_CHECKING:
     from hikari import iterators
     from hikari import messages
     from hikari import traits
+    from hikari import webhooks
 
 
 @enum.unique
@@ -101,11 +102,88 @@ class ChannelType(enum.IntEnum):
 class ChannelFollow:
     """Represents a channel follow."""
 
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    """The client application that models may use for procedures."""
+
     channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the news channel that's being followed."""
 
     webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the webhook for this follow."""
+
+    async def fetch_channel(self) -> GuildChannel:
+        """Fetch the object of the guild channel being followed.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            The channel being followed. This will be a _derivative_ of
+            `hikari.channels.PartialChannel`, depending on the type of
+            channel you request for.
+
+            This means that you may get one of
+            `hikari.channels.PrivateTextChannel`,
+            `hikari.channels.GroupPrivateTextChannel`,
+            `hikari.channels.GuildTextChannel`,
+            `hikari.channels.GuildVoiceChannel`,
+            `hikari.channels.GuildStoreChannel`,
+            `hikari.channels.GuildNewsChannel`.
+
+            Likewise, the `hikari.channels.GuildChannel` can be used to
+            determine if a channel is guild-bound, and
+            `hikari.channels.TextChannel` can be used to determine
+            if the channel provides textual functionality to the application.
+
+            You can check for these using the `builtins.isinstance`
+            builtin function.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, GuildChannel)
+        return channel
+
+    async def fetch_webhook(self) -> webhooks.Webhook:
+        """Fetch the webhook attached to this follow.
+
+        Returns
+        -------
+        hikari.webhooks.Webhook
+            The webhook attached to this follow.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_WEBHOOKS` permission in the guild or
+            channel this follow is targeting.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_webhook(self.webhook_id)
+
+    def get_channel(self) -> typing.Optional[GuildChannel]:
+        """Get the channel being followed from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildChannel]
+            The object of the guild channel that was found in the cache or
+            `builtins.None`.
+        """
+        return self.app.cache.get_guild_channel(self.channel_id)
 
 
 @enum.unique

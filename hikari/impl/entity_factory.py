@@ -464,6 +464,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_channel_follow(self, payload: data_binding.JSONObject) -> channel_models.ChannelFollow:
         return channel_models.ChannelFollow(
+            app=self._app,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]),
         )
