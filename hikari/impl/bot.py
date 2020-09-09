@@ -23,6 +23,9 @@
 
 from __future__ import annotations
 
+import threading
+import traceback
+
 __all__: typing.Final[typing.List[str]] = ["BotApp", "LoggerLevelT"]
 
 import asyncio
@@ -456,6 +459,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
+        propagate_interrupts: bool = False,
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
@@ -517,6 +521,15 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
+        propagate_interrupts : builtins.bool
+            Defaults to `builtins.False`. If set to `builtins.True`, then any
+            internal `hikari.errors.HikariInterrupt` that is raises as a
+            result of catching an OS level signal will result in the
+            exception being rethrown once the application has closed. This can
+            allow you to use hikari signal handlers and still be able to
+            determine what kind of interrupt the application received after
+            it closes. When `builtins.False`, nothing is raised and the call
+            will terminate cleanly and silently where possible instead.
         shard_ids : typing.Optional[typing.Set[builtins.int]]
             The shard IDs to create shards for. If not `builtins.None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
@@ -531,7 +544,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         loop = asyncio.get_event_loop()
-        signals = ("SIGINT", "SIGQUIT", "SIGTERM")
+        signals = ("SIGINT", "SIGTERM")
 
         if asyncio_debug:
             loop.set_debug(True)
@@ -543,18 +556,49 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             except AttributeError:
                 _LOGGER.debug("cannot set coroutine tracking depth for %s, no functionality exists for this", loop)
 
-        def signal_handler(signum: int) -> None:
-            raise errors.HikariInterrupt(signum, signal.strsignal(signum))
+        # Throwing this in the handler will lead to lots of fun OS specific shenanigans. So, lets just
+        # cache it for later, I guess.
+        interrupt: typing.Optional[errors.HikariInterrupt] = None
+        loop_thread_id = threading.get_native_id()
+
+        def handle_os_interrupt(signum: int, frame: types.FrameType) -> None:
+            # If we use a POSIX system, then raising an exception in here works perfectly and shuts the loop down
+            # with an exception, which is good.
+            # Windows, however, is special on this front. On Windows, the exception is caught by whatever was
+            # currently running on the event loop at the time, which is annoying for us, as this could be fired into
+            # the task for an event dispatch, for example, which is a guarded call that is never waited for by design.
+
+            # We can't always safely intercept this either, as Windows does not allow us to use asyncio loop
+            # signal listeners (since Windows doesn't have kernel-level signals, only emulated system calls
+            # for a remote few standard C signal types). Thus, the best solution here is to set the close bit
+            # instead, which will let the bot start to clean itself up as if the user closed it manually via a call
+            # to `bot.close()`.
+            nonlocal interrupt
+            signame = signal.strsignal(signum)
+            interrupt = errors.HikariInterrupt(signum, signame)
+            # The loop may or may not be running, depending on the state of the application when this occurs.
+            # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
+            # threadsafe if we want the user's application to still shut down if on a separate thread.
+            # We log native thread IDs purely for debugging purposes.
+            if self._debug:
+                _LOGGER.debug(
+                    "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
+                    "Stack trace:\n%s",
+                    signum,
+                    threading.get_native_id(),
+                    loop_thread_id,
+                    "".join(traceback.format_stack(frame)),
+                )
+
+            asyncio.run_coroutine_threadsafe(self._set_close_flag(signame, signum), loop)
 
         if enable_signal_handlers:
             for sig in signals:
                 try:
                     signum = getattr(signal, sig)
-                    loop.add_signal_handler(signum, signal_handler, signum)
-                except (NotImplementedError, AttributeError):
-                    # Windows doesn't use signals (NotImplementedError);
-                    # Some OSs may decide to not implement some signals either...
-                    pass
+                    signal.signal(signum, handle_os_interrupt)
+                except AttributeError:
+                    _LOGGER.debug("signal %s is not implemented on your platform", sig)
 
         try:
             loop.run_until_complete(
@@ -572,21 +616,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
             loop.run_until_complete(self.join())
 
-        except errors.HikariInterrupt as interrupt:
-            _LOGGER.info(
-                "received %s (%s), will proceed to shut down",
-                interrupt.description or str(interrupt.signum),
-                interrupt.signum,
-            )
-
-        except KeyboardInterrupt:
-            # If signal handlers are not registered,
-            # we will get a KeyboardInterrupt instead.
-            # This just allows us to have a nicer shutdown
-            _LOGGER.info(
-                "received KeyboardInterrupt, will proceed to shut down",
-            )
-
         finally:
             try:
                 loop.run_until_complete(self.terminate(close_executor=close_executor))
@@ -595,16 +624,18 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     for sig in signals:
                         try:
                             signum = getattr(signal, sig)
-                            loop.remove_signal_handler(signum)
-                        except (NotImplementedError, AttributeError):
-                            # Windows doesn't use signals (NotImplementedError);
-                            # Some OSs may decide to not implement some signals either...
+                            signal.signal(signum, signal.SIG_DFL)
+                        except AttributeError:
+                            # Signal not implemented probably. We should have logged this earlier.
                             pass
 
                 if close_loop:
                     self._destroy_loop(loop)
 
                 _LOGGER.info("application has successfully terminated")
+
+                if propagate_interrupts and interrupt is not None:
+                    raise interrupt
 
     async def start(
         self,
@@ -843,6 +874,15 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         ]
 
         await aio.all_of(*coros)
+
+    async def _set_close_flag(self, signame: str, signum: int) -> None:
+        # This needs to be a coroutine, as the closing event is not threadsafe, so we have no way to set this
+        # from a Unix system call handler if we are running on a thread that isn't the main application thread
+        # without getting undefined behaviour. We do however have `asyncio.run_coroutine_threadsafe` which can
+        # run a coroutine function on the event loop from a completely different thread, so this is the safest
+        # solution.
+        _LOGGER.info("received interrupt %s (%s), will start shutting down shortly", signame, signum)
+        self._closing_event.set()
 
     async def _start_one_shard(
         self,
