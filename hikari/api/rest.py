@@ -195,14 +195,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def follow_channel(
         self,
-        origin_channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        news_channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
         target_channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
     ) -> channels.ChannelFollow:
         """Follow a news channel to send messages to a target channel.
 
         Parameters
         ----------
-        origin_channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildNewsChannel]
+        news_channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildNewsChannel]
             The object or ID of the news channel to follow.
         target_channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The object or ID of the channel to target.
@@ -210,13 +210,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.channels.ChannelFollow
-            Information about the created channel following.
+            Information about the new relationship that was made.
 
         Raises
         ------
         hikari.errors.BadRequestError
             If you try to follow a channel that's not a news channel or if the
-            target channel has reached it's webhook limit.
+            target channel has reached it's webhook limit, which is 10 at the
+            time of writing.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -818,12 +819,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def crosspost_message(
+    async def create_crossposts(
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> messages_.Message:
-        """Crosspost a message in a News Channel to following channels.
+        """Broadcast an announcement message.
 
         Parameters
         ----------
@@ -840,7 +841,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.BadRequestError
-            If you tried to crosspost a message that's already been crossposted.
+            If you tried to crosspost a message that has already been broadcast.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError

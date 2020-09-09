@@ -100,16 +100,38 @@ class ChannelType(enum.IntEnum):
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class ChannelFollow:
-    """Represents a channel follow."""
+    """Relationship between a news channel and a subscriber channel.
+
+    The subscriber channel will receive crosspost messages that correspond
+    to any "broadcast" announcements that the news channel creates.
+    """
 
     app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
+    """Return the client application that models may use for procedures.
+
+    Returns
+    -------
+    hikari.traits.RESTAware
+        The REST-aware application object.
+    """
 
     channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
-    """The ID of the news channel that's being followed."""
+    """Return the channel ID of the channel being followed.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The channel ID for the channel being followed.
+    """
 
     webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
-    """The ID of the webhook for this follow."""
+    """Return the ID of the webhook for this follow.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The ID of the webhook that was created for this follow.
+    """
 
     async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Fetch the object of the guild channel being followed.
@@ -158,8 +180,13 @@ class ChannelFollow:
         """
         return await self.app.rest.fetch_webhook(self.webhook_id)
 
-    def get_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
+    @property
+    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Get the channel being followed from the cache.
+
+        !!! warning
+            This will always be `builtins.None` if you are not
+            in the guild that this channel exists in.
 
         Returns
         -------

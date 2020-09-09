@@ -1216,13 +1216,13 @@ class TestRESTClientImplAsync:
         with pytest.raises(ValueError, match="You may only specify one of 'attachment' or 'attachments', not both"):
             await rest_client.create_message(StubModel(123), attachment=object(), attachments=object())
 
-    async def test_crosspost_message(self, rest_client):
+    async def test_create_crossposts(self, rest_client):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=444432, message=12353234)
         mock_message = object()
         rest_client._entity_factory.deserialize_message = mock.Mock(return_value=mock_message)
         rest_client._request = mock.AsyncMock(return_value={"id": "93939383883", "content": "foobar"})
 
-        result = await rest_client.crosspost_message(StubModel(444432), StubModel(12353234))
+        result = await rest_client.create_crossposts(StubModel(444432), StubModel(12353234))
 
         assert result is mock_message
         rest_client._entity_factory.deserialize_message.assert_called_once_with(
@@ -1236,13 +1236,11 @@ class TestRESTClientImplAsync:
 
     async def test_follow_channel(self, rest_client):
         expected_route = routes.POST_CHANNEL_FOLLOWERS.compile(channel=3333)
-        mock_message = object()
-        rest_client._entity_factory.deserialize_channel_follow = mock.Mock(return_value=mock_message)
         rest_client._request = mock.AsyncMock(return_value={"channel_id": "929292", "webhook_id": "929383838"})
 
         result = await rest_client.follow_channel(StubModel(3333), StubModel(606060), reason="get followed")
 
-        assert result is mock_message
+        assert result is rest_client._entity_factory.deserialize_channel_follow.return_value
         rest_client._entity_factory.deserialize_channel_follow.assert_called_once_with(
             {"channel_id": "929292", "webhook_id": "929383838"}
         )

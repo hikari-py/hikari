@@ -66,12 +66,12 @@ class TestChannelFollow:
         mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
 
     @pytest.mark.asyncio
-    async def test_get_channel(self, mock_app):
+    async def test_channel(self, mock_app):
         mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
         mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
         follow = channels.ChannelFollow(webhook_id=993883, app=mock_app, channel_id=snowflakes.Snowflake(696969))
 
-        result = follow.get_channel()
+        result = follow.channel
 
         assert result is mock_channel
         mock_app.cache.get_guild_channel.assert_called_once_with(696969)
