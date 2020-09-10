@@ -238,7 +238,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_private_text_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
+    def deserialize_dm(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
         """Parse a raw payload from Discord into a DM channel object.
 
         Parameters
@@ -248,14 +248,12 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.channels.PrivateTextChannel
+        hikari.channels.DMChannel
             The deserialized DM channel object.
         """
 
     @abc.abstractmethod
-    def deserialize_private_group_text_channel(
-        self, payload: data_binding.JSONObject
-    ) -> channel_models.GroupPrivateTextChannel:
+    def deserialize_group_dm(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
         """Parse a raw payload from Discord into a group DM channel object.
 
         Parameters
@@ -265,8 +263,8 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.channels.GroupPrivateTextChannel
-            The deserialized group private text channel object.
+        hikari.channels.GroupDMChannel
+            The deserialized group DM object.
         """
 
     @abc.abstractmethod

@@ -225,8 +225,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._dm_channel_type_mapping = {
-            channel_models.ChannelType.PRIVATE_TEXT: self.deserialize_private_text_channel,
-            channel_models.ChannelType.PRIVATE_GROUP_TEXT: self.deserialize_private_group_text_channel,
+            channel_models.ChannelType.DM: self.deserialize_dm,
+            channel_models.ChannelType.GROUP_DM: self.deserialize_group_dm,
         }
         self._guild_channel_type_mapping = {
             channel_models.ChannelType.GUILD_CATEGORY: self.deserialize_guild_category,
@@ -495,12 +495,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_models.ChannelType(payload["type"]),
         )
 
-    def deserialize_private_text_channel(self, payload: data_binding.JSONObject) -> channel_models.PrivateTextChannel:
+    def deserialize_dm(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
 
-        return channel_models.PrivateTextChannel(
+        return channel_models.DMChannel(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             name=payload.get("name"),
@@ -509,9 +509,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             recipient=self.deserialize_user(payload["recipients"][0]),
         )
 
-    def deserialize_private_group_text_channel(
-        self, payload: data_binding.JSONObject
-    ) -> channel_models.GroupPrivateTextChannel:
+    def deserialize_group_dm(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload["last_message_id"]) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
@@ -523,7 +521,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         recipients = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]}
 
-        return channel_models.GroupPrivateTextChannel(
+        return channel_models.GroupDMChannel(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             name=payload.get("name"),

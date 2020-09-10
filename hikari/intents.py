@@ -268,25 +268,25 @@ class Intents(flag.Flag):
     PRIVATE_MESSAGES = 1 << 12
     """Subscribes to the following events:
 
-    * `CHANNEL_CREATE` (in private message channels only)
-    * `MESSAGE_CREATE` (in private message channels only)
-    * `MESSAGE_UPDATE` (in private message channels only)
-    * `MESSAGE_DELETE` (in private message channels only)
+    * `CHANNEL_CREATE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_CREATE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_UPDATE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_DELETE` (in private message channels (non-guild bound) only)
     """
 
     PRIVATE_MESSAGE_REACTIONS = 1 << 13
     """Subscribes to the following events:
 
-    * `MESSAGE_REACTION_ADD` (in private message channels only)
-    * `MESSAGE_REACTION_REMOVE` (in private message channels only)
-    * `MESSAGE_REACTION_REMOVE_ALL` (in private message channels only)
-    * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels only)
+    * `MESSAGE_REACTION_ADD` (in private message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_ALL` (in private message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels (non-guild bound) only)
     """
 
     PRIVATE_MESSAGE_TYPING = 1 << 14
     """Subscribes to the following events
 
-    * `TYPING_START` (in private message channels only)
+    * `TYPING_START` (in private message channels (non-guild bound) only)
     """
 
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
@@ -328,7 +328,7 @@ class Intents(flag.Flag):
     """
 
     ALL_PRIVATE = PRIVATE_MESSAGES | PRIVATE_MESSAGE_TYPING | PRIVATE_MESSAGE_REACTIONS
-    """All private message intents."""
+    """All private message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = PRIVATE_MESSAGES | GUILD_MESSAGES
     """All message intents."""

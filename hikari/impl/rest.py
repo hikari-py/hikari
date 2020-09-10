@@ -1512,15 +1512,13 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
-    async def create_dm_channel(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> channels.PrivateTextChannel:
+    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
         raw_response = await self._request(route, json=body)
         response = typing.cast(data_binding.JSONObject, raw_response)
-        return self._entity_factory.deserialize_private_text_channel(response)
+        return self._entity_factory.deserialize_dm(response)
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()

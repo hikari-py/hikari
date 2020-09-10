@@ -94,7 +94,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         if isinstance(event.channel, channels.GuildChannel):
             self._cache.set_guild_channel(event.channel)
         else:
-            self._cache.set_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
+            self._cache.set_dm(typing.cast(channels.DMChannel, event.channel))
 
         await self.dispatch(event)
 
@@ -105,7 +105,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         if isinstance(event.channel, channels.GuildChannel):
             self._cache.update_guild_channel(event.channel)
         else:
-            self._cache.update_private_text_channel(typing.cast(channels.PrivateTextChannel, event.channel))
+            self._cache.update_dm(typing.cast(channels.DMChannel, event.channel))
 
         await self.dispatch(event)
 
@@ -116,9 +116,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         if isinstance(event.channel, channels.GuildChannel):
             self._cache.delete_guild_channel(event.channel.id)
         else:
-            self._cache.delete_private_text_channel(
-                typing.cast(channels.PrivateTextChannel, event.channel).recipient.id
-            )
+            self._cache.delete_dm(typing.cast(channels.DMChannel, event.channel).recipient.id)
 
         await self.dispatch(event)
 

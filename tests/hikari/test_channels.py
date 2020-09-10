@@ -39,7 +39,7 @@ def mock_app():
 
 def test_ChannelType_str_operator():
     channel_type = channels.ChannelType(1)
-    assert str(channel_type) == "PRIVATE_TEXT"
+    assert str(channel_type) == "DM"
 
 
 class TestChannelFollow:
@@ -98,28 +98,26 @@ def test_DMChannel_str_operator():
     mock_user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="snoop#0420"))
     mock_user.discriminator = "0420"
     mock_user.username = "snoop"
-    mock_channel = mock.Mock(channels.PrivateTextChannel, recipient=mock_user)
-    assert channels.PrivateTextChannel.__str__(mock_channel) == "PrivateTextChannel with: snoop#0420"
+    mock_channel = mock.Mock(channels.DMChannel, recipient=mock_user)
+    assert channels.DMChannel.__str__(mock_channel) == "DMChannel with: snoop#0420"
 
 
 def test_DMChannel_shard_id():
-    assert hikari_test_helpers.stub_class(channels.PrivateTextChannel).shard_id == 0
+    assert hikari_test_helpers.stub_class(channels.DMChannel).shard_id == 0
 
 
 def test_GroupDMChannel_str_operator():
-    mock_channel = mock.Mock(channels.GroupPrivateTextChannel)
+    mock_channel = mock.Mock(channels.GroupDMChannel)
     mock_channel.name = "super cool group dm"
-    assert channels.GroupPrivateTextChannel.__str__(mock_channel) == "super cool group dm"
+    assert channels.GroupDMChannel.__str__(mock_channel) == "super cool group dm"
 
 
 def test_GroupDMChannel_str_operator_when_name_is_None():
     user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="snoop#0420"))
     other_user = mock.Mock(users.UserImpl, __str__=mock.Mock(return_value="nice#6969"))
-    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, recipients={1: user, 2: other_user})
+    mock_channel = mock.Mock(channels.GroupDMChannel, recipients={1: user, 2: other_user})
     mock_channel.name = None
-    assert (
-        channels.GroupPrivateTextChannel.__str__(mock_channel) == "GroupPrivateTextChannel with: snoop#0420, nice#6969"
-    )
+    assert channels.GroupDMChannel.__str__(mock_channel) == "GroupDMChannel with: snoop#0420, nice#6969"
 
 
 def test_PermissionOverwrite_unset():
@@ -188,29 +186,29 @@ async def test_TextChannel_history():
 
 def test_GroupDMChannel_icon_url():
     channel = hikari_test_helpers.mock_class_namespace(
-        channels.GroupPrivateTextChannel, init=False, format_icon=mock.Mock(return_value="icon")
+        channels.GroupDMChannel, init=False, format_icon=mock.Mock(return_value="icon")
     )()
     assert channel.icon_url == "icon"
     channel.format_icon.assert_called_once()
 
 
 def test_GroupDMChannel_format_icon():
-    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, id=123, icon_hash="456abc")
-    assert channels.GroupPrivateTextChannel.format_icon(mock_channel, ext="jpeg", size=16) == files.URL(
+    mock_channel = mock.Mock(channels.GroupDMChannel, id=123, icon_hash="456abc")
+    assert channels.GroupDMChannel.format_icon(mock_channel, ext="jpeg", size=16) == files.URL(
         "https://cdn.discordapp.com/channel-icons/123/456abc.jpeg?size=16"
     )
 
 
 def test_GroupDMChannel_format_icon_without_optionals():
-    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, id=123, icon_hash="456abc")
-    assert channels.GroupPrivateTextChannel.format_icon(mock_channel) == files.URL(
+    mock_channel = mock.Mock(channels.GroupDMChannel, id=123, icon_hash="456abc")
+    assert channels.GroupDMChannel.format_icon(mock_channel) == files.URL(
         "https://cdn.discordapp.com/channel-icons/123/456abc.png?size=4096"
     )
 
 
 def test_GroupDMChannel_format_icon_when_hash_is_None():
-    mock_channel = mock.Mock(channels.GroupPrivateTextChannel, icon_hash=None)
-    assert channels.GroupPrivateTextChannel.format_icon(mock_channel) is None
+    mock_channel = mock.Mock(channels.GroupDMChannel, icon_hash=None)
+    assert channels.GroupDMChannel.format_icon(mock_channel) is None
 
 
 def test_GuildChannel_shard_id_property_when_guild_id_is_None():

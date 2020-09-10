@@ -99,8 +99,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             channel you request for.
 
             This means that you may get one of
-            `hikari.channels.PrivateTextChannel`,
-            `hikari.channels.GroupPrivateTextChannel`,
+            `hikari.channels.DMChannel`,
+            `hikari.channels.GroupDMChannel`,
             `hikari.channels.GuildTextChannel`,
             `hikari.channels.GuildVoiceChannel`,
             `hikari.channels.GuildStoreChannel`,
@@ -1827,9 +1827,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
-    async def create_dm_channel(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> channels.PrivateTextChannel:
+    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
         ...
 
     # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO

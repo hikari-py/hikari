@@ -47,8 +47,8 @@ class TestStatefulCacheImpl:
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
         return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheImpl)(app=app_impl, intents=None)
 
-    def test__build_private_text_channel_with_cached_user(self, cache_impl):
-        channel_data = hikari.utilities.cache.PrivateTextChannelData(
+    def test__build_dm_with_cached_user(self, cache_impl):
+        channel_data = hikari.utilities.cache.DMChannelData(
             id=snowflakes.Snowflake(5642134),
             name=None,
             last_message_id=snowflakes.Snowflake(65345),
@@ -58,17 +58,17 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = mapping.DictionaryCollection(
             {snowflakes.Snowflake(2342344): hikari.utilities.cache.GenericRefWrapper(object=mock_user)}
         )
-        channel = cache_impl._build_private_text_channel(channel_data)
+        channel = cache_impl._build_dm(channel_data)
         assert channel.app is cache_impl._app
         assert channel.id == snowflakes.Snowflake(5642134)
         assert channel.name is None
-        assert channel.type is channels.ChannelType.PRIVATE_TEXT
+        assert channel.type is channels.ChannelType.DM
         assert channel.last_message_id == snowflakes.Snowflake(65345)
         assert channel.recipient == mock_user
         assert channel.recipient is not mock_user
 
-    def test__build_private_text_channel_with_passed_through_user(self, cache_impl):
-        channel_data = hikari.utilities.cache.PrivateTextChannelData(
+    def test__build_dm_with_passed_through_user(self, cache_impl):
+        channel_data = hikari.utilities.cache.DMChannelData(
             id=snowflakes.Snowflake(5642134),
             name=None,
             last_message_id=snowflakes.Snowflake(65345),
@@ -76,21 +76,21 @@ class TestStatefulCacheImpl:
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection({})
-        channel_channel = cache_impl._build_private_text_channel(
+        channel_channel = cache_impl._build_dm(
             channel_data,
             cached_users={snowflakes.Snowflake(2342344): hikari.utilities.cache.GenericRefWrapper(object=mock_user)},
         )
         assert channel_channel.recipient == mock_user
         assert channel_channel.recipient is not mock_user
 
-    def test_clear_private_text_channels(self, cache_impl):
-        mock_channel_data_1 = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
-        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
+    def test_clear_dms(self, cache_impl):
+        mock_channel_data_1 = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.DMChannelData)
         mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
         mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_channel_1 = mock.Mock(channels.PrivateTextChannel)
-        mock_channel_2 = mock.Mock(channels.PrivateTextChannel)
-        cache_impl._private_text_channel_entries = mapping.DictionaryCollection(
+        mock_channel_1 = mock.Mock(channels.DMChannel)
+        mock_channel_2 = mock.Mock(channels.DMChannel)
+        cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(978655): mock_channel_data_1,
                 snowflakes.Snowflake(2342344): mock_channel_data_2,
@@ -105,8 +105,8 @@ class TestStatefulCacheImpl:
         )
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl._garbage_collect_user = mock.Mock()
-        cache_impl._build_private_text_channel = mock.Mock(side_effect=[mock_channel_1, mock_channel_2])
-        view = cache_impl.clear_private_text_channels()
+        cache_impl._build_dm = mock.Mock(side_effect=[mock_channel_1, mock_channel_2])
+        view = cache_impl.clear_dms()
         assert view == {
             snowflakes.Snowflake(978655): mock_channel_1,
             snowflakes.Snowflake(2342344): mock_channel_2,
@@ -117,8 +117,8 @@ class TestStatefulCacheImpl:
                 mock.call(snowflakes.Snowflake(2342344), decrement=1),
             ]
         )
-        assert cache_impl._private_text_channel_entries == {}
-        cache_impl._build_private_text_channel.assert_has_calls(
+        assert cache_impl._dm_entries == {}
+        cache_impl._build_dm.assert_has_calls(
             [
                 mock.call(
                     mock_channel_data_1,
@@ -137,54 +137,52 @@ class TestStatefulCacheImpl:
             ]
         )
 
-    def test_clear_private_text_channels_when_no_channels_cached(self, cache_impl):
-        assert cache_impl.clear_private_text_channels() == {}
+    def test_clear_dms_when_no_channels_cached(self, cache_impl):
+        assert cache_impl.clear_dms() == {}
 
-    def test_delete_private_text_channel_for_known_channel(self, cache_impl):
-        mock_channel_data = mock.Mock(
-            hikari.utilities.cache.PrivateTextChannelData, recipient_id=snowflakes.Snowflake(7345234)
-        )
-        mock_channel = mock.Mock(channels.PrivateTextChannel)
-        mock_other_channel_data = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
-        cache_impl._private_text_channel_entries = mapping.DictionaryCollection(
+    def test_delete_dm_for_known_channel(self, cache_impl):
+        mock_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData, recipient_id=snowflakes.Snowflake(7345234))
+        mock_channel = mock.Mock(channels.DMChannel)
+        mock_other_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData)
+        cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(7345234): mock_channel_data,
                 snowflakes.Snowflake(531234): mock_other_channel_data,
             }
         )
         cache_impl._garbage_collect_user = mock.Mock()
-        cache_impl._build_private_text_channel = mock.Mock(return_value=mock_channel)
-        assert cache_impl.delete_private_text_channel(snowflakes.Snowflake(7345234)) is mock_channel
-        cache_impl._build_private_text_channel.assert_called_once_with(mock_channel_data)
+        cache_impl._build_dm = mock.Mock(return_value=mock_channel)
+        assert cache_impl.delete_dm(snowflakes.Snowflake(7345234)) is mock_channel
+        cache_impl._build_dm.assert_called_once_with(mock_channel_data)
         cache_impl._garbage_collect_user.assert_called_once_with(snowflakes.Snowflake(7345234), decrement=1)
-        assert cache_impl._private_text_channel_entries == {snowflakes.Snowflake(531234): mock_other_channel_data}
+        assert cache_impl._dm_entries == {snowflakes.Snowflake(531234): mock_other_channel_data}
 
-    def test_delete_private_text_channel_for_unknown_channel_channel(self, cache_impl):
-        assert cache_impl.delete_private_text_channel(snowflakes.Snowflake(564234123)) is None
+    def test_delete_dm_for_unknown_channel_channel(self, cache_impl):
+        assert cache_impl.delete_dm(snowflakes.Snowflake(564234123)) is None
 
-    def test_get_private_text_channel_for_known_channel(self, cache_impl):
-        mock_channel_data = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
-        mock_channel = mock.Mock(channels.PrivateTextChannel)
-        cache_impl._private_text_channel_entries = mapping.DictionaryCollection(
+    def test_get_dm_for_known_channel(self, cache_impl):
+        mock_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_channel = mock.Mock(channels.DMChannel)
+        cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(65234123): mock_channel_data,
-                snowflakes.Snowflake(5123): mock.Mock(hikari.utilities.cache.PrivateTextChannelData),
+                snowflakes.Snowflake(5123): mock.Mock(hikari.utilities.cache.DMChannelData),
             }
         )
-        cache_impl._build_private_text_channel = mock.Mock(return_value=mock_channel)
-        assert cache_impl.get_private_text_channel(snowflakes.Snowflake(65234123)) is mock_channel
-        cache_impl._build_private_text_channel.assert_called_once_with(mock_channel_data)
+        cache_impl._build_dm = mock.Mock(return_value=mock_channel)
+        assert cache_impl.get_dm(snowflakes.Snowflake(65234123)) is mock_channel
+        cache_impl._build_dm.assert_called_once_with(mock_channel_data)
 
-    def test_get_private_text_channel_for_unknown_channel(self, cache_impl):
-        assert cache_impl.get_private_text_channel(snowflakes.Snowflake(561243)) is None
+    def test_get_dm_for_unknown_channel(self, cache_impl):
+        assert cache_impl.get_dm(snowflakes.Snowflake(561243)) is None
 
-    def test_get_private_text_channel_view(self, cache_impl):
+    def test_get_dm_view(self, cache_impl):
         mock_channel_data_1 = mock.Mock(
-            hikari.utilities.cache.PrivateTextChannelData,
+            hikari.utilities.cache.DMChannelData,
         )
-        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.PrivateTextChannelData)
-        mock_channel_1 = mock.Mock(channels.PrivateTextChannel)
-        mock_channel_2 = mock.Mock(channels.PrivateTextChannel)
+        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_channel_1 = mock.Mock(channels.DMChannel)
+        mock_channel_2 = mock.Mock(channels.DMChannel)
         mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
         mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
@@ -194,19 +192,19 @@ class TestStatefulCacheImpl:
                 snowflakes.Snowflake(65656): mock_wrapped_user_2,
             }
         )
-        cache_impl._build_private_text_channel = mock.Mock(side_effect=[mock_channel_1, mock_channel_2])
-        cache_impl._private_text_channel_entries = mapping.DictionaryCollection(
+        cache_impl._build_dm = mock.Mock(side_effect=[mock_channel_1, mock_channel_2])
+        cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(54213): mock_channel_data_1,
                 snowflakes.Snowflake(65656): mock_channel_data_2,
             }
         )
-        view = cache_impl.get_private_text_channels_view()
+        view = cache_impl.get_dms_view()
         assert view == {
             snowflakes.Snowflake(54213): mock_channel_1,
             snowflakes.Snowflake(65656): mock_channel_2,
         }
-        cache_impl._build_private_text_channel.assert_has_calls(
+        cache_impl._build_dm.assert_has_calls(
             [
                 mock.call(
                     mock_channel_data_1,
@@ -225,26 +223,26 @@ class TestStatefulCacheImpl:
             ]
         )
 
-    def test_get_private_text_channel_view_when_no_channels_cached(self, cache_impl):
-        assert cache_impl.get_private_text_channels_view() == {}
+    def test_get_dm_view_when_no_channels_cached(self, cache_impl):
+        assert cache_impl.get_dms_view() == {}
 
-    def test_set_private_text_channel(self, cache_impl):
+    def test_set_dm(self, cache_impl):
         mock_recipient = mock.Mock(users.User, id=snowflakes.Snowflake(7652341234))
-        channel = channels.PrivateTextChannel(
+        channel = channels.DMChannel(
             id=snowflakes.Snowflake(23123),
             app=cache_impl._app,
             name=None,
-            type=channels.ChannelType.PRIVATE_TEXT,
+            type=channels.ChannelType.DM,
             recipient=mock_recipient,
             last_message_id=snowflakes.Snowflake(5432134234),
         )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
-        cache_impl.set_private_text_channel(channel)
+        cache_impl.set_dm(channel)
         cache_impl.set_user.assert_called_once_with(mock_recipient)
         cache_impl._increment_user_ref_count.assert_called_once_with(7652341234)
-        assert 7652341234 in cache_impl._private_text_channel_entries
-        channel_data = cache_impl._private_text_channel_entries[snowflakes.Snowflake(7652341234)]
+        assert 7652341234 in cache_impl._dm_entries
+        channel_data = cache_impl._dm_entries[snowflakes.Snowflake(7652341234)]
         assert channel_data.id == 23123
         assert not hasattr(channel_data, "app")
         assert channel_data.name is None
@@ -253,32 +251,30 @@ class TestStatefulCacheImpl:
         assert channel_data.recipient_id == 7652341234
         assert channel_data.last_message_id == 5432134234
 
-    def test_set_private_text_channel_doesnt_increment_user_ref_for_pre_cached_channel(self, cache_impl):
+    def test_set_dm_doesnt_increment_user_ref_for_pre_cached_channel(self, cache_impl):
         mock_recipient = mock.Mock(users.User, id=snowflakes.Snowflake(7652341234))
-        channel = mock.Mock(channels.PrivateTextChannel, recipient=mock_recipient)
+        channel = mock.Mock(channels.DMChannel, recipient=mock_recipient)
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
-        cache_impl._private_text_channel_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(7652341234): mock.Mock(hikari.utilities.cache.PrivateTextChannelData)}
+        cache_impl._dm_entries = mapping.DictionaryCollection(
+            {snowflakes.Snowflake(7652341234): mock.Mock(hikari.utilities.cache.DMChannelData)}
         )
-        cache_impl.set_private_text_channel(channel)
+        cache_impl.set_dm(channel)
         cache_impl.set_user.assert_called_once_with(mock_recipient)
         cache_impl._increment_user_ref_count.assert_not_called()
 
-    def test_update_private_text_channel(self, cache_impl):
-        mock_old_cached_channel = mock.Mock(channels.PrivateTextChannel)
-        mock_new_cached_channel = mock.Mock(channels.PrivateTextChannel)
-        mock_channel = mock.Mock(
-            channels.PrivateTextChannel, recipient=mock.Mock(users.User, id=snowflakes.Snowflake(53123123))
-        )
-        cache_impl.get_private_text_channel = mock.Mock(side_effect=[mock_old_cached_channel, mock_new_cached_channel])
-        cache_impl.set_private_text_channel = mock.Mock()
-        assert cache_impl.update_private_text_channel(mock_channel) == (
+    def test_update_dm(self, cache_impl):
+        mock_old_cached_channel = mock.Mock(channels.DMChannel)
+        mock_new_cached_channel = mock.Mock(channels.DMChannel)
+        mock_channel = mock.Mock(channels.DMChannel, recipient=mock.Mock(users.User, id=snowflakes.Snowflake(53123123)))
+        cache_impl.get_dm = mock.Mock(side_effect=[mock_old_cached_channel, mock_new_cached_channel])
+        cache_impl.set_dm = mock.Mock()
+        assert cache_impl.update_dm(mock_channel) == (
             mock_old_cached_channel,
             mock_new_cached_channel,
         )
-        cache_impl.set_private_text_channel.assert_called_once_with(mock_channel)
-        cache_impl.get_private_text_channel.assert_has_calls([mock.call(53123123), mock.call(53123123)])
+        cache_impl.set_dm.assert_called_once_with(mock_channel)
+        cache_impl.get_dm.assert_has_calls([mock.call(53123123), mock.call(53123123)])
 
     def test__build_emoji(self, cache_impl):
         emoji_data = hikari.utilities.cache.KnownCustomEmojiData(

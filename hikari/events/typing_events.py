@@ -228,17 +228,17 @@ class PrivateTypingEvent(TypingEvent):
     # <<inherited docstring from TypingEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+    def channel(self) -> typing.Optional[channels.DMChannel]:
         """Get the cached channel, if known.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PrivateTextChannel]
+        typing.Optional[hikari.channels.DMChannel]
             The channel, if known.
         """
-        return self.app.cache.get_private_text_channel(self.user_id)
+        return self.app.cache.get_dm(self.user_id)
 
     if typing.TYPE_CHECKING:
 
-        async def fetch_channel(self) -> channels.PrivateTextChannel:
+        async def fetch_channel(self) -> channels.DMChannel:
             ...

@@ -319,9 +319,9 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+    def channel(self) -> typing.Optional[channels.DMChannel]:
         # <<inherited docstring from MessagesEvent>>.
-        return self.app.cache.get_private_text_channel(self.author_id)
+        return self.app.cache.get_dm(self.author_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
@@ -366,9 +366,9 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+    def channel(self) -> typing.Optional[channels.DMChannel]:
         # <<inherited docstring from MessagesEvent>>.
-        return self.app.cache.get_private_text_channel(self.author_id)
+        return self.app.cache.get_dm(self.author_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
@@ -411,7 +411,7 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+    def channel(self) -> typing.Optional[channels.DMChannel]:
         # <<inherited from MessageEvent>>.
         # TODO: implement when we can find cached private channel by ID
         return None
