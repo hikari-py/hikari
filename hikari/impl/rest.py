@@ -329,6 +329,14 @@ class RESTApp(traits.ExecutorAware):
     ) -> None:
         await self.close()
 
+    def __enter__(self) -> typing.NoReturn:
+        # This is async only.
+        cls = type(self)
+        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+        return None
+
 
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V6 and V7-compatible Discord HTTP API.
@@ -465,6 +473,14 @@ class RESTClientImpl(rest_api.RESTClient):
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
         await self.close()
+
+    def __enter__(self) -> typing.NoReturn:
+        # This is async only.
+        cls = type(self)
+        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+        return None
 
     @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:

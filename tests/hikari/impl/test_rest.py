@@ -182,6 +182,17 @@ class TestRESTApp:
             with pytest.raises(RuntimeError):
                 rest_app.acquire(token="token", token_type="Type")
 
+    def test___enter__(self, rest_app):
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
+            rest_app.__enter__()
+
+    def test___exit__(self, rest_app):
+        try:
+            rest_app.__exit__(None, None, None)
+        except AttributeError as exc:
+            pytest.fail(exc)
+
 
 @pytest.mark.asyncio
 class TestRESTAppAsync:
@@ -354,6 +365,17 @@ class TestRESTClientImpl:
             entity_factory=None,
         )
         assert obj._rest_url == "https://some.where/api/v2"
+
+    def test___enter__(self, rest_app):
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
+            rest_app.__enter__()
+
+    def test___exit__(self, rest_app):
+        try:
+            rest_app.__exit__(None, None, None)
+        except AttributeError as exc:
+            pytest.fail(exc)
 
     def test_http_settings_property(self, rest_client):
         mock_http_settings = object()

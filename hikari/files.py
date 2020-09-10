@@ -378,6 +378,14 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
     ) -> None:
         ...
 
+    def __enter__(self) -> typing.NoReturn:
+        # This is async only.
+        cls = type(self)
+        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+        return None
+
 
 @attr.s(slots=True, weakref_slot=False)
 @typing.final
