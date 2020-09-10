@@ -134,10 +134,14 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         super().__init__(*args, **kwargs)
         self._zlib = zlib.decompressobj()
 
-    def close(self, *, code: int = 1000, message: bytes = b"") -> typing.Coroutine[typing.Any, typing.Any, bool]:
+    async def close(self, *, code: int = 1000, message: bytes = b"") -> bool:
         if not self._closed and not self._closing:
             self._logger.debug("sending close frame with code %s and message %s", int(code), message)
-        return super().close(code=code, message=message)
+        try:
+            return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
+        except asyncio.TimeoutError:
+            self._logger.debug("failed to send close frame in time, probably connection issues")
+            return False
 
     async def receive_json(
         self,
@@ -261,7 +265,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             ) as cs:
                 try:
                     async with cs.ws_connect(
-                        heartbeat=_PING_PONG_HEARTBEAT_LATENCY,
+                        # heartbeat=_PING_PONG_HEARTBEAT_LATENCY,
                         max_msg_size=0,
                         proxy=proxy_config.url,
                         proxy_headers=proxy_config.headers,
@@ -305,7 +309,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
 
                 except aiohttp.ClientConnectionError as ex:
                     message = f"Failed to connect to Discord: {ex!r}"
-                    raise errors.GatewayError(message) from ex
+                    raise errors.GatewayConnectionError(message) from ex
 
                 except aiohttp.WSServerHandshakeError as ex:
                     try:
@@ -695,11 +699,12 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
                 # Gateway is zombie
+                self._logger.debug("zombied")
                 return True
 
             self._logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval)
 
-            task = asyncio.create_task(self._send_heartbeat(), name=f"shard {self.id} send heartbeat")
+            await self._send_heartbeat()
 
             try:
                 await asyncio.wait_for(self._closing.wait(), timeout=heartbeat_interval)
@@ -707,10 +712,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return False
             except asyncio.TimeoutError:
                 # We should continue
-                if not task.done():
-                    task.cancel()
-                    self._logger.debug("took more than one heartbeat interval to send a heartbeat, giving up")
-                    return True
+                continue
 
     async def _resume(self) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
@@ -722,7 +724,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _run(self) -> None:
         self._closed.clear()
-        last_started_at = -float("nan")
+        last_started_at = -float("inf")
 
         backoff = rate_limits.ExponentialBackOff(
             base=_BACKOFF_BASE,
@@ -745,8 +747,12 @@ class GatewayShardImpl(shard.GatewayShard):
                         pass
 
                 try:
+                    last_started_at = date.monotonic()
                     if not await self._run_once():
                         self._logger.debug("shard has shut down")
+
+                except errors.GatewayConnectionError as ex:
+                    self._logger.error("failed to connect to server, reason was %s, will retry shortly", ex.__cause__)
 
                 except errors.GatewayServerClosedConnectionError as ex:
                     if not ex.can_reconnect:
@@ -810,8 +816,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 try:
                     if self._seq is not None:
+                        self._logger.debug("resuming session %s", self._session_id)
                         await self._resume()
                     else:
+                        self._logger.debug("identifying with new session")
                         await self._identify()
 
                     if self._closing.is_set():
@@ -824,7 +832,12 @@ class GatewayShardImpl(shard.GatewayShard):
 
                     # Event polling.
                     while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
-                        payload = await self._ws.receive_json()
+                        try:
+                            payload = await self._ws.receive_json(timeout=5)
+                        except asyncio.TimeoutError:
+                            # Don't wait forever, check if the heartbeat has died.
+                            continue
+
                         op = payload[_OP]  # opcode int
                         d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
 

@@ -317,7 +317,6 @@ class Test_V6GatewayTransport:
             ws_response_class=shard._V6GatewayTransport,
         )
         mock_client_session.ws_connect.assert_called_once_with(
-            heartbeat=shard._PING_PONG_HEARTBEAT_LATENCY,
             max_msg_size=0,
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.headers,

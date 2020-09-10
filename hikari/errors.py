@@ -37,6 +37,7 @@ __all__: typing.Final[typing.List[str]] = [
     "ClientHTTPResponseError",
     "InternalServerError",
     "ShardCloseCode",
+    "GatewayConnectionError",
     "GatewayServerClosedConnectionError",
     "GatewayError",
     "MissingIntentWarning",
@@ -136,6 +137,11 @@ class ShardCloseCode(enum.IntEnum):
     INVALID_VERSION = 4012
     INVALID_INTENT = 4013
     DISALLOWED_INTENT = 4014
+
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class GatewayConnectionError(GatewayError):
+    """An exception thrown if a connection issue occurs."""
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
