@@ -874,7 +874,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     if await heartbeat_task:
                         now = date.monotonic()
                         self._logger.error(
-                            "connection is a zombie, last heartbeat sent %ss ago",
+                            "connection is a zombie, last heartbeat sent %.2fs ago",
                             now - self._last_heartbeat_sent,
                         )
                         self._logger.debug("will attempt to reconnect (_run_once => reconnect)")
