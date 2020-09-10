@@ -37,17 +37,20 @@ class GuildEvent:
         )
         return cls()
 
-    def test_available_guild(self, event):
-        result = event.available_guild
+    def test_guild_when_available(self, event):
+        result = event.guild
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
+        event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_unavailable_guild(self, event):
-        result = event.unavailable_guild
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(534123123)
+        event.app.cache.get_available_guild.assert_called_once_with(534123123)
 
     @pytest.mark.asyncio
     async def test_fetch_guild(self, event):

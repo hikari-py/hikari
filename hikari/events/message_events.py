@@ -136,7 +136,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
 
     @property
-    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild this event corresponds to, if known.
 
         !!! note
@@ -149,11 +149,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
-        return self.app.cache.get_available_guild(self.guild_id)
-
-    @property
-    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        return self.app.cache.get_unavailable_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -482,8 +478,8 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
         return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
 
     @property
-    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached available guild this event corresponds to, if known.
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild this event corresponds to, if known.
 
         !!! note
             You will need `hikari.intents.Intents.GUILDS` enabled to receive this
@@ -495,20 +491,4 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
-        return self.app.cache.get_available_guild(self.guild_id)
-
-    @property
-    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the stale unavailable guild this event corresponds to, if known.
-
-        !!! note
-            You will need `hikari.intents.Intents.GUILDS` enabled to receive this
-            information.
-
-        Returns
-        -------
-        hikari.guilds.GatewayGuild
-            The gateway guild that this event corresponds to, if known and
-            cached.
-        """
-        return self.app.cache.get_unavailable_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)

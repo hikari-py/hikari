@@ -45,17 +45,20 @@ class TestGuildMessageEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54123123123)
 
-    def test_available_guild(self, event):
-        result = event.available_guild
+    def test_guild_when_available(self, event):
+        result = event.guild
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(342123123)
+        event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_unavailable_guild(self, event):
-        result = event.unavailable_guild
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(342123123)
+        event.app.cache.get_available_guild.assert_called_once_with(342123123)
 
 
 class TestMessageCreateEvent:
@@ -187,14 +190,17 @@ class TestGuildMessageBulkDeleteEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
 
-    def test_available_guild(self, event):
-        result = event.available_guild
+    def test_guild_when_available(self, event):
+        result = event.guild
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(542342354564)
+        event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_unavailable_guild(self, event):
-        result = event.unavailable_guild
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(542342354564)
+        event.app.cache.get_available_guild.assert_called_once_with(542342354564)

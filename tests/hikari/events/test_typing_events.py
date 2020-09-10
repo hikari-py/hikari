@@ -78,17 +78,20 @@ class TestGuildTypingEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(123)
 
-    def test_available_guild(self, event):
-        result = event.available_guild
+    def test_guild_when_available(self, event):
+        result = event.guild
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(789)
+        event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_unavailable_guild(self, event):
-        result = event.unavailable_guild
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(789)
+        event.app.cache.get_available_guild.assert_called_once_with(789)
 
     async def test_fetch_channel(self, event):
         await event.fetch_member()

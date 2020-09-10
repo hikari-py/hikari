@@ -311,7 +311,7 @@ class Member(users.User):
     premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `builtins.None` if they aren't boosting and
+    This will be `builtins.None` if they are not boosting and
     `hikari.undefined.UndefinedType` if their boosting status is
     unknown.
     """

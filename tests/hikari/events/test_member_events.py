@@ -40,17 +40,20 @@ class TestMemberEvent:
     def test_user_id_property(self, event):
         event.user_id == 456
 
-    def test_available_guild(self, event):
-        result = event.available_guild
+    def test_guild_when_available(self, event):
+        result = event.guild
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(123)
+        event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_unavailable_guild(self, event):
-        result = event.unavailable_guild
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(123)
+        event.app.cache.get_available_guild.assert_called_once_with(123)
 
 
 class TestMemberCreateEvent:

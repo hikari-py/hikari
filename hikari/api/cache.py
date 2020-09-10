@@ -169,8 +169,8 @@ class Cache(abc.ABC):
 
         !!! note
             Unlike `Cache.get_available_guild`, the objects returned by this
-            method will likely be out of date and not-accurate as they are
-            considered unavailable meaning that we aren't receiving gateway
+            method will likely be out of date and inaccurate as they are
+            considered unavailable, meaning that we are not receiving gateway
             events for this guild.
 
         Parameters
@@ -200,8 +200,8 @@ class Cache(abc.ABC):
 
         !!! note
             Unlike `Cache.get_available_guilds_view`, the objects returned by
-            this method will likely be out of date and not-accurate as they are
-            considered unavailable meaning that we aren't receiving gateway
+            this method will likely be out of date and inaccurate as they are
+            considered unavailable, meaning that we are not receiving gateway
             events for this guild.
 
         Returns

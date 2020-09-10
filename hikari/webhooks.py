@@ -265,7 +265,7 @@ class Webhook(snowflakes.Unique):
             If this webhook is not found.
         hikari.errors.ForbiddenError
             If you either lack the `MANAGE_WEBHOOKS` permission or
-            aren't a member of the guild this webhook belongs to.
+            are not a member of the guild this webhook belongs to.
         builtins.ValueError
             If `use_token` is passed as `builtins.True` when `Webhook.token` is
             `builtins.None`.
@@ -321,10 +321,10 @@ class Webhook(snowflakes.Unique):
             If any invalid snowflake IDs are passed; a snowflake may be invalid
             due to it being outside of the range of a 64 bit integer.
         hikari.errors.NotFoundError
-            If either the webhook or the channel aren't found.
+            If either the webhook or the channel are not found.
         hikari.errors.ForbiddenError
             If you either lack the `MANAGE_WEBHOOKS` permission or
-            aren't a member of the guild this webhook belongs to.
+            are not a member of the guild this webhook belongs to.
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         builtins.ValueError

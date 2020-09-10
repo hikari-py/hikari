@@ -165,34 +165,17 @@ class GuildTypingEvent(TypingEvent):
         return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
 
     @property
-    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached available object of the guild this typing event occurred in.
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached object of the guild this typing event occurred in.
 
-        If the guild is not found in the cache or is cached in an unavailable
-        state then this will return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found cached in an available
-            state else `builtins.None`.
-        """
-        return self.app.cache.get_available_guild(self.guild_id)
-
-    @property
-    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the stale cached object of the guild this typing event occurred in.
-
-        If the guild is not found in the cache or is cached in an available
-        state then this will return `builtins.None`.
+        If the guild is not found then this will return `builtins.None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The stale object of the gateway guild if found cached in an
-            unavailable state else `builtins.None`.
+            The object of the gateway guild if found else `builtins.None`.
         """
-        return self.app.cache.get_unavailable_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     if typing.TYPE_CHECKING:
 

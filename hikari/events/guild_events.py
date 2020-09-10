@@ -80,33 +80,17 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         """
 
     @property
-    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached available guild that this event relates to.
+    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild that this event relates to, if known.
 
-        If the guild is not cached or cached in an unavailable state then this
-        will return `builtins.None`.
+        If not known, this will return `builtins.None` instead.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild this event relates to, or `builtins.None` if not known.
         """
-        return self.app.cache.get_available_guild(self.guild_id)
-
-    @property
-    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached unavailable guild that this event relates to.
-
-        If the guild is not cached or cached in an available state then this
-        will return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The stale object of the guild this event relates to if it is cached
-            in an unavailable state, else `builtins.None`.
-        """
-        return self.app.cache.get_unavailable_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
         """Perform an API call to get the guild that this event relates to.
