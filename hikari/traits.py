@@ -572,20 +572,3 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         raise NotImplementedError
-
-    async def terminate(self, close_executor: bool = False) -> None:
-        """Kill the application by shutting all components down.
-
-        Other Parameters
-        ----------------
-        close_executor : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, any custom
-            `concurrent.futures.Executor` passed to the constructor will be
-            shut down when the application terminates. This does not affect the
-            default executor associated with the event loop, and will not
-            do anything if you do not provide a custom executor to the
-            constructor.
-        """
-        raise NotImplementedError
-
-    __slots__: typing.Sequence[str] = ()
