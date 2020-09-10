@@ -699,8 +699,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             self._logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval)
 
-            # TODO: Could this error, or can I just assume any other receiver will die first?
-            await self._send_heartbeat()
+            task = asyncio.create_task(self._send_heartbeat(), name=f"shard {self.id} send heartbeat")
 
             try:
                 await asyncio.wait_for(self._closing.wait(), timeout=heartbeat_interval)
@@ -708,7 +707,10 @@ class GatewayShardImpl(shard.GatewayShard):
                 return False
             except asyncio.TimeoutError:
                 # We should continue
-                pass
+                if not task.done():
+                    task.cancel()
+                    self._logger.debug("took more than one heartbeat interval to send a heartbeat, giving up")
+                    return True
 
     async def _resume(self) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
