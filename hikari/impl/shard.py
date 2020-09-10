@@ -750,7 +750,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         self._logger.debug("shard has shut down")
 
                 except errors.GatewayConnectionError as ex:
-                    self._logger.error("failed to connect to server, reason was %s, will retry shortly", ex.__cause__)
+                    self._logger.error("failed to connect to server, reason was: %s. Will retry shortly", ex.__cause__)
 
                 except errors.GatewayServerClosedConnectionError as ex:
                     if not ex.can_reconnect:
