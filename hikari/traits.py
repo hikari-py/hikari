@@ -446,6 +446,8 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing.Protocol):
     """Structural supertype for a component that is aware of all internals."""
 
+    __slots__: typing.Sequence[str] = ()
+
     async def join(self, until_close: bool = True) -> None:
         """Wait indefinitely until the application closes.
 
@@ -470,7 +472,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
         *,
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
-        close_executor: bool = False,
+        close_passed_executor: bool = False,
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
