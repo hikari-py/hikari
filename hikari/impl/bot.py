@@ -420,22 +420,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         return self._events.get_listeners(event_type, polymorphic=polymorphic)
 
     async def join(self, until_close: bool = True) -> None:
-        """Wait indefinitely until the application closes.
-
-        This can be placed in a task and cancelled without affecting the
-        application runtime itself. Any exceptions raised by shards will be
-        propagated to here.
-
-        Other Parameters
-        ----------------
-        until_close : builtins.bool
-            Defaults to `builtins.True`. If set, the waiter will stop as soon as
-            a request for shut down is processed. This can allow you to break
-            and begin closing your own resources.
-
-            If `builtins.False`, then this will wait until all shards' tasks
-            have died.
-        """
         awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
         if until_close:
             awaitables.append(self._closing_event.wait())
@@ -691,42 +675,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
-        """Start the bot, wait for all shards to become ready, and then return.
-
-        Other Parameters
-        ----------------
-        activity : typing.Optional[hikari.presences.Activity]
-            The initial activity to display in the bot user presence, or
-            `builtins.None` (default) to not show any.
-        afk : builtins.bool
-            The initial AFK state to display in the bot user presence, or
-            `builtins.False` (default) to not show any.
-        idle_since : typing.Optional[datetime.datetime]
-            The `datetime.datetime` the user should be marked as being idle
-            since, or `builtins.None` (default) to not show this.
-        ignore_session_start_limit : builtins.bool
-            Defaults to `builtins.False`. If `builtins.False`, then attempting
-            to start more sessions than you are allowed in a 24 hour window
-            will throw a `hikari.errors.GatewayError` rather than going ahead
-            and hitting the IDENTIFY limit, which may result in your token
-            being reset. Setting to `builtins.True` disables this behavior.
-        large_threshold : builtins.int
-            Threshold for members in a guild before it is treated as being
-            "large" and no longer sending member details in the `GUILD CREATE`
-            event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.Set[builtins.int]]
-            The shard IDs to create shards for. If not `builtins.None`, then
-            a non-`None` `shard_count` must ALSO be provided. Defaults to
-            `builtins.None`, which means the Discord-recommended count is used
-            for your application instead.
-        shard_count : typing.Optional[builtins.int]
-            The number of shards to use in the entire distributed application.
-            Defaults to `builtins.None` which results in the count being
-            determined dynamically on startup.
-        status : hikari.presences.Status
-            The initial status to show for the user presence on startup.
-            Defaults to `hikari.presences.Status.ONLINE`.
-        """
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
 
