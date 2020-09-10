@@ -67,28 +67,24 @@ class StatelessCacheImpl(cache.MutableCache):
     def _no_cache() -> NotImplementedError:
         return NotImplementedError("This application is stateless, cache operations are not implemented.")
 
-    def clear_private_text_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
+    def clear_dms(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
         raise self._no_cache()
 
-    def delete_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
+    def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
         raise self._no_cache()
 
-    def get_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
+    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
         return None
 
-    def get_private_text_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
+    def get_dms_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
         return cache_utilities.EmptyCacheView()
 
-    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
+    def set_dm(self, channel: channels.DMChannel, /) -> None:
         raise self._no_cache()
 
-    def update_private_text_channel(
-        self, channel: channels.PrivateTextChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
+    def update_dm(
+        self, channel: channels.DMChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
         raise self._no_cache()
 
     def clear_emojis(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:

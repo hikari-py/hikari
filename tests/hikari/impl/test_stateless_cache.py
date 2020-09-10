@@ -32,27 +32,27 @@ class TestStatelessCache:
     def component(self):
         return stateless_cache.StatelessCacheImpl()
 
-    def test_clear_private_text_channels(self, component):
+    def test_clear_dms(self, component):
         with pytest.raises(NotImplementedError):
-            assert component.clear_private_text_channels()
+            assert component.clear_dms()
 
-    def test_delete_private_text_channel(self, component):
+    def test_delete_dm(self, component):
         with pytest.raises(NotImplementedError):
-            assert component.delete_private_text_channel(123)
+            assert component.delete_dm(123)
 
-    def test_get_private_text_channel(self, component):
-        assert component.get_private_text_channel(123) is None
+    def test_get_dm(self, component):
+        assert component.get_dm(123) is None
 
-    def test_get_private_text_channels_view(self, component):
-        assert component.get_private_text_channels_view() == {}
+    def test_get_dms_view(self, component):
+        assert component.get_dms_view() == {}
 
-    def test_set_private_text_channel(self, component):
+    def test_set_dm(self, component):
         with pytest.raises(NotImplementedError):
-            assert component.set_private_text_channel(object())
+            assert component.set_dm(object())
 
-    def test_update_private_text_channel(self, component):
+    def test_update_dm(self, component):
         with pytest.raises(NotImplementedError):
-            assert component.update_private_text_channel(object())
+            assert component.update_dm(object())
 
     def test_clear_emojis(self, component):
         with pytest.raises(NotImplementedError):

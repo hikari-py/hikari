@@ -31,8 +31,8 @@ __all__: typing.Final[typing.List[str]] = [
     "PartialChannel",
     "TextChannel",
     "PrivateChannel",
-    "PrivateTextChannel",
-    "GroupPrivateTextChannel",
+    "DMChannel",
+    "GroupDMChannel",
     "GuildCategory",
     "GuildChannel",
     "GuildTextChannel",
@@ -75,13 +75,13 @@ class ChannelType(enum.IntEnum):
     GUILD_TEXT = 0
     """A text channel in a guild."""
 
-    PRIVATE_TEXT = 1
+    DM = 1
     """A direct channel between two users."""
 
     GUILD_VOICE = 2
     """A voice channel in a guild."""
 
-    PRIVATE_GROUP_TEXT = 3
+    GROUP_DM = 3
     """A direct channel between multiple users."""
 
     GUILD_CATEGORY = 4
@@ -514,8 +514,8 @@ class PrivateChannel(PartialChannel):
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class PrivateTextChannel(PrivateChannel, TextChannel):
-    """Represents a private text channel that is between you and another user."""
+class DMChannel(PrivateChannel, TextChannel):
+    """Represents a direct message text channel that is between you and another user."""
 
     recipient: users.User = attr.ib(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
@@ -530,8 +530,8 @@ class PrivateTextChannel(PrivateChannel, TextChannel):
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class GroupPrivateTextChannel(PrivateChannel):
-    """Represents a group private channel.
+class GroupDMChannel(PrivateChannel):
+    """Represents a group direct message channel.
 
     !!! note
         This doesn't have the methods found on `TextChannel` as bots cannot
@@ -565,11 +565,11 @@ class GroupPrivateTextChannel(PrivateChannel):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon for this DM channel, if set."""
+        """Icon for this groupd DM, if set."""
         return self.format_icon()
 
     def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the icon for this DM, if set.
+        """Generate the icon for this group, if set.
 
         Parameters
         ----------

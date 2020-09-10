@@ -28,7 +28,7 @@ __all__: typing.Final[typing.List[str]] = [
     "EmptyCacheView",
     "GuildRecord",
     "BaseData",
-    "PrivateTextChannelData",
+    "DMChannelData",
     "InviteData",
     "MemberData",
     "KnownCustomEmojiData",
@@ -36,7 +36,7 @@ __all__: typing.Final[typing.List[str]] = [
     "MemberPresenceData",
     "VoiceStateData",
     "GenericRefWrapper",
-    "PrivateTextChannelMRUMutableMapping",
+    "DMChannelMRUMutableMapping",
     "copy_guild_channel",
     "GuildChannelCacheMappingView",
     "Cache3DMappingView",
@@ -329,8 +329,8 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
-class PrivateTextChannelData(BaseData[channels.PrivateTextChannel]):
-    """A data model for storing private text channel data in an in-memory cache.
+class DMChannelData(BaseData[channels.DMChannel]):
+    """A data model for storing DM data in an in-memory cache.
 
     !!! note
         This doesn't cover private group text channels as we won't ever receive
@@ -342,20 +342,18 @@ class PrivateTextChannelData(BaseData[channels.PrivateTextChannel]):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     recipient_id: snowflakes.Snowflake = attr.ib()
 
-    def build_entity(self, **kwargs: typing.Any) -> channels.PrivateTextChannel:
-        return channels.PrivateTextChannel(
+    def build_entity(self, **kwargs: typing.Any) -> channels.DMChannel:
+        return channels.DMChannel(
             id=self.id,
             name=self.name,
             last_message_id=self.last_message_id,
-            type=channels.ChannelType.PRIVATE_TEXT,
+            type=channels.ChannelType.DM,
             app=kwargs["app"],
             recipient=kwargs["recipient"],
         )
 
     @classmethod
-    def build_from_entity(
-        cls: typing.Type[PrivateTextChannelData], entity: channels.PrivateTextChannel
-    ) -> PrivateTextChannelData:
+    def build_from_entity(cls: typing.Type[DMChannelData], entity: channels.DMChannel) -> DMChannelData:
         return cls(
             id=entity.id, name=entity.name, last_message_id=entity.last_message_id, recipient_id=entity.recipient.id
         )
@@ -695,8 +693,8 @@ class GenericRefWrapper(typing.Generic[ValueT]):
     ref_count: int = attr.ib(default=0)
 
 
-class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, PrivateTextChannelData]):
-    """A specialised Most-recently-used limited mapping for private text channels.
+class DMChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, DMChannelData]):
+    """A specialised Most-recently-used limited mapping for DMs.
 
     This allows us to stop the private message cached from growing
     un-controllably by removing old private channels rather than waiting for
@@ -719,7 +717,7 @@ class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Sn
 
     def __init__(
         self,
-        source: typing.Optional[typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]] = None,
+        source: typing.Optional[typing.Dict[snowflakes.Snowflake, DMChannelData]] = None,
         /,
         *,
         expiry: datetime.timedelta,
@@ -730,10 +728,10 @@ class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Sn
         self._channels = source or {}
         self._expiry = expiry
 
-    def copy(self) -> PrivateTextChannelMRUMutableMapping:
-        return PrivateTextChannelMRUMutableMapping(self._channels.copy(), expiry=self._expiry)
+    def copy(self) -> DMChannelMRUMutableMapping:
+        return DMChannelMRUMutableMapping(self._channels.copy(), expiry=self._expiry)
 
-    def freeze(self) -> typing.Dict[snowflakes.Snowflake, PrivateTextChannelData]:
+    def freeze(self) -> typing.Dict[snowflakes.Snowflake, DMChannelData]:
         return self._channels.copy()
 
     def _garbage_collect(self) -> None:
@@ -748,7 +746,7 @@ class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Sn
         del self._channels[sf]
         self._garbage_collect()
 
-    def __getitem__(self, sf: snowflakes.Snowflake) -> PrivateTextChannelData:
+    def __getitem__(self, sf: snowflakes.Snowflake) -> DMChannelData:
         return self._channels[sf]
 
     def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
@@ -757,7 +755,7 @@ class PrivateTextChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Sn
     def __len__(self) -> int:
         return len(self._channels)
 
-    def __setitem__(self, sf: snowflakes.Snowflake, value: PrivateTextChannelData) -> None:
+    def __setitem__(self, sf: snowflakes.Snowflake, value: DMChannelData) -> None:
         self._garbage_collect()
         #  Seeing as we rely on insertion order in _garbage_collect, we have to make sure that each item is added to
         #  the end of the dict.

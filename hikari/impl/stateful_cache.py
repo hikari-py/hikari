@@ -88,7 +88,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
     __slots__: typing.Sequence[str] = (
         "_app",
-        "_private_text_channel_entries",
+        "_dm_entries",
         "_emoji_entries",
         "_guild_channel_entries",
         "_guild_entries",
@@ -103,7 +103,7 @@ class StatefulCacheImpl(cache.MutableCache):
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
     _app: traits.RESTAware
     _me: typing.Optional[users.OwnUser]
-    _private_text_channel_entries: mapping.MappedCollection[snowflakes.Snowflake, cache_utility.PrivateTextChannelData]
+    _dm_entries: mapping.MappedCollection[snowflakes.Snowflake, cache_utility.DMChannelData]
     _emoji_entries: mapping.MappedCollection[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
     _guild_channel_entries: mapping.MappedCollection[snowflakes.Snowflake, channels.GuildChannel]
     _guild_entries: mapping.MappedCollection[snowflakes.Snowflake, cache_utility.GuildRecord]
@@ -122,9 +122,7 @@ class StatefulCacheImpl(cache.MutableCache):
         # Cached Private Channels channels are a special case as there's no sane way to remove them from cache as we'd
         # have to go through all the guilds the app is in to see if it shares any of them with the channel's owner
         # before removing it from the cache so we use a specific MRU implementation to cover private channel de-caching.
-        self._private_text_channel_entries = cache_utility.PrivateTextChannelMRUMutableMapping(
-            expiry=datetime.timedelta(minutes=5)
-        )
+        self._dm_entries = cache_utility.DMChannelMRUMutableMapping(expiry=datetime.timedelta(minutes=5))
         self._emoji_entries = mapping.DictionaryCollection()
         self._guild_channel_entries = mapping.DictionaryCollection()
         self._guild_entries = mapping.DictionaryCollection()
@@ -143,13 +141,13 @@ class StatefulCacheImpl(cache.MutableCache):
     def _is_intent_enabled(self, intents: intents_.Intents, /) -> bool:
         return self._intents is None or (self._intents & intents) == intents
 
-    def _build_private_text_channel(
+    def _build_dm(
         self,
-        channel_data: cache_utility.PrivateTextChannelData,
+        channel_data: cache_utility.DMChannelData,
         cached_users: typing.Optional[
             typing.Mapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
         ] = None,
-    ) -> channels.PrivateTextChannel:
+    ) -> channels.DMChannel:
         if cached_users:
             recipient = copy.copy(cached_users[channel_data.recipient_id].object)
         else:
@@ -157,12 +155,12 @@ class StatefulCacheImpl(cache.MutableCache):
 
         return channel_data.build_entity(app=self._app, recipient=recipient)
 
-    def clear_private_text_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
-        if not self._private_text_channel_entries:
+    def clear_dms(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
+        if not self._dm_entries:
             return cache_utility.EmptyCacheView()
 
-        cached_channels = self._private_text_channel_entries
-        self._private_text_channel_entries = mapping.DictionaryCollection()
+        cached_channels = self._dm_entries
+        self._dm_entries = mapping.DictionaryCollection()
         cached_users = {}
 
         for user_id in cached_channels:
@@ -170,55 +168,49 @@ class StatefulCacheImpl(cache.MutableCache):
             self._garbage_collect_user(user_id, decrement=1)
 
         return cache_utility.StatefulCacheMappingView(
-            cached_channels, builder=lambda channel: self._build_private_text_channel(channel, cached_users)
+            cached_channels, builder=lambda channel: self._build_dm(channel, cached_users)
         )
 
-    def delete_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
-        channel_data = self._private_text_channel_entries.pop(user_id, None)
+    def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+        channel_data = self._dm_entries.pop(user_id, None)
         if channel_data is None:
             return None
 
-        channel = self._build_private_text_channel(channel_data)
+        channel = self._build_dm(channel_data)
         self._garbage_collect_user(user_id, decrement=1)
         return channel
 
-    def get_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
-        if user_id in self._private_text_channel_entries:
-            return self._build_private_text_channel(self._private_text_channel_entries[user_id])
+    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+        if user_id in self._dm_entries:
+            return self._build_dm(self._dm_entries[user_id])
 
         return None
 
-    def get_private_text_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
-        if not self._private_text_channel_entries:
+    def get_dms_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
+        if not self._dm_entries:
             return cache_utility.EmptyCacheView()
 
-        cached_channels = self._private_text_channel_entries.freeze()
+        cached_channels = self._dm_entries.freeze()
         cached_users = {user_id: self._user_entries[user_id] for user_id in cached_channels}
         return cache_utility.StatefulCacheMappingView(
             cached_channels,
-            builder=lambda channel: self._build_private_text_channel(channel, cached_users),
+            builder=lambda channel: self._build_dm(channel, cached_users),
         )
 
-    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
+    def set_dm(self, channel: channels.DMChannel, /) -> None:
         self.set_user(channel.recipient)
 
-        if channel.recipient.id not in self._private_text_channel_entries:
+        if channel.recipient.id not in self._dm_entries:
             self._increment_user_ref_count(channel.recipient.id)
 
-        self._private_text_channel_entries[
-            channel.recipient.id
-        ] = cache_utility.PrivateTextChannelData.build_from_entity(channel)
+        self._dm_entries[channel.recipient.id] = cache_utility.DMChannelData.build_from_entity(channel)
 
-    def update_private_text_channel(
-        self, channel: channels.PrivateTextChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
-        cached_channel = self.get_private_text_channel(channel.recipient.id)
-        self.set_private_text_channel(channel)
-        return cached_channel, self.get_private_text_channel(channel.recipient.id)
+    def update_dm(
+        self, channel: channels.DMChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
+        cached_channel = self.get_dm(channel.recipient.id)
+        self.set_dm(channel)
+        return cached_channel, self.get_dm(channel.recipient.id)
 
     def _build_emoji(
         self,

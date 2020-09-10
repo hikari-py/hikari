@@ -590,7 +590,7 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.PrivateTextChannel]:
+    def channel(self) -> typing.Optional[channels.DMChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -604,18 +604,18 @@ class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
         # TODO: implement when there is a way to find private channels by ID in cache.
         return None
 
-    async def fetch_channel(self) -> channels.PrivateTextChannel:
+    async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch the details about this channel.
 
         Returns
         -------
-        hikari.channels.PrivateTextChannel
-            A derivative of `hikari.channels.PrivateTextChannel`. The actual
+        hikari.channels.DMChannel
+            A derivative of `hikari.channels.DMChannel`. The actual
             type will vary depending on the type of channel this event
             concerns.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.PrivateTextChannel)
+        assert isinstance(channel, channels.DMChannel)
         return channel
 
 

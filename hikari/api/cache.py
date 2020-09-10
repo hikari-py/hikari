@@ -78,32 +78,30 @@ class Cache(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def get_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
-        """Get a private text channel object from the cache.
+    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+        """Get a DM object from the cache.
 
         Parameters
         ----------
         user_id : hikari.snowflakes.Snowflake
-            The ID of the user that the private text channel to get from the
+            The ID of the user that the DM to get from the
             cache is with.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PrivateTextChannel]
-            The object of the private text channel that was found in the cache
+        typing.Optional[hikari.channels.DMChannel]
+            The object of the DM that was found in the cache
             or `builtins.None`.
         """
 
     @abc.abstractmethod
-    def get_private_text_channels_view(self) -> CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
-        """Get a view of the private text channel objects in the cache.
+    def get_dms_view(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
+        """Get a view of the DM objects in the cache.
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PrivateTextChannel]
-            The view of the user IDs to private text channel objects in the cache.
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.DMChannel]
+            The view of the user IDs to DM objects in the cache.
         """
 
     @abc.abstractmethod
@@ -547,13 +545,13 @@ class MutableCache(Cache, abc.ABC):
     """
 
     @abc.abstractmethod
-    def clear_private_text_channels(self) -> CacheView[snowflakes.Snowflake, channels.PrivateTextChannel]:
-        """Remove all the private text channel channel objects from the cache.
+    def clear_dms(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
+        """Remove all the DM channel objects from the cache.
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PrivateTextChannel]
-            The cache view of user IDs to the private text channel objects that
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.DMChannel]
+            The cache view of user IDs to the DM objects that
             were removed from the cache.
 
         Raises
@@ -563,21 +561,19 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_private_text_channel(
-        self, user_id: snowflakes.Snowflake, /
-    ) -> typing.Optional[channels.PrivateTextChannel]:
-        """Remove a private text channel channel object from the cache.
+    def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+        """Remove a DM channel object from the cache.
 
         Parameters
         ----------
         user_id : hikari.snowflakes.Snowflake
-            The ID of the user that the private text channel channel to remove
+            The ID of the user that the DM channel to remove
             from the cache it with.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PrivateTextChannel]
-            The object of the private text channel that was removed from the
+        typing.Optional[hikari.channels.DMChannel]
+            The object of the DM that was removed from the
             cache if found, else `builtins.None`
 
         Raises
@@ -587,13 +583,13 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_private_text_channel(self, channel: channels.PrivateTextChannel, /) -> None:
-        """Add a private text channel object to the cache.
+    def set_dm(self, channel: channels.DMChannel, /) -> None:
+        """Add a DM object to the cache.
 
         Parameters
         ----------
-        channel : hikari.channels.PrivateTextChannel
-            The object of the private text channel to add to the cache.
+        channel : hikari.channels.DMChannel
+            The object of the DM to add to the cache.
 
         Raises
         ------
@@ -602,21 +598,21 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_private_text_channel(
-        self, channel: channels.PrivateTextChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.PrivateTextChannel], typing.Optional[channels.PrivateTextChannel]]:
-        """Update a private text Channel object in the cache.
+    def update_dm(
+        self, channel: channels.DMChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
+        """Update a DM object in the cache.
 
         Parameters
         ----------
-        channel : hikari.channels.PrivateTextChannel
-            The object of the private text channel to update in the cache.
+        channel : hikari.channels.DMChannel
+            The object of the DM to update in the cache.
 
         Returns
         -------
-        typing.Tuple[typing.Optional[hikari.channels.PrivateTextChannel], typing.Optional[hikari.channels.PrivateTextChannel]]
-            A tuple of the old cached private text channel if found
-            (else `builtins.None`) and the new cached private text channel if it
+        typing.Tuple[typing.Optional[hikari.channels.DMChannel], typing.Optional[hikari.channels.DMChannel]]
+            A tuple of the old cached DM if found
+            (else `builtins.None`) and the new cached DM if it
             could be cached (else `builtins.None`).
 
         Raises
@@ -1430,7 +1426,7 @@ class MutableCache(Cache, abc.ABC):
 
         !!! note
             This will skip users that are being referenced by other entries
-            within the cache; member entries and private text channel entries
+            within the cache; member entries and DM entries
             will keep a user alive within the cache.
 
         Returns
@@ -1456,7 +1452,7 @@ class MutableCache(Cache, abc.ABC):
 
         !!! note
             You cannot delete a user object while it's being referenced by other
-            entries within the cache; member entries and private text channel
+            entries within the cache; member entries and DM
             entries will keep a user alive within the cache.
 
         Returns
