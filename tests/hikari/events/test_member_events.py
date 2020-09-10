@@ -22,22 +22,35 @@
 import mock
 import pytest
 
+from hikari import snowflakes
 from hikari.events import member_events
+from tests.hikari import hikari_test_helpers
 
 
 class TestMemberEvent:
     @pytest.fixture()
     def event(self):
-        class StubEvent(member_events.MemberEvent):
-            guild_id = 123
-            user = mock.Mock(id=456)
-            shard = None
-            app = None
-
-        return StubEvent()
+        cls = hikari_test_helpers.mock_class_namespace(
+            member_events.MemberEvent,
+            guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(123)),
+            user=mock.PropertyMock(return_value=mock.Mock(id=456)),
+        )
+        return cls()
 
     def test_user_id_property(self, event):
         event.user_id == 456
+
+    def test_available_guild(self, event):
+        result = event.available_guild
+
+        assert result is event.app.cache.get_available_guild.return_value
+        event.app.cache.get_available_guild.assert_called_once_with(123)
+
+    def test_unavailable_guild(self, event):
+        result = event.unavailable_guild
+
+        assert result is event.app.cache.get_unavailable_guild.return_value
+        event.app.cache.get_unavailable_guild.assert_called_once_with(123)
 
 
 class TestMemberCreateEvent:

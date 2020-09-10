@@ -137,18 +137,34 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
 
     @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild that this event relates to, if known.
+    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached available guild that this event relates to.
 
-        If not, return `builtins.None`.
+        This will return `builtins.None` if the guild is unknown or cached in an
+        unavailable state.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The gateway guild this event relates to, if known. Otherwise
-            this will return `builtins.None`.
+            The gateway guild this event relates to, if it's cached in an
+            available state. Otherwise this will return `builtins.None`.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id)
+
+    @property
+    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached unavailable guild that this event relates to.
+
+        This will return `builtins.None` if the guild is unknown or cached in an
+        available state.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The stale object of guild this event relates to, if it's cached in
+            an unavailable state. Otherwise this will return `builtins.None`.
+        """
+        return self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
         """Perform an API call to fetch the guild that this event relates to.

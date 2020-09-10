@@ -419,23 +419,37 @@ class StatefulCacheImpl(cache.MutableCache):
 
         return guild
 
-    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+    def _get_guild(
+        self, guild_id: snowflakes.Snowflake, /, *, availability: bool
+    ) -> typing.Optional[guilds.GatewayGuild]:
         guild_record = self._guild_entries.get(guild_id)
-        if guild_record is not None:
-            if guild_record.guild and not guild_record.is_available:
-                raise errors.UnavailableGuildError(guild_record.guild) from None
+        if guild_record is None or guild_record.guild is None or guild_record.is_available is not availability:
+            return None
 
-            return copy.copy(guild_record.guild)
+        return copy.copy(guild_record.guild)
 
-        return None
+    def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        return self._get_guild(guild_id, availability=True)
 
-    def get_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        # TODO: do we want to include unavailable guilds here or hide them?
+    def get_unavailable_guild(self, guild_id: snowflakes.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
+        return self._get_guild(guild_id, availability=False)
+
+    def _get_guilds_view(self, *, availability: bool) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         entries = self._guild_entries.freeze()
         # We may have a guild record without a guild object in cases where we're caching other entities that belong to
         # the guild therefore we want to make sure record.guild isn't None.
-        results = {sf: guild_record.guild for sf, guild_record in entries.items() if guild_record.guild}
+        results = {
+            sf: guild_record.guild
+            for sf, guild_record in entries.items()
+            if guild_record.guild and guild_record.is_available is availability
+        }
         return cache_utility.StatefulCacheMappingView(results) if results else cache_utility.EmptyCacheView()
+
+    def get_available_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        return self._get_guilds_view(availability=True)
+
+    def get_unavailable_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        return self._get_guilds_view(availability=False)
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
         guild_record = self._get_or_create_guild_record(guild.id)
@@ -443,15 +457,10 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record.is_available = True
 
     def set_guild_availability(self, guild_id: snowflakes.Snowflake, is_available: bool, /) -> None:
-        guild_record = self._get_or_create_guild_record(guild_id=guild_id)
-        guild_record.is_available = is_available  # TODO: only set this if guild object cached?
+        guild_record = self._guild_entries.get(guild_id)
 
-    # TODO: is this the best way to handle this?
-    def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflakes.Snowflake], /) -> None:
-        # Invoked when we receive ON_READY, assume all of these are unavailable on startup.
-        self._guild_entries = mapping.DictionaryCollection(
-            {guild_id: cache_utility.GuildRecord(is_available=False) for guild_id in guild_ids}
-        )
+        if guild_record is not None and guild_record.guild is not None:
+            guild_record.is_available = is_available
 
     def update_guild(
         self, guild: guilds.GatewayGuild, /

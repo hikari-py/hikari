@@ -246,20 +246,73 @@ class GuildRecord:
     """
 
     is_available: typing.Optional[bool] = attr.ib(default=None)
+    """Whether the chached guild is available or not.
+
+    This will be `builtins.None` when no `GuildRecord.guild` is also
+    `builtins.None` else `builtins.bool`.
+    """
+
     guild: typing.Optional[guilds.GatewayGuild] = attr.ib(default=None)
+    """A cached guild object.
+
+    This will be `hikari.guilds.GatewayGuild` or `builtins.None` if not cached.
+    """
+
     channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
+    """A set of the IDs of the guild channels cached for this guild.
+
+    This will be `builtins.None` if no channels are cached for this guild else
+    `typing.MutableSet[hikari.snowflakes.Snowflake]` of channel IDs.
+    """
+
     emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
+    """A set of the IDs of the emojis cached for this guild.
+
+    This will be `builtins.None` if no emojis are cached for this guild else
+    `typing.MutableSet[hikari.snowflakes.Snowflake]` of emoji IDs.
+    """
+
     invites: typing.Optional[typing.MutableSequence[str]] = attr.ib(default=None)
+    """A set of the `builtins.str` codes of the invites cached for this guild.
+
+    This will be `builtins.None` if no invites are cached for this guild else
+    `typing.MutableSequence[str]` of invite codes.
+    """
+
     members: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
+    """A mapping of user IDs to the objects of members cached for this guild.
+
+    This will be `builtins.None` if no members are cached for this guild else
+    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, MemberData]`.
+    """
+
     presences: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
         default=None
     )
+    """A mapping of user IDs to objects of the presences cached for this guild.
+
+    This will be `builtins.None` if no presences are cached for this guild else
+    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, MemberPresenceData]`.
+    """
+
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
+    """A set of the IDs of the roles cached for this guild.
+
+    This will be `builtins.None` if no roles are cached for this guild else
+    `typing.MutableSet[hikari.snowflakes.Snowflake]` of role IDs.
+    """
+
     voice_states: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
         default=None
     )
+    """A mapping of user IDs to objects of the voice states cached for this guild.
 
-    def __bool__(self) -> bool:  # TODO: should "is_available" keep this alive?
+    This will be `builtins.None` if no voice states are cached for this guild else
+    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, VoiceStateData]`.
+    """
+
+    def __bool__(self) -> bool:
+        # As `.is_available` should be paired with `.guild`, we don't need to check both.
         return any(
             (
                 self.channels,

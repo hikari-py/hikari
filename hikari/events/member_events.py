@@ -86,18 +86,34 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         return self.user.id
 
     @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached view of the guild this member event occurred in.
+    def available_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached view of the available guild this member event occurred in.
 
-        If the guild itself is not cached, this will return `builtins.None`.
+        If the guild itself is not cached, or is cached in an unavailable state
+        then this will return `builtins.None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The guild that this event occurred in, if known, else
-            `builtins.None`.
+            The guild that this event occurred in, if known and "available",
+            else `builtins.None`.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id)
+
+    @property
+    def unavailable_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the stale cached object of the guild this member event occurred in.
+
+        If the guild itself is not cached, or is cached in an unavailable state
+        then this will return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The guild that this event occurred in, if it's cached in an
+            unavailable state, else `builtins.None`.
+        """
+        return self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @attr_extensions.with_copy

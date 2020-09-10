@@ -23,10 +23,8 @@ import datetime
 import mock
 import pytest
 
-import hikari.utilities.cache
 from hikari import channels
 from hikari import emojis
-from hikari import errors
 from hikari import guilds
 from hikari import invites
 from hikari import snowflakes
@@ -34,6 +32,7 @@ from hikari import traits
 from hikari import users
 from hikari import voices
 from hikari.impl import stateful_cache
+from hikari.utilities import cache
 from hikari.utilities import mapping
 from tests.hikari import hikari_test_helpers
 
@@ -48,7 +47,7 @@ class TestStatefulCacheImpl:
         return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheImpl)(app=app_impl, intents=None)
 
     def test__build_dm_with_cached_user(self, cache_impl):
-        channel_data = hikari.utilities.cache.DMChannelData(
+        channel_data = cache.DMChannelData(
             id=snowflakes.Snowflake(5642134),
             name=None,
             last_message_id=snowflakes.Snowflake(65345),
@@ -56,7 +55,7 @@ class TestStatefulCacheImpl:
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(2342344): hikari.utilities.cache.GenericRefWrapper(object=mock_user)}
+            {snowflakes.Snowflake(2342344): cache.GenericRefWrapper(object=mock_user)}
         )
         channel = cache_impl._build_dm(channel_data)
         assert channel.app is cache_impl._app
@@ -68,7 +67,7 @@ class TestStatefulCacheImpl:
         assert channel.recipient is not mock_user
 
     def test__build_dm_with_passed_through_user(self, cache_impl):
-        channel_data = hikari.utilities.cache.DMChannelData(
+        channel_data = cache.DMChannelData(
             id=snowflakes.Snowflake(5642134),
             name=None,
             last_message_id=snowflakes.Snowflake(65345),
@@ -78,16 +77,16 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = mapping.DictionaryCollection({})
         channel_channel = cache_impl._build_dm(
             channel_data,
-            cached_users={snowflakes.Snowflake(2342344): hikari.utilities.cache.GenericRefWrapper(object=mock_user)},
+            cached_users={snowflakes.Snowflake(2342344): cache.GenericRefWrapper(object=mock_user)},
         )
         assert channel_channel.recipient == mock_user
         assert channel_channel.recipient is not mock_user
 
     def test_clear_dms(self, cache_impl):
-        mock_channel_data_1 = mock.Mock(hikari.utilities.cache.DMChannelData)
-        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.DMChannelData)
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_channel_data_1 = mock.Mock(cache.DMChannelData)
+        mock_channel_data_2 = mock.Mock(cache.DMChannelData)
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
         mock_channel_1 = mock.Mock(channels.DMChannel)
         mock_channel_2 = mock.Mock(channels.DMChannel)
         cache_impl._dm_entries = mapping.DictionaryCollection(
@@ -99,7 +98,7 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(2342344): mock_wrapped_user_1,
-                snowflakes.Snowflake(653451234): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(653451234): mock.Mock(cache.GenericRefWrapper),
                 snowflakes.Snowflake(978655): mock_wrapped_user_2,
             }
         )
@@ -141,9 +140,9 @@ class TestStatefulCacheImpl:
         assert cache_impl.clear_dms() == {}
 
     def test_delete_dm_for_known_channel(self, cache_impl):
-        mock_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData, recipient_id=snowflakes.Snowflake(7345234))
+        mock_channel_data = mock.Mock(cache.DMChannelData, recipient_id=snowflakes.Snowflake(7345234))
         mock_channel = mock.Mock(channels.DMChannel)
-        mock_other_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_other_channel_data = mock.Mock(cache.DMChannelData)
         cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(7345234): mock_channel_data,
@@ -161,12 +160,12 @@ class TestStatefulCacheImpl:
         assert cache_impl.delete_dm(snowflakes.Snowflake(564234123)) is None
 
     def test_get_dm_for_known_channel(self, cache_impl):
-        mock_channel_data = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_channel_data = mock.Mock(cache.DMChannelData)
         mock_channel = mock.Mock(channels.DMChannel)
         cache_impl._dm_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(65234123): mock_channel_data,
-                snowflakes.Snowflake(5123): mock.Mock(hikari.utilities.cache.DMChannelData),
+                snowflakes.Snowflake(5123): mock.Mock(cache.DMChannelData),
             }
         )
         cache_impl._build_dm = mock.Mock(return_value=mock_channel)
@@ -178,17 +177,17 @@ class TestStatefulCacheImpl:
 
     def test_get_dm_view(self, cache_impl):
         mock_channel_data_1 = mock.Mock(
-            hikari.utilities.cache.DMChannelData,
+            cache.DMChannelData,
         )
-        mock_channel_data_2 = mock.Mock(hikari.utilities.cache.DMChannelData)
+        mock_channel_data_2 = mock.Mock(cache.DMChannelData)
         mock_channel_1 = mock.Mock(channels.DMChannel)
         mock_channel_2 = mock.Mock(channels.DMChannel)
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(54213): mock_wrapped_user_1,
-                snowflakes.Snowflake(6764556): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(6764556): mock.Mock(cache.GenericRefWrapper),
                 snowflakes.Snowflake(65656): mock_wrapped_user_2,
             }
         )
@@ -257,7 +256,7 @@ class TestStatefulCacheImpl:
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl._dm_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(7652341234): mock.Mock(hikari.utilities.cache.DMChannelData)}
+            {snowflakes.Snowflake(7652341234): mock.Mock(cache.DMChannelData)}
         )
         cache_impl.set_dm(channel)
         cache_impl.set_user.assert_called_once_with(mock_recipient)
@@ -277,7 +276,7 @@ class TestStatefulCacheImpl:
         cache_impl.get_dm.assert_has_calls([mock.call(53123123), mock.call(53123123)])
 
     def test__build_emoji(self, cache_impl):
-        emoji_data = hikari.utilities.cache.KnownCustomEmojiData(
+        emoji_data = cache.KnownCustomEmojiData(
             id=snowflakes.Snowflake(1233534234),
             name="OKOKOKOKOK",
             is_animated=True,
@@ -290,7 +289,7 @@ class TestStatefulCacheImpl:
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(56234232): hikari.utilities.cache.GenericRefWrapper(object=mock_user)}
+            {snowflakes.Snowflake(56234232): cache.GenericRefWrapper(object=mock_user)}
         )
         emoji = cache_impl._build_emoji(emoji_data)
         assert emoji.app is cache_impl._app
@@ -305,7 +304,7 @@ class TestStatefulCacheImpl:
         assert emoji.is_available is True
 
     def test__build_emoji_with_passed_through_users(self, cache_impl):
-        emoji_data = hikari.utilities.cache.KnownCustomEmojiData(
+        emoji_data = cache.KnownCustomEmojiData(
             id=snowflakes.Snowflake(1233534234),
             name="OKOKOKOKOK",
             is_animated=True,
@@ -320,13 +319,13 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = mapping.DictionaryCollection({})
         emoji = cache_impl._build_emoji(
             emoji_data,
-            cached_users={snowflakes.Snowflake(56234232): hikari.utilities.cache.GenericRefWrapper(object=mock_user)},
+            cached_users={snowflakes.Snowflake(56234232): cache.GenericRefWrapper(object=mock_user)},
         )
         assert emoji.user == mock_user
         assert emoji.user is not mock_user
 
     def test__build_emoji_with_no_user(self, cache_impl):
-        emoji_data = hikari.utilities.cache.KnownCustomEmojiData(
+        emoji_data = cache.KnownCustomEmojiData(
             id=snowflakes.Snowflake(1233534234),
             name="OKOKOKOKOK",
             is_animated=True,
@@ -343,18 +342,14 @@ class TestStatefulCacheImpl:
         assert emoji.user is None
 
     def test_clear_emojis(self, cache_impl):
-        mock_emoji_data_1 = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123123), ref_count=0
-        )
-        mock_emoji_data_2 = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123), ref_count=0
-        )
-        mock_emoji_data_3 = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData, user_id=None, ref_count=0)
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123123), ref_count=0)
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123), ref_count=0)
+        mock_emoji_data_3 = mock.Mock(cache.KnownCustomEmojiData, user_id=None, ref_count=0)
         mock_emoji_1 = mock.Mock(emojis.Emoji)
         mock_emoji_2 = mock.Mock(emojis.Emoji)
         mock_emoji_3 = mock.Mock(emojis.Emoji)
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(43123123): mock_emoji_data_1,
@@ -366,7 +361,7 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(123123): mock_wrapped_user_1,
                 snowflakes.Snowflake(123): mock_wrapped_user_2,
-                snowflakes.Snowflake(99999): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(99999): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._build_emoji = mock.Mock(side_effect=[mock_emoji_1, mock_emoji_2, mock_emoji_3])
@@ -406,23 +401,19 @@ class TestStatefulCacheImpl:
         )
 
     def test_clear_emojis_for_guild(self, cache_impl):
-        mock_emoji_data_1 = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123123), ref_count=0
-        )
-        mock_emoji_data_2 = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123), ref_count=0
-        )
-        mock_emoji_data_3 = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData, user_id=None, ref_count=0)
-        mock_other_emoji_data = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)
-        emoji_ids = hikari.utilities.cache.IDTable()
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123123), ref_count=0)
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123), ref_count=0)
+        mock_emoji_data_3 = mock.Mock(cache.KnownCustomEmojiData, user_id=None, ref_count=0)
+        mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
+        emoji_ids = cache.IDTable()
         emoji_ids.add_all(
             [snowflakes.Snowflake(43123123), snowflakes.Snowflake(87643523), snowflakes.Snowflake(6873451)]
         )
         mock_emoji_1 = mock.Mock(emojis.Emoji)
         mock_emoji_2 = mock.Mock(emojis.Emoji)
         mock_emoji_3 = mock.Mock(emojis.Emoji)
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(6873451): mock_emoji_data_1,
@@ -435,13 +426,13 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(123123): mock_wrapped_user_1,
                 snowflakes.Snowflake(123): mock_wrapped_user_2,
-                snowflakes.Snowflake(99999): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(99999): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(432123123): hikari.utilities.cache.GuildRecord(emojis=emoji_ids),
-                snowflakes.Snowflake(1): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(432123123): cache.GuildRecord(emojis=emoji_ids),
+                snowflakes.Snowflake(1): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_emoji = mock.Mock(side_effect=[mock_emoji_1, mock_emoji_2, mock_emoji_3])
@@ -486,11 +477,11 @@ class TestStatefulCacheImpl:
         )
 
     def test_clear_emojis_for_guild_for_unknown_emoji_cache(self, cache_impl):
-        cache_impl._emoji_entries = {snowflakes.Snowflake(3123): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)}
+        cache_impl._emoji_entries = {snowflakes.Snowflake(3123): mock.Mock(cache.KnownCustomEmojiData)}
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(432123123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(1): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(432123123): cache.GuildRecord(),
+                snowflakes.Snowflake(1): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_emoji = mock.Mock()
@@ -503,11 +494,9 @@ class TestStatefulCacheImpl:
         cache_impl._build_emoji.assert_not_called()
 
     def test_clear_emojis_for_guild_for_unknown_record(self, cache_impl):
-        cache_impl._emoji_entries = {
-            snowflakes.Snowflake(123124): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)
-        }
+        cache_impl._emoji_entries = {snowflakes.Snowflake(123124): mock.Mock(cache.KnownCustomEmojiData)}
         cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(1): mock.Mock(hikari.utilities.cache.GuildRecord)}
+            {snowflakes.Snowflake(1): mock.Mock(cache.GuildRecord)}
         )
         cache_impl._build_emoji = mock.Mock()
         cache_impl._remove_guild_record_if_empty = mock.Mock()
@@ -520,14 +509,14 @@ class TestStatefulCacheImpl:
 
     def test_delete_emoji(self, cache_impl):
         mock_emoji_data = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData,
+            cache.KnownCustomEmojiData,
             user_id=snowflakes.Snowflake(54123),
             guild_id=snowflakes.Snowflake(123333),
             ref_count=0,
         )
-        mock_other_emoji_data = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)
+        mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.cache.IDTable()
+        emoji_ids = cache.IDTable()
         emoji_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
@@ -536,7 +525,7 @@ class TestStatefulCacheImpl:
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(123333): hikari.utilities.cache.GuildRecord(emojis=emoji_ids)}
+            {snowflakes.Snowflake(123333): cache.GuildRecord(emojis=emoji_ids)}
         )
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_emoji = mock.Mock(return_value=mock_emoji)
@@ -548,14 +537,14 @@ class TestStatefulCacheImpl:
 
     def test_delete_emoji_without_user(self, cache_impl):
         mock_emoji_data = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData,
+            cache.KnownCustomEmojiData,
             ref_count=0,
             user_id=None,
             guild_id=snowflakes.Snowflake(123333),
         )
-        mock_other_emoji_data = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)
+        mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.cache.IDTable()
+        emoji_ids = cache.IDTable()
         emoji_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
@@ -564,7 +553,7 @@ class TestStatefulCacheImpl:
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(123333): hikari.utilities.cache.GuildRecord(emojis=emoji_ids)}
+            {snowflakes.Snowflake(123333): cache.GuildRecord(emojis=emoji_ids)}
         )
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_emoji = mock.Mock(return_value=mock_emoji)
@@ -582,7 +571,7 @@ class TestStatefulCacheImpl:
         cache_impl._garbage_collect_user.assert_not_called()
 
     def test_get_emoji(self, cache_impl):
-        mock_emoji_data = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)
+        mock_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
         cache_impl._build_emoji = mock.Mock(return_value=mock_emoji)
         cache_impl._emoji_entries = mapping.DictionaryCollection({snowflakes.Snowflake(3422123): mock_emoji_data})
@@ -595,11 +584,11 @@ class TestStatefulCacheImpl:
         cache_impl._build_emoji.assert_not_called()
 
     def test_get_emojis_view(self, cache_impl):
-        mock_emoji_data_1 = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(43123))
-        mock_emoji_data_2 = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData, user_id=None)
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(43123))
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=None)
         mock_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
         mock_emoji_2 = mock.Mock(emojis.KnownCustomEmoji)
-        mock_wrapped_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(123123123): mock_emoji_data_1,
@@ -608,7 +597,7 @@ class TestStatefulCacheImpl:
         )
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(564123): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(564123): mock.Mock(cache.GenericRefWrapper),
                 snowflakes.Snowflake(43123): mock_wrapped_user,
             }
         )
@@ -625,32 +614,30 @@ class TestStatefulCacheImpl:
         )
 
     def test_get_emojis_view_for_guild(self, cache_impl):
-        mock_emoji_data_1 = mock.Mock(
-            hikari.utilities.cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(32124123)
-        )
-        mock_emoji_data_2 = mock.Mock(hikari.utilities.cache.KnownCustomEmojiData, user_id=None)
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(32124123))
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=None)
         mock_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
         mock_emoji_2 = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.cache.IDTable()
+        emoji_ids = cache.IDTable()
         emoji_ids.add_all([snowflakes.Snowflake(65123), snowflakes.Snowflake(43156234)])
-        mock_wrapped_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._emoji_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(65123): mock_emoji_data_1,
-                snowflakes.Snowflake(942123): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData),
+                snowflakes.Snowflake(942123): mock.Mock(cache.KnownCustomEmojiData),
                 snowflakes.Snowflake(43156234): mock_emoji_data_2,
             }
         )
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(564123): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(564123): mock.Mock(cache.GenericRefWrapper),
                 snowflakes.Snowflake(32124123): mock_wrapped_user,
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(99999): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(9342123): hikari.utilities.cache.GuildRecord(emojis=emoji_ids),
+                snowflakes.Snowflake(99999): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(9342123): cache.GuildRecord(emojis=emoji_ids),
             }
         )
         cache_impl._build_emoji = mock.Mock(side_effect=[mock_emoji_1, mock_emoji_2])
@@ -667,12 +654,12 @@ class TestStatefulCacheImpl:
 
     def test_get_emojis_view_for_guild_for_unknown_emoji_cache(self, cache_impl):
         cache_impl._emoji_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(9999): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)}
+            {snowflakes.Snowflake(9999): mock.Mock(cache.KnownCustomEmojiData)}
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(99999): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(9342123): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(99999): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(9342123): cache.GuildRecord(),
             }
         )
         cache_impl._build_emoji = mock.Mock()
@@ -681,11 +668,9 @@ class TestStatefulCacheImpl:
 
     def test_get_emojis_view_for_guild_for_unknown_record(self, cache_impl):
         cache_impl._emoji_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(12354345): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)}
+            {snowflakes.Snowflake(12354345): mock.Mock(cache.KnownCustomEmojiData)}
         )
-        cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(9342123): hikari.utilities.cache.GuildRecord()}
-        )
+        cache_impl._guild_entries = mapping.DictionaryCollection({snowflakes.Snowflake(9342123): cache.GuildRecord()})
         cache_impl._build_emoji = mock.Mock()
         assert cache_impl.get_emojis_view_for_guild(snowflakes.Snowflake(9342123)) == {}
         cache_impl._build_emoji.assert_not_called()
@@ -740,7 +725,7 @@ class TestStatefulCacheImpl:
             is_available=False,
         )
         cache_impl._emoji_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(5123123): mock.Mock(hikari.utilities.cache.KnownCustomEmojiData)}
+            {snowflakes.Snowflake(5123123): mock.Mock(cache.KnownCustomEmojiData)}
         )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
@@ -764,14 +749,14 @@ class TestStatefulCacheImpl:
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(423123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(675345): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(423123): cache.GuildRecord(),
+                snowflakes.Snowflake(675345): cache.GuildRecord(),
             }
         )
         assert cache_impl.clear_guilds() == {}
         assert cache_impl._guild_entries == {
-            snowflakes.Snowflake(423123): hikari.utilities.cache.GuildRecord(),
-            snowflakes.Snowflake(675345): hikari.utilities.cache.GuildRecord(),
+            snowflakes.Snowflake(423123): cache.GuildRecord(),
+            snowflakes.Snowflake(675345): cache.GuildRecord(),
         }
 
     def test_clear_guilds(self, cache_impl):
@@ -781,23 +766,21 @@ class TestStatefulCacheImpl:
         mock_guild_3 = mock.MagicMock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(423123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(675345): hikari.utilities.cache.GuildRecord(guild=mock_guild_1),
-                snowflakes.Snowflake(32142): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(423123): cache.GuildRecord(),
+                snowflakes.Snowflake(675345): cache.GuildRecord(guild=mock_guild_1),
+                snowflakes.Snowflake(32142): cache.GuildRecord(
                     guild=mock_guild_2,
                     members=mapping.DictionaryCollection({snowflakes.Snowflake(3241123): mock_member}),
                 ),
-                snowflakes.Snowflake(765345): hikari.utilities.cache.GuildRecord(guild=mock_guild_3),
-                snowflakes.Snowflake(321132): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(765345): cache.GuildRecord(guild=mock_guild_3),
+                snowflakes.Snowflake(321132): cache.GuildRecord(),
             }
         )
         assert cache_impl.clear_guilds() == {675345: mock_guild_1, 32142: mock_guild_2, 765345: mock_guild_3}
         assert cache_impl._guild_entries == {
-            snowflakes.Snowflake(423123): hikari.utilities.cache.GuildRecord(),
-            snowflakes.Snowflake(32142): hikari.utilities.cache.GuildRecord(
-                members={snowflakes.Snowflake(3241123): mock_member}
-            ),
-            snowflakes.Snowflake(321132): hikari.utilities.cache.GuildRecord(),
+            snowflakes.Snowflake(423123): cache.GuildRecord(),
+            snowflakes.Snowflake(32142): cache.GuildRecord(members={snowflakes.Snowflake(3241123): mock_member}),
+            snowflakes.Snowflake(321132): cache.GuildRecord(),
         }
 
     def test_delete_guild_for_known_guild(self, cache_impl):
@@ -805,8 +788,8 @@ class TestStatefulCacheImpl:
         mock_member = mock.Mock(guilds.Member)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(354123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(
                     guild=mock_guild,
                     is_available=True,
                     members=mapping.DictionaryCollection({snowflakes.Snowflake(43123): mock_member}),
@@ -815,108 +798,174 @@ class TestStatefulCacheImpl:
         )
         assert cache_impl.delete_guild(snowflakes.Snowflake(543123)) is mock_guild
         assert cache_impl._guild_entries == {
-            snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord(),
-            snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(
-                members={snowflakes.Snowflake(43123): mock_member}
-            ),
+            snowflakes.Snowflake(354123): cache.GuildRecord(),
+            snowflakes.Snowflake(543123): cache.GuildRecord(members={snowflakes.Snowflake(43123): mock_member}),
         }
 
     def test_delete_guild_for_removes_emptied_record(self, cache_impl):
         mock_guild = mock.Mock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(guild=mock_guild, is_available=True),
+                snowflakes.Snowflake(354123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(guild=mock_guild, is_available=True),
             }
         )
         assert cache_impl.delete_guild(snowflakes.Snowflake(543123)) is mock_guild
-        assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord()}
+        assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): cache.GuildRecord()}
 
     def test_delete_guild_for_unknown_guild(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(354123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(),
             }
         )
         assert cache_impl.delete_guild(snowflakes.Snowflake(543123)) is None
         assert cache_impl._guild_entries == {
-            snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord(),
-            snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(),
+            snowflakes.Snowflake(354123): cache.GuildRecord(),
+            snowflakes.Snowflake(543123): cache.GuildRecord(),
         }
 
     def test_delete_guild_for_unknown_record(self, cache_impl):
-        cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord()}
-        )
+        cache_impl._guild_entries = mapping.DictionaryCollection({snowflakes.Snowflake(354123): cache.GuildRecord()})
         assert cache_impl.delete_guild(snowflakes.Snowflake(543123)) is None
-        assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): hikari.utilities.cache.GuildRecord()}
+        assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): cache.GuildRecord()}
 
-    def test_get_guild_for_known_guild_when_available(self, cache_impl):
+    def test_get_available_guild_for_known_guild_when_available(self, cache_impl):
         mock_guild = mock.MagicMock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54234123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(guild=mock_guild, is_available=True),
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(guild=mock_guild, is_available=True),
             }
         )
-        cached_guild = cache_impl.get_guild(snowflakes.Snowflake(543123))
+        cached_guild = cache_impl.get_available_guild(snowflakes.Snowflake(543123))
         assert cached_guild == mock_guild
         assert cache_impl is not mock_guild
 
-    def test_get_guild_for_known_guild_when_unavailable(self, cache_impl):
+    def test_get_available_guild_for_known_guild_when_unavailable(self, cache_impl):
         mock_guild = mock.Mock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54234123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(guild=mock_guild, is_available=False),
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(guild=mock_guild, is_available=False),
             }
         )
 
-        with pytest.raises(errors.UnavailableGuildError):
-            cache_impl.get_guild(snowflakes.Snowflake(543123))
+        result = cache_impl.get_available_guild(snowflakes.Snowflake(543123))
 
-    def test_get_guild_for_unknown_guild(self, cache_impl):
+        assert result is None
+
+    def test_get_available_guild_for_unknown_guild(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54234123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(),
             }
         )
-        assert cache_impl.get_guild(snowflakes.Snowflake(543123)) is None
+        assert cache_impl.get_available_guild(snowflakes.Snowflake(543123)) is None
 
-    def test_get_guild_for_unknown_guild_record(self, cache_impl):
+    def test_get_available_guild_for_unknown_guild_record(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54234123): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
             }
         )
-        assert cache_impl.get_guild(snowflakes.Snowflake(543123)) is None
+        assert cache_impl.get_available_guild(snowflakes.Snowflake(543123)) is None
 
-    def test_get_guilds_view(self, cache_impl):
+    def test_get_unavailable_guild_for_known_guild_when_unavailable(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(452131): cache.GuildRecord(guild=mock_guild, is_available=False),
+            }
+        )
+        cached_guild = cache_impl.get_unavailable_guild(snowflakes.Snowflake(452131))
+        assert cached_guild == mock_guild
+        assert cache_impl is not mock_guild
+
+    def test_get_unavailable_guild_for_known_guild_when_available(self, cache_impl):
+        mock_guild = mock.Mock(guilds.GatewayGuild)
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(654234): cache.GuildRecord(guild=mock_guild, is_available=True),
+            }
+        )
+
+        result = cache_impl.get_unavailable_guild(snowflakes.Snowflake(654234))
+
+        assert result is None
+
+    def test_get_unavailable_guild_for_unknown_guild(self, cache_impl):
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(),
+            }
+        )
+        assert cache_impl.get_unavailable_guild(snowflakes.Snowflake(543123)) is None
+
+    def test_get_unavailable_guild_for_unknown_guild_record(self, cache_impl):
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+            }
+        )
+        assert cache_impl.get_unavailable_guild(snowflakes.Snowflake(543123)) is None
+
+    def test_get_available_guilds_view(self, cache_impl):
         mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
         mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(4312312): hikari.utilities.cache.GuildRecord(guild=mock_guild_1),
-                snowflakes.Snowflake(34123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(73453): hikari.utilities.cache.GuildRecord(guild=mock_guild_2),
+                snowflakes.Snowflake(4312312): cache.GuildRecord(guild=mock_guild_1, is_available=True),
+                snowflakes.Snowflake(34123): cache.GuildRecord(),
+                snowflakes.Snowflake(73453): cache.GuildRecord(guild=mock_guild_2, is_available=True),
+                snowflakes.Snowflake(6554234): cache.GuildRecord(guild=object(), is_available=False),
             }
         )
-        assert cache_impl.get_guilds_view() == {
+        assert cache_impl.get_available_guilds_view() == {
             snowflakes.Snowflake(4312312): mock_guild_1,
             snowflakes.Snowflake(73453): mock_guild_2,
         }
 
-    def test_get_guilds_view_when_no_guilds_cached(self, cache_impl):
+    def test_get_available_guilds_view_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(4312312): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(34123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(73453): hikari.utilities.cache.GuildRecord(),
+                snowflakes.Snowflake(4312312): cache.GuildRecord(),
+                snowflakes.Snowflake(34123): cache.GuildRecord(),
+                snowflakes.Snowflake(73453): cache.GuildRecord(),
             }
         )
-        assert cache_impl.get_guilds_view() == {}
+        assert cache_impl.get_available_guilds_view() == {}
+
+    def test_get_unavailable_guilds_view(self, cache_impl):
+        mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(4312312): cache.GuildRecord(guild=mock_guild_1, is_available=False),
+                snowflakes.Snowflake(34123): cache.GuildRecord(),
+                snowflakes.Snowflake(73453): cache.GuildRecord(guild=mock_guild_2, is_available=False),
+                snowflakes.Snowflake(6554234): cache.GuildRecord(guild=object(), is_available=True),
+            }
+        )
+        assert cache_impl.get_unavailable_guilds_view() == {
+            snowflakes.Snowflake(4312312): mock_guild_1,
+            snowflakes.Snowflake(73453): mock_guild_2,
+        }
+
+    def test_get_unavailable_guilds_view_when_no_guilds_cached(self, cache_impl):
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(4312312): cache.GuildRecord(),
+                snowflakes.Snowflake(34123): cache.GuildRecord(),
+                snowflakes.Snowflake(73453): cache.GuildRecord(),
+            }
+        )
+        assert cache_impl.get_unavailable_guilds_view() == {}
 
     def test_set_guild(self, cache_impl):
         mock_guild = mock.MagicMock(guilds.GatewayGuild, id=snowflakes.Snowflake(5123123))
@@ -926,22 +975,14 @@ class TestStatefulCacheImpl:
         assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].guild is not mock_guild
         assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].is_available is True
 
-    def test_set_guild_availability(self, cache_impl):
+    def test_set_guild_availability_for_cached_guild(self, cache_impl):
+        cache_impl._guild_entries = {snowflakes.Snowflake(43123): cache.GuildRecord(guild=object())}
         assert cache_impl.set_guild_availability(snowflakes.Snowflake(43123), True) is None
-        assert 43123 in cache_impl._guild_entries
         assert cache_impl._guild_entries[snowflakes.Snowflake(43123)].is_available is True
 
-    def test_set_initial_unavailable_guilds(self, cache_impl):
-        result = cache_impl.set_initial_unavailable_guilds(
-            [snowflakes.Snowflake(1234), snowflakes.Snowflake(6123123), snowflakes.Snowflake(6654234)]
-        )
-        assert result is None
-        assert 1234 in cache_impl._guild_entries
-        assert cache_impl._guild_entries[snowflakes.Snowflake(1234)].is_available is False
-        assert 1234 in cache_impl._guild_entries
-        assert cache_impl._guild_entries[snowflakes.Snowflake(6123123)].is_available is False
-        assert 1234 in cache_impl._guild_entries
-        assert cache_impl._guild_entries[snowflakes.Snowflake(6654234)].is_available is False
+    def test_set_guild_availability_for_uncached_guild(self, cache_impl):
+        assert cache_impl.set_guild_availability(snowflakes.Snowflake(452234123), True) is None
+        assert 452234123 not in cache_impl._guild_entries
 
     @pytest.mark.skip(reason="TODO")
     def test_update_guild(self, cache_impl):
@@ -980,7 +1021,7 @@ class TestStatefulCacheImpl:
         ...
 
     def test__build_invite(self, cache_impl):
-        invite_data = hikari.utilities.cache.InviteData(
+        invite_data = cache.InviteData(
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
@@ -997,9 +1038,9 @@ class TestStatefulCacheImpl:
         mock_target_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(123123): hikari.utilities.cache.GenericRefWrapper(object=mock_inviter),
-                snowflakes.Snowflake(9999): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
-                snowflakes.Snowflake(9543453): hikari.utilities.cache.GenericRefWrapper(object=mock_target_user),
+                snowflakes.Snowflake(123123): cache.GenericRefWrapper(object=mock_inviter),
+                snowflakes.Snowflake(9999): mock.Mock(cache.GenericRefWrapper),
+                snowflakes.Snowflake(9543453): cache.GenericRefWrapper(object=mock_target_user),
             }
         )
         invite = cache_impl._build_invite(invite_data)
@@ -1023,7 +1064,7 @@ class TestStatefulCacheImpl:
         assert invite.created_at == datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc)
 
     def test__build_invite_with_passed_through_members(self, cache_impl):
-        invite_data = hikari.utilities.cache.InviteData(
+        invite_data = cache.InviteData(
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
@@ -1041,8 +1082,8 @@ class TestStatefulCacheImpl:
         invite = cache_impl._build_invite(
             invite_data,
             {
-                snowflakes.Snowflake(123123): hikari.utilities.cache.GenericRefWrapper(object=mock_inviter),
-                snowflakes.Snowflake(9543453): hikari.utilities.cache.GenericRefWrapper(object=mock_target_user),
+                snowflakes.Snowflake(123123): cache.GenericRefWrapper(object=mock_inviter),
+                snowflakes.Snowflake(9543453): cache.GenericRefWrapper(object=mock_target_user),
             },
         )
         assert invite.inviter == mock_inviter
@@ -1052,19 +1093,19 @@ class TestStatefulCacheImpl:
 
     def test_clear_invites(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=snowflakes.Snowflake(5341231),
             inviter_id=snowflakes.Snowflake(12354123),
         )
         mock_invite_data_2 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=None,
             inviter_id=None,
         )
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=5)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=3)
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=5)
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=3)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "hiBye": mock_invite_data_1,
@@ -1075,7 +1116,7 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(5341231): mock_wrapped_target_user,
                 snowflakes.Snowflake(12354123): mock_wrapped_inviter,
-                snowflakes.Snowflake(65345352): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(65345352): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
@@ -1105,20 +1146,20 @@ class TestStatefulCacheImpl:
 
     def test_clear_invites_for_guild(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=snowflakes.Snowflake(5341231),
             inviter_id=snowflakes.Snowflake(12354123),
         )
         mock_invite_data_2 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=None,
             inviter_id=None,
         )
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=4)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=42)
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=4)
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=42)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "oeoeoeoeooe": mock_invite_data_1,
@@ -1130,15 +1171,13 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(5341231): mock_wrapped_target_user,
                 snowflakes.Snowflake(12354123): mock_wrapped_inviter,
-                snowflakes.Snowflake(65345352): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(65345352): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999888777): hikari.utilities.cache.GuildRecord(
-                    invites=["oeoeoeoeooe", "owowowowoowowow"]
-                ),
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999888777): cache.GuildRecord(invites=["oeoeoeoeooe", "owowowowoowowow"]),
             }
         )
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
@@ -1167,14 +1206,14 @@ class TestStatefulCacheImpl:
         )
 
     def test_clear_invites_for_guild_unknown_invite_cache(self, cache_impl):
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         cache_impl._invite_entries = {
             "oeoeoeoeoeoeoe": mock_other_invite_data,
         }
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999888777): hikari.utilities.cache.GuildRecord(invites=None),
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999888777): cache.GuildRecord(invites=None),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1183,7 +1222,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite.assert_not_called()
 
     def test_clear_invites_for_guild_unknown_record(self, cache_impl):
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "oeoeoeoeoeoeoe": mock_other_invite_data,
@@ -1191,7 +1230,7 @@ class TestStatefulCacheImpl:
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1201,23 +1240,23 @@ class TestStatefulCacheImpl:
 
     def test_clear_invites_for_channel(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=snowflakes.Snowflake(5341231),
             inviter_id=snowflakes.Snowflake(12354123),
             channel_id=snowflakes.Snowflake(34123123),
         )
         mock_invite_data_2 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             target_user_id=None,
             inviter_id=None,
             channel_id=snowflakes.Snowflake(34123123),
         )
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData, channel_id=snowflakes.Snowflake(9484732))
-        mock_other_invite_data_2 = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData, channel_id=snowflakes.Snowflake(9484732))
+        mock_other_invite_data_2 = mock.Mock(cache.InviteData)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=42)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User], ref_count=280)
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=42)
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User], ref_count=280)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "oeoeoeoeooe": mock_invite_data_1,
@@ -1230,13 +1269,13 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(5341231): mock_wrapped_target_user,
                 snowflakes.Snowflake(12354123): mock_wrapped_inviter,
-                snowflakes.Snowflake(65345352): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(65345352): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999888777): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999888777): cache.GuildRecord(
                     invites=["oeoeoeoeooe", "owowowowoowowow", "oeoeoeoeoeoeoe"]
                 ),
             }
@@ -1274,7 +1313,7 @@ class TestStatefulCacheImpl:
         )
 
     def test_clear_invites_for_channel_unknown_invite_cache(self, cache_impl):
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "oeoeoeoeoeoeoe": mock_other_invite_data,
@@ -1282,13 +1321,13 @@ class TestStatefulCacheImpl:
         )
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65345352): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(65345352): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999888777): hikari.utilities.cache.GuildRecord(invites=None),
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999888777): cache.GuildRecord(invites=None),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1299,7 +1338,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite.assert_not_called()
 
     def test_clear_invites_for_channel_unknown_record(self, cache_impl):
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "oeoeoeoeoeoeoe": mock_other_invite_data,
@@ -1307,12 +1346,12 @@ class TestStatefulCacheImpl:
         )
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65345352): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(65345352): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(54123): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1323,8 +1362,8 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite.assert_not_called()
 
     def test_delete_invite(self, cache_impl):
-        mock_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_invite_data = mock.Mock(cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         mock_invite = mock.Mock(
             invites.InviteWithMetadata,
             inviter=mock.Mock(users.User, id=snowflakes.Snowflake(543123)),
@@ -1336,10 +1375,8 @@ class TestStatefulCacheImpl:
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1234312): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999999999): hikari.utilities.cache.GuildRecord(
-                    invites=["ok", "blat", "oooooooooooooo"]
-                ),
+                snowflakes.Snowflake(1234312): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999999999): cache.GuildRecord(invites=["ok", "blat", "oooooooooooooo"]),
             }
         )
         cache_impl._build_invite = mock.Mock(return_value=mock_invite)
@@ -1359,8 +1396,8 @@ class TestStatefulCacheImpl:
         assert cache_impl._guild_entries[snowflakes.Snowflake(999999999)].invites == ["ok", "blat"]
 
     def test_delete_invite_when_guild_id_is_None(self, cache_impl):
-        mock_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_invite_data = mock.Mock(cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         mock_invite = mock.Mock(invites.InviteWithMetadata, inviter=None, target_user=None, guild_id=None)
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {"blamSpat": mock_other_invite_data, "oooooooooooooo": mock_invite_data}
@@ -1374,8 +1411,8 @@ class TestStatefulCacheImpl:
         assert cache_impl._invite_entries == {"blamSpat": mock_other_invite_data}
 
     def test_delete_invite_without_users(self, cache_impl):
-        mock_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
-        mock_other_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_invite_data = mock.Mock(cache.InviteData)
+        mock_other_invite_data = mock.Mock(cache.InviteData)
         mock_invite = mock.Mock(
             invites.InviteWithMetadata, inviter=None, target_user=None, guild_id=snowflakes.Snowflake(999999999)
         )
@@ -1384,10 +1421,8 @@ class TestStatefulCacheImpl:
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1234312): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(999999999): hikari.utilities.cache.GuildRecord(
-                    invites=["ok", "blat", "oooooooooooooo"]
-                ),
+                snowflakes.Snowflake(1234312): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(999999999): cache.GuildRecord(invites=["ok", "blat", "oooooooooooooo"]),
             }
         )
         cache_impl._build_invite = mock.Mock(return_value=mock_invite)
@@ -1410,11 +1445,11 @@ class TestStatefulCacheImpl:
         cache_impl._garbage_collect_user.assert_not_called()
 
     def test_get_invite(self, cache_impl):
-        mock_invite_data = mock.Mock(hikari.utilities.cache.InviteData)
+        mock_invite_data = mock.Mock(cache.InviteData)
         mock_invite = mock.Mock(invites.InviteWithMetadata)
         cache_impl._build_invite = mock.Mock(return_value=mock_invite)
         cache_impl._invite_entries = mapping.DictionaryCollection(
-            {"blam": mock.Mock(hikari.utilities.cache.InviteData), "okokok": mock_invite_data}
+            {"blam": mock.Mock(cache.InviteData), "okokok": mock_invite_data}
         )
         assert cache_impl.get_invite("okokok") is mock_invite
         cache_impl._build_invite.assert_called_once_with(mock_invite_data)
@@ -1423,7 +1458,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite = mock.Mock()
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
-                "blam": mock.Mock(hikari.utilities.cache.InviteData),
+                "blam": mock.Mock(cache.InviteData),
             }
         )
         assert cache_impl.get_invite("okokok") is None
@@ -1431,20 +1466,20 @@ class TestStatefulCacheImpl:
 
     def test_get_invites_view(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             inviter_id=snowflakes.Snowflake(987),
             target_user_id=snowflakes.Snowflake(34123),
         )
-        mock_invite_data_2 = mock.Mock(hikari.utilities.cache.InviteData, inviter_id=None, target_user_id=None)
+        mock_invite_data_2 = mock.Mock(cache.InviteData, inviter_id=None, target_user_id=None)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(987): mock_wrapped_inviter,
                 snowflakes.Snowflake(34123): mock_wrapped_target_user,
-                snowflakes.Snowflake(6599): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(6599): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._invite_entries = mapping.DictionaryCollection(
@@ -1473,33 +1508,33 @@ class TestStatefulCacheImpl:
 
     def test_get_invites_view_for_guild(self, cache_impl):
         mock_invite_data_1 = mock.Mock(
-            hikari.utilities.cache.InviteData,
+            cache.InviteData,
             inviter_id=snowflakes.Snowflake(987),
             target_user_id=snowflakes.Snowflake(34123),
         )
-        mock_invite_data_2 = mock.Mock(hikari.utilities.cache.InviteData, inviter_id=None, target_user_id=None)
+        mock_invite_data_2 = mock.Mock(cache.InviteData, inviter_id=None, target_user_id=None)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(987): mock_wrapped_inviter,
                 snowflakes.Snowflake(34123): mock_wrapped_target_user,
-                snowflakes.Snowflake(6599): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(6599): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "okok": mock_invite_data_1,
                 "dsaytert": mock_invite_data_2,
-                "bitsbits ": mock.Mock(hikari.utilities.cache.InviteData),
+                "bitsbits ": mock.Mock(cache.InviteData),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(9544994): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(4444444): hikari.utilities.cache.GuildRecord(invites=["okok", "dsaytert"]),
+                snowflakes.Snowflake(9544994): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(4444444): cache.GuildRecord(invites=["okok", "dsaytert"]),
             }
         )
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
@@ -1529,14 +1564,14 @@ class TestStatefulCacheImpl:
     def test_get_invites_view_for_guild_unknown_emoji_cache(self, cache_impl):
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
-                "okok": mock.Mock(hikari.utilities.cache.InviteData),
-                "dsaytert": mock.Mock(hikari.utilities.cache.InviteData),
+                "okok": mock.Mock(cache.InviteData),
+                "dsaytert": mock.Mock(cache.InviteData),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(9544994): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(4444444): hikari.utilities.cache.GuildRecord(invites=None),
+                snowflakes.Snowflake(9544994): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(4444444): cache.GuildRecord(invites=None),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1546,13 +1581,13 @@ class TestStatefulCacheImpl:
     def test_get_invites_view_for_guild_unknown_record(self, cache_impl):
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
-                "okok": mock.Mock(hikari.utilities.cache.InviteData),
-                "dsaytert": mock.Mock(hikari.utilities.cache.InviteData),
+                "okok": mock.Mock(cache.InviteData),
+                "dsaytert": mock.Mock(cache.InviteData),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(9544994): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(9544994): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1568,29 +1603,27 @@ class TestStatefulCacheImpl:
         mock_invite_data_2 = mock.Mock(inviter_id=None, target_user_id=None, channel_id=snowflakes.Snowflake(987987))
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
-        mock_wrapped_inviter = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_target_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_inviter = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_target_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(4312365): mock_wrapped_inviter,
                 snowflakes.Snowflake(65643213): mock_wrapped_target_user,
-                snowflakes.Snowflake(999875673): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(999875673): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
                 "blamBang": mock_invite_data_1,
                 "bingBong": mock_invite_data_2,
-                "Pop": mock.Mock(hikari.utilities.cache.InviteData, channel_id=snowflakes.Snowflake(94934923)),
-                "Fam": mock.Mock(hikari.utilities.cache.InviteData, channel_id=snowflakes.Snowflake(2123)),
+                "Pop": mock.Mock(cache.InviteData, channel_id=snowflakes.Snowflake(94934923)),
+                "Fam": mock.Mock(cache.InviteData, channel_id=snowflakes.Snowflake(2123)),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(31423): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(83452134): hikari.utilities.cache.GuildRecord(
-                    invites=["blamBang", "bingBong", "Pop"]
-                ),
+                snowflakes.Snowflake(31423): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(83452134): cache.GuildRecord(invites=["blamBang", "bingBong", "Pop"]),
             }
         )
         cache_impl._build_invite = mock.Mock(side_effect=[mock_invite_1, mock_invite_2])
@@ -1622,14 +1655,14 @@ class TestStatefulCacheImpl:
     def test_get_invites_view_for_channel_unknown_emoji_cache(self, cache_impl):
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
-                "okok": mock.Mock(hikari.utilities.cache.InviteData),
-                "dsaytert": mock.Mock(hikari.utilities.cache.InviteData),
+                "okok": mock.Mock(cache.InviteData),
+                "dsaytert": mock.Mock(cache.InviteData),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(9544994): mock.Mock(hikari.utilities.cache.GuildRecord),
-                snowflakes.Snowflake(4444444): hikari.utilities.cache.GuildRecord(invites=None),
+                snowflakes.Snowflake(9544994): mock.Mock(cache.GuildRecord),
+                snowflakes.Snowflake(4444444): cache.GuildRecord(invites=None),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1640,13 +1673,13 @@ class TestStatefulCacheImpl:
     def test_get_invites_view_for_channel_unknown_record(self, cache_impl):
         cache_impl._invite_entries = mapping.DictionaryCollection(
             {
-                "okok": mock.Mock(hikari.utilities.cache.InviteData),
-                "dsaytert": mock.Mock(hikari.utilities.cache.InviteData),
+                "okok": mock.Mock(cache.InviteData),
+                "dsaytert": mock.Mock(cache.InviteData),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(9544994): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(9544994): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._build_invite = mock.Mock()
@@ -1703,7 +1736,7 @@ class TestStatefulCacheImpl:
         assert cache_impl._me == mock_own_user
 
     def test__build_member(self, cache_impl):
-        member_data = hikari.utilities.cache.MemberData(
+        member_data = cache.MemberData(
             id=snowflakes.Snowflake(512312354),
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
@@ -1715,7 +1748,7 @@ class TestStatefulCacheImpl:
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(512312354): hikari.utilities.cache.GenericRefWrapper(object=mock_user)}
+            {snowflakes.Snowflake(512312354): cache.GenericRefWrapper(object=mock_user)}
         )
         member = cache_impl._build_member(member_data)
         assert member.user == mock_user
@@ -1729,7 +1762,7 @@ class TestStatefulCacheImpl:
         assert member.is_mute is True
 
     def test__build_member_for_passed_through_user(self, cache_impl):
-        member_data = hikari.utilities.cache.MemberData(
+        member_data = cache.MemberData(
             id=snowflakes.Snowflake(512312354),
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
@@ -1743,30 +1776,30 @@ class TestStatefulCacheImpl:
         cache_impl._user_entries = mapping.DictionaryCollection({})
         member = cache_impl._build_member(
             member_data,
-            cached_users={snowflakes.Snowflake(512312354): hikari.utilities.cache.GenericRefWrapper(object=mock_user)},
+            cached_users={snowflakes.Snowflake(512312354): cache.GenericRefWrapper(object=mock_user)},
         )
         assert member.user == mock_user
         assert member.user is not mock_user
 
     def test_clear_members(self, cache_impl):
         mock_data_member_1 = mock.Mock(
-            hikari.utilities.cache.MemberData, id=snowflakes.Snowflake(2123123), guild_id=snowflakes.Snowflake(43123123)
+            cache.MemberData, id=snowflakes.Snowflake(2123123), guild_id=snowflakes.Snowflake(43123123)
         )
         mock_data_member_2 = mock.Mock(
-            hikari.utilities.cache.MemberData,
+            cache.MemberData,
             id=snowflakes.Snowflake(212314423),
             guild_id=snowflakes.Snowflake(43123123),
         )
         mock_data_member_3 = mock.Mock(
-            hikari.utilities.cache.MemberData, id=snowflakes.Snowflake(2123166623), guild_id=snowflakes.Snowflake(65234)
+            cache.MemberData, id=snowflakes.Snowflake(2123166623), guild_id=snowflakes.Snowflake(65234)
         )
         mock_data_member_4 = mock.Mock(
-            hikari.utilities.cache.MemberData,
+            cache.MemberData,
             id=snowflakes.Snowflake(21237777123),
             guild_id=snowflakes.Snowflake(65234),
         )
         mock_data_member_5 = mock.Mock(
-            hikari.utilities.cache.MemberData,
+            cache.MemberData,
             id=snowflakes.Snowflake(212399999123),
             guild_id=snowflakes.Snowflake(65234),
         )
@@ -1782,7 +1815,7 @@ class TestStatefulCacheImpl:
         mock_wrapped_user_5 = object()
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(43123123): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(43123123): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {
                             snowflakes.Snowflake(2123123): mock_data_member_1,
@@ -1790,9 +1823,9 @@ class TestStatefulCacheImpl:
                         }
                     )
                 ),
-                snowflakes.Snowflake(35123): hikari.utilities.cache.GuildRecord(members={}),
-                snowflakes.Snowflake(76345123): hikari.utilities.cache.GuildRecord(members=None),
-                snowflakes.Snowflake(65234): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(35123): cache.GuildRecord(members={}),
+                snowflakes.Snowflake(76345123): cache.GuildRecord(members=None),
+                snowflakes.Snowflake(65234): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {
                             snowflakes.Snowflake(2123166623): mock_data_member_3,
@@ -1861,20 +1894,16 @@ class TestStatefulCacheImpl:
         assert cache_impl.delete_member(snowflakes.Snowflake(42123), snowflakes.Snowflake(67876)) is None
 
     def test_delete_member_for_unknown_member_cache(self, cache_impl):
-        cache_impl._guild_entries = {snowflakes.Snowflake(42123): hikari.utilities.cache.GuildRecord()}
+        cache_impl._guild_entries = {snowflakes.Snowflake(42123): cache.GuildRecord()}
         assert cache_impl.delete_member(snowflakes.Snowflake(42123), snowflakes.Snowflake(67876)) is None
 
     def test_delete_member_for_known_member(self, cache_impl):
         mock_member = mock.Mock(guilds.Member)
         mock_member_data = mock.Mock(
-            hikari.utilities.cache.MemberData, id=snowflakes.Snowflake(67876), guild_id=snowflakes.Snowflake(42123)
+            cache.MemberData, id=snowflakes.Snowflake(67876), guild_id=snowflakes.Snowflake(42123)
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
-            {
-                snowflakes.Snowflake(42123): hikari.utilities.cache.GuildRecord(
-                    members={snowflakes.Snowflake(67876): mock_member_data}
-                )
-            }
+            {snowflakes.Snowflake(42123): cache.GuildRecord(members={snowflakes.Snowflake(67876): mock_member_data})}
         )
         cache_impl._remove_guild_record_if_empty = mock.Mock()
         cache_impl._garbage_collect_user = mock.Mock()
@@ -1887,15 +1916,15 @@ class TestStatefulCacheImpl:
 
     def test_delete_member_for_known_hard_referenced_member(self, cache_impl):
         cache_impl._user_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(67876): hikari.utilities.cache.GenericRefWrapper(object=object(), ref_count=4)}
+            {snowflakes.Snowflake(67876): cache.GenericRefWrapper(object=object(), ref_count=4)}
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(42123): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(42123): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {
                             snowflakes.Snowflake(67876): mock.Mock(
-                                hikari.utilities.cache.MemberData,
+                                cache.MemberData,
                                 id=snowflakes.Snowflake(67876),
                                 guild_id=snowflakes.Snowflake(42123),
                             )
@@ -1910,16 +1939,14 @@ class TestStatefulCacheImpl:
         assert cache_impl.delete_member(snowflakes.Snowflake(42123), snowflakes.Snowflake(67876)) is None
 
     def test_get_member_for_unknown_member_cache(self, cache_impl):
-        cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(1234213): hikari.utilities.cache.GuildRecord()}
-        )
+        cache_impl._guild_entries = mapping.DictionaryCollection({snowflakes.Snowflake(1234213): cache.GuildRecord()})
         assert cache_impl.get_member(snowflakes.Snowflake(1234213), snowflakes.Snowflake(512312354)) is None
 
     def test_get_member_for_unknown_member(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1234213): hikari.utilities.cache.GuildRecord(
-                    members={snowflakes.Snowflake(43123): mock.Mock(hikari.utilities.cache.MemberData)}
+                snowflakes.Snowflake(1234213): cache.GuildRecord(
+                    members={snowflakes.Snowflake(43123): mock.Mock(cache.MemberData)}
                 )
             }
         )
@@ -1929,15 +1956,15 @@ class TestStatefulCacheImpl:
         assert cache_impl.get_member(snowflakes.Snowflake(1234213), snowflakes.Snowflake(512312354)) is None
 
     def test_get_member_for_known_member(self, cache_impl):
-        mock_member_data = mock.Mock(hikari.utilities.cache.MemberData)
+        mock_member_data = mock.Mock(cache.MemberData)
         mock_member = mock.Mock(guilds.Member)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1234213): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(1234213): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {
                             snowflakes.Snowflake(512312354): mock_member_data,
-                            snowflakes.Snowflake(321): mock.Mock(hikari.utilities.cache.MemberData),
+                            snowflakes.Snowflake(321): mock.Mock(cache.MemberData),
                         }
                     )
                 )
@@ -1972,16 +1999,14 @@ class TestStatefulCacheImpl:
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(543123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(54123123): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(543123): cache.GuildRecord(),
+                snowflakes.Snowflake(54123123): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {snowflakes.Snowflake(321): mock_member_data_1, snowflakes.Snowflake(6324): mock_member_data_2}
                     )
                 ),
-                snowflakes.Snowflake(54234): hikari.utilities.cache.GuildRecord(
-                    members=mapping.DictionaryCollection({})
-                ),
-                snowflakes.Snowflake(783452): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(54234): cache.GuildRecord(members=mapping.DictionaryCollection({})),
+                snowflakes.Snowflake(783452): cache.GuildRecord(
                     members=mapping.DictionaryCollection(
                         {
                             snowflakes.Snowflake(54123): mock_member_data_3,
@@ -2020,25 +2045,23 @@ class TestStatefulCacheImpl:
         assert members_mapping == {}
 
     def test_get_members_view_for_guild_unknown_member_cache(self, cache_impl):
-        cache_impl._guild_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(42334): hikari.utilities.cache.GuildRecord()}
-        )
+        cache_impl._guild_entries = mapping.DictionaryCollection({snowflakes.Snowflake(42334): cache.GuildRecord()})
         members_mapping = cache_impl.get_members_view_for_guild(snowflakes.Snowflake(42334))
         assert members_mapping == {}
 
     def test_get_members_view_for_guild(self, cache_impl):
-        mock_member_data_1 = mock.Mock(hikari.utilities.cache.MemberData, has_been_deleted=False)
-        mock_member_data_2 = mock.Mock(hikari.utilities.cache.MemberData, has_been_deleted=False)
+        mock_member_data_1 = mock.Mock(cache.MemberData, has_been_deleted=False)
+        mock_member_data_2 = mock.Mock(cache.MemberData, has_been_deleted=False)
         mock_member_1 = mock.Mock(guilds.Member)
         mock_member_2 = mock.Mock(guilds.Member)
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        guild_record = hikari.utilities.cache.GuildRecord(
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
+        guild_record = cache.GuildRecord(
             members=mapping.DictionaryCollection(
                 {
                     snowflakes.Snowflake(3214321): mock_member_data_1,
                     snowflakes.Snowflake(53224): mock_member_data_2,
-                    snowflakes.Snowflake(9000): mock.Mock(hikari.utilities.cache.MemberData, has_been_deleted=True),
+                    snowflakes.Snowflake(9000): mock.Mock(cache.MemberData, has_been_deleted=True),
                 }
             )
         )
@@ -2047,7 +2070,7 @@ class TestStatefulCacheImpl:
             {
                 snowflakes.Snowflake(3214321): mock_wrapped_user_1,
                 snowflakes.Snowflake(53224): mock_wrapped_user_2,
-                snowflakes.Snowflake(87345): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(87345): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._build_member = mock.Mock(side_effect=[mock_member_1, mock_member_2])
@@ -2119,10 +2142,8 @@ class TestStatefulCacheImpl:
         cache_impl._increment_user_ref_count = mock.Mock()
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(67345234): hikari.utilities.cache.GuildRecord(
-                    members=mapping.DictionaryCollection(
-                        {snowflakes.Snowflake(645234123): mock.Mock(hikari.utilities.cache.MemberData)}
-                    )
+                snowflakes.Snowflake(67345234): cache.GuildRecord(
+                    members=mapping.DictionaryCollection({snowflakes.Snowflake(645234123): mock.Mock(cache.MemberData)})
                 )
             }
         )
@@ -2213,8 +2234,8 @@ class TestStatefulCacheImpl:
         mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(53422132): hikari.utilities.cache.GenericRefWrapper(object=mock_user_1),
-                snowflakes.Snowflake(7654433245): hikari.utilities.cache.GenericRefWrapper(object=mock_user_2),
+                snowflakes.Snowflake(53422132): cache.GenericRefWrapper(object=mock_user_1),
+                snowflakes.Snowflake(7654433245): cache.GenericRefWrapper(object=mock_user_2),
             }
         )
         assert cache_impl.clear_users() == {
@@ -2224,7 +2245,7 @@ class TestStatefulCacheImpl:
         assert cache_impl._user_entries == {}
 
     def test_clear_users_ignores_hard_referenced_users(self, cache_impl):
-        wrapped_user = hikari.utilities.cache.GenericRefWrapper(object=mock.Mock(users.User), ref_count=2)
+        wrapped_user = cache.GenericRefWrapper(object=mock.Mock(users.User), ref_count=2)
         cache_impl._user_entries = mapping.DictionaryCollection({snowflakes.Snowflake(53422132): wrapped_user})
         assert cache_impl.clear_users() == {}
         assert cache_impl._user_entries == {snowflakes.Snowflake(53422132): wrapped_user}
@@ -2235,10 +2256,10 @@ class TestStatefulCacheImpl:
 
     def test_delete_user_for_known_unreferenced_user(self, cache_impl):
         mock_user = mock.Mock(users.User)
-        mock_wrapped_other_user = hikari.utilities.cache.GenericRefWrapper(object=mock.Mock(users.User))
+        mock_wrapped_other_user = cache.GenericRefWrapper(object=mock.Mock(users.User))
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(21231234): hikari.utilities.cache.GenericRefWrapper(object=mock_user),
+                snowflakes.Snowflake(21231234): cache.GenericRefWrapper(object=mock_user),
                 snowflakes.Snowflake(645234): mock_wrapped_other_user,
             }
         )
@@ -2246,8 +2267,8 @@ class TestStatefulCacheImpl:
         assert cache_impl._user_entries == {snowflakes.Snowflake(645234): mock_wrapped_other_user}
 
     def test_delete_user_for_referenced_user(self, cache_impl):
-        mock_wrapped_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper, ref_count=2)
-        mock_other_wrapped_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper)
+        mock_wrapped_user = mock.Mock(cache.GenericRefWrapper, ref_count=2)
+        mock_other_wrapped_user = mock.Mock(cache.GenericRefWrapper)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(21231234): mock_wrapped_user,
@@ -2261,7 +2282,7 @@ class TestStatefulCacheImpl:
         }
 
     def test_delete_user_for_unknown_user(self, cache_impl):
-        mock_wrapped_user = mock.Mock(hikari.utilities.cache.GenericRefWrapper)
+        mock_wrapped_user = mock.Mock(cache.GenericRefWrapper)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(21231234): mock_wrapped_user,
@@ -2276,8 +2297,8 @@ class TestStatefulCacheImpl:
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(21231234): hikari.utilities.cache.GenericRefWrapper(object=mock_user),
-                snowflakes.Snowflake(645234): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(21231234): cache.GenericRefWrapper(object=mock_user),
+                snowflakes.Snowflake(645234): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._build_user = mock.Mock(return_value=mock_user)
@@ -2288,8 +2309,8 @@ class TestStatefulCacheImpl:
         mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(54123): hikari.utilities.cache.GenericRefWrapper(object=mock_user_1),
-                snowflakes.Snowflake(76345): hikari.utilities.cache.GenericRefWrapper(object=mock_user_2),
+                snowflakes.Snowflake(54123): cache.GenericRefWrapper(object=mock_user_1),
+                snowflakes.Snowflake(76345): cache.GenericRefWrapper(object=mock_user_2),
             }
         )
         assert cache_impl.get_users_view() == {
@@ -2303,7 +2324,7 @@ class TestStatefulCacheImpl:
     def test_set_user(self, cache_impl):
         mock_user = mock.MagicMock(users.User, id=snowflakes.Snowflake(6451234123))
         cache_impl._user_entries = mapping.DictionaryCollection(
-            {snowflakes.Snowflake(542143): mock.Mock(hikari.utilities.cache.GenericRefWrapper)}
+            {snowflakes.Snowflake(542143): mock.Mock(cache.GenericRefWrapper)}
         )
         assert cache_impl.set_user(mock_user) is None
         assert 6451234123 in cache_impl._user_entries
@@ -2315,8 +2336,8 @@ class TestStatefulCacheImpl:
         mock_user = mock.MagicMock(users.User, id=snowflakes.Snowflake(6451234123))
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(542143): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
-                snowflakes.Snowflake(6451234123): mock.Mock(hikari.utilities.cache.GenericRefWrapper, ref_count=42),
+                snowflakes.Snowflake(542143): mock.Mock(cache.GenericRefWrapper),
+                snowflakes.Snowflake(6451234123): mock.Mock(cache.GenericRefWrapper, ref_count=42),
             }
         )
         assert cache_impl.set_user(mock_user) is None
@@ -2336,7 +2357,7 @@ class TestStatefulCacheImpl:
         cache_impl.get_user.assert_has_calls([mock.call(54123123), mock.call(54123123)])
 
     def test__build_voice_state(self, cache_impl):
-        voice_state_data = hikari.utilities.cache.VoiceStateData(
+        voice_state_data = cache.VoiceStateData(
             channel_id=snowflakes.Snowflake(4651234123),
             guild_id=snowflakes.Snowflake(54123123),
             is_guild_deafened=True,
@@ -2349,13 +2370,13 @@ class TestStatefulCacheImpl:
             user_id=snowflakes.Snowflake(7512312),
             session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
         )
-        mock_member_data = mock.Mock(hikari.utilities.cache.MemberData)
+        mock_member_data = mock.Mock(cache.MemberData)
         mock_member = mock.Mock(guilds.Member)
-        record = hikari.utilities.cache.GuildRecord(
+        record = cache.GuildRecord(
             members=mapping.DictionaryCollection(
                 {
                     snowflakes.Snowflake(7512312): mock_member_data,
-                    snowflakes.Snowflake(43123123): mock.Mock(hikari.utilities.cache.MemberData),
+                    snowflakes.Snowflake(43123123): mock.Mock(cache.MemberData),
                 }
             ),
         )
@@ -2377,7 +2398,7 @@ class TestStatefulCacheImpl:
         assert current_voice_state.member is mock_member
 
     def test__build_voice_state_with_pass_through_member_and_user_data(self, cache_impl):
-        voice_state_data = hikari.utilities.cache.VoiceStateData(
+        voice_state_data = cache.VoiceStateData(
             channel_id=snowflakes.Snowflake(4651234123),
             guild_id=snowflakes.Snowflake(54123123),
             is_guild_deafened=True,
@@ -2390,7 +2411,7 @@ class TestStatefulCacheImpl:
             user_id=snowflakes.Snowflake(7512312),
             session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
         )
-        mock_member_data = mock.Mock(hikari.utilities.cache.MemberData)
+        mock_member_data = mock.Mock(cache.MemberData)
         mock_member = mock.Mock(guilds.Member)
         mock_user = mock.Mock(users.User)
         cache_impl._build_member = mock.Mock(return_value=mock_member)
@@ -2399,7 +2420,7 @@ class TestStatefulCacheImpl:
             cached_members=mapping.DictionaryCollection(
                 {
                     snowflakes.Snowflake(7512312): mock_member_data,
-                    snowflakes.Snowflake(63123): mock.Mock(hikari.utilities.cache.MemberData),
+                    snowflakes.Snowflake(63123): mock.Mock(cache.MemberData),
                 }
             ),
             cached_users=mapping.DictionaryCollection({snowflakes.Snowflake(7512312): mock_user}),
@@ -2429,23 +2450,19 @@ class TestStatefulCacheImpl:
         ...
 
     def test_clear_voice_states_for_guild(self, cache_impl):
-        mock_voice_state_data_1 = mock.Mock(
-            hikari.utilities.cache.VoiceStateData, user_id=snowflakes.Snowflake(7512312)
-        )
-        mock_voice_state_data_2 = mock.Mock(
-            hikari.utilities.cache.VoiceStateData, user_id=snowflakes.Snowflake(43123123)
-        )
+        mock_voice_state_data_1 = mock.Mock(cache.VoiceStateData, user_id=snowflakes.Snowflake(7512312))
+        mock_voice_state_data_2 = mock.Mock(cache.VoiceStateData, user_id=snowflakes.Snowflake(43123123))
         mock_voice_state_1 = mock.Mock(voices.VoiceState)
         mock_voice_state_2 = mock.Mock(voices.VoiceState)
         mock_member_data_1 = mock.Mock(
-            hikari.utilities.cache.MemberData, guild_id=snowflakes.Snowflake(54123123), id=snowflakes.Snowflake(7512312)
+            cache.MemberData, guild_id=snowflakes.Snowflake(54123123), id=snowflakes.Snowflake(7512312)
         )
         mock_member_data_2 = mock.Mock(
-            hikari.utilities.cache.MemberData,
+            cache.MemberData,
             guild_id=snowflakes.Snowflake(54123123),
             id=snowflakes.Snowflake(43123123),
         )
-        record = hikari.utilities.cache.GuildRecord(
+        record = cache.GuildRecord(
             voice_states=mapping.DictionaryCollection(
                 {
                     snowflakes.Snowflake(7512312): mock_voice_state_data_1,
@@ -2456,18 +2473,18 @@ class TestStatefulCacheImpl:
                 {
                     snowflakes.Snowflake(7512312): mock_member_data_1,
                     snowflakes.Snowflake(43123123): mock_member_data_2,
-                    snowflakes.Snowflake(123): mock.Mock(hikari.utilities.cache.MemberData),
+                    snowflakes.Snowflake(123): mock.Mock(cache.MemberData),
                 }
             ),
         )
         cache_impl._remove_guild_record_if_empty = mock.Mock()
-        mock_wrapped_user_1 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
-        mock_wrapped_user_2 = mock.Mock(hikari.utilities.cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_1 = mock.Mock(cache.GenericRefWrapper[users.User])
+        mock_wrapped_user_2 = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._user_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(7512312): mock_wrapped_user_1,
                 snowflakes.Snowflake(43123123): mock_wrapped_user_2,
-                snowflakes.Snowflake(56234): mock.Mock(hikari.utilities.cache.GenericRefWrapper),
+                snowflakes.Snowflake(56234): mock.Mock(cache.GenericRefWrapper),
             }
         )
         cache_impl._guild_entries = mapping.DictionaryCollection({snowflakes.Snowflake(54123123): record})
@@ -2505,19 +2522,19 @@ class TestStatefulCacheImpl:
         )
 
     def test_clear_voice_states_for_guild_unknown_voice_state_cache(self, cache_impl):
-        cache_impl._guild_entries[snowflakes.Snowflake(24123)] = hikari.utilities.cache.GuildRecord()
+        cache_impl._guild_entries[snowflakes.Snowflake(24123)] = cache.GuildRecord()
         assert cache_impl.clear_voice_states_for_guild(snowflakes.Snowflake(24123)) == {}
 
     def test_clear_voice_states_for_guild_unknown_record(self, cache_impl):
         assert cache_impl.clear_voice_states_for_guild(snowflakes.Snowflake(24123)) == {}
 
     def test_delete_voice_state(self, cache_impl):
-        mock_voice_state_data = mock.Mock(hikari.utilities.cache.VoiceStateData, user_id=snowflakes.Snowflake(12354345))
-        mock_other_voice_state_data = mock.Mock(hikari.utilities.cache.VoiceStateData)
+        mock_voice_state_data = mock.Mock(cache.VoiceStateData, user_id=snowflakes.Snowflake(12354345))
+        mock_other_voice_state_data = mock.Mock(cache.VoiceStateData)
         mock_voice_state = mock.Mock(voices.VoiceState)
         mock_member_data = object()
         cache_impl._build_voice_state = mock.Mock(return_value=mock_voice_state)
-        guild_record = hikari.utilities.cache.GuildRecord(
+        guild_record = cache.GuildRecord(
             voice_states=mapping.DictionaryCollection(
                 {
                     snowflakes.Snowflake(12354345): mock_voice_state_data,
@@ -2533,7 +2550,7 @@ class TestStatefulCacheImpl:
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65234): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(65234): mock.Mock(cache.GuildRecord),
                 snowflakes.Snowflake(43123): guild_record,
             }
         )
@@ -2548,14 +2565,14 @@ class TestStatefulCacheImpl:
         }
 
     def test_delete_voice_state_unknown_state(self, cache_impl):
-        mock_other_voice_state_data = mock.Mock(hikari.utilities.cache.VoiceStateData)
+        mock_other_voice_state_data = mock.Mock(cache.VoiceStateData)
         cache_impl._build_voice_state = mock.Mock()
-        guild_record = hikari.utilities.cache.GuildRecord(
+        guild_record = cache.GuildRecord(
             voice_states=mapping.DictionaryCollection({snowflakes.Snowflake(6541234): mock_other_voice_state_data})
         )
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65234): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(65234): mock.Mock(cache.GuildRecord),
                 snowflakes.Snowflake(43123): guild_record,
             }
         )
@@ -2568,10 +2585,10 @@ class TestStatefulCacheImpl:
 
     def test_delete_voice_state_unknown_state_cache(self, cache_impl):
         cache_impl._build_voice_state = mock.Mock()
-        guild_record = hikari.utilities.cache.GuildRecord(voice_states=None)
+        guild_record = cache.GuildRecord(voice_states=None)
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65234): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(65234): mock.Mock(cache.GuildRecord),
                 snowflakes.Snowflake(43123): guild_record,
             }
         )
@@ -2583,7 +2600,7 @@ class TestStatefulCacheImpl:
         cache_impl._build_voice_state = mock.Mock()
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(65234): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(65234): mock.Mock(cache.GuildRecord),
             }
         )
         cache_impl._remove_guild_record_if_empty = mock.Mock()
@@ -2591,16 +2608,14 @@ class TestStatefulCacheImpl:
         cache_impl._remove_guild_record_if_empty.assert_not_called()
 
     def test_get_voice_state_for_known_voice_state(self, cache_impl):
-        mock_voice_state_data = mock.Mock(hikari.utilities.cache.VoiceStateData)
+        mock_voice_state_data = mock.Mock(cache.VoiceStateData)
         mock_voice_state = mock.Mock(voices.VoiceState)
         cache_impl._build_voice_state = mock.Mock(return_value=mock_voice_state)
-        guild_record = hikari.utilities.cache.GuildRecord(
-            voice_states={snowflakes.Snowflake(43124): mock_voice_state_data}
-        )
+        guild_record = cache.GuildRecord(voice_states={snowflakes.Snowflake(43124): mock_voice_state_data})
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
                 snowflakes.Snowflake(1235123): guild_record,
-                snowflakes.Snowflake(73245): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(73245): mock.Mock(cache.GuildRecord),
             }
         )
         result = cache_impl.get_voice_state(snowflakes.Snowflake(1235123), snowflakes.Snowflake(43124))
@@ -2610,12 +2625,12 @@ class TestStatefulCacheImpl:
     def test_get_voice_state_for_unknown_voice_state(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1235123): hikari.utilities.cache.GuildRecord(
+                snowflakes.Snowflake(1235123): cache.GuildRecord(
                     voice_states=mapping.DictionaryCollection(
-                        {snowflakes.Snowflake(54123): mock.Mock(hikari.utilities.cache.VoiceStateData)}
+                        {snowflakes.Snowflake(54123): mock.Mock(cache.VoiceStateData)}
                     )
                 ),
-                snowflakes.Snowflake(73245): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(73245): mock.Mock(cache.GuildRecord),
             }
         )
         assert cache_impl.get_voice_state(snowflakes.Snowflake(1235123), snowflakes.Snowflake(43124)) is None
@@ -2623,14 +2638,14 @@ class TestStatefulCacheImpl:
     def test_get_voice_state_for_unknown_voice_state_cache(self, cache_impl):
         cache_impl._guild_entries = mapping.DictionaryCollection(
             {
-                snowflakes.Snowflake(1235123): hikari.utilities.cache.GuildRecord(),
-                snowflakes.Snowflake(73245): mock.Mock(hikari.utilities.cache.GuildRecord),
+                snowflakes.Snowflake(1235123): cache.GuildRecord(),
+                snowflakes.Snowflake(73245): mock.Mock(cache.GuildRecord),
             }
         )
         assert cache_impl.get_voice_state(snowflakes.Snowflake(1235123), snowflakes.Snowflake(43124)) is None
 
     def test_get_voice_state_for_unknown_record(self, cache_impl):
-        cache_impl._guild_entries = {snowflakes.Snowflake(73245): mock.Mock(hikari.utilities.cache.GuildRecord)}
+        cache_impl._guild_entries = {snowflakes.Snowflake(73245): mock.Mock(cache.GuildRecord)}
         assert cache_impl.get_voice_state(snowflakes.Snowflake(1235123), snowflakes.Snowflake(43124)) is None
 
     @pytest.mark.skip(reason="TODO")

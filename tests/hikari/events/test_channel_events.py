@@ -22,8 +22,55 @@
 import mock
 import pytest
 
+from hikari import channels
+from hikari import snowflakes
 from hikari.events import channel_events
 from tests.hikari import hikari_test_helpers
+
+
+class TestGuildChannelEvent:
+    @pytest.fixture()
+    def event(self):
+        cls = hikari_test_helpers.mock_class_namespace(
+            channel_events.GuildChannelEvent,
+            guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(929292929)),
+            channel_id=mock.PropertyMock(return_value=snowflakes.Snowflake(432432432)),
+        )
+        return cls()
+
+    def test_available_guild(self, event):
+        result = event.available_guild
+
+        assert result is event.app.cache.get_available_guild.return_value
+        event.app.cache.get_available_guild.assert_called_once_with(929292929)
+
+    def test_unavailable_guild(self, event):
+        result = event.unavailable_guild
+
+        assert result is event.app.cache.get_unavailable_guild.return_value
+        event.app.cache.get_unavailable_guild.assert_called_once_with(929292929)
+
+    @pytest.mark.asyncio
+    async def test_fetch_guild(self, event):
+        event.app.rest.fetch_guild = mock.AsyncMock()
+        result = await event.fetch_guild()
+
+        assert result is event.app.rest.fetch_guild.return_value
+        event.app.rest.fetch_guild.assert_awaited_once_with(929292929)
+
+    def test_channel(self, event):
+        result = event.channel
+
+        assert result is event.app.cache.get_guild_channel.return_value
+        event.app.cache.get_guild_channel.assert_called_once_with(432432432)
+
+    @pytest.mark.asyncio
+    async def test_fetch_channel(self, event):
+        event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock.MagicMock(spec=channels.GuildChannel))
+        result = await event.fetch_channel()
+
+        assert result is event.app.rest.fetch_channel.return_value
+        event.app.rest.fetch_channel.assert_awaited_once_with(432432432)
 
 
 class TestChannelCreateEvent:

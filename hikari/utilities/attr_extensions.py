@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Utility for extending and optimisation the usage of attr models."""
+"""Utility for extending and optimising the usage of attr models."""
 from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [

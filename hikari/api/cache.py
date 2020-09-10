@@ -149,8 +149,8 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
-        """Get a guild object from the cache.
+    def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the object of an available guild from the cache.
 
         Parameters
         ----------
@@ -164,8 +164,45 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        """Get a view of the guild objects in the cache.
+    def get_unavailable_guild(self, guild_id: snowflakes.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the object of a unavailable guild from the cache.
+
+        !!! note
+            Unlike `Cache.get_available_guild`, the objects returned by this
+            method will likely be out of date and not-accurate as they are
+            considered unavailable meaning that we aren't receiving gateway
+            events for this guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.snowflakes.Snowflake
+            The ID of the guild to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else None.
+        """
+
+    @abc.abstractmethod
+    def get_available_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        """Get a view of the available guild objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
+            A view of guild IDs to the guild objects found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_unavailable_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        """Get a view of the unavailable guild objects in the cache.
+
+        !!! note
+            Unlike `Cache.get_available_guilds_view`, the objects returned by
+            this method will likely be out of date and not-accurate as they are
+            considered unavailable meaning that we aren't receiving gateway
+            events for this guild.
 
         Returns
         -------
@@ -801,10 +838,6 @@ class MutableCache(Cache, abc.ABC):
         builtins.NotImplementedError
             When called on a stateless cache implementation.
         """
-
-    @abc.abstractmethod
-    def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflakes.Snowflake], /) -> None:
-        ...
 
     @abc.abstractmethod
     def update_guild(

@@ -26,6 +26,36 @@ from hikari import messages
 from hikari import snowflakes
 from hikari import users
 from hikari.events import message_events
+from tests.hikari import hikari_test_helpers
+
+
+class TestGuildMessageEvent:
+    @pytest.fixture()
+    def event(self):
+        cls = hikari_test_helpers.mock_class_namespace(
+            message_events.GuildMessageEvent,
+            guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(342123123)),
+            channel_id=mock.PropertyMock(return_value=snowflakes.Snowflake(54123123123)),
+        )
+        return cls()
+
+    def test_channel(self, event):
+        result = event.channel
+
+        assert result is event.app.cache.get_guild_channel.return_value
+        event.app.cache.get_guild_channel.assert_called_once_with(54123123123)
+
+    def test_available_guild(self, event):
+        result = event.available_guild
+
+        assert result is event.app.cache.get_available_guild.return_value
+        event.app.cache.get_available_guild.assert_called_once_with(342123123)
+
+    def test_unavailable_guild(self, event):
+        result = event.unavailable_guild
+
+        assert result is event.app.cache.get_unavailable_guild.return_value
+        event.app.cache.get_unavailable_guild.assert_called_once_with(342123123)
 
 
 class TestMessageCreateEvent:
@@ -33,7 +63,7 @@ class TestMessageCreateEvent:
     def event(self):
         class MessageCreateEvent(message_events.MessageCreateEvent):
             app = None
-            message = mock.Mock(messages.Message)
+            message = mock.Mock(messages.Message, guild_id=snowflakes.Snowflake(998866))
             shard = object()
             channel = object()
 
@@ -138,3 +168,33 @@ class TestGuildMessageDeleteEvent:
 
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(9182736)
+
+
+class TestGuildMessageBulkDeleteEvent:
+    @pytest.fixture()
+    def event(self):
+        return message_events.GuildMessageBulkDeleteEvent(
+            guild_id=snowflakes.Snowflake(542342354564),
+            channel_id=snowflakes.Snowflake(54213123123),
+            app=mock.Mock(),
+            shard=None,
+            message_ids=None,
+        )
+
+    def test_channel(self, event):
+        result = event.channel
+
+        assert result is event.app.cache.get_guild_channel.return_value
+        event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
+
+    def test_available_guild(self, event):
+        result = event.available_guild
+
+        assert result is event.app.cache.get_available_guild.return_value
+        event.app.cache.get_available_guild.assert_called_once_with(542342354564)
+
+    def test_unavailable_guild(self, event):
+        result = event.unavailable_guild
+
+        assert result is event.app.cache.get_unavailable_guild.return_value
+        event.app.cache.get_unavailable_guild.assert_called_once_with(542342354564)
