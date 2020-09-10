@@ -23,6 +23,9 @@
 
 from __future__ import annotations
 
+import threading
+import traceback
+
 __all__: typing.Final[typing.List[str]] = ["BotApp", "LoggerLevelT"]
 
 import asyncio
@@ -195,6 +198,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_cache",
         "_chunker",
         "_closing_event",
+        "_closed",
         "_debug",
         "_entity_factory",
         "_events",
@@ -234,6 +238,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # Settings and state
         self._banner = banner
         self._closing_event = asyncio.Event()
+        self._closed = False
         self._debug = debug
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
@@ -364,17 +369,47 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def rest(self) -> rest_.RESTClient:
         return self._rest
 
-    async def close(self, wait: bool = False) -> None:
+    async def close(self, force: bool = True) -> None:
+        """Kill the application by shutting all components down."""
+        if not self._closing_event.is_set():
+            _LOGGER.info("bot requested to shutdown [force:%s]", force)
+
         self._closing_event.set()
 
-        _LOGGER.debug("BotApp#close(%s) invoked", wait)
+        if self._closed or not force:
+            return
 
-        if wait:
+        self._closed = True
+
+        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
+            future = asyncio.ensure_future(awaitable)
+
             try:
-                await self.join()
-            finally:
-                # Discard any exception that occurred from shutting down.
-                return
+                await future
+            except Exception as ex:
+                loop = asyncio.get_running_loop()
+
+                loop.call_exception_handler(
+                    {
+                        "message": f"{name} raised an exception during shutdown",
+                        "future": future,
+                        "exception": ex,
+                    }
+                )
+
+        await self.dispatch(lifetime_events.StoppingEvent(app=self))
+
+        calls = [
+            ("rest", self._rest.close()),
+            ("chunker", self._chunker.close()),
+            ("voice handler", self._voice.close()),
+            *((f"shard {s.id}", s.close()) for s in self._shards.values()),
+        ]
+
+        for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
+            await coro
+
+        await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
     def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
         return self._events.dispatch(event)
@@ -433,13 +468,14 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
         asyncio_debug: typing.Optional[bool] = None,
-        close_executor: bool = False,
+        close_passed_executor: bool = False,
         close_loop: bool = True,
         coroutine_tracking_depth: typing.Optional[int] = None,
         enable_signal_handlers: bool = True,
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
+        propagate_interrupts: bool = False,
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Optional[typing.Set[int]] = None,
         shard_count: typing.Optional[int] = None,
@@ -457,7 +493,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         asyncio_debug : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then debugging is
             enabled for the asyncio event loop in use.
-        close_executor : builtins.bool
+        close_passed_executor : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the
@@ -501,6 +537,15 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
+        propagate_interrupts : builtins.bool
+            Defaults to `builtins.False`. If set to `builtins.True`, then any
+            internal `hikari.errors.HikariInterrupt` that is raises as a
+            result of catching an OS level signal will result in the
+            exception being rethrown once the application has closed. This can
+            allow you to use hikari signal handlers and still be able to
+            determine what kind of interrupt the application received after
+            it closes. When `builtins.False`, nothing is raised and the call
+            will terminate cleanly and silently where possible instead.
         shard_ids : typing.Optional[typing.Set[builtins.int]]
             The shard IDs to create shards for. If not `builtins.None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
@@ -514,8 +559,11 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             The initial status to show for the user presence on startup.
             Defaults to `hikari.presences.Status.ONLINE`.
         """
+        if shard_ids is not None and shard_count is None:
+            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+
         loop = asyncio.get_event_loop()
-        signals = ("SIGINT", "SIGQUIT", "SIGTERM")
+        signals = ("SIGINT", "SIGTERM")
 
         if asyncio_debug:
             loop.set_debug(True)
@@ -527,18 +575,51 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             except AttributeError:
                 _LOGGER.debug("cannot set coroutine tracking depth for %s, no functionality exists for this", loop)
 
-        def signal_handler(signum: int) -> None:
-            raise errors.HikariInterrupt(signum, signal.strsignal(signum))
+        # Throwing this in the handler will lead to lots of fun OS specific shenanigans. So, lets just
+        # cache it for later, I guess.
+        interrupt: typing.Optional[errors.HikariInterrupt] = None
+        loop_thread_id = threading.get_native_id()
+
+        def handle_os_interrupt(signum: int, frame: types.FrameType) -> None:
+            # If we use a POSIX system, then raising an exception in here works perfectly and shuts the loop down
+            # with an exception, which is good.
+            # Windows, however, is special on this front. On Windows, the exception is caught by whatever was
+            # currently running on the event loop at the time, which is annoying for us, as this could be fired into
+            # the task for an event dispatch, for example, which is a guarded call that is never waited for by design.
+
+            # We can't always safely intercept this either, as Windows does not allow us to use asyncio loop
+            # signal listeners (since Windows doesn't have kernel-level signals, only emulated system calls
+            # for a remote few standard C signal types). Thus, the best solution here is to set the close bit
+            # instead, which will let the bot start to clean itself up as if the user closed it manually via a call
+            # to `bot.close()`.
+            nonlocal interrupt
+            signame = signal.strsignal(signum)
+            assert signame is not None  # Will always be True
+
+            interrupt = errors.HikariInterrupt(signum, signame)
+            # The loop may or may not be running, depending on the state of the application when this occurs.
+            # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
+            # threadsafe if we want the user's application to still shut down if on a separate thread.
+            # We log native thread IDs purely for debugging purposes.
+            if self._debug:
+                _LOGGER.debug(
+                    "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
+                    "Stack trace:\n%s",
+                    signum,
+                    threading.get_native_id(),
+                    loop_thread_id,
+                    "".join(traceback.format_stack(frame)),
+                )
+
+            asyncio.run_coroutine_threadsafe(self._set_close_flag(signame, signum), loop)
 
         if enable_signal_handlers:
             for sig in signals:
                 try:
                     signum = getattr(signal, sig)
-                    loop.add_signal_handler(signum, signal_handler, signum)
-                except (NotImplementedError, AttributeError):
-                    # Windows doesn't use signals (NotImplementedError);
-                    # Some OSs may decide to not implement some signals either...
-                    pass
+                    signal.signal(signum, handle_os_interrupt)
+                except AttributeError:
+                    _LOGGER.debug("signal %s is not implemented on your platform", sig)
 
         try:
             loop.run_until_complete(
@@ -556,39 +637,31 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
             loop.run_until_complete(self.join())
 
-        except errors.HikariInterrupt as interrupt:
-            _LOGGER.info(
-                "received %s (%s), will proceed to shut down",
-                interrupt.description or str(interrupt.signum),
-                interrupt.signum,
-            )
-
-        except KeyboardInterrupt:
-            # If signal handlers are not registered,
-            # we will get a KeyboardInterrupt instead.
-            # This just allows us to have a nicer shutdown
-            _LOGGER.info(
-                "received KeyboardInterrupt, will proceed to shut down",
-            )
-
         finally:
             try:
-                loop.run_until_complete(self.terminate(close_executor=close_executor))
+                loop.run_until_complete(self.close())
+
+                if close_passed_executor and self._executor is not None:
+                    _LOGGER.debug("shutting down executor %s", self._executor)
+                    self._executor.shutdown(wait=True)
+                    self._executor = None
             finally:
                 if enable_signal_handlers:
                     for sig in signals:
                         try:
                             signum = getattr(signal, sig)
-                            loop.remove_signal_handler(signum)
-                        except (NotImplementedError, AttributeError):
-                            # Windows doesn't use signals (NotImplementedError);
-                            # Some OSs may decide to not implement some signals either...
+                            signal.signal(signum, signal.SIG_DFL)
+                        except AttributeError:
+                            # Signal not implemented probably. We should have logged this earlier.
                             pass
 
                 if close_loop:
                     self._destroy_loop(loop)
 
                 _LOGGER.info("application has successfully terminated")
+
+                if propagate_interrupts and interrupt is not None:
+                    raise interrupt
 
     async def start(
         self,
@@ -707,44 +780,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
         return self._events.stream(event_type, timeout=timeout, limit=limit)
 
-    async def terminate(self, close_executor: bool = False) -> None:
-        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
-            future = asyncio.ensure_future(awaitable)
-
-            try:
-                await future
-            except Exception as ex:
-                loop = asyncio.get_running_loop()
-
-                loop.call_exception_handler(
-                    {
-                        "message": f"{name} raised an exception during shutdown",
-                        "future": future,
-                        "exception": ex,
-                    }
-                )
-
-        await self.dispatch(lifetime_events.StoppingEvent(app=self))
-
-        calls = [
-            ("rest", self._rest.close()),
-            ("chunker", self._chunker.close()),
-            ("voice handler", self._voice.close()),
-            *((f"shard {s.id}", s.close()) for s in self._shards.values()),
-        ]
-
-        for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
-            await coro
-
-        # Users may still require use of an executor once shut down, so we
-        # should do that after we do this.
-        await self.dispatch(lifetime_events.StoppedEvent(app=self))
-
-        if close_executor and self._executor is not None:
-            _LOGGER.debug("shutting down executor %s", self._executor)
-            self._executor.shutdown(wait=True)
-            self._executor = None
-
     def subscribe(
         self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
     ) -> event_dispatcher.CallbackT[typing.Any]:
@@ -778,6 +813,16 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         ]
 
         await aio.all_of(*coros)
+
+    async def _set_close_flag(self, signame: str, signum: int) -> None:
+        # This needs to be a coroutine, as the closing event is not threadsafe, so we have no way to set this
+        # from a Unix system call handler if we are running on a thread that isn't the main application thread
+        # without getting undefined behaviour. We do however have `asyncio.run_coroutine_threadsafe` which can
+        # run a coroutine function on the event loop from a completely different thread, so this is the safest
+        # solution.
+        _LOGGER.info("received interrupt %s (%s), will start shutting down shortly", signame, signum)
+
+        await self.close(force=False)
 
     async def _start_one_shard(
         self,

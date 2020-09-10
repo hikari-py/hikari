@@ -94,8 +94,8 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
     signum: int = attr.ib()
     """The signal number that was raised."""
 
-    description: typing.Optional[str] = attr.ib()
-    """Signal description."""
+    signame: str = attr.ib()
+    """The signal name that was raised."""
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)

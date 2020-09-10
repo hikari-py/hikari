@@ -25,6 +25,7 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = [
     "ChannelType",
+    "ChannelFollow",
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
@@ -63,6 +64,7 @@ if typing.TYPE_CHECKING:
     from hikari import iterators
     from hikari import messages
     from hikari import traits
+    from hikari import webhooks
 
 
 @enum.unique
@@ -93,6 +95,110 @@ class ChannelType(enum.IntEnum):
 
     def __str__(self) -> str:
         return self.name
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class ChannelFollow:
+    """Relationship between a news channel and a subscriber channel.
+
+    The subscriber channel will receive crosspost messages that correspond
+    to any "broadcast" announcements that the news channel creates.
+    """
+
+    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    """Return the client application that models may use for procedures.
+
+    Returns
+    -------
+    hikari.traits.RESTAware
+        The REST-aware application object.
+    """
+
+    channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """Return the channel ID of the channel being followed.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The channel ID for the channel being followed.
+    """
+
+    webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """Return the ID of the webhook for this follow.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The ID of the webhook that was created for this follow.
+    """
+
+    async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
+        """Fetch the object of the guild channel being followed.
+
+        Returns
+        -------
+        typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
+            The channel being followed. While this will usually be
+            `GuildNewsChannel`, if the channel's news status has been removed
+            then this will be a `GuildTextChannel`
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, (GuildTextChannel, GuildNewsChannel))
+        return channel
+
+    async def fetch_webhook(self) -> webhooks.Webhook:
+        """Fetch the webhook attached to this follow.
+
+        Returns
+        -------
+        hikari.webhooks.Webhook
+            The webhook attached to this follow.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_WEBHOOKS` permission in the guild or
+            channel this follow is targeting.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_webhook(self.webhook_id)
+
+    @property
+    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
+        """Get the channel being followed from the cache.
+
+        !!! warning
+            This will always be `builtins.None` if you are not
+            in the guild that this channel exists in.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
+            The object of the guild channel that was found in the cache or
+            `builtins.None`. While this will usually be `GuildNewsChannel` or
+            `builtins.None`, if the channel referenced has since lost it's news
+            status then this will return a `GuildTextChannel`.
+        """
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert isinstance(channel, (GuildNewsChannel, GuildTextChannel))
+        return channel
 
 
 @enum.unique

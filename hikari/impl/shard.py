@@ -246,6 +246,8 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                     limit=1,
                     use_dns_cache=False,
                     verify_ssl=http_config.verify_ssl,
+                    enable_cleanup_closed=True,
+                    force_close=True,
                 ),
                 raise_for_status=True,
                 timeout=aiohttp.ClientTimeout(

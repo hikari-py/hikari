@@ -272,6 +272,7 @@ class GuildWidget:
     """Whether this embed is enabled."""
 
 
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
