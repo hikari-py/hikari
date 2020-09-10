@@ -40,6 +40,16 @@ import colorlog  # type: ignore[import]
 
 from hikari import _about as about
 
+# While this is discouraged for most purposes in libraries, this enables us to
+# filter out the vast majority of clutter that most network logger calls
+# create. This also has a very minute performance improvement for trace logging
+# calls, as we have to use `logger.log` directly to utilise this properly.
+# We append `_HIKARI` to the name to keep it unique from any other logging
+# levels that may be in use.
+
+TRACE: typing.Final[int] = logging.DEBUG - 5
+logging.addLevelName(TRACE, "TRACE_HIKARI")
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 

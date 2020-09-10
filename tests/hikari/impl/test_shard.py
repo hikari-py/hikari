@@ -64,7 +64,10 @@ class Test_V6GatewayTransport:
     @pytest.fixture()
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
-            return shard._V6GatewayTransport()
+            transport = shard._V6GatewayTransport()
+            transport._logger = mock.Mock(getEffectiveLevel=mock.Mock(return_value=5))
+            transport._log_filterer = mock.Mock()
+            yield transport
 
     def test__init__calls_super(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__") as init:
@@ -109,24 +112,22 @@ class Test_V6GatewayTransport:
 
     async def test_receive_json(self, transport_impl):
         transport_impl._receive_and_check = mock.AsyncMock(return_value="{'json_response': null}")
-        transport_impl._log_debug_payload = mock.Mock()
+        transport_impl._log_payload = mock.Mock()
         mock_loads = mock.Mock(return_value={"json_response": None})
 
         assert await transport_impl.receive_json(loads=mock_loads, timeout=69) == {"json_response": None}
 
         transport_impl._receive_and_check.assert_awaited_once_with(69)
-        transport_impl._log_debug_payload.assert_called_once_with("{'json_response': null}", "received")
         mock_loads.assert_called_once_with("{'json_response': null}")
 
     async def test_send_json(self, transport_impl):
         transport_impl.send_str = mock.AsyncMock()
-        transport_impl._log_debug_payload = mock.Mock()
+        transport_impl._log_payload = mock.Mock()
         mock_dumps = mock.Mock(return_value="{'json_send': null}")
 
         await transport_impl.send_json({"json_send": None}, 420, dumps=mock_dumps)
 
         transport_impl.send_str.assert_awaited_once_with("{'json_send': null}", 420)
-        transport_impl._log_debug_payload.assert_called_once_with("{'json_send': null}", "sending")
         mock_dumps.assert_called_once_with({"json_send": None})
 
     class StubResponse:
@@ -243,26 +244,6 @@ class Test_V6GatewayTransport:
 
         transport_impl.receive.assert_awaited_once_with(10)
 
-    def test__log_debug_payload_when_debug(self, transport_impl):
-        transport_impl._debug = True
-        transport_impl._logger = mock.Mock()
-        transport_impl._log_filterer = mock.Mock(return_value="{'token': '**REDACTED**'}")
-
-        transport_impl._log_debug_payload("{'token': 'TOKEN'}", "sending")
-
-        transport_impl._log_filterer.assert_called_once_with("{'token': 'TOKEN'}")
-        transport_impl._logger.debug.assert_called_once_with(
-            "%s payload with size %s\n    %s", "sending", 18, "{'token': '**REDACTED**'}"
-        )
-
-    def test__log_debug_payload_when_not_debug(self, transport_impl):
-        transport_impl._debug = False
-        transport_impl._logger = mock.Mock()
-
-        transport_impl._log_debug_payload("{'token': 'TOKEN'}", "sending")
-
-        transport_impl._logger.debug.assert_called_once_with("%s payload with size %s", "sending", 18)
-
     async def test_connect_yields_websocket(self, http_settings, proxy_settings):
         class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
             closed = True
@@ -286,7 +267,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -294,7 +274,6 @@ class Test_V6GatewayTransport:
                 log_filterer=log_filterer,
             ) as ws:
                 assert ws._logger is logger
-                assert ws._debug is True
 
         tcp_connector.assert_called_once_with(
             limit=1,
@@ -349,7 +328,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -389,7 +367,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -429,7 +406,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -467,7 +443,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -501,7 +476,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -540,7 +514,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -579,7 +552,6 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                debug=True,
                 http_config=http_settings,
                 proxy_config=proxy_settings,
                 logger=logger,
@@ -624,12 +596,12 @@ class TestGatewayShardImpl:
     def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
         g = shard.GatewayShardImpl(
             event_consumer=mock.Mock(),
-            token=None,
             http_settings=http_settings,
             proxy_settings=proxy_settings,
             url="wss://gaytewhuy.discord.meh",
             data_format="json",
             compression=compression,
+            token="12345",
         )
 
         assert g._url == f"wss://gaytewhuy.discord.meh?{expect}"

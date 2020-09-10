@@ -218,6 +218,7 @@ from hikari.impl import rate_limits
 from hikari.utilities import aio
 from hikari.utilities import date
 from hikari.utilities import routes
+from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
     import types
@@ -427,12 +428,12 @@ class RESTBucketManager:
         """
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
-        _LOGGER.debug("rate limit garbage collector started")
+        _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
         while not self.closed_event.is_set():
             try:
                 await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
             except asyncio.TimeoutError:
-                _LOGGER.debug("performing rate limit garbage collection pass")
+                _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
                 self.do_gc_pass(expire_after)
         self.gc_task = None
 
@@ -489,7 +490,7 @@ class RESTBucketManager:
             self.real_hashes_to_buckets[full_hash].close()
             del self.real_hashes_to_buckets[full_hash]
 
-        _LOGGER.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
+        _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
         """Acquire a bucket for the given _route.

@@ -48,6 +48,7 @@ from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.utilities import data_binding
 from hikari.utilities import date
+from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -120,12 +121,11 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
-    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_debug", "_log_filterer")
+    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_log_filterer")
 
     # Initialized from `connect'
     _zlib: _ZlibDecompressor
     _logger: logging.Logger
-    _debug: bool
     _log_filterer: typing.Callable[[str], str]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
@@ -148,7 +148,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         timeout: typing.Optional[float] = None,
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
-        self._log_debug_payload(pl, "received")
+        if self._logger.getEffectiveLevel() <= ux.TRACE:
+            filtered = self._log_filterer(pl)  # type: ignore
+            self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
         return loads(pl)
 
     async def send_json(
@@ -159,7 +161,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
     ) -> None:
         pl = dumps(data)
-        self._log_debug_payload(pl, "sending")
+        if self._logger.getEffectiveLevel() <= ux.TRACE:
+            filtered = self._log_filterer(pl)  # type: ignore
+            self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)
 
     async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
@@ -209,24 +213,11 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 )
                 raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
-    def _log_debug_payload(self, payload: str, message: str, /) -> None:
-        if self._debug:
-            self._logger.debug(
-                "%s payload with size %s\n    %s",
-                message,
-                len(payload),
-                # False positive, MyPy expects a method.
-                self._log_filterer(payload),  # type: ignore
-            )
-        else:
-            self._logger.debug("%s payload with size %s", message, len(payload))
-
     @classmethod
     @contextlib.asynccontextmanager
     async def connect(
         cls,
         *,
-        debug: bool,
         http_config: config.HTTPSettings,
         logger: logging.Logger,
         proxy_config: config.ProxySettings,
@@ -263,7 +254,6 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             ) as cs:
                 try:
                     async with cs.ws_connect(
-                        # heartbeat=_PING_PONG_HEARTBEAT_LATENCY,
                         max_msg_size=0,
                         proxy=proxy_config.url,
                         proxy_headers=proxy_config.headers,
@@ -273,7 +263,6 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                         try:
                             assert isinstance(ws, cls)
                             ws._logger = logger
-                            ws._debug = debug
                             # We store this so we can remove it from debug logs
                             # which enables people to send me logs in issues safely.
                             # Also MyPy raises a false positive about this...
@@ -288,7 +277,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                             raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
                         finally:
                             if ws.closed:
-                                logger.debug("ws was already closed")
+                                logger.log(ux.TRACE, "ws was already closed")
 
                             elif raised:
                                 await ws.close(
@@ -337,10 +326,6 @@ class GatewayShardImpl(shard.GatewayShard):
     compression : typing.Optional[buitlins.str]
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
-    debug : builtins.bool
-        If `builtins.True`, each sent and received payload is dumped to the
-        logs. If `builtins.False`, only the fact that data has been
-        sent/received will be logged.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
         `builtins.None` if no activity should be set initially. This is the
@@ -399,7 +384,6 @@ class GatewayShardImpl(shard.GatewayShard):
         "_closed",
         "_closing",
         "_chunking_rate_limit",
-        "_debug",
         "_event_consumer",
         "_handshake_completed",
         "_heartbeat_latency",
@@ -429,7 +413,6 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         *,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
-        debug: bool = False,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
@@ -467,7 +450,6 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} chunking rate limit",
             *_CHUNKING_RATELIMIT,
         )
-        self._debug = debug
         self._event_consumer = event_consumer
         self._handshake_completed = asyncio.Event()
         self._heartbeat_latency = float("nan")
@@ -569,10 +551,8 @@ class GatewayShardImpl(shard.GatewayShard):
             raise ValueError("'nonce' can be no longer than 32 byte characters long.")
 
         await self._chunking_rate_limit.acquire()
-        message = "requesting guild members for guild %s"
-        if include_presences:
-            message += " with presences"
-        self._logger.debug(message, int(guild))
+        message = "requesting guild members for guild %s%s"
+        self._logger.debug(message, int(guild), " with presences" if include_presences else "")
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
@@ -697,10 +677,12 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
                 # Gateway is zombie
-                self._logger.debug("zombied")
+                self._logger.log(ux.TRACE, "zombied")
                 return True
 
-            self._logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval)
+            self._logger.log(
+                ux.TRACE, "preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval
+            )
 
             await self._send_heartbeat()
 
@@ -779,7 +761,6 @@ class GatewayShardImpl(shard.GatewayShard):
         dispatch_disconnect = False
         try:
             async with _V6GatewayTransport.connect(
-                debug=self._debug,
                 http_config=self._http_settings,
                 log_filterer=_log_filterer(self._token),
                 logger=self._logger,
@@ -842,16 +823,18 @@ class GatewayShardImpl(shard.GatewayShard):
                         if op == _DISPATCH:
                             t = payload[_T]  # event name str
                             s = payload[_S]  # seq int
-                            self._logger.debug("dispatching %s with seq %s", t, s)
+                            self._logger.log(ux.TRACE, "dispatching %s with seq %s", t, s)
                             self._dispatch(t, s, d)
                         elif op == _HEARTBEAT:
                             await self._send_heartbeat_ack()
-                            self._logger.debug("sent HEARTBEAT")
+                            self._logger.log(ux.TRACE, "sent HEARTBEAT")
                         elif op == _HEARTBEAT_ACK:
                             now = date.monotonic()
                             self._last_heartbeat_ack_received = now
                             self._heartbeat_latency = now - self._last_heartbeat_sent
-                            self._logger.debug("received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
+                            self._logger.log(
+                                ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000
+                            )
                         elif op == _RECONNECT:
                             # We should be able to resume...
                             self._logger.debug("received instruction to reconnect, will resume existing session")
@@ -866,7 +849,7 @@ class GatewayShardImpl(shard.GatewayShard):
                                 self._logger.debug("received invalid session, will resume existing session")
                             return True
                         else:
-                            self._logger.debug("unknown opcode %s received, it will be ignored...", op)
+                            self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
 
                     # If the heartbeat died due to an error, it should be raised here.
                     # This will currently allow us to try to resume if that happens
