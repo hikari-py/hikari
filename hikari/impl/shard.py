@@ -84,8 +84,6 @@ _BACKOFF_WINDOW: typing.Final[float] = 30.0
 _BACKOFF_BASE: typing.Final[float] = 1.85
 _BACKOFF_INCREMENT_START: typing.Final[int] = 2
 _BACKOFF_CAP: typing.Final[float] = 600.0
-# Ping-pong. Might disable this eventually.
-_PING_PONG_HEARTBEAT_LATENCY: typing.Optional[float] = 20.0
 # Discord seems to invalidate sessions if I send a 1xxx, which is useless
 # for invalid session and reconnect messages where I want to be able to
 # resume.
