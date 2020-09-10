@@ -399,6 +399,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(lifetime_events.StoppingEvent(app=self))
 
+        _LOGGER.debug("StoppingEvent dispatch completed, now beginning termination")
+
         calls = [
             ("rest", self._rest.close()),
             ("chunker", self._chunker.close()),
@@ -408,6 +410,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
             await coro
+
+        # Join any shards until they finish
+        await aio.all_of(*(s.join() for s in self._shards.values()), timeout=len(self._shards))
+
+        # Clear out shard map
+        self._shards.clear()
 
         await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
@@ -620,7 +628,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             if self._debug:
                 _LOGGER.debug(
                     "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
-                    "Stack trace:\n%s",
+                    "Stacktrace for developer sanity:\n%s",
                     signum,
                     threading.get_native_id(),
                     loop_thread_id,
@@ -786,16 +794,21 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     # die in this time, we shut down immediately.
                     # If we time out, the joining tasks get discarded and we spin up the next
                     # block of shards, if applicable.
-                    await aio.all_of(close_waiter, *shard_joiners, timeout=5)
-                    if close_waiter:
+                    _LOGGER.info("waiting for 5 seconds until next shard startup window")
+                    await aio.first_completed(aio.all_of(*shard_joiners, timeout=5), close_waiter)
+
+                    if not close_waiter.cancelled():
                         _LOGGER.info("requested to shut down during startup of shards")
                     else:
                         _LOGGER.critical("one or more shards shut down unexpectedly during bot startup")
                     return
 
                 except asyncio.TimeoutError:
+                    # If any shards stopped silently, we should close.
+                    if any(not s.is_alive for s in self._shards.values()):
+                        _LOGGER.info("one of the shards has been manually shut down (no error), will now shut down")
+                        return
                     # new window starts.
-                    pass
 
                 except Exception as ex:
                     _LOGGER.critical("an exception occurred in one of the started shards during bot startup: %r", ex)
@@ -905,7 +918,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         )
 
         start = date.monotonic()
-        await new_shard.start()
+        await aio.first_completed(new_shard.start(), self._closing_event.wait())
         end = date.monotonic()
 
         if new_shard.is_alive:

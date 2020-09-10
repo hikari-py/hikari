@@ -361,8 +361,6 @@ class GatewayShardImpl(shard.GatewayShard):
         The shard ID.
     shard_count : builtins.int
         The shard count.
-    version : builtins.int
-        Gateway API version to use.
     event_consumer
         A non-coroutine function consuming a `GatewayShardImpl`,
         a `builtins.str` event name, and a
@@ -438,7 +436,6 @@ class GatewayShardImpl(shard.GatewayShard):
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
-        version: int = 6,
         event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
@@ -520,6 +517,10 @@ class GatewayShardImpl(shard.GatewayShard):
         if not self._closing.is_set():
             try:
                 if self._ws is not None:
+                    self._logger.debug(
+                        "shard.close() was called and the websocket was still alive -- "
+                        "disconnecting immediately with GOING AWAY"
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                 self._closing.set()
             finally:
@@ -786,6 +787,11 @@ class GatewayShardImpl(shard.GatewayShard):
                 # Expect HELLO.
                 payload = await self._ws.receive_json()
                 if payload[_OP] != _HELLO:
+                    self._logger.debug(
+                        "expected HELLO opcode, received %s which makes no sense, closing with PROTOCOL ERROR ",
+                        "(_run_once => raise and do not reconnect)",
+                        payload[_OP],
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
                     raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
 
@@ -793,6 +799,10 @@ class GatewayShardImpl(shard.GatewayShard):
                 heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
 
                 if self._closing.is_set():
+                    self._logger.debug(
+                        "closing flag was set before we could handshake, disconnecting with GOING AWAY "
+                        "(_run_once => do not reconnect)"
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
@@ -803,6 +813,11 @@ class GatewayShardImpl(shard.GatewayShard):
                         await self._identify()
 
                     if self._closing.is_set():
+                        self._logger.debug(
+                            "closing flag was set during handshake, disconnecting with GOING AWAY "
+                            "(_run_once => do not reconnect)"
+                        )
+                        await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                         return False
 
                     # Event polling.
@@ -840,16 +855,23 @@ class GatewayShardImpl(shard.GatewayShard):
                         else:
                             self._logger.debug("unknown opcode %s received, it will be ignored...", op)
 
-                    # If the heartbeat died due to an error, it should be raised here. We expect the heartbeat
-                    # to always kill our connection if it dies.
-                    # We return True if zombied
+                    # If the heartbeat died due to an error, it should be raised here.
+                    # This will currently allow us to try to resume if that happens
+                    # We return True if zombied.
                     if await heartbeat_task:
                         now = date.monotonic()
                         self._logger.error(
                             "connection is a zombie, last heartbeat sent %ss ago",
                             now - self._last_heartbeat_sent,
                         )
+                        self._logger.debug("will attempt to reconnect (_run_once => reconnect)")
                         return True
+
+                    self._logger.debug(
+                        "shard has requested graceful termination, so will not attempt to reconnect "
+                        "(_run_once => do not reconnect)"
+                    )
+                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
                 finally:
