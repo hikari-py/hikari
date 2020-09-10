@@ -120,6 +120,8 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
 
     def __init__(self, **kwargs: typing.Any) -> None:
         self.connector: typing.Optional[aiohttp.TCPConnector] = None
+        kwargs.setdefault("enable_cleanup_closed", True)
+        kwargs.setdefault("force_close", True)
         self.connector_kwargs = kwargs
 
     async def close(self) -> None:
