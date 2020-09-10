@@ -37,6 +37,7 @@ from hikari.api import event_dispatcher
 from hikari.api import voice
 from hikari.events import voice_events
 from hikari.impl import bot
+from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
     _VoiceEventCallbackT = typing.Callable[[voice_events.VoiceEvent], typing.Coroutine[None, typing.Any, None]]
@@ -53,11 +54,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_debug", "_connections", "_dispatcher")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.BotApp, debug: bool, dispatcher: event_dispatcher.EventDispatcher) -> None:
+    def __init__(self, app: bot.BotApp, dispatcher: event_dispatcher.EventDispatcher) -> None:
         self._app = app
-        self._debug = debug
         self._dispatcher = dispatcher
         self._connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection] = {}
         self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
@@ -118,7 +118,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
             # for a little bit.
             raise errors.VoiceError(f"Cannot connect to shard {shard_id}, the shard is not online.")
 
-        _LOGGER.debug("attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
+        _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
         user = self._app.cache.get_me()
         if user is None:
@@ -126,8 +126,12 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         await asyncio.wait_for(shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=5.0)
 
-        _LOGGER.debug(
-            "waiting for voice events for connecting to voice channel %s in %s via shard %s", channel, guild, shard_id
+        _LOGGER.log(
+            ux.TRACE,
+            "waiting for voice events for connecting to voice channel %s in %s via shard %s",
+            channel,
+            guild,
+            shard_id,
         )
 
         state_event, server_event = await asyncio.wait_for(
@@ -161,7 +165,6 @@ class VoiceComponentImpl(voice.VoiceComponent):
         try:
             voice_connection = await voice_connection_type.initialize(
                 channel_id=snowflakes.Snowflake(channel),
-                debug=self._debug,
                 endpoint=server_event.endpoint,
                 guild_id=guild_id,
                 on_close=self._on_connection_close,
@@ -229,5 +232,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
     async def _on_voice_event(self, event: voice_events.VoiceEvent) -> None:
         if event.guild_id in self._connections:
             connection = self._connections[event.guild_id]
-            _LOGGER.debug("notifying voice connection %s in guild %s of event %s", connection, event.guild_id, event)
+            _LOGGER.log(
+                ux.TRACE, "notifying voice connection %s in guild %s of event %s", connection, event.guild_id, event
+            )
             await connection.notify(event)

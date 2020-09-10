@@ -105,7 +105,7 @@ class TestRestProvider:
 
     @pytest.fixture()
     def rest_provider(self, rest_client):
-        return rest._RESTProvider(lambda: rest_client)
+        return rest._RESTProvider(lambda: mock.Mock(), None, lambda: mock.Mock(), lambda: rest_client)
 
     def test_rest_property(self, rest_provider, rest_client):
         assert rest_provider.rest == rest_client
@@ -127,7 +127,6 @@ def rest_app():
     return hikari_test_helpers.unslot_class(rest.RESTApp)(
         connector_factory=mock.Mock(),
         connector_owner=False,
-        debug=True,
         executor=None,
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
         proxy_settings=mock.Mock(spec_set=config.ProxySettings),
@@ -137,10 +136,6 @@ def rest_app():
 
 
 class TestRESTApp:
-    def test_debug_property(self, rest_app):
-        rest_app._debug = True
-        assert rest_app.is_debug_enabled is True
-
     def test_executor_property(self, rest_app):
         mock_executor = object()
         rest_app._executor = mock_executor
@@ -172,7 +167,6 @@ class TestRESTApp:
         mock_client.assert_called_once_with(
             connector_factory=rest_app._connector_factory,
             connector_owner=rest_app._connector_owner,
-            debug=rest_app._debug,
             entity_factory=mock_entity_factory,
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
@@ -230,7 +224,6 @@ def rest_client(rest_client_class):
     obj = rest_client_class(
         connector_factory=mock.Mock(),
         connector_owner=False,
-        debug=True,
         http_settings=mock.Mock(spec=config.HTTPSettings),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
@@ -296,7 +289,6 @@ class TestRESTClientImpl:
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
-            debug=True,
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,
@@ -311,7 +303,6 @@ class TestRESTClientImpl:
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
-            debug=True,
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token="some_token",
@@ -326,7 +317,6 @@ class TestRESTClientImpl:
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
-            debug=True,
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token="some_token",
@@ -341,7 +331,6 @@ class TestRESTClientImpl:
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
-            debug=True,
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,
@@ -356,7 +345,6 @@ class TestRESTClientImpl:
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
-            debug=True,
             http_settings=mock.Mock(),
             proxy_settings=mock.Mock(),
             token=None,

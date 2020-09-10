@@ -63,15 +63,18 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
+from hikari.api import cache as cache_
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
+from hikari.impl import stateless_cache
 from hikari.utilities import data_binding
 from hikari.utilities import date
 from hikari.utilities import net
 from hikari.utilities import routes
+from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -137,10 +140,35 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
 
 
 class _RESTProvider(traits.RESTAware):
-    __slots__: typing.Sequence[str] = ("_rest",)
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_executor", "_cache", "_rest")
 
-    def __init__(self, rest: typing.Callable[[], rest_api.RESTClient]) -> None:
+    def __init__(
+        self,
+        entity_factory: typing.Callable[[], entity_factory_.EntityFactory],
+        executor: typing.Optional[concurrent.futures.Executor],
+        cache: typing.Callable[[], cache_.Cache],
+        rest: typing.Callable[[], rest_api.RESTClient],
+    ) -> None:
+        self._entity_factory = entity_factory
+        self._executor = executor
+        self._cache = cache
         self._rest = rest
+
+    @property
+    def entity_factory(self) -> entity_factory_.EntityFactory:
+        return self._entity_factory()
+
+    @property
+    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+        return self._executor
+
+    @property
+    def cache(self) -> cache_.Cache:
+        return self._cache()
+
+    @property
+    def me(self) -> typing.Optional[users.OwnUser]:
+        return self._cache().get_me()
 
     @property
     def rest(self) -> rest_api.RESTClient:
@@ -179,10 +207,6 @@ class RESTApp(traits.ExecutorAware):
         manually. The latter is useful if you wish to maintain a shared
         connection pool across your application with other non-Hikari
         components.
-    debug : builtins.bool
-        If `builtins.True`, then much more information is logged each time a
-        request is made. Generally you do not need this to be on, so it will
-        default to `builtins.False` instead.
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
@@ -208,7 +232,6 @@ class RESTApp(traits.ExecutorAware):
     __slots__: typing.Sequence[str] = (
         "_connector_factory",
         "_connector_owner",
-        "_debug",
         "_event_loop",
         "_executor",
         "_http_settings",
@@ -222,7 +245,6 @@ class RESTApp(traits.ExecutorAware):
         *,
         connector_factory: typing.Optional[rest_api.ConnectorFactory] = None,
         connector_owner: bool = True,
-        debug: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
@@ -238,7 +260,6 @@ class RESTApp(traits.ExecutorAware):
         # would then fail when creating an HTTP request.
         self._connector_factory: rest_api.ConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
         self._connector_owner = connector_owner
-        self._debug = debug
         self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
@@ -253,10 +274,6 @@ class RESTApp(traits.ExecutorAware):
     @property
     def http_settings(self) -> config.HTTPSettings:
         return self._http_settings
-
-    @property
-    def is_debug_enabled(self) -> bool:
-        return self._debug
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
@@ -274,12 +291,18 @@ class RESTApp(traits.ExecutorAware):
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        entity_factory = entity_factory_impl.EntityFactoryImpl(_RESTProvider(lambda: rest_client))
+        cache = stateless_cache.StatelessCacheImpl()
+        provider = _RESTProvider(
+            lambda: entity_factory,
+            self._executor,
+            lambda: cache,
+            lambda: rest_client,
+        )
+        entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
         rest_client = RESTClientImpl(
             connector_factory=self._connector_factory,
             connector_owner=self._connector_owner,
-            debug=self._debug,
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -331,12 +354,6 @@ class RESTClientImpl(rest_api.RESTClient):
         manually. The latter is useful if you wish to maintain a shared
         connection pool across your application with other non-Hikari
         components.
-    debug : builtins.bool
-        If `builtins.True`, this will enable logging of each payload sent and
-        received, as well as information such as DNS cache hits and misses, and
-        other information useful for debugging this application. These logs will
-        be written as DEBUG log entries. For most purposes, this should be
-        left `builtins.False`.
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
@@ -360,7 +377,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_closed_event",
         "_connector_factory",
         "_connector_owner",
-        "_debug",
         "_entity_factory",
         "_executor",
         "_http_settings",
@@ -384,7 +400,6 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         connector_factory: rest_api.ConnectorFactory,
         connector_owner: bool,
-        debug: bool,
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
@@ -401,7 +416,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._closed_event = asyncio.Event()
         self._connector_factory = connector_factory
         self._connector_owner = connector_owner
-        self._debug = debug
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
@@ -468,6 +482,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 ),
                 trust_env=self._proxy_settings.trust_env,
             )
+            _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
 
         elif self._client_session.closed:
             raise errors.HTTPClientClosedError
@@ -513,12 +528,15 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 uuid = date.uuid()
 
-                if self._debug:
-                    _LOGGER.debug(
-                        "%s %s %s\n%s", uuid, compiled_route.method, url, self._stringify_http_message(headers, json)
+                if _LOGGER.getEffectiveLevel() <= ux.TRACE:
+                    _LOGGER.log(
+                        ux.TRACE,
+                        "%s %s %s\n%s",
+                        uuid,
+                        compiled_route.method,
+                        url,
+                        self._stringify_http_message(headers, json),
                     )
-                else:
-                    _LOGGER.debug("%s %s %s", uuid, compiled_route.method, url)
 
                 # Make the request.
                 session = self._acquire_client_session()
@@ -538,8 +556,9 @@ class RESTClientImpl(rest_api.RESTClient):
                 )
                 time_taken = (date.monotonic() - start) * 1_000
 
-                if self._debug:
-                    _LOGGER.debug(
+                if _LOGGER.getEffectiveLevel() <= ux.TRACE:
+                    _LOGGER.log(
+                        ux.TRACE,
                         "%s %s %s in %sms\n%s",
                         uuid,
                         response.status,
@@ -547,8 +566,6 @@ class RESTClientImpl(rest_api.RESTClient):
                         time_taken,
                         self._stringify_http_message(response.headers, await response.read()),
                     )
-                else:
-                    _LOGGER.debug("%s %s %s in %sms", uuid, response.status, response.reason, time_taken)
 
                 # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
                 await self._parse_ratelimits(compiled_route, response)

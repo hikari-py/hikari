@@ -72,6 +72,7 @@ if typing.TYPE_CHECKING:
 
 LoggerLevelT = typing.Union[
     int,
+    typing.Literal["TRACE_HIKARI"],
     typing.Literal["DEBUG"],
     typing.Literal["INFO"],
     typing.Literal["WARNING"],
@@ -81,8 +82,8 @@ LoggerLevelT = typing.Union[
 """Type-hint for a valid logging level.
 
 This may be an `int` logging level (e.g. `logging.DEBUG`, `logging.CRITICAL`),
-or a capitalized string that matches one of `"DEBUG"`, `"INFO"`, `"WARNING"`,
-`"ERROR"`, or `"CRITICAL"`.
+or a capitalized string that matches one of `"TRACE_HIKARI"`, `"DEBUG"`,
+`"INFO"`, `"WARNING", `"ERROR"`, or `"CRITICAL"`.
 """
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
@@ -119,10 +120,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     chunking_limit : typing.Optional[builtins.int]
         Defaults to `200`. The maximum amount of requests that this chunker
         should store information about for each shard.
-    debug : builtins.bool
-        Defaults to `builtins.False`. If `builtins.True`, then the contents
-        of each payload sent and received over the REST API and any websockets.
-        This may incur a noticeable performance penalty for large applications.
     enable_cache : builtins.bool
         Defaults to `builtins.True`. If `builtins.False`, the application is
         configured to be mostly stateless. This means almost all cache calls
@@ -199,7 +196,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_chunker",
         "_closing_event",
         "_closed",
-        "_debug",
         "_entity_factory",
         "_events",
         "_event_factory",
@@ -221,7 +217,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         allow_color: bool = True,
         banner: typing.Optional[str] = "hikari",
         chunking_limit: int = 200,
-        debug: bool = False,
         enable_cache: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
@@ -239,7 +234,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._banner = banner
         self._closing_event = asyncio.Event()
         self._closed = False
-        self._debug = debug
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
         self._intents = intents
@@ -283,11 +277,10 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._event_factory = event_factory_impl.EventFactoryImpl(self)
 
         # Voice subsystem
-        self._voice = voice_impl.VoiceComponentImpl(self, self._debug, self._events)
+        self._voice = voice_impl.VoiceComponentImpl(self, self._events)
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            debug=debug,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(),
             connector_owner=True,
             entity_factory=self._entity_factory,
@@ -372,7 +365,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
         if not self._closing_event.is_set():
-            _LOGGER.info("bot requested to shutdown [force:%s]", force)
+            _LOGGER.debug("bot requested to shutdown [force:%s]", force)
 
         self._closing_event.set()
 
@@ -399,7 +392,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(lifetime_events.StoppingEvent(app=self))
 
-        _LOGGER.debug("StoppingEvent dispatch completed, now beginning termination")
+        _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
         calls = [
             ("rest", self._rest.close()),
@@ -581,7 +574,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 # Provisionally defined in CPython, may be removed without notice.
                 loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
             except AttributeError:
-                _LOGGER.debug("cannot set coroutine tracking depth for %s, no functionality exists for this", loop)
+                _LOGGER.log(
+                    ux.TRACE, "cannot set coroutine tracking depth for %s, no functionality exists for this", loop
+                )
 
         # Throwing this in the handler will lead to lots of fun OS specific shenanigans. So, lets just
         # cache it for later, I guess.
@@ -609,8 +604,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
             # threadsafe if we want the user's application to still shut down if on a separate thread.
             # We log native thread IDs purely for debugging purposes.
-            if self._debug:
-                _LOGGER.debug(
+            if _LOGGER.getEffectiveLevel() <= ux.TRACE:
+                _LOGGER.log(
+                    ux.TRACE,
                     "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
                     "Stacktrace for developer sanity:\n%s",
                     signum,
@@ -627,7 +623,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     signum = getattr(signal, sig)
                     signal.signal(signum, handle_os_interrupt)
                 except AttributeError:
-                    _LOGGER.debug("signal %s is not implemented on your platform", sig)
+                    _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform", sig)
 
         try:
             loop.run_until_complete(
@@ -742,7 +738,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     # die in this time, we shut down immediately.
                     # If we time out, the joining tasks get discarded and we spin up the next
                     # block of shards, if applicable.
-                    _LOGGER.info("waiting for 5 seconds until next shard startup window")
+                    _LOGGER.debug("waiting for 5 seconds until next shard startup window")
                     await aio.first_completed(aio.all_of(*shard_joiners, timeout=5), close_waiter)
 
                     if not close_waiter.cancelled():
@@ -833,7 +829,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # without getting undefined behaviour. We do however have `asyncio.run_coroutine_threadsafe` which can
         # run a coroutine function on the event loop from a completely different thread, so this is the safest
         # solution.
-        _LOGGER.info("received interrupt %s (%s), will start shutting down shortly", signame, signum)
+        _LOGGER.debug("received interrupt %s (%s), will start shutting down shortly", signame, signum)
 
         await self.close(force=False)
 
@@ -849,7 +845,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
-            debug=self._debug,
             event_consumer=self._raw_event_consumer,
             http_settings=self._http_settings,
             initial_activity=activity,
@@ -870,7 +865,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         end = date.monotonic()
 
         if new_shard.is_alive:
-            _LOGGER.info("Shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
+            _LOGGER.debug("Shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
             return new_shard
 
         raise errors.GatewayError(f"Shard {shard_id} shut down immediately when starting")
@@ -882,6 +877,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             # throw an asyncio.CancelledError, otherwise it will spam logs with warnings
             # about exceptions not being retrieved before GC.
             try:
+                _LOGGER.log(ux.TRACE, "killing %s", future)
                 future.cancel()
                 await future
             except asyncio.CancelledError:

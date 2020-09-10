@@ -36,6 +36,8 @@ import typing
 
 import attr
 
+from hikari.utilities import ux
+
 ModelT = typing.TypeVar("ModelT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
@@ -43,7 +45,7 @@ _DEEP_COPIERS: typing.MutableMapping[
     typing.Any, typing.Callable[[typing.Any, typing.MutableMapping[int, typing.Any]], None]
 ] = {}
 _SHALLOW_COPIERS: typing.MutableMapping[typing.Any, typing.Callable[[typing.Any], typing.Any]] = {}
-_LOGGER = logging.getLogger("hikari")
+_LOGGER = logging.getLogger("hikari.models")
 
 
 def invalidate_shallow_copy_cache() -> None:
@@ -107,7 +109,7 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     setters = ";".join(f"r.{attribute.name}=m.{attribute.name}" for attribute in setters) + ";" if setters else ""
     code = f"def copy(m):r=cls({kwargs});{setters}return r"
     globals_ = {"cls": cls}
-    _LOGGER.debug("generating shallow copy function for %r: %r", cls, code)
+    _LOGGER.log(ux.TRACE, "generating shallow copy function for %r: %r", cls, code)
     exec(code, globals_)  # noqa: S102 - Use of exec detected.
     return typing.cast("typing.Callable[[ModelT], ModelT]", globals_["copy"])
 
