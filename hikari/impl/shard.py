@@ -84,8 +84,6 @@ _BACKOFF_WINDOW: typing.Final[float] = 30.0
 _BACKOFF_BASE: typing.Final[float] = 1.85
 _BACKOFF_INCREMENT_START: typing.Final[int] = 2
 _BACKOFF_CAP: typing.Final[float] = 600.0
-# Ping-pong. Might disable this eventually.
-_PING_PONG_HEARTBEAT_LATENCY: typing.Optional[float] = 20.0
 # Discord seems to invalidate sessions if I send a 1xxx, which is useless
 # for invalid session and reconnect messages where I want to be able to
 # resume.
@@ -134,10 +132,14 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         super().__init__(*args, **kwargs)
         self._zlib = zlib.decompressobj()
 
-    def close(self, *, code: int = 1000, message: bytes = b"") -> typing.Coroutine[typing.Any, typing.Any, bool]:
+    async def close(self, *, code: int = 1000, message: bytes = b"") -> bool:
         if not self._closed and not self._closing:
             self._logger.debug("sending close frame with code %s and message %s", int(code), message)
-        return super().close(code=code, message=message)
+        try:
+            return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
+        except asyncio.TimeoutError:
+            self._logger.debug("failed to send close frame in time, probably connection issues")
+            return False
 
     async def receive_json(
         self,
@@ -261,7 +263,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             ) as cs:
                 try:
                     async with cs.ws_connect(
-                        heartbeat=_PING_PONG_HEARTBEAT_LATENCY,
+                        # heartbeat=_PING_PONG_HEARTBEAT_LATENCY,
                         max_msg_size=0,
                         proxy=proxy_config.url,
                         proxy_headers=proxy_config.headers,
@@ -305,7 +307,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
 
                 except aiohttp.ClientConnectionError as ex:
                     message = f"Failed to connect to Discord: {ex!r}"
-                    raise errors.GatewayError(message) from ex
+                    raise errors.GatewayConnectionError(message) from ex
 
                 except aiohttp.WSServerHandshakeError as ex:
                     try:
@@ -361,8 +363,6 @@ class GatewayShardImpl(shard.GatewayShard):
         The shard ID.
     shard_count : builtins.int
         The shard count.
-    version : builtins.int
-        Gateway API version to use.
     event_consumer
         A non-coroutine function consuming a `GatewayShardImpl`,
         a `builtins.str` event name, and a
@@ -438,7 +438,6 @@ class GatewayShardImpl(shard.GatewayShard):
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
-        version: int = 6,
         event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
@@ -520,6 +519,10 @@ class GatewayShardImpl(shard.GatewayShard):
         if not self._closing.is_set():
             try:
                 if self._ws is not None:
+                    self._logger.debug(
+                        "shard.close() was called and the websocket was still alive -- "
+                        "disconnecting immediately with GOING AWAY"
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                 self._closing.set()
             finally:
@@ -694,11 +697,11 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
                 # Gateway is zombie
+                self._logger.debug("zombied")
                 return True
 
             self._logger.debug("preparing to send HEARTBEAT [s:%s, interval:%ss]", self._seq, heartbeat_interval)
 
-            # TODO: Could this error, or can I just assume any other receiver will die first?
             await self._send_heartbeat()
 
             try:
@@ -707,7 +710,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return False
             except asyncio.TimeoutError:
                 # We should continue
-                pass
+                continue
 
     async def _resume(self) -> None:
         await self._ws.send_json(  # type: ignore[union-attr]
@@ -719,7 +722,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _run(self) -> None:
         self._closed.clear()
-        last_started_at = -float("nan")
+        last_started_at = -float("inf")
 
         backoff = rate_limits.ExponentialBackOff(
             base=_BACKOFF_BASE,
@@ -742,8 +745,12 @@ class GatewayShardImpl(shard.GatewayShard):
                         pass
 
                 try:
+                    last_started_at = date.monotonic()
                     if not await self._run_once():
                         self._logger.debug("shard has shut down")
+
+                except errors.GatewayConnectionError as ex:
+                    self._logger.error("failed to connect to server, reason was: %s. Will retry shortly", ex.__cause__)
 
                 except errors.GatewayServerClosedConnectionError as ex:
                     if not ex.can_reconnect:
@@ -786,6 +793,11 @@ class GatewayShardImpl(shard.GatewayShard):
                 # Expect HELLO.
                 payload = await self._ws.receive_json()
                 if payload[_OP] != _HELLO:
+                    self._logger.debug(
+                        "expected HELLO opcode, received %s which makes no sense, closing with PROTOCOL ERROR ",
+                        "(_run_once => raise and do not reconnect)",
+                        payload[_OP],
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
                     raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
 
@@ -793,21 +805,37 @@ class GatewayShardImpl(shard.GatewayShard):
                 heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
 
                 if self._closing.is_set():
+                    self._logger.debug(
+                        "closing flag was set before we could handshake, disconnecting with GOING AWAY "
+                        "(_run_once => do not reconnect)"
+                    )
                     await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
                 try:
                     if self._seq is not None:
+                        self._logger.debug("resuming session %s", self._session_id)
                         await self._resume()
                     else:
+                        self._logger.debug("identifying with new session")
                         await self._identify()
 
                     if self._closing.is_set():
+                        self._logger.debug(
+                            "closing flag was set during handshake, disconnecting with GOING AWAY "
+                            "(_run_once => do not reconnect)"
+                        )
+                        await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                         return False
 
                     # Event polling.
                     while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
-                        payload = await self._ws.receive_json()
+                        try:
+                            payload = await self._ws.receive_json(timeout=5)
+                        except asyncio.TimeoutError:
+                            # Don't wait forever, check if the heartbeat has died.
+                            continue
+
                         op = payload[_OP]  # opcode int
                         d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
 
@@ -840,16 +868,23 @@ class GatewayShardImpl(shard.GatewayShard):
                         else:
                             self._logger.debug("unknown opcode %s received, it will be ignored...", op)
 
-                    # If the heartbeat died due to an error, it should be raised here. We expect the heartbeat
-                    # to always kill our connection if it dies.
-                    # We return True if zombied
+                    # If the heartbeat died due to an error, it should be raised here.
+                    # This will currently allow us to try to resume if that happens
+                    # We return True if zombied.
                     if await heartbeat_task:
                         now = date.monotonic()
                         self._logger.error(
-                            "connection is a zombie, last heartbeat sent %ss ago",
+                            "connection is a zombie, last heartbeat sent %.2fs ago",
                             now - self._last_heartbeat_sent,
                         )
+                        self._logger.debug("will attempt to reconnect (_run_once => reconnect)")
                         return True
+
+                    self._logger.debug(
+                        "shard has requested graceful termination, so will not attempt to reconnect "
+                        "(_run_once => do not reconnect)"
+                    )
+                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
                 finally:
