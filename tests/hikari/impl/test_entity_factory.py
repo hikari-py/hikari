@@ -528,6 +528,12 @@ class TestEntityFactoryImpl:
     # CHANNEL MODELS #
     ##################
 
+    def test_deserialize_channel_follow(self, entity_factory_impl, mock_app):
+        follow = entity_factory_impl.deserialize_channel_follow({"channel_id": "41231", "webhook_id": "939393"})
+        assert follow.app is mock_app
+        assert follow.channel_id == 41231
+        assert follow.webhook_id == 939393
+
     @pytest.fixture()
     def permission_overwrite_payload(self):
         return {"id": "4242", "type": "member", "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}

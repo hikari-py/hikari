@@ -26,13 +26,55 @@ import pytest
 from hikari import channels
 from hikari import files
 from hikari import permissions
+from hikari import snowflakes
 from hikari import users
+from hikari.impl import bot
 from tests.hikari import hikari_test_helpers
+
+
+@pytest.fixture()
+def mock_app():
+    return mock.Mock(bot.BotApp)
 
 
 def test_ChannelType_str_operator():
     channel_type = channels.ChannelType(1)
     assert str(channel_type) == "PRIVATE_TEXT"
+
+
+class TestChannelFollow:
+    @pytest.mark.asyncio
+    async def test_fetch_channel(self, mock_app):
+        mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
+        mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+        follow = channels.ChannelFollow(channel_id=snowflakes.Snowflake(9459234123), app=mock_app, webhook_id=3123123)
+
+        result = await follow.fetch_channel()
+
+        assert result is mock_channel
+        mock_app.rest.fetch_channel.assert_awaited_once_with(9459234123)
+
+    @pytest.mark.asyncio
+    async def test_fetch_webhook(self, mock_app):
+        mock_webhook = object()
+        mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock_webhook)
+        follow = channels.ChannelFollow(webhook_id=snowflakes.Snowflake(54123123), app=mock_app, channel_id=94949494)
+
+        result = await follow.fetch_webhook()
+
+        assert result is mock_webhook
+        mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
+
+    @pytest.mark.asyncio
+    async def test_channel(self, mock_app):
+        mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
+        mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
+        follow = channels.ChannelFollow(webhook_id=993883, app=mock_app, channel_id=snowflakes.Snowflake(696969))
+
+        result = follow.channel
+
+        assert result is mock_channel
+        mock_app.cache.get_guild_channel.assert_called_once_with(696969)
 
 
 def test_PermissionOverwriteType_str_operator():
