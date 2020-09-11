@@ -13,7 +13,7 @@ To push branches directly to the remote, you will have to name them like this:
   - `task/issue-number-small-info-on-branch`
     - This should be the default for any commit that doesnt fall in any of the cases under.
   - `feature/issue-number-small-info-on-branch`
-    - This should be used for branches that require more tasks to merge into before going as one MR into `development`.
+    - This should be used for branches that require more tasks to merge into before going as one MR into `master`.
   - `bugfix/issue-number-small-info-on-branch`
     - This should be used for bugfixes.
 
@@ -41,12 +41,12 @@ This includes:
   - `safety`
     - Vulnerability checking.
   - `twemoji-mapping`
-    - Force test all discord emojis (will only run when a file regarding emojis has been changed).
+    - Force test all discord emojis.
   - `pdoc3`
     - Generate documentation.
   - `pages`
     - Generate final documentation.
   - `deploy`
-    - Deployment to pypi (will only run on `staging` and `master`).
+    - Deployment to PyPI (will `master`).
 
 All jobs will need to succeed before anything gets merged.
