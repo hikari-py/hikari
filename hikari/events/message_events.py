@@ -149,7 +149,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -491,4 +491,4 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)

@@ -583,7 +583,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         self._stringify_http_message(response.headers, await response.read()),
                     )
 
-                # Ensure we aren't rate limited, and update rate limiting headers where appropriate.
+                # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                 await self._parse_ratelimits(compiled_route, response)
 
                 # Don't bother processing any further if we got NO CONTENT. There's not anything

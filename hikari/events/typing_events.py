@@ -166,8 +166,16 @@ class GuildTypingEvent(TypingEvent):
 
     @property
     def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        # <<inherited docstring from TypingEvent>>.
-        return self.app.cache.get_guild(self.guild_id)
+        """Get the cached object of the guild this typing event occurred in.
+
+        If the guild is not found then this will return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the gateway guild if found else `builtins.None`.
+        """
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     if typing.TYPE_CHECKING:
 

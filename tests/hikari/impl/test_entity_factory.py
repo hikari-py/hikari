@@ -1587,12 +1587,6 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_member_ban_with_null_fields(self, entity_factory_impl, user_payload):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None
 
-    def test_deserialize_unavailable_guild(self, entity_factory_impl, mock_app):
-        unavailable_guild = entity_factory_impl.deserialize_unavailable_guild({"id": "42069", "unavailable": True})
-        assert unavailable_guild.id == 42069
-        assert unavailable_guild.is_unavailable is True
-        assert isinstance(unavailable_guild, guild_models.UnavailableGuild)
-
     @pytest.fixture()
     def guild_preview_payload(self, known_custom_emoji_payload):
         return {

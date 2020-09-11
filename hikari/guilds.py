@@ -46,7 +46,6 @@ __all__: typing.Final[typing.List[str]] = [
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
-    "UnavailableGuild",
 ]
 
 import abc
@@ -312,7 +311,7 @@ class Member(users.User):
     premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `builtins.None` if they aren't boosting and
+    This will be `builtins.None` if they are not boosting and
     `hikari.undefined.UndefinedType` if their boosting status is
     unknown.
     """
@@ -581,29 +580,6 @@ class GuildMemberBan:
 
     user: users.User = attr.ib(repr=True)
     """The object of the user this ban targets."""
-
-
-@attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-@typing.final
-class UnavailableGuild(snowflakes.Unique):
-    """An unavailable guild object, received during gateway events such as READY.
-
-    An unavailable guild cannot be interacted with, and most information may
-    be outdated if that is the case.
-    """
-
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
-    """The ID of this entity."""
-
-    # Ignore docstring not starting in an imperative mood
-    @property
-    def is_unavailable(self) -> bool:  # noqa: D401
-        """`builtins.True` if this guild is unavailable, else `builtins.False`.
-
-        This value is always `builtins.True`, and is only provided for consistency.
-        """
-        return True
 
 
 @attr_extensions.with_copy

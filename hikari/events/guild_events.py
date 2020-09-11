@@ -90,7 +90,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild this event relates to, or `builtins.None` if not known.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
         """Perform an API call to get the guild that this event relates to.

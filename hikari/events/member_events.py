@@ -97,7 +97,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
             The guild that this event occurred in, if known, else
             `builtins.None`.
         """
-        return self.app.cache.get_guild(self.guild_id)
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @attr_extensions.with_copy

@@ -123,19 +123,22 @@ class StatelessCacheImpl(cache.MutableCache):
     def delete_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         raise self._no_cache()
 
-    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+    def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         return None
 
-    def get_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+    def get_unavailable_guild(self, guild_id: snowflakes.Snowflake) -> typing.Optional[guilds.GatewayGuild]:
+        return None
+
+    def get_available_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        return cache_utilities.EmptyCacheView()
+
+    def get_unavailable_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         return cache_utilities.EmptyCacheView()
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
         raise self._no_cache()
 
     def set_guild_availability(self, guild_id: snowflakes.Snowflake, is_available: bool, /) -> None:
-        raise self._no_cache()
-
-    def set_initial_unavailable_guilds(self, guild_ids: typing.Collection[snowflakes.Snowflake], /) -> None:
         raise self._no_cache()
 
     def update_guild(

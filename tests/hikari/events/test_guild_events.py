@@ -24,7 +24,49 @@ import pytest
 
 from hikari import guilds
 from hikari import presences
+from hikari import snowflakes
 from hikari.events import guild_events
+from tests.hikari import hikari_test_helpers
+
+
+class GuildEvent:
+    @pytest.fixture()
+    def event(self):
+        cls = hikari_test_helpers.mock_class_namespace(
+            guild_events.GuildEvent, guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(534123123))
+        )
+        return cls()
+
+    def test_guild_when_available(self, event):
+        result = event.guild
+
+        assert result is event.app.cache.get_available_guild.return_value
+        event.app.cache.get_available_guild.assert_called_once_with(534123123)
+        event.app.cache.get_unavailable_guild.assert_not_called()
+
+    def test_guild_when_unavailable(self, event):
+        event.app.cache.get_available_guild.return_value = None
+        result = event.guild
+
+        assert result is event.app.cache.get_unavailable_guild.return_value
+        event.app.cache.get_unavailable_guild.assert_called_once_with(534123123)
+        event.app.cache.get_available_guild.assert_called_once_with(534123123)
+
+    @pytest.mark.asyncio
+    async def test_fetch_guild(self, event):
+        event.app.rest.fetch_guild = mock.AsyncMock()
+        result = await event.fetch_guild()
+
+        assert result is event.app.rest.fetch_guild.return_value
+        event.app.rest.fetch_guild.assert_called_once_with(534123123)
+
+    @pytest.mark.asyncio
+    async def test_fetch_guild_preview(self, event):
+        event.app.rest.fetch_guild_preview = mock.AsyncMock()
+        result = await event.fetch_guild_preview()
+
+        assert result is event.app.rest.fetch_guild_preview.return_value
+        event.app.rest.fetch_guild_preview.assert_called_once_with(534123123)
 
 
 class TestGuildAvailableEvent:

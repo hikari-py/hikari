@@ -91,11 +91,17 @@ class TestStatelessCache:
         with pytest.raises(NotImplementedError):
             assert component.delete_guild(123123)
 
-    def test_get_guild(self, component):
-        assert component.get_guild(1234123) is None
+    def test_get_available_guild(self, component):
+        assert component.get_available_guild(1234123) is None
 
-    def test_get_guilds_view(self, component):
-        assert component.get_guilds_view() == {}
+    def test_get_unavailable_guild(self, component):
+        assert component.get_unavailable_guild(43123) is None
+
+    def test_get_available_guilds_view(self, component):
+        assert component.get_available_guilds_view() == {}
+
+    def test_get_unavailable_guilds_view(self, component):
+        assert component.get_unavailable_guilds_view() == {}
 
     def test_set_guild(self, component):
         with pytest.raises(NotImplementedError):
@@ -104,10 +110,6 @@ class TestStatelessCache:
     def test_set_guild_availability(self, component):
         with pytest.raises(NotImplementedError):
             assert component.set_guild_availability(123123, True)
-
-    def test_set_initial_unavailable_guilds(self, component):
-        with pytest.raises(NotImplementedError):
-            assert component.set_initial_unavailable_guilds([123])
 
     def test_update_guild(self, component):
         with pytest.raises(NotImplementedError):

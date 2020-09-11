@@ -305,7 +305,7 @@ class MemberPresence:
     premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `builtins.None` if they aren't boosting.
+    This will be `builtins.None` if they are not boosting.
     """
 
     nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)

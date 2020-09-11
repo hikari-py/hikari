@@ -1082,9 +1082,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.GuildMemberBan:
         return guild_models.GuildMemberBan(reason=payload["reason"], user=self.deserialize_user(payload["user"]))
 
-    def deserialize_unavailable_guild(self, payload: data_binding.JSONObject) -> guild_models.UnavailableGuild:
-        return guild_models.UnavailableGuild(id=snowflakes.Snowflake(payload["id"]))
-
     @staticmethod
     def _set_partial_guild_attributes(payload: data_binding.JSONObject) -> _PartialGuildFields:
         features = []

@@ -79,7 +79,6 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
         event = self._app.event_factory.deserialize_ready_event(shard, payload)
         self._cache.update_me(event.my_user)
-        self._cache.set_initial_unavailable_guilds(event.unavailable_guilds)
         await self.dispatch(event)
 
     async def on_resumed(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
