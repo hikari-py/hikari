@@ -224,7 +224,7 @@
                     if url is None:
                         module_part = module.find_ident(phrase.split('.')[0])
                         if not isinstance(module_part, pdoc.External):
-                            print(f"Code reference `{phrase}` in module '{ident.refname}' does not match any documented object.")
+                            print(f"Code reference `{phrase}` in module '{module.refname}' does not match any documented object.")
 
                         bits = ident.name.split(".")[:-1]
 

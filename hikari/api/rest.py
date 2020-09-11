@@ -807,7 +807,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `SEND_MESSAGES` in the channel.
+            If you are missing the `SEND_MESSAGES` in the channel or the
+            person you are trying to message has the DM's disabled.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.InternalServerError
@@ -1802,6 +1803,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         newest_first : builtins.bool
             Whether to fetch the newest first or the olders first.
             Defaults to `builtins.False`.
+        start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
+            If specified, the ID start at. This may be a
+            `hikari.guilds.PartialGuild` or an ID.
 
         Returns
         -------
@@ -1823,17 +1827,67 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def leave_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> None:
-        ...
+        """Leave a guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to leave. This may be a `hikari.guilds.PartialGuild` or
+            the ID of an existing guild.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found or you own the guild.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
-        ...
+        """Create a DM channel with a user.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The user to create the DM channel with. This may be a
+            `hikari.users.PartialUser` or the ID of an existing user.
+
+        Returns
+        -------
+        hikari.channels.DMChannel
+            The created DM channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the user is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO
     @abc.abstractmethod
     async def fetch_application(self) -> applications.Application:
-        ...
+        """Fetch the token's associated application.
+
+        Returns
+        -------
+        hikari.applications.Application
+            The token's associated application.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
@@ -1850,15 +1904,104 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
-        ...
+        """Add a user to a guild.
+
+        !!! note
+            This requires the `access_token` to have the
+            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to add the user to. This can be a `hikari.guilds.PartialGuild`
+            or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialGuild]
+            The user to add to the guild. This can be a `hikari.users.PartialUser`
+            or the ID of an existing user.
+        nick : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the nick to add to the user when he joins the guild.
+
+            Requires the `MANAGE_NICKNAMES` permission on the guild.
+        roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+            If specified, the roles to add to the user when he joins the guild.
+            This can be a collection of `hikari.guilds.PartialRole` or of IDs.
+
+            Requires the `MANAGE_ROLES` permission on the guild.
+        mute : hikari.undefined.UndefinedOr[builtins.bool]
+            If specified, the mute state to add the user when he joins the guild.
+
+            Requires the `MUTE_MEMBERS` permission on the guild.
+        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+            If specified, the deaf state to add the user when he joins the guild.
+
+            Requires the `DEAFEN_MEMBERS` permission on the guild.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Member]
+            `builtins.None` if the user was already part of the guild, else
+            `hikari.guilds.Member`.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild you want to add the user to,
+            if you are missing permissions to do one of the things you specified,
+            if you are using an access token for another user, if the token is
+            bound to annother bot or if the access token doesnt have the
+            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If you own the guild or the user is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
-        ...
+        """Fetch available voice regions.
+
+        !!! note
+            This endpoint doesn't return VIP voice regions.
+
+        Returns
+        -------
+        typing.Sequence[hikari.voices.VoiceRegion]
+            The available voice regions.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
-        ...
+        """Fetch a user.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialGuild]
+            The user to fetch. This can be a `hikari.users.PartialUser`
+            or the ID of an existing user.
+
+        Returns
+        -------
+        hikari.users.User
+            The requested user
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the user is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     def fetch_audit_log(
         self,
@@ -1975,7 +2118,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
-        ...
+        """Delete a guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to delete. This may be a `hikari.guilds.PartialGuild` or
+            the ID of an existing guild.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not the owner of the guild.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+             If you own the guild or if you are not in it.
+         hikari.errors.InternalServerError
+             If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_guild_channels(
