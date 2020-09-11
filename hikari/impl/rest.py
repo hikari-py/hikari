@@ -220,9 +220,6 @@ class RESTApp(traits.ExecutorAware):
     url : typing.Optional[builtins.str]
         The base URL for the API. You can generally leave this as being
         `builtins.None` and the correct default API base URL will be generated.
-    version : builtins.int
-        The Discord API version to use. Can be `6` (stable, default), or `7`
-        (undocumented development release).
 
     !!! note
         This event loop will be bound to a connector when the first call
@@ -237,7 +234,6 @@ class RESTApp(traits.ExecutorAware):
         "_http_settings",
         "_proxy_settings",
         "_url",
-        "_version",
     )
 
     def __init__(
@@ -249,7 +245,6 @@ class RESTApp(traits.ExecutorAware):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
-        version: int = 6,
     ) -> None:
         # Lazy initialized later, since we must initialize this in the event
         # loop we run the application from, otherwise aiohttp throws complaints
@@ -265,7 +260,6 @@ class RESTApp(traits.ExecutorAware):
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
-        self._version = version
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
