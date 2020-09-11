@@ -49,12 +49,12 @@ class TestStreamer:
 
     def test___enter__(self, stub_streamer):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             stub_streamer().__enter__()
 
     def test___exit__(self, stub_streamer):
         try:
-            stub_streamer().__exit__(object(), object(), object())
+            stub_streamer().__exit__(None, None, None)
         except AttributeError as exc:
             pytest.fail(exc)
 

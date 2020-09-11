@@ -51,7 +51,6 @@ class Streamer(iterators.LazyIterator[EventT], abc.ABC):
 
     Examples
     --------
-
     A streamer may either be started and closed using `async with` syntax
     where `Streamer.open` and `Streamer.close` are implicitly called based on
     context.
