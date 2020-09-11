@@ -131,7 +131,6 @@ def rest_app():
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
         proxy_settings=mock.Mock(spec_set=config.ProxySettings),
         url="https://some.url",
-        version=3,
     )
 
 
@@ -366,14 +365,14 @@ class TestRESTClientImpl:
         )
         assert obj._rest_url == "https://some.where/api/v2"
 
-    def test___enter__(self, rest_app):
+    def test___enter__(self, rest_client):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
-            rest_app.__enter__()
+            rest_client.__enter__()
 
-    def test___exit__(self, rest_app):
+    def test___exit__(self, rest_client):
         try:
-            rest_app.__exit__(None, None, None)
+            rest_client.__exit__(None, None, None)
         except AttributeError as exc:
             pytest.fail(exc)
 
