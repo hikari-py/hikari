@@ -48,14 +48,13 @@ import attr
 
 from hikari import intents
 from hikari import snowflakes
+from hikari import undefined
 from hikari import users
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    # Do NOT remove the users import here. It **is** required, even if PyCharm
-    # tries to assure you otherwise.
     from hikari import channels
     from hikari import guilds
     from hikari import messages
@@ -131,9 +130,24 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         """
 
     @property
-    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
-        # <<inherited docstring from MessagesEvent>>.
-        return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
+    def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
+        """Channel that the message was sent in, if known.
+
+        Returns
+        -------
+        typing.Union[builtins.None, hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel]
+            The channel the message was sent in, or `builtins.None` if not
+            known/cached.
+
+            This otherwise will always be a `hikari.channels.GuildTextChannel`
+            if it is a normal message, or `hikari.channels.GuildNewsChannel` if
+            sent in an announcement channel.
+        """
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert channel is None or isinstance(
+            channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
+        ), "expected cached channel to be None or a GuildTextChannel/GuildNewsChannel"
+        return channel
 
     @property
     def guild(self) -> typing.Optional[guilds.GatewayGuild]:
@@ -158,6 +172,11 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
     """Event base for any message creation event."""
 
     @property
+    def message_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from MessageEvent>>.
+        return self.message.id
+
+    @property
     @abc.abstractmethod
     def message(self) -> messages.Message:
         """Message that was sent in the event.
@@ -167,11 +186,6 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         hikari.messages.Message
             The message object that was sent with this event.
         """
-
-    @property
-    def message_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from MessageEvent>>.
-        return self.message.id
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -188,6 +202,17 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
             The ID of the author that triggered this event concerns.
         """
         return self.message.author.id
+
+    @property
+    @abc.abstractmethod
+    def author(self) -> users.User:
+        """User that sent the message.
+
+        Returns
+        -------
+        hikari.users.User
+            The user that sent the message.
+        """
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -220,6 +245,23 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
     @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from MessageEvent>>.
+        return self.message.channel_id
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.TextChannel]:
+        """Channel that the message was sent in, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextChannel]
+            The text channel that the message was sent in, if known and cached,
+            otherwise, `builtins.None`.
+        """
+
+    @property
     def author_id(self) -> snowflakes.Snowflake:
         """ID of the author that triggered this event.
 
@@ -230,13 +272,23 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         """
         # Looks like `author` is always present in this event variant.
         author = self.message.author
-        assert isinstance(author, users.PartialUser)
+        assert isinstance(author, users.User), "message.author was expected to be present"
         return author.id
 
     @property
-    def channel_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from MessageEvent>>.
-        return self.message.channel_id
+    @abc.abstractmethod
+    def author(self) -> typing.Optional[users.User]:
+        """User that sent the message.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.User]
+            The user that sent the message, if known and cached, otherwise
+            `builtins.None`.
+        """
+        author = self.message.author
+        assert isinstance(author, users.User), "message.author was expected to be present"
+        return author
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -278,6 +330,18 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         # <<inherited docstring from MessagesEvent>>.
         return self.message.channel_id
 
+    @property
+    @abc.abstractmethod
+    def channel(self) -> typing.Optional[channels.TextChannel]:
+        """Channel that the message was sent in, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextChannel]
+            The text channel that the message was sent in, if known and cached,
+            otherwise, `builtins.None`.
+        """
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 @attr_extensions.with_copy
@@ -292,14 +356,27 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
-
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
+        guild_id = self.message.guild_id
+        assert isinstance(guild_id, snowflakes.Snowflake)
+        return guild_id
+
+    @property
+    def author(self) -> typing.Union[guilds.Member]:
+        """Member that sent the message.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            The member that sent the message. This is a specialised
+            implementation of `hikari.users.User`.
+        """
+        return typing.cast(guilds.Member, self.message.member)
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
@@ -315,13 +392,24 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.Message = attr.ib()
-
     # <<inherited docstring from MessageCreateEvent>>.
 
     @property
     def channel(self) -> typing.Optional[channels.DMChannel]:
-        # <<inherited docstring from MessagesEvent>>.
+        """Channel that the message was sent in, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.DMChannel]
+            The DM channel that the message was sent in, if known and cached,
+            otherwise, `builtins.None`.
+        """
         return self.app.cache.get_dm(self.author_id)
+
+    @property
+    def author(self) -> users.User:
+        # <<inherited from MessageCreateEvent>>.
+        return self.message.author
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
@@ -337,7 +425,6 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
-
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
@@ -347,6 +434,21 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
         guild_id = self.message.guild_id
         assert isinstance(guild_id, snowflakes.Snowflake)
         return guild_id
+
+    @property
+    def author(self) -> typing.Union[guilds.Member, users.User]:
+        # <<inherited from GuildMessageUpdateEvent>>.
+        member = self.message.member
+        if member is not undefined.UNDEFINED and member is not None:
+            return member
+        member = self.app.cache.get_member(self.guild_id, self.author_id)
+        if member is not None:
+            return member
+
+        # This should always be present.
+        author = self.message.author
+        assert isinstance(author, users.User), "expected author to be present"
+        return author
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
@@ -362,13 +464,19 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
-
     # <<inherited docstring from MessageUpdateEvent>>.
 
     @property
     def channel(self) -> typing.Optional[channels.DMChannel]:
         # <<inherited docstring from MessagesEvent>>.
         return self.app.cache.get_dm(self.author_id)
+
+    @property
+    def author(self) -> typing.Optional[users.User]:
+        # Always present on an update event.
+        author = self.message.author
+        assert isinstance(author, users.User), "expected author to be present on PartialMessage"
+        return author
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
@@ -384,7 +492,6 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
-
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property
@@ -407,7 +514,6 @@ class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     message: messages.PartialMessage = attr.ib()
-
     # <<inherited docstring from MessageDeleteEvent>>.
 
     @property
@@ -473,9 +579,24 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
     """
 
     @property
-    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
-        # <<inherited docstring from MessagesEvent>>.
-        return typing.cast("channels.GuildTextChannel", self.app.cache.get_guild_channel(self.channel_id))
+    def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
+        """
+
+        Returns
+        -------
+        typing.Union[builtins.None, hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel]
+            The channel the messages were sent in, or `builtins.None` if not
+            known/cached.
+
+            This otherwise will always be a `hikari.channels.GuildTextChannel`
+            if it is a normal message, or `hikari.channels.GuildNewsChannel` if
+            sent in an announcement channel.
+        """
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert channel is None or isinstance(
+            channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
+        ), "expected cached channel to be None or a GuildTextChannel/GuildNewsChannel"
+        return channel
 
     @property
     def guild(self) -> typing.Optional[guilds.GatewayGuild]:
