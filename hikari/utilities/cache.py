@@ -636,13 +636,10 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     """A data model for storing presence data in an in-memory cache."""
 
     user_id: snowflakes.Snowflake = attr.ib()
-    role_ids: typing.Optional[typing.Tuple[snowflakes.Snowflake, ...]] = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
     visible_status: typing.Union[presences.Status, str] = attr.ib()
     activities: typing.Tuple[RichActivityData, ...] = attr.ib()
     client_status: presences.ClientStatus = attr.ib()
-    premium_since: typing.Optional[datetime.datetime] = attr.ib()
-    nickname: typing.Optional[str] = attr.ib()
 
     @classmethod
     def build_from_entity(
@@ -654,9 +651,6 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             user_id=entity.user_id,
             guild_id=entity.guild_id,
             visible_status=entity.visible_status,
-            premium_since=entity.premium_since,
-            nickname=entity.nickname,
-            role_ids=tuple(entity.role_ids) if entity.role_ids is not None else None,
             activities=tuple(RichActivityData.build_from_entity(activity) for activity in entity.activities),
             client_status=copy.copy(entity.client_status),
         )
@@ -669,11 +663,8 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         activities = [activity.build_entity(**kwargs_) for activity, kwargs_ in zip(self.activities, presence_kwargs)]
         return presences.MemberPresence(
             user_id=self.user_id,
-            role_ids=self.role_ids,
             guild_id=self.guild_id,
             visible_status=self.visible_status,
-            premium_since=self.premium_since,
-            nickname=self.nickname,
             app=kwargs["app"],
             activities=activities,
             client_status=copy.copy(self.client_status),

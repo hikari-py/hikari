@@ -1634,8 +1634,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
-
         activities = []
         for activity_payload in payload["activities"]:
             timestamps: typing.Optional[presence_models.ActivityTimestamps] = None
@@ -1729,20 +1727,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else presence_models.Status.OFFLINE
         )
         client_status = presence_models.ClientStatus(desktop=desktop, mobile=mobile, web=web)
-        # TODO: do we want to differentiate between undefined and null here?
-        premium_since = payload.get("premium_since")
-        premium_since = date.iso8601_datetime_string_to_datetime(premium_since) if premium_since is not None else None
+
         return presence_models.MemberPresence(
             app=self._app,
             user_id=snowflakes.Snowflake(payload["user"]["id"]),
-            role_ids=role_ids,
             guild_id=guild_id if guild_id is not undefined.UNDEFINED else snowflakes.Snowflake(payload["guild_id"]),
             visible_status=presence_models.Status(payload["status"]),
             activities=activities,
             client_status=client_status,
-            premium_since=premium_since,
-            # TODO: do we want to differentiate between undefined and null here?
-            nickname=payload.get("nick"),
         )
 
     ###############

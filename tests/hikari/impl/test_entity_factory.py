@@ -2615,14 +2615,11 @@ class TestEntityFactoryImpl:
     def member_presence_payload(self, user_payload, presence_activity_payload):
         return {
             "user": user_payload,
-            "roles": ["49494949"],
-            "game": presence_activity_payload,
+            "activity": presence_activity_payload,
             "guild_id": "44004040",
             "status": "dnd",
             "activities": [presence_activity_payload],
             "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
-            "premium_since": "2015-04-26T06:26:56.936000+00:00",
-            "nick": "Nick",
         }
 
     def test_deserialize_member_presence(
@@ -2631,7 +2628,6 @@ class TestEntityFactoryImpl:
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
         assert presence.user_id == 115590097100865541
-        assert presence.role_ids == [49494949]
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DO_NOT_DISTURB
         # PresenceActivity
@@ -2682,27 +2678,7 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web == presence_models.Status.DO_NOT_DISTURB
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
-        assert presence.premium_since == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
-        assert presence.nickname == "Nick"
         assert isinstance(presence, presence_models.MemberPresence)
-
-    def test_deserialize_member_presence_with_null_fields(self, entity_factory_impl, user_payload):
-        presence = entity_factory_impl.deserialize_member_presence(
-            {
-                "user": {"username": "agent 47", "avatar": None, "discriminator": "4747", "id": "474747474"},
-                "roles": [],
-                "game": None,
-                "guild_id": "42",
-                "status": "dnd",
-                "activities": [],
-                "client_status": {},
-                "premium_since": None,
-                "nick": None,
-            }
-        )
-        assert presence.premium_since is None
-        assert presence.nickname is None
-        # PresenceUser
 
     def test_deserialize_member_presence_with_unset_fields(
         self, entity_factory_impl, user_payload, presence_activity_payload
@@ -2718,9 +2694,6 @@ class TestEntityFactoryImpl:
             guild_id=snowflakes.Snowflake(9654234123),
         )
         assert presence.guild_id == snowflakes.Snowflake(9654234123)
-        assert presence.premium_since is None
-        assert presence.nickname is None
-        assert presence.role_ids is None
         # ClientStatus
         assert presence.client_status.desktop is presence_models.Status.OFFLINE
         assert presence.client_status.mobile is presence_models.Status.OFFLINE
@@ -2730,7 +2703,6 @@ class TestEntityFactoryImpl:
         presence = entity_factory_impl.deserialize_member_presence(
             {
                 "user": user_payload,
-                "roles": ["49494949"],
                 "game": None,
                 "guild_id": "44004040",
                 "status": "dnd",
@@ -2762,7 +2734,6 @@ class TestEntityFactoryImpl:
         presence = entity_factory_impl.deserialize_member_presence(
             {
                 "user": user_payload,
-                "roles": ["49494949"],
                 "game": None,
                 "guild_id": "44004040",
                 "status": "dnd",
@@ -2806,7 +2777,6 @@ class TestEntityFactoryImpl:
         presence = entity_factory_impl.deserialize_member_presence(
             {
                 "user": user_payload,
-                "roles": ["49494949"],
                 "game": None,
                 "guild_id": "44004040",
                 "status": "dnd",
