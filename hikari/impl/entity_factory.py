@@ -995,12 +995,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
-        premium_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED
-        if "premium_since" in payload:
-            raw_premium_since = payload["premium_since"]
-            premium_since = (
-                date.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
-            )
+        raw_premium_since = payload["premium_since"]
+        premium_since = (
+            date.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
+        )
 
         return guild_models.Member(
             user=user,
