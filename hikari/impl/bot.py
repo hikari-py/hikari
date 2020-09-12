@@ -179,6 +179,37 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         If a `typing.Dict[str, typing.Any]` equivalent, then this value is
         passed to `logging.config.dictConfig` to allow the user to provide a
         specialized logging configuration of their choice.
+
+        As a side note, you can always opt to leave this on the default value
+        and then use an incremental `logging.config.dictConfig` that applies
+        any additional changes on top of the base configuration, if you prefer.
+        An example of this is as follows:
+
+        ```py
+        import os
+
+        from logging.config import dictConfig
+        from hikari import Bot, Intents
+
+        bot = Bot(token=os.environ["BOT_TOKEN"], intents=Intents.ALL, logs="INFO")
+
+        # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
+        dictConfig({
+            "version": 1,
+            "incremental": True,
+            "loggers": {
+                "hikari.gateway": {
+                    "level": "DEBUG"
+                },
+                "hikari.ratelimits": {
+                    "level": "TRACE_HIKARI"
+                },
+            },
+        })
+        ```
+
+        Taking note that `"TRACE_HIKARI"` is a library-specific logging level
+        which is expected to be more verbose than `"DEBUG"`.
     proxy_settings : typing.Optional[config.ProxySettings]
         If specified, custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
