@@ -73,7 +73,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, app: traits.BotAware, intents: typing.Optional[intents_.Intents]) -> None:
+    def __init__(self, app: traits.BotAware, intents: intents_.Intents) -> None:
         self._app = app
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
@@ -122,25 +122,23 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         return callback
 
     def _check_intents(self, event_type: typing.Type[event_dispatcher.EventT_co], nested: int) -> None:
-        # If None, the user is on v6 with intents disabled, so we don't care.
-        if self._intents is not None:
-            # Collection of combined bitfield combinations of intents that
-            # could be enabled to receive this event.
-            expected_intent_groups = base_events.get_required_intents_for(event_type)
+        # Collection of combined bitfield combinations of intents that
+        # could be enabled to receive this event.
+        expected_intent_groups = base_events.get_required_intents_for(event_type)
 
-            if expected_intent_groups:
-                for expected_intent_group in expected_intent_groups:
-                    if (self._intents & expected_intent_group) == expected_intent_group:
-                        break
-                else:
-                    expected_intents_str = ", ".join(map(str, expected_intent_groups))
+        if expected_intent_groups:
+            for expected_intent_group in expected_intent_groups:
+                if (self._intents & expected_intent_group) == expected_intent_group:
+                    break
+            else:
+                expected_intents_str = ", ".join(map(str, expected_intent_groups))
 
-                    warnings.warn(
-                        f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
-                        f"you enable one of the following intents: {expected_intents_str}.",
-                        category=errors.MissingIntentWarning,
-                        stacklevel=nested + 3,
-                    )
+                warnings.warn(
+                    f"You have tried to listen to {event_type.__name__}, but this will only ever be triggered if "
+                    f"you enable one of the following intents: {expected_intents_str}.",
+                    category=errors.MissingIntentWarning,
+                    stacklevel=nested + 3,
+                )
 
     def get_listeners(
         self,

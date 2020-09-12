@@ -114,9 +114,9 @@ class StatefulCacheImpl(cache.MutableCache):
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
     _user_entries: mapping.MappedCollection[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
-    _intents: typing.Optional[intents_.Intents]
+    _intents: intents_.Intents
 
-    def __init__(self, app: traits.RESTAware, intents: typing.Optional[intents_.Intents]) -> None:
+    def __init__(self, app: traits.RESTAware, intents: intents_.Intents) -> None:
         self._app = app
         self._me = None
         # Cached Private Channels channels are a special case as there's no sane way to remove them from cache as we'd
@@ -135,11 +135,11 @@ class StatefulCacheImpl(cache.MutableCache):
         self._intents = intents
 
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
-        if self._intents is not None and self._intents ^ intents:
+        if self._intents ^ intents:
             raise errors.MissingIntentError(intents) from None
 
     def _is_intent_enabled(self, intents: intents_.Intents, /) -> bool:
-        return self._intents is None or (self._intents & intents) == intents
+        return (self._intents & intents) == intents
 
     def _build_dm(
         self,

@@ -568,6 +568,7 @@ class TestGatewayShardImpl:
     def client(self, http_settings, proxy_settings, unslotted_client_type):
         return unslotted_client_type(
             url="wss://gateway.discord.gg",
+            intents=intents.Intents.ALL,
             token="lol",
             event_consumer=mock.Mock(),
             http_settings=http_settings,
@@ -586,6 +587,7 @@ class TestGatewayShardImpl:
             event_consumer=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
+            intents=intents.Intents.ALL,
             url="wss://gaytewhuy.discord.meh",
             data_format="json",
             compression=compression,
@@ -602,6 +604,7 @@ class TestGatewayShardImpl:
                 proxy_settings=proxy_settings,
                 token=mock.Mock(),
                 url="wss://erlpack-is-broken-lol.discord.meh",
+                intents=intents.Intents.ALL,
                 data_format="etf",
                 compression=True,
             )

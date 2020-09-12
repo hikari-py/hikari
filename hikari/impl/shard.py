@@ -334,9 +334,9 @@ class GatewayShardImpl(shard.GatewayShard):
     initial_status : hikari.presences.Status
         The initial status to set on login for the shard. Defaults to
         `hikari.presences.Status.ONLINE`.
-    intents : typing.Optional[hikari.intents.Intents]
-        Collection of intents to use, or `builtins.None` to not use intents at
-        all.
+    intents : hikari.intents.Intents
+        Collection of intents to use. Unlike on the V6 gateway, this is
+        MANDATORY.
     large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
     shard_id : builtins.int
@@ -412,7 +412,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
-        intents: typing.Optional[intents_.Intents] = None,
+        intents: intents_.Intents,
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
