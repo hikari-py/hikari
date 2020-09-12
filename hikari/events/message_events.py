@@ -46,6 +46,8 @@ import typing
 
 import attr
 
+from hikari import channels
+from hikari import guilds
 from hikari import intents
 from hikari import snowflakes
 from hikari import undefined
@@ -55,8 +57,6 @@ from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import channels
-    from hikari import guilds
     from hikari import messages
     from hikari import traits
     from hikari.api import shard as gateway_shard
@@ -146,7 +146,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert channel is None or isinstance(
             channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
-        ), "expected cached channel to be None or a GuildTextChannel/GuildNewsChannel"
+        ), f"expected cached channel to be None or a GuildTextChannel/GuildNewsChannel, not {channel}"
         return channel
 
     @property
@@ -498,7 +498,9 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildMessageEvent>>.
         # Always present in this event.
-        return typing.cast("snowflakes.Snowflake", self.message.guild_id)
+        guild_id = self.message.guild_id
+        assert isinstance(guild_id, snowflakes.Snowflake), f"expected guild_id to be snowflake, not {guild_id}"
+        return guild_id
 
 
 @attr_extensions.with_copy
@@ -580,7 +582,7 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
 
     @property
     def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
-        """
+        """Get the cached channel the messages were sent in, if known.
 
         Returns
         -------
@@ -595,7 +597,7 @@ class GuildMessageBulkDeleteEvent(MessageBulkDeleteEvent):
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert channel is None or isinstance(
             channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
-        ), "expected cached channel to be None or a GuildTextChannel/GuildNewsChannel"
+        ), f"expected cached channel to be None or a GuildTextChannel/GuildNewsChannel, not {channel}"
         return channel
 
     @property
