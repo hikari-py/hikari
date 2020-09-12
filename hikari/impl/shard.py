@@ -95,7 +95,7 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # ratelimit window).
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
 # Supported gateway version
-_VERSION: int = 6
+_VERSION: int = 8
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
