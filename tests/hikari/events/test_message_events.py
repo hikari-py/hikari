@@ -22,6 +22,7 @@
 import mock
 import pytest
 
+from hikari import channels
 from hikari import messages
 from hikari import snowflakes
 from hikari import users
@@ -39,9 +40,11 @@ class TestGuildMessageEvent:
         )
         return cls()
 
-    def test_channel(self, event):
-        result = event.channel
+    @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
+    def test_channel(self, event, guild_channel_impl):
+        event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
 
+        result = event.channel
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54123123123)
 
@@ -64,13 +67,21 @@ class TestGuildMessageEvent:
 class TestMessageCreateEvent:
     @pytest.fixture()
     def event(self):
-        class MessageCreateEvent(message_events.MessageCreateEvent):
-            app = None
-            message = mock.Mock(messages.Message, guild_id=snowflakes.Snowflake(998866))
-            shard = object()
-            channel = object()
+        cls = hikari_test_helpers.mock_class_namespace(
+            message_events.MessageCreateEvent,
+            app=object(),
+            message=mock.Mock(
+                spec_set=messages.Message,
+                author=mock.Mock(
+                    spec_set=users.User,
+                ),
+            ),
+            shard=object(),
+            channel=object(),
+            author=object(),
+        )
 
-        return MessageCreateEvent()
+        return cls()
 
     def test_message_id_property(self, event):
         event.message.id = 123
@@ -88,18 +99,21 @@ class TestMessageCreateEvent:
 class TestMessageUpdateEvent:
     @pytest.fixture()
     def event(self):
-        class MessageUpdateEvent(message_events.MessageUpdateEvent):
-            app = None
-            message = mock.Mock(
+        cls = hikari_test_helpers.mock_class_namespace(
+            message_events.MessageUpdateEvent,
+            app=object(),
+            message=mock.Mock(
                 spec_set=messages.Message,
                 author=mock.Mock(
-                    spec_set=users.PartialUser,
+                    spec_set=users.User,
                 ),
-            )
-            shard = object()
-            channel = object()
+            ),
+            shard=object(),
+            channel=object(),
+            author=object(),
+        )
 
-        return MessageUpdateEvent()
+        return cls()
 
     def test_message_id_property(self, event):
         event.message.id = snowflakes.Snowflake(123)
@@ -184,7 +198,9 @@ class TestGuildMessageBulkDeleteEvent:
             message_ids=None,
         )
 
-    def test_channel(self, event):
+    @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
+    def test_channel(self, event, guild_channel_impl):
+        event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
         result = event.channel
 
         assert result is event.app.cache.get_guild_channel.return_value
