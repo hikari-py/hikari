@@ -55,7 +55,6 @@ import attr
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import guilds
     from hikari import intents as intents_
     from hikari import messages
     from hikari import snowflakes
