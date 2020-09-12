@@ -296,9 +296,9 @@ class MemberPresence:
 
     activities: typing.Sequence[RichActivity] = attr.ib(eq=False, hash=False, repr=False)
     """All active user activities.
-    
+
     You can assume the first activity is the one that the GUI Discord client
-    will show. 
+    will show.
     """
 
     client_status: ClientStatus = attr.ib(eq=False, hash=False, repr=False)
