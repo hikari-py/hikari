@@ -141,9 +141,8 @@ class EventFactoryImpl(event_factory.EventFactory):
                 shard=shard,
                 channel_id=channel_id,
                 guild_id=guild_id,
-                user_id=user_id,
                 timestamp=timestamp,
-                member=member,
+                user=member,
             )
 
         return typing_events.PrivateTypingEvent(
