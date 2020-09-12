@@ -577,8 +577,8 @@ class TestGatewayShardImpl:
     @pytest.mark.parametrize(
         ("compression", "expect"),
         [
-            (None, "v=6&encoding=json"),
-            ("payload_zlib_stream", "v=6&encoding=json&compress=zlib-stream"),
+            (None, f"v={shard._VERSION}&encoding=json"),
+            ("payload_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
         ],
     )
     def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):

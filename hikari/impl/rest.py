@@ -843,7 +843,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", target_type)
         body.put("allow", allow)
         body.put("deny", deny)
-
         await self._request(route, json=body, reason=reason)
 
     async def delete_permission_overwrite(

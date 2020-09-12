@@ -77,9 +77,10 @@ class TestChannelFollow:
         mock_app.cache.get_guild_channel.assert_called_once_with(696969)
 
 
-def test_PermissionOverwriteType_str_operator():
-    overwrite_type = channels.PermissionOverwriteType("role")
-    assert str(overwrite_type) == "ROLE"
+@pytest.mark.parametrize(("type", "expect_name"), [(0, "ROLE"), (1, "MEMBER")])
+def test_PermissionOverwriteType_str_operator(type, expect_name):
+    overwrite_type = channels.PermissionOverwriteType(type)
+    assert str(overwrite_type) == expect_name
 
 
 def test_PartialChannel_str_operator():

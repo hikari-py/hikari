@@ -291,22 +291,22 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_audit_log_overwrites(self, entity_factory_impl):
         test_overwrite_payloads = [
-            {"id": "24", "type": "role", "allow": 21, "deny": 0, "allow_new": "21", "deny_new": "0"},
-            {"id": "48", "type": "role", "deny": 42, "allow": 0, "allow_new": "0", "deny_new": "42"},
+            {"id": "24", "type": 0, "allow": 21, "deny": 0, "allow_new": "21", "deny_new": "0"},
+            {"id": "48", "type": 1, "deny": 42, "allow": 0, "allow_new": "0", "deny_new": "42"},
         ]
         overwrites = entity_factory_impl._deserialize_audit_log_overwrites(test_overwrite_payloads)
         assert overwrites == {
             24: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "24", "type": "role", "allow_new": "21", "deny_new": "0"}
+                {"id": "24", "type": 0, "allow_new": "21", "deny_new": "0"}
             ),
             48: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "48", "type": "role", "deny_new": "42", "allow_new": "0"}
+                {"id": "48", "type": 1, "deny_new": "42", "allow_new": "0"}
             ),
         }
 
     @pytest.fixture()
     def overwrite_info_payload(self):
-        return {"id": "123123123", "type": "role", "role_name": "aRole"}
+        return {"id": "123123123", "type": 0, "role_name": "aRole"}
 
     def test__deserialize_channel_overwrite_entry_info(self, entity_factory_impl, overwrite_info_payload):
         overwrite_entry_info = entity_factory_impl._deserialize_channel_overwrite_entry_info(overwrite_info_payload)
@@ -408,7 +408,7 @@ class TestEntityFactoryImpl:
                 }
             ],
             "id": "694026906592477214",
-            "options": {"id": "115590097100865541", "type": "member"},
+            "options": {"id": "115590097100865541", "type": 1},
             "target_id": "115590097100865541",
             "user_id": "560984860634644482",
             "reason": "An artificial insanity.",
@@ -536,19 +536,32 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def permission_overwrite_payload(self):
-        return {"id": "4242", "type": "member", "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
+        return {"id": "4242", "type": 1, "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
 
-    def test_deserialize_permission_overwrite(self, entity_factory_impl, permission_overwrite_payload):
+    @pytest.mark.parametrize("type", [0, 1])
+    def test_deserialize_permission_overwrite(self, entity_factory_impl, type):
+        permission_overwrite_payload = {
+            "id": "4242",
+            "type": type,
+            "allow": 65,
+            "deny": 49152,
+            "allow_new": "65",
+            "deny_new": "49152",
+        }
         overwrite = entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
-        assert overwrite.type == channel_models.PermissionOverwriteType.MEMBER
+        assert overwrite.type == channel_models.PermissionOverwriteType(type)
         assert overwrite.allow == permission_models.Permissions(65)
         assert overwrite.deny == permission_models.Permissions(49152)
         assert isinstance(overwrite, channel_models.PermissionOverwrite)
 
-    def test_serialize_permission_overwrite(self, entity_factory_impl):
-        overwrite = channel_models.PermissionOverwrite(id=123123, type="member", allow=42, deny=62)
+    @pytest.mark.parametrize(
+        "type",
+        [channel_models.PermissionOverwriteType.MEMBER, channel_models.PermissionOverwriteType.ROLE],
+    )
+    def test_serialize_permission_overwrite(self, entity_factory_impl, type):
+        overwrite = channel_models.PermissionOverwrite(id=123123, type=type, allow=42, deny=62)
         payload = entity_factory_impl.serialize_permission_overwrite(overwrite)
-        assert payload == {"id": "123123", "type": "member", "allow": "42", "deny": "62"}
+        assert payload == {"id": "123123", "type": int(type), "allow": "42", "deny": "62"}
 
     @pytest.fixture()
     def partial_channel_payload(self):
