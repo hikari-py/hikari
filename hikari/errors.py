@@ -42,7 +42,6 @@ __all__: typing.Final[typing.List[str]] = [
     "GatewayError",
     "MissingIntentWarning",
     "MissingIntentError",
-    "UnavailableGuildError",
     "BulkDeleteError",
     "VoiceError",
 ]
@@ -422,11 +421,3 @@ class MissingIntentError(HikariError, ValueError):
 
     def __str__(self) -> str:
         return f"You are missing the following intent(s): {str(self.intents)}"
-
-
-@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class UnavailableGuildError(HikariError):
-    """Raised when a guild is unavailable due to an outage."""
-
-    guild: typing.Optional[guilds.GatewayGuild] = attr.ib()
-    """The guild that is unavailable, or `builtins.None` if not yet known."""
