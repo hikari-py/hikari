@@ -367,7 +367,7 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
         return guild_id
 
     @property
-    def author(self) -> typing.Union[guilds.Member]:
+    def author(self) -> guilds.Member:
         """Member that sent the message.
 
         Returns
