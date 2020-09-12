@@ -291,16 +291,16 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_audit_log_overwrites(self, entity_factory_impl):
         test_overwrite_payloads = [
-            {"id": "24", "type": 0, "allow": 21, "deny": 0, "allow_new": "21", "deny_new": "0"},
-            {"id": "48", "type": 1, "deny": 42, "allow": 0, "allow_new": "0", "deny_new": "42"},
+            {"id": "24", "type": 0, "allow": "21", "deny": "0"},
+            {"id": "48", "type": 1, "deny": "42", "allow": "0"},
         ]
         overwrites = entity_factory_impl._deserialize_audit_log_overwrites(test_overwrite_payloads)
         assert overwrites == {
             24: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "24", "type": 0, "allow_new": "21", "deny_new": "0"}
+                {"id": "24", "type": 0, "allow": "21", "deny": "0"}
             ),
             48: entity_factory_impl.deserialize_permission_overwrite(
-                {"id": "48", "type": 1, "deny_new": "42", "allow_new": "0"}
+                {"id": "48", "type": 1, "deny": "42", "allow": "0"}
             ),
         }
 

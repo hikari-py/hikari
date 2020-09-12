@@ -467,8 +467,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return channel_models.PermissionOverwrite(
             id=snowflakes.Snowflake(payload["id"]),
             type=channel_models.PermissionOverwriteType(payload["type"]),
-            allow=permission_models.Permissions(int(payload["allow_new"])),
-            deny=permission_models.Permissions(int(payload["deny_new"])),
+            allow=permission_models.Permissions(int(payload["allow"])),
+            deny=permission_models.Permissions(int(payload["deny"])),
         )
 
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
