@@ -476,7 +476,7 @@ class MemberData(BaseData[guilds.Member]):
     nickname: undefined.UndefinedNoneOr[str] = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
     joined_at: datetime.datetime = attr.ib()
-    premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib()
+    premium_since: typing.Optional[datetime.datetime] = attr.ib()
     is_deaf: undefined.UndefinedOr[bool] = attr.ib()
     is_mute: undefined.UndefinedOr[bool] = attr.ib()
     # meta-attribute

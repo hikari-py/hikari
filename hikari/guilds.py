@@ -315,12 +315,10 @@ class Member(users.User):
     joined_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: undefined.UndefinedNoneOr[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    This will be `builtins.None` if they are not boosting and
-    `hikari.undefined.UndefinedType` if their boosting status is
-    unknown.
+    Will be `builtins.None` if the member is not a premium user.
     """
 
     is_deaf: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)

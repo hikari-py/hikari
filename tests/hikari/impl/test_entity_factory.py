@@ -1452,12 +1452,13 @@ class TestEntityFactoryImpl:
                 "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "user": user_payload,
                 "guild_id": "123123123",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
             }
         )
         assert member.nickname is undefined.UNDEFINED
-        assert member.premium_since is undefined.UNDEFINED
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
+        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
 
     def test_deserialize_member_with_passed_through_user_object_and_guild_id(self, entity_factory_impl):
         mock_user = mock.Mock(user_models.UserImpl)
