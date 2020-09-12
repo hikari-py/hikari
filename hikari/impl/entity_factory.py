@@ -267,7 +267,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             icon_hash=guild_fields.icon_hash,
             features=guild_fields.features,
             is_owner=bool(payload["owner"]),
-            my_permissions=permission_models.Permissions(int(payload["permissions_new"])),
+            my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
@@ -1020,7 +1020,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_hoisted=payload["hoist"],
             position=int(payload["position"]),
             # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
-            permissions=permission_models.Permissions(int(payload["permissions_new"])),
+            permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
             is_mentionable=payload["mentionable"],
         )

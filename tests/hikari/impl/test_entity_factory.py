@@ -145,8 +145,7 @@ class TestEntityFactoryImpl:
             "name": "Isopropyl",
             "icon": "d4a983885dsaa7691ce8bcaaf945a",
             "owner": False,
-            "permissions": 2147483647,
-            "permissions_new": "2147483647",
+            "permissions": "2147483647",
             "features": ["DISCOVERABLE", "FORCE_RELAY"],
         }
 
@@ -166,8 +165,7 @@ class TestEntityFactoryImpl:
                 "name": "Isopropyl",
                 "icon": None,
                 "owner": False,
-                "permissions": 2147483647,
-                "permissions_new": "2147483647",
+                "permissions": "2147483647",
                 "features": ["DISCOVERABLE", "FORCE_RELAY"],
             }
         )
@@ -1498,8 +1496,7 @@ class TestEntityFactoryImpl:
             "color": 3_447_003,
             "hoist": True,
             "position": 0,
-            "permissions": 66321471,
-            "permissions_new": "66321471",
+            "permissions": "66321471",
             "managed": False,
             "mentionable": False,
         }
@@ -1895,8 +1892,6 @@ class TestEntityFactoryImpl:
             "mfa_level": 1,
             "name": "L33t guild",
             "owner_id": "6969696",
-            "permissions": 66321471,
-            "permissions_new": "66321471",
             "preferred_locale": "en-GB",
             "premium_subscription_count": 1,
             "premium_tier": 2,
