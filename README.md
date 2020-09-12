@@ -131,12 +131,16 @@ Currently, this functionality does not yet exist.
 If you wish to contribute something, you should first start by cloning the
 repository.
 
+In the repository, make a virtual environment (`python -m venv .venv`) and enter
+it (`source .venv/bin/activate` on Linux, or for Windows use one of
+`.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+`source .venv/Scripts/activate`).
+
 The first thing you should run is `pip install nox` to install nox. This handles
 running predefined tasks and pipelines.
 
-To initialize a development environment and install everything you need, simply
-run `nox -s init`. This will create a venv and install everything you need in it
-to get started.
+You can install any dependencies with
+`pip install -r requirements.txt -r dev-requirements.txt`.
 
 Once this is complete, you can run `nox` without any arguments to ensure
 everything builds and is correct.
