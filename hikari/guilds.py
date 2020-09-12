@@ -136,7 +136,14 @@ class GuildFeature(str, enum.Enum):
     """Guild is public, go figure."""
 
     PUBLIC_DISABLED = "PUBLIC_DISABLED"
-    """Guild cannot be public. Who would have guessed?"""
+    """Guild cannot be public."""
+
+    RELAY_ENABLED = "RELAY_ENABLED"
+    """Guild is using relays.
+
+    Relays are new infrastructure designed to handle large guilds more
+    efficiently server-side.
+    """
 
     VANITY_URL = "VANITY_URL"
     """Guild has access to set a vanity URL."""
