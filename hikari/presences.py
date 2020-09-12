@@ -295,12 +295,14 @@ class MemberPresence:
     """This user's current status being displayed by the client."""
 
     activities: typing.Sequence[RichActivity] = attr.ib(eq=False, hash=False, repr=False)
-    """An array of the user's activities, with the top one will being
-    prioritised by the client.
+    """All active user activities.
+    
+    You can assume the first activity is the one that the GUI Discord client
+    will show. 
     """
 
     client_status: ClientStatus = attr.ib(eq=False, hash=False, repr=False)
-    """An object of the target user's client statuses."""
+    """Platform-specific user-statuses."""
 
     premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this member started "boosting" this guild.
