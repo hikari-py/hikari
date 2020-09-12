@@ -44,6 +44,8 @@ from hikari._about import __version__
 from hikari.applications import *
 from hikari.audit_logs import *
 from hikari.channels import *
+from hikari.colors import *
+from hikari.colours import *
 from hikari.config import *
 from hikari.embeds import *
 from hikari.emojis import *
