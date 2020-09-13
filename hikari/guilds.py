@@ -802,9 +802,6 @@ class Guild(PartialGuild, abc.ABC):
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    verification_level: GuildVerificationLevel = attr.ib(eq=False, hash=False, repr=False)
-    """The verification level required for a user to participate in this guild."""
-
     default_message_notifications: GuildMessageNotificationsLevel = attr.ib(eq=False, hash=False, repr=False)
     """The default setting for message notifications in this guild."""
 
@@ -838,9 +835,6 @@ class Guild(PartialGuild, abc.ABC):
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
-
-    system_channel_flags: GuildSystemChannelFlag = attr.ib(eq=False, hash=False, repr=False)
-    """Flags for the guild system channel to describe which notifications are suppressed."""
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
@@ -899,6 +893,38 @@ class Guild(PartialGuild, abc.ABC):
     This is only present if `GuildFeature.PUBLIC` is in `Guild.features` for
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
+
+    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
+    # to execute.
+    _verification_level: int = attr.ib(eq=False, hash=False, repr=False)
+    _system_channel_flags: int = attr.ib(eq=False, hash=False, repr=False)
+
+    @property
+    def verification_level(self) -> GuildVerificationLevel:
+        """Return the verification level required for this guild.
+
+        This defines the verification level needed for a user to participate in
+        this guild.
+
+        Returns
+        -------
+        GuildVerificationLevel
+            The verification level required for this guild.
+        """
+        return GuildVerificationLevel(self._verification_level)
+
+    @property
+    def system_channel_flags(self) -> GuildSystemChannelFlag:
+        """Return flags for the guild system channel.
+
+        These are used to describe which notifications are suppressed.
+
+        Returns
+        -------
+        GuildSystemChannelFlag
+            The system channel flags for this channel.
+        """
+        return GuildSystemChannelFlag(self._system_channel_flags)
 
     @property
     @abc.abstractmethod

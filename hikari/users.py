@@ -332,8 +332,12 @@ class PartialUserImpl(PartialUser):
     is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
-    flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
-    """Public flags for this user."""
+    _flags: undefined.UndefinedOr[int] = attr.ib(eq=False, hash=False)
+
+    @property
+    def flags(self) -> undefined.UndefinedOr[UserFlag]:
+        """Public flags for this user."""
+        return UserFlag(self._flags) if self._flags is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def mention(self) -> str:
@@ -398,6 +402,7 @@ class UserImpl(PartialUserImpl, User):
     is_system: bool
     """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
 
+    _flags: int
     flags: UserFlag
     """The public flags for this user."""
 
