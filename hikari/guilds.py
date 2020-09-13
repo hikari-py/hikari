@@ -426,6 +426,29 @@ class Member(users.User):
         """
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
+    @property
+    def top_role(self) -> typing.Optional[Role]:
+        """Return the highest role the member has.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Role]
+            `builtins.None` if the cache is missing the roles information or
+            the highest role the user has.
+        """
+        roles_view = self.app.cache.get_roles_view_for_guild(self.guild_id)
+
+        roles = sorted(
+            (r for r in roles_view.values() if r.id in self.role_ids),
+            key=lambda r: r.position,
+            reverse=True,
+        )
+
+        try:
+            return next(iter(roles))
+        except StopIteration:
+            return None
+
     def __str__(self) -> str:
         return str(self.user)
 
