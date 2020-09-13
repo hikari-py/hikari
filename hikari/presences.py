@@ -44,6 +44,7 @@ import attr
 
 from hikari import snowflakes
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import flag
 
 if typing.TYPE_CHECKING:
@@ -251,7 +252,7 @@ class RichActivity(Activity):
 
 
 @typing.final
-class Status(str, enum.Enum):
+class Status(str, enums.Enum):
     """The status of a member."""
 
     ONLINE = "online"

@@ -59,6 +59,7 @@ from hikari import snowflakes
 from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import flag
 from hikari.utilities import routes
 
@@ -94,9 +95,8 @@ class GuildExplicitContentFilterLevel(enum.IntEnum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class GuildFeature(str, enum.Enum):
+class GuildFeature(str, enums.Enum):
     """Features that a guild can provide."""
 
     ANIMATED_ICON = "ANIMATED_ICON"

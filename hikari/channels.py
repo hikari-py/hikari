@@ -54,6 +54,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -201,9 +202,8 @@ class ChannelFollow:
         return channel
 
 
-@enum.unique
 @typing.final
-class PermissionOverwriteType(str, enum.Enum):
+class PermissionOverwriteType(str, enums.Enum):
     """The type of entity a Permission Overwrite targets."""
 
     ROLE = "role"

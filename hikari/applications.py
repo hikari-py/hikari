@@ -44,6 +44,7 @@ from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -52,9 +53,8 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-@enum.unique
 @typing.final
-class OAuth2Scope(str, enum.Enum):
+class OAuth2Scope(str, enums.Enum):
     """OAuth2 Scopes that Discord allows.
 
     These are categories of permissions for applications using the OAuth2 API

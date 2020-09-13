@@ -24,12 +24,9 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["Enum"]
 
+import collections
 import sys
 import types
-import typing
-
-T = typing.TypeVar("T", bound=typing.Hashable)
-E = typing.TypeVar("E", bound="_EnumMeta")
 
 
 class _EnumNamespace(dict):
@@ -39,6 +36,26 @@ class _EnumNamespace(dict):
         self.names_to_values = {}
         self.values_to_names = {}
         self["__doc__"] = "An enumeration."
+
+    def __contains__(self, item):
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+    def __getitem__(self, name):
+        try:
+            return super().__getitem__(name)
+        except KeyError:
+            try:
+                return self.names_to_values[name]
+            except KeyError:
+                raise KeyError(name) from None
+
+    def __iter__(self):
+        yield from super().__iter__()
+        yield from self.names_to_values
 
     def __setitem__(self, name: str, value: typing.Any) -> None:
         if name == "" or name == "mro":
@@ -69,20 +86,15 @@ class _EnumNamespace(dict):
 
         if name in self.names_to_values:
             raise TypeError("Cannot define same name twice")
-        if name in self.values_to_names:
-            raise TypeError("Cannot define same value twice")
+        if value in self.values_to_names:
+            # We must have defined some alias, so just register the name
+            self.names_to_values[name] = value
+            return
         if not isinstance(value, self.base):
             raise TypeError("Enum values must be an instance of the base type of the enum")
 
         self.names_to_values[name] = value
         self.values_to_names[value] = name
-
-
-def _make_delegate(name):
-    # Do this in a module-global method to skip filling __closure__ with
-    # contextual shit we don't want from the metaclass. Lets that crap get
-    # garbage collected properly.
-    return property(lambda self: getattr(self._value_, name))
 
 
 # We refer to these from the metaclasses, but obviously this won't work
@@ -92,25 +104,22 @@ def _make_delegate(name):
 _Enum = NotImplemented
 
 
-def _make_cast(value2member_map):
-    def __cast__(_: E, value: T):
-        return value2member_map[value]
-
-    return __cast__
+def _attr_mutator(self, *_):
+    raise TypeError("Cannot mutate enum members")
 
 
 class _EnumMeta(type):
-    __objtype__: T
-    __enumtype__: E
-    _value2member_map_: typing.Mapping[T, E]
-    _name2member_map_: typing.Mapping[str, E]
-    __members__: types.MappingProxyType[str, T]
-
-    def __init_member__(cls: E):
+    def __init_member__(cls):
         return super().__call__()
 
-    def __call__(cls: E, value: T):
+    def __call__(cls, value):
         return cls._value2member_map_[value]
+
+    def __getattr__(cls, name):
+        return cls._name2member_map_[name]
+
+    def __getitem__(cls, name):
+        return cls._name2member_map_[name]
 
     @staticmethod
     def __new__(mcs, name, bases, namespace):
@@ -133,6 +142,7 @@ class _EnumMeta(type):
             "__enumtype__": enum_type,
             "_name2member_map_": (name2member := {}),
             "_value2member_map_": (value2member := {}),
+            # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
             **namespace,
         }
@@ -151,6 +161,9 @@ class _EnumMeta(type):
             name2member[name] = member
             value2member[value] = member
 
+        cls.__setattr__ = _attr_mutator
+        cls.__delattr__ = _attr_mutator
+
         return cls
 
     @classmethod
@@ -168,10 +181,20 @@ class _EnumMeta(type):
         except ValueError:
             return _EnumNamespace(object)
 
+    def __repr__(cls):
+        return f"<enum {cls.__name__}>"
+
+    __str__ = __repr__
+
 
 class Enum(metaclass=_EnumMeta):
-    __objtype__: typing.Type[T]
-    __enumtype__: typing.Type[E]
-    _value2member_map_: typing.ClassVar[typing.Mapping[T, E]]
-    _name2member_map_: typing.ClassVar[typing.Mapping[str, E]]
-    __members__: typing.ClassVar[types.MappingProxyType[str, T]]
+    __slots__ = ()
+
+    def __getattr__(self, name):
+        return getattr(self.value, name)
+
+    def __repr__(self):
+        return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
+
+    def __str__(self):
+        return f"{type(self).__name__}.{self.name}"

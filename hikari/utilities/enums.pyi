@@ -28,4 +28,7 @@
 # ship my own MyPy plugin for this, so just make MyPy think that the types
 # we are using are just aliases from the enum types in the standard library.
 
-from enum import Enum
+import enum as __enum
+Enum = __enum.Enum
+
+__all__ = ["Enum"]

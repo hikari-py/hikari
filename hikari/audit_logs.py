@@ -49,7 +49,9 @@ import attr
 
 from hikari import snowflakes
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import mapping
+
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -60,7 +62,7 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class AuditLogChangeKey(str, enum.Enum):
+class AuditLogChangeKey(str, enums.Enum):
     """Commonly known and documented keys for audit log change objects.
 
     Others may exist. These should be expected to default to the raw string
