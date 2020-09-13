@@ -109,9 +109,6 @@ def _attr_mutator(self, *_):
 
 
 class _EnumMeta(type):
-    def __init_member__(cls):
-        return super().__call__()
-
     def __call__(cls, value):
         return cls._value2member_map_[value]
 
@@ -155,7 +152,7 @@ class _EnumMeta(type):
             # in cls.__new__. Reason for this is that python will also always
             # invoke cls.__init__ if we do this, so we end up with two function
             # calls.
-            member = cls.__init_member__()
+            member = cls.__new__(cls, value)
             member.name = name
             member.value = value
             name2member[name] = member
@@ -188,8 +185,6 @@ class _EnumMeta(type):
 
 
 class Enum(metaclass=_EnumMeta):
-    __slots__ = ()
-
     def __getattr__(self, name):
         return getattr(self.value, name)
 
