@@ -414,6 +414,13 @@ class Color(int):
             if is_start_hash_or_hex_literal or is_hex_digits:
                 return cls.from_hex_code(value)
 
+            parts = value.strip("()").replace(" ", "").split(",")
+            if len(parts) != 3:
+                raise ValueError(f"RGB sequence detected but input could not be converted")
+            if all(p.isdigit() for p in parts):
+                return cls.from_rgb(int(parts[0]), int(parts[1]), int(parts[2]))
+            return cls.from_rgb_float(float(parts[0]), float(parts[1]), float(parts[2]))
+
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
     def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
