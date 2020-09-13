@@ -995,7 +995,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
-        raw_premium_since = payload["premium_since"]
+        raw_premium_since = payload.get("premium_since")
         premium_since = (
             date.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
