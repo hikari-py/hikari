@@ -67,6 +67,7 @@ if typing.TYPE_CHECKING:
     import types
 
 _MAGIC: typing.Final[int] = 50 * 1024
+SPOILER_TAG: typing.Final[str] = "SPOILER_"
 
 ReaderImplT = typing.TypeVar("ReaderImplT", bound="AsyncReader")
 ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound="AsyncReader", covariant=True)
@@ -817,21 +818,26 @@ class File(Resource[FileReader]):
 
             This will all be performed as required in an executor to prevent
             blocking the event loop.
-
     filename : typing.Optional[builtins.str]
         The filename to use. If this is `builtins.None`, the name of the file is taken
         from the path instead.
+    spoiler : bool
+        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
     """
 
-    __slots__: typing.Sequence[str] = ("path", "_filename")
+    __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler")
 
     path: pathlib.Path
     """The path to the file."""
 
+    is_spoiler: bool
+    """Whether the file will be marked as a spoiler."""
+
     _filename: typing.Optional[str]
 
-    def __init__(self, path: Pathish, filename: typing.Optional[str] = None) -> None:
+    def __init__(self, path: Pathish, /, filename: typing.Optional[str] = None, *, spoiler: bool = False) -> None:
         self.path = ensure_path(path)
+        self.is_spoiler = spoiler
         self._filename = filename
 
     @property
@@ -841,9 +847,12 @@ class File(Resource[FileReader]):
 
     @property
     def filename(self) -> str:
-        if self._filename is None:
-            return self.path.name
-        return self._filename
+        filename = self._filename if self._filename else self.path.name
+
+        if self.is_spoiler:
+            return SPOILER_TAG + filename
+
+        return filename
 
     def stream(
         self,
@@ -965,9 +974,11 @@ class Bytes(Resource[IteratorReader]):
         The mimetype, or `builtins.None` if you do not wish to specify this.
         If not provided, then this will be generated from the file extension
         of the filename instead.
+    spoiler : bool
+        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
     """
 
-    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype")
+    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
 
     data: typing.Union[bytes, LazyByteIteratorish]
     """The raw data/provider of raw data to upload."""
@@ -975,12 +986,17 @@ class Bytes(Resource[IteratorReader]):
     mimetype: typing.Optional[str]
     """The provided mimetype, if specified. Otherwise `builtins.None`."""
 
+    is_spoiler: bool
+    """Whether the file will be marked as a spoiler."""
+
     def __init__(
         self,
         data: typing.Union[Rawish, LazyByteIteratorish],
         filename: str,
         /,
         mimetype: typing.Optional[str] = None,
+        *,
+        spoiler: bool = False,
     ) -> None:
         if isinstance(data, RAWISH_TYPES):
             data = unwrap_bytes(data)
@@ -996,6 +1012,7 @@ class Bytes(Resource[IteratorReader]):
 
         self._filename = filename
         self.mimetype = mimetype
+        self.is_spoiler = spoiler
 
     @property
     def url(self) -> str:
@@ -1003,6 +1020,9 @@ class Bytes(Resource[IteratorReader]):
 
     @property
     def filename(self) -> str:
+        if self.is_spoiler:
+            return SPOILER_TAG + self._filename
+
         return self._filename
 
     def stream(
