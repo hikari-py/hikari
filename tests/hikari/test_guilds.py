@@ -107,6 +107,7 @@ class TestMember:
                 __str__=mock.Mock(return_value="davfsa#0001"),
             ),
             nickname="davb",
+            guild_id=456,
         )
 
     def test_str_operator(self, obj):
@@ -160,6 +161,35 @@ class TestMember:
     def test_mention_property_when_no_nickname(self, obj):
         obj.nickname = None
         assert obj.mention == "<@123>"
+
+    def test_top_role_when_empty_cache(self, obj):
+        obj.app.cache.get_roles_view_for_guild.return_value = {}
+
+        assert obj.top_role is None
+
+        obj.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+
+    def test_top_role_when_role_ids_not_in_cache(self, obj):
+        role1 = mock.Mock(id=123, position=2)
+        role2 = mock.Mock(id=456, position=1)
+        mock_cache_view = {123: role1, 456: role2}
+        obj.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+        obj.role_ids = [321, 654]
+
+        assert obj.top_role is None
+
+        obj.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+
+    def test_top_role(self, obj):
+        role1 = mock.Mock(id=321, position=2)
+        role2 = mock.Mock(id=654, position=1)
+        mock_cache_view = {321: role1, 654: role2}
+        obj.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+        obj.role_ids = [321, 654]
+
+        assert obj.top_role is role1
+
+        obj.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
 
 
 class TestPartialGuild:
