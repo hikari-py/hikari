@@ -25,8 +25,39 @@ from __future__ import annotations
 
 __all__: typing.Final[typing.List[str]] = ["Color", "Colorish"]
 
+import re
 import string
 import typing
+
+
+def _to_rgb_int(value: str, name: str) -> int:
+    # Heavy validation that is user-friendly and doesn't allow exploiting overflows, etc easily.
+    #
+    # isdigit allows chars like ² according to the docs.
+    if not all(c in string.digits for c in value):
+        raise ValueError(f"Expected digits only for {name}")
+    if not value or len(value) > 3:
+        raise ValueError(f"Expected 1 to 3 digits for {name}, got {len(value)} digits")
+
+    int_value = int(value)
+
+    if int_value >= 256:
+        raise ValueError(f"Expected {name} to be less than 256, got {value!r}")
+
+    return int_value
+
+
+_FLOAT_PATTERN: typing.Final[re.Pattern[str]] = re.compile(r"0\.\d*|\.\d+|1\.0*")
+
+
+def _to_rgb_float(value: str, name: str) -> float:
+    # Floats are easier to handle, as they don't overflow, they just become `inf`.
+
+    if value.count(".") != 1:
+        raise ValueError(f'Expected exactly 1 decimal point "." in {name}')
+    if not _FLOAT_PATTERN.match(value):
+        raise ValueError(f"Expected {name} to be a decimal in the range [0.0, 1.0]")
+    return float(value)
 
 
 class Color(int):
@@ -323,6 +354,80 @@ class Color(int):
         """
         return cls(integer)
 
+    @classmethod
+    def from_tuple_str(cls, tuple_str: str, /):
+        """Convert a string in a tuple-like format to a `Color`.
+
+        This allows formats that are optionally enclosed by `()`, `{}`, or
+        `[]`, and contain three floats or ints, either space separated or
+        comma separated.
+
+        If comma separated, trailing and leading whitespace around each member
+        is truncated.
+
+        This is provided to allow command frontends to directly pass user
+        input for representing a given colour into this class safely.
+
+        Examples
+        --------
+        ```py
+        # Floats
+        "1.0 1.0 1.0"
+        "(1.0 1.0 1.0)"
+        "[1.0 1.0 1.0]"
+        "{1.0 1.0 1.0}"
+        "1.0, 1.0, 1.0"
+        "(1.0, 1.0, 1.0)"
+        "[1.0, 1.0, 1.0]"
+        "{1.0, 1.0, 1.0}"
+
+        # Ints
+        "252 252 252"
+        "(252 252 252)"
+        "[252 252 252]"
+        "{252 252 252}"
+        "252, 252, 252"
+        "(252, 252, 252)"
+        "[252, 252, 252]"
+        "{252, 252, 252}"
+        ```
+
+        Parameters
+        ----------
+        tuple_str : builtins.str
+            The string to parse.
+
+        Returns
+        -------
+        Color
+            The parsed colour object.
+
+        Raises
+        ------
+        ValueError
+            If an invalid format is given, or if any values exceed 1.0 for
+            floats or 255 for ints.
+        """
+        if tuple_str[: 1 : len(tuple_str) - 1] in ("()", "{}", "<>", "[]"):
+            tuple_str = tuple_str[1:-1].strip()
+
+        try:
+            if "," in tuple_str:
+                r, g, b = (bit.strip() for bit in tuple_str.split(","))
+            else:
+                r, g, b = tuple_str.split()
+        except ValueError:
+            raise ValueError("Expected three comma/space separated values")
+
+        if any("." in s for s in (r, g, b)):
+            return cls.from_rgb_float(
+                _to_rgb_float(r, "red value"), _to_rgb_float(g, "green value"), _to_rgb_float(b, "blue value")
+            )
+        else:
+            return cls.from_rgb(
+                _to_rgb_int(r, "red value"), _to_rgb_int(g, "green value"), _to_rgb_int(b, "blue value")
+            )
+
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
     def from_bytes(
@@ -385,6 +490,18 @@ class Color(int):
 
         >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
         Color(r=0xff, g=0x5, b=0x1a)
+
+        # Commas and brackets are optional, whitespace is ignored, and these
+        # are compatible with all-ints between 0-255 or all-floats between
+        # 0.0 and 1.0 only.
+        >>> c = Color.of("5, 22, 33")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("(5, 22, 33)")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("[5, 22, 33]")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("{5, 22, 33}")
+        Color(r=0x5, g=0x16, b=0x21)
         ```
 
         Returns
@@ -409,17 +526,13 @@ class Color(int):
                 return cls.from_rgb(r, g, b)
 
         if isinstance(value, str):
+            if any(c in value for c in "({[,. "):
+                return cls.from_tuple_str(value)
+
             is_start_hash_or_hex_literal = value.casefold().startswith(("#", "0x"))
             is_hex_digits = all(c in string.hexdigits for c in value) and len(value) in (3, 6)
             if is_start_hash_or_hex_literal or is_hex_digits:
                 return cls.from_hex_code(value)
-
-            parts = value.strip("()").replace(" ", "").split(",")
-            if len(parts) != 3:
-                raise ValueError(f"RGB sequence detected but input could not be converted")
-            if all(p.isdigit() for p in parts):
-                return cls.from_rgb(int(parts[0]), int(parts[1]), int(parts[2]))
-            return cls.from_rgb_float(float(parts[0]), float(parts[1]), float(parts[2]))
 
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
