@@ -343,7 +343,7 @@ class TestAllOf:
         assert f1.cancelled()
         assert f3.cancelled()
 
-    @hikari_test_helpers.timeout(0.3)
+    @hikari_test_helpers.timeout()
     async def test_cancels_all_if_timeout(self, event_loop):
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
@@ -351,8 +351,25 @@ class TestAllOf:
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.1))
         await hikari_test_helpers.idle()
-        assert not waiter.cancelled()
-        assert not waiter.done()
+        assert not waiter.cancelled(), "future was forcefully cancelled?"
+        assert waiter.done(), "asyncio.TimeoutError not raised?"
 
         with pytest.raises(asyncio.TimeoutError):
+            await waiter
+
+    @hikari_test_helpers.timeout()
+    async def test_cancels_all_if_cancelled(self, event_loop):
+        f1 = event_loop.create_future()
+        f2 = event_loop.create_future()
+        f3 = event_loop.create_future()
+
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
+        await hikari_test_helpers.idle(0.01)
+        waiter.cancel()
+        await hikari_test_helpers.idle(0.01)
+
+        assert waiter.cancelled(), "future was forcefully cancelled?"
+        assert waiter.done(), "asyncio.CancelledError not raised?"
+
+        with pytest.raises(asyncio.CancelledError):
             await waiter

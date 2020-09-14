@@ -233,8 +233,8 @@ def skip_if_no_sem_open(test):
     return pytest.mark.skipif(not has_sem_open_impl(), reason="Your platform lacks a sem_open implementation")(test)
 
 
-async def idle():
-    await asyncio.sleep(REASONABLE_SLEEP_TIME)
+async def idle(for_=REASONABLE_SLEEP_TIME, /):
+    await asyncio.sleep(for_)
 
 
 @contextlib.contextmanager

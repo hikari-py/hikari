@@ -119,8 +119,14 @@ async def first_completed(
     """
     fs = list(map(asyncio.ensure_future, aws))
     iterator = asyncio.as_completed(fs, timeout=timeout)
+    cancelled = False
+    timed_out = False
     try:
         await next(iterator)
+    except asyncio.CancelledError:
+        cancelled = True
+    except asyncio.TimeoutError:
+        timed_out = True
     finally:
         for f in fs:
             if not f.done() and not f.cancelled():
@@ -130,6 +136,11 @@ async def first_completed(
                     await f
                 except asyncio.CancelledError:
                     pass
+
+        if cancelled:
+            raise asyncio.CancelledError("first_completed gatherer cancelled")
+        if timed_out:
+            raise asyncio.TimeoutError("first_completed gatherer timed out")
 
 
 async def all_of(
@@ -156,8 +167,14 @@ async def all_of(
     """
     fs = list(map(asyncio.ensure_future, aws))
     gatherer = asyncio.gather(*fs)
+    cancelled = False
+    timed_out = False
     try:
         return await asyncio.wait_for(gatherer, timeout=timeout)
+    except asyncio.TimeoutError:
+        timed_out = True
+    except asyncio.CancelledError:
+        cancelled = True
     finally:
         for f in fs:
             if not f.done() and not f.cancelled():
@@ -172,3 +189,8 @@ async def all_of(
             await gatherer
         except asyncio.CancelledError:
             pass
+
+        if cancelled:
+            raise asyncio.CancelledError("all_of gatherer cancelled")
+        if timed_out:
+            raise asyncio.TimeoutError("all_of gatherer timed out")
