@@ -1,4 +1,6 @@
-flake8==3.8.3
+# Android support
+#flake8==3.8.3
+git+https://gitlab.com/PyCQA/flake8@master
 
 # Plugins
 # Ref: https://github.com/DmytroLitvinov/awesome-flake8-extensions
