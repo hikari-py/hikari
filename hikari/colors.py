@@ -355,7 +355,7 @@ class Color(int):
         return cls(integer)
 
     @classmethod
-    def from_tuple_str(cls, tuple_str: str, /):
+    def from_tuple_str(cls, tuple_str: str, /) -> Color:
         """Convert a string in a tuple-like format to a `Color`.
 
         This allows formats that are optionally enclosed by `()`, `{}`, or
