@@ -122,8 +122,8 @@ def test_GroupDMChannel_str_operator_when_name_is_None():
 
 def test_PermissionOverwrite_unset():
     overwrite = channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=1234321)
-    overwrite.allow = permissions.Permissions.CREATE_INSTANT_INVITE
-    overwrite.deny = permissions.Permissions.CHANGE_NICKNAME
+    overwrite._allow = permissions.Permissions.CREATE_INSTANT_INVITE
+    overwrite._deny = permissions.Permissions.CHANGE_NICKNAME
     assert overwrite.unset == permissions.Permissions(-67108866)
 
 
