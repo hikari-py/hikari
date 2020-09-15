@@ -507,6 +507,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
         asyncio_debug: typing.Optional[bool] = None,
+        check_for_updates: bool = True,
         close_passed_executor: bool = False,
         close_loop: bool = True,
         coroutine_tracking_depth: typing.Optional[int] = None,
@@ -532,6 +533,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         asyncio_debug : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then debugging is
             enabled for the asyncio event loop in use.
+        check_for_updates : builtins.bool
+            Defaults to `builtins.True`. If `builtins.True`, will check for
+            newer versions of `hikari` on PyPI and notify if available.
         close_passed_executor : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
@@ -668,6 +672,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 self.start(
                     activity=activity,
                     afk=afk,
+                    check_for_updates=check_for_updates,
                     idle_since=idle_since,
                     ignore_session_start_limit=ignore_session_start_limit,
                     large_threshold=large_threshold,
@@ -710,6 +715,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         *,
         activity: typing.Optional[presences.Activity] = None,
         afk: bool = False,
+        check_for_updates: bool = True,
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
@@ -717,12 +723,52 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
+        """Start the bot, wait for all shards to become ready, and then return.
+
+        Other Parameters
+        ----------------
+        activity : typing.Optional[hikari.presences.Activity]
+            The initial activity to display in the bot user presence, or
+            `builtins.None` (default) to not show any.
+        afk : builtins.bool
+            The initial AFK state to display in the bot user presence, or
+            `builtins.False` (default) to not show any.
+        check_for_updates : builtins.bool
+            Defaults to `builtins.True`. If `builtins.True`, will check for
+            newer versions of `hikari` on PyPI and notify if available.
+        idle_since : typing.Optional[datetime.datetime]
+            The `datetime.datetime` the user should be marked as being idle
+            since, or `builtins.None` (default) to not show this.
+        ignore_session_start_limit : builtins.bool
+            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            to start more sessions than you are allowed in a 24 hour window
+            will throw a `hikari.errors.GatewayError` rather than going ahead
+            and hitting the IDENTIFY limit, which may result in your token
+            being reset. Setting to `builtins.True` disables this behavior.
+        large_threshold : builtins.int
+            Threshold for members in a guild before it is treated as being
+            "large" and no longer sending member details in the `GUILD CREATE`
+            event. Defaults to `250`.
+        shard_ids : typing.Optional[typing.Set[builtins.int]]
+            The shard IDs to create shards for. If not `builtins.None`, then
+            a non-`None` `shard_count` must ALSO be provided. Defaults to
+            `builtins.None`, which means the Discord-recommended count is used
+            for your application instead.
+        shard_count : typing.Optional[builtins.int]
+            The number of shards to use in the entire distributed application.
+            Defaults to `builtins.None` which results in the count being
+            determined dynamically on startup.
+        status : hikari.presences.Status
+            The initial status to show for the user presence on startup.
+            Defaults to `hikari.presences.Status.ONLINE`.
+        """
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
-        asyncio.create_task(ux.check_for_updates(), name="check for package updates")
+        if check_for_updates:
+            asyncio.create_task(ux.check_for_updates(), name="check for package updates")
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
         await self.dispatch(lifetime_events.StartingEvent(app=self))
         requirements = await requirements_task
