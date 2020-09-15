@@ -85,6 +85,9 @@ class ActivityType(enum.IntEnum):
         Bots currently do not support setting custom statuses.
     """
 
+    COMPETING = 5
+    """Shows up as `Competing in <name>`"""
+
     def __str__(self) -> str:
         return self.name
 
