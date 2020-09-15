@@ -31,7 +31,6 @@ __all__: typing.Sequence[str] = [
     "MRIMutableMapping",
     "CMRIMutableMapping",
     "get_index_or_slice",
-    "copy_mapping",
 ]
 
 import abc
@@ -297,17 +296,3 @@ def get_index_or_slice(
             raise IndexError(index_or_slice) from None
 
     raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
-
-
-def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
-    """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy).
-
-    .. deprecated::
-        `MappedCollection` should be preferred over this.
-    """
-    # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
-    # try to use this where possible.
-    try:
-        return mapping.copy()  # type: ignore[attr-defined, no-any-return]
-    except (AttributeError, TypeError):
-        raise NotImplementedError("provided mapping doesn't implement a copy method") from None

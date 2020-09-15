@@ -826,7 +826,7 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in mapping.copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in channel.permission_overwrites.copy().items()
     }
     return channel
 
