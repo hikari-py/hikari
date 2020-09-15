@@ -248,6 +248,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_shards",
         "_token",
         "_voice",
+        "shards",
     )
 
     def __init__(
@@ -334,6 +335,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # We populate these on startup instead, as we need to possibly make some
         # HTTP requests to determine what to put in this mapping.
         self._shards: typing.Dict[int, shard.GatewayShard] = {}
+        self.shards: typing.Mapping[int, gateway_shard.GatewayShard] = types.MappingProxyType(self._shards)
 
     @property
     def cache(self) -> cache_.Cache:
@@ -383,10 +385,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     @property
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
-
-    @property
-    def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
-        return types.MappingProxyType(self._shards)
 
     @property
     def shard_count(self) -> int:
