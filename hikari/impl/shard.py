@@ -432,7 +432,7 @@ class GatewayShardImpl(shard.GatewayShard):
         if data_format != shard.GatewayDataFormat.JSON:
             raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
 
-        query = {"v": _VERSION, "encoding": data_format}
+        query = {"v": _VERSION, "encoding": str(data_format)}
 
         if compression is not None:
             if compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
