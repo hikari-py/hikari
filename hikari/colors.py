@@ -35,14 +35,14 @@ def _to_rgb_int(value: str, name: str) -> int:
     #
     # isdigit allows chars like ² according to the docs.
     if not all(c in string.digits for c in value):
-        raise ValueError(f"Expected digits only for {name}")
+        raise ValueError(f"Expected digits only for {name} channel")
     if not value or len(value) > 3:
-        raise ValueError(f"Expected 1 to 3 digits for {name}, got {len(value)} digits")
+        raise ValueError(f"Expected 1 to 3 digits for {name} channel, got {len(value)}")
 
     int_value = int(value)
 
     if int_value >= 256:
-        raise ValueError(f"Expected {name} to be less than 256, got {value!r}")
+        raise ValueError(f"Expected {name} channel to be in the inclusive range of 0 and 255, got {value!r}")
 
     return int_value
 
@@ -54,9 +54,9 @@ def _to_rgb_float(value: str, name: str) -> float:
     # Floats are easier to handle, as they don't overflow, they just become `inf`.
 
     if value.count(".") != 1:
-        raise ValueError(f'Expected exactly 1 decimal point "." in {name}')
+        raise ValueError(f'Expected exactly 1 decimal point "." in {name} channel')
     if not _FLOAT_PATTERN.match(value):
-        raise ValueError(f"Expected {name} to be a decimal in the range [0.0, 1.0]")
+        raise ValueError(f"Expected {name} channel to be a decimal in the inclusive range of 0.0 and 1.0")
     return float(value)
 
 
@@ -255,11 +255,11 @@ class Color(int):
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
-            raise ValueError("red must be in the inclusive range of 0 and 255")
+            raise ValueError("Expected red channel to be in the inclusive range of 0 and 255")
         if not 0 <= green <= 0xFF:
-            raise ValueError("green must be in the inclusive range of 0 and 255")
+            raise ValueError("Expected green channel to be in the inclusive range of 0 and 255")
         if not 0 <= blue <= 0xFF:
-            raise ValueError("blue must be in the inclusive range of 0 and 255")
+            raise ValueError("Expected blue channel to be in the inclusive range of 0 and 255")
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
@@ -289,11 +289,11 @@ class Color(int):
             If red, green or blue are outside the range [0, 1].
         """
         if not 0 <= red <= 1:
-            raise ValueError("red must be in the inclusive range of 0 and 1.")
+            raise ValueError("Expected red channel to be in the inclusive range of 0.0 and 1.0")
         if not 0 <= green <= 1:
-            raise ValueError("green must be in the inclusive range of 0 and 1.")
+            raise ValueError("Expected green channel to be in the inclusive range of 0.0 and 1.0")
         if not 0 <= blue <= 1:
-            raise ValueError("blue must be in the inclusive range of 0 and 1.")
+            raise ValueError("Expected blue channel to be in the inclusive range of 0.0 and 1.0")
         return cls.from_rgb(int(red * 0xFF), int(green * 0xFF), int(blue * 0xFF))
 
     @classmethod
@@ -355,7 +355,7 @@ class Color(int):
         return cls(integer)
 
     @classmethod
-    def from_tuple_str(cls, tuple_str: str, /) -> Color:
+    def from_tuple_string(cls, tuple_str: str, /) -> Color:
         """Convert a string in a tuple-like format to a `Color`.
 
         This allows formats that are optionally enclosed by `()`, `{}`, or
@@ -408,7 +408,7 @@ class Color(int):
             If an invalid format is given, or if any values exceed 1.0 for
             floats or 255 for ints.
         """
-        if tuple_str[: 1 : len(tuple_str) - 1] in ("()", "{}", "<>", "[]"):
+        if tuple_str[:: len(tuple_str) - 1] in ("()", "{}", "<>", "[]"):
             tuple_str = tuple_str[1:-1].strip()
 
         try:
@@ -417,16 +417,12 @@ class Color(int):
             else:
                 r, g, b = tuple_str.split()
         except ValueError:
-            raise ValueError("Expected three comma/space separated values")
+            raise ValueError("Expected three comma/space separated values") from None
 
         if any("." in s for s in (r, g, b)):
-            return cls.from_rgb_float(
-                _to_rgb_float(r, "red value"), _to_rgb_float(g, "green value"), _to_rgb_float(b, "blue value")
-            )
+            return cls.from_rgb_float(_to_rgb_float(r, "red"), _to_rgb_float(g, "green"), _to_rgb_float(b, "blue"))
         else:
-            return cls.from_rgb(
-                _to_rgb_int(r, "red value"), _to_rgb_int(g, "green value"), _to_rgb_int(b, "blue value")
-            )
+            return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
 
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
@@ -515,7 +511,7 @@ class Color(int):
             return cls.from_int(value)
         if isinstance(value, (list, tuple)):
             if len(value) != 3:
-                raise ValueError(f"color must be an RGB triplet if set to a {type(value).__name__} type")
+                raise ValueError(f"Color must be an RGB triplet if set to a {type(value).__name__} type")
 
             if any(isinstance(c, float) for c in value):
                 r, g, b = value
@@ -526,8 +522,8 @@ class Color(int):
                 return cls.from_rgb(r, g, b)
 
         if isinstance(value, str):
-            if any(c in value for c in "({[,. "):
-                return cls.from_tuple_str(value)
+            if any(c in value for c in "({[<,. "):
+                return cls.from_tuple_string(value)
 
             is_start_hash_or_hex_literal = value.casefold().startswith(("#", "0x"))
             is_hex_digits = all(c in string.hexdigits for c in value) and len(value) in (3, 6)
