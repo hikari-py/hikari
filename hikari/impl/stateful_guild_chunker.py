@@ -234,7 +234,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild],
         *,
         timeout: typing.Union[int, float, None],
-        limit: typing.Optional[int],
+        limit: typing.Optional[int] = None,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
