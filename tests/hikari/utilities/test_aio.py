@@ -264,6 +264,8 @@ class TestFirstCompleted:
         assert f2.cancelled()
         assert f3.cancelled()
 
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_result_propagates(self, event_loop):
         f1 = event_loop.create_future()
@@ -278,6 +280,8 @@ class TestFirstCompleted:
         assert f3.done()
         assert not f3.cancelled()
 
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_exception_propagates(self, event_loop):
         f1 = event_loop.create_future()
@@ -297,6 +301,8 @@ class TestFirstCompleted:
 
 @pytest.mark.asyncio
 class TestAllOf:
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_waits_for_all(self, event_loop):
         f1 = event_loop.create_future()
@@ -304,25 +310,27 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        await hikari_test_helpers.idle()
+        await hikari_test_helpers.idle(0.1)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f1.set_result(1)
-        await hikari_test_helpers.idle()
+        await hikari_test_helpers.idle(0.1)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f2.set_result(2)
-        await hikari_test_helpers.idle()
+        await hikari_test_helpers.idle(0.1)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f3.set_result(3)
-        await hikari_test_helpers.idle()
+        await hikari_test_helpers.idle(0.1)
         assert not waiter.cancelled()
         assert waiter.done()
 
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_cancels_all_if_one_errors(self, event_loop):
         f1 = event_loop.create_future()
@@ -330,19 +338,20 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        await hikari_test_helpers.idle()
+        # Wait a little bit and ensure asyncio doesn't kill it for some reason
+        await asyncio.sleep(0.25)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f2.set_exception(FileNotFoundError("boop"))
-        await hikari_test_helpers.idle()
-
         with pytest.raises(FileNotFoundError, match="boop"):
-            waiter.result()
+            await waiter
 
         assert f1.cancelled()
         assert f3.cancelled()
 
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_cancels_all_if_timeout(self, event_loop):
         f1 = event_loop.create_future()
@@ -350,13 +359,13 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.1))
-        await hikari_test_helpers.idle()
+        with pytest.raises(asyncio.TimeoutError):
+            await waiter
         assert not waiter.cancelled(), "future was forcefully cancelled?"
         assert waiter.done(), "asyncio.TimeoutError not raised?"
 
-        with pytest.raises(asyncio.TimeoutError):
-            await waiter
-
+    # If the CI runners are slow, this may be flaky.
+    @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
     async def test_cancels_all_if_cancelled(self, event_loop):
         f1 = event_loop.create_future()
@@ -364,12 +373,8 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        await hikari_test_helpers.idle(0.01)
-        waiter.cancel()
-        await hikari_test_helpers.idle(0.01)
-
-        assert waiter.cancelled(), "future was forcefully cancelled?"
-        assert waiter.done(), "asyncio.CancelledError not raised?"
-
+        event_loop.call_later(0.01, lambda *_: waiter.cancel())
         with pytest.raises(asyncio.CancelledError):
             await waiter
+        assert waiter.cancelled(), "future was forcefully cancelled?"
+        assert waiter.done(), "asyncio.CancelledError not raised?"
