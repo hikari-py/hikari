@@ -53,7 +53,7 @@ class TestSnowflake:
         assert neko_snowflake.internal_worker_id == 2
 
     def test_hash(self, neko_snowflake, raw_id):
-        assert hash(neko_snowflake) == raw_id
+        assert hash(neko_snowflake) == hash(raw_id)
 
     def test_int_cast(self, neko_snowflake, raw_id):
         assert int(neko_snowflake) == raw_id
@@ -107,7 +107,7 @@ class TestUnique:
         )
 
     def test__hash__(self, neko_unique, raw_id):
-        assert hash(neko_unique) == raw_id
+        assert hash(neko_unique) == hash(raw_id)
 
     def test__eq__(self, neko_snowflake, raw_id):
         class NekoUnique(snowflakes.Unique):
