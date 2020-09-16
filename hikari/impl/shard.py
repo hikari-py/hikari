@@ -712,16 +712,16 @@ class GatewayShardImpl(shard.GatewayShard):
             self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
         elif op == _RECONNECT:
             # We should be able to resume...
-            self._logger.debug("received instruction to reconnect, will resume existing session")
+            self._logger.info("received instruction to reconnect, will resume existing session")
             return True
         elif op == _INVALID_SESSION:
             # We can resume if the payload was `true`.
             if not d:
-                self._logger.debug("received invalid session, will need to start a new session")
+                self._logger.info("received invalid session, will need to start a new session")
                 self._seq = None
                 self._session_id = None
             else:
-                self._logger.debug("received invalid session, will resume existing session")
+                self._logger.info("received invalid session, will resume existing session")
             return True
         else:
             self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
@@ -790,7 +790,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             finally:
                 self._closed.set()
-                self._logger.info("shard has disconnected and shut down", self._shard_id)
+                self._logger.info("shard has disconnected and shut down")
 
     async def _run_once(self) -> bool:
         self._closing.clear()
