@@ -214,6 +214,41 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
             The user that sent the message.
         """
 
+    @property
+    def is_bot(self) -> bool:
+        """Return `builtins.True` if the message is from a bot.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if from a bot, or `builtins.False` otherwise.
+        """
+        return self.message.author.is_bot
+
+    @property
+    def is_webhook(self) -> bool:
+        """Return `builtins.True` if the message was created by a webhook.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if from a webhook, or `builtins.False` otherwise.
+        """
+        return self.message.webhook_id is not None
+
+    @property
+    def is_human(self) -> bool:
+        """Return `builtins.True` if the message was created by a human.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if from a human user, or `builtins.False` otherwise.
+        """
+        # Not second-guessing some weird edge case will occur in the future with this,
+        # so I am being safe rather than sorry.
+        return not self.message.author.is_bot and self.message.webhook_id is None
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -367,16 +402,29 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
         return guild_id
 
     @property
-    def author(self) -> guilds.Member:
+    def author(self) -> users.User:
         """Member that sent the message.
+
+        !!! note
+            For webhooks, this will be a `hikari.users.User`.
+
+            Any code relying on this being a `hikari.guilds.Member` directly
+            should use an `isinstance` assertion to determine if member info
+            is available or not.
 
         Returns
         -------
-        hikari.guilds.Member
-            The member that sent the message. This is a specialised
+        hikari.users.User
+            The member that sent the message, if known. This is a specialised
             implementation of `hikari.users.User`.
+
+            If the author was a webhook, then a `hikari.users.User` will be
+            returned instead, as webhooks do not have member objects.
         """
-        return typing.cast(guilds.Member, self.message.member)
+        member = self.message.member
+        if member is not None:
+            return member
+        return self.message.author
 
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
