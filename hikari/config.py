@@ -23,8 +23,6 @@
 
 from __future__ import annotations
 
-import yarl
-
 __all__: typing.Final[typing.List[str]] = [
     "BasicAuthHeader",
     "ProxySettings",
@@ -37,6 +35,7 @@ import ssl as ssl_
 import typing
 
 import attr
+import yarl
 
 from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
