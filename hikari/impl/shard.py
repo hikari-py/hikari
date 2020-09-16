@@ -766,13 +766,11 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 try:
                     last_started_at = date.monotonic()
-                    should_die = await self._run_once()
+                    should_restart = await self._run_once()
 
-                    if not should_die:
-                        continue
-
-                    self._logger.info("shard has disconnected and shut down normally")
-                    return
+                    if not should_restart:
+                        self._logger.info("shard has disconnected and shut down normally")
+                        return
 
                 except errors.GatewayConnectionError as ex:
                     self._logger.error(
