@@ -27,7 +27,6 @@ __all__: typing.Final[typing.List[str]] = ["GatewayShardImpl"]
 
 import asyncio
 import contextlib
-import http
 import json
 import logging
 import platform
@@ -121,25 +120,33 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     Payload logging is also performed here.
     """
 
-    __slots__: typing.Sequence[str] = ("_zlib", "_logger", "_log_filterer")
+    __slots__: typing.Sequence[str] = ("zlib", "logger", "log_filterer", "sent_close")
 
     # Initialized from `connect'
-    _zlib: _ZlibDecompressor
-    _logger: logging.Logger
-    _log_filterer: typing.Callable[[str], str]
+    zlib: _ZlibDecompressor
+    logger: logging.Logger
+    log_filterer: typing.Callable[[str], str]
+    sent_close: bool
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
-        self._zlib = zlib.decompressobj()
+        self.zlib = zlib.decompressobj()
+        self.sent_close = False
 
-    async def close(self, *, code: int = 1000, message: bytes = b"") -> bool:
-        if not self._closed and not self._closing:
-            self._logger.debug("sending close frame with code %s and message %s", int(code), message)
-        try:
-            return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
-        except asyncio.TimeoutError:
-            self._logger.debug("failed to send close frame in time, probably connection issues")
-            return False
+    async def send_close(self, *, code: int = 1000, message: bytes = b"") -> bool:
+        # aiohttp may close the socket by invoking close() internally. By giving
+        # a different name, we can ensure aiohttp won't invoke this method.
+        # We can then guarantee any call to this method was made by us, as
+        # opposed to, for example, Windows injecting a spurious EOF when
+        # something disconnects, which makes aiohttp just shut down as if we
+        # did it.
+        if not self.sent_close:
+            self.logger.debug("sending close frame with code %s and message %s", int(code), message)
+            try:
+                return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
+            except asyncio.TimeoutError:
+                self.logger.debug("failed to send close frame in time, probably connection issues")
+        return False
 
     async def receive_json(
         self,
@@ -148,9 +155,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         timeout: typing.Optional[float] = None,
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
-        if self._logger.getEffectiveLevel() <= ux.TRACE:
-            filtered = self._log_filterer(pl)  # type: ignore
-            self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
+        if self.logger.getEffectiveLevel() <= ux.TRACE:
+            filtered = self.log_filterer(pl)  # type: ignore
+            self.logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
         return loads(pl)
 
     async def send_json(
@@ -161,9 +168,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
     ) -> None:
         pl = dumps(data)
-        if self._logger.getEffectiveLevel() <= ux.TRACE:
-            filtered = self._log_filterer(pl)  # type: ignore
-            self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
+        if self.logger.getEffectiveLevel() <= ux.TRACE:
+            filtered = self.log_filterer(pl)  # type: ignore
+            self.logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)
 
     async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
@@ -175,7 +182,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             if message.type == aiohttp.WSMsgType.CLOSE:
                 close_code = int(message.data)
                 reason = message.extra
-                self._logger.error("connection closed with code %s (%s)", close_code, reason)
+                self.logger.error("connection closed with code %s (%s)", close_code, reason)
 
                 can_reconnect = close_code < 4000 or close_code in (
                     errors.ShardCloseCode.UNKNOWN_ERROR,
@@ -189,7 +196,10 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
             elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-                raise asyncio.CancelledError("Socket closed")
+                # May be caused by the server shutting us down.
+                # May be caused by Windows injecting an EOF if something disconnects, as some
+                # network drivers appear to do this.
+                raise errors.GatewayError("Socket has closed")
 
             elif len(buff) != 0 and message.type != aiohttp.WSMsgType.BINARY:
                 raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
@@ -198,7 +208,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                 buff.extend(message.data)
 
                 if buff.endswith(b"\x00\x00\xff\xff"):
-                    return self._zlib.decompress(buff).decode("utf-8")
+                    return self.zlib.decompress(buff).decode("utf-8")
 
             elif message.type == aiohttp.WSMsgType.TEXT:
                 return message.data  # type: ignore
@@ -206,10 +216,10 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             else:
                 # Assume exception for now.
                 ex = self.exception()
-                self._logger.warning(
+                self.logger.warning(
                     "encountered unexpected error: %s",
                     ex,
-                    exc_info=ex if self._logger.isEnabledFor(logging.DEBUG) else None,
+                    exc_info=ex if self.logger.isEnabledFor(logging.DEBUG) else None,
                 )
                 raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
@@ -233,84 +243,77 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         and keeps all of the nested boilerplate out of the way of the
         rest of the code, for the most part anyway.
         """
+        exit_stack = contextlib.AsyncExitStack()
+
         try:
-            async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(
-                    limit=1,
-                    use_dns_cache=False,
-                    verify_ssl=http_config.verify_ssl,
-                    enable_cleanup_closed=True,
-                    force_close=True,
-                ),
-                raise_for_status=True,
-                timeout=aiohttp.ClientTimeout(
-                    total=http_config.timeouts.total,
-                    connect=http_config.timeouts.acquire_and_connect,
-                    sock_read=http_config.timeouts.request_socket_read,
-                    sock_connect=http_config.timeouts.request_socket_connect,
-                ),
-                trust_env=proxy_config.trust_env,
-                ws_response_class=cls,
-            ) as cs:
-                try:
-                    async with cs.ws_connect(
-                        max_msg_size=0,
-                        proxy=proxy_config.url,
-                        proxy_headers=proxy_config.headers,
-                        url=url,
-                    ) as ws:
-                        raised = False
-                        try:
-                            assert isinstance(ws, cls)
-                            ws._logger = logger
-                            # We store this so we can remove it from debug logs
-                            # which enables people to send me logs in issues safely.
-                            # Also MyPy raises a false positive about this...
-                            ws._log_filterer = log_filterer  # type: ignore
+            client_session = await exit_stack.enter_async_context(
+                aiohttp.ClientSession(
+                    connector=aiohttp.TCPConnector(
+                        limit=1,
+                        use_dns_cache=False,
+                        verify_ssl=http_config.verify_ssl,
+                        enable_cleanup_closed=True,
+                        force_close=True,
+                    ),
+                    raise_for_status=True,
+                    timeout=aiohttp.ClientTimeout(
+                        total=http_config.timeouts.total,
+                        connect=http_config.timeouts.acquire_and_connect,
+                        sock_read=http_config.timeouts.request_socket_read,
+                        sock_connect=http_config.timeouts.request_socket_connect,
+                    ),
+                    trust_env=proxy_config.trust_env,
+                    ws_response_class=cls,
+                )
+            )
 
-                            yield ws
-                        except errors.GatewayError:
-                            raised = True
-                            raise
-                        except Exception as ex:
-                            raised = True
-                            raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
-                        finally:
-                            if ws.closed:
-                                logger.log(ux.TRACE, "ws was already closed")
+            web_socket = await exit_stack.enter_async_context(
+                client_session.ws_connect(
+                    max_msg_size=0,
+                    proxy=proxy_config.url,
+                    proxy_headers=proxy_config.headers,
+                    url=url,
+                )
+            )
 
-                            elif raised:
-                                await ws.close(
-                                    code=errors.ShardCloseCode.UNEXPECTED_CONDITION,
-                                    message=b"unexpected fatal client error :-(",
-                                )
+            raised = False
+            try:
+                assert isinstance(web_socket, cls)
+                web_socket.logger = logger
+                # We store this so we can remove it from debug logs
+                # which enables people to send me logs in issues safely.
+                # Also MyPy raises a false positive about this...
+                web_socket.log_filterer = log_filterer  # type: ignore
 
-                            elif not ws._closing:
-                                # We use a special close code here that prevents Discord
-                                # randomly invalidating our session. Undocumented behaviour is
-                                # nice like that...
-                                await ws.close(
-                                    code=_RESUME_CLOSE_CODE,
-                                    message=b"client is shutting down",
-                                )
+                yield web_socket
+            except errors.GatewayError:
+                raised = True
+                raise
+            except Exception as ex:
+                raised = True
+                raise errors.GatewayError(f"Unexpected {type(ex).__name__}: {ex}") from ex
+            finally:
+                if web_socket.closed:
+                    logger.log(ux.TRACE, "ws was already closed")
 
-                except aiohttp.ClientConnectionError as ex:
-                    message = f"Failed to connect to Discord: {ex!r}"
-                    raise errors.GatewayConnectionError(message) from ex
-
-                except aiohttp.WSServerHandshakeError as ex:
-                    try:
-                        reason = http.HTTPStatus(ex.status).name
-                    except ValueError:
-                        reason = "Unknown Reason"
-
-                    message = (
-                        f"Discord produced a {ex.status} {reason} response "
-                        f"when attempting to upgrade to a websocket: {ex.message!r}"
+                elif raised:
+                    await web_socket.send_close(
+                        code=errors.ShardCloseCode.UNEXPECTED_CONDITION,
+                        message=b"unexpected fatal client error :-(",
                     )
 
-                    raise errors.GatewayError(message) from ex
+                elif not web_socket._closing:
+                    # We use a special close code here that prevents Discord
+                    # randomly invalidating our session. Undocumented behaviour is
+                    # nice like that...
+                    await web_socket.send_close(
+                        code=_RESUME_CLOSE_CODE,
+                        message=b"client is shutting down",
+                    )
+
         finally:
+            await exit_stack.aclose()
+
             # We have to sleep to allow aiohttp time to close SSL transports...
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
@@ -759,126 +762,137 @@ class GatewayShardImpl(shard.GatewayShard):
         self._closing.clear()
         self._handshake_completed.clear()
         dispatch_disconnect = False
-        try:
-            async with _V6GatewayTransport.connect(
+
+        exit_stack = contextlib.AsyncExitStack()
+
+        self._ws = await exit_stack.enter_async_context(
+            _V6GatewayTransport.connect(
                 http_config=self._http_settings,
                 log_filterer=_log_filterer(self._token),
                 logger=self._logger,
                 proxy_config=self._proxy_settings,
                 url=self._url,
-            ) as self._ws:
-                # Dispatch CONNECTED synthetic event.
-                self._event_consumer(self, "CONNECTED", {})
-                dispatch_disconnect = True
+            )
+        )
 
-                # Expect HELLO.
-                payload = await self._ws.receive_json()
-                if payload[_OP] != _HELLO:
-                    self._logger.debug(
-                        "expected HELLO opcode, received %s which makes no sense, closing with PROTOCOL ERROR ",
-                        "(_run_once => raise and do not reconnect)",
-                        payload[_OP],
-                    )
-                    await self._ws.close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-                    raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
+        try:
+            # Dispatch CONNECTED synthetic event.
+            self._event_consumer(self, "CONNECTED", {})
+            dispatch_disconnect = True
 
-                heartbeat_latency = float(payload[_D]["heartbeat_interval"]) / 1_000.0
-                heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
+            # Expect HELLO.
+            payload = await self._ws.receive_json()
+            if payload[_OP] != _HELLO:
+                self._logger.debug(
+                    "expected HELLO opcode, received %s which makes no sense, closing with PROTOCOL ERROR ",
+                    "(_run_once => raise and do not reconnect)",
+                    payload[_OP],
+                )
+                await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
+                raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
+
+            heartbeat_latency = float(payload[_D]["heartbeat_interval"]) / 1_000.0
+            heartbeat_task = asyncio.create_task(self._heartbeat(heartbeat_latency))
+
+            if self._closing.is_set():
+                self._logger.debug(
+                    "closing flag was set before we could handshake, disconnecting with GOING AWAY "
+                    "(_run_once => do not reconnect)"
+                )
+                await self._ws.send_close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
+                return False
+
+            try:
+                if self._seq is not None:
+                    self._logger.debug("resuming session %s", self._session_id)
+                    await self._resume()
+                else:
+                    self._logger.debug("identifying with new session")
+                    await self._identify()
 
                 if self._closing.is_set():
                     self._logger.debug(
-                        "closing flag was set before we could handshake, disconnecting with GOING AWAY "
+                        "closing flag was set during handshake, disconnecting with GOING AWAY "
                         "(_run_once => do not reconnect)"
                     )
-                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
+                    await self._ws.send_close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                     return False
 
-                try:
-                    if self._seq is not None:
-                        self._logger.debug("resuming session %s", self._session_id)
-                        await self._resume()
-                    else:
-                        self._logger.debug("identifying with new session")
-                        await self._identify()
+                # Event polling.
+                while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
+                    try:
+                        payload = await self._ws.receive_json(timeout=5)
+                    except asyncio.TimeoutError:
+                        # Don't wait forever, check if the heartbeat has died.
+                        continue
 
-                    if self._closing.is_set():
-                        self._logger.debug(
-                            "closing flag was set during handshake, disconnecting with GOING AWAY "
-                            "(_run_once => do not reconnect)"
-                        )
-                        await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
-                        return False
+                    op = payload[_OP]  # opcode int
+                    d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
 
-                    # Event polling.
-                    while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
-                        try:
-                            payload = await self._ws.receive_json(timeout=5)
-                        except asyncio.TimeoutError:
-                            # Don't wait forever, check if the heartbeat has died.
-                            continue
-
-                        op = payload[_OP]  # opcode int
-                        d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
-
-                        if op == _DISPATCH:
-                            t = payload[_T]  # event name str
-                            s = payload[_S]  # seq int
-                            self._logger.log(ux.TRACE, "dispatching %s with seq %s", t, s)
-                            self._dispatch(t, s, d)
-                        elif op == _HEARTBEAT:
-                            await self._send_heartbeat_ack()
-                            self._logger.log(ux.TRACE, "sent HEARTBEAT")
-                        elif op == _HEARTBEAT_ACK:
-                            now = date.monotonic()
-                            self._last_heartbeat_ack_received = now
-                            self._heartbeat_latency = now - self._last_heartbeat_sent
-                            self._logger.log(
-                                ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000
-                            )
-                        elif op == _RECONNECT:
-                            # We should be able to resume...
-                            self._logger.debug("received instruction to reconnect, will resume existing session")
-                            return True
-                        elif op == _INVALID_SESSION:
-                            # We can resume if the payload was `true`.
-                            if not d:
-                                self._logger.debug("received invalid session, will need to start a new session")
-                                self._seq = None
-                                self._session_id = None
-                            else:
-                                self._logger.debug("received invalid session, will resume existing session")
-                            return True
-                        else:
-                            self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
-
-                    # If the heartbeat died due to an error, it should be raised here.
-                    # This will currently allow us to try to resume if that happens
-                    # We return True if zombied.
-                    if await heartbeat_task:
+                    if op == _DISPATCH:
+                        t = payload[_T]  # event name str
+                        s = payload[_S]  # seq int
+                        self._logger.log(ux.TRACE, "dispatching %s with seq %s", t, s)
+                        self._dispatch(t, s, d)
+                    elif op == _HEARTBEAT:
+                        await self._send_heartbeat_ack()
+                        self._logger.log(ux.TRACE, "sent HEARTBEAT")
+                    elif op == _HEARTBEAT_ACK:
                         now = date.monotonic()
-                        self._logger.error(
-                            "connection is a zombie, last heartbeat sent %.2fs ago",
-                            now - self._last_heartbeat_sent,
-                        )
-                        self._logger.debug("will attempt to reconnect (_run_once => reconnect)")
+                        self._last_heartbeat_ack_received = now
+                        self._heartbeat_latency = now - self._last_heartbeat_sent
+                        self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
+                    elif op == _RECONNECT:
+                        # We should be able to resume...
+                        self._logger.debug("received instruction to reconnect, will resume existing session")
                         return True
+                    elif op == _INVALID_SESSION:
+                        # We can resume if the payload was `true`.
+                        if not d:
+                            self._logger.debug("received invalid session, will need to start a new session")
+                            self._seq = None
+                            self._session_id = None
+                        else:
+                            self._logger.debug("received invalid session, will resume existing session")
+                        return True
+                    else:
+                        self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
 
-                    self._logger.debug(
-                        "shard has requested graceful termination, so will not attempt to reconnect "
-                        "(_run_once => do not reconnect)"
+                # If the heartbeat died due to an error, it should be raised here.
+                # This will currently allow us to try to resume if that happens
+                # We return True if zombied.
+                if await heartbeat_task:
+                    now = date.monotonic()
+                    self._logger.error(
+                        "connection is a zombie, last heartbeat sent %.2fs ago",
+                        now - self._last_heartbeat_sent,
                     )
-                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
-                    return False
+                    self._logger.debug("will attempt to reconnect (_run_once => reconnect)")
+                    return True
 
-                finally:
-                    heartbeat_task.cancel()
+                self._logger.debug(
+                    "shard has requested graceful termination, so will not attempt to reconnect "
+                    "(_run_once => do not reconnect)"
+                )
+                await self._ws.send_close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
+                return False
+
+            finally:
+                heartbeat_task.cancel()
 
         finally:
+            ws = self._ws
             self._ws = None
+            await exit_stack.aclose()
             if dispatch_disconnect:
                 # If we managed to connect, we must always send the DISCONNECT event
                 # afterwards.
                 self._event_consumer(self, "DISCONNECTED", {})
+
+            # Check if we made the socket close or handled it. If we didn't, we should always try to
+            # reconnect, as aiohttp is probably closing it internally without telling us properly.
+            if not ws.sent_close:
+                return True
 
     async def _send_heartbeat(self) -> None:
         await self._ws.send_json({_OP: _HEARTBEAT, _D: self._seq})  # type: ignore[union-attr]
