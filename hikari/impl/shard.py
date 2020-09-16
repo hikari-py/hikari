@@ -751,7 +751,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
         try:
-            while True:
+            while not self._closing.is_set() and not self._closed:
                 if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
                     time = next(backoff)
                     self._logger.info("backing off reconnecting for %.2fs", time)
