@@ -666,14 +666,14 @@ class GatewayShardImpl(shard.GatewayShard):
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
     async def _heartbeat(self, heartbeat_interval: float) -> bool:
-        # Return True if zombied.
+        # Return True if zombied or should reconnect, false if time to die forever.
         # Prevent immediately zombie-ing.
         self._last_heartbeat_ack_received = date.monotonic()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
-        while True:
+        while not self._closing.is_set() and not self._closed.is_set():
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
-                # Gateway is zombie
+                # Gateway is zombie, close and request reconnect.
                 self._logger.warning(
                     "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected, "
                     "expect a reconnect shortly",
@@ -690,10 +690,13 @@ class GatewayShardImpl(shard.GatewayShard):
             try:
                 await asyncio.wait_for(self._closing.wait(), timeout=heartbeat_interval)
                 # We are closing
-                return False
+                break
             except asyncio.TimeoutError:
                 # We should continue
                 continue
+
+        self._logger.debug("heartbeat task is finishing now")
+        return False
 
     async def _poll_events(self) -> typing.Optional[bool]:
         payload = await self._ws.receive_json(timeout=5)  # type: ignore[union-attr]
@@ -742,6 +745,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _run(self) -> None:
         self._closed.clear()
+        self._closing.clear()
         last_started_at = -float("inf")
 
         backoff = rate_limits.ExponentialBackOff(
@@ -751,7 +755,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
         try:
-            while not self._closing.is_set() and not self._closed:
+            while not self._closing.is_set() and not self._closed.is_set():
                 if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
                     time = next(backoff)
                     self._logger.info("backing off reconnecting for %.2fs", time)
@@ -801,10 +805,10 @@ class GatewayShardImpl(shard.GatewayShard):
                     self._logger.error("encountered some unhandled error", exc_info=ex)
                     raise
         finally:
+            self._closing.set()
             self._closed.set()
 
     async def _run_once(self) -> bool:
-        self._closing.clear()
         self._handshake_completed.clear()
         dispatch_disconnect = False
 

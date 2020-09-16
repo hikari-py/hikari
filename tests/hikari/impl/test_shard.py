@@ -970,7 +970,8 @@ class TestGatewayShardImpl:
     async def test__heartbeat(self, client):
         client._last_heartbeat_sent = 5
         client._logger = mock.Mock()
-        client._closing = mock.Mock()
+        client._closing = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closed = mock.Mock(is_set=mock.Mock(return_value=False))
         client._send_heartbeat = mock.AsyncMock()
 
         with mock.patch.object(date, "monotonic", return_value=10):
