@@ -674,7 +674,11 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
                 # Gateway is zombie
-                self._logger.log(ux.TRACE, "zombied")
+                self._logger.warning(
+                    "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected, "
+                    "expect a reconnect shortly",
+                    date.monotonic() - self._last_heartbeat_ack_received,
+                )
                 return True
 
             self._logger.log(
