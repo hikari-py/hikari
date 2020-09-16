@@ -767,6 +767,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
+        start_time = date.monotonic()
+
         if check_for_updates:
             asyncio.create_task(
                 ux.check_for_updates(self._http_settings, self._proxy_settings),
@@ -866,6 +868,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 self._shards[started_shard.id] = started_shard
 
         await self.dispatch(lifetime_events.StartedEvent(app=self))
+
+        _LOGGER.info("application started successfully in approx %.0f seconds", date.monotonic() - start_time)
 
     def stream(
         self,

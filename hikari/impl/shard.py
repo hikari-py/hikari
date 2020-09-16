@@ -790,7 +790,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             finally:
                 self._closed.set()
-                self._logger.info("shard %s has shut down", self._shard_id)
+                self._logger.info("shard has disconnected and shut down", self._shard_id)
 
     async def _run_once(self) -> bool:
         self._closing.clear()
