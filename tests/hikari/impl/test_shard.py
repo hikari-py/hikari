@@ -65,8 +65,8 @@ class Test_V6GatewayTransport:
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
             transport = shard._V6GatewayTransport()
-            transport._logger = mock.Mock(getEffectiveLevel=mock.Mock(return_value=5))
-            transport._log_filterer = mock.Mock()
+            transport.logger = mock.Mock(getEffectiveLevel=mock.Mock(return_value=5))
+            transport.log_filterer = mock.Mock()
             yield transport
 
     def test__init__calls_super(self):
@@ -75,44 +75,22 @@ class Test_V6GatewayTransport:
 
         init.assert_called_once_with("arg1", "arg2", some_kwarg="kwarg1")
 
-    async def test_close_when_closed_doesnt_log(self, transport_impl):
-        transport_impl._closed = True
-        transport_impl._closing = False
-        transport_impl._logger = mock.Mock()
-
-        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close") as close:
-            await transport_impl.close(code=1234, message=b"some message")
-
-        transport_impl._logger.debug.assert_not_called()
-        close.assert_called_once_with(code=1234, message=b"some message")
-
-    async def test_close_when_closing_doesnt_log(self, transport_impl):
-        transport_impl._closed = False
-        transport_impl._closing = True
-        transport_impl._logger = mock.Mock()
-
-        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close") as close:
-            await transport_impl.close(code=1234, message=b"some message")
-
-        transport_impl._logger.debug.assert_not_called()
-        close.assert_called_once_with(code=1234, message=b"some message")
-
-    async def test_close_when_not_closed_nor_closing_logs(self, transport_impl):
+    async def test_send_close_when_not_closed_nor_closing_logs(self, transport_impl):
         transport_impl._closed = False
         transport_impl._closing = False
-        transport_impl._logger = mock.Mock()
+        transport_impl.logger = mock.Mock()
 
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "close") as close:
-            await transport_impl.close(code=1234, message=b"some message")
+            await transport_impl.send_close(code=1234, message=b"some message")
 
-        transport_impl._logger.debug.assert_called_once_with(
+        transport_impl.logger.debug.assert_called_once_with(
             "sending close frame with code %s and message %s", 1234, b"some message"
         )
         close.assert_called_once_with(code=1234, message=b"some message")
 
     async def test_receive_json(self, transport_impl):
         transport_impl._receive_and_check = mock.AsyncMock(return_value="{'json_response': null}")
-        transport_impl._log_payload = mock.Mock()
+        transport_impl.log_payload = mock.Mock()
         mock_loads = mock.Mock(return_value={"json_response": None})
 
         assert await transport_impl.receive_json(loads=mock_loads, timeout=69) == {"json_response": None}
@@ -122,7 +100,7 @@ class Test_V6GatewayTransport:
 
     async def test_send_json(self, transport_impl):
         transport_impl.send_str = mock.AsyncMock()
-        transport_impl._log_payload = mock.Mock()
+        transport_impl.log_payload = mock.Mock()
         mock_dumps = mock.Mock(return_value="{'json_send': null}")
 
         await transport_impl.send_json({"json_send": None}, 420, dumps=mock_dumps)
@@ -156,7 +134,7 @@ class Test_V6GatewayTransport:
     async def test__receive_and_check_when_message_type_is_CLOSE_and_should_reconnect(self, code, transport_impl):
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
-        transport_impl._logger = mock.Mock()
+        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             await transport_impl._receive_and_check(10)
@@ -174,7 +152,7 @@ class Test_V6GatewayTransport:
     async def test__receive_and_check_when_message_type_is_CLOSE_and_should_not_reconnect(self, code, transport_impl):
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="dont reconnect", data=code)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
-        transport_impl._logger = mock.Mock()
+        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             await transport_impl._receive_and_check(10)
@@ -189,7 +167,7 @@ class Test_V6GatewayTransport:
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSING)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
 
-        with pytest.raises(asyncio.CancelledError, match="Socket closed"):
+        with pytest.raises(errors.GatewayError, match="Socket has closed"):
             await transport_impl._receive_and_check(10)
 
         transport_impl.receive.assert_awaited_once_with(10)
@@ -198,7 +176,7 @@ class Test_V6GatewayTransport:
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSED)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
 
-        with pytest.raises(asyncio.CancelledError, match="Socket closed"):
+        with pytest.raises(errors.GatewayError, match="Socket has closed"):
             await transport_impl._receive_and_check(10)
 
         transport_impl.receive.assert_awaited_once_with(10)
@@ -208,12 +186,12 @@ class Test_V6GatewayTransport:
         response2 = self.StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"data")
         response3 = self.StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\x00\xff\xff")
         transport_impl.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-        transport_impl._zlib = mock.Mock(decompress=mock.Mock(return_value=b"utf-8 encoded bytes"))
+        transport_impl.zlib = mock.Mock(decompress=mock.Mock(return_value=b"utf-8 encoded bytes"))
 
         assert await transport_impl._receive_and_check(10) == "utf-8 encoded bytes"
 
         transport_impl.receive.assert_awaited_with(10)
-        transport_impl._zlib.decompress.assert_called_once_with(bytearray(b"somedata\x00\x00\xff\xff"))
+        transport_impl.zlib.decompress.assert_called_once_with(bytearray(b"somedata\x00\x00\xff\xff"))
 
     async def test__receive_and_check_when_buff_but_next_is_not_BINARY(self, transport_impl):
         response1 = self.StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some")
@@ -237,7 +215,7 @@ class Test_V6GatewayTransport:
     async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
         transport_impl.receive = mock.AsyncMock(return_value=self.StubResponse(type=aiohttp.WSMsgType.ERROR))
         transport_impl.exception = mock.Mock(return_value=Exception)
-        transport_impl._logger = mock.Mock()
+        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway"):
             await transport_impl._receive_and_check(10)
@@ -247,6 +225,8 @@ class Test_V6GatewayTransport:
     async def test_connect_yields_websocket(self, http_settings, proxy_settings):
         class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
             closed = True
+            send_close = mock.AsyncMock()
+            sent_close = False
 
             def __init__(self):
                 pass
@@ -273,7 +253,7 @@ class Test_V6GatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
             ) as ws:
-                assert ws._logger is logger
+                assert ws.logger is logger
 
         tcp_connector.assert_called_once_with(
             limit=1,
@@ -308,7 +288,8 @@ class Test_V6GatewayTransport:
     async def test_connect_when_gateway_error_after_connecting(self, http_settings, proxy_settings):
         class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
             closed = False
-            close = mock.AsyncMock()
+            sent_close = False
+            send_close = mock.AsyncMock()
 
             def __init__(self):
                 pass
@@ -336,7 +317,7 @@ class Test_V6GatewayTransport:
             ):
                 hikari_test_helpers.raiser(errors.GatewayError("some reason"))
 
-        mock_websocket.close.assert_awaited_once_with(
+        mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("
         )
 
@@ -347,7 +328,8 @@ class Test_V6GatewayTransport:
     async def test_connect_when_unexpected_error_after_connecting(self, http_settings, proxy_settings):
         class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
             closed = False
-            close = mock.AsyncMock()
+            send_close = mock.AsyncMock()
+            sent_close = False
 
             def __init__(self):
                 pass
@@ -375,7 +357,7 @@ class Test_V6GatewayTransport:
             ):
                 hikari_test_helpers.raiser(ValueError("testing"))
 
-        mock_websocket.close.assert_awaited_once_with(
+        mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("
         )
 
@@ -387,7 +369,8 @@ class Test_V6GatewayTransport:
         class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
             closed = False
             _closing = False
-            close = mock.AsyncMock()
+            sent_close = False
+            send_close = mock.AsyncMock()
 
             def __init__(self):
                 pass
@@ -414,7 +397,9 @@ class Test_V6GatewayTransport:
             ):
                 pass
 
-        mock_websocket.close.assert_awaited_once_with(code=shard._RESUME_CLOSE_CODE, message=b"client is shutting down")
+        mock_websocket.send_close.assert_awaited_once_with(
+            code=shard._RESUME_CLOSE_CODE, message=b"client is shutting down"
+        )
 
         sleep.assert_awaited_once_with(0.25)
         mock_client_session.assert_used_once()
@@ -504,8 +489,8 @@ class Test_V6GatewayTransport:
             pytest.raises(
                 errors.GatewayError,
                 match=(
-                    "Discord produced a 123 Unknown Reason response "
-                    "when attempting to upgrade to a websocket: 'some error'"
+                    r"Failed to connect to Discord: "
+                    r"WSServerHandshakeError\(None, None, status=123, message='some error'\)"
                 ),
             )
         )
@@ -542,8 +527,8 @@ class Test_V6GatewayTransport:
             pytest.raises(
                 errors.GatewayError,
                 match=(
-                    "Discord produced a 500 INTERNAL_SERVER_ERROR response "
-                    "when attempting to upgrade to a websocket: 'some error'"
+                    r"Failed to connect to Discord: WSServerHandshakeError"
+                    r"\(None, None, status=500, message='some error'\)"
                 ),
             )
         )
