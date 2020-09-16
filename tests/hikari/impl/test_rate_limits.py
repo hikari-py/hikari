@@ -450,8 +450,7 @@ class TestExponentialBackOff:
             base=5, maximum=sys.float_info.max, jitter_multiplier=0.0, initial_increment=power
         )
 
-        with pytest.raises(asyncio.TimeoutError):
-            next(eb)
+        assert next(eb) == sys.float_info.max
 
     def test_increment_maximum(self):
         max_bound = 64
@@ -460,16 +459,14 @@ class TestExponentialBackOff:
         for _ in range(iterations):
             next(eb)
 
-        with pytest.raises(asyncio.TimeoutError):
-            next(eb)
+        assert next(eb) == max_bound
 
     def test_increment_does_not_increment_when_on_maximum(self):
-        eb = rate_limits.ExponentialBackOff(2, 32, initial_increment=5)
+        eb = rate_limits.ExponentialBackOff(2, 32, initial_increment=5, jitter_multiplier=0)
 
         assert eb.increment == 5
 
-        with pytest.raises(asyncio.TimeoutError):
-            next(eb)
+        assert next(eb) == 32
 
         assert eb.increment == 5
 

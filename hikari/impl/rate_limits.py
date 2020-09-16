@@ -441,8 +441,8 @@ class ExponentialBackOff:
     base : builtins.float
         The base to use. Defaults to `2.0`.
     maximum : builtins.float
-        The max value the backoff can be in a single iteration before an
-        `asyncio.TimeoutError` is raised. Defaults to `64.0` seconds.
+        The max value the backoff can be in a single iteration. Anything above
+        this will be capped to this base value plus random jitter.
     jitter_multiplier : builtins.float
         The multiplier for the random jitter. Defaults to `1.0`.
         Set to `0` to disable jitter.
@@ -510,17 +510,17 @@ class ExponentialBackOff:
         """Get the next back off to sleep by."""
         try:
             value = self.base ** self.increment
+
+            if value >= self.maximum:
+                value = self.maximum
+            else:
+                # This should only be incremented after we verify we haven't hit the maximum value.
+                self.increment += 1
         except OverflowError:
             # If this happened then we can be sure that we've passed maximum.
-            raise asyncio.TimeoutError from None
+            value = self.maximum
 
-        if value >= self.maximum:
-            raise asyncio.TimeoutError from None
-
-        # This should only be incremented after we verify we haven't hit the maximum value.
-        self.increment += 1
-        value += random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
-        return value
+        return value + random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
 
     def __iter__(self) -> ExponentialBackOff:
         """Return this object, as it is an iterator."""
