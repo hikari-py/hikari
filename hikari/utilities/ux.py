@@ -22,10 +22,6 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
-import time
-
-from hikari.utilities import net
-
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
 import contextlib
@@ -37,11 +33,13 @@ import platform
 import re
 import string
 import sys
+import time
 import typing
 
 import colorlog  # type: ignore[import]
 
 from hikari import _about as about
+from hikari.utilities import net
 
 if typing.TYPE_CHECKING:
     from hikari import config
