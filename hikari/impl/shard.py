@@ -84,7 +84,7 @@ _HEARTBEAT_ACK: typing.Final[int] = 11
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
 _BACKOFF_BASE: typing.Final[float] = 1.85
 _BACKOFF_INCREMENT_START: typing.Final[int] = 2
-_BACKOFF_CAP: typing.Final[float] = 600.0
+_BACKOFF_CAP: typing.Final[float] = 60.0
 # Discord seems to invalidate sessions if I send a 1xxx, which is useless
 # for invalid session and reconnect messages where I want to be able to
 # resume.
@@ -763,6 +763,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 last_started_at = date.monotonic()
                 # TODO: should I be using the result of this still, or is it dead code? Is it a bug I created?
                 await self._run_once()
+                self._logger.info("shard has disconnected and shut down normally")
 
             except errors.GatewayConnectionError as ex:
                 self._logger.error(
@@ -780,17 +781,21 @@ class GatewayShardImpl(shard.GatewayShard):
                     ex.reason,
                 )
 
+                # We don't want to back off from this. If Discord keep closing the connection, it is their issue.
+                # If we back off here, we'll find a mass outage will prevent shards from becoming healthy on
+                # reconnect in large sharded bots for a very long period of time.
+                backoff.reset()
+
             except errors.GatewayError as ex:
-                self._logger.debug("encountered generic gateway error", exc_info=ex)
+                self._logger.error("encountered generic gateway error", exc_info=ex)
                 raise
 
             except Exception as ex:
-                self._logger.debug("encountered some unhandled error", exc_info=ex)
+                self._logger.error("encountered some unhandled error", exc_info=ex)
                 raise
 
             finally:
                 self._closed.set()
-                self._logger.info("shard has disconnected and shut down")
 
     async def _run_once(self) -> bool:
         self._closing.clear()
