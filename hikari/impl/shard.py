@@ -311,6 +311,12 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
                         message=b"client is shutting down",
                     )
 
+        except (aiohttp.ClientOSError, aiohttp.ClientConnectionError) as ex:
+            # Windows will sometimes raise an aiohttp.ClientOSError
+            # If we cannot do DNS lookup, this will fail with a ClientConnectionError
+            # usually.
+            raise errors.GatewayError(f"Failed to connect to gateway {type(ex).__name__}: {ex}")
+
         finally:
             await exit_stack.aclose()
 
@@ -735,7 +741,9 @@ class GatewayShardImpl(shard.GatewayShard):
                         self._logger.debug("shard has shut down")
 
                 except errors.GatewayConnectionError as ex:
-                    self._logger.error("failed to connect to server, reason was: %s. Will retry shortly", ex.__cause__)
+                    self._logger.error(
+                        "failed to communicate with server, reason was: %s. Will retry shortly", ex.__cause__,
+                    )
 
                 except errors.GatewayServerClosedConnectionError as ex:
                     if not ex.can_reconnect:
