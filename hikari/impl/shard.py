@@ -47,6 +47,7 @@ from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.utilities import data_binding
 from hikari.utilities import date
+from hikari.utilities import net
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
@@ -83,7 +84,7 @@ _HEARTBEAT_ACK: typing.Final[int] = 11
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
 _BACKOFF_BASE: typing.Final[float] = 1.85
 _BACKOFF_INCREMENT_START: typing.Final[int] = 2
-_BACKOFF_CAP: typing.Final[float] = 600.0
+_BACKOFF_CAP: typing.Final[float] = 60.0
 # Discord seems to invalidate sessions if I send a 1xxx, which is useless
 # for invalid session and reconnect messages where I want to be able to
 # resume.
@@ -228,9 +229,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     async def connect(
         cls,
         *,
-        http_config: config.HTTPSettings,
+        http_settings: config.HTTPSettings,
         logger: logging.Logger,
-        proxy_config: config.ProxySettings,
+        proxy_settings: config.ProxySettings,
         log_filterer: typing.Callable[[str], str],
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
@@ -246,32 +247,16 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         exit_stack = contextlib.AsyncExitStack()
 
         try:
+            connector = net.create_tcp_connector(http_settings, dns_cache=False, limit=1)
             client_session = await exit_stack.enter_async_context(
-                aiohttp.ClientSession(
-                    connector=aiohttp.TCPConnector(
-                        limit=1,
-                        use_dns_cache=False,
-                        verify_ssl=http_config.verify_ssl,
-                        enable_cleanup_closed=True,
-                        force_close=True,
-                    ),
-                    raise_for_status=True,
-                    timeout=aiohttp.ClientTimeout(
-                        total=http_config.timeouts.total,
-                        connect=http_config.timeouts.acquire_and_connect,
-                        sock_read=http_config.timeouts.request_socket_read,
-                        sock_connect=http_config.timeouts.request_socket_connect,
-                    ),
-                    trust_env=proxy_config.trust_env,
-                    ws_response_class=cls,
-                )
+                net.create_client_session(connector, True, http_settings, True, proxy_settings.trust_env, cls)
             )
 
             web_socket = await exit_stack.enter_async_context(
                 client_session.ws_connect(
                     max_msg_size=0,
-                    proxy=proxy_config.url,
-                    proxy_headers=proxy_config.headers,
+                    proxy=proxy_settings.url,
+                    proxy_headers=proxy_settings.headers,
                     url=url,
                 )
             )
@@ -641,11 +626,13 @@ class GatewayShardImpl(shard.GatewayShard):
             user_id = user_pl["id"]
             self._user_id = snowflakes.Snowflake(user_id)
             tag = user_pl["username"] + "#" + user_pl["discriminator"]
+            unavailable_guild_count = len(data["guilds"])
             self._logger.info(
-                "shard is ready [session:%s, user_id:%s, tag:%s]",
+                "shard is ready [session:%s, user_id:%s, tag:%s, guilds:%s]",
                 self._session_id,
                 user_id,
                 tag,
+                unavailable_guild_count,
             )
             self._handshake_completed.set()
 
@@ -679,15 +666,19 @@ class GatewayShardImpl(shard.GatewayShard):
         await self._ws.send_json(payload)  # type: ignore[union-attr]
 
     async def _heartbeat(self, heartbeat_interval: float) -> bool:
-        # Return True if zombied.
+        # Return True if zombied or should reconnect, false if time to die forever.
         # Prevent immediately zombie-ing.
         self._last_heartbeat_ack_received = date.monotonic()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
-        while True:
+        while not self._closing.is_set() and not self._closed.is_set():
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
-                # Gateway is zombie
-                self._logger.log(ux.TRACE, "zombied")
+                # Gateway is zombie, close and request reconnect.
+                self._logger.warning(
+                    "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected, "
+                    "expect a reconnect shortly",
+                    date.monotonic() - self._last_heartbeat_ack_received,
+                )
                 return True
 
             self._logger.log(
@@ -699,10 +690,13 @@ class GatewayShardImpl(shard.GatewayShard):
             try:
                 await asyncio.wait_for(self._closing.wait(), timeout=heartbeat_interval)
                 # We are closing
-                return False
+                break
             except asyncio.TimeoutError:
                 # We should continue
                 continue
+
+        self._logger.debug("heartbeat task is finishing now")
+        return False
 
     async def _poll_events(self) -> typing.Optional[bool]:
         payload = await self._ws.receive_json(timeout=5)  # type: ignore[union-attr]
@@ -725,16 +719,16 @@ class GatewayShardImpl(shard.GatewayShard):
             self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
         elif op == _RECONNECT:
             # We should be able to resume...
-            self._logger.debug("received instruction to reconnect, will resume existing session")
+            self._logger.info("received instruction to reconnect, will resume existing session")
             return True
         elif op == _INVALID_SESSION:
             # We can resume if the payload was `true`.
             if not d:
-                self._logger.debug("received invalid session, will need to start a new session")
+                self._logger.info("received invalid session, will need to start a new session")
                 self._seq = None
                 self._session_id = None
             else:
-                self._logger.debug("received invalid session, will resume existing session")
+                self._logger.info("received invalid session, will resume existing session")
             return True
         else:
             self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
@@ -751,6 +745,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _run(self) -> None:
         self._closed.clear()
+        self._closing.clear()
         last_started_at = -float("inf")
 
         backoff = rate_limits.ExponentialBackOff(
@@ -759,54 +754,61 @@ class GatewayShardImpl(shard.GatewayShard):
             initial_increment=_BACKOFF_INCREMENT_START,
         )
 
-        while True:
-            if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
-                time = next(backoff)
-                self._logger.info("backing off reconnecting for %.2fs", time)
+        try:
+            while not self._closing.is_set() and not self._closed.is_set():
+                if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
+                    time = next(backoff)
+                    self._logger.info("backing off reconnecting for %.2fs", time)
+
+                    try:
+                        await asyncio.wait_for(self._closing.wait(), timeout=time)
+                        # We were told to close.
+                        return
+                    except asyncio.TimeoutError:
+                        # We are going to run once.
+                        pass
 
                 try:
-                    await asyncio.wait_for(self._closing.wait(), timeout=time)
-                    # We were told to close.
-                    return
-                except asyncio.TimeoutError:
-                    # We are going to run once.
-                    pass
+                    last_started_at = date.monotonic()
+                    should_restart = await self._run_once()
 
-            try:
-                last_started_at = date.monotonic()
-                if not await self._run_once():
-                    self._logger.debug("shard has shut down")
+                    if not should_restart:
+                        self._logger.info("shard has disconnected and shut down normally")
+                        return
 
-            except errors.GatewayConnectionError as ex:
-                self._logger.error(
-                    "failed to communicate with server, reason was: %s. Will retry shortly",
-                    ex.__cause__,
-                )
+                except errors.GatewayConnectionError as ex:
+                    self._logger.error(
+                        "failed to communicate with server, reason was: %s. Will retry shortly",
+                        ex.__cause__,
+                    )
 
-            except errors.GatewayServerClosedConnectionError as ex:
-                if not ex.can_reconnect:
+                except errors.GatewayServerClosedConnectionError as ex:
+                    if not ex.can_reconnect:
+                        raise
+
+                    self._logger.info(
+                        "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
+                        ex.code,
+                        ex.reason,
+                    )
+
+                    # We don't want to back off from this. If Discord keep closing the connection, it is their issue.
+                    # If we back off here, we'll find a mass outage will prevent shards from becoming healthy on
+                    # reconnect in large sharded bots for a very long period of time.
+                    backoff.reset()
+
+                except errors.GatewayError as ex:
+                    self._logger.error("encountered generic gateway error", exc_info=ex)
                     raise
 
-                self._logger.info(
-                    "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
-                    ex.code,
-                    ex.reason,
-                )
-
-            except errors.GatewayError as ex:
-                self._logger.debug("encountered generic gateway error", exc_info=ex)
-                raise
-
-            except Exception as ex:
-                self._logger.debug("encountered some unhandled error", exc_info=ex)
-                raise
-
-            finally:
-                self._closed.set()
-                self._logger.info("shard %s has shut down", self._shard_id)
+                except Exception as ex:
+                    self._logger.error("encountered some unhandled error", exc_info=ex)
+                    raise
+        finally:
+            self._closing.set()
+            self._closed.set()
 
     async def _run_once(self) -> bool:
-        self._closing.clear()
         self._handshake_completed.clear()
         dispatch_disconnect = False
 
@@ -814,10 +816,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._ws = await exit_stack.enter_async_context(
             _V6GatewayTransport.connect(
-                http_config=self._http_settings,
+                http_settings=self._http_settings,
                 log_filterer=_log_filterer(self._token),
                 logger=self._logger,
-                proxy_config=self._proxy_settings,
+                proxy_settings=self._proxy_settings,
                 url=self._url,
             )
         )

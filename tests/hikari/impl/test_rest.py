@@ -54,19 +54,31 @@ from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
-def connector_factory():
-    return rest.BasicLazyCachedTCPConnectorFactory(test=123)
+def http_settings():
+    return mock.Mock(spec_set=config.HTTPSettings)
+
+
+@pytest.fixture()
+def connector_factory(http_settings):
+    return rest.BasicLazyCachedTCPConnectorFactory(http_settings)
 
 
 class TestBasicLazyCachedTCPConnectorFactory:
-    def test_acquire_when_connector_is_None(self, connector_factory):
+    def test_acquire_when_connector_is_None(self, connector_factory, http_settings):
         connector_mock = object()
         connector_factory.connector = None
 
         with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
             assert connector_factory.acquire() is connector_mock
             assert connector_factory.connector is connector_mock
-        tcp_connector.assert_called_once_with(test=123, force_close=True, enable_cleanup_closed=True)
+        tcp_connector.assert_called_once_with(
+            force_close=http_settings.force_close_transports,
+            enable_cleanup_closed=http_settings.enable_cleanup_closed,
+            limit=100,
+            ssl_context=http_settings.ssl,
+            ttl_dns_cache=10,
+            use_dns_cache=True,
+        )
 
     def test_acquire_when_connector_is_not_None(self, connector_factory):
         connector_mock = object()
@@ -404,9 +416,11 @@ class TestRESTClientImpl:
             client_session.assert_called_once_with(
                 connector=connector_mock,
                 connector_owner=False,
-                version=aiohttp.HttpVersion11,
+                raise_for_status=False,
                 timeout=aiohttp.ClientTimeout(total=10, connect=5, sock_read=4, sock_connect=1),
                 trust_env=False,
+                version=aiohttp.HttpVersion11,
+                ws_response_class=aiohttp.ClientWebSocketResponse,
             )
 
     def test__acquire_client_session_when_not_None_and_open(self, rest_client):

@@ -119,13 +119,11 @@ _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Res
 class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
     """Lazy cached TCP connector factory."""
 
-    __slots__: typing.Sequence[str] = ("connector", "connector_kwargs")
+    __slots__: typing.Sequence[str] = ("connector", "http_settings")
 
-    def __init__(self, **kwargs: typing.Any) -> None:
+    def __init__(self, http_settings: config.HTTPSettings) -> None:
         self.connector: typing.Optional[aiohttp.TCPConnector] = None
-        kwargs.setdefault("enable_cleanup_closed", True)
-        kwargs.setdefault("force_close", True)
-        self.connector_kwargs = kwargs
+        self.http_settings = http_settings
 
     async def close(self) -> None:
         if self.connector is not None:
@@ -134,7 +132,7 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
 
     def acquire(self) -> aiohttp.BaseConnector:
         if self.connector is None:
-            self.connector = aiohttp.TCPConnector(**self.connector_kwargs)
+            self.connector = net.create_tcp_connector(self.http_settings)
 
         return self.connector
 
@@ -207,6 +205,10 @@ class RESTApp(traits.ExecutorAware):
         manually. The latter is useful if you wish to maintain a shared
         connection pool across your application with other non-Hikari
         components.
+
+        !!! warning
+            If you do not give a `connector_factory`, this will be IGNORED
+            and always be treated as `builtins.True` internally.
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
@@ -246,6 +248,9 @@ class RESTApp(traits.ExecutorAware):
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
+        self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
+        self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
+
         # Lazy initialized later, since we must initialize this in the event
         # loop we run the application from, otherwise aiohttp throws complaints
         # at us. Quart, amongst other libraries, causes issues with this by
@@ -253,12 +258,14 @@ class RESTApp(traits.ExecutorAware):
         # the connector here and initialised this class in global scope, it
         # would potentially end up using the wrong event loop and aiohttp
         # would then fail when creating an HTTP request.
-        self._connector_factory: rest_api.ConnectorFactory = connector_factory or BasicLazyCachedTCPConnectorFactory()
+        if connector_factory is None:
+            connector_factory = BasicLazyCachedTCPConnectorFactory(self._http_settings)
+            connector_owner = True
+
+        self._connector_factory = connector_factory
         self._connector_owner = connector_owner
         self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
-        self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
-        self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._url = url
 
     @property
@@ -480,16 +487,13 @@ class RESTClientImpl(rest_api.RESTClient):
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         if self._client_session is None:
             self._closed_event.clear()
-            self._client_session = aiohttp.ClientSession(
+            self._client_session = net.create_client_session(
                 connector=self._connector_factory.acquire(),
+                # No, this is correct. We manage closing the connector ourselves in this class if we are
+                # told we own it. This works around some other lifespan issues.
                 connector_owner=False,
-                version=aiohttp.HttpVersion11,
-                timeout=aiohttp.ClientTimeout(
-                    total=self._http_settings.timeouts.total,
-                    connect=self._http_settings.timeouts.acquire_and_connect,
-                    sock_read=self._http_settings.timeouts.request_socket_read,
-                    sock_connect=self._http_settings.timeouts.request_socket_connect,
-                ),
+                http_settings=self._http_settings,
+                raise_for_status=False,
                 trust_env=self._proxy_settings.trust_env,
             )
             _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
@@ -558,11 +562,10 @@ class RESTClientImpl(rest_api.RESTClient):
                     params=query,
                     json=json,
                     data=form,
-                    allow_redirects=self._http_settings.allow_redirects,
+                    allow_redirects=self._http_settings.max_redirects is not None,
                     max_redirects=self._http_settings.max_redirects,
                     proxy=self._proxy_settings.url,
                     proxy_headers=self._proxy_settings.all_headers,
-                    verify_ssl=self._http_settings.verify_ssl,
                 )
                 time_taken = (date.monotonic() - start) * 1_000
 

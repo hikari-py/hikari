@@ -247,8 +247,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -257,10 +257,11 @@ class Test_V6GatewayTransport:
 
         tcp_connector.assert_called_once_with(
             limit=1,
+            ttl_dns_cache=10,
             use_dns_cache=False,
-            verify_ssl=http_settings.verify_ssl,
-            enable_cleanup_closed=True,
-            force_close=True,
+            ssl_context=http_settings.ssl,
+            enable_cleanup_closed=http_settings.enable_cleanup_closed,
+            force_close=http_settings.force_close_transports,
         )
         client_timeout.assert_called_once_with(
             total=http_settings.timeouts.total,
@@ -270,9 +271,11 @@ class Test_V6GatewayTransport:
         )
         client_session.assert_called_once_with(
             connector=tcp_connector(),
+            connector_owner=True,
             raise_for_status=True,
             timeout=client_timeout(),
             trust_env=proxy_settings.trust_env,
+            version=aiohttp.HttpVersion11,
             ws_response_class=shard._V6GatewayTransport,
         )
         mock_client_session.ws_connect.assert_called_once_with(
@@ -309,8 +312,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -349,8 +352,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -389,8 +392,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -428,8 +431,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -461,8 +464,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -499,8 +502,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -537,8 +540,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -827,7 +830,7 @@ class TestGatewayShardImpl:
 
         client._ws.send_json.assert_awaited_once_with({"op": 4, "d": payload})
 
-    def test__dipatch_when_READY(self, client):
+    def test_dispatch_when_READY(self, client):
         client._seq = 0
         client._session_id = 0
         client._user_id = 0
@@ -836,21 +839,38 @@ class TestGatewayShardImpl:
         client._event_consumer = mock.Mock()
 
         client._dispatch(
-            "READY", 10, {"session_id": 101, "user": {"id": 123, "username": "hikari", "discriminator": "5863"}}
+            "READY",
+            10,
+            {
+                "session_id": 101,
+                "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
+                "guilds": [
+                    {"id": "123"},
+                    {"id": "456"},
+                    {"id": "789"},
+                ],
+            },
         )
 
         assert client._seq == 10
         assert client._session_id == 101
         assert client._user_id == 123
         client._logger.info.assert_called_once_with(
-            "shard is ready [session:%s, user_id:%s, tag:%s]",
-            101,
-            123,
-            "hikari#5863",
+            "shard is ready [session:%s, user_id:%s, tag:%s, guilds:%s]", 101, 123, "hikari#5863", 3
         )
         client._handshake_completed.set.assert_called_once_with()
         client._event_consumer.assert_called_once_with(
-            client, "READY", {"session_id": 101, "user": {"id": 123, "username": "hikari", "discriminator": "5863"}}
+            client,
+            "READY",
+            {
+                "session_id": 101,
+                "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
+                "guilds": [
+                    {"id": "123"},
+                    {"id": "456"},
+                    {"id": "789"},
+                ],
+            },
         )
 
     def test__dipatch_when_RESUME(self, client):
@@ -950,7 +970,8 @@ class TestGatewayShardImpl:
     async def test__heartbeat(self, client):
         client._last_heartbeat_sent = 5
         client._logger = mock.Mock()
-        client._closing = mock.Mock()
+        client._closing = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closed = mock.Mock(is_set=mock.Mock(return_value=False))
         client._send_heartbeat = mock.AsyncMock()
 
         with mock.patch.object(date, "monotonic", return_value=10):

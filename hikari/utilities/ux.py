@@ -22,6 +22,10 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
+import time
+
+from hikari.utilities import net
+
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
 import contextlib
@@ -35,10 +39,12 @@ import string
 import sys
 import typing
 
-import aiohttp
 import colorlog  # type: ignore[import]
 
 from hikari import _about as about
+
+if typing.TYPE_CHECKING:
+    from hikari import config
 
 # While this is discouraged for most purposes in libraries, this enables us to
 # filter out the vast majority of clutter that most network logger calls
@@ -187,6 +193,9 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
             args[code] = ""
 
     sys.stdout.write(string.Template(raw_banner).safe_substitute(args))
+    # Give the stream some time to flush
+    sys.stdout.flush()
+    time.sleep(0.125)
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
@@ -241,13 +250,27 @@ class HikariVersion(distutils.version.StrictVersion):
     )
 
 
-async def check_for_updates() -> None:
+async def check_for_updates(
+    http_settings: config.HTTPSettings,
+    proxy_settings: config.ProxySettings,
+) -> None:
     """Perform a check for newer versions of the library, logging any found."""
     try:
-        async with aiohttp.request(
-            "GET", "https://pypi.org/pypi/hikari/json", timeout=aiohttp.ClientTimeout(total=1.5), raise_for_status=True
-        ) as resp:
-            data = await resp.json()
+        async with net.create_client_session(
+            connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
+            connector_owner=True,
+            http_settings=http_settings,
+            raise_for_status=True,
+            trust_env=proxy_settings.trust_env,
+        ) as cs:
+            async with cs.get(
+                "https://pypi.org/pypi/hikari/json",
+                allow_redirects=http_settings.max_redirects is not None,
+                max_redirects=http_settings.max_redirects if http_settings.max_redirects is not None else 10,
+                proxy=proxy_settings.url,
+                proxy_headers=proxy_settings.all_headers,
+            ) as resp:
+                data = await resp.json()
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
