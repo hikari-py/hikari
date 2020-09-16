@@ -746,56 +746,60 @@ class GatewayShardImpl(shard.GatewayShard):
             initial_increment=_BACKOFF_INCREMENT_START,
         )
 
-        while True:
-            if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
-                time = next(backoff)
-                self._logger.info("backing off reconnecting for %.2fs", time)
+        try:
+            while True:
+                if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
+                    time = next(backoff)
+                    self._logger.info("backing off reconnecting for %.2fs", time)
+
+                    try:
+                        await asyncio.wait_for(self._closing.wait(), timeout=time)
+                        # We were told to close.
+                        return
+                    except asyncio.TimeoutError:
+                        # We are going to run once.
+                        pass
 
                 try:
-                    await asyncio.wait_for(self._closing.wait(), timeout=time)
-                    # We were told to close.
+                    last_started_at = date.monotonic()
+                    should_die = await self._run_once()
+
+                    if not should_die:
+                        continue
+
+                    self._logger.info("shard has disconnected and shut down normally")
                     return
-                except asyncio.TimeoutError:
-                    # We are going to run once.
-                    pass
 
-            try:
-                last_started_at = date.monotonic()
-                # TODO: should I be using the result of this still, or is it dead code? Is it a bug I created?
-                await self._run_once()
-                self._logger.info("shard has disconnected and shut down normally")
+                except errors.GatewayConnectionError as ex:
+                    self._logger.error(
+                        "failed to communicate with server, reason was: %s. Will retry shortly",
+                        ex.__cause__,
+                    )
 
-            except errors.GatewayConnectionError as ex:
-                self._logger.error(
-                    "failed to communicate with server, reason was: %s. Will retry shortly",
-                    ex.__cause__,
-                )
+                except errors.GatewayServerClosedConnectionError as ex:
+                    if not ex.can_reconnect:
+                        raise
 
-            except errors.GatewayServerClosedConnectionError as ex:
-                if not ex.can_reconnect:
+                    self._logger.info(
+                        "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
+                        ex.code,
+                        ex.reason,
+                    )
+
+                    # We don't want to back off from this. If Discord keep closing the connection, it is their issue.
+                    # If we back off here, we'll find a mass outage will prevent shards from becoming healthy on
+                    # reconnect in large sharded bots for a very long period of time.
+                    backoff.reset()
+
+                except errors.GatewayError as ex:
+                    self._logger.error("encountered generic gateway error", exc_info=ex)
                     raise
 
-                self._logger.info(
-                    "server has closed connection, will reconnect if possible [code:%s, reason:%s]",
-                    ex.code,
-                    ex.reason,
-                )
-
-                # We don't want to back off from this. If Discord keep closing the connection, it is their issue.
-                # If we back off here, we'll find a mass outage will prevent shards from becoming healthy on
-                # reconnect in large sharded bots for a very long period of time.
-                backoff.reset()
-
-            except errors.GatewayError as ex:
-                self._logger.error("encountered generic gateway error", exc_info=ex)
-                raise
-
-            except Exception as ex:
-                self._logger.error("encountered some unhandled error", exc_info=ex)
-                raise
-
-            finally:
-                self._closed.set()
+                except Exception as ex:
+                    self._logger.error("encountered some unhandled error", exc_info=ex)
+                    raise
+        finally:
+            self._closed.set()
 
     async def _run_once(self) -> bool:
         self._closing.clear()
