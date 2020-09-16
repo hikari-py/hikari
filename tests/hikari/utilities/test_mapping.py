@@ -122,8 +122,8 @@ class TestMRIMutableMapping:
 
     def test_copy(self):
         raw_map = {
-            "floom": (0.4312, "buebue"),
-            "bash": (0.65234, "bunny_time"),
+            "floom": (999999999999999999999999, "buebue"),
+            "bash": (999999999999999999999999, "bunny_time"),
         }
         mock_map = mapping.MRIMutableMapping(raw_map, expiry=datetime.timedelta(seconds=4523412))
         result = mock_map.copy()
