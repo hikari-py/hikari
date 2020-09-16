@@ -315,7 +315,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
             # Windows will sometimes raise an aiohttp.ClientOSError
             # If we cannot do DNS lookup, this will fail with a ClientConnectionError
             # usually.
-            raise errors.GatewayConnectionError(f"Failed to connect to gateway {type(ex).__name__}: {ex}")
+            raise errors.GatewayConnectionError(f"Failed to connect to gateway {type(ex).__name__}: {ex}") from ex
 
         finally:
             await exit_stack.aclose()
