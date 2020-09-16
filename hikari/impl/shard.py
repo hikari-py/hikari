@@ -47,6 +47,7 @@ from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.utilities import data_binding
 from hikari.utilities import date
+from hikari.utilities import net
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
@@ -228,9 +229,9 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
     async def connect(
         cls,
         *,
-        http_config: config.HTTPSettings,
+        http_settings: config.HTTPSettings,
         logger: logging.Logger,
-        proxy_config: config.ProxySettings,
+        proxy_settings: config.ProxySettings,
         log_filterer: typing.Callable[[str], str],
         url: str,
     ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
@@ -246,32 +247,16 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         exit_stack = contextlib.AsyncExitStack()
 
         try:
+            connector = net.create_tcp_connector(http_settings, dns_cache=False, limit=1)
             client_session = await exit_stack.enter_async_context(
-                aiohttp.ClientSession(
-                    connector=aiohttp.TCPConnector(
-                        limit=1,
-                        use_dns_cache=False,
-                        verify_ssl=http_config.verify_ssl,
-                        enable_cleanup_closed=True,
-                        force_close=True,
-                    ),
-                    raise_for_status=True,
-                    timeout=aiohttp.ClientTimeout(
-                        total=http_config.timeouts.total,
-                        connect=http_config.timeouts.acquire_and_connect,
-                        sock_read=http_config.timeouts.request_socket_read,
-                        sock_connect=http_config.timeouts.request_socket_connect,
-                    ),
-                    trust_env=proxy_config.trust_env,
-                    ws_response_class=cls,
-                )
+                net.create_client_session(connector, True, http_settings, True, proxy_settings.trust_env, cls)
             )
 
             web_socket = await exit_stack.enter_async_context(
                 client_session.ws_connect(
                     max_msg_size=0,
-                    proxy=proxy_config.url,
-                    proxy_headers=proxy_config.headers,
+                    proxy=proxy_settings.url,
+                    proxy_headers=proxy_settings.headers,
                     url=url,
                 )
             )
@@ -641,11 +626,13 @@ class GatewayShardImpl(shard.GatewayShard):
             user_id = user_pl["id"]
             self._user_id = snowflakes.Snowflake(user_id)
             tag = user_pl["username"] + "#" + user_pl["discriminator"]
+            unavailable_guild_count = len(data["guilds"])
             self._logger.info(
-                "shard is ready [session:%s, user_id:%s, tag:%s]",
+                "shard is ready [session:%s, user_id:%s, tag:%s, guilds:%s]",
                 self._session_id,
                 user_id,
                 tag,
+                unavailable_guild_count,
             )
             self._handshake_completed.set()
 
@@ -774,8 +761,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
             try:
                 last_started_at = date.monotonic()
-                if not await self._run_once():
-                    self._logger.debug("shard has shut down")
+                # TODO: should I be using the result of this still, or is it dead code? Is it a bug I created?
+                await self._run_once()
 
             except errors.GatewayConnectionError as ex:
                 self._logger.error(
@@ -814,10 +801,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._ws = await exit_stack.enter_async_context(
             _V6GatewayTransport.connect(
-                http_config=self._http_settings,
+                http_settings=self._http_settings,
                 log_filterer=_log_filterer(self._token),
                 logger=self._logger,
-                proxy_config=self._proxy_settings,
+                proxy_settings=self._proxy_settings,
                 url=self._url,
             )
         )

@@ -247,8 +247,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -309,8 +309,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -349,8 +349,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -389,8 +389,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -428,8 +428,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -461,8 +461,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -499,8 +499,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
@@ -537,8 +537,8 @@ class Test_V6GatewayTransport:
 
         with stack:
             async with shard._V6GatewayTransport.connect(
-                http_config=http_settings,
-                proxy_config=proxy_settings,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,

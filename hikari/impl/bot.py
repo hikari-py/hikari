@@ -322,7 +322,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(),
+            connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
             connector_owner=True,
             entity_factory=self._entity_factory,
             executor=self._executor,
@@ -768,7 +768,10 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
         if check_for_updates:
-            asyncio.create_task(ux.check_for_updates(), name="check for package updates")
+            asyncio.create_task(
+                ux.check_for_updates(self._http_settings, self._proxy_settings),
+                name="check for package updates",
+            )
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
         await self.dispatch(lifetime_events.StartingEvent(app=self))
         requirements = await requirements_task
@@ -822,7 +825,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     # die in this time, we shut down immediately.
                     # If we time out, the joining tasks get discarded and we spin up the next
                     # block of shards, if applicable.
-                    _LOGGER.debug("waiting for 5 seconds until next shard startup window")
+                    _LOGGER.info("the next startup window is in 5 seconds, please wait...")
                     await aio.first_completed(aio.all_of(*shard_joiners, timeout=5), close_waiter)
 
                     if not close_waiter.cancelled():
