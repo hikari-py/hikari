@@ -1,4 +1,5 @@
 [![hikarivers](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
+[![traviscomstats](https://travis-ci.com/nekokatt/hikari.svg?branch=master)](https://travis-ci.com/nekokatt/hikari)
 [![pyvers](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
 [![codecov](https://img.shields.io/codecov/c/github/nekokatt/hikari)](https://codecov.io/gh/nekokatt/hikari)
 [![prs](https://img.shields.io/github/issues-pr/nekokatt/hikari)](https://github.com/nekokatt/hikari/pulls)
