@@ -22,6 +22,8 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
+import time
+
 from hikari.utilities import net
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
@@ -191,6 +193,9 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
             args[code] = ""
 
     sys.stdout.write(string.Template(raw_banner).safe_substitute(args))
+    # Give the stream some time to flush
+    sys.stdout.flush()
+    time.sleep(0.125)
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
