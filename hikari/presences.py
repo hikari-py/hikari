@@ -86,7 +86,7 @@ class ActivityType(enum.IntEnum):
     """
 
     COMPETING = 5
-    """Shows up as `Competing in <name>`"""
+    """Shows up as `Competing in <name>`."""
 
     def __str__(self) -> str:
         return self.name

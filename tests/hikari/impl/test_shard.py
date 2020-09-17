@@ -912,7 +912,8 @@ class TestGatewayShardImpl:
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="v0.0.1"))
         stack.enter_context(mock.patch.object(_about, "__version__", new="v1.0.0"))
 
-        await client._identify()
+        with stack:
+            await client._identify()
 
         expected_json = {
             "op": 2,
