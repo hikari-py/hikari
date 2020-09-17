@@ -1915,7 +1915,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to add the user to. This can be a `hikari.guilds.PartialGuild`
             or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialGuild]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to add to the guild. This can be a `hikari.users.PartialUser`
             or the ID of an existing user.
         nick : hikari.undefined.UndefinedOr[builtins.str]
@@ -1984,7 +1984,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialGuild]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to fetch. This can be a `hikari.users.PartialUser`
             or the ID of an existing user.
 

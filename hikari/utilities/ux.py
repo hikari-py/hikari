@@ -24,7 +24,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
-import contextlib
 import distutils.version
 import importlib.resources
 import logging.config
@@ -144,6 +143,9 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
     package : typing.Optional[builtins.str]
         The package to find the `banner.txt` in, or `builtins.None` if no
         banner should be shown.
+
+        !!! note
+            The `banner.txt` must be in the root folder of the package.
     allow_color : builtins.bool
         If `builtins.False`, no colour is allowed. If `builtins.True`, the
         output device must be supported for this to return `builtins.True`.
@@ -177,9 +179,6 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
         # Python stuff.
         "python_implementation": platform.python_implementation(),
         "python_version": platform.python_version(),
-        "python_build": " ".join(platform.python_build()),
-        "python_branch": platform.python_branch(),
-        "python_compiler": platform.python_compiler(),
         # Platform specific stuff I might remove later.
         "system_description": " ".join(filtered_system_bits),
     }
@@ -197,30 +196,33 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
-    """Return `builtins.True` if the terminal device supports colour output.
+    """Return `builtins.True` if the terminal device supports color output.
 
     Parameters
     ----------
     allow_color : builtins.bool
-        If `builtins.False`, no colour is allowed. If `builtins.True`, the
+        If `builtins.False`, no color is allowed. If `builtins.True`, the
         output device must be supported for this to return `builtins.True`.
     force_color : builtins.bool
         If `builtins.True`, return `builtins.True` always, otherwise only
-        return `builtins.True` if the device supports colour output and the
+        return `builtins.True` if the device supports color output and the
         `allow_color` flag is not `builtins.False`.
 
     Returns
     -------
     builtins.bool
-        `builtins.True` if colour is allowed on the output terminal, or
+        `builtins.True` if color is allowed on the output terminal, or
         `builtins.False` otherwise.
     """
+    if not allow_color:
+        return False
+
     # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
     is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
     if os.getenv("CLICOLOR_FORCE", "0") != "0" or force_color:
         return True
-    elif (os.getenv("CLICOLOR", "0") != "0" or allow_color) and is_a_tty:
+    elif os.getenv("CLICOLOR", "0") != "0" and is_a_tty:
         return True
 
     plat = sys.platform
@@ -244,8 +246,25 @@ class HikariVersion(distutils.version.StrictVersion):
 
     # Not typed correctly on distutils, so overriding it raises a false positive...
     version_re: typing.ClassVar[typing.Final[re.Pattern[str]]] = re.compile(  # type: ignore[misc]
-        r"^(\d+)\.(\d+)(\.(\d+))?(\.[a-z]+(\d+))?$", re.I
+        r"^(\d+)\.(\d+)(\.(\d+))?(\.[a-z]+)?(\d+)?$", re.I
     )
+
+    # Parse doesnt set the prerelease correctly, so we overwrite it to fix it.
+    #
+    # Not typed correctly on distutils, so overriding it raises a false positive...
+    def parse(self, vstring: str) -> None:  # type: ignore[override]
+        match = self.version_re.match(vstring)
+        if not match:
+            raise ValueError(f"invalid version number '{vstring}'")
+
+        (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 4, 5, 6)
+
+        self.version = (int(major), int(minor), int(patch) if patch else 0)
+
+        if prerelease:
+            self.prerelease = (prerelease, int(prerelease_num))
+        else:
+            self.prerelease = None
 
 
 async def check_for_updates(
@@ -253,6 +272,10 @@ async def check_for_updates(
     proxy_settings: config.ProxySettings,
 ) -> None:
     """Perform a check for newer versions of the library, logging any found."""
+    if about.__git_sha1__.casefold() == "head":
+        # We are not in a PyPI release, return
+        return
+
     try:
         async with net.create_client_session(
             connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
@@ -272,24 +295,20 @@ async def check_for_updates(
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
-        is_ambiguous_dev = about.__git_sha1__.casefold() == "head"
         newer_releases: typing.List[HikariVersion] = []
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):
-                with contextlib.suppress(Exception):
-                    v = HikariVersion(release_string)
-                    if v.prerelease is not None and not is_dev:
-                        # Don't encourage the user to upgrade from a stable to a dev release...
-                        continue
+                v = HikariVersion(release_string)
+                if v.prerelease is not None and not is_dev:
+                    # Don't encourage the user to upgrade from a stable to a dev release...
+                    continue
 
-                    if is_dev and is_ambiguous_dev and v.version == this_version.version:
-                        # i.e. we are a git release of v2.0.0.dev, and we compare to pypi
-                        # 2.0.0.dev67, we cannot determine if we are newer or not...
-                        continue
+                if v.version == this_version.version:
+                    continue
 
-                    if v > this_version:
-                        newer_releases.append(v)
+                if v > this_version:
+                    newer_releases.append(v)
         if newer_releases:
             newest = max(newer_releases)
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest)
