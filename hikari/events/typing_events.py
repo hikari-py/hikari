@@ -288,7 +288,7 @@ class PrivateTypingEvent(TypingEvent):
         typing.Optional[hikari.channels.DMChannel]
             The channel, if known.
         """
-        return self.app.cache.get_dm(self.user_id)
+        return self.app.cache.get_dm_channel(self.user_id)
 
     @property
     def user(self) -> typing.Optional[users.User]:

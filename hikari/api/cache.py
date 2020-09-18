@@ -78,8 +78,8 @@ class Cache(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        """Get a DM object from the cache.
+    def get_dm_channel(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+        """Get a DM channel object from the cache.
 
         Parameters
         ----------
@@ -95,8 +95,8 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_dms_view(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
-        """Get a view of the DM objects in the cache.
+    def get_dm_channels_view(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
+        """Get a view of the DM channel objects in the cache.
 
         Returns
         -------

@@ -180,13 +180,13 @@ class StatefulCacheImpl(cache.MutableCache):
         self._garbage_collect_user(user_id, decrement=1)
         return channel
 
-    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+    def get_dm_channel(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
         if user_id in self._dm_entries:
             return self._build_dm(self._dm_entries[user_id])
 
         return None
 
-    def get_dms_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
+    def get_dm_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
         if not self._dm_entries:
             return cache_utility.EmptyCacheView()
 
@@ -208,9 +208,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_dm(
         self, channel: channels.DMChannel, /
     ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
-        cached_channel = self.get_dm(channel.recipient.id)
+        cached_channel = self.get_dm_channel(channel.recipient.id)
         self.set_dm(channel)
-        return cached_channel, self.get_dm(channel.recipient.id)
+        return cached_channel, self.get_dm_channel(channel.recipient.id)
 
     def _build_emoji(
         self,

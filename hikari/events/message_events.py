@@ -452,7 +452,7 @@ class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
             The DM channel that the message was sent in, if known and cached,
             otherwise, `builtins.None`.
         """
-        return self.app.cache.get_dm(self.author_id)
+        return self.app.cache.get_dm_channel(self.author_id)
 
     @property
     def author(self) -> users.User:
@@ -517,7 +517,7 @@ class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
     @property
     def channel(self) -> typing.Optional[channels.DMChannel]:
         # <<inherited docstring from MessagesEvent>>.
-        return self.app.cache.get_dm(self.author_id)
+        return self.app.cache.get_dm_channel(self.author_id)
 
     @property
     def author(self) -> typing.Optional[users.User]:

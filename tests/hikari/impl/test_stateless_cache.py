@@ -40,11 +40,11 @@ class TestStatelessCache:
         with pytest.raises(NotImplementedError):
             assert component.delete_dm(123)
 
-    def test_get_dm(self, component):
-        assert component.get_dm(123) is None
+    def test_get_dm_channel(self, component):
+        assert component.get_dm_channel(123) is None
 
-    def test_get_dms_view(self, component):
-        assert component.get_dms_view() == {}
+    def test_get_dm_channels_view(self, component):
+        assert component.get_dm_channels_view() == {}
 
     def test_set_dm(self, component):
         with pytest.raises(NotImplementedError):

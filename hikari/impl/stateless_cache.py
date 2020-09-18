@@ -73,10 +73,10 @@ class StatelessCacheImpl(cache.MutableCache):
     def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
         raise self._no_cache()
 
-    def get_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
+    def get_dm_channel(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
         return None
 
-    def get_dms_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
+    def get_dm_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
         return cache_utilities.EmptyCacheView()
 
     def set_dm(self, channel: channels.DMChannel, /) -> None:

@@ -159,7 +159,7 @@ class TestStatefulCacheImpl:
     def test_delete_dm_for_unknown_channel_channel(self, cache_impl):
         assert cache_impl.delete_dm(snowflakes.Snowflake(564234123)) is None
 
-    def test_get_dm_for_known_channel(self, cache_impl):
+    def test_get_dm_channel_for_known_channel(self, cache_impl):
         mock_channel_data = mock.Mock(cache.DMChannelData)
         mock_channel = mock.Mock(channels.DMChannel)
         cache_impl._dm_entries = mapping.DictionaryCollection(
@@ -169,13 +169,13 @@ class TestStatefulCacheImpl:
             }
         )
         cache_impl._build_dm = mock.Mock(return_value=mock_channel)
-        assert cache_impl.get_dm(snowflakes.Snowflake(65234123)) is mock_channel
+        assert cache_impl.get_dm_channel(snowflakes.Snowflake(65234123)) is mock_channel
         cache_impl._build_dm.assert_called_once_with(mock_channel_data)
 
-    def test_get_dm_for_unknown_channel(self, cache_impl):
-        assert cache_impl.get_dm(snowflakes.Snowflake(561243)) is None
+    def test_get_dm_channel_for_unknown_channel(self, cache_impl):
+        assert cache_impl.get_dm_channel(snowflakes.Snowflake(561243)) is None
 
-    def test_get_dm_view(self, cache_impl):
+    def test_get_dm_channel_view(self, cache_impl):
         mock_channel_data_1 = mock.Mock(
             cache.DMChannelData,
         )
@@ -198,7 +198,7 @@ class TestStatefulCacheImpl:
                 snowflakes.Snowflake(65656): mock_channel_data_2,
             }
         )
-        view = cache_impl.get_dms_view()
+        view = cache_impl.get_dm_channels_view()
         assert view == {
             snowflakes.Snowflake(54213): mock_channel_1,
             snowflakes.Snowflake(65656): mock_channel_2,
@@ -222,8 +222,8 @@ class TestStatefulCacheImpl:
             ]
         )
 
-    def test_get_dm_view_when_no_channels_cached(self, cache_impl):
-        assert cache_impl.get_dms_view() == {}
+    def test_get_dm_channel_view_when_no_channels_cached(self, cache_impl):
+        assert cache_impl.get_dm_channels_view() == {}
 
     def test_set_dm(self, cache_impl):
         mock_recipient = mock.Mock(users.User, id=snowflakes.Snowflake(7652341234))
@@ -266,14 +266,14 @@ class TestStatefulCacheImpl:
         mock_old_cached_channel = mock.Mock(channels.DMChannel)
         mock_new_cached_channel = mock.Mock(channels.DMChannel)
         mock_channel = mock.Mock(channels.DMChannel, recipient=mock.Mock(users.User, id=snowflakes.Snowflake(53123123)))
-        cache_impl.get_dm = mock.Mock(side_effect=[mock_old_cached_channel, mock_new_cached_channel])
+        cache_impl.get_dm_channel = mock.Mock(side_effect=[mock_old_cached_channel, mock_new_cached_channel])
         cache_impl.set_dm = mock.Mock()
         assert cache_impl.update_dm(mock_channel) == (
             mock_old_cached_channel,
             mock_new_cached_channel,
         )
         cache_impl.set_dm.assert_called_once_with(mock_channel)
-        cache_impl.get_dm.assert_has_calls([mock.call(53123123), mock.call(53123123)])
+        cache_impl.get_dm_channel.assert_has_calls([mock.call(53123123), mock.call(53123123)])
 
     def test__build_emoji(self, cache_impl):
         emoji_data = cache.KnownCustomEmojiData(
