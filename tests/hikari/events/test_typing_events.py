@@ -130,10 +130,10 @@ class TestPrivateTypingEvent:
         )
 
     async def test_channel(self, event):
-        event.app.cache.get_dm = mock.Mock(return_value=mock.Mock(spec_set=channels.DMChannel))
+        event.app.cache.get_dm_channel = mock.Mock(return_value=mock.Mock(spec_set=channels.DMChannel))
         result = event.channel
-        assert result is event.app.cache.get_dm.return_value
-        event.app.cache.get_dm.assert_called_once_with(456)
+        assert result is event.app.cache.get_dm_channel.return_value
+        event.app.cache.get_dm_channel.assert_called_once_with(456)
 
     def test_user(self, event):
         event.app.cache.get_user = mock.Mock(return_value=mock.Mock(spec_set=users.User))
