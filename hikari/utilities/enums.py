@@ -24,10 +24,10 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["Enum"]
 
+import os
 import sys
 import types
 import typing
-
 
 _T = typing.TypeVar("_T")
 
@@ -113,10 +113,30 @@ def _attr_mutator(self, *_: typing.Any) -> typing.NoReturn:
 
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
-        return cls._value2member_map_[value]
+        try:
+            return cls._value2member_map_[value]
+        except KeyError:
+            raise ValueError(value) from None
+
+    def __dir__(cls) -> typing.List[str]:
+        members = ["__class__", "__doc__", "__members__", "__module__"]
+        try:
+            members += list(cls._name2member_map_)
+        finally:
+            return members
 
     def __getattr__(cls, name: str) -> typing.Any:
-        return cls._name2member_map_[name]
+        if name.startswith("_") and name.endswith("_"):
+            # Stop recursion errors by trying to look up _name2member_map_
+            # recursively.
+            raise AttributeError(name)
+        try:
+            return cls._name2member_map_[name]
+        except KeyError:
+            try:
+                return super().__getattribute__(name)
+            except AttributeError:
+                raise AttributeError(name) from None
 
     def __getitem__(cls, name: str) -> typing.Any:
         return cls._name2member_map_[name]
@@ -137,7 +157,7 @@ class _EnumMeta(type):
         try:
             base, enum_type = bases
         except ValueError:
-            raise TypeError("Expected two base classes for an enum")
+            raise TypeError("Expected two base classes for an enum") from None
 
         if not issubclass(enum_type, _Enum):
             raise TypeError("second base type for enum must be derived from Enum")
@@ -192,12 +212,19 @@ class _EnumMeta(type):
     __str__ = __repr__
 
 
-class Enum(metaclass=_EnumMeta):
-    def __getattr__(self, name: str) -> typing.Any:
-        return getattr(self.value, name)
+# We have to use this fallback, or Pdoc will fail to document some stuff correctly...
+if os.getenv("PDOC3_GENERATING") == "1":
+    from enum import Enum
+else:
 
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
+    class Enum(metaclass=_EnumMeta):
+        """Re-implementation of parts of Python's `enum` to be faster."""
 
-    def __str__(self) -> str:
-        return f"{type(self).__name__}.{self.name}"
+        def __getattr__(self, name: str) -> typing.Any:
+            return getattr(self.value, name)
+
+        def __repr__(self) -> str:
+            return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
+
+        def __str__(self) -> str:
+            return f"{type(self).__name__}.{self.name}"

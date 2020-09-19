@@ -90,8 +90,12 @@ for i in range(100_000):
 
 py_enum_call_time = timeit.timeit("BasicPyEnum('25')", number=1_000_000, globals=globals())
 hikari_enum_call_time = timeit.timeit("BasicHikariEnum('25')", number=1_000_000, globals=globals())
-py_enum_delegate_to_map_time = timeit.timeit("BasicPyEnum._value2member_map_['25']", number=1_000_000, globals=globals())
-hikari_enum_delegate_to_map_time = timeit.timeit("BasicHikariEnum._value2member_map_['25']", number=1_000_000, globals=globals())
+py_enum_delegate_to_map_time = timeit.timeit(
+    "BasicPyEnum._value2member_map_['25']", number=1_000_000, globals=globals()
+)
+hikari_enum_delegate_to_map_time = timeit.timeit(
+    "BasicHikariEnum._value2member_map_['25']", number=1_000_000, globals=globals()
+)
 py_enum_getitem_time = timeit.timeit("BasicPyEnum['z']", number=1_000_000, globals=globals())
 hikari_enum_getitem_time = timeit.timeit("BasicHikariEnum['z']", number=1_000_000, globals=globals())
 

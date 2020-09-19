@@ -29,6 +29,7 @@
 # we are using are just aliases from the enum types in the standard library.
 
 import enum as __enum
+
 Enum = __enum.Enum
 
 __all__ = ["Enum"]
