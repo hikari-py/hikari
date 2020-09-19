@@ -19,32 +19,35 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of parts of Python's `enum` protocol to be fast."""
+"""Implementation of parts of Python's `enum` protocol to be faster."""
 from __future__ import annotations
 
 __all__: typing.List[str] = ["Enum"]
 
-import collections
 import sys
 import types
+import typing
 
 
-class _EnumNamespace(dict):
-    def __init__(self, base) -> None:
+_T = typing.TypeVar("_T")
+
+
+class _EnumNamespace(typing.Dict[str, typing.Any]):
+    def __init__(self, base: typing.Type[typing.Any]) -> None:
         super().__init__()
         self.base = base
-        self.names_to_values = {}
-        self.values_to_names = {}
+        self.names_to_values: typing.Dict[str, typing.Any] = {}
+        self.values_to_names: typing.Dict[str, typing.Any] = {}
         self["__doc__"] = "An enumeration."
 
-    def __contains__(self, item):
+    def __contains__(self, item: typing.Any) -> bool:
         try:
             _ = self[item]
             return True
         except KeyError:
             return False
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> typing.Any:
         try:
             return super().__getitem__(name)
         except KeyError:
@@ -53,7 +56,7 @@ class _EnumNamespace(dict):
             except KeyError:
                 raise KeyError(name) from None
 
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[str]:
         yield from super().__iter__()
         yield from self.names_to_values
 
@@ -104,22 +107,27 @@ class _EnumNamespace(dict):
 _Enum = NotImplemented
 
 
-def _attr_mutator(self, *_):
+def _attr_mutator(self, *_: typing.Any) -> typing.NoReturn:
     raise TypeError("Cannot mutate enum members")
 
 
 class _EnumMeta(type):
-    def __call__(cls, value):
+    def __call__(cls, value: typing.Any) -> typing.Any:
         return cls._value2member_map_[value]
 
-    def __getattr__(cls, name):
+    def __getattr__(cls, name: str) -> typing.Any:
         return cls._name2member_map_[name]
 
-    def __getitem__(cls, name):
+    def __getitem__(cls, name: str) -> typing.Any:
         return cls._name2member_map_[name]
 
     @staticmethod
-    def __new__(mcs, name, bases, namespace):
+    def __new__(
+        mcs: typing.Type[_T],
+        name: str,
+        bases: typing.Tuple[typing.Type[typing.Any], ...],
+        namespace: _EnumNamespace,
+    ) -> _T:
         global _Enum
 
         if name == "Enum" and _Enum is NotImplemented:
@@ -164,7 +172,7 @@ class _EnumMeta(type):
         return cls
 
     @classmethod
-    def __prepare__(mcs, name, bases=()):
+    def __prepare__(mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()) -> _EnumNamespace:
         try:
             # Fails if Enum is not defined. We check this in `__new__` properly.
             base, enum_type = bases
@@ -178,18 +186,18 @@ class _EnumMeta(type):
         except ValueError:
             return _EnumNamespace(object)
 
-    def __repr__(cls):
+    def __repr__(cls) -> str:
         return f"<enum {cls.__name__}>"
 
     __str__ = __repr__
 
 
 class Enum(metaclass=_EnumMeta):
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> typing.Any:
         return getattr(self.value, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{type(self).__name__}.{self.name}"
