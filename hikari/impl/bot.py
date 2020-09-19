@@ -26,7 +26,7 @@ from __future__ import annotations
 import threading
 import traceback
 
-__all__: typing.Final[typing.List[str]] = ["BotApp", "LoggerLevelT"]
+__all__: typing.List[str] = ["BotApp", "LoggerLevelT"]
 
 import asyncio
 import concurrent.futures

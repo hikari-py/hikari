@@ -27,7 +27,7 @@ wish to extend this API further!
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "LazyIterator",
     "FlatLazyIterator",
     "All",

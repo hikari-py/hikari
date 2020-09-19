@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatelessEventManagerImpl"]
+__all__: typing.List[str] = ["StatelessEventManagerImpl"]
 
 import logging
 import typing

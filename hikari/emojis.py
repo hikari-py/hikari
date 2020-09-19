@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
+__all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
 
 import abc
 import typing

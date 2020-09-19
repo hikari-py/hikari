@@ -22,7 +22,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["ConnectorFactory", "RESTClient"]
+__all__: typing.List[str] = ["ConnectorFactory", "RESTClient"]
 
 import abc
 import typing

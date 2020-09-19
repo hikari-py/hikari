@@ -22,7 +22,7 @@
 """Utility for extending and optimising the usage of attr models."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "with_copy",
     "copy_attrs",
     "deep_copy_attrs",

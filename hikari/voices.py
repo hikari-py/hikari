@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["VoiceRegion", "VoiceState", "VoiceRegionish"]
+__all__: typing.List[str] = ["VoiceRegion", "VoiceState", "VoiceRegionish"]
 
 import typing
 

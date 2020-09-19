@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatefulEventManagerImpl"]
+__all__: typing.List[str] = ["StatefulEventManagerImpl"]
 
 import asyncio
 import typing

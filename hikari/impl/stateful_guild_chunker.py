@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatefulGuildChunkerImpl", "ChunkStream"]
+__all__: typing.List[str] = ["StatefulGuildChunkerImpl", "ChunkStream"]
 
 import asyncio
 import base64

@@ -22,9 +22,7 @@
 """Core interface for components that dispatch events to the library."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
-    "EventDispatcher",
-]
+__all__: typing.List[str] = ["EventDispatcher"]
 
 import abc
 import asyncio

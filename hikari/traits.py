@@ -22,7 +22,7 @@
 """Core app interface for application implementations."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "AsyncCallbackT",
     "EventT_co",
     "EventT_inv",
