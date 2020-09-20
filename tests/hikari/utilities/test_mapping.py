@@ -136,7 +136,11 @@ class TestMRIMutableMapping:
         assert dict(result) == {"floom": "buebue", "bash": "bunny_time"}, "got: " + repr(dict(result))
 
     def test_freeze(self):
-        raw_map = {"bash": (0.523423, "gtuutueu"), "blam": (0.4332, "poke"), "owowo": (0.323, "no you")}
+        raw_map = {
+            "bash": (999999999999999999999999, "gtuutueu"),
+            "blam": (999999999999999999999999, "poke"),
+            "owowo": (999999999999999999999999, "no you"),
+        }
         mock_map = mapping.MRIMutableMapping(raw_map, expiry=datetime.timedelta(seconds=6523423))
         result = mock_map.freeze()
 
