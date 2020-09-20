@@ -906,7 +906,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def pin_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.PUT_CHANNEL_PINS.compile(channel=channel, message=message)
         await self._request(route)
@@ -914,7 +914,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def unpin_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
@@ -965,7 +965,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         raw_response = await self._request(route)
@@ -1058,7 +1058,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_crossposts(
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_CROSSPOST.compile(channel=channel, message=message)
 
@@ -1070,7 +1070,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1115,7 +1115,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         await self._request(route)
@@ -1124,12 +1124,12 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         /,
-        *messages: snowflakes.SnowflakeishOr[messages_.Message],
+        *messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending: typing.Deque[snowflakes.SnowflakeishOr[messages_.Message]] = collections.deque(messages)
-        deleted: typing.Deque[snowflakes.SnowflakeishOr[messages_.Message]] = collections.deque()
+        pending: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque(messages)
+        deleted: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque()
 
         while pending:
             # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,
@@ -1175,7 +1175,6 @@ class RESTClientImpl(rest_api.RESTClient):
             return emoji.url_name
 
         if isinstance(emoji, str) and (custom_mention_match := self._CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
-            # False positive in PyCharm, yet again.
             return custom_mention_match.group(1)
 
         return str(emoji)
@@ -1183,7 +1182,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def add_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
@@ -1196,7 +1195,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_my_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
@@ -1209,7 +1208,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_all_reactions_for_emoji(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
@@ -1222,7 +1221,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> None:
@@ -1237,7 +1236,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_all_reactions(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
@@ -1245,7 +1244,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def fetch_reactions_for_emoji(
         self,
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages_.Message],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
         return special_endpoints.ReactorIterator(
@@ -1625,11 +1624,9 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
-        emoji: typing.Union[str, emojis.CustomEmoji],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> emojis.KnownCustomEmoji:
-        route = routes.GET_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
+        route = routes.GET_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
@@ -1671,9 +1668,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
-        emoji: typing.Union[str, emojis.CustomEmoji],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[
@@ -1681,7 +1676,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
-        route = routes.PATCH_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
+        route = routes.PATCH_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put_snowflake_array("roles", roles)
@@ -1693,11 +1688,9 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        # This is an emoji ID, which is the URL-safe emoji name, not the snowflake alone.
-        # likewise this only is valid for custom emojis, unicode emojis make little sense here.
-        emoji: typing.Union[str, emojis.CustomEmoji],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> None:
-        route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=self._transform_emoji_to_url_format(emoji))
+        route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route)
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
@@ -2067,7 +2060,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         body = data_binding.JSONObjectBuilder()

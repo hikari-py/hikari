@@ -28,6 +28,7 @@ __all__: typing.List[str] = [
     "HikariWarning",
     "HikariInterrupt",
     "NotFoundError",
+    "RateLimitedError",
     "UnauthorizedError",
     "ForbiddenError",
     "BadRequestError",
@@ -382,10 +383,10 @@ class BulkDeleteError(HikariError):
     and will have a cause containing the initial exception.
     """
 
-    messages_deleted: typing.Sequence[snowflakes.SnowflakeishOr[messages.Message]] = attr.ib()
+    messages_deleted: typing.Sequence[snowflakes.SnowflakeishOr[messages.PartialMessage]] = attr.ib()
     """Any message objects that were deleted before an exception occurred."""
 
-    messages_skipped: typing.Sequence[snowflakes.SnowflakeishOr[messages.Message]] = attr.ib()
+    messages_skipped: typing.Sequence[snowflakes.SnowflakeishOr[messages.PartialMessage]] = attr.ib()
     """Any message objects that were skipped due to an exception."""
 
     @property
