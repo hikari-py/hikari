@@ -2511,33 +2511,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def edit_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
-        *,
-        expire_behaviour: undefined.UndefinedOr[guilds.IntegrationExpireBehaviour] = undefined.UNDEFINED,
-        expire_grace_period: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
-        enable_emojis: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        ...
-
-    @abc.abstractmethod
     async def delete_integration(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         integration: snowflakes.SnowflakeishOr[guilds.Integration],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        ...
-
-    @abc.abstractmethod
-    async def sync_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
     ) -> None:
         ...
 

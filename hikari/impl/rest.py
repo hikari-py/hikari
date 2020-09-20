@@ -2262,24 +2262,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_integration)
 
-    async def edit_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
-        *,
-        expire_behaviour: undefined.UndefinedOr[guilds.IntegrationExpireBehaviour] = undefined.UNDEFINED,
-        expire_grace_period: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
-        enable_emojis: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        route = routes.PATCH_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
-        body = data_binding.JSONObjectBuilder()
-        body.put("expire_behaviour", expire_behaviour)
-        body.put("expire_grace_period", expire_grace_period, conversion=date.timespan_to_int)
-        # Inconsistent naming in the API itself, so I have changed the name.
-        body.put("enable_emoticons", enable_emojis)
-        await self._request(route, json=body, reason=reason)
-
     async def delete_integration(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2289,14 +2271,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.DELETE_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
         await self._request(route, reason=reason)
-
-    async def sync_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
-    ) -> None:
-        route = routes.POST_GUILD_INTEGRATION_SYNC.compile(guild=guild, integration=integration)
-        await self._request(route)
 
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
