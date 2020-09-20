@@ -495,6 +495,8 @@
             if hasattr(parent, "__annotations__") and v.name in parent.__annotations__:
                 return_type = get_annotation(lambda *_, **__: parent.__annotations__[v.name])
 
+            return_type = re.sub(r'[\w\.]+', functools.partial(_fixed_linkify, link=link, module=v.module), return_type)
+
         value = None
         if v.cls is not None:
             try:
