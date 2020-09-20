@@ -22,7 +22,7 @@
 """Events fired when users begin typing in channels."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "TypingEvent",
     "GuildTypingEvent",
     "PrivateTypingEvent",

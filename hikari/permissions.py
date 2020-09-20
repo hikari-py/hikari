@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["Permissions"]
+__all__: typing.List[str] = ["Permissions"]
 
 import enum
 import typing

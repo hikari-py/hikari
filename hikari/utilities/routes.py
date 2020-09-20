@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["CompiledRoute", "Route", "CDNRoute"]
+__all__: typing.List[str] = ["CompiledRoute", "Route", "CDNRoute"]
 
 import math
 import re

@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["EventFactoryImpl"]
+__all__: typing.List[str] = ["EventFactoryImpl"]
 
 import datetime
 import typing

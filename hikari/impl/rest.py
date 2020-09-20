@@ -27,7 +27,7 @@ RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "BasicLazyCachedTCPConnectorFactory",
     "RESTApp",
     "RESTClientImpl",

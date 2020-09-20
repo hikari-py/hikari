@@ -22,7 +22,7 @@
 """Events fired when the account user is updated."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["OwnUserUpdateEvent"]
+__all__: typing.List[str] = ["OwnUserUpdateEvent"]
 
 import typing
 

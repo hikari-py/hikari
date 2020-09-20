@@ -22,7 +22,7 @@
 """Core interface for a cache implementation."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["CacheView", "Cache", "MutableCache"]
+__all__: typing.List[str] = ["CacheView", "Cache", "MutableCache"]
 
 import abc
 import typing

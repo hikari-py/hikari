@@ -22,7 +22,7 @@
 """Various utilities that may be used in a cache-impl."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "IDTable",
     "StatefulCacheMappingView",
     "EmptyCacheView",

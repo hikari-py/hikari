@@ -26,7 +26,7 @@ bots where desired.
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["StatelessCacheImpl"]
+__all__: typing.List[str] = ["StatelessCacheImpl"]
 
 import typing
 

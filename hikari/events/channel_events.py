@@ -26,7 +26,7 @@ This does not include message events, nor reaction events.
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "ChannelEvent",
     "GuildChannelEvent",
     "PrivateChannelEvent",

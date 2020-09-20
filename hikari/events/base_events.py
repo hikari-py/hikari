@@ -22,7 +22,7 @@
 """Base types and functions for events in Hikari."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "Event",
     "ExceptionEvent",
     "is_no_recursive_throw_event",

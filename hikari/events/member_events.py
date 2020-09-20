@@ -22,7 +22,7 @@
 """Events concerning manipulation of members within guilds."""
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = [
+__all__: typing.List[str] = [
     "MemberEvent",
     "MemberCreateEvent",
     "MemberUpdateEvent",

@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GuildChunker", "RequestInformation"]
+__all__: typing.List[str] = ["GuildChunker", "RequestInformation"]
 
 import abc
 import typing

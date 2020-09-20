@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["GatewayShardImpl"]
+__all__: typing.List[str] = ["GatewayShardImpl"]
 
 import asyncio
 import contextlib

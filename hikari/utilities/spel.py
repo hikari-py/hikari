@@ -52,7 +52,7 @@ and nice to work with.
 """
 from __future__ import annotations
 
-__all__: typing.Final[typing.List[str]] = ["AttrGetter"]
+__all__: typing.List[str] = ["AttrGetter"]
 
 import operator
 import typing

@@ -22,7 +22,7 @@
 """Mapping utility and implementations used in Hriki."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = [
+__all__: typing.List[str] = [
     "MapT",
     "KeyT",
     "ValueT",
