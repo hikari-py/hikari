@@ -2379,38 +2379,12 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
-    async def test_edit_integration(self, rest_client):
-        expected_route = routes.PATCH_GUILD_INTEGRATION.compile(guild=123, integration=789)
-        expected_json = {
-            "expire_behaviour": 0,
-            "expire_grace_period": 60,
-            "enable_emoticons": True,
-        }
-        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-
-        await rest_client.edit_integration(
-            StubModel(123),
-            StubModel(789),
-            expire_behaviour=guilds.IntegrationExpireBehaviour.REMOVE_ROLE,
-            expire_grace_period=60,
-            enable_emojis=True,
-            reason="change of mind",
-        )
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="change of mind")
-
     async def test_delete_integration(self, rest_client):
         expected_route = routes.DELETE_GUILD_INTEGRATION.compile(guild=123, integration=456)
         rest_client._request = mock.AsyncMock()
 
         await rest_client.delete_integration(StubModel(123), StubModel(456), reason="dont need it anymore")
         rest_client._request.assert_awaited_once_with(expected_route, reason="dont need it anymore")
-
-    async def test_sync_integration(self, rest_client):
-        expected_route = routes.POST_GUILD_INTEGRATION_SYNC.compile(guild=123, integration=456)
-        rest_client._request = mock.AsyncMock()
-
-        await rest_client.sync_integration(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_widget(self, rest_client):
         widget = StubModel(789)

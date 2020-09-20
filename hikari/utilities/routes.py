@@ -354,11 +354,9 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
-PATCH_GUILD_INTEGRATION: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/integrations/{integration}")
-DELETE_GUILD_INTEGRATION: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/integrations/{integration}")
 
 GET_GUILD_INTEGRATIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/integrations")
-POST_GUILD_INTEGRATION_SYNC: typing.Final[Route] = Route(POST, "/guilds/{guild}/integrations/{integration}")
+DELETE_GUILD_INTEGRATION: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/integrations/{integration}")
 
 GET_GUILD_INVITES: typing.Final[Route] = Route(GET, "/guilds/{guild}/invites")
 
