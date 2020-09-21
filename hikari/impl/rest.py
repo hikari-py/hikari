@@ -2095,9 +2095,20 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
-    ) -> guilds.GuildMemberBan:
+    ) -> typing.Optional[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
-        raw_response = await self._request(route)
+        try:
+            raw_response = await self._request(route)
+        except errors.NotFoundError as ex:
+            # Discord raises an error when the ban is not found.
+            # We simplify this for the user and only raise the
+            # NotFoundError if it is something else not being found.
+            json_body = typing.cast(data_binding.JSONObject, data_binding.load_json(ex.raw_body))
+            if json_body["code"] == 10026:
+                return None
+
+            raise
+
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_guild_member_ban(response)
 

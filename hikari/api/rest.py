@@ -2329,7 +2329,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
-    ) -> guilds.GuildMemberBan:
+    ) -> typing.Optional[guilds.GuildMemberBan]:
         ...
 
     @abc.abstractmethod

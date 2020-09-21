@@ -43,6 +43,7 @@ from hikari import users
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
+from hikari.utilities import data_binding
 from hikari.utilities import net
 from hikari.utilities import routes
 from tests.hikari import client_session_stub
@@ -2192,6 +2193,31 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_ban(StubModel(123), StubModel(456)) == ban
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
+
+    async def test_fetch_ban_when_ban_NOT_FOUND(self, rest_client):
+        expected_route = routes.GET_GUILD_BAN.compile(guild=123, user=456)
+        rest_client._request = mock.AsyncMock(side_effect=errors.NotFoundError("url", {}, "{'code': 10026}"))
+
+        with mock.patch.object(data_binding, "load_json", return_value={"code": 10026}) as load_json:
+            assert await rest_client.fetch_ban(StubModel(123), StubModel(456)) is None
+
+        load_json.assert_called_once_with("{'code': 10026}")
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_guild_member_ban.assert_not_called()
+
+    async def test_fetch_ban_when_other_NOT_FOUND(self, rest_client):
+        ex = errors.NotFoundError("url", {}, "{'code': 0}")
+        expected_route = routes.GET_GUILD_BAN.compile(guild=123, user=456)
+        rest_client._request = mock.AsyncMock(side_effect=ex)
+
+        with mock.patch.object(data_binding, "load_json", return_value={"code": 0}) as load_json:
+            with pytest.raises(errors.NotFoundError) as exception:
+                await rest_client.fetch_ban(StubModel(123), StubModel(456))
+
+        assert exception.value is ex
+        load_json.assert_called_once_with("{'code': 0}")
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_guild_member_ban.assert_not_called()
 
     async def test_fetch_bans(self, rest_client):
         ban1 = StubModel(456)
