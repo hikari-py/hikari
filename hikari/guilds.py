@@ -279,11 +279,11 @@ class GuildWidget:
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
-    guild_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    guild_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the guild this member belongs to."""
 
     # This is technically optional, since UPDATE MEMBER and MESSAGE CREATE
@@ -293,14 +293,10 @@ class Member(users.User):
     # can assume this is always set, and thus we are always able to get info
     # such as the ID of the user this member represents.
     # TODO: make member generic on this field (e.g. Member[PartialUser], Member[UserImpl], Member[OwnUser], etc)?
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: users.User = attr.ib(repr=True)
     """This member's corresponding user object."""
 
-    nickname: undefined.UndefinedNoneOr[str] = attr.ib(
-        eq=False,
-        hash=False,
-        repr=True,
-    )
+    nickname: undefined.UndefinedNoneOr[str] = attr.ib(repr=True)
     """This member's nickname.
 
     This will be `builtins.None` if not set.
@@ -309,26 +305,26 @@ class Member(users.User):
     In this case, this will be undefined.
     """
 
-    role_ids: typing.Sequence[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=False)
     """A sequence of the IDs of the member's current roles."""
 
-    joined_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=True)
+    joined_at: datetime.datetime = attr.ib(repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
-    premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    premium_since: typing.Optional[datetime.datetime] = attr.ib(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
     Will be `builtins.None` if the member is not a premium user.
     """
 
-    is_deaf: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_deaf: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """`builtins.True` if this member is deafened in the current voice channel.
 
     This will be `hikari.undefined.UndefinedType if it's state is
     unknown.
     """
 
-    is_mute: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_mute: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """`builtins.True` if this member is muted in the current voice channel.
 
     This will be `hikari.undefined.UndefinedType if it's state is unknown.
@@ -451,6 +447,12 @@ class Member(users.User):
 
     def __str__(self) -> str:
         return str(self.user)
+
+    def __hash__(self) -> int:
+        return hash(self.user)
+
+    def __eq__(self, other: object) -> bool:
+        return self.user == other
 
 
 @attr_extensions.with_copy

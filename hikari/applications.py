@@ -265,31 +265,37 @@ class TeamMembershipState(enum.IntEnum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class TeamMember:
     """Represents a member of a Team."""
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.ib(repr=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
-    membership_state: TeamMembershipState = attr.ib(eq=False, hash=False, repr=False)
+    membership_state: TeamMembershipState = attr.ib(repr=False)
     """The state of this user's membership."""
 
-    permissions: typing.Sequence[str] = attr.ib(eq=False, hash=False, repr=False)
+    permissions: typing.Sequence[str] = attr.ib(repr=False)
     """This member's permissions within a team.
 
     At the time of writing, this will always be a sequence of one `builtins.str`,
     which will always be `"*"`. This may change in the future, however.
     """
 
-    team_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    team_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = attr.ib(eq=True, hash=True, repr=True)
+    user: users.User = attr.ib(repr=True)
     """The user representation of this team member."""
 
     def __str__(self) -> str:
         return str(self.user)
+
+    def __hash__(self) -> int:
+        return hash(self.user)
+
+    def __eq__(self, other: object) -> bool:
+        return self.user == other
 
 
 @attr_extensions.with_copy
