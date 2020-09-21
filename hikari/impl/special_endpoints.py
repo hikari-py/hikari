@@ -441,7 +441,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
-        message: snowflakes.SnowflakeishOr[messages.Message],
+        message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
     ) -> None:
         super().__init__()

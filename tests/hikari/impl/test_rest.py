@@ -1698,12 +1698,11 @@ class TestRESTClientImplAsync:
 
     async def test_fetch_emoji(self, rest_client):
         emoji = StubModel(456)
-        expected_route = routes.GET_GUILD_EMOJI.compile(emoji="rooYay:123", guild=123)
+        expected_route = routes.GET_GUILD_EMOJI.compile(emoji=456, guild=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._transform_emoji_to_url_format = mock.Mock(return_value="rooYay:123")
         rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
 
-        assert await rest_client.fetch_emoji(StubModel(123), "<:rooYay:123>") == emoji
+        assert await rest_client.fetch_emoji(StubModel(123), StubModel(456)) == emoji
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "456"}, guild_id=123)
 
@@ -1738,15 +1737,14 @@ class TestRESTClientImplAsync:
 
     async def test_edit_emoji(self, rest_client):
         emoji = StubModel(234)
-        expected_route = routes.PATCH_GUILD_EMOJI.compile(guild=123, emoji="rooYay:123")
+        expected_route = routes.PATCH_GUILD_EMOJI.compile(guild=123, emoji=456)
         expected_json = {"name": "rooYay2", "roles": ["789", "987"]}
         rest_client._request = mock.AsyncMock(return_value={"id": "234"})
         rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
-        rest_client._transform_emoji_to_url_format = mock.Mock(return_value="rooYay:123")
 
         returned = await rest_client.edit_emoji(
             StubModel(123),
-            "<:rooYay:123>",
+            StubModel(456),
             name="rooYay2",
             roles=[StubModel(789), StubModel(987)],
             reason="Because we have got the power",
@@ -1759,11 +1757,10 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "234"}, guild_id=123)
 
     async def test_delete_emoji(self, rest_client):
-        expected_route = routes.DELETE_GUILD_EMOJI.compile(guild=123, emoji="rooYay:123")
+        expected_route = routes.DELETE_GUILD_EMOJI.compile(guild=123, emoji=456)
         rest_client._request = mock.AsyncMock()
-        rest_client._transform_emoji_to_url_format = mock.Mock(return_value="rooYay:123")
 
-        await rest_client.delete_emoji(StubModel(123), "<:rooYay:123>")
+        await rest_client.delete_emoji(StubModel(123), StubModel(456))
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_guild(self, rest_client):
