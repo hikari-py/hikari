@@ -198,19 +198,6 @@ class HTTPClientClosedError(HTTPError):
     """The error message."""
 
 
-_message_default_factory = attr.Factory(
-    lambda self: f"{self.status}: {self.raw_body}" if self.reason is None else self.reason, takes_self=True
-)
-
-
-@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
-class HTTPErrorResponse(HTTPError):
-    """Base exception for an erroneous HTTP response."""
-
-    url: str = attr.ib()
-    """The URL that produced this error message."""
-
-
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
@@ -227,27 +214,30 @@ class HTTPResponseError(HTTPError):
     raw_body: typing.Any = attr.ib()
     """The response body."""
 
-    reason: typing.Optional[str] = attr.ib(default=None)
-    """The error reason. If `builtins.None`, will generate one automatically."""
-
-    message: str = attr.ib(default=_message_default_factory, init=False)
+    message: str = attr.ib(default="")
     """The error message."""
 
+    code: int = attr.ib(default=0)
+    """The error code."""
+
     def __str__(self) -> str:
-        try:
-            raw_body = self.raw_body.decode("utf-8")
-        except (AttributeError, UnicodeDecodeError):
-            raw_body = str(self.raw_body)
-
-        chomped = len(raw_body) > 200
-
         if isinstance(self.status, http.HTTPStatus):
             name = self.status.name.replace("_", " ").title()
             name_value = f"{name} {self.status.value}"
         else:
             name_value = str(self.status).title()
 
-        return f"{name_value}: {raw_body[:200]}{'...' if chomped else ''} for {self.url}"
+        if self.message:
+            body = self.message
+        else:
+            try:
+                body = self.raw_body.decode("utf-8")
+            except (AttributeError, UnicodeDecodeError, TypeError, ValueError):
+                body = str(self.raw_body)
+
+        chomped = len(body) > 200
+
+        return f"{name_value}: '{body[:200]}{'...' if chomped else ''}' for {self.url}"
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
@@ -266,9 +256,6 @@ class BadRequestError(ClientHTTPResponseError):
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.BAD_REQUEST, init=False)
     """The HTTP status code for the response."""
 
-    message: str = attr.ib(default=_message_default_factory, init=False)
-    """The error message."""
-
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class UnauthorizedError(ClientHTTPResponseError):
@@ -276,9 +263,6 @@ class UnauthorizedError(ClientHTTPResponseError):
 
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.UNAUTHORIZED, init=False)
     """The HTTP status code for the response."""
-
-    message: str = attr.ib(default=_message_default_factory, init=False)
-    """The error message."""
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
@@ -293,9 +277,6 @@ class ForbiddenError(ClientHTTPResponseError):
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.FORBIDDEN, init=False)
     """The HTTP status code for the response."""
 
-    message: str = attr.ib(default=_message_default_factory, init=False)
-    """The error message."""
-
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class NotFoundError(ClientHTTPResponseError):
@@ -303,9 +284,6 @@ class NotFoundError(ClientHTTPResponseError):
 
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.NOT_FOUND, init=False)
     """The HTTP status code for the response."""
-
-    message: str = attr.ib(default=_message_default_factory, init=False)
-    """The error message."""
 
 
 @attr.s(auto_exc=True, kw_only=True, slots=True, repr=False, weakref_slot=False)
@@ -353,9 +331,6 @@ class RateLimitedError(ClientHTTPResponseError):
     @reason.default
     def _(self) -> str:
         return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
-
-    message: str = attr.ib(default=_message_default_factory, init=False)
-    """The error message."""
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
