@@ -36,7 +36,7 @@ from hikari.utilities import flag
 class Permissions(flag.Flag):
     """Represents the permissions available in a given channel or guild.
 
-    This is an int-flag enum. This means that you can **combine multiple
+    This enum is an `enum.IntFlag`. This means that you can **combine multiple
     permissions together** into one value using the bitwise-OR operator (`|`).
 
         my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD

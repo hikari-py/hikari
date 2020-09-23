@@ -179,7 +179,9 @@ class GuildBuilder(abc.ABC):
     If not overridden, the guild will use the default voice region for Discord.
     """
 
-    verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = attr.ib(default=undefined.UNDEFINED)
+    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.ib(
+        default=undefined.UNDEFINED
+    )
     """Verification level required to join the guild that can be overwritten.
 
     If not overridden, the guild will use the default verification level for

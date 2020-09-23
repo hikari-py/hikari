@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["WebhookType", "Webhook"]
 
-import enum
 import typing
 
 import attr
@@ -35,6 +34,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -46,9 +46,8 @@ if typing.TYPE_CHECKING:
     from hikari import users as users_
 
 
-@enum.unique
 @typing.final
-class WebhookType(enum.IntEnum):
+class WebhookType(int, enums.Enum):
     """Types of webhook."""
 
     INCOMING = 1
@@ -77,7 +76,7 @@ class Webhook(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
-    type: WebhookType = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[WebhookType, int] = attr.ib(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)

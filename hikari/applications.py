@@ -34,7 +34,6 @@ __all__: typing.List[str] = [
     "TeamMembershipState",
 ]
 
-import enum
 import typing
 
 import attr
@@ -44,6 +43,7 @@ from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -52,9 +52,8 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-@enum.unique
 @typing.final
-class OAuth2Scope(str, enum.Enum):
+class OAuth2Scope(str, enums.Enum):
     """OAuth2 Scopes that Discord allows.
 
     These are categories of permissions for applications using the OAuth2 API
@@ -184,9 +183,8 @@ class OAuth2Scope(str, enum.Enum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class ConnectionVisibility(enum.IntEnum):
+class ConnectionVisibility(int, enums.Enum):
     """Describes who can see a connection with a third party account."""
 
     NONE = 0
@@ -235,7 +233,7 @@ class OwnConnection:
     is_activity_visible: bool = attr.ib(eq=False, hash=False, repr=False)
     """`builtins.True` if this connection's activities are shown in the user's presence."""
 
-    visibility: ConnectionVisibility = attr.ib(eq=False, hash=False, repr=True)
+    visibility: typing.Union[ConnectionVisibility, int] = attr.ib(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
@@ -250,8 +248,8 @@ class OwnGuild(guilds.PartialGuild):
     """The guild-level permissions that apply to the current user or bot."""
 
 
-@enum.unique
-class TeamMembershipState(enum.IntEnum):
+@typing.final
+class TeamMembershipState(int, enums.Enum):
     """Represents the state of a user's team membership."""
 
     INVITED = 1
@@ -272,7 +270,7 @@ class TeamMember:
     app: traits.RESTAware = attr.ib(repr=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
-    membership_state: TeamMembershipState = attr.ib(repr=False)
+    membership_state: typing.Union[TeamMembershipState, int] = attr.ib(repr=False)
     """The state of this user's membership."""
 
     permissions: typing.Sequence[str] = attr.ib(repr=False)

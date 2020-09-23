@@ -47,13 +47,13 @@ __all__: typing.List[str] = [
     "VoiceError",
 ]
 
-import enum
 import http
 import typing
 
 import attr
 
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_
@@ -109,9 +109,8 @@ class GatewayError(HikariError):
         return self.reason
 
 
-@enum.unique
 @typing.final
-class ShardCloseCode(enum.IntEnum):
+class ShardCloseCode(int, enums.Enum):
     """Reasons for a shard connection closure."""
 
     NORMAL_CLOSURE = 1000

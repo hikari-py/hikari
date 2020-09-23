@@ -25,10 +25,10 @@ from __future__ import annotations
 __all__: typing.List[str] = ["GatewayDataFormat", "GatewayCompression", "GatewayShard"]
 
 import abc
-import enum
 import typing
 
 from hikari import undefined
+from hikari.utilities import enums
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -41,9 +41,8 @@ if typing.TYPE_CHECKING:
     from hikari import users as users_
 
 
-@enum.unique
 @typing.final
-class GatewayDataFormat(str, enum.Enum):
+class GatewayDataFormat(str, enums.Enum):
     """Format of inbound gateway payloads."""
 
     JSON = "json"
@@ -52,9 +51,8 @@ class GatewayDataFormat(str, enum.Enum):
     """Erlang transmission format."""
 
 
-@enum.unique
 @typing.final
-class GatewayCompression(str, enum.Enum):
+class GatewayCompression(str, enums.Enum):
     """Types of gateway compression that may be supported."""
 
     TRANSPORT_ZLIB_STREAM = "transport_zlib_stream"

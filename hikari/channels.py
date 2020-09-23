@@ -42,7 +42,6 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import enum
 import typing
 
 import attr
@@ -54,6 +53,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -67,9 +67,8 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
 
 
-@enum.unique
 @typing.final
-class ChannelType(enum.IntEnum):
+class ChannelType(int, enums.Enum):
     """The known channel types that are exposed to us by the API."""
 
     GUILD_TEXT = 0
@@ -201,9 +200,8 @@ class ChannelFollow:
         return channel
 
 
-@enum.unique
 @typing.final
-class PermissionOverwriteType(str, enum.Enum):
+class PermissionOverwriteType(str, enums.Enum):
     """The type of entity a Permission Overwrite targets."""
 
     ROLE = "role"
@@ -252,7 +250,9 @@ class PermissionOverwrite(snowflakes.Unique):
     )
     """The ID of this entity."""
 
-    type: PermissionOverwriteType = attr.ib(converter=PermissionOverwriteType, eq=True, hash=True, repr=True)
+    type: typing.Union[PermissionOverwriteType, str] = attr.ib(
+        converter=PermissionOverwriteType, eq=True, hash=True, repr=True
+    )
     """The type of entity this overwrite targets."""
 
     # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
@@ -306,7 +306,7 @@ class PartialChannel(snowflakes.Unique):
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: ChannelType = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[ChannelType, int] = attr.ib(eq=False, hash=False, repr=True)
     """The channel's type."""
 
     def __str__(self) -> str:

@@ -33,7 +33,6 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import enum
 import typing
 
 import attr
@@ -43,6 +42,7 @@ from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -53,9 +53,8 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-@enum.unique
 @typing.final
-class TargetUserType(enum.IntEnum):
+class TargetUserType(int, enums.Enum):
     """The reason a invite targets a user."""
 
     STREAM = 1
@@ -121,7 +120,7 @@ class InviteGuild(guilds.PartialGuild):
     Otherwise, this will always be `builtins.None`. For all other purposes, it is `builtins.None`.
     """
 
-    verification_level: guilds.GuildVerificationLevel = attr.ib(eq=False, hash=False, repr=False)
+    verification_level: typing.Union[guilds.GuildVerificationLevel, int] = attr.ib(eq=False, hash=False, repr=False)
     """The verification level required for a user to participate in this guild."""
 
     vanity_url_code: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
@@ -248,7 +247,7 @@ class Invite(InviteCode):
     target_user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The object of the user who this invite targets, if set."""
 
-    target_user_type: typing.Optional[TargetUserType] = attr.ib(eq=False, hash=False, repr=False)
+    target_user_type: typing.Union[TargetUserType, int, None] = attr.ib(eq=False, hash=False, repr=False)
     """The type of user target this invite is, if applicable."""
 
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
