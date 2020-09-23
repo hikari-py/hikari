@@ -48,8 +48,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         json_body = await response.json()
         args.append(json_body.get("message", ""))
         args.append(errors.RESTErrorCode(json_body.get("code", 0)))
-
-    except (aiohttp.ContentTypeError):
+    except aiohttp.ContentTypeError:
         pass
 
     if response.status == http.HTTPStatus.BAD_REQUEST:
@@ -63,15 +62,12 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
 
     status = http.HTTPStatus(response.status)
 
-    cls: typing.Type[errors.HikariError]
     if 400 <= status < 500:
-        cls = errors.ClientHTTPResponseError
+        return errors.ClientHTTPResponseError(real_url, status, response.headers, raw_body)
     elif 500 <= status < 600:
-        cls = errors.InternalServerError
+        return errors.InternalServerError(real_url, status, response.headers, raw_body)
     else:
-        cls = errors.HTTPResponseError
-
-    return cls(real_url, status, response.headers, raw_body)
+        return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
 
 
 def create_tcp_connector(

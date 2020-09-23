@@ -202,7 +202,7 @@ class HTTPClientClosedError(HTTPError):
 
 
 @typing.final
-class RESTErrorCode(str, enums.Enum):
+class RESTErrorCode(int, enums.Enum):
     """Error codes provided as further info on errors returned by the REST API."""
 
     GENERAL_ERROR = 0

@@ -79,9 +79,10 @@ async def test_generate_error_response(status_, expected_error):
         (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
     ],
 )
-@pytest.mark.parametrize("json_response", [aiohttp.ContentTypeError(None, None), KeyError])
 @pytest.mark.asyncio
-async def test_generate_error_when_error_with_json(status_, expected_error, json_response):
+async def test_generate_error_when_error_with_json(status_, expected_error):
+    json_response = aiohttp.ContentTypeError(None, None)
+
     class StubResponse:
         real_url = "https://some.url"
         status = status_
