@@ -21,26 +21,28 @@
 
 import http
 
+import aiohttp
 import pytest
+import mock
 
 from hikari import errors
 from hikari.utilities import net
 
 
 @pytest.mark.parametrize(
-    ("status_", "expected_return"),
+    ("status_", "expected_error"),
     [
-        (http.HTTPStatus.BAD_REQUEST, errors.BadRequestError),
-        (http.HTTPStatus.UNAUTHORIZED, errors.UnauthorizedError),
-        (http.HTTPStatus.FORBIDDEN, errors.ForbiddenError),
-        (http.HTTPStatus.NOT_FOUND, errors.NotFoundError),
-        (http.HTTPStatus.PAYMENT_REQUIRED, errors.ClientHTTPResponseError),
-        (http.HTTPStatus.SERVICE_UNAVAILABLE, errors.InternalServerError),
-        (http.HTTPStatus.PERMANENT_REDIRECT, errors.HTTPResponseError),
+        (http.HTTPStatus.BAD_REQUEST, "BadRequestError"),
+        (http.HTTPStatus.UNAUTHORIZED, "UnauthorizedError"),
+        (http.HTTPStatus.FORBIDDEN, "ForbiddenError"),
+        (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
+        (http.HTTPStatus.PAYMENT_REQUIRED, "ClientHTTPResponseError"),
+        (http.HTTPStatus.SERVICE_UNAVAILABLE, "InternalServerError"),
+        (http.HTTPStatus.PERMANENT_REDIRECT, "HTTPResponseError"),
     ],
 )
 @pytest.mark.asyncio
-async def test_generate_error_response(status_, expected_return):
+async def test_generate_error_response(status_, expected_error):
     class StubResponse:
         real_url = "https://some.url"
         status = status_
@@ -49,4 +51,48 @@ async def test_generate_error_response(status_, expected_return):
         async def read(self):
             return "some raw body"
 
-    assert isinstance(await net.generate_error_response(StubResponse()), expected_return)
+        async def json(self):
+            return {"message": "raw message", "code": 123}
+
+    with mock.patch.object(errors, expected_error) as error:
+        returned = await net.generate_error_response(StubResponse())
+
+    if status_ in (
+        http.HTTPStatus.BAD_REQUEST,
+        http.HTTPStatus.UNAUTHORIZED,
+        http.HTTPStatus.FORBIDDEN,
+        http.HTTPStatus.NOT_FOUND,
+    ):
+        error.assert_called_once_with("https://some.url", {}, "some raw body", "raw message", 123)
+    else:
+        error.assert_called_once_with("https://some.url", status_, {}, "some raw body")
+
+    assert returned is error()
+
+
+@pytest.mark.parametrize(
+    ("status_", "expected_error"),
+    [
+        (http.HTTPStatus.BAD_REQUEST, "BadRequestError"),
+        (http.HTTPStatus.UNAUTHORIZED, "UnauthorizedError"),
+        (http.HTTPStatus.FORBIDDEN, "ForbiddenError"),
+        (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
+    ],
+)
+@pytest.mark.parametrize("json_response", [aiohttp.ContentTypeError(None, None), KeyError])
+@pytest.mark.asyncio
+async def test_generate_error_when_error_with_json(status_, expected_error, json_response):
+    class StubResponse:
+        real_url = "https://some.url"
+        status = status_
+        headers = {}
+        json = mock.AsyncMock(side_effect=json_response)
+
+        async def read(self):
+            return "some raw body"
+
+    with mock.patch.object(errors, expected_error) as error:
+        returned = await net.generate_error_response(StubResponse())
+
+    error.assert_called_once_with("https://some.url", {}, "some raw body")
+    assert returned is error()
