@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "UnauthorizedError",
     "ForbiddenError",
     "BadRequestError",
+    "RESTErrorCode",
     "HTTPError",
     "HTTPResponseError",
     "HTTPClientClosedError",
@@ -136,6 +137,9 @@ class ShardCloseCode(int, enums.Enum):
     INVALID_INTENT = 4013
     DISALLOWED_INTENT = 4014
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayConnectionError(GatewayError):
@@ -197,6 +201,119 @@ class HTTPClientClosedError(HTTPError):
     """The error message."""
 
 
+@typing.final
+class RESTErrorCode(str, enums.Enum):
+    """Error codes provided as further info on errors returned by the REST API."""
+
+    GENERAL_ERROR = 0
+    """A general error, no further info provided."""
+
+    UNKNOWN_APPLICATION = 10002
+    """Unknown application provided."""
+
+    UNKNOWN_CHANNEL = 10003
+    """Unknown channel provided."""
+
+    UNKNOWN_GUILD = 10004
+    """Unknown guild provided."""
+
+    UNKNOWN_INTEGRATION = 10005
+    """Unknown integration provided."""
+
+    UNKNOWN_INVITE = 10006
+    """Unknown invite provided."""
+
+    UNKNOWN_MEMBER = 10007
+    """Unknown member provided."""
+
+    UNKNOWN_MESSAGE = 10008
+    """Unknown message provided."""
+
+    UNKNOWN_PERMISSION_OVERWRITE = 10009
+    """Unknown permission overwrite provided."""
+
+    UNKNOWN_ROLE = 10011
+    """Unknown role provided."""
+
+    UNKNOWN_USER = 10013
+    """Unknown user provided."""
+
+    UNKNOWN_EMOJI = 10014
+    """Unknown emoji provided."""
+
+    UNKNOWN_WEBHOOK = 10015
+    """Unknown webhook provided."""
+
+    UNKNOWN_BAN = 10026
+    """Unknown ban provided."""
+
+    WRITE_LIMIT_HIT = 20028
+    """The global write limit on a channel has been hit."""
+
+    MAXIMUM_GUILDS = 30001
+    """Maximum number of guilds reached (100)."""
+
+    MAXIMUM_PINS = 30003
+    """Maximum number of pins reached for the channel (50)."""
+
+    MAXIMUM_ROLES = 30005
+    """Maximum number of guild roles reached (250)."""
+
+    MAXIMUM_WEBHOOKS = 30007
+    """Maximum number of webhooks in a channel reached (10)."""
+
+    MAXIMUM_REACTIONS = 30010
+    """Maximum number of reactions on a message reached (20)."""
+
+    MAXIMUM_CHANNELS = 30013
+    """Maximum number of guild channels reached (500)."""
+
+    MAXIMUM_INVITES = 30016
+    """Maximum number of invites reached (1000)."""
+
+    REQUEST_TOO_LARGE = 40005
+    """Request too large. Try sending something smaller in size."""
+
+    TEMPORARILY_DISABLED = 40006
+    """This feature has been temporarily disabled server-side."""
+
+    ALREADY_CROSSPOSTED = 40033
+    """This message has already been crossposted."""
+
+    MISSING_ACCESS = 50001
+    """Missing access."""
+
+    PROHIBITED_ON_DM = 50003
+    """Cannot execute action on a DM channel."""
+
+    NOT_MESSAGE_AUTHOR = 50005
+    """Cannot edit a message authored by another user."""
+
+    EMPTY_MESSAGE = 50006
+    """Cannot send an empty message."""
+
+    USER_DM_CLOSED = 50007
+    """Cannot send messages to this user."""
+
+    MESSAGE_IN_VC = 50008
+    """Cannot send messages in a voice channel."""
+
+    PINS_ONLY_ON_ORIGIN_CHANNEL = 50019
+    """A message can only be pinned to the channel it was sent in."""
+
+    PROHIBITED_ON_SYSTEM_MESSAGE = 50021
+    """Cannot execute action on a system message."""
+
+    MESSAGE_TOO_OLD = 50034
+    """A message provided was too old to bulk delete."""
+
+    SYSTEM_OVERLOADED = 130000
+    """API resource is currently overloaded. Try again a little later."""
+
+    def __str__(self) -> str:
+        return self.name
+
+
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
@@ -216,7 +333,7 @@ class HTTPResponseError(HTTPError):
     message: str = attr.ib(default="")
     """The error message."""
 
-    code: int = attr.ib(default=0)
+    code: typing.Union[RESTErrorCode, int] = attr.ib(default=RESTErrorCode.GENERAL_ERROR)
     """The error code."""
 
     def __str__(self) -> str:
