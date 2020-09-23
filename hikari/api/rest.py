@@ -308,7 +308,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         target: snowflakes.Snowflakeish,
         *,
-        target_type: typing.Union[channels.PermissionOverwriteType, str],
+        target_type: channels.PermissionOverwriteType,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -323,7 +323,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels.PermissionOverwrite
         ],
         *,
-        target_type: undefined.UndefinedOr[typing.Union[channels.PermissionOverwriteType, str]] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[channels.PermissionOverwriteType] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -338,7 +338,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
             The channel overwrite to edit. This may be the object or the ID of an
             existing overwrite.
-        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, builtins.str]]
+        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
@@ -481,7 +481,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the target user id for this invite. This may be the
             object or the ID of an existing user.
-        target_user_type : hikari.undefined.UndefinedOr[typing.Union[hikari.invites.TargetUserType, builtins.int]]
+        target_user_type : hikari.undefined.UndefinedOr[hikari.invites.TargetUserType]
             If provided, the type of target user for this invite.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.

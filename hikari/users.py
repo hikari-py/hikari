@@ -36,6 +36,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import flag
 from hikari.utilities import routes
 
@@ -94,9 +95,8 @@ class UserFlag(flag.Flag):
     """
 
 
-@enum.unique
 @typing.final
-class PremiumType(enum.IntEnum):
+class PremiumType(int, enums.Enum):
     """The types of Nitro."""
 
     NONE = 0
@@ -431,7 +431,7 @@ class OwnUser(UserImpl):
     scope. Will always be `builtins.None` for bot users.
     """
 
-    premium_type: typing.Optional[PremiumType] = attr.ib(eq=False, hash=False, repr=False)
+    premium_type: typing.Union[PremiumType, int, None] = attr.ib(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be `builtins.None` for bots.

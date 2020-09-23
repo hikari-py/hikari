@@ -59,6 +59,7 @@ from hikari import snowflakes
 from hikari import urls
 from hikari import users
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import flag
 from hikari.utilities import routes
 
@@ -76,9 +77,8 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_
 
 
-@enum.unique
 @typing.final
-class GuildExplicitContentFilterLevel(enum.IntEnum):
+class GuildExplicitContentFilterLevel(int, enums.Enum):
     """Represents the explicit content filter setting for a guild."""
 
     DISABLED = 0
@@ -94,9 +94,8 @@ class GuildExplicitContentFilterLevel(enum.IntEnum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class GuildFeature(str, enum.Enum):
+class GuildFeature(str, enums.Enum):
     """Features that a guild can provide."""
 
     ANIMATED_ICON = "ANIMATED_ICON"
@@ -173,9 +172,8 @@ library.
 """
 
 
-@enum.unique
 @typing.final
-class GuildMessageNotificationsLevel(enum.IntEnum):
+class GuildMessageNotificationsLevel(int, enums.Enum):
     """Represents the default notification level for new messages in a guild."""
 
     ALL_MESSAGES = 0
@@ -188,9 +186,8 @@ class GuildMessageNotificationsLevel(enum.IntEnum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class GuildMFALevel(enum.IntEnum):
+class GuildMFALevel(int, enums.Enum):
     """Represents the multi-factor authorization requirement for a guild."""
 
     NONE = 0
@@ -203,9 +200,8 @@ class GuildMFALevel(enum.IntEnum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class GuildPremiumTier(enum.IntEnum):
+class GuildPremiumTier(int, enums.Enum):
     """Tier for Discord Nitro boosting in a guild."""
 
     NONE = 0
@@ -239,9 +235,8 @@ class GuildSystemChannelFlag(flag.Flag):
     """Display a message when the guild is Nitro boosted."""
 
 
-@enum.unique
 @typing.final
-class GuildVerificationLevel(enum.IntEnum):
+class GuildVerificationLevel(int, enums.Enum):
     """Represents the level of verification of a guild."""
 
     NONE = 0
@@ -517,9 +512,8 @@ class Role(PartialRole):
         return self.color
 
 
-@enum.unique
 @typing.final
-class IntegrationExpireBehaviour(enum.IntEnum):
+class IntegrationExpireBehaviour(int, enums.Enum):
     """Behavior for expiring integration subscribers."""
 
     REMOVE_ROLE = 0
@@ -581,7 +575,7 @@ class Integration(PartialIntegration):
     is_emojis_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether users under this integration are allowed to use it's custom emojis."""
 
-    expire_behavior: IntegrationExpireBehaviour = attr.ib(eq=False, hash=False, repr=False)
+    expire_behavior: typing.Union[IntegrationExpireBehaviour, int] = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This will not be enacted until after `GuildIntegration.expire_grace_period`
@@ -827,13 +821,17 @@ class Guild(PartialGuild, abc.ABC):
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    default_message_notifications: GuildMessageNotificationsLevel = attr.ib(eq=False, hash=False, repr=False)
+    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attr.ib(
+        eq=False, hash=False, repr=False
+    )
     """The default setting for message notifications in this guild."""
 
-    explicit_content_filter: GuildExplicitContentFilterLevel = attr.ib(eq=False, hash=False, repr=False)
+    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attr.ib(
+        eq=False, hash=False, repr=False
+    )
     """The setting for the explicit content filter in this guild."""
 
-    mfa_level: GuildMFALevel = attr.ib(eq=False, hash=False, repr=False)
+    mfa_level: typing.Union[GuildMFALevel, int] = attr.ib(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
@@ -895,7 +893,7 @@ class Guild(PartialGuild, abc.ABC):
     `Guild.features` for this guild. For all other purposes, it is `builtins.None`.
     """
 
-    premium_tier: GuildPremiumTier = attr.ib(eq=False, hash=False, repr=False)
+    premium_tier: typing.Union[GuildPremiumTier, int] = attr.ib(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
     premium_subscription_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
@@ -919,24 +917,12 @@ class Guild(PartialGuild, abc.ABC):
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
+    verification_level: typing.Union[GuildVerificationLevel, int] = attr.ib(eq=False, hash=False, repr=False)
+    """The verification level needed for a user to participate in this guild."""
+
     # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
     # to execute.
-    _verification_level: int = attr.ib(eq=False, hash=False, repr=False)
     _system_channel_flags: int = attr.ib(eq=False, hash=False, repr=False)
-
-    @property
-    def verification_level(self) -> GuildVerificationLevel:
-        """Return the verification level required for this guild.
-
-        This defines the verification level needed for a user to participate in
-        this guild.
-
-        Returns
-        -------
-        GuildVerificationLevel
-            The verification level required for this guild.
-        """
-        return GuildVerificationLevel(self._verification_level)
 
     @property
     def system_channel_flags(self) -> GuildSystemChannelFlag:

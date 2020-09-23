@@ -79,7 +79,7 @@ class _PartialGuildFields:
     id: snowflakes.Snowflake = attr.ib()
     name: str = attr.ib()
     icon_hash: str = attr.ib()
-    features: typing.Sequence[typing.Union[guild_models.GuildFeature, str]] = attr.ib()
+    features: typing.Sequence[guild_models.GuildFeatureish] = attr.ib()
 
 
 @attr_extensions.with_copy
@@ -87,7 +87,7 @@ class _PartialGuildFields:
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attr.ib()
     name: typing.Optional[str] = attr.ib()
-    type: channel_models.ChannelType = attr.ib()
+    type: typing.Union[channel_models.ChannelType, int] = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
     position: int = attr.ib()
     permission_overwrites: typing.Mapping[snowflakes.Snowflake, channel_models.PermissionOverwrite] = attr.ib()
@@ -113,10 +113,10 @@ class _GuildFields(_PartialGuildFields):
     region: str = attr.ib()
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     afk_timeout: datetime.timedelta = attr.ib()
-    verification_level: guild_models.GuildVerificationLevel = attr.ib()
-    default_message_notifications: guild_models.GuildMessageNotificationsLevel = attr.ib()
-    explicit_content_filter: guild_models.GuildExplicitContentFilterLevel = attr.ib()
-    mfa_level: guild_models.GuildMFALevel = attr.ib()
+    verification_level: typing.Union[guild_models.GuildVerificationLevel, int] = attr.ib()
+    default_message_notifications: typing.Union[guild_models.GuildMessageNotificationsLevel, int] = attr.ib()
+    explicit_content_filter: typing.Union[guild_models.GuildVerificationLevel, int] = attr.ib()
+    mfa_level: typing.Union[guild_models.GuildMFALevel, int] = attr.ib()
     application_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
@@ -127,7 +127,7 @@ class _GuildFields(_PartialGuildFields):
     vanity_url_code: typing.Optional[str] = attr.ib()
     description: typing.Optional[str] = attr.ib()
     banner_hash: typing.Optional[str] = attr.ib()
-    premium_tier: guild_models.GuildPremiumTier = attr.ib()
+    premium_tier: typing.Union[guild_models.GuildPremiumTier, int] = attr.ib()
     premium_subscription_count: typing.Optional[int] = attr.ib()
     preferred_locale: str = attr.ib()
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
@@ -143,7 +143,7 @@ class _InviteFields:
     channel_id: snowflakes.Snowflake = attr.ib()
     inviter: typing.Optional[user_models.User] = attr.ib()
     target_user: typing.Optional[user_models.User] = attr.ib()
-    target_user_type: typing.Optional[invite_models.TargetUserType] = attr.ib()
+    target_user_type: typing.Union[invite_models.TargetUserType, int, None] = attr.ib()
     approximate_active_member_count: typing.Optional[int] = attr.ib()
     approximate_member_count: typing.Optional[int] = attr.ib()
 
@@ -402,10 +402,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if (change_payloads := entry_payload.get("changes")) is not None:
                 for change_payload in change_payloads:
                     key: typing.Union[audit_log_models.AuditLogChangeKey, str]
-                    try:
-                        key = audit_log_models.AuditLogChangeKey(change_payload["key"])
-                    except ValueError:
-                        key = change_payload["key"]
+                    key = audit_log_models.AuditLogChangeKey(change_payload["key"])
 
                     new_value: typing.Any = change_payload.get("new_value")
                     old_value: typing.Any = change_payload.get("old_value")
@@ -424,10 +421,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 user_id = snowflakes.Snowflake(raw_user_id)
 
             action_type: typing.Union[audit_log_models.AuditLogEventType, int]
-            try:
-                action_type = audit_log_models.AuditLogEventType(entry_payload["action_type"])
-            except ValueError:
-                action_type = entry_payload["action_type"]
+            action_type = audit_log_models.AuditLogEventType(entry_payload["action_type"])
 
             options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
             if (raw_option := entry_payload.get("options")) is not None:
@@ -1084,10 +1078,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _set_partial_guild_attributes(payload: data_binding.JSONObject) -> _PartialGuildFields:
         features = []
         for feature in payload["features"]:
-            try:
-                features.append(guild_models.GuildFeature(feature))
-            except ValueError:
-                features.append(feature)
+            features.append(guild_models.GuildFeature(feature))
 
         return _PartialGuildFields(
             id=snowflakes.Snowflake(payload["id"]),

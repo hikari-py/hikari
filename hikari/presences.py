@@ -44,6 +44,7 @@ import attr
 
 from hikari import snowflakes
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import flag
 
 if typing.TYPE_CHECKING:
@@ -53,9 +54,8 @@ if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@enum.unique
 @typing.final
-class ActivityType(enum.IntEnum):
+class ActivityType(int, enums.Enum):
     """The activity type."""
 
     PLAYING = 0
@@ -191,7 +191,7 @@ class Activity:
     url: typing.Optional[str] = attr.ib(default=None, repr=False)
     """The activity URL. Only valid for `STREAMING` activities."""
 
-    type: ActivityType = attr.ib(converter=ActivityType, default=ActivityType.PLAYING)
+    type: typing.Union[ActivityType, int] = attr.ib(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
     def __str__(self) -> str:
@@ -251,7 +251,7 @@ class RichActivity(Activity):
 
 
 @typing.final
-class Status(str, enum.Enum):
+class Status(str, enums.Enum):
     """The status of a member."""
 
     ONLINE = "online"
@@ -275,13 +275,13 @@ class Status(str, enum.Enum):
 class ClientStatus:
     """The client statuses for this member."""
 
-    desktop: Status = attr.ib(repr=True)
+    desktop: typing.Union[Status, str] = attr.ib(repr=True)
     """The status of the target user's desktop session."""
 
-    mobile: Status = attr.ib(repr=True)
+    mobile: typing.Union[Status, str] = attr.ib(repr=True)
     """The status of the target user's mobile session."""
 
-    web: Status = attr.ib(repr=True)
+    web: typing.Union[Status, str] = attr.ib(repr=True)
     """The status of the target user's web session."""
 
 
@@ -306,7 +306,7 @@ class MemberPresence:
     guild_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the guild this presence belongs to."""
 
-    visible_status: Status = attr.ib(eq=False, hash=False, repr=True)
+    visible_status: typing.Union[Status, str] = attr.ib(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""
 
     activities: typing.Sequence[RichActivity] = attr.ib(eq=False, hash=False, repr=False)

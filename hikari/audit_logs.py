@@ -42,13 +42,13 @@ __all__: typing.List[str] = [
 
 import abc
 import datetime
-import enum
 import typing
 
 import attr
 
 from hikari import snowflakes
 from hikari.utilities import attr_extensions
+from hikari.utilities import enums
 from hikari.utilities import mapping
 
 if typing.TYPE_CHECKING:
@@ -60,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class AuditLogChangeKey(str, enum.Enum):
+class AuditLogChangeKey(str, enums.Enum):
     """Commonly known and documented keys for audit log change objects.
 
     Others may exist. These should be expected to default to the raw string
@@ -142,9 +142,8 @@ class AuditLogChange:
     """The name of the audit log change's key."""
 
 
-@enum.unique
 @typing.final
-class AuditLogEventType(enum.IntEnum):
+class AuditLogEventType(int, enums.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
@@ -204,7 +203,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
-    type: channels.PermissionOverwriteType = attr.ib(repr=True)
+    type: typing.Union[channels.PermissionOverwriteType, str] = attr.ib(repr=True)
     """The type of entity this overwrite targets."""
 
     role_name: typing.Optional[str] = attr.ib(repr=True)
