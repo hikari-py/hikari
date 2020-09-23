@@ -39,28 +39,31 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     real_url = str(response.real_url)
     raw_body = await response.read()
 
-    cls: typing.Optional[typing.Type[errors.HTTPError]] = None
+    args = [
+        real_url,
+        response.headers,
+        raw_body,
+    ]
+    try:
+        json_body = await response.json()
+        args.append(json_body.get("message", ""))
+        args.append(errors.RESTErrorCode(json_body.get("code", 0)))
+
+    except (aiohttp.ContentTypeError):
+        pass
 
     if response.status == http.HTTPStatus.BAD_REQUEST:
-        cls = errors.BadRequestError
-    elif response.status == http.HTTPStatus.UNAUTHORIZED:
-        cls = errors.UnauthorizedError
-    elif response.status == http.HTTPStatus.FORBIDDEN:
-        cls = errors.ForbiddenError
-    elif response.status == http.HTTPStatus.NOT_FOUND:
-        cls = errors.NotFoundError
-
-    if cls is not None:
-        try:
-            json_body = await response.json()
-            return cls(real_url, response.headers, raw_body, json_body["message"], json_body["code"])  # type: ignore[call-arg]
-
-        except (aiohttp.ContentTypeError, KeyError):
-            # Discord didnt provide `message` or `code` or there is no json body
-            return cls(real_url, response.headers, raw_body)  # type: ignore[call-arg]
+        return errors.BadRequestError(*args)
+    if response.status == http.HTTPStatus.UNAUTHORIZED:
+        return errors.UnauthorizedError(*args)
+    if response.status == http.HTTPStatus.FORBIDDEN:
+        return errors.ForbiddenError(*args)
+    if response.status == http.HTTPStatus.NOT_FOUND:
+        return errors.NotFoundError(*args)
 
     status = http.HTTPStatus(response.status)
 
+    cls: typing.Type[errors.HikariError]
     if 400 <= status < 500:
         cls = errors.ClientHTTPResponseError
     elif 500 <= status < 600:
