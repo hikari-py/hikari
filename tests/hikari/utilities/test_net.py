@@ -22,8 +22,8 @@
 import http
 
 import aiohttp
-import pytest
 import mock
+import pytest
 
 from hikari import errors
 from hikari.utilities import net

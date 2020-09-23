@@ -25,7 +25,7 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
-    session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
+    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt", "-r", "flake8-requirements.txt")
     session.run(
         "flake8",
         "--statistics",
@@ -40,7 +40,7 @@ def flake8(session: nox.Session) -> None:
 @nox.session(reuse_venv=True)
 def flake8_html(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis and generate an HTML report."""
-    session.install("-r", "requirements.txt", "-r", "flake8-requirements.txt")
+    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt", "-r", "flake8-requirements.txt")
     session.run(
         "flake8",
         "--format=html",
