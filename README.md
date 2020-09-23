@@ -24,15 +24,56 @@ bot = hikari.Bot(token="...")
 
 
 @bot.listen()
-async def ping(event: hikari.MessageCreateEvent) -> None:
+async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
 
-    if not event.message.author.is_bot and event.message.content.startswith("hk.ping"):
+    if not event.is_bot and event.message.content.startswith("hk.ping"):
         await event.message.reply("Pong!")
 
 
 bot.run()
 ```
+
+This will only respond to messages created in guilds. You can use `PrivateMessageCreateEvent` 
+instead to only listen on DMs, or `MessageCreateEvent` to listen to both DMs and guild-based
+messages.
+
+[Logging](https://docs.python.org/3/library/logging.html) will be automatically configured
+for you if you do not enable it manually. This has been implemented after seeing a large
+number of new bot developers struggle with writing their first bot in other frameworks
+simply because of working blind after not understanding or knowing how to set up standard
+logging messages.
+
+If you wish to customise the intents being used in order to change which events your bot
+is notified about, then you can pass the `intents` kwarg to the `Bot` constructor:
+
+```py
+# the default is to enable all unprivileged intents (all events that do not target the
+# presence or activity of a specific member).
+bot = hikari.Bot(intents=hikari.Intents.ALL, token="...")
+```
+
+The above example would enable all intents, thus enabling events relating to member presences
+to be received (you'd need to whitelist your application first to be able to start the bot
+if you do this). [Other options also exist](https://nekokatt.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp)
+such as [customising timeouts for requests](https://nekokatt.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://nekokatt.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
+
+Also note that you could pass extra options to `bot.run` during development, for example:
+
+```py
+bot.run(
+    asyncio_debug=True,             # enable asyncio debug to detect blocking and slow code.
+    
+    coroutine_tracking_depth=20,    # enable tracking of coroutines, makes some asyncio 
+                                    # errors clearer.
+                                    
+    propagate_interrupts=True,      # Any OS interrupts get rethrown as errors.
+)
+```
+
+[Many other helpful options](https://nekokatt.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp.run)
+exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or
 alternatively as a type passed to the `@bot.listen()` decorator, if you do not
