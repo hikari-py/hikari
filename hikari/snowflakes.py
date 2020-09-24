@@ -163,7 +163,7 @@ def calculate_shard_id(
     return (int(guild) >> 22) % shard_count
 
 
-Snowflakeish = typing.Union[Snowflake, int, str]
+Snowflakeish = typing.Union[Snowflake, int]
 """Type hint for a value that resembles a `Snowflake` object functionally.
 
 This is a value that is `Snowflake`-ish.
@@ -173,7 +173,6 @@ a `Snowflake`.
 
 The valid types for this type hint are:
 
-- `builtins.str` containing digits.
 - `builtins.int`
 - `Snowflake`
 """
@@ -210,9 +209,6 @@ use of intents).
 
 The valid types for this type hint are:
 
-- `T` - the generic type parameter in the expression
-    `SearchableSnowflakeishOr[T]`
-- `builtins.str` containing digits.
 - `buitlins.int`
 - `Snowflake`
 """
@@ -230,9 +226,6 @@ use of intents).
 
 The valid types for this type hint are:
 
-- `T` - the generic type parameter in the expression
-    `SearchableSnowflakeishOr[T]`
-- `builtins.str` containing digits.
 - `buitlins.int`
 - `Snowflake`
 - `datetime.datetime`
