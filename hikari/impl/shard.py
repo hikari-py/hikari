@@ -481,7 +481,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return self._shard_id
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intents]:
+    def intents(self) -> intents_.Intents:
         return self._intents
 
     @property
@@ -526,12 +526,11 @@ class GatewayShardImpl(shard.GatewayShard):
         users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        if self._intents is not None:
-            if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
-                raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
+        if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
+            raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
-            if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
-                raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
+        if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
+            raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
         if users is not undefined.UNDEFINED and (query or limit):
             raise ValueError("Cannot specify limit/query with users")
@@ -660,8 +659,7 @@ class GatewayShardImpl(shard.GatewayShard):
             },
         }
 
-        if self._intents is not None:
-            payload[_D]["intents"] = self._intents
+        payload[_D]["intents"] = self._intents
 
         payload[_D]["presence"] = self._serialize_and_store_presence_payload()
 

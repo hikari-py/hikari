@@ -362,10 +362,6 @@ class TestStatefulGuildChunkerImpl:
     def test__default_include_presences_when_include_presences_already_set(self, mock_chunker):
         assert mock_chunker._default_include_presences(54234, True) is True
 
-    def test__default_include_presences_default_when_intents_is_none(self, mock_chunker, mock_app):
-        mock_app.shards[0].intents = None
-        assert mock_chunker._default_include_presences(54234, undefined.UNDEFINED) is True
-
     def test__default_include_presences_default_when_declaring_presences_intents(self, mock_chunker, mock_app):
         mock_app.shards[1].intents = intents.Intents.GUILD_PRESENCES | intents.Intents.GUILD_MESSAGES
         assert mock_chunker._default_include_presences(655288690192416778, undefined.UNDEFINED) is True

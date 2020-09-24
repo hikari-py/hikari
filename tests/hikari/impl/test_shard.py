@@ -715,26 +715,26 @@ class TestGatewayShardImpl:
 
     @pytest.mark.parametrize("limit", [-1, 101])
     async def test_request_guild_members_when_limit_under_0_or_over_100(self, client, limit):
-        client._intents = None
+        client._intents = intents.Intents.ALL
 
         with pytest.raises(ValueError, match="'limit' must be between 0 and 100, both inclusive"):
             await client.request_guild_members(123, limit=limit)
 
     async def test_request_guild_members_when_users_over_100(self, client):
-        client._intents = None
+        client._intents = intents.Intents.ALL
 
         with pytest.raises(ValueError, match="'users' is limited to 100 users"):
             await client.request_guild_members(123, users=range(101))
 
     async def test_request_guild_members_when_nonce_over_32_chars(self, client):
-        client._intents = None
+        client._intents = intents.Intents.ALL
 
         with pytest.raises(ValueError, match="'nonce' can be no longer than 32 byte characters long."):
             await client.request_guild_members(123, nonce="x" * 33)
 
     @pytest.mark.parametrize("include_presences", [True, False])
     async def test_request_guild_members(self, client, include_presences):
-        client._intents = None
+        client._intents = intents.Intents.ALL
         client._ws = mock.Mock(send_json=mock.AsyncMock())
 
         await client.request_guild_members(123, include_presences=include_presences)
@@ -901,41 +901,7 @@ class TestGatewayShardImpl:
         client._handshake_completed.set.assert_not_called()
         client._event_consumer.assert_called_once_with(client, "EVENT NAME", {"payload": None})
 
-    async def test__identify_when_no_intents(self, client):
-        client._token = "token"
-        client._intents = None
-        client._large_threshold = 123
-        client._shard_id = 0
-        client._shard_count = 1
-        client._serialize_and_store_presence_payload = mock.Mock(return_value={"presence": "payload"})
-        client._ws = mock.Mock(send_json=mock.AsyncMock())
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(platform, "system", return_value="Potato PC"))
-        stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
-        stack.enter_context(mock.patch.object(aiohttp, "__version__", new="v0.0.1"))
-        stack.enter_context(mock.patch.object(_about, "__version__", new="v1.0.0"))
-
-        with stack:
-            await client._identify()
-
-        expected_json = {
-            "op": 2,
-            "d": {
-                "token": "token",
-                "compress": False,
-                "large_threshold": 123,
-                "properties": {
-                    "$os": "Potato PC ARM64",
-                    "$browser": "aiohttp v0.0.1",
-                    "$device": "hikari v1.0.0",
-                },
-                "shard": [0, 1],
-                "presence": {"presence": "payload"},
-            },
-        }
-        client._ws.send_json.assert_awaited_once_with(expected_json)
-
-    async def test__identify_when_intents(self, client):
+    async def test__identify(self, client):
         client._token = "token"
         client._intents = intents.Intents.ALL
         client._large_threshold = 123
