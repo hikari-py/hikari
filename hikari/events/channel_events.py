@@ -29,19 +29,19 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ChannelEvent",
     "GuildChannelEvent",
-    "PrivateChannelEvent",
+    "DMChannelEvent",
     "ChannelCreateEvent",
     "GuildChannelCreateEvent",
-    "PrivateChannelCreateEvent",
+    "DMChannelCreateEvent",
     "ChannelUpdateEvent",
     "GuildChannelUpdateEvent",
-    "PrivateChannelUpdateEvent",
+    "DMChannelUpdateEvent",
     "ChannelDeleteEvent",
     "GuildChannelDeleteEvent",
-    "PrivateChannelDeleteEvent",
+    "DMChannelDeleteEvent",
     "PinsUpdateEvent",
     "GuildPinsUpdateEvent",
-    "PrivatePinsUpdateEvent",
+    "DMPinsUpdateEvent",
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",
@@ -194,7 +194,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateChannelEvent(ChannelEvent, abc.ABC):
+class DMChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
 
     @property
@@ -283,7 +283,7 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateChannelCreateEvent(PrivateChannelEvent, ChannelCreateEvent):
+class DMChannelCreateEvent(DMChannelEvent, ChannelCreateEvent):
     """Event fired when a private channel is created."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -354,7 +354,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateChannelUpdateEvent(PrivateChannelEvent, ChannelUpdateEvent):
+class DMChannelUpdateEvent(DMChannelEvent, ChannelUpdateEvent):
     """Event fired when a private channel is edited."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -436,7 +436,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateChannelDeleteEvent(PrivateChannelEvent, ChannelDeleteEvent):
+class DMChannelDeleteEvent(DMChannelEvent, ChannelDeleteEvent):
     """Event fired when a private channel is deleted."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -573,7 +573,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 # TODO: This is not documented as having an intent, is this right? The guild version requires GUILDS intent.
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivatePinsUpdateEvent(PinsUpdateEvent, PrivateChannelEvent):
+class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

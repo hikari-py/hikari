@@ -91,6 +91,9 @@ class TestStatelessCache:
         with pytest.raises(NotImplementedError):
             assert component.delete_guild(123123)
 
+    def test_get_guild(self, component):
+        assert component.get_guild(1234123) is None
+
     def test_get_available_guild(self, component):
         assert component.get_available_guild(1234123) is None
 

@@ -22,19 +22,21 @@ import hikari
 
 bot = hikari.Bot(token="...")
 
-
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
     # If a non-bot user sends a message "hk.ping", respond with "Pong!"
+    # We check there is actually content first, if no message content exists,
+    # we would get `None' here.
+    if event.is_bot or not event.content:
+        return
 
-    if not event.is_bot and event.message.content.startswith("hk.ping"):
+    if event.content.startswith("hk.ping"):
         await event.message.reply("Pong!")
-
 
 bot.run()
 ```
 
-This will only respond to messages created in guilds. You can use `PrivateMessageCreateEvent`
+This will only respond to messages created in guilds. You can use `DMMessageCreateEvent`
 instead to only listen on DMs, or `MessageCreateEvent` to listen to both DMs and guild-based
 messages.
 
@@ -190,7 +192,6 @@ everything builds and is correct.
 ### Where can I start?
 
 Check out the issues tab on GitHub. If you are nervous, look for issues
-marked as ![good-first-issue-badge](https://img.shields.io/github/labels/nekokatt/hikari/good%20first%20issue) for
- something easy to start with!
+marked as "good first issue" for something easy to start with!
 
 [![good-first-issues](https://img.shields.io/github/issues/nekokatt/hikari/good%20first%20issue)](https://github.com/nekokatt/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
