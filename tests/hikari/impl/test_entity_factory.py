@@ -1430,7 +1430,7 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == [11111, 22222, 33333, 44444]
+        assert member.role_ids == [76543325, 11111, 22222, 33333, 44444]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
