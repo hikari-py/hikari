@@ -26,7 +26,7 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ReactionEvent",
     "GuildReactionEvent",
-    "PrivateReactionEvent",
+    "DMReactionEvent",
     "ReactionAddEvent",
     "ReactionDeleteEvent",
     "ReactionDeleteEmojiEvent",
@@ -35,10 +35,10 @@ __all__: typing.List[str] = [
     "GuildReactionDeleteEvent",
     "GuildReactionDeleteEmojiEvent",
     "GuildReactionDeleteAllEvent",
-    "PrivateReactionAddEvent",
-    "PrivateReactionDeleteEvent",
-    "PrivateReactionDeleteEmojiEvent",
-    "PrivateReactionDeleteAllEvent",
+    "DMReactionAddEvent",
+    "DMReactionDeleteEvent",
+    "DMReactionDeleteEmojiEvent",
+    "DMReactionDeleteAllEvent",
 ]
 
 import abc
@@ -106,7 +106,7 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
-class PrivateReactionEvent(ReactionEvent, abc.ABC):
+class DMReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in private messages."""
 
 
@@ -314,7 +314,7 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
-class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
+class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -339,7 +339,7 @@ class PrivateReactionAddEvent(PrivateReactionEvent, ReactionAddEvent):
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
-class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
+class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -364,7 +364,7 @@ class PrivateReactionDeleteEvent(PrivateReactionEvent, ReactionDeleteEvent):
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
-class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiEvent):
+class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -386,7 +386,7 @@ class PrivateReactionDeleteEmojiEvent(PrivateReactionEvent, ReactionDeleteEmojiE
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
-class PrivateReactionDeleteAllEvent(PrivateReactionEvent, ReactionDeleteAllEvent):
+class DMReactionDeleteAllEvent(DMReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

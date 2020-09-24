@@ -428,6 +428,11 @@ class StatefulCacheImpl(cache.MutableCache):
 
         return copy.copy(guild_record.guild)
 
+    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        if (guild := self._get_guild(guild_id, availability=True)) is not None:
+            return guild
+        return self._get_guild(guild_id, availability=False)
+
     def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         return self._get_guild(guild_id, availability=True)
 

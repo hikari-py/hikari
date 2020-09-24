@@ -66,7 +66,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelCreateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.PrivateChannelCreateEvent(app=self._app, shard=shard, channel=channel)
+            return channel_events.DMChannelCreateEvent(app=self._app, shard=shard, channel=channel)
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_update_event(
@@ -76,7 +76,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelUpdateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.PrivateChannelUpdateEvent(app=self._app, shard=shard, channel=channel)
+            return channel_events.DMChannelUpdateEvent(app=self._app, shard=shard, channel=channel)
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_delete_event(
@@ -86,7 +86,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelDeleteEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.PrivateChannelDeleteEvent(app=self._app, shard=shard, channel=channel)
+            return channel_events.DMChannelDeleteEvent(app=self._app, shard=shard, channel=channel)
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_pins_update_event(
@@ -109,7 +109,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 last_pin_timestamp=last_pin_timestamp,
             )
 
-        return channel_events.PrivatePinsUpdateEvent(
+        return channel_events.DMPinsUpdateEvent(
             app=self._app, shard=shard, channel_id=channel_id, last_pin_timestamp=last_pin_timestamp
         )
 
@@ -145,7 +145,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 user=member,
             )
 
-        return typing_events.PrivateTypingEvent(
+        return typing_events.DMTypingEvent(
             app=self._app, shard=shard, channel_id=channel_id, user_id=user_id, timestamp=timestamp
         )
 
@@ -344,7 +344,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         message = self._app.entity_factory.deserialize_message(payload)
 
         if message.guild_id is None:
-            return message_events.PrivateMessageCreateEvent(app=self._app, shard=shard, message=message)
+            return message_events.DMMessageCreateEvent(app=self._app, shard=shard, message=message)
 
         return message_events.GuildMessageCreateEvent(app=self._app, shard=shard, message=message)
 
@@ -354,7 +354,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         message = self._app.entity_factory.deserialize_partial_message(payload)
 
         if message.guild_id is None:
-            return message_events.PrivateMessageUpdateEvent(app=self._app, shard=shard, message=message)
+            return message_events.DMMessageUpdateEvent(app=self._app, shard=shard, message=message)
 
         return message_events.GuildMessageUpdateEvent(app=self._app, shard=shard, message=message)
 
@@ -364,7 +364,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         message = self._app.entity_factory.deserialize_partial_message(payload)
 
         if message.guild_id is None:
-            return message_events.PrivateMessageDeleteEvent(app=self._app, shard=shard, message=message)
+            return message_events.DMMessageDeleteEvent(app=self._app, shard=shard, message=message)
 
         return message_events.GuildMessageDeleteEvent(app=self._app, shard=shard, message=message)
 
@@ -402,7 +402,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
 
         user_id = snowflakes.Snowflake(payload["user_id"])
-        return reaction_events.PrivateReactionAddEvent(
+        return reaction_events.DMReactionAddEvent(
             app=self._app,
             shard=shard,
             channel_id=channel_id,
@@ -430,7 +430,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 emoji=emoji,
             )
 
-        return reaction_events.PrivateReactionDeleteEvent(
+        return reaction_events.DMReactionDeleteEvent(
             app=self._app,
             shard=shard,
             user_id=user_id,
@@ -455,7 +455,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
 
         # TODO: check if this can even occur.
-        return reaction_events.PrivateReactionDeleteAllEvent(
+        return reaction_events.DMReactionDeleteAllEvent(
             app=self._app,
             shard=shard,
             channel_id=channel_id,
@@ -480,7 +480,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
 
         # TODO: check if this can even occur.
-        return reaction_events.PrivateReactionDeleteEmojiEvent(
+        return reaction_events.DMReactionDeleteEmojiEvent(
             app=self._app,
             shard=shard,
             emoji=emoji,

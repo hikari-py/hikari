@@ -27,16 +27,16 @@ __all__: typing.List[str] = [
     "MessagesEvent",
     "MessageEvent",
     "GuildMessageEvent",
-    "PrivateMessageEvent",
+    "DMMessageEvent",
     "MessageCreateEvent",
     "GuildMessageCreateEvent",
-    "PrivateMessageCreateEvent",
+    "DMMessageCreateEvent",
     "MessageUpdateEvent",
     "GuildMessageUpdateEvent",
-    "PrivateMessageUpdateEvent",
+    "DMMessageUpdateEvent",
     "MessageDeleteEvent",
     "GuildMessageDeleteEvent",
-    "PrivateMessageDeleteEvent",
+    "DMMessageDeleteEvent",
     "MessageBulkDeleteEvent",
     "GuildMessageBulkDeleteEvent",
 ]
@@ -57,6 +57,7 @@ from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import embeds as embeds_
     from hikari import messages
     from hikari import traits
     from hikari.api import shard as gateway_shard
@@ -109,7 +110,7 @@ class MessageEvent(MessagesEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateMessageEvent(MessageEvent, abc.ABC):
+class DMMessageEvent(MessageEvent, abc.ABC):
     """Event base for any message-bound event in private messages."""
 
 
@@ -163,7 +164,7 @@ class GuildMessageEvent(MessageEvent, abc.ABC):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
-        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
+        return self.app.cache.get_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -215,6 +216,30 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         """
 
     @property
+    def content(self) -> typing.Optional[str]:
+        """Content of the message.
+
+        Returns
+        -------
+        typing.Optional[builtins.str]
+            The content of the message, if present. This may be `builtins.None`
+            or an empty string (or any falsy value) if no content is present
+            (e.g. if only an embed was sent).
+        """
+        return self.message.content
+
+    @property
+    def embeds(self) -> typing.Sequence[embeds_.Embed]:
+        """Sequence of embeds in the message.
+
+        Returns
+        -------
+        typing.Sequence[hikari.embeds.Embed]
+            The embeds in the message.
+        """
+        return self.message.embeds
+
+    @property
     def is_bot(self) -> bool:
         """Return `builtins.True` if the message is from a bot.
 
@@ -224,17 +249,6 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
             `builtins.True` if from a bot, or `builtins.False` otherwise.
         """
         return self.message.author.is_bot
-
-    @property
-    def is_webhook(self) -> bool:
-        """Return `builtins.True` if the message was created by a webhook.
-
-        Returns
-        -------
-        builtins.bool
-            `builtins.True` if from a webhook, or `builtins.False` otherwise.
-        """
-        return self.message.webhook_id is not None
 
     @property
     def is_human(self) -> bool:
@@ -248,6 +262,17 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
         return not self.message.author.is_bot and self.message.webhook_id is None
+
+    @property
+    def is_webhook(self) -> bool:
+        """Return `builtins.True` if the message was created by a webhook.
+
+        Returns
+        -------
+        builtins.bool
+            `builtins.True` if from a webhook, or `builtins.False` otherwise.
+        """
+        return self.message.webhook_id is not None
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.PRIVATE_MESSAGES)
@@ -430,7 +455,7 @@ class GuildMessageCreateEvent(GuildMessageEvent, MessageCreateEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateMessageCreateEvent(PrivateMessageEvent, MessageCreateEvent):
+class DMMessageCreateEvent(DMMessageEvent, MessageCreateEvent):
     """Event triggered when a message is sent to a private channel."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -502,7 +527,7 @@ class GuildMessageUpdateEvent(GuildMessageEvent, MessageUpdateEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateMessageUpdateEvent(PrivateMessageEvent, MessageUpdateEvent):
+class DMMessageUpdateEvent(DMMessageEvent, MessageUpdateEvent):
     """Event triggered when a message is updated in a private channel."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -554,7 +579,7 @@ class GuildMessageDeleteEvent(GuildMessageEvent, MessageDeleteEvent):
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
-class PrivateMessageDeleteEvent(PrivateMessageEvent, MessageDeleteEvent):
+class DMMessageDeleteEvent(DMMessageEvent, MessageDeleteEvent):
     """Event triggered when a message is deleted from a private channel."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

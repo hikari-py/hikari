@@ -116,10 +116,10 @@ class TestGuildTypingEvent:
 
 
 @pytest.mark.asyncio
-class TestPrivateTypingEvent:
+class TestDMTypingEvent:
     @pytest.fixture()
     def event(self):
-        cls = hikari_test_helpers.mock_class_namespace(typing_events.PrivateTypingEvent)
+        cls = hikari_test_helpers.mock_class_namespace(typing_events.DMTypingEvent)
 
         return cls(
             channel_id=123,

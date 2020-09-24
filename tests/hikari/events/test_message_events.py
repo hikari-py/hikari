@@ -51,17 +51,15 @@ class TestGuildMessageEvent:
     def test_guild_when_available(self, event):
         result = event.guild
 
-        assert result is event.app.cache.get_available_guild.return_value
-        event.app.cache.get_available_guild.assert_called_once_with(342123123)
-        event.app.cache.get_unavailable_guild.assert_not_called()
+        assert result is event.app.cache.get_guild.return_value
+        event.app.cache.get_guild.assert_called_once_with(342123123)
 
     def test_guild_when_unavailable(self, event):
         event.app.cache.get_available_guild.return_value = None
         result = event.guild
 
-        assert result is event.app.cache.get_unavailable_guild.return_value
-        event.app.cache.get_unavailable_guild.assert_called_once_with(342123123)
-        event.app.cache.get_available_guild.assert_called_once_with(342123123)
+        assert result is event.app.cache.get_guild.return_value
+        event.app.cache.get_guild.assert_called_once_with(342123123)
 
 
 class TestMessageCreateEvent:
