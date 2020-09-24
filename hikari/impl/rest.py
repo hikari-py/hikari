@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of a V6 and V7 compatible HTTP API for Discord.
+"""Implementation of a V8 compatible REST API for Discord.
 
 This also includes implementations designed towards providing
 RESTful functionality.

@@ -64,14 +64,14 @@ class Test_V6GatewayTransport:
     @pytest.fixture()
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
-            transport = shard._V6GatewayTransport()
+            transport = shard._GatewayTransport()
             transport.logger = mock.Mock(getEffectiveLevel=mock.Mock(return_value=5))
             transport.log_filterer = mock.Mock()
             yield transport
 
     def test__init__calls_super(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__") as init:
-            shard._V6GatewayTransport("arg1", "arg2", some_kwarg="kwarg1")
+            shard._GatewayTransport("arg1", "arg2", some_kwarg="kwarg1")
 
         init.assert_called_once_with("arg1", "arg2", some_kwarg="kwarg1")
 
@@ -223,7 +223,7 @@ class Test_V6GatewayTransport:
         transport_impl.receive.assert_awaited_once_with(10)
 
     async def test_connect_yields_websocket(self, http_settings, proxy_settings):
-        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
+        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._GatewayTransport):
             closed = True
             send_close = mock.AsyncMock()
             sent_close = False
@@ -246,7 +246,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -276,7 +276,7 @@ class Test_V6GatewayTransport:
             timeout=client_timeout(),
             trust_env=proxy_settings.trust_env,
             version=aiohttp.HttpVersion11,
-            ws_response_class=shard._V6GatewayTransport,
+            ws_response_class=shard._GatewayTransport,
         )
         mock_client_session.ws_connect.assert_called_once_with(
             max_msg_size=0,
@@ -289,7 +289,7 @@ class Test_V6GatewayTransport:
         sleep.assert_awaited_once_with(0.25)
 
     async def test_connect_when_gateway_error_after_connecting(self, http_settings, proxy_settings):
-        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
+        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._GatewayTransport):
             closed = False
             sent_close = False
             send_close = mock.AsyncMock()
@@ -311,7 +311,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -329,7 +329,7 @@ class Test_V6GatewayTransport:
         mock_websocket.assert_used_once()
 
     async def test_connect_when_unexpected_error_after_connecting(self, http_settings, proxy_settings):
-        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
+        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._GatewayTransport):
             closed = False
             send_close = mock.AsyncMock()
             sent_close = False
@@ -351,7 +351,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -369,7 +369,7 @@ class Test_V6GatewayTransport:
         mock_websocket.assert_used_once()
 
     async def test_connect_when_no_error_and_not_closing(self, http_settings, proxy_settings):
-        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
+        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._GatewayTransport):
             closed = False
             _closing = False
             sent_close = False
@@ -391,7 +391,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -409,7 +409,7 @@ class Test_V6GatewayTransport:
         mock_websocket.assert_used_once()
 
     async def test_connect_when_no_error_and_closing(self, http_settings, proxy_settings):
-        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._V6GatewayTransport):
+        class MockWS(hikari_test_helpers.AsyncContextManagerMock, shard._GatewayTransport):
             closed = False
             _closing = True
             close = mock.AsyncMock()
@@ -430,7 +430,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -463,7 +463,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -501,7 +501,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -539,7 +539,7 @@ class Test_V6GatewayTransport:
         log_filterer = mock.Mock()
 
         with stack:
-            async with shard._V6GatewayTransport.connect(
+            async with shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
@@ -841,39 +841,39 @@ class TestGatewayShardImpl:
         client._handshake_completed = mock.Mock()
         client._event_consumer = mock.Mock()
 
+        pl = {
+            "session_id": 101,
+            "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
+            "guilds": [
+                {"id": "123"},
+                {"id": "456"},
+                {"id": "789"},
+            ],
+            "v": 8,
+        }
+
         client._dispatch(
             "READY",
             10,
-            {
-                "session_id": 101,
-                "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
-                "guilds": [
-                    {"id": "123"},
-                    {"id": "456"},
-                    {"id": "789"},
-                ],
-            },
+            pl,
         )
 
         assert client._seq == 10
         assert client._session_id == 101
         assert client._user_id == 123
         client._logger.info.assert_called_once_with(
-            "shard is ready [session:%s, user_id:%s, tag:%s, guilds:%s]", 101, 123, "hikari#5863", 3
+            "shard is ready: %s guilds, %s (%s), session %r on v%s gateway",
+            3,
+            "hikari#5863",
+            123,
+            101,
+            8,
         )
         client._handshake_completed.set.assert_called_once_with()
         client._event_consumer.assert_called_once_with(
             client,
             "READY",
-            {
-                "session_id": 101,
-                "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
-                "guilds": [
-                    {"id": "123"},
-                    {"id": "456"},
-                    {"id": "789"},
-                ],
-            },
+            pl,
         )
 
     def test__dipatch_when_RESUME(self, client):
