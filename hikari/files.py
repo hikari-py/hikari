@@ -431,6 +431,42 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
+    async def read(
+        self,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+    ) -> bytes:
+        """Read the entire resource at once into memory.
+
+        ```py
+        data = await resource.read(...)
+        # ^-- This is a shortcut for the following --v
+        async with resource.stream(...) as reader:
+            data = await reader.read()
+        ```
+
+        !!! warning
+            If you simply wish to re-upload this resource to Discord via
+            any endpoint in Hikari, you should opt to just pass this
+            resource object directly. This way, Hikari can perform byte
+            inception, which significantly reduces the memory usage for
+            your bot as it grows larger.
+
+        Parameters
+        ----------
+        executor : typing.Optional[concurrent.futures.Executor]
+            The executor to run in for blocking operations.
+            If `builtins.None`, then the default executor is used for the
+            current event loop.
+
+        Returns
+        -------
+        builtins.bytes
+            The entire resource.
+        """
+        async with self.stream(executor=executor) as reader:
+            return await reader.read()
+
     @abc.abstractmethod
     def stream(
         self,
