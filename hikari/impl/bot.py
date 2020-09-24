@@ -151,19 +151,10 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         customise functionality such as whether SSL-verification is enabled,
         what timeouts `aiohttp` should expect to use for requests, and behavior
         regarding HTTP-redirects.
-    intents : typing.Optional[hikari.intents.Intents]
+    intents : hikari.intents.Intents
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-
-        You can set this to `builtins.None` to explicitly disable intents. You
-        will need to enable privileged intents to continue receiving
-        events pertaining to members and member presences from the 7th October
-        2020.
-
-        Note that explicitly disabling intents should be treated as deprecated
-        behaviour, and is only supported until Hikari is moved to the v8 Discord
-        API, where this will become mandatory.
     logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
@@ -262,7 +253,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
-        intents: typing.Optional[intents_.Intents] = intents_.Intents.ALL_UNPRIVILEGED,
+        intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,

@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of a V6 and V7 compatible HTTP API for Discord.
+"""Implementation of a V8 compatible REST API for Discord.
 
 This also includes implementations designed towards providing
 RESTful functionality.
@@ -280,7 +280,11 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
-    def acquire(self, token: str, token_type: str = _BEARER_TOKEN_PREFIX) -> rest_api.RESTClient:
+    def acquire(
+        self,
+        token: typing.Optional[str] = None,
+        token_type: str = _BEARER_TOKEN_PREFIX,
+    ) -> rest_api.RESTClient:
         loop = asyncio.get_running_loop()
 
         if self._event_loop is None:
@@ -843,7 +847,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", target_type)
         body.put("allow", allow)
         body.put("deny", deny)
-
         await self._request(route, json=body, reason=reason)
 
     async def delete_permission_overwrite(

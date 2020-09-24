@@ -150,12 +150,6 @@ class TestEventManagerBase:
         assert event_manager._listeners == {member_events.MemberCreateEvent: [test2, test]}
         check.assert_called_once_with(member_events.MemberCreateEvent, 2)
 
-    def test__check_intents_when_intents_is_None(self, event_manager):
-        with mock.patch.object(base_events, "get_required_intents_for") as get_intents:
-            event_manager._check_intents(member_events.MemberCreateEvent, 0)
-
-        get_intents.assert_not_called()
-
     def test__check_intents_when_no_intents_required(self, event_manager):
         event_manager._intents = intents.Intents.ALL
 

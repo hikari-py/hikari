@@ -39,6 +39,7 @@ from hikari import invites
 from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari import users
 from hikari.impl import entity_factory
 from hikari.impl import rest
@@ -361,7 +362,7 @@ class TestRESTClientImpl:
             executor=None,
             entity_factory=None,
         )
-        assert obj._rest_url == "https://discord.com/api/v6"
+        assert obj._rest_url == urls.REST_API_URL
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
@@ -1087,7 +1088,7 @@ class TestRESTClientImplAsync:
         target = StubModel(456)
         expected_route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
-        expected_json = {"type": "member", "allow": 4, "deny": 1}
+        expected_json = {"type": 1, "allow": 4, "deny": 1}
 
         await rest_client.edit_permission_overwrites(
             StubModel(123),

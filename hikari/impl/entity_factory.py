@@ -267,7 +267,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             icon_hash=guild_fields.icon_hash,
             features=guild_fields.features,
             is_owner=bool(payload["owner"]),
-            my_permissions=permission_models.Permissions(int(payload["permissions_new"])),
+            my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
@@ -467,8 +467,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return channel_models.PermissionOverwrite(
             id=snowflakes.Snowflake(payload["id"]),
             type=channel_models.PermissionOverwriteType(payload["type"]),
-            allow=permission_models.Permissions(int(payload["allow_new"])),
-            deny=permission_models.Permissions(int(payload["deny_new"])),
+            allow=permission_models.Permissions(int(payload["allow"])),
+            deny=permission_models.Permissions(int(payload["deny"])),
         )
 
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
@@ -1020,7 +1020,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_hoisted=payload["hoist"],
             position=int(payload["position"]),
             # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
-            permissions=permission_models.Permissions(int(payload["permissions_new"])),
+            permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
             is_mentionable=payload["mentionable"],
         )
@@ -1634,8 +1634,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else None
-
         activities = []
         for activity_payload in payload["activities"]:
             timestamps: typing.Optional[presence_models.ActivityTimestamps] = None
@@ -1729,20 +1727,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else presence_models.Status.OFFLINE
         )
         client_status = presence_models.ClientStatus(desktop=desktop, mobile=mobile, web=web)
-        # TODO: do we want to differentiate between undefined and null here?
-        premium_since = payload.get("premium_since")
-        premium_since = date.iso8601_datetime_string_to_datetime(premium_since) if premium_since is not None else None
+
         return presence_models.MemberPresence(
             app=self._app,
             user_id=snowflakes.Snowflake(payload["user"]["id"]),
-            role_ids=role_ids,
             guild_id=guild_id if guild_id is not undefined.UNDEFINED else snowflakes.Snowflake(payload["guild_id"]),
             visible_status=presence_models.Status(payload["status"]),
             activities=activities,
             client_status=client_status,
-            premium_since=premium_since,
-            # TODO: do we want to differentiate between undefined and null here?
-            nickname=payload.get("nick"),
         )
 
     ###############

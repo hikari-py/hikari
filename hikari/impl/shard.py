@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Single-shard implementation for the V6 and V7 event gateway for Discord."""
+"""Single-shard implementation for the V8 event gateway for Discord."""
 
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # ratelimit window).
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
 # Supported gateway version
-_VERSION: int = 6
+_VERSION: int = 8
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
@@ -111,7 +111,7 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
+class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     """Internal component to handle lower-level communication logic.
 
     This includes translating aiohttp error conditions to hikari ones,
@@ -234,7 +234,7 @@ class _V6GatewayTransport(aiohttp.ClientWebSocketResponse):
         proxy_settings: config.ProxySettings,
         log_filterer: typing.Callable[[str], str],
         url: str,
-    ) -> typing.AsyncGenerator[_V6GatewayTransport, None]:
+    ) -> typing.AsyncGenerator[_GatewayTransport, None]:
         """Generate a single-use websocket connection.
 
         This uses a single connection in a TCP connector pool, with a one-use
@@ -334,9 +334,9 @@ class GatewayShardImpl(shard.GatewayShard):
     initial_status : hikari.presences.Status
         The initial status to set on login for the shard. Defaults to
         `hikari.presences.Status.ONLINE`.
-    intents : typing.Optional[hikari.intents.Intents]
-        Collection of intents to use, or `builtins.None` to not use intents at
-        all.
+    intents : hikari.intents.Intents
+        Collection of intents to use. Unlike on the V6 gateway, this is
+        MANDATORY.
     large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
     shard_id : builtins.int
@@ -412,7 +412,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
-        intents: typing.Optional[intents_.Intents] = None,
+        intents: intents_.Intents,
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
@@ -470,7 +470,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         self._url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
         self._user_id: typing.Optional[snowflakes.Snowflake] = None
-        self._ws: typing.Optional[_V6GatewayTransport] = None
+        self._ws: typing.Optional[_GatewayTransport] = None
 
     @property
     def heartbeat_latency(self) -> float:
@@ -627,12 +627,14 @@ class GatewayShardImpl(shard.GatewayShard):
             self._user_id = snowflakes.Snowflake(user_id)
             tag = user_pl["username"] + "#" + user_pl["discriminator"]
             unavailable_guild_count = len(data["guilds"])
+            version = data["v"]
             self._logger.info(
-                "shard is ready [session:%s, user_id:%s, tag:%s, guilds:%s]",
-                self._session_id,
-                user_id,
-                tag,
+                "shard is ready: %s guilds, %s (%s), session %r on v%s gateway",
                 unavailable_guild_count,
+                tag,
+                user_id,
+                self._session_id,
+                version,
             )
             self._handshake_completed.set()
 
@@ -815,7 +817,7 @@ class GatewayShardImpl(shard.GatewayShard):
         exit_stack = contextlib.AsyncExitStack()
 
         self._ws = await exit_stack.enter_async_context(
-            _V6GatewayTransport.connect(
+            _GatewayTransport.connect(
                 http_settings=self._http_settings,
                 log_filterer=_log_filterer(self._token),
                 logger=self._logger,

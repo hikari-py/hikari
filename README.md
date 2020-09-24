@@ -8,19 +8,22 @@
 [![mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
 [![docs](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://nekokatt.github.io/hikari/hikari)
 
-[![Discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
+[![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
-# _hikari_
+# hikari
 
-An opinionated, static typed Discord microframework for Python3 and asyncio.
+An opinionated, static typed Discord microframework for Python3 and asyncio
+that supports Discord's V8 REST API and Gateway.
 
 Built on good intentions and the hope that it will be extendable and reusable,
 rather than an obstacle for future development.
 
+## Bots
+
 ```py
 import hikari
 
-bot = hikari.Bot(token="...")
+bot = hikari.BotApp(token="...")
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
@@ -47,12 +50,12 @@ simply because of working blind after not understanding or knowing how to set up
 logging messages.
 
 If you wish to customise the intents being used in order to change which events your bot
-is notified about, then you can pass the `intents` kwarg to the `Bot` constructor:
+is notified about, then you can pass the `intents` kwarg to the `BotApp` constructor:
 
 ```py
 # the default is to enable all unprivileged intents (all events that do not target the
 # presence or activity of a specific member).
-bot = hikari.Bot(intents=hikari.Intents.ALL, token="...")
+bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 ```
 
 The above example would enable all intents, thus enabling events relating to member presences
@@ -87,6 +90,32 @@ async def ping(event):
     ...
 ```
 
+---
+
+## REST-only applications
+
+You may only want to integrate with the REST API, for example if writing a web
+dashboard.
+
+This is relatively simple to do:
+
+```py
+rest = hikari.RESTApp()
+
+async def print_my_user(token):
+    # We acquire a client with a given token. This allows one REST app instance
+    # with one internal connection pool to be reused.
+    async with rest.acquire(token) as client:
+        my_user = await client.fetch_my_user()
+        print(my_user)
+
+asyncio.run(print_my_user("user token here"))
+```
+
+This client has been designed to be able to work in compliment with existing
+OAuth2 client implementations, such as
+[`aiohttp-oauth2`](https://pypi.org/project/aiohttp-oauth2/).
+
 ----
 
 ## Installation
@@ -99,7 +128,7 @@ python -m pip install hikari -U --pre
 py -3 -m pip install hikari -U --pre
 ```
 
-----
+---
 
 ## Additional resources
 
@@ -112,7 +141,7 @@ a third party library to do it.
 - [`lightbulb`](https://gitlab.com/tandemdude/lightbulb) - a simple and easy to
   use command framework for Hikari.
 
-----
+---
 
 ## Making your application more efficient
 

@@ -28,6 +28,6 @@ __all__: typing.List[str] = ["BASE_URL", "REST_API_URL", "OAUTH2_API_URL", "CDN_
 import typing
 
 BASE_URL: typing.Final[str] = "https://discord.com"
-REST_API_URL: typing.Final[str] = f"{BASE_URL}/api/v6"
+REST_API_URL: typing.Final[str] = f"{BASE_URL}/api/v8"
 OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
 CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"

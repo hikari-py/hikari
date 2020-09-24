@@ -51,7 +51,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         self,
         app: traits.BotAware,
         cache: cache_.MutableCache,
-        intents: typing.Optional[intents_.Intents],
+        intents: intents_.Intents,
     ) -> None:
         self._cache = cache
         super().__init__(app=app, intents=intents)
@@ -154,11 +154,8 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for voice_state in event.voice_states.values():
             self._cache.set_voice_state(voice_state)
 
-        members_declared: int = True
-        presences_declared: int = True
-        if self._intents is not None:
-            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
-            presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
+        members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
+        presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
         # When intents are enabled discord will only send other member objects on the guild create
         # payload if presence intents are also declared, so if this isn't the case then we also want

@@ -296,13 +296,6 @@ class MemberPresence:
     user_id: snowflakes.Snowflake = attr.ib(repr=True, eq=False, hash=True)
     """The ID of the user this presence belongs to."""
 
-    role_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.ib(eq=False, hash=False, repr=False)
-    """The IDs of the user's current roles in the guild this presence belongs to.
-
-    !!! info
-        If this is `builtins.None` then this information wasn't provided and is unknown.
-    """
-
     guild_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of the guild this presence belongs to."""
 
@@ -318,12 +311,3 @@ class MemberPresence:
 
     client_status: ClientStatus = attr.ib(eq=False, hash=False, repr=False)
     """Platform-specific user-statuses."""
-
-    premium_since: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
-    """The datetime of when this member started "boosting" this guild.
-
-    This will be `builtins.None` if they are not boosting.
-    """
-
-    nickname: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
-    """This member's nickname, if set."""
