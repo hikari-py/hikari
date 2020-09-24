@@ -831,6 +831,30 @@ class TestStatefulCacheImpl:
         assert cache_impl.delete_guild(snowflakes.Snowflake(543123)) is None
         assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): cache.GuildRecord()}
 
+    def test_get_guild_first_tries_get_available_guilds(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(54234123): cache.GuildRecord(),
+                snowflakes.Snowflake(543123): cache.GuildRecord(guild=mock_guild, is_available=True),
+            }
+        )
+        cached_guild = cache_impl.get_guild(snowflakes.Snowflake(543123))
+        assert cached_guild == mock_guild
+        assert cache_impl is not mock_guild
+
+    def test_get_guild_then_tries_get_unavailable_guilds(self, cache_impl):
+        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = mapping.DictionaryCollection(
+            {
+                snowflakes.Snowflake(543123): cache.GuildRecord(is_available=True),
+                snowflakes.Snowflake(54234123): cache.GuildRecord(guild=mock_guild, is_available=False),
+            }
+        )
+        cached_guild = cache_impl.get_guild(snowflakes.Snowflake(54234123))
+        assert cached_guild == mock_guild
+        assert cache_impl is not mock_guild
+
     def test_get_available_guild_for_known_guild_when_available(self, cache_impl):
         mock_guild = mock.MagicMock(guilds.GatewayGuild)
         cache_impl._guild_entries = mapping.DictionaryCollection(

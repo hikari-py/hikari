@@ -34,7 +34,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
 bot.run()
 ```
 
-This will only respond to messages created in guilds. You can use `PrivateMessageCreateEvent` 
+This will only respond to messages created in guilds. You can use `PrivateMessageCreateEvent`
 instead to only listen on DMs, or `MessageCreateEvent` to listen to both DMs and guild-based
 messages.
 
@@ -64,10 +64,10 @@ Also note that you could pass extra options to `bot.run` during development, for
 ```py
 bot.run(
     asyncio_debug=True,             # enable asyncio debug to detect blocking and slow code.
-    
-    coroutine_tracking_depth=20,    # enable tracking of coroutines, makes some asyncio 
+
+    coroutine_tracking_depth=20,    # enable tracking of coroutines, makes some asyncio
                                     # errors clearer.
-                                    
+
     propagate_interrupts=True,      # Any OS interrupts get rethrown as errors.
 )
 ```

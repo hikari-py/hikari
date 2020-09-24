@@ -123,6 +123,9 @@ class StatelessCacheImpl(cache.MutableCache):
     def delete_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         raise self._no_cache()
 
+    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        return None
+
     def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         return None
 

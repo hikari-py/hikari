@@ -25,7 +25,7 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "TypingEvent",
     "GuildTypingEvent",
-    "PrivateTypingEvent",
+    "DMTypingEvent",
 ]
 
 import abc
@@ -261,7 +261,7 @@ class GuildTypingEvent(TypingEvent):
 @base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class PrivateTypingEvent(TypingEvent):
+class DMTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

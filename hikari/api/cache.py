@@ -149,6 +149,27 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
+        """Get a guild from the cache.
+
+        !!! warning
+            This will return a guild regardless of whether it is available or
+            not. To only query available guilds, use `get_available_guild`
+            instead. Likewise, to only query unavailable guilds, use
+            `get_unavailable_guild`.
+
+        Parameters
+        ----------
+        guild_id : hikari.snowflakes.Snowflake
+            The ID of the guild to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else `builtins.None`.
+        """
+
+    @abc.abstractmethod
     def get_available_guild(self, guild_id: snowflakes.Snowflake, /) -> typing.Optional[guilds.GatewayGuild]:
         """Get the object of an available guild from the cache.
 
@@ -160,7 +181,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else None.
+            The object of the guild if found, else `builtins.None`.
         """
 
     @abc.abstractmethod
@@ -181,7 +202,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else None.
+            The object of the guild if found, else `builtins.None`.
         """
 
     @abc.abstractmethod
