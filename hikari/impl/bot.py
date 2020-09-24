@@ -366,7 +366,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         return self._http_settings
 
     @property
-    def intents(self) -> typing.Optional[intents_.Intents]:
+    def intents(self) -> intents_.Intents:
         return self._intents
 
     @property

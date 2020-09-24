@@ -227,7 +227,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
 
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         shard = self._app.shards[shard_id]
-        return shard.intents is None or bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
+        return bool(shard.intents & intents_.Intents.GUILD_PRESENCES)
 
     def fetch_members_for_guild(
         self,

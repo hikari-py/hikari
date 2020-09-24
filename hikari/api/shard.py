@@ -94,19 +94,13 @@ class GatewayShard(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def intents(self) -> typing.Optional[intents_.Intents]:
+    def intents(self) -> intents_.Intents:
         """Return the intents set on this shard.
 
         Returns
         -------
-        typing.Optional[hikari.intents.Intents]
-            The intents being used on this shard. This may be
-            `builtins.None` if intents were not specified.
-
-        !!! warning
-            As of October 2020, Intents will become mandatory,
-            at which point this API will be changed to always
-            return a value here.
+        hikari.intents.Intents
+            The intents being used on this shard.
         """
 
     @property
