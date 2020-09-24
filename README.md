@@ -23,7 +23,7 @@ rather than an obstacle for future development.
 ```py
 import hikari
 
-bot = hikari.Bot(token="...")
+bot = hikari.BotApp(token="...")
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
@@ -50,12 +50,12 @@ simply because of working blind after not understanding or knowing how to set up
 logging messages.
 
 If you wish to customise the intents being used in order to change which events your bot
-is notified about, then you can pass the `intents` kwarg to the `Bot` constructor:
+is notified about, then you can pass the `intents` kwarg to the `BotApp` constructor:
 
 ```py
 # the default is to enable all unprivileged intents (all events that do not target the
 # presence or activity of a specific member).
-bot = hikari.Bot(intents=hikari.Intents.ALL, token="...")
+bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 ```
 
 The above example would enable all intents, thus enabling events relating to member presences
@@ -100,7 +100,7 @@ dashboard.
 This is relatively simple to do:
 
 ```py
-rest = hikari.REST()
+rest = hikari.RESTApp()
 
 async def print_my_user(token):
     # We acquire a client with a given token. This allows one REST app instance
