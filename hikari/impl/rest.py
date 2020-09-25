@@ -104,12 +104,10 @@ _HTTP_USER_AGENT: typing.Final[str] = (
     f"AIOHTTP/{aiohttp.__version__} "
     f"{platform.python_implementation()}/{platform.python_version()} {platform.system()} {platform.architecture()[0]}"
 )
-_MILLISECOND_PRECISION: typing.Final[str] = "millisecond"
 _USER_AGENT_HEADER: typing.Final[str] = sys.intern("User-Agent")
 _X_AUDIT_LOG_REASON_HEADER: typing.Final[str] = sys.intern("X-Audit-Log-Reason")
 _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
-_X_RATELIMIT_PRECISION_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Precision")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
@@ -530,7 +528,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
-        headers.put(_X_RATELIMIT_PRECISION_HEADER, _MILLISECOND_PRECISION)
 
         if self._token is not None and not no_auth:
             headers[_AUTHORIZATION_HEADER] = self._token

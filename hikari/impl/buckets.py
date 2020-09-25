@@ -112,11 +112,6 @@ await on which completes when you are allowed to proceed with making a request,
 and a real bucket hash which should be stored temporarily. This will be
 explained in the next section.
 
-When you make your response, you should be sure to set the
-`X-RateLimit-Precision` header to `millisecond` to ensure a much greater
-accuracy against rounding errors for rate limits (reduces the error margin from
-`1` second to `1` millisecond).
-
 Handling the rate limit headers of a response
 ---------------------------------------------
 
@@ -128,11 +123,11 @@ These headers are:
     the response date on the server. This should be parsed to a
     `datetime.datetime` using `email.utils.parsedate_to_datetime`.
 * `X-RateLimit-Limit`:
-    an `builtins.int` describing the max requests in the bucket from empty to being rate
-    limited.
+    an `builtins.int` describing the max requests in the bucket from empty to
+    being rate limited.
 * `X-RateLimit-Remaining`:
-    an `builtins.int` describing the remaining number of requests before rate limiting
-    occurs in the current window.
+    an `builtins.int` describing the remaining number of requests before rate
+    limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
     a `builtins.str` containing the initial bucket hash.
 * `X-RateLimit-Reset`:
