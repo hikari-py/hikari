@@ -24,6 +24,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["Enum"]
 
+import math
 import os
 import sys
 import types
@@ -152,13 +153,15 @@ class _EnumMeta(type):
         mcs: typing.Type[_T],
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: _EnumNamespace,
+        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
     ) -> _T:
         global _Enum
 
-        if name == "Enum" and _Enum is NotImplemented:
+        if _Enum is NotImplemented:
             # noinspection PyRedundantParentheses
             return (_Enum := super().__new__(mcs, name, bases, namespace))
+
+        assert isinstance(namespace, _EnumNamespace)
 
         try:
             base, enum_type = bases
@@ -198,7 +201,12 @@ class _EnumMeta(type):
         return cls
 
     @classmethod
-    def __prepare__(mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()) -> _EnumNamespace:
+    def __prepare__(mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+        if _Enum is NotImplemented:
+            if name != "Enum":
+                raise TypeError("First instance of _EnumMeta must be Enum")
+            return {}
+
         try:
             # Fails if Enum is not defined. We check this in `__new__` properly.
             base, enum_type = bases
@@ -231,6 +239,74 @@ class Enum(metaclass=_EnumMeta):
         return f"{type(self).__name__}.{self.name}"
 
 
+class _IntFlagNamespace(dict):
+    def __init__(self) -> None:
+        super().__init__()
+        self.powers_of_2: typing.Dict[str, int] = {}
+        self.combined_fields: typing.Dict[str, typing.List[int]] = {}
+
+    def __setitem__(self, key: str, value: typing.Any) -> None:
+        if not isinstance(value, int):
+            super().__setitem__(key, value)
+
+        if value & value - 1:
+            self.powers_of_2[key] = value
+        else:
+            bits = set()
+            for bit_place in range(0, int(math.ceil(math.log2(value)))):
+                mask = value & bit_place
+                if mask:
+                    bits.add(mask)
+
+            for bit in bits:
+                if bit not in self.powers_of_2.values():
+                    # Don't allow specifying random combinations without each bit
+                    # being defined beforehand, as that is rubbish.
+                    raise ValueError(
+                        f"{key} defines combination bitfield value {value:x}, but one of the bits "
+                        f"({bit:x}) is not defined as a field before this value"
+                    )
+
+            self.combined_fields[key] = value
+
+
+_IntFlag = NotImplemented
+
+
+class _IntFlagMeta(type):
+    @classmethod
+    def __prepare__(
+        mcs,
+        name: str,
+        bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
+    ) -> typing.Union[typing.Dict[str, typing.Any], _IntFlagNamespace]:
+        if _IntFlag is NotImplemented:
+            if name != "IntFlag":
+                raise TypeError("First instance of _IntFlagMeta must be _IntFlag")
+            return {}
+        else:
+            if bases != (_IntFlag,):
+                raise TypeError("IntFlag must ONLY derive directly from IntFlag")
+            return _IntFlagNamespace()
+
+    @staticmethod
+    def __new__(
+        mcs: typing.Type[_T],
+        name: str,
+        bases: typing.Tuple[typing.Type[typing.Any], ...],
+        namespace: typing.Union[typing.Dict[str, typing.Any], _IntFlagNamespace],
+    ) -> _T:
+        global _IntFlag
+
+        if _IntFlag is NotImplemented:
+            int_flag = super().__new__(mcs, name, bases, namespace)
+            _IntFlag = int_flag
+            return int_flag
+
+        assert isinstance(namespace, _IntFlagNamespace)
+
+
 # We have to use this fallback, or Pdoc will fail to document some stuff correctly...
 if os.getenv("PDOC3_GENERATING") == "1":  # pragma: no cover
     from enum import Enum  # noqa: F811 - Redefinition intended
+    from enum import IntFlag  # noqa: F811 - Redefinition intended
