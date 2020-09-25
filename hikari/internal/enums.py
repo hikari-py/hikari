@@ -201,7 +201,9 @@ class _EnumMeta(type):
         return cls
 
     @classmethod
-    def __prepare__(mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+    def __prepare__(
+        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
+    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
         if _Enum is NotImplemented:
             if name != "Enum":
                 raise TypeError("First instance of _EnumMeta must be Enum")
@@ -244,6 +246,26 @@ class _IntFlagNamespace(dict):
         super().__init__()
         self.powers_of_2: typing.Dict[str, int] = {}
         self.combined_fields: typing.Dict[str, typing.List[int]] = {}
+        self["__doc__"] = "An integer bitfield flag."
+
+    def __contains__(self, item: typing.Any) -> bool:
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+    def __getitem__(self, name: str) -> typing.Any:
+        try:
+            return super().__getitem__(name)
+        except KeyError:
+            try:
+                return self.powers_of_2[name]
+            except KeyError:
+                try:
+                    return self.combined_fields[name]
+                except KeyError:
+                    raise KeyError(name) from None
 
     def __setitem__(self, key: str, value: typing.Any) -> None:
         if not isinstance(value, int):
@@ -276,9 +298,7 @@ _IntFlag = NotImplemented
 class _IntFlagMeta(type):
     @classmethod
     def __prepare__(
-        mcs,
-        name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
+        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
     ) -> typing.Union[typing.Dict[str, typing.Any], _IntFlagNamespace]:
         if _IntFlag is NotImplemented:
             if name != "IntFlag":
