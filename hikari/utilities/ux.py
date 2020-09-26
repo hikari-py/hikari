@@ -127,6 +127,7 @@ def init_logging(
             format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
             stream=sys.stderr,
         )
+        logging.captureWarnings(True)
 
 
 def print_banner(package: typing.Optional[str], allow_color: bool, force_color: bool) -> None:

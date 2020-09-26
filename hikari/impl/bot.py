@@ -37,6 +37,7 @@ import signal
 import sys
 import types
 import typing
+import warnings
 
 from hikari import config
 from hikari import errors
@@ -756,6 +757,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         if shard_ids is not None and shard_count is None:
             raise TypeError("Must pass shard_count if specifying shard_ids manually")
 
+        self._validate_activity(activity)
+
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
         start_time = date.monotonic()
@@ -898,6 +901,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
+        self._validate_activity(activity)
+
         coros = [
             s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
             for s in self._shards.values()
@@ -990,3 +995,34 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         _LOGGER.debug("closing event loop")
         loop.close()
+
+    @staticmethod
+    def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
+        # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
+
+        if activity is undefined.UNDEFINED or activity is None:
+            return
+
+        # If you ever change where this is called from, make sure to check the stacklevels are correct
+        # or the code preview in the warning will be wrong...
+        if activity.type == presences.ActivityType.WATCHING:
+            warnings.warn(
+                "The WATCHING activity type is not officially recognised by Discord and may be removed from Hikari in "
+                "a future release.",
+                category=PendingDeprecationWarning,
+                stacklevel=3,
+            )
+        elif activity.type == presences.ActivityType.CUSTOM:
+            warnings.warn(
+                "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
+                "any effect if used.",
+                category=errors.HikariWarning,
+                stacklevel=3,
+            )
+        elif activity.type == presences.ActivityType.STREAMING and activity.url is None:
+            warnings.warn(
+                "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
+                "URL to be specified on the activity for the presence update to have any effect.",
+                category=errors.HikariWarning,
+                stacklevel=3,
+            )

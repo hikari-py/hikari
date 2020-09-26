@@ -62,7 +62,13 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Playing <name>`"""
 
     STREAMING = 1
-    """Shows up as `Streaming` and links to a Twitch or YouTube stream/video."""
+    """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
+
+    !!! warning
+        You **MUST** provide a valid Twitch or YouTube stream URL to the
+        activity you create in order for this to be valid. If you fail to
+        do this, then the activity **WILL NOT** update.
+    """
 
     LISTENING = 2
     """Shows up as `Listening to <name>`."""
@@ -70,9 +76,11 @@ class ActivityType(int, enums.Enum):
     WATCHING = 3
     """Shows up as `Watching <name>`.
 
-    !!! note
-        this is not officially documented, so will be likely removed in the near
-        future.
+    !!! warning
+        This is not documented by Discord, and was supposedly going to be
+        removed a long time ago, but that never happened. This may be
+        removed at any time without warning by Discord, so use this at
+        your own risk.
     """
 
     CUSTOM = 4
@@ -82,7 +90,7 @@ class ActivityType(int, enums.Enum):
     (`:smiley:`) as the first part of the status activity name.
 
     !!! warning
-        Bots currently do not support setting custom statuses.
+        Bots **DO NOT** support setting custom statuses.
     """
 
     COMPETING = 5

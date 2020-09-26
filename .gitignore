@@ -57,3 +57,6 @@ prof/
 
 # Generated stubs for MyPy --strict hackfixes.
 hikari/**/__init__.pyi
+
+# Logs
+*.log
