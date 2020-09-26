@@ -326,11 +326,18 @@ class HTTPSettings:
         if value is not None and (not isinstance(value, int) or value <= 0):  # type: ignore[unreachable]
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
-    ssl: ssl_.SSLContext = attr.ib(
+    _ssl: typing.Union[bool, ssl_.SSLContext] = attr.ib(
         default=True,
         converter=_ssl_factory,
         validator=attr.validators.instance_of(ssl_.SSLContext),  # type: ignore[assignment,arg-type]
     )
+
+    @property
+    def ssl(self) -> ssl_.SSLContext:
+        ssl = self._ssl
+        assert isinstance(ssl, ssl_.SSLContext), "conversion logic in hikari for SSL customisation has broken"
+        return ssl
+
     """SSL context to use.
 
     This may be __assigned__ a `builtins.bool` or an `ssl.SSLContext` object.
