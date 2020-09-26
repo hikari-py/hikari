@@ -1005,21 +1005,21 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # If you ever change where this is called from, make sure to check the stacklevels are correct
         # or the code preview in the warning will be wrong...
-        if activity.type == presences.ActivityType.WATCHING:
+        if activity.type is presences.ActivityType.WATCHING:
             warnings.warn(
                 "The WATCHING activity type is not officially recognised by Discord and may be removed from Hikari in "
                 "a future release.",
                 category=PendingDeprecationWarning,
                 stacklevel=3,
             )
-        elif activity.type == presences.ActivityType.CUSTOM:
+        elif activity.type is presences.ActivityType.CUSTOM:
             warnings.warn(
                 "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
                 "any effect if used.",
                 category=errors.HikariWarning,
                 stacklevel=3,
             )
-        elif activity.type == presences.ActivityType.STREAMING and activity.url is None:
+        elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
             warnings.warn(
                 "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
                 "URL to be specified on the activity for the presence update to have any effect.",
