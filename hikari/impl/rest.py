@@ -650,6 +650,15 @@ class RESTClientImpl(rest_api.RESTClient):
         if not is_rate_limited:
             return
 
+        # If we get ratelimited when running more than one bot under the same token,
+        # or if the ratelimiting logic goes wrong, we will get a 429 and expect the
+        # "remaining" header to be zeroed, or even negative as I don't trust that there
+        # isn't some weird edge case here somewhere in Discord's implementation.
+        # We can safely retry if this happens.
+        if remaining <= 0:
+            _LOGGER.warning("rate limited on bucket %s, maybe you are running more than one bot on this token?", bucket)
+            raise self._RetryRequest
+
         if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
             # but I'd rather we just give up than do something resulting in multiple failed

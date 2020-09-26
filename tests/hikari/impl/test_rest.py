@@ -955,7 +955,7 @@ class TestRESTClientImplAsync:
 
         rest_client.global_rate_limit.throttle.assert_called_once_with(0.002)
 
-    async def test__parse_ratelimits_when_remaining_under_or_equal_to_0(self, rest_client):
+    async def test__parse_ratelimits_when_remaining_header_under_or_equal_to_0(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -966,10 +966,10 @@ class TestRESTClientImplAsync:
             real_url = "https://some.url"
 
             async def json(self):
-                return {"retry_after": "2"}
+                return {"retry_after": "2", "global": False}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.RateLimitedError):
+        with pytest.raises(rest_client._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
