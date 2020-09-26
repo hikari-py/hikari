@@ -221,8 +221,14 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
     if os.getenv("CLICOLOR_FORCE", "0") != "0" or force_color:
+        # https://bixense.com/clicolors/
         return True
     elif os.getenv("CLICOLOR", "0") != "0" and is_a_tty:
+        # https://bixense.com/clicolors/
+        return True
+    elif os.getenv("COLORTERM", "").casefold() in ("truecolor", "24bit"):
+        # Seems to be used by Gnome Terminal, and Tmpod will beat me if I don't add it.
+        # https://gist.github.com/XVilka/8346728#true-color-detection
         return True
 
     plat = sys.platform
