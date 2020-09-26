@@ -2444,33 +2444,35 @@ class TestEntityFactoryImpl:
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
 
-    def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
-        partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
+    def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
+        partial_message = entity_factory_impl.deserialize_partial_message(
+            {"id": 123, "channel_id": 456, "author": user_payload}
+        )
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
-        assert partial_message.guild_id == undefined.UNDEFINED
-        assert partial_message.author == undefined.UNDEFINED
-        assert partial_message.member == undefined.UNDEFINED
-        assert partial_message.content == undefined.UNDEFINED
-        assert partial_message.timestamp == undefined.UNDEFINED
-        assert partial_message.edited_timestamp == undefined.UNDEFINED
-        assert partial_message.is_tts == undefined.UNDEFINED
-        assert partial_message.is_mentioning_everyone == undefined.UNDEFINED
-        assert partial_message.user_mentions == undefined.UNDEFINED
-        assert partial_message.role_mentions == undefined.UNDEFINED
-        assert partial_message.channel_mentions == undefined.UNDEFINED
-        assert partial_message.attachments == undefined.UNDEFINED
-        assert partial_message.embeds == undefined.UNDEFINED
-        assert partial_message.reactions == undefined.UNDEFINED
-        assert partial_message.is_pinned == undefined.UNDEFINED
-        assert partial_message.webhook_id == undefined.UNDEFINED
-        assert partial_message.type == undefined.UNDEFINED
-        assert partial_message.activity == undefined.UNDEFINED
-        assert partial_message.application == undefined.UNDEFINED
-        assert partial_message.message_reference == undefined.UNDEFINED
-        assert partial_message.flags == undefined.UNDEFINED
-        assert partial_message.nonce == undefined.UNDEFINED
+        assert partial_message.guild_id is None
+        assert partial_message.author is not None
+        assert partial_message.member is undefined.UNDEFINED
+        assert partial_message.content is undefined.UNDEFINED
+        assert partial_message.timestamp is undefined.UNDEFINED
+        assert partial_message.edited_timestamp is undefined.UNDEFINED
+        assert partial_message.is_tts is undefined.UNDEFINED
+        assert partial_message.is_mentioning_everyone is undefined.UNDEFINED
+        assert partial_message.user_mentions is undefined.UNDEFINED
+        assert partial_message.role_mentions is undefined.UNDEFINED
+        assert partial_message.channel_mentions is undefined.UNDEFINED
+        assert partial_message.attachments is undefined.UNDEFINED
+        assert partial_message.embeds is undefined.UNDEFINED
+        assert partial_message.reactions is undefined.UNDEFINED
+        assert partial_message.is_pinned is undefined.UNDEFINED
+        assert partial_message.webhook_id is undefined.UNDEFINED
+        assert partial_message.type is undefined.UNDEFINED
+        assert partial_message.activity is undefined.UNDEFINED
+        assert partial_message.application is undefined.UNDEFINED
+        assert partial_message.message_reference is undefined.UNDEFINED
+        assert partial_message.flags is undefined.UNDEFINED
+        assert partial_message.nonce is undefined.UNDEFINED
 
     def test_deserialize_full_message(
         self,

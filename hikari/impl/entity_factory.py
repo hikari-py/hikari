@@ -1406,19 +1406,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
-        author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
-        if "author" in payload:
-            author = self.deserialize_user(payload["author"])
+        assert (
+            "author" in payload
+        ), "Discord have made a breaking change and are no longer sending 'author' in MessageUpdate events"
+        author = self.deserialize_user(payload["author"])
 
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED
+        guild_id: typing.Optional[snowflakes.Snowflake] = None
+        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED
-        if "member" in payload:
-            assert author is not undefined.UNDEFINED
-            assert guild_id is not undefined.UNDEFINED
-            member = self.deserialize_member(payload["member"], user=author, guild_id=guild_id)
+            # TODO: will discord always send this with a guild? If so, we should default this to none I guess.
+            if "member" in payload:
+                member = self.deserialize_member(payload["member"], user=author, guild_id=guild_id)
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
         if "timestamp" in payload:

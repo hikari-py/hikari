@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.PRIVATE_MESSAGE_TYPING)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.DM_MESSAGE_TYPING)
 class TypingEvent(shard_events.ShardEvent, abc.ABC):
     """Base event fired when a user begins typing in a channel."""
 
@@ -258,7 +258,7 @@ class GuildTypingEvent(TypingEvent):
         return await self.app.rest.fetch_member(self.guild_id, self.user_id)
 
 
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMTypingEvent(TypingEvent):

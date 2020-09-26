@@ -70,7 +70,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
@@ -231,7 +231,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         return channel
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelCreateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being created."""
@@ -280,7 +280,7 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
         return self.channel.guild_id
 
 
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMChannelCreateEvent(DMChannelEvent, ChannelCreateEvent):
@@ -302,7 +302,7 @@ class DMChannelCreateEvent(DMChannelEvent, ChannelCreateEvent):
     """
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being updated."""
@@ -351,7 +351,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
         return self.channel.guild_id
 
 
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMChannelUpdateEvent(DMChannelEvent, ChannelUpdateEvent):
@@ -373,7 +373,7 @@ class DMChannelUpdateEvent(DMChannelEvent, ChannelUpdateEvent):
     """
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being deleted."""
@@ -433,7 +433,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 
 # TODO: can this actually ever get fired?
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGES)
+@base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMChannelDeleteEvent(DMChannelEvent, ChannelDeleteEvent):

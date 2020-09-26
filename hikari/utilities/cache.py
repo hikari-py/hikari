@@ -23,7 +23,6 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "IDTable",
     "StatefulCacheMappingView",
     "EmptyCacheView",
     "GuildRecord",
@@ -36,7 +35,7 @@ __all__: typing.List[str] = [
     "MemberPresenceData",
     "VoiceStateData",
     "GenericRefWrapper",
-    "DMChannelMRUMutableMapping",
+    "DMChannelCacheMapping",
     "copy_guild_channel",
     "GuildChannelCacheMappingView",
     "Cache3DMappingView",
@@ -46,11 +45,8 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import array
-import bisect
 import copy
 import datetime
-import reprlib
 import typing
 
 import attr
@@ -66,8 +62,8 @@ from hikari import undefined
 from hikari import voices
 from hikari.api import cache
 from hikari.utilities import attr_extensions
+from hikari.utilities import collections
 from hikari.utilities import date
-from hikari.utilities import mapping
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
@@ -75,54 +71,6 @@ KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint for mapping keys."""
 ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
-
-
-class IDTable(typing.MutableSet[snowflakes.Snowflake]):
-    """Compact 64-bit integer bisected-array-set of snowflakes."""
-
-    __slots__: typing.Sequence[str] = ("_ids",)
-
-    def __init__(self) -> None:
-        self._ids = array.array("Q")
-
-    def add(self, sf: snowflakes.Snowflake) -> None:
-        """Add a snowflake to this set."""
-        if not self._ids:
-            self._ids.append(sf)
-        else:
-            index = bisect.bisect_left(self._ids, sf)
-            if len(self._ids) == index or self._ids[index] != sf:
-                self._ids.insert(index, sf)
-
-    def add_all(self, sfs: typing.Iterable[snowflakes.Snowflake]) -> None:
-        """Add a collection of snowflakes to this set."""
-        for sf in sfs:
-            self.add(sf)
-
-    def discard(self, sf: snowflakes.Snowflake) -> None:
-        """Remove a snowflake from this set if it's present."""
-        index = self._index_of(sf)
-        if index != -1:
-            del self._ids[index]
-
-    def _index_of(self, sf: int) -> int:
-        index = bisect.bisect_left(self._ids, sf)
-        return index if index < len(self._ids) or self._ids[index] == sf else -1
-
-    def __contains__(self, value: typing.Any) -> bool:
-        if not isinstance(value, int):
-            return False
-
-        return self._index_of(value) != -1
-
-    def __len__(self) -> int:
-        return len(self._ids)
-
-    def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
-        return map(snowflakes.Snowflake, self._ids)
-
-    def __repr__(self) -> str:
-        return "SnowflakeTable" + reprlib.repr(self._ids)[5:]
 
 
 class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, ValueT]):
@@ -279,14 +227,16 @@ class GuildRecord:
     `typing.MutableSequence[str]` of invite codes.
     """
 
-    members: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberData]] = attr.ib(default=None)
+    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(
+        default=None
+    )
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be `builtins.None` if no members are cached for this guild else
     `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, MemberData]`.
     """
 
-    presences: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
+    presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
         default=None
     )
     """A mapping of user IDs to objects of the presences cached for this guild.
@@ -302,7 +252,7 @@ class GuildRecord:
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of role IDs.
     """
 
-    voice_states: typing.Optional[mapping.MappedCollection[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
+    voice_states: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
         default=None
     )
     """A mapping of user IDs to objects of the voice states cached for this guild.
@@ -737,7 +687,7 @@ class GenericRefWrapper(typing.Generic[ValueT]):
     ref_count: int = attr.ib(default=0)
 
 
-class DMChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, DMChannelData]):
+class DMChannelCacheMapping(collections.ExtendedMutableMapping[snowflakes.Snowflake, DMChannelData]):
     """A specialised Most-recently-used limited mapping for DMs.
 
     This allows us to stop the private message cached from growing
@@ -772,8 +722,8 @@ class DMChannelMRUMutableMapping(mapping.MappedCollection[snowflakes.Snowflake, 
         self._channels = source or {}
         self._expiry = expiry
 
-    def copy(self) -> DMChannelMRUMutableMapping:
-        return DMChannelMRUMutableMapping(self._channels.copy(), expiry=self._expiry)
+    def copy(self) -> DMChannelCacheMapping:
+        return DMChannelCacheMapping(self._channels.copy(), expiry=self._expiry)
 
     def freeze(self) -> typing.Dict[snowflakes.Snowflake, DMChannelData]:
         return self._channels.copy()
@@ -817,7 +767,7 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in mapping.copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in collections.copy_mapping(channel.permission_overwrites).items()
     }
     return channel
 

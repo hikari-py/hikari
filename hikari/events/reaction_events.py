@@ -60,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any message reaction event."""
 
@@ -105,13 +105,13 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in private messages."""
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionAddEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction that is added to a message."""
 
@@ -140,7 +140,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     """Event base for any single reaction that is removed from a message."""
 
@@ -170,13 +170,13 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteAllEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed from a message."""
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed for one emoji."""
 
@@ -313,7 +313,7 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
@@ -338,7 +338,7 @@ class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
 
@@ -363,7 +363,7 @@ class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
 
@@ -385,7 +385,7 @@ class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.PRIVATE_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteAllEvent(DMReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""
 

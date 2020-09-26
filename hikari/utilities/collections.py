@@ -19,28 +19,33 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Mapping utility and implementations used in Hriki."""
+"""Custom data structures used within Hikari's core implementation."""
 from __future__ import annotations
 
 __all__: typing.List[str] = [
     "MapT",
     "KeyT",
     "ValueT",
-    "MappedCollection",
-    "DictionaryCollection",
-    "MRIMutableMapping",
-    "CMRIMutableMapping",
+    "ExtendedMutableMapping",
+    "FreezableDict",
+    "TimedCacheMap",
+    "LimitedCapacityCacheMap",
     "get_index_or_slice",
     "copy_mapping",
 ]
 
 import abc
+import array
+import bisect
 import datetime
 import itertools
+import sys
 import time
 import typing
 
-MapT = typing.TypeVar("MapT", bound="MappedCollection[typing.Any, typing.Any]")
+from hikari import snowflakes
+
+MapT = typing.TypeVar("MapT", bound="ExtendedMutableMapping[typing.Any, typing.Any]")
 """Type-hint A type hint used for mapped collection objects."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint A type hint used for the type of a mapping's key."""
@@ -48,10 +53,12 @@ ValueT = typing.TypeVar("ValueT")
 """Type-hint A type hint used for the type of a mapping's value."""
 
 
-class MappedCollection(typing.MutableMapping[KeyT, ValueT], abc.ABC):
-    """The abstract class of mutable mappings used within hikari.
+class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
+    """The abstract class of mutable mappings used within Hikari.
 
-    This extends `typing.MutableMapping` with "copy" and "freeze" methods.
+    These are mutable mappings that have a couple of extra methods to allow
+    for further optimised copy operations, as well as the ability to freeze
+    the implementation of a mapping to make it read-only.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -83,8 +90,8 @@ class MappedCollection(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         This may look like calling `dict.copy`.
 
         !!! note
-            Unlike `MappedCollection.copy`, this should return a pure mapping
-            with no removal policy at all.
+            Unlike `ExtendedMutableMapping.copy`, this should return a pure
+            mapping with no removal policy at all.
 
         Returns
         -------
@@ -93,17 +100,18 @@ class MappedCollection(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         """
 
 
-class DictionaryCollection(MappedCollection[KeyT, ValueT]):
-    """A basic mapped collection that acts like a dictionary."""
+class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
+    """A mapping that wraps a dict, but can also be frozen."""
 
     __slots__ = ("_data",)
 
     def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /) -> None:
         self._data = source or {}
 
-    def copy(self) -> DictionaryCollection[KeyT, ValueT]:
-        return DictionaryCollection(self._data.copy())
+    def copy(self) -> FreezableDict[KeyT, ValueT]:
+        return FreezableDict(self._data.copy())
 
+    # TODO: name this something different if it is not physically frozen.
     def freeze(self) -> typing.Dict[KeyT, ValueT]:
         return self._data.copy()
 
@@ -123,7 +131,7 @@ class DictionaryCollection(MappedCollection[KeyT, ValueT]):
         self._data[key] = value
 
 
-class _FrozenMRIMapping(typing.MutableMapping[KeyT, ValueT]):
+class _FrozenDict(typing.MutableMapping[KeyT, ValueT]):
     __slots__ = ("_source",)
 
     def __init__(self, source: typing.Dict[KeyT, typing.Tuple[float, ValueT]], /) -> None:
@@ -145,7 +153,7 @@ class _FrozenMRIMapping(typing.MutableMapping[KeyT, ValueT]):
         self._source[key] = (0.0, value)
 
 
-class MRIMutableMapping(MappedCollection[KeyT, ValueT]):
+class TimedCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     """A most-recently-inserted limited mutable mapping implementation.
 
     This will remove entries on modification as as they pass the expiry limit.
@@ -175,11 +183,11 @@ class MRIMutableMapping(MappedCollection[KeyT, ValueT]):
         self._data = source or {}
         self._garbage_collect()
 
-    def copy(self) -> MRIMutableMapping[KeyT, ValueT]:
-        return MRIMutableMapping(self._data.copy(), expiry=datetime.timedelta(seconds=self._expiry))
+    def copy(self) -> TimedCacheMap[KeyT, ValueT]:
+        return TimedCacheMap(self._data.copy(), expiry=datetime.timedelta(seconds=self._expiry))
 
     def freeze(self) -> typing.MutableMapping[KeyT, ValueT]:
-        return _FrozenMRIMapping(self._data.copy())
+        return _FrozenDict(self._data.copy())
 
     def _garbage_collect(self) -> None:
         current_time = time.perf_counter()
@@ -212,7 +220,7 @@ class MRIMutableMapping(MappedCollection[KeyT, ValueT]):
         self._garbage_collect()
 
 
-class CMRIMutableMapping(MappedCollection[KeyT, ValueT]):
+class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     """Implementation of a capacity-limited most-recently-inserted mapping.
 
     This will start removing the oldest entries after it's maximum capacity is
@@ -234,8 +242,8 @@ class CMRIMutableMapping(MappedCollection[KeyT, ValueT]):
         self._limit = limit
         self._garbage_collect()
 
-    def copy(self) -> CMRIMutableMapping[KeyT, ValueT]:
-        return CMRIMutableMapping(self._data.copy(), limit=self._limit)
+    def copy(self) -> LimitedCapacityCacheMap[KeyT, ValueT]:
+        return LimitedCapacityCacheMap(self._data.copy(), limit=self._limit)
 
     def freeze(self) -> typing.Dict[KeyT, ValueT]:
         return self._data.copy()
@@ -259,6 +267,117 @@ class CMRIMutableMapping(MappedCollection[KeyT, ValueT]):
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
         self._garbage_collect()
+
+
+# TODO: can this be immutable?
+class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
+    r"""Set of `hikari.snowflakes.Snowflake` objects.
+
+    This internally uses a sorted bisect-array of 64 bit integers to represent
+    the information. This reduces the space needed to store these objects
+    significantly down to the size of 8 bytes per item.
+
+    In contrast, a regular list would take generally 8 bytes per item just to
+    store the memory address, and then a further 28 bytes or more to physically
+    store the integral value if it does not get interned by the Python
+    implementation you are using. A regular set would consume even more
+    space, being a hashtable internally.
+
+    The detail of this implementation has the side effect that searches
+    will take $$ \mathcal{O} \left( \log n \right) $$ operations in the worst
+    case, and $$ \Omega \left (k \right) $$ in the best case. Average case
+    will be $$ \mathcal{O} \left( \log n \right) $$
+
+    Insertions and removals will take $$ \mathcal{O} \left( \log n \right) $$
+    operations in the worst case, due to `bisect` using a binary insertion sort
+    algorithm internally. Average case will be
+    $$ \mathcal{O} \left( \log n \right) $$, and best case will be
+    $$ \Omega \left\( k \right) $$.
+
+    !!! warning
+        This is not thread-safe and must not be iterated across whilst being
+        concurrently modified.
+
+    Other Parameters
+    ----------------
+    *ids : builtins.int
+        The IDs to fill this table with.
+    """
+
+    __slots__: typing.Sequence[str] = ("_ids",)
+
+    _LONG_LONG_UNSIGNED: typing.Final[typing.ClassVar[str]] = "Q"
+
+    def __init__(self, *ids: int) -> None:
+        self._ids = array.array(self._LONG_LONG_UNSIGNED)
+
+        if ids:
+            self.add_all(ids)
+
+    def add(self, sf: int) -> None:
+        """Add a snowflake to this set."""
+        # Always append the first item, as we cannot compare with nothing.
+        index = bisect.bisect_left(self._ids, sf)
+        if index == len(self._ids):
+            self._ids.append(sf)
+        elif self._ids[index] != sf:
+            self._ids.insert(index, sf)
+
+    def add_all(self, sfs: typing.Iterable[int]) -> None:
+        """Add a collection of snowflakes to this set."""
+        if not sfs:
+            return
+
+        for sf in sfs:
+            # Yes, this is repeated code, but we want insertions to be as fast
+            # as possible for caching purposes, so reduce the number of function
+            # calls as much as possible and reimplement the logic for `add`
+            # here.
+            index = bisect.bisect_left(self._ids, sf)
+            if index == len(self._ids):
+                self._ids.append(sf)
+            elif self._ids[index] != sf:
+                self._ids.insert(index, sf)
+
+    def clear(self) -> None:
+        """Clear all items from this collection."""
+        # Arrays lack a "clear" method.
+        self._ids = array.array(self._LONG_LONG_UNSIGNED)
+
+    def discard(self, sf: int) -> None:
+        """Remove a snowflake from this set if it's present."""
+        if not self._ids:
+            return
+
+        index = bisect.bisect_left(self._ids, sf)
+
+        if index < len(self) and self._ids[index] == sf:
+            del self._ids[index]
+
+    def __contains__(self, value: typing.Any) -> bool:
+        if not isinstance(value, int):
+            return False
+
+        index = bisect.bisect_left(self._ids, value)
+
+        if index < len(self._ids):
+            return self._ids[index] == value
+        return False
+
+    def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
+        return map(snowflakes.Snowflake, self._ids)
+
+    def __len__(self) -> int:
+        return len(self._ids)
+
+    def __repr__(self) -> str:
+        return type(self).__name__ + "(" + ", ".join(map(repr, self._ids)) + ")"
+
+    def __sizeof__(self) -> int:
+        return super().__sizeof__() + sys.getsizeof(self._ids)
+
+    def __str__(self) -> str:
+        return "{" + ", ".join(map(repr, self._ids)) + "}"
 
 
 def get_index_or_slice(
@@ -310,4 +429,4 @@ def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping
     try:
         return mapping.copy()  # type: ignore[attr-defined, no-any-return]
     except (AttributeError, TypeError):
-        raise NotImplementedError("provided mapping doesn't implement a copy method") from None
+        return dict(mapping)

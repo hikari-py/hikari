@@ -278,10 +278,10 @@ class PartialMessage(snowflakes.Unique):
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: undefined.UndefinedOr[users.User] = attr.ib(repr=True)
+    author: users.User = attr.ib(repr=True)
     """The author of this message."""
 
     member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)

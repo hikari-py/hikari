@@ -265,7 +265,7 @@ class Intents(flag.Flag):
     * `TYPING_START` (in guilds only)
     """
 
-    PRIVATE_MESSAGES = 1 << 12
+    DM_MESSAGES = 1 << 12
     """Subscribes to the following events:
 
     * `CHANNEL_CREATE` (in private message channels (non-guild bound) only)
@@ -274,7 +274,7 @@ class Intents(flag.Flag):
     * `MESSAGE_DELETE` (in private message channels (non-guild bound) only)
     """
 
-    PRIVATE_MESSAGE_REACTIONS = 1 << 13
+    DM_MESSAGE_REACTIONS = 1 << 13
     """Subscribes to the following events:
 
     * `MESSAGE_REACTION_ADD` (in private message channels (non-guild bound) only)
@@ -283,7 +283,7 @@ class Intents(flag.Flag):
     * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels (non-guild bound) only)
     """
 
-    PRIVATE_MESSAGE_TYPING = 1 << 14
+    DM_MESSAGE_TYPING = 1 << 14
     """Subscribes to the following events
 
     * `TYPING_START` (in private message channels (non-guild bound) only)
@@ -327,19 +327,19 @@ class Intents(flag.Flag):
         use.
     """
 
-    ALL_PRIVATE = PRIVATE_MESSAGES | PRIVATE_MESSAGE_TYPING | PRIVATE_MESSAGE_REACTIONS
+    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
     """All private message channel (non-guild bound) intents."""
 
-    ALL_MESSAGES = PRIVATE_MESSAGES | GUILD_MESSAGES
+    ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
     """All message intents."""
 
-    ALL_MESSAGE_REACTIONS = PRIVATE_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
+    ALL_MESSAGE_REACTIONS = DM_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
     """All message reaction intents."""
 
-    ALL_MESSAGE_TYPING = PRIVATE_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
+    ALL_MESSAGE_TYPING = DM_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
 
-    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_PRIVATE
+    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS
     """All unprivileged intents."""
 
     ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED
