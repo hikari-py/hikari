@@ -334,8 +334,8 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         Returns
         -------
         typing.Mapping[builtins.int, builtins.float]
-            Each shard ID mapped to the corresponding heartbeat latency in
-            seconds.
+            Each shard ID mapped to the corresponding heartbeat latency.
+            Each latency is measured in seconds.
         """
         raise NotImplementedError
 
@@ -349,7 +349,8 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         -------
         builtins.float
             The average heartbeat latency of all started shards, or
-            `float('nan')` if no shards are started.
+            `float('nan')` if no shards are started. This is measured
+            in seconds.
         """
         raise NotImplementedError
 
