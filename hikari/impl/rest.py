@@ -2264,16 +2264,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_integration)
 
-    async def delete_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        route = routes.DELETE_GUILD_INTEGRATION.compile(guild=guild, integration=integration)
-        await self._request(route, reason=reason)
-
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
         raw_response = await self._request(route)

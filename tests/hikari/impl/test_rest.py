@@ -2377,13 +2377,6 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
-    async def test_delete_integration(self, rest_client):
-        expected_route = routes.DELETE_GUILD_INTEGRATION.compile(guild=123, integration=456)
-        rest_client._request = mock.AsyncMock()
-
-        await rest_client.delete_integration(StubModel(123), StubModel(456), reason="dont need it anymore")
-        rest_client._request.assert_awaited_once_with(expected_route, reason="dont need it anymore")
-
     async def test_fetch_widget(self, rest_client):
         widget = StubModel(789)
         expected_route = routes.GET_GUILD_WIDGET.compile(guild=123)
