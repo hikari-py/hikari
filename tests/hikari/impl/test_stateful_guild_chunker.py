@@ -20,7 +20,6 @@
 # SOFTWARE.
 import asyncio
 import copy
-import time
 
 import mock
 import pytest
@@ -36,6 +35,7 @@ from hikari.impl import shard
 from hikari.impl import stateful_guild_chunker
 from hikari.utilities import attr_extensions
 from hikari.utilities import event_stream
+from hikari.utilities import time
 from tests.hikari import hikari_test_helpers
 
 

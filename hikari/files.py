@@ -60,8 +60,8 @@ import aiohttp.client
 import attr
 
 from hikari.utilities import aio
-from hikari.utilities import time
 from hikari.utilities import net
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     import types

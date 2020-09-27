@@ -944,7 +944,7 @@ class TestGatewayShardImpl:
         client._closed = mock.Mock(is_set=mock.Mock(return_value=False))
         client._send_heartbeat = mock.AsyncMock()
 
-        with mock.patch.object(date, "monotonic", return_value=10):
+        with mock.patch.object(time, "monotonic", return_value=10):
             with mock.patch.object(asyncio, "wait_for", side_effect=[asyncio.TimeoutError, None]) as wait_for:
                 assert await client._heartbeat(20) is False
 
@@ -955,7 +955,7 @@ class TestGatewayShardImpl:
         client._last_heartbeat_sent = 10
         client._logger = mock.Mock()
 
-        with mock.patch.object(date, "monotonic", return_value=5):
+        with mock.patch.object(time, "monotonic", return_value=5):
             with mock.patch.object(asyncio, "wait_for") as wait_for:
                 assert await client._heartbeat(20) is True
 
@@ -988,7 +988,7 @@ class TestGatewayShardImpl:
         client._last_heartbeat_sent = 0
         client._seq = 10
 
-        with mock.patch.object(date, "monotonic", return_value=200):
+        with mock.patch.object(time, "monotonic", return_value=200):
             await client._send_heartbeat()
 
         client._ws.send_json.assert_awaited_once_with({"op": 1, "d": 10})

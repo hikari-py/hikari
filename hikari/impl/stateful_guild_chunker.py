@@ -29,7 +29,6 @@ import asyncio
 import base64
 import copy
 import random
-import time
 import typing
 
 import attr
@@ -41,8 +40,8 @@ from hikari.api import chunker
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 from hikari.utilities import collections
-from hikari.utilities import time
 from hikari.utilities import event_stream
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -57,7 +56,7 @@ EXPIRY_TIME: typing.Final[int] = 5000
 
 
 def _random_nonce() -> str:
-    head = time.perf_counter_ns().to_bytes(8, "big")
+    head = time.monotonic_ns().to_bytes(8, "big")
     tail = random.getrandbits(92).to_bytes(12, "big")
     return base64.b64encode(head + tail).decode("ascii")
 

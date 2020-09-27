@@ -43,8 +43,8 @@ from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
-from hikari.utilities import time
 from hikari.utilities import routes
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

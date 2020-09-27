@@ -60,8 +60,8 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.utilities import aio
-from hikari.utilities import time
 from hikari.utilities import event_stream
+from hikari.utilities import time
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
