@@ -26,6 +26,7 @@ __all__: typing.List[str] = [
     "MapT",
     "KeyT",
     "ValueT",
+    "SnowflakeSet",
     "ExtendedMutableMapping",
     "FreezableDict",
     "TimedCacheMap",
@@ -291,8 +292,8 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     Insertions and removals will take $$ \mathcal{O} \left( \log n \right) $$
     operations in the worst case, due to `bisect` using a binary insertion sort
     algorithm internally. Average case will be
-    $$ \mathcal{O} \left( \log n \right) $$, and best case will be
-    $$ \Omega \left\( k \right) $$.
+    $$ \mathcal{O} \left( \log n \right) $$ and best case will be
+    $$ \Omega \left\( k \right) $$
 
     !!! warning
         This is not thread-safe and must not be iterated across whilst being

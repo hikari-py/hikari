@@ -99,7 +99,7 @@ class BasicAuthHeader:
         -------
         builtins.str
             A base64-encoded string containing
-            `"{username}:{password}`.
+            `"{username}:{password}"`.
         """
         raw_token = f"{self.username}:{self.password}".encode(self.charset)
         token_part = base64.b64encode(raw_token).decode(self.charset)
