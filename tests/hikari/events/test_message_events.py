@@ -270,11 +270,6 @@ class TestDMMessageUpdateEvent:
             shard=mock.Mock(),
         )
 
-    def test_channel_property(self, event):
-        channel = event.channel
-        assert channel is event.app.cache.get_dm_channel.return_value
-        event.app.cache.get_dm_channel.assert_called_once_with(8000010662)
-
 
 class TestMessageDeleteEvent:
     def test_message_id_property(self):

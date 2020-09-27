@@ -38,7 +38,6 @@ class TestTypingEvent:
             user_id=456,
             timestamp=object(),
             shard=object(),
-            channel=object(),
         )
 
         return cls()
@@ -128,12 +127,6 @@ class TestDMTypingEvent:
             app=mock.Mock(rest=mock.AsyncMock()),
             user_id=456,
         )
-
-    async def test_channel(self, event):
-        event.app.cache.get_dm_channel = mock.Mock(return_value=mock.Mock(spec_set=channels.DMChannel))
-        result = event.channel
-        assert result is event.app.cache.get_dm_channel.return_value
-        event.app.cache.get_dm_channel.assert_called_once_with(456)
 
     def test_user(self, event):
         event.app.cache.get_user = mock.Mock(return_value=mock.Mock(spec_set=users.User))

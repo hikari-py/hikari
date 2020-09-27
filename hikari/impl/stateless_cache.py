@@ -49,7 +49,7 @@ class StatelessCacheImpl(cache.MutableCache):
     """Stateless cache.
 
     A stateless cache implementation that implements dummy operations for
-    each of the required attributes of a functional cache implementation.
+    each of the required attributes of a functional cache implementation.R
     Any descriptors will always return `builtins.NotImplemented`, and any
     methods will always raise `hikari.errors.HikariError` when being invoked.
 
@@ -66,26 +66,6 @@ class StatelessCacheImpl(cache.MutableCache):
     @staticmethod
     def _no_cache() -> NotImplementedError:
         return NotImplementedError("This application is stateless, cache operations are not implemented.")
-
-    def clear_dms(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
-        raise self._no_cache()
-
-    def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        raise self._no_cache()
-
-    def get_dm_channel(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        return None
-
-    def get_dm_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.DMChannel]:
-        return cache_utilities.EmptyCacheView()
-
-    def set_dm(self, channel: channels.DMChannel, /) -> None:
-        raise self._no_cache()
-
-    def update_dm(
-        self, channel: channels.DMChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
-        raise self._no_cache()
 
     def clear_emojis(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         raise self._no_cache()

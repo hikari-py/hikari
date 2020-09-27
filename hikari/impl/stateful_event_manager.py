@@ -89,34 +89,21 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""
         event = self._app.event_factory.deserialize_channel_create_event(shard, payload)
-
-        if isinstance(event.channel, channels.GuildChannel):
-            self._cache.set_guild_channel(event.channel)
-        else:
-            self._cache.set_dm(typing.cast(channels.DMChannel, event.channel))
-
+        assert isinstance(event.channel, channels.GuildChannel), "channel create events for DM channels are unexpected"
+        self._cache.set_guild_channel(event.channel)
         await self.dispatch(event)
 
     async def on_channel_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
         event = self._app.event_factory.deserialize_channel_update_event(shard, payload)
-
-        if isinstance(event.channel, channels.GuildChannel):
-            self._cache.update_guild_channel(event.channel)
-        else:
-            self._cache.update_dm(typing.cast(channels.DMChannel, event.channel))
-
+        assert isinstance(event.channel, channels.GuildChannel), "channel update events for DM channels are unexpected"
+        self._cache.update_guild_channel(event.channel)
         await self.dispatch(event)
 
     async def on_channel_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-delete for more info."""
         event = self._app.event_factory.deserialize_channel_delete_event(shard, payload)
-
-        if isinstance(event.channel, channels.GuildChannel):
-            self._cache.delete_guild_channel(event.channel.id)
-        else:
-            self._cache.delete_dm(typing.cast(channels.DMChannel, event.channel).recipient.id)
-
+        self._cache.delete_guild_channel(event.channel.id)
         await self.dispatch(event)
 
     async def on_channel_pins_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
