@@ -529,7 +529,7 @@ class EventFactory(typing.Protocol):
 
     def deserialize_message_delete_bulk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> message_events.MessageBulkDeleteEvent:
+    ) -> message_events.MessageDeleteEvent:
         """Parse a raw payload from Discord into a message delete bulk event object.
 
         Parameters
@@ -541,8 +541,13 @@ class EventFactory(typing.Protocol):
 
         Returns
         -------
-        hikari.events.message_events.MessageBulkDeleteEvent
+        hikari.events.message_events.MessageDeleteEvent
             The parsed message delete bulk event object.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            If a bulk delete occurs in a DM channel.
         """
 
     def deserialize_message_reaction_add_event(

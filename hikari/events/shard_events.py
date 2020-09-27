@@ -40,7 +40,7 @@ import attr
 
 from hikari.events import base_events
 from hikari.utilities import attr_extensions
-from hikari.utilities import mapping
+from hikari.utilities import collections
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -249,7 +249,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[guilds.Member, typing.Sequence[guilds.Member]]:
-        return mapping.get_index_or_slice(self.members, index_or_slice)
+        return collections.get_index_or_slice(self.members, index_or_slice)
 
     def __iter__(self) -> typing.Iterator[guilds.Member]:
         return iter(self.members.values())

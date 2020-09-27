@@ -45,6 +45,7 @@ from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
+from hikari.utilities import collections
 from hikari.utilities import data_binding
 from hikari.utilities import date
 
@@ -361,26 +362,45 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_message_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
-        message = self._app.entity_factory.deserialize_partial_message(payload)
+        channel_id = snowflakes.Snowflake(payload["channel_id"])
+        message_ids = collections.SnowflakeSet(int(payload["id"]))
 
-        if message.guild_id is None:
-            return message_events.DMMessageDeleteEvent(app=self._app, shard=shard, message=message)
+        if "guild_id" in payload:
+            return message_events.GuildMessageDeleteEvent(
+                app=self._app,
+                shard=shard,
+                channel_id=channel_id,
+                message_ids=message_ids,
+                is_bulk=False,
+                guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            )
 
-        return message_events.GuildMessageDeleteEvent(app=self._app, shard=shard, message=message)
+        return message_events.DMMessageDeleteEvent(
+            app=self._app,
+            shard=shard,
+            channel_id=channel_id,
+            message_ids=message_ids,
+            is_bulk=False,
+        )
 
     def deserialize_message_delete_bulk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> message_events.MessageBulkDeleteEvent:
-        if "guild_id" not in payload:
-            raise NotImplementedError("No implementation for private message bulk delete events")
+    ) -> message_events.MessageDeleteEvent:
 
-        return message_events.GuildMessageBulkDeleteEvent(
-            app=self._app,
-            shard=shard,
-            channel_id=snowflakes.Snowflake(payload["channel_id"]),
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-            message_ids=[snowflakes.Snowflake(message_id) for message_id in payload["ids"]],
-        )
+        message_ids = collections.SnowflakeSet(*(snowflakes.Snowflake(message_id) for message_id in payload["ids"]))
+        channel_id = snowflakes.Snowflake(payload["channel_id"])
+
+        if "guild_id" in payload:
+            return message_events.GuildMessageDeleteEvent(
+                app=self._app,
+                shard=shard,
+                channel_id=channel_id,
+                guild_id=snowflakes.Snowflake(payload["guild_id"]),
+                message_ids=message_ids,
+                is_bulk=True,
+            )
+
+        raise NotImplementedError("DM bulk deletes are not documented behavior")
 
     def deserialize_message_reaction_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

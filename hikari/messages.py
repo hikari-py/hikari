@@ -278,14 +278,24 @@ class PartialMessage(snowflakes.Unique):
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.ib(repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: undefined.UndefinedOr[users.User] = attr.ib(repr=True)
-    """The author of this message."""
+    author: typing.Optional[users.User] = attr.ib(repr=True)
+    """The author of this message.
 
-    member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)
-    """The member properties for the message's author."""
+    This will be `builtins.None` in some cases such as when Discord
+    updates a message with an embed URL preview.
+    """
+
+    member: typing.Optional[guilds.Member] = attr.ib(repr=False)
+    """The member for the author who created the message.
+
+    If the message is not in a guild, this will be `builtins.None`.
+
+    This will also be `builtins.None` in some cases such as when Discord updates
+    a message with an embed URL preview.
+    """
 
     content: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
     """The content of the message."""
@@ -306,6 +316,7 @@ class PartialMessage(snowflakes.Unique):
     is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
+    # TODO: make a mentions object. These type hints are cancer in the documentation.
     user_mentions: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 
