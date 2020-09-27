@@ -158,7 +158,7 @@ class Webhook(snowflakes.Unique):
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
-            If specified, the message contents. If
+            If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
             `builtins.str`.
@@ -170,36 +170,39 @@ class Webhook(snowflakes.Unique):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
         username : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the username to override the webhook's username
+            If provided, the username to override the webhook's username
             for this request.
         avatar_url : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the url of an image to override the webhook's
+            If provided, the url of an image to override the webhook's
             avatar with for this request.
         tts : hikari.undefined.UndefinedOr[bool]
-            If specified, whether the message will be sent as a TTS message.
+            If provided, whether the message will be sent as a TTS message.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If specified, the message attachment. This can be a resource,
+            If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
-            If specified, the message attachments. These can be resources, or
+            If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
-            If specified, a sequence of between `1` to `10` embed objects
+            If provided, a sequence of between `1` to `10` embed objects
             (inclusive) to send with the embed.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether the message should parse @everyone/@here
+            If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
@@ -250,8 +253,8 @@ class Webhook(snowflakes.Unique):
     async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         use_token : hikari.undefined.UndefinedOr[builtins.bool]
             If set to `builtins.True` then the webhook's token will be used for
             this request; if set to `builtins.False` then bot authorization will
@@ -289,18 +292,18 @@ class Webhook(snowflakes.Unique):
     ) -> Webhook:
         """Edit this webhook.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the new name string.
+            If provided, the new name string.
         avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If specified, the new avatar image. If `builtins.None`, then
+            If provided, the new avatar image. If `builtins.None`, then
             it is removed. If not specified, nothing is changed.
         channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
-            If specified, the object or ID of the new channel the given
+            If provided, the object or ID of the new channel the given
             webhook should be moved to.
         reason : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the audit log reason explaining why the operation
+            If provided, the audit log reason explaining why the operation
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
         use_token : hikari.undefined.UndefinedOr[builtins.bool]
@@ -365,8 +368,8 @@ class Webhook(snowflakes.Unique):
     async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> Webhook:
         """Fetch this webhook.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         use_token : hikari.undefined.UndefinedOr[builtins.bool]
             If set to `builtins.True` then the webhook's token will be used for
             this request; if set to `builtins.False` then bot authorization will

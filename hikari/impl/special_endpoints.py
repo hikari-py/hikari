@@ -250,7 +250,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         *,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -261,9 +261,9 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         if len(self._roles) == 0:
             if name != "@everyone":
                 raise ValueError("First role must always be the '@everyone' role")
-            if undefined.count(color, colour, hoisted, mentionable, position) != 5:
+            if undefined.count(color, colour, hoist, mentionable, position) != 5:
                 raise ValueError(
-                    "Cannot pass 'color', 'colour', 'hoisted', 'mentionable' nor 'position' to the '@everyone' role."
+                    "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
                 )
 
         snowflake_id = self._new_snowflake()
@@ -272,7 +272,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put("name", name)
         payload.put("color", color)
         payload.put("color", colour)
-        payload.put("hoisted", hoisted)
+        payload.put("hoist", hoist)
         payload.put("mentionable", mentionable)
         payload.put("permissions", permissions)
         payload.put("position", position)

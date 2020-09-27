@@ -329,8 +329,8 @@ class TextChannel(PartialChannel, abc.ABC):
     ) -> iterators.LazyIterator[messages.Message]:
         """Browse the message history for a given text channel.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
             If provided, fetch messages before this snowflakes. If you provide
             a datetime object, it will be transformed into a snowflakes. This
@@ -396,7 +396,7 @@ class TextChannel(PartialChannel, abc.ABC):
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
-            If specified, the message contents. If
+            If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
             `builtins.str`.
@@ -408,32 +408,35 @@ class TextChannel(PartialChannel, abc.ABC):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If specified, the message embed.
+            If provided, the message embed.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
-            If specified, the message attachment. This can be a resource,
+            If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
-            If specified, the message attachments. These can be resources, or
+            If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether the message will be TTS (Text To Speech).
+            If provided, whether the message will be TTS (Text To Speech).
         nonce : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, a nonce that can be used for optimistic message
+            If provided, a nonce that can be used for optimistic message
             sending.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether the message should parse @everyone/@here
+            If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning

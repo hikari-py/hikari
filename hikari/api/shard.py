@@ -169,8 +169,8 @@ class GatewayShard(abc.ABC):
         the new presence settings will be remembered for when the shard
         does connect.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.
@@ -229,16 +229,19 @@ class GatewayShard(abc.ABC):
         ----------
         guild: hikari.guilds.Guild
             The guild to request chunk for.
+
+        Other Parameters
+        ----------------
         include_presences: hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether to request presences.
+            If provided, whether to request presences.
         query: builtins.str
             If not `""`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
         users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
-            If specified, the users to request for.
+            If provided, the users to request for.
         nonce: hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the nonce to be sent with guild chunks.
+            If provided, the nonce to be sent with guild chunks.
 
         !!! note
             To request the full list of members, set `query` to `""` (empty

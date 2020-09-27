@@ -280,6 +280,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -313,6 +316,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -346,6 +352,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.snowflakes.Snowflake
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -379,6 +388,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.snowflakes.Snowflake
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -412,6 +424,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.snowflakes.Snowflake
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -445,6 +460,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the guild this channel belongs to. This will be ignored
             for DM and group DM channels and will be prioritised over
@@ -629,6 +647,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         user : hikari.undefined.UndefinedOr[hikari.users.User]
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
@@ -875,6 +896,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the guild the presence belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
@@ -951,6 +975,9 @@ class EntityFactory(abc.ABC):
         ----------
         payload : hikari.utilities.data_binding.JSONObject
             The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
         guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.

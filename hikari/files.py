@@ -1020,7 +1020,7 @@ class Bytes(Resource[IteratorReader]):
     """The raw data/provider of raw data to upload."""
 
     mimetype: typing.Optional[str]
-    """The provided mimetype, if specified. Otherwise `builtins.None`."""
+    """The provided mimetype, if provided. Otherwise `builtins.None`."""
 
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""

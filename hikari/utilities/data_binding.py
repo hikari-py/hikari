@@ -129,6 +129,9 @@ class StringMapBuilder(multidict.MultiDict[str]):
             The string key.
         value : hikari.undefined.UndefinedOr[typing.Any]
             The value to set.
+
+        Other Parameters
+        ----------------
         conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
             An optional conversion to perform.
 
@@ -199,8 +202,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
+
+        Other Parameters
+        ----------------
         conversion : typing.Optional[typing.Callable[[typing.Any], JSONish]]
-            Optional conversion to apply.
+            The optional conversion to apply.
         """
         if value is not undefined.UNDEFINED:
             if conversion is not None:
@@ -230,8 +236,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
+
+        Other Parameters
+        ----------------
         conversion : typing.Optional[typing.Callable[[typing.Any], JSONType]]
-            Optional conversion to apply.
+            The optional conversion to apply.
         """
         if values is not undefined.UNDEFINED:
             if conversion is not None:
