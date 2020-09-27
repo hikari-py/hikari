@@ -37,7 +37,7 @@ import abc
 import datetime
 import typing
 
-from hikari.utilities import date
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -60,7 +60,7 @@ class Snowflake(int):
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
         epoch = self >> 22
-        return date.discord_epoch_to_datetime(epoch)
+        return time.discord_epoch_to_datetime(epoch)
 
     @property
     def internal_worker_id(self) -> int:
@@ -100,7 +100,7 @@ class Snowflake(int):
     def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:
         """Convert the pieces of info that comprise an ID into a Snowflake."""
         return cls(
-            (date.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
+            (time.datetime_to_discord_epoch(timestamp) << 22) | (worker_id << 17) | (process_id << 12) | increment
         )
 
 

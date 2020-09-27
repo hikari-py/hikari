@@ -60,7 +60,7 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.utilities import aio
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import event_stream
 from hikari.utilities import ux
 
@@ -761,7 +761,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
-        start_time = date.monotonic()
+        start_time = time.monotonic()
 
         if check_for_updates:
             asyncio.create_task(
@@ -863,7 +863,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
-        _LOGGER.info("application started successfully in approx %.0f seconds", date.monotonic() - start_time)
+        _LOGGER.info("application started successfully in approx %.0f seconds", time.monotonic() - start_time)
 
     def stream(
         self,
@@ -947,9 +947,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             url=url,
         )
 
-        start = date.monotonic()
+        start = time.monotonic()
         await aio.first_completed(new_shard.start(), self._closing_event.wait())
-        end = date.monotonic()
+        end = time.monotonic()
 
         if new_shard.is_alive:
             _LOGGER.debug("Shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)

@@ -71,7 +71,7 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
 from hikari.impl import stateless_cache
 from hikari.utilities import data_binding
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import net
 from hikari.utilities import routes
 from hikari.utilities import ux
@@ -541,7 +541,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Wait for any rate-limits to finish.
                 await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
-                uuid = date.uuid()
+                uuid = time.uuid()
 
                 if _LOGGER.getEffectiveLevel() <= ux.TRACE:
                     _LOGGER.log(
@@ -555,7 +555,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 # Make the request.
                 session = self._acquire_client_session()
-                start = date.monotonic()
+                start = time.monotonic()
                 response = await session.request(
                     compiled_route.method,
                     url,
@@ -568,7 +568,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     proxy=self._proxy_settings.url,
                     proxy_headers=self._proxy_settings.all_headers,
                 )
-                time_taken = (date.monotonic() - start) * 1_000
+                time_taken = (time.monotonic() - start) * 1_000
 
                 if _LOGGER.getEffectiveLevel() <= ux.TRACE:
                     _LOGGER.log(
@@ -634,7 +634,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
-        now_date = date.rfc7231_datetime_string_to_datetime(resp_headers[_DATE_HEADER])
+        now_date = time.rfc7231_datetime_string_to_datetime(resp_headers[_DATE_HEADER])
 
         is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
 
@@ -777,7 +777,7 @@ class RESTClientImpl(rest_api.RESTClient):
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -877,7 +877,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
-        max_age: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        max_age: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -887,7 +887,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> invites.InviteWithMetadata:
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
-        body.put("max_age", max_age, conversion=date.timespan_to_int)
+        body.put("max_age", max_age, conversion=time.timespan_to_int)
         body.put("max_uses", max_uses)
         body.put("temporary", temporary)
         body.put("unique", unique)
@@ -1735,7 +1735,7 @@ class RESTClientImpl(rest_api.RESTClient):
             guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
         afk_channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
-        afk_timeout: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        afk_timeout: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,

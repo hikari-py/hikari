@@ -84,7 +84,7 @@ def create_tcp_connector(
         If `builtins.True`, DNS caching is used with a default TTL of 10 seconds.
         If `builtins.False`, DNS cacheing is disabled. If an `builtins.int` is
         given, then DNS caching is enabled with an explicit TTL set. If
-        `builtins.None`, the cache will be enabled and never invalidate.
+        `builtins.None`, the cache will be enabled and never invalitime.
     http_settings : config.HTTPSettings
         HTTP settings to use for the connector.
     limit : builtins.int

@@ -35,7 +35,7 @@ from hikari import presences
 from hikari import undefined
 from hikari.impl import shard
 from hikari.utilities import aio
-from hikari.utilities import date
+from hikari.utilities import time
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 

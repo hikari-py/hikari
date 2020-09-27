@@ -30,7 +30,7 @@ import typing
 import attr
 
 from hikari.utilities import attr_extensions
-from hikari.utilities import date
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -64,7 +64,7 @@ class SessionStartLimit:
     more information.
     """
 
-    _created_at: datetime.datetime = attr.ib(factory=date.local_datetime, init=False)
+    _created_at: datetime.datetime = attr.ib(factory=time.local_datetime, init=False)
 
     @property
     def used(self) -> int:

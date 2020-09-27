@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
-    from hikari.utilities import date
+    from hikari.utilities import time
 
 
 class ConnectorFactory(abc.ABC):
@@ -145,7 +145,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -174,7 +174,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new bitrate for the channel.
         user_limit : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.date.Intervalish
+        rate_limit_per_user : hikari.utilities.time.Intervalish
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
@@ -461,7 +461,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
-        max_age: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        max_age: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2848,7 +2848,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
         afk_channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
-        afk_timeout: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        afk_timeout: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
@@ -2888,7 +2888,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         afk_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
             If provided, the new afk channel. Requires `afk_timeout` to
             be set to work.
-        afk_timeout : hikari.undefined.UndefinedOr[hikari.utilities.date.Intervalish]
+        afk_timeout : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
             If provided, the new afk timeout.
         icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the new guild icon. Must be a 1024x1024 image or can be

@@ -43,7 +43,7 @@ from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import routes
 
 if typing.TYPE_CHECKING:
@@ -314,7 +314,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         *,
         parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
@@ -327,7 +327,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_TEXT)
         payload.put("topic", topic)
-        payload.put("rate_limit_per_user", rate_limit_per_user, conversion=date.timespan_to_int)
+        payload.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
         payload.put("position", position)
         payload.put("nsfw", nsfw)
         payload.put_snowflake("parent_id", parent_id)
