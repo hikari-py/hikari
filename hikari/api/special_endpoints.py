@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import voices
-    from hikari.utilities import date
+    from hikari.utilities import time
 
 
 class TypingIndicator(abc.ABC):
@@ -325,7 +325,7 @@ class GuildBuilder(abc.ABC):
         *,
         parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[date.Intervalish] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]

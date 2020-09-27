@@ -41,7 +41,7 @@ from hikari.api import chunker
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
 from hikari.utilities import collections
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import event_stream
 
 if typing.TYPE_CHECKING:
@@ -97,7 +97,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         self._include_presences = include_presences
         self._limit = query_limit
         self._missing_chunks: typing.Optional[typing.MutableSequence[int]] = None
-        self._nonce = date.uuid()
+        self._nonce = time.uuid()
         self._query = query
         self._users = users
         self.filter(lambda event: event.nonce == self._nonce)
@@ -197,7 +197,7 @@ class _TrackedRequests:
         self.not_found_ids.extend(event.not_found)
         self.missing_chunk_indexes.remove(event.chunk_index)
         self._mono_last_received = time.monotonic_ns()
-        self.last_received = date.utc_datetime()
+        self.last_received = time.utc_datetime()
 
 
 class StatefulGuildChunkerImpl(chunker.GuildChunker):

@@ -211,7 +211,7 @@ import typing
 
 from hikari.impl import rate_limits
 from hikari.utilities import aio
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import routes
 from hikari.utilities import ux
 
@@ -288,13 +288,13 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             The epoch at which to reset the limit.
 
         !!! note
-            The `reset_at` epoch is expected to be a `date.monotonic_timestamp`
+            The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
             monotonic epoch, rather than a `time.time` date-based epoch.
         """
         self.remaining = remaining
         self.limit = limit
         self.reset_at = reset_at
-        self.period = max(0.0, self.reset_at - date.monotonic())
+        self.period = max(0.0, self.reset_at - time.monotonic())
 
     def drip(self) -> None:
         """Decrement the remaining count for this bucket.
@@ -457,7 +457,7 @@ class RESTBucketManager:
         """
         buckets_to_purge = []
 
-        now = date.monotonic()
+        now = time.monotonic()
 
         # We have three main states that a bucket can be in:
         # 1. active - the bucket is active and is not at risk of deallocation
@@ -560,7 +560,7 @@ class RESTBucketManager:
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
         reset_after = (reset_at_header - date_header).total_seconds()
-        reset_at_monotonic = date.monotonic() + reset_after
+        reset_at_monotonic = time.monotonic() + reset_after
 
         if real_bucket_hash in self.real_hashes_to_buckets:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]

@@ -46,7 +46,7 @@ from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.utilities import data_binding
-from hikari.utilities import date
+from hikari.utilities import time
 from hikari.utilities import net
 from hikari.utilities import ux
 
@@ -668,7 +668,7 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _heartbeat(self, heartbeat_interval: float) -> bool:
         # Return True if zombied or should reconnect, false if time to die forever.
         # Prevent immediately zombie-ing.
-        self._last_heartbeat_ack_received = date.monotonic()
+        self._last_heartbeat_ack_received = time.monotonic()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
         while not self._closing.is_set() and not self._closed.is_set():
@@ -677,7 +677,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._logger.warning(
                     "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected, "
                     "expect a reconnect shortly",
-                    date.monotonic() - self._last_heartbeat_ack_received,
+                    time.monotonic() - self._last_heartbeat_ack_received,
                 )
                 return True
 
@@ -713,7 +713,7 @@ class GatewayShardImpl(shard.GatewayShard):
             await self._send_heartbeat_ack()
             self._logger.log(ux.TRACE, "sent HEARTBEAT")
         elif op == _HEARTBEAT_ACK:
-            now = date.monotonic()
+            now = time.monotonic()
             self._last_heartbeat_ack_received = now
             self._heartbeat_latency = now - self._last_heartbeat_sent
             self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
@@ -756,7 +756,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         try:
             while not self._closing.is_set() and not self._closed.is_set():
-                if date.monotonic() - last_started_at < _BACKOFF_WINDOW:
+                if time.monotonic() - last_started_at < _BACKOFF_WINDOW:
                     time = next(backoff)
                     self._logger.info("backing off reconnecting for %.2fs", time)
 
@@ -769,7 +769,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         pass
 
                 try:
-                    last_started_at = date.monotonic()
+                    last_started_at = time.monotonic()
                     should_restart = await self._run_once()
 
                     if not should_restart:
@@ -864,7 +864,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 # This will currently allow us to try to resume if that happens
                 # We return True if zombied.
                 if await heartbeat_task:
-                    now = date.monotonic()
+                    now = time.monotonic()
                     self._logger.error(
                         "connection is a zombie, last heartbeat sent %.2fs ago",
                         now - self._last_heartbeat_sent,
@@ -901,7 +901,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _send_heartbeat(self) -> None:
         await self._ws.send_json({_OP: _HEARTBEAT, _D: self._seq})  # type: ignore[union-attr]
-        self._last_heartbeat_sent = date.monotonic()
+        self._last_heartbeat_sent = time.monotonic()
 
     async def _send_heartbeat_ack(self) -> None:
         await self._ws.send_json({_OP: _HEARTBEAT_ACK, _D: None})  # type: ignore[union-attr]

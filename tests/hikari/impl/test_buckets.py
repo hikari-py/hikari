@@ -26,7 +26,7 @@ import mock
 import pytest
 
 from hikari.impl import buckets
-from hikari.utilities import date as hikari_date
+from hikari.utilities import time as hikari_date
 from hikari.utilities import routes
 from tests.hikari import hikari_test_helpers
 

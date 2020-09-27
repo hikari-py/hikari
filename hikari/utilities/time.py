@@ -220,7 +220,7 @@ def utc_datetime() -> datetime.datetime:
     return datetime.datetime.now(tz=datetime.timezone.utc)
 
 
-# date.monotonic_ns is no slower than time.monotonic, but is more accurate.
+# time.monotonic_ns is no slower than time.monotonic, but is more accurate.
 # Also, fun fact that monotonic_ns appears to be 1µs faster on average than
 # monotonic on AARM64 architectures, but on x86, monotonic is around 1ns faster
 # than monotonic_ns. Just thought that was kind of interesting to note down.

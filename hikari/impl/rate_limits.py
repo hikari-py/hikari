@@ -41,7 +41,7 @@ import math
 import random
 import typing
 
-from hikari.utilities import date
+from hikari.utilities import time
 
 if typing.TYPE_CHECKING:
     import types
@@ -285,7 +285,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
 
     reset_at: float
-    """The `date.monotonic_timestamp` that the limit window ends at."""
+    """The `time.monotonic_timestamp` that the limit window ends at."""
 
     remaining: int
     """The number of `WindowedBurstRateLimiter.acquire`'s left in this window
@@ -324,7 +324,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
-        if self.throttle_task is not None or self.is_rate_limited(date.monotonic()):
+        if self.throttle_task is not None or self.is_rate_limited(time.monotonic()):
             self.queue.append(future)
             if self.throttle_task is None:
                 self.throttle_task = loop.create_task(self.throttle())
@@ -340,7 +340,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : builtins.float
-            The monotonic `date.monotonic_timestamp` timestamp.
+            The monotonic `time.monotonic_timestamp` timestamp.
 
         !!! warning
             Invoking this method will update the internal state if we were
@@ -365,7 +365,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : builtins.float
-            The monotonic `date.monotonic_timestamp` timestamp.
+            The monotonic `time.monotonic_timestamp` timestamp.
 
         Returns
         -------
@@ -409,11 +409,11 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         _LOGGER.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
             self.name,
-            self.get_time_until_reset(date.monotonic()),
+            self.get_time_until_reset(time.monotonic()),
         )
 
         while self.queue:
-            sleep_for = self.get_time_until_reset(date.monotonic())
+            sleep_for = self.get_time_until_reset(time.monotonic())
             await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:

@@ -52,7 +52,7 @@ from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
 from hikari.utilities import attr_extensions
 from hikari.utilities import data_binding
-from hikari.utilities import date
+from hikari.utilities import time
 
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
 
@@ -592,7 +592,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         last_pin_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
-            last_pin_timestamp = date.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
 
         return channel_models.GuildTextChannel(
             app=self._app,
@@ -627,7 +627,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         last_pin_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
-            last_pin_timestamp = date.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
 
         return channel_models.GuildNewsChannel(
             app=self._app,
@@ -706,7 +706,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         description = payload.get("description")
         url = payload.get("url")
         color = color_models.Color(payload["color"]) if "color" in payload else None
-        timestamp = date.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
+        timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
         fields: typing.Optional[typing.MutableSequence[embed_models.EmbedField]] = None
 
         image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
@@ -987,11 +987,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]]
 
-        joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"])
+        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"])
 
         raw_premium_since = payload.get("premium_since")
         premium_since = (
-            date.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
+            time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
         return guild_models.Member(
@@ -1054,7 +1054,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         last_synced_at: typing.Optional[datetime.datetime] = None
         if (raw_last_synced_at := payload.get("synced_at")) is not None:
-            last_synced_at = date.iso8601_datetime_string_to_datetime(raw_last_synced_at)
+            last_synced_at = time.iso8601_datetime_string_to_datetime(raw_last_synced_at)
 
         return guild_models.Integration(
             id=integration_fields.id,
@@ -1220,7 +1220,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
         is_large = payload["large"] if "large" in payload else None
-        joined_at = date.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
+        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
         member_count = int(payload["member_count"]) if "member_count" in payload else None
 
         guild = guild_models.GatewayGuild(
@@ -1398,7 +1398,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_uses=int(payload["max_uses"]),
             max_age=datetime.timedelta(seconds=max_age) if max_age > 0 else None,
             is_temporary=payload["temporary"],
-            created_at=date.iso8601_datetime_string_to_datetime(payload["created_at"]),
+            created_at=time.iso8601_datetime_string_to_datetime(payload["created_at"]),
         )
 
     ##################
@@ -1420,12 +1420,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
         if "timestamp" in payload:
-            timestamp = date.iso8601_datetime_string_to_datetime(payload["timestamp"])
+            timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"])
 
         edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED
         if "edited_timestamp" in payload:
             if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
-                edited_timestamp = date.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
+                edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
             else:
                 edited_timestamp = None
 
@@ -1536,7 +1536,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         edited_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
-            edited_timestamp = date.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
+            edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
 
         user_mentions = [snowflakes.Snowflake(mention["id"]) for mention in payload["mentions"]]
         role_mentions = [snowflakes.Snowflake(mention) for mention in payload["mention_roles"]]
@@ -1602,7 +1602,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             author=author,
             member=member,
             content=payload["content"],
-            timestamp=date.iso8601_datetime_string_to_datetime(payload["timestamp"]),
+            timestamp=time.iso8601_datetime_string_to_datetime(payload["timestamp"]),
             edited_timestamp=edited_timestamp,
             is_tts=payload["tts"],
             is_mentioning_everyone=payload["mention_everyone"],
@@ -1638,9 +1638,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "timestamps" in activity_payload:
                 timestamps_payload = activity_payload["timestamps"]
                 start = (
-                    date.unix_epoch_to_datetime(timestamps_payload["start"]) if "start" in timestamps_payload else None
+                    time.unix_epoch_to_datetime(timestamps_payload["start"]) if "start" in timestamps_payload else None
                 )
-                end = date.unix_epoch_to_datetime(timestamps_payload["end"]) if "end" in timestamps_payload else None
+                end = time.unix_epoch_to_datetime(timestamps_payload["end"]) if "end" in timestamps_payload else None
                 timestamps = presence_models.ActivityTimestamps(start=start, end=end)
 
             application_id = (
@@ -1694,7 +1694,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 name=activity_payload["name"],
                 type=presence_models.ActivityType(activity_payload["type"]),
                 url=activity_payload.get("url"),
-                created_at=date.unix_epoch_to_datetime(activity_payload["created_at"]),
+                created_at=time.unix_epoch_to_datetime(activity_payload["created_at"]),
                 timestamps=timestamps,
                 application_id=application_id,
                 details=activity_payload.get("details"),

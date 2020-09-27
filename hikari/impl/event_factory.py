@@ -47,7 +47,7 @@ from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.utilities import collections
 from hikari.utilities import data_binding
-from hikari.utilities import date
+from hikari.utilities import time
 
 
 class EventFactoryImpl(event_factory.EventFactory):
@@ -97,7 +97,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         # Turns out this _can_ be None or not present. Only set it if it is actually available.
         if (raw := payload.get("last_pin_timestamp")) is not None:
-            last_pin_timestamp: typing.Optional[datetime.datetime] = date.iso8601_datetime_string_to_datetime(raw)
+            last_pin_timestamp: typing.Optional[datetime.datetime] = time.iso8601_datetime_string_to_datetime(raw)
         else:
             last_pin_timestamp = None
 
@@ -132,7 +132,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         user_id = snowflakes.Snowflake(payload["user_id"])
         # Turns out that this endpoint uses seconds rather than milliseconds.
-        timestamp = date.unix_epoch_to_datetime(payload["timestamp"], is_millis=False)
+        timestamp = time.unix_epoch_to_datetime(payload["timestamp"], is_millis=False)
 
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
