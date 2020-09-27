@@ -363,7 +363,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
-        message_ids = collections.SnowflakeSet(payload["id"])
+        message_ids = collections.SnowflakeSet(int(payload["id"]))
 
         if "guild_id" in payload:
             return message_events.GuildMessageDeleteEvent(

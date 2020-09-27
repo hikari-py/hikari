@@ -281,8 +281,12 @@ class PartialMessage(snowflakes.Unique):
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(repr=True)
     """The ID of the guild that the message was sent in."""
 
-    author: users.User = attr.ib(repr=True)
-    """The author of this message."""
+    author: undefined.UndefinedOr[users.User] = attr.ib(repr=True)
+    """The author of this message.
+
+    This will be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+    updates a message with an embed URL preview.
+    """
 
     member: undefined.UndefinedNoneOr[guilds.Member] = attr.ib(repr=False)
     """The member properties for the message's author."""
@@ -306,6 +310,7 @@ class PartialMessage(snowflakes.Unique):
     is_mentioning_everyone: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the message mentions `@everyone` or `@here`."""
 
+    # TODO: make a mentions object. These type hints are cancer in the documentation.
     user_mentions: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.ib(repr=False)
     """The users the message mentions."""
 

@@ -23,8 +23,10 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
+from hikari import undefined
 from hikari import users
 from hikari.events import message_events
 from tests.hikari import hikari_test_helpers
@@ -107,11 +109,18 @@ class TestMessageUpdateEvent:
 
         return cls()
 
-    def test_author_property(self, event):
-        assert event.author is event.message.author
+    @pytest.mark.parametrize("author", [mock.Mock(spec_set=users.User), undefined.UNDEFINED])
+    def test_author_property(self, event, author):
+        event.message.author = author
+        assert event.author is author
 
-    def test_author_id_property(self, event):
-        assert event.author_id is event.author.id
+    @pytest.mark.parametrize(
+        ("author", "expected_id"),
+        [(mock.Mock(spec_set=users.User, id=91827), 91827), (undefined.UNDEFINED, undefined.UNDEFINED)],
+    )
+    def test_author_id_property(self, event, author, expected_id):
+        event.message.author = author
+        assert event.author_id == expected_id
 
     def test_channel_id_property(self, event):
         assert event.channel_id is event.message.channel_id
@@ -127,17 +136,23 @@ class TestMessageUpdateEvent:
         event.message.author.is_bot = is_bot
         assert event.is_bot is is_bot
 
+    def test_is_bot_property_if_no_author(self, event):
+        event.message.author = undefined.UNDEFINED
+        assert event.is_bot is None
+
     @pytest.mark.parametrize(
-        ("author_is_bot", "webhook_id", "expected_is_human"),
+        ("author", "webhook_id", "expected_is_human"),
         [
-            (True, 123, False),
-            (True, None, False),
-            (False, 123, False),
-            (False, None, True),
+            (mock.Mock(spec_set=users.User, is_bot=True), 123, False),
+            (mock.Mock(spec_set=users.User, is_bot=True), None, False),
+            (mock.Mock(spec_set=users.User, is_bot=False), 123, False),
+            (mock.Mock(spec_set=users.User, is_bot=False), None, True),
+            (undefined.UNDEFINED, 123, False),
+            (undefined.UNDEFINED, None, None),
         ],
     )
-    def test_is_human_property(self, event, author_is_bot, webhook_id, expected_is_human):
-        event.message.author.is_bot = author_is_bot
+    def test_is_human_property(self, event, author, webhook_id, expected_is_human):
+        event.message.author = author
         event.message.webhook_id = webhook_id
         assert event.is_human is expected_is_human
 
@@ -193,6 +208,40 @@ class TestGuildMessageUpdateEvent:
             ),
             shard=mock.Mock(),
         )
+
+    def test_author_property_when_member_defined(self, event):
+        event.message.member = mock.Mock(spec_set=guilds.Member)
+        event.message.author = undefined.UNDEFINED
+
+        assert event.author is event.message.member
+
+    @pytest.mark.parametrize("member_attr", [undefined.UNDEFINED, None])
+    def test_author_property_when_member_undefined_but_cached(self, event, member_attr):
+        event.message.member = member_attr
+        event.message.author = mock.Mock(spec_set=users.User, id=1234321)
+        event.message.guild_id = snowflakes.Snowflake(696969)
+        real_member = mock.Mock(spec_set=guilds.Member)
+        event.app.cache.get_member = mock.Mock(return_value=real_member)
+
+        assert event.author is real_member
+
+        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
+
+    def test_author_property_when_member_undefined_but_author_also_undefined(self, event):
+        event.message.author = undefined.UNDEFINED
+        event.message.member = undefined.UNDEFINED
+
+        assert event.author is undefined.UNDEFINED
+
+        event.app.cache.get_member.assert_not_called()
+
+    @pytest.mark.parametrize("member_attr", [undefined.UNDEFINED, None])
+    def test_author_property_when_member_undefined_and_uncached_but_author_defined(self, event, member_attr):
+        event.message.member = member_attr
+        event.app.cache.get_member = mock.Mock(return_value=None)
+        event.message.author = mock.Mock(spec_set=users.User)
+
+        assert event.author is event.message.author
 
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)

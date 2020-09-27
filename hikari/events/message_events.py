@@ -337,28 +337,33 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     """
 
     @property
-    def author(self) -> users.User:
+    def author(self) -> undefined.UndefinedOr[users.User]:
         """User that sent the message.
 
         Returns
         -------
-        hikari.users.User
+        hikari.undefined.UndefinedOr[hikari.users.User]
             The user that sent the message.
+
+            This will be `hikari.undefined.UNDEFINED` in some cases, such as
+            when Discord updates a message with an embed for a URL preview.
         """
         return self.message.author
 
     @property
-    def author_id(self) -> snowflakes.Snowflake:
+    def author_id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         """ID of the author that triggered this event.
 
         Returns
         -------
-        hikari.snowflakes.Snowflake
+        hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID of the author that triggered this event concerns.
+
+            This will be `hikari.undefined.UNDEFINED` in some cases, such as
+            when Discord updates a message with an embed for a URL preview.
         """
         author = self.message.author
-        assert isinstance(author, users.User), "message.author was expected to be present"
-        return author.id
+        return author.id if author is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -392,28 +397,44 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.embeds
 
     @property
-    def is_bot(self) -> bool:
+    def is_bot(self) -> typing.Optional[bool]:
         """Return `builtins.True` if the message is from a bot.
 
         Returns
         -------
-        builtins.bool
+        typing.Optional[builtins.bool]
             `builtins.True` if from a bot, or `builtins.False` otherwise.
+
+            If the author is not known, due to the update event being caused
+            by Discord adding an embed preview to accompany a URL, then this
+            will return `builtins.None` instead.
         """
-        return self.message.author.is_bot
+        if (author := self.message.author) is not undefined.UNDEFINED:
+            return author.is_bot
+        return None
 
     @property
-    def is_human(self) -> bool:
+    def is_human(self) -> typing.Optional[bool]:
         """Return `builtins.True` if the message was created by a human.
 
         Returns
         -------
-        builtins.bool
+        typing.Optional[builtins.bool]
             `builtins.True` if from a human user, or `builtins.False` otherwise.
+
+            If the author is not known, due to the update event being caused
+            by Discord adding an embed preview to accompany a URL, then this
+            may return `builtins.None` instead.
         """
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
-        return not self.message.author.is_bot and self.message.webhook_id is None
+        if self.message.webhook_id is not None:
+            return False
+
+        if (author := self.message.author) is not undefined.UNDEFINED:
+            return not author.is_bot
+
+        return None
 
     @property
     def is_webhook(self) -> bool:
@@ -469,25 +490,33 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> users.User:
+    def author(self) -> undefined.UndefinedOr[users.User]:
         """Member or user that sent the message.
 
         Returns
         -------
-        typing.Union[hikari.users.User, hikari.guilds.Member]
+        typing.Union[hikari.undefined.UNDEFINED, hikari.users.User, hikari.guilds.Member]
             The user that sent the message. If the member is cached
             (the intents are enabled), then this will be the corresponding
             member object instead (which is a specialization of the
             user object you should otherwise expect).
+
+            This will be `builtins.None` in some cases, such as when Discord
+            updates a message with an embed for a URL preview.
         """
         member = self.message.member
         if member is not undefined.UNDEFINED and member is not None:
             return member
-        member = self.app.cache.get_member(self.guild_id, self.author_id)
-        if member is not None:
-            return member
 
-        return super().author
+        author = self.message.author
+
+        if author is not undefined.UNDEFINED:
+            member = self.app.cache.get_member(self.guild_id, author.id)
+
+            if member is not None:
+                return member
+
+        return author
 
     @property
     def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
@@ -532,7 +561,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         """
         guild_id = self.message.guild_id
         # Always present on guild events
-        assert isinstance(guild_id, snowflakes.Snowflake), "no guild_id attribute set"
+        assert isinstance(guild_id, snowflakes.Snowflake), f"expected guild_id, got {guild_id}"
         return guild_id
 
 
@@ -564,8 +593,13 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
         typing.Optional[hikari.channels.DMChannel]
             The channel that the message was sent in, if known and cached,
             otherwise, `builtins.None`.
+
+            Likewise, if the author is not known, this will also return
+            `builtins.None`.
         """
-        return self.app.cache.get_dm_channel(self.author_id)
+        if (author_id := self.author_id) is not undefined.UNDEFINED:
+            return self.app.cache.get_dm_channel(author_id)
+        return None
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)

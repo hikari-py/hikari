@@ -1406,10 +1406,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
-        assert (
-            "author" in payload
-        ), "Discord have made a breaking change and are no longer sending 'author' in MessageUpdate events"
-        author = self.deserialize_user(payload["author"])
+        author: undefined.UndefinedOr[user_models.User]
+        if author_pl := payload.get("author"):
+            author = self.deserialize_user(author_pl)
+        else:
+            author = undefined.UNDEFINED
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
         member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED
