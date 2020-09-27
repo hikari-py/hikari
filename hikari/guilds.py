@@ -287,7 +287,6 @@ class Member(users.User):
     # entity factory to always provide the user object in these cases, so we
     # can assume this is always set, and thus we are always able to get info
     # such as the ID of the user this member represents.
-    # TODO: make member generic on this field (e.g. Member[PartialUser], Member[UserImpl], Member[OwnUser], etc)?
     user: users.User = attr.ib(repr=True)
     """This member's corresponding user object."""
 
@@ -331,47 +330,20 @@ class Member(users.User):
         return self.user.app
 
     @property
-    def id(self) -> snowflakes.Snowflake:
-        return self.user.id
-
-    @id.setter
-    def id(self, value: snowflakes.Snowflake) -> None:
-        raise TypeError("Cannot mutate the ID of a member")
-
-    @property
-    def username(self) -> str:
-        return self.user.username
-
-    @property
-    def discriminator(self) -> str:
-        return self.user.discriminator
-
-    @property
     def avatar_hash(self) -> typing.Optional[str]:
         return self.user.avatar_hash
-
-    @property
-    def is_bot(self) -> bool:
-        return self.user.is_bot
-
-    @property
-    def is_system(self) -> bool:
-        return self.user.is_system
-
-    @property
-    def flags(self) -> users.UserFlag:
-        return self.user.flags
 
     @property
     def avatar_url(self) -> files.URL:
         return self.user.avatar_url
 
-    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        return self.user.format_avatar(ext=ext, size=size)
-
     @property
     def default_avatar(self) -> files.URL:
         return self.user.default_avatar
+
+    @property
+    def discriminator(self) -> str:
+        return self.user.discriminator
 
     @property
     def display_name(self) -> str:
@@ -391,6 +363,26 @@ class Member(users.User):
         Username: `Member.username`
         """
         return self.nickname if isinstance(self.nickname, str) else self.username
+
+    @property
+    def flags(self) -> users.UserFlag:
+        return self.user.flags
+
+    @property
+    def id(self) -> snowflakes.Snowflake:
+        return self.user.id
+
+    @id.setter
+    def id(self, value: snowflakes.Snowflake) -> None:
+        raise TypeError("Cannot mutate the ID of a member")
+
+    @property
+    def is_bot(self) -> bool:
+        return self.user.is_bot
+
+    @property
+    def is_system(self) -> bool:
+        return self.user.is_system
 
     @property
     def mention(self) -> str:
@@ -418,6 +410,21 @@ class Member(users.User):
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
     @property
+    def presence(self) -> typing.Optional[presences_.MemberPresence]:
+        """Get the cached presence for this member, if known.
+
+        Presence info includes user status and activities.
+
+        This requires the `GUILD_PRESENCES` intent to be enabled.
+
+        Returns
+        -------
+        typing.Optional[hikari.presences.MemberPresence]
+            The member presence, or `builtins.None` if not known.
+        """
+        return self.app.cache.get_presence(self.guild_id, self.id)
+
+    @property
     def top_role(self) -> typing.Optional[Role]:
         """Return the highest role the member has.
 
@@ -439,6 +446,13 @@ class Member(users.User):
             return next(iter(roles))
         except StopIteration:
             return None
+
+    @property
+    def username(self) -> str:
+        return self.user.username
+
+    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.format_avatar(ext=ext, size=size)
 
     def __str__(self) -> str:
         return str(self.user)
