@@ -23,7 +23,6 @@ import datetime
 import mock
 import pytest
 
-import hikari.utilities.collections
 from hikari import channels
 from hikari import emojis
 from hikari import guilds
@@ -406,7 +405,7 @@ class TestStatefulCacheImpl:
         mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=snowflakes.Snowflake(123), ref_count=0)
         mock_emoji_data_3 = mock.Mock(cache.KnownCustomEmojiData, user_id=None, ref_count=0)
         mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
-        emoji_ids = hikari.utilities.collections.SnowflakeSet()
+        emoji_ids = collections.SnowflakeSet()
         emoji_ids.add_all(
             [snowflakes.Snowflake(43123123), snowflakes.Snowflake(87643523), snowflakes.Snowflake(6873451)]
         )
@@ -515,7 +514,7 @@ class TestStatefulCacheImpl:
         )
         mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.collections.SnowflakeSet()
+        emoji_ids = collections.SnowflakeSet()
         emoji_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
         cache_impl._emoji_entries = collections.FreezableDict(
             {
@@ -543,7 +542,7 @@ class TestStatefulCacheImpl:
         )
         mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         mock_emoji = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.collections.SnowflakeSet()
+        emoji_ids = collections.SnowflakeSet()
         emoji_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
         cache_impl._emoji_entries = collections.FreezableDict(
             {
@@ -617,7 +616,7 @@ class TestStatefulCacheImpl:
         mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user_id=None)
         mock_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
         mock_emoji_2 = mock.Mock(emojis.KnownCustomEmoji)
-        emoji_ids = hikari.utilities.collections.SnowflakeSet()
+        emoji_ids = collections.SnowflakeSet()
         emoji_ids.add_all([snowflakes.Snowflake(65123), snowflakes.Snowflake(43156234)])
         mock_wrapped_user = mock.Mock(cache.GenericRefWrapper[users.User])
         cache_impl._emoji_entries = collections.FreezableDict(

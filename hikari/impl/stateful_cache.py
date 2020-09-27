@@ -30,7 +30,6 @@ import datetime
 import logging
 import typing
 
-import hikari.utilities.collections
 from hikari import channels
 from hikari import emojis
 from hikari import errors
@@ -369,7 +368,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_container = self._get_or_create_guild_record(emoji.guild_id)
 
         if guild_container.emojis is None:  # TODO: add test cases when it is not None?
-            guild_container.emojis = hikari.utilities.collections.SnowflakeSet()
+            guild_container.emojis = collections.SnowflakeSet()
 
         guild_container.emojis.add(emoji.id)
 
@@ -564,7 +563,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record = self._get_or_create_guild_record(channel.guild_id)
 
         if guild_record.channels is None:
-            guild_record.channels = hikari.utilities.collections.SnowflakeSet()
+            guild_record.channels = collections.SnowflakeSet()
 
         guild_record.channels.add(channel.id)
 
@@ -1348,7 +1347,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record = self._get_or_create_guild_record(role.guild_id)
 
         if guild_record.roles is None:  # TODO: test when this is not None
-            guild_record.roles = hikari.utilities.collections.SnowflakeSet()
+            guild_record.roles = collections.SnowflakeSet()
 
         guild_record.roles.add(role.id)
 
