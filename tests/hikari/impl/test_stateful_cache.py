@@ -1697,6 +1697,7 @@ class TestStatefulCacheImpl:
         cache_impl._guild_entries = collections.FreezableDict(
             {snowflakes.Snowflake(42123): cache.GuildRecord(members={snowflakes.Snowflake(67876): mock_member_data})}
         )
+        cache_impl._user_entries = collections.FreezableDict({snowflakes.Snowflake(67876): object()})
         cache_impl._remove_guild_record_if_empty = mock.Mock()
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_member = mock.Mock(return_value=mock_member)
