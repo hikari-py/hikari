@@ -203,7 +203,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         Taking note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
     proxy_settings : typing.Optional[config.ProxySettings]
-        If specified, custom proxy settings to use with network-layer logic
+        Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
     rest_url : typing.Optional[builtins.str]
         Defaults to the Discord REST API URL if `builtins.None`. Can be

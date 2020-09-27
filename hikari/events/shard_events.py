@@ -235,7 +235,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     Returns
     -------
     typing.Optional[builtins.str]
-        The request nonce if specified, or `builtins.None` otherwise.
+        The request nonce if set, or `builtins.None` otherwise.
     """
 
     @typing.overload

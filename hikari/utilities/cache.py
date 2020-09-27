@@ -233,7 +233,7 @@ class GuildRecord:
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be `builtins.None` if no members are cached for this guild else
-    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, MemberData]`.
+    `hikari.utilities.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberData]`.
     """
 
     presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
@@ -242,7 +242,7 @@ class GuildRecord:
     """A mapping of user IDs to objects of the presences cached for this guild.
 
     This will be `builtins.None` if no presences are cached for this guild else
-    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, MemberPresenceData]`.
+    `hikari.utilities.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberPresenceData]`.
     """
 
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
@@ -258,7 +258,7 @@ class GuildRecord:
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
     This will be `builtins.None` if no voice states are cached for this guild else
-    `hikari.utilities.mapping.MappedCollection[hikari.snowflakes.Snowflake, VoiceStateData]`.
+    `hikari.utilities.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
     """
 
     def __bool__(self) -> bool:

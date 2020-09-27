@@ -410,8 +410,8 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         retained. This means you do not have to track the global presence
         in your code.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.

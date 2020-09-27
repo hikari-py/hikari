@@ -386,7 +386,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         -------
         hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             The embeds in the message. If the embeds were not changed in this
-            event, then this may instead be `hikari.undefined.Undefined`.
+            event, then this may instead be `hikari.undefined.UNDEFINED`.
         """
         return self.message.embeds
 

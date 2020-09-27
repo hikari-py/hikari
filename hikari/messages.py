@@ -264,7 +264,7 @@ class PartialMessage(snowflakes.Unique):
 
     !!! warn
         All fields on this model except `channel` and `id` may be set to
-        `hikari.undefined.UndefinedType` (a singleton) if we have not
+        `hikari.undefined.UNDEFINED` (a singleton) if we have not
         received information about their state from Discord alongside field
         nullability.
     """
@@ -438,6 +438,9 @@ class PartialMessage(snowflakes.Unique):
             If this is a `hikari.embeds.Embed` and no `embed` kwarg is
             provided, then this will instead update the embed. This allows for
             simpler syntax when sending an embed alone.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             The embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed if
@@ -554,7 +557,7 @@ class PartialMessage(snowflakes.Unique):
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
-            If specified, the message contents. If
+            If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
             `builtins.str`.
@@ -566,32 +569,35 @@ class PartialMessage(snowflakes.Unique):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If specified, the message embed.
+            If provided, the message embed.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
-            If specified, the message attachment. This can be a resource,
+            If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
-            If specified, the message attachments. These can be resources, or
+            If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether the message will be TTS (Text To Speech).
+            If provided, whether the message will be TTS (Text To Speech).
         nonce : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, a nonce that can be used for optimistic message
+            If provided, a nonce that can be used for optimistic message
             sending.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether the message should parse @everyone/@here
+            If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
-            If specified, and `builtins.True`, all mentions will be parsed.
-            If specified, and `builtins.False`, no mentions will be parsed.
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
@@ -746,6 +752,9 @@ class PartialMessage(snowflakes.Unique):
         ----------
         emoji : hikari.emojis.Emojiish
             The emoji to remove.
+
+        Other Parameters
+        ----------------
         user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
@@ -792,8 +801,8 @@ class PartialMessage(snowflakes.Unique):
     async def remove_all_reactions(self, emoji: undefined.UndefinedOr[emojis_.Emojiish] = undefined.UNDEFINED) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         emoji : hikari.undefined.UndefinedOr[hikari.emojis.Emojiish]
             The emoji to remove all reactions for. If not specified, then all
             emojis are removed.

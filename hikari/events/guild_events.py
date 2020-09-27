@@ -44,7 +44,6 @@ import typing
 import attr
 
 from hikari import intents
-from hikari import undefined
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.utilities import attr_extensions
@@ -341,7 +340,6 @@ class BanCreateEvent(BanEvent):
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
-
     # <<inherited docstring from BanEvent>>.
 
     async def fetch_ban(self) -> guilds.GuildMemberBan:
@@ -355,17 +353,7 @@ class BanCreateEvent(BanEvent):
         hikari.guilds.GuildMemberBan
             The ban details.
         """
-
-    async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
-        """Perform an API call to unban this member.
-
-        Parameters
-        ----------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            The optional reason to add to the audit log for why the user
-            was unbanned. Can be left undefined.
-        """
-        return await self.app.rest.unban_user(self.guild_id, self.user)
+        return await self.app.rest.fetch_ban(self.guild_id, self.user)
 
 
 @attr_extensions.with_copy
@@ -384,23 +372,7 @@ class BanDeleteEvent(BanEvent):
     # <<inherited docstring from GuildEvent>>.
 
     user: users.User = attr.ib()
-
     # <<inherited docstring from BanEvent>>.
-
-    # Sure, I could allow delete_message_days here, but... is there any point?
-    # TODO: do I want this call or is it dumb?
-    # I'm not sure if I want to keep this call or whether it promotes API abuse.
-    # I'll have a think about it.
-    async def reban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
-        """Perform an API call to re-ban this member.
-
-        Parameters
-        ----------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            The optional reason to add to the audit log for why the user
-            was rebanned. Can be left undefined.
-        """
-        return await self.app.rest.unban_user(self.guild_id, self.user)
 
 
 @attr_extensions.with_copy

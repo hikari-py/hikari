@@ -159,6 +159,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to edit. This may be the object or the ID of an
             existing channel.
+
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[[builtins.str]
             If provided, the new name for the channel.
         position : hikari.undefined.UndefinedOr[[builtins.int]
@@ -338,6 +341,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
             The channel overwrite to edit. This may be the object or the ID of an
             existing overwrite.
+
+        Other Parameters
+        ----------------
         target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
@@ -470,6 +476,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
             The channel to create a invite for. This may be the object
             or the ID of an existing channel.
+
+        Other Parameters
+        ----------------
         max_age : hikari.undefined.UndefinedOr[typing.Union[datetime.timedelta, builtins.float, builtins.int]]
             If provided, the duration of the invite before expiry.
         max_uses : hikari.undefined.UndefinedOr[builtins.int]
@@ -502,7 +511,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `MANAGE_CHANNELS` permission.
         hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
-            if specified.
+            if provided.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
             rate-limits automatically. This includes bucket-specific
@@ -705,6 +714,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to fetch messages in. This may be the object or
             the ID of an existing channel.
+
+        Other Parameters
+        ----------------
         before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -840,6 +852,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
@@ -1020,7 +1035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The message to edit. This may be the object or the ID
             of an existing message.
         content : hikari.undefined.UndefinedOr[typing.Any]
-            The message content to update with. If
+            If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
             be changed. If `builtins.None`, then the content will be removed.
 
@@ -1029,20 +1044,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is a `hikari.embeds.Embed` and no `embed` kwarg is
             provided, then this will instead update the embed. This allows for
             simpler syntax when sending an embed alone.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
-            The embed to set on the message. If
+            If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed if
             present is not changed. If this is `builtins.None`, then the embed
             is removed if present. Otherwise, the new embed value that was
             provided will be used as the replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
-            Sanitation for `@everyone` mentions. If
+            If provided, sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
-            Sanitation for user mentions. If
+            If provided, sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
             as mentions. If `builtins.False`, all valid user mentions will not
@@ -1052,7 +1070,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
-            Sanitation for role mentions. If
+            If provided, sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
             as mentions. If `builtins.False`, all valid role mentions will not
@@ -1062,7 +1080,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake` role IDs, or
             `hikari.guilds.PartialRole`-derived objects.
         flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
-            Optional flags to set on the message. If
+            If provided, optional flags to set on the message. If
             `hikari.undefined.UNDEFINED`, then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
@@ -1506,6 +1524,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the object or the ID of an existing channel.
         name : str
             The name for the webhook. This cannnot be `clyde`.
+
+        Other Parameters
+        ----------------
         avatar : typing.Optional[hikari.files.Resourceish]
             If provided, the avatar for the webhook.
         reason : hikari.undefined.UndefinedOr[builtins.str]
@@ -1553,6 +1574,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
             The webhook to fetch. This may be the object or the ID
             of an existing webhook.
+
+        Other Parameters
+        ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the webhoook token that will be used to fetch
             the webhook instead of the token the client was initialized with.
@@ -1678,6 +1702,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
             The webhook to edit. This may be the object or the
             ID of an existing webhook.
+
+        Other Parameters
+        ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the webhoook token that will be used to edit
             the webhook instead of the token the client was initialized with.
@@ -1732,6 +1759,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
             The webhook to delete. This may be the object or the
             ID of an existing webhook.
+
+        Other Parameters
+        ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the webhoook token that will be used to delete
             the webhook instead of the token the client was initialized with.
@@ -1802,6 +1832,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
@@ -2050,8 +2083,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> users.OwnUser:
         """Edit the token's associated user.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         username : undefined.UndefinedOr[builtins.str]
             If provided, the new username.
         avatar : undefined.UndefinedNoneOr[hikari.files.Resourceish]
@@ -2110,8 +2143,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
-        Parameters
-        ----------
+        Other Parameters
+        ----------------
         newest_first : builtins.bool
             Whether to fetch the newest first or the olders first.
             Defaults to `builtins.False`.
@@ -2271,6 +2304,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to add to the guild. This may be the object
             or the ID of an existing user.
+
+        Other Parameters
+        ----------------
         nick : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the nick to add to the user when he joins the guild.
 
@@ -2397,6 +2433,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to fetch the audit logs from. This can be a
             guild object or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         before : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
             If provided, filter to only actions after this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -2541,6 +2580,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         image : hikari.files.Resourceish
             The 128x128 image for the emoji. Maximum upload size is 256kb.
             This can be a still or an animated image.
+
+        Other Parameters
+        ----------------
         roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
             If provided, a collection of the roles that will be able to
             use this emoji. This can be a `hikari.guilds.PartialRole` or
@@ -2599,6 +2641,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
             The emoji to edit. This can be a `hikari.emojis.CustomEmoji`
             or the ID of an existing emoji.
+
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new name for the emoji.
         roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
@@ -2827,6 +2872,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit. This may be the object
             or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new name for the guild.
         region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
@@ -2987,6 +3035,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name : builtins.str
             The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the position of the channel (relative to the
             category, if any).
@@ -3059,6 +3110,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name : builtins.str
             The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the position of the channel (relative to the
             category, if any).
@@ -3130,6 +3184,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name : builtins.str
             The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the position of the channel (relative to the
             category, if any).
@@ -3197,6 +3254,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name : builtins.str
             The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the position of the category.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -3381,6 +3441,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit. This may be the object
             or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         nick : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new nick for the member. If `builtins.None`,
             will remove the members nick.
@@ -3454,6 +3517,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nick : typing.Optional[builtins.str]
             The new nick. If `builtins.None`,
             will remove the nick.
+
+        Other Parameters
+        ----------------
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3500,6 +3566,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
             The role to add. This may be the object or the
             ID of an existing role.
+
+        Other Parameters
+        ----------------
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3546,6 +3615,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
             The role to remove. This may be the object or the
             ID of an existing role.
+
+        Other Parameters
+        ----------------
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3588,6 +3660,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to kick. This may be the object
             or the ID of an existing user.
+
+        Other Parameters
+        ----------------
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3634,6 +3709,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to kick. This may be the object
             or the ID of an existing user.
+
+        Other Parameters
+        ----------------
         delete_message_days : hikari.undefined.UndefinedNoneOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
@@ -3684,6 +3762,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The user to unban. This may be the object
             or the ID of an existing user.
+
+        Other Parameters
+        ----------------
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3848,6 +3929,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the role in. This may be the
             object or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the name for the role.
         permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
@@ -3953,6 +4037,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
             The role to edit. This may be the object or the
             ID of an existing role.
+
+        Other Parameters
+        ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new name for the role.
         permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
@@ -4052,6 +4139,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to estimate the guild prune count for. This may be the object
             or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         days : hikari.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
         include_roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
@@ -4106,6 +4196,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to begin the guild prune in. This may be the object
             or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         days : hikari.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
         compute_prune_count: hikari.snowflakes.SnowflakeishOr[builtins.bool]
@@ -4354,6 +4447,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit the widget in. This can be the object
             or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
         channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]]
             If provided, the channel to set the widget to. If `builtins.None`,
             will not set to any.

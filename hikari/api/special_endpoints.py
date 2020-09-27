@@ -230,11 +230,11 @@ class GuildBuilder(abc.ABC):
         name: str,
         /,
         *,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        hoisted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         """Create a role.
@@ -245,28 +245,23 @@ class GuildBuilder(abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The role name.
-        color : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
-            The colour of the role to use. If unspecified, then the default
-            colour is used instead.
-        colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
-            Alias for the `color` parameter for non-american users.
-        hoisted : hikari.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the role will show up in the user sidebar in a separate
-            category if it is the highest hoisted role. If `builtins.False`, or
-            unspecified, then this will not occur.
-        mentionable : hikari.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, then the role will be able to be mentioned.
-        permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            The optional permissions to enforce on the role. If unspecified,
-            the default permissions for roles will be used.
+            The role's name.
 
-            !!! note
-                The default permissions are **NOT** the same as providing
-                zero permissions. To set no permissions, you should
-                pass `Permission(0)` explicitly.
-        position : hikari.undefined.UndefinedOr[builtins.int]
-            If specified, the position to place the role in.
+        Other Parameters
+        ----------------
+        permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            If provided, the permissions for the role.
+        color : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
+            If provided, the role's color.
+        colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
+            An alias for `color`.
+        hoist : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to hoist the role.
+        mentionable : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to make the role mentionable.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -303,12 +298,14 @@ class GuildBuilder(abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The name of the category.
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
-            The position to place the category in, if specified.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Collection[hikari.channels.PermissionOverwrite]]
-            If defined, a collection of one or more
-            `hikari.channels.PermissionOverwrite` objects.
+            If provided, the position of the category.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the category.
 
         Returns
         -------
@@ -340,24 +337,26 @@ class GuildBuilder(abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The name of the category.
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
-            The position to place the category in, if specified.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Collection[hikari.channels.PermissionOverwrite]]
-            If defined, a collection of one or more
-            `hikari.channels.PermissionOverwrite` objects.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the channel is marked as NSFW and only users
-            over 18 years of age should be given access.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
-            If defined, should be a snowflake ID of a category channel
-            that was made with this builder. If provided, this channel will
-            become a child channel of that category.
+            If provided, the position of the channel (relative to the
+            category, if any).
         topic : hikari.undefined.UndefinedOr[builtins.str]
-            If specified, the topic to set on the channel.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.date.Intervalish]
-            If specified, the time to wait between allowing consecutive messages
-            to be sent. If not specified, this will not be enabled.
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the ammount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
 
         Returns
         -------
@@ -388,21 +387,25 @@ class GuildBuilder(abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The name of the category.
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
         position : hikari.undefined.UndefinedOr[builtins.int]
-            The position to place the category in, if specified.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Collection[hikari.channels.PermissionOverwrite]]
-            If defined, a collection of one or more
-            `hikari.channels.PermissionOverwrite` objects.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
-            If defined, should be a snowflake ID of a category channel
-            that was made with this builder. If provided, this channel will
-            become a child channel of that category.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
-            If specified, the bitrate to set on the channel.
+            If provided, the position of the channel (relative to the
+            category, if any).
         user_limit : hikari.undefined.UndefinedOr[builtins.int]
-            If specified, the maximum number of users to allow in the voice
-            channel.
+            If provided, the maximum users in the channel at once.
+            Must be between 0 and 99 with 0 meaning no limit.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the bitrate for the channel. Must be
+            between 8000 and 96000 or 8000 and 128000 for VIP
+            servers.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
 
         Returns
         -------
