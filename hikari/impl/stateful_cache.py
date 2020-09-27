@@ -867,12 +867,18 @@ class StatefulCacheImpl(cache.MutableCache):
             self._remove_guild_record_if_empty(member.guild_id)
 
     def _chainable_remove_member(
-        self, member: cache_utility.MemberData, guild_record: cache_utility.GuildRecord
+        self,
+        member: cache_utility.MemberData,
+        guild_record: cache_utility.GuildRecord,
+        cached_users: typing.MutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]],
     ) -> typing.Optional[cache_utility.MemberData]:
         assert guild_record.members is not None
         member.has_been_deleted = True
         if not self._can_remove_member(member, guild_record):
             return None
+
+        if member.id not in cached_users:
+            cached_users[member.id] = self._user_entries[member.id]
 
         self._garbage_collect_user(member.id, decrement=1)
         del guild_record.members[member.id]
@@ -899,7 +905,8 @@ class StatefulCacheImpl(cache.MutableCache):
             #  This takes roughly half the time a two-layered for loop where we
             #  assign to the members dict on every inner-iteration takes.
             members_gen = (
-                self._chainable_remove_member(m, guild_record) for m in guild_record.members.freeze().values()
+                self._chainable_remove_member(m, guild_record, _VOID_MAPPING)
+                for m in guild_record.members.freeze().values()
             )
             # _chainable_remove_member will only return the member data object if they could be removed, else None.
             cached_members = {member.id: member for member in members_gen if member is not None}
@@ -915,10 +922,10 @@ class StatefulCacheImpl(cache.MutableCache):
             return cache_utility.EmptyCacheView()
 
         cached_members = guild_record.members.freeze()
-        members_gen = (self._chainable_remove_member(m, guild_record) for m in cached_members.values())
+        cached_users: typing.MutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]] = {}
+        members_gen = (self._chainable_remove_member(m, guild_record, cached_users) for m in cached_members.values())
         # _chainable_remove_member will only return the member data object if they could be removed, else None.
         cached_members = {member.id: member for member in members_gen if member is not None}
-        cached_users = {user_id: self._user_entries[user_id] for user_id in cached_members}
         return cache_utility.StatefulCacheMappingView(
             cached_members, builder=lambda member: self._build_member(member, cached_users=cached_users)
         )
@@ -936,7 +943,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
         member = self._build_member(member_data)
         # _chainable_remove_member will only return the member data object if they could be removed, else None.
-        return member if self._chainable_remove_member(member_data, guild_record) is not None else None
+        return member if self._chainable_remove_member(member_data, guild_record, _VOID_MAPPING) is not None else None
 
     def get_member(
         self, guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake, /
