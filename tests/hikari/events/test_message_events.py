@@ -116,7 +116,7 @@ class TestMessageUpdateEvent:
 
     @pytest.mark.parametrize(
         ("author", "expected_id"),
-        [(mock.Mock(spec_set=users.User, id=91827), 91827), (undefined.UNDEFINED, undefined.UNDEFINED)],
+        [(mock.Mock(spec_set=users.User, id=91827), 91827), (None, None)],
     )
     def test_author_id_property(self, event, author, expected_id):
         event.message.author = author
@@ -137,7 +137,7 @@ class TestMessageUpdateEvent:
         assert event.is_bot is is_bot
 
     def test_is_bot_property_if_no_author(self, event):
-        event.message.author = undefined.UNDEFINED
+        event.message.author = None
         assert event.is_bot is None
 
     @pytest.mark.parametrize(
@@ -147,8 +147,8 @@ class TestMessageUpdateEvent:
             (mock.Mock(spec_set=users.User, is_bot=True), None, False),
             (mock.Mock(spec_set=users.User, is_bot=False), 123, False),
             (mock.Mock(spec_set=users.User, is_bot=False), None, True),
-            (undefined.UNDEFINED, 123, False),
-            (undefined.UNDEFINED, None, None),
+            (None, 123, False),
+            (None, None, None),
         ],
     )
     def test_is_human_property(self, event, author, webhook_id, expected_is_human):
@@ -215,9 +215,8 @@ class TestGuildMessageUpdateEvent:
 
         assert event.author is event.message.member
 
-    @pytest.mark.parametrize("member_attr", [undefined.UNDEFINED, None])
-    def test_author_property_when_member_undefined_but_cached(self, event, member_attr):
-        event.message.member = member_attr
+    def test_author_property_when_member_none_but_cached(self, event):
+        event.message.member = None
         event.message.author = mock.Mock(spec_set=users.User, id=1234321)
         event.message.guild_id = snowflakes.Snowflake(696969)
         real_member = mock.Mock(spec_set=guilds.Member)
@@ -227,17 +226,16 @@ class TestGuildMessageUpdateEvent:
 
         event.app.cache.get_member.assert_called_once_with(696969, 1234321)
 
-    def test_author_property_when_member_undefined_but_author_also_undefined(self, event):
-        event.message.author = undefined.UNDEFINED
-        event.message.member = undefined.UNDEFINED
+    def test_author_property_when_member_none_but_author_also_none(self, event):
+        event.message.author = None
+        event.message.member = None
 
-        assert event.author is undefined.UNDEFINED
+        assert event.author is None
 
         event.app.cache.get_member.assert_not_called()
 
-    @pytest.mark.parametrize("member_attr", [undefined.UNDEFINED, None])
-    def test_author_property_when_member_undefined_and_uncached_but_author_defined(self, event, member_attr):
-        event.message.member = member_attr
+    def test_author_property_when_member_none_and_uncached_but_author_defined(self, event):
+        event.message.member = None
         event.app.cache.get_member = mock.Mock(return_value=None)
         event.message.author = mock.Mock(spec_set=users.User)
 

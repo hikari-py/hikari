@@ -2453,7 +2453,7 @@ class TestEntityFactoryImpl:
         assert partial_message.channel_id == 456
         assert partial_message.guild_id is None
         assert partial_message.author is not None
-        assert partial_message.member is undefined.UNDEFINED
+        assert partial_message.member is None
         assert partial_message.content is undefined.UNDEFINED
         assert partial_message.timestamp is undefined.UNDEFINED
         assert partial_message.edited_timestamp is undefined.UNDEFINED

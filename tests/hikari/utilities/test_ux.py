@@ -259,11 +259,13 @@ class TestSupportsColor:
         with stack:
             assert ux.supports_color(True, False) is False
 
-        assert getenv.call_count == 2
-        getenv.assert_has_calls([mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0")])
+        assert getenv.call_count == 3
+        getenv.assert_has_calls(
+            [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("COLORTERM", "")]
+        )
 
     @pytest.mark.parametrize(
-        ("term_program", "asicon", "isatty", "expected"),
+        ("term_program", "ansicon", "isatty", "expected"),
         [
             ("mintty", False, True, True),
             ("Terminus", False, True, True),
@@ -274,21 +276,22 @@ class TestSupportsColor:
             ("Terminus", True, False, False),
         ],
     )
-    def test_when_plat_is_win32(self, term_program, asicon, isatty, expected):
+    def test_when_plat_is_win32(self, term_program, ansicon, isatty, expected):
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", term_program, ""]))
+        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", "", term_program, ""]))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new="win32"))
-        stack.enter_context(mock.patch.object(os, "environ", new=["ANSICON"] if asicon else []))
+        stack.enter_context(mock.patch.object(os, "environ", new=["ANSICON"] if ansicon else []))
 
         with stack:
             assert ux.supports_color(True, False) is expected
 
-        assert getenv.call_count == 4
+        assert getenv.call_count == 5
         getenv.assert_has_calls(
             [
                 mock.call("CLICOLOR_FORCE", "0"),
                 mock.call("CLICOLOR", "0"),
+                mock.call("COLORTERM", ""),
                 mock.call("TERM_PROGRAM", None),
                 mock.call("PYCHARM_HOSTED", ""),
             ]
@@ -297,16 +300,21 @@ class TestSupportsColor:
     @pytest.mark.parametrize("isatty", [True, False])
     def test_when_plat_is_not_win32(self, isatty):
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", ""]))
+        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", "", ""]))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new="linux"))
 
         with stack:
             assert ux.supports_color(True, False) is isatty
 
-        assert getenv.call_count == 3
+        assert getenv.call_count == 4
         getenv.assert_has_calls(
-            [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("PYCHARM_HOSTED", "")]
+            [
+                mock.call("CLICOLOR_FORCE", "0"),
+                mock.call("CLICOLOR", "0"),
+                mock.call("COLORTERM", ""),
+                mock.call("PYCHARM_HOSTED", ""),
+            ]
         )
 
     @pytest.mark.parametrize("isatty", [True, False])
@@ -321,19 +329,25 @@ class TestSupportsColor:
             assert ux.supports_color(True, False) is True
 
         if plat == "win32":
-            assert getenv.call_count == 4
+            assert getenv.call_count == 5
             getenv.assert_has_calls(
                 [
                     mock.call("CLICOLOR_FORCE", "0"),
                     mock.call("CLICOLOR", "0"),
+                    mock.call("COLORTERM", ""),
                     mock.call("TERM_PROGRAM", None),
                     mock.call("PYCHARM_HOSTED", ""),
                 ]
             )
         else:
-            assert getenv.call_count == 3
+            assert getenv.call_count == 4
             getenv.assert_has_calls(
-                [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("PYCHARM_HOSTED", "")]
+                [
+                    mock.call("CLICOLOR_FORCE", "0"),
+                    mock.call("CLICOLOR", "0"),
+                    mock.call("COLORTERM", ""),
+                    mock.call("PYCHARM_HOSTED", ""),
+                ]
             )
 
 

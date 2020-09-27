@@ -1406,20 +1406,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
-        author: undefined.UndefinedOr[user_models.User]
+        author: typing.Optional[user_models.User] = None
         if author_pl := payload.get("author"):
             author = self.deserialize_user(author_pl)
-        else:
-            author = undefined.UNDEFINED
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
-        member: undefined.UndefinedOr[guild_models.Member] = undefined.UNDEFINED
+        member: typing.Optional[guild_models.Member] = None
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-            # TODO: will discord always send this with a guild? If so, we should default this to none I guess.
-            if "member" in payload:
-                member = self.deserialize_member(payload["member"], user=author, guild_id=guild_id)
+            if author is not None and (member_pl := payload.get("member")):
+                member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
         if "timestamp" in payload:

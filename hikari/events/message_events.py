@@ -337,33 +337,33 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     """
 
     @property
-    def author(self) -> undefined.UndefinedOr[users.User]:
+    def author(self) -> typing.Optional[users.User]:
         """User that sent the message.
 
         Returns
         -------
-        hikari.undefined.UndefinedOr[hikari.users.User]
+        typing.Optional[hikari.users.User]
             The user that sent the message.
 
-            This will be `hikari.undefined.UNDEFINED` in some cases, such as
-            when Discord updates a message with an embed for a URL preview.
+            This will be `builtins.None` in some cases, such as when Discord
+            updates a message with an embed for a URL preview.
         """
         return self.message.author
 
     @property
-    def author_id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
+    def author_id(self) -> typing.Optional[snowflakes.Snowflake]:
         """ID of the author that triggered this event.
 
         Returns
         -------
-        hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        typing.Optional[hikari.snowflakes.Snowflake]
             The ID of the author that triggered this event concerns.
 
-            This will be `hikari.undefined.UNDEFINED` in some cases, such as
+            This will be `builtins.None` in some cases, such as
             when Discord updates a message with an embed for a URL preview.
         """
         author = self.message.author
-        return author.id if author is not undefined.UNDEFINED else undefined.UNDEFINED
+        return author.id if author is not None else None
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -409,7 +409,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
             by Discord adding an embed preview to accompany a URL, then this
             will return `builtins.None` instead.
         """
-        if (author := self.message.author) is not undefined.UNDEFINED:
+        if (author := self.message.author) is not None:
             return author.is_bot
         return None
 
@@ -431,7 +431,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         if self.message.webhook_id is not None:
             return False
 
-        if (author := self.message.author) is not undefined.UNDEFINED:
+        if (author := self.message.author) is not None:
             return not author.is_bot
 
         return None
@@ -490,12 +490,12 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> undefined.UndefinedOr[users.User]:
+    def author(self) -> typing.Optional[users.User]:
         """Member or user that sent the message.
 
         Returns
         -------
-        typing.Union[hikari.undefined.UNDEFINED, hikari.users.User, hikari.guilds.Member]
+        typing.Union[builtins.None, hikari.users.User, hikari.guilds.Member]
             The user that sent the message. If the member is cached
             (the intents are enabled), then this will be the corresponding
             member object instead (which is a specialization of the
@@ -505,12 +505,12 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             updates a message with an embed for a URL preview.
         """
         member = self.message.member
-        if member is not undefined.UNDEFINED and member is not None:
+        if member is not None:
             return member
 
         author = self.message.author
 
-        if author is not undefined.UNDEFINED:
+        if author is not None:
             member = self.app.cache.get_member(self.guild_id, author.id)
 
             if member is not None:
@@ -597,7 +597,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
             Likewise, if the author is not known, this will also return
             `builtins.None`.
         """
-        if (author_id := self.author_id) is not undefined.UNDEFINED:
+        if (author_id := self.author_id) is not None:
             return self.app.cache.get_dm_channel(author_id)
         return None
 
