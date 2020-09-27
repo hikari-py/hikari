@@ -9,6 +9,8 @@ _test_job: &test_job
   install:
     - ${PYTHON_COMMAND} -m pip install nox
   before_script:
+    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    - chmod +x ./cc-test-reporter
     - mkdir public > /dev/null 2>&1 || true
     - ${PYTHON_COMMAND} -V
   script:
@@ -17,6 +19,7 @@ _test_job: &test_job
     - ${PYTHON_COMMAND} -m nox --sessions pytest-speedups -- --cov-append
   after_script:
     - bash <(curl -s https://codecov.io/bash)
+    - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 _windows_test_job: &windows_test_job
   os: windows
@@ -33,6 +36,10 @@ _linux_test_job: &linux_test_job
   env:
     - PYTHON_COMMAND=python
   <<: *test_job
+
+env:
+  global:
+    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
 
 jobs:
   include:
