@@ -174,7 +174,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new bitrate for the channel.
         user_limit : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.utilities.time.Intervalish
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
@@ -3019,7 +3019,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -3045,7 +3045,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[builtins.int]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
             If provided, the ammount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
@@ -3094,7 +3094,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -3120,7 +3120,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[builtins.int]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
             If provided, the ammount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
