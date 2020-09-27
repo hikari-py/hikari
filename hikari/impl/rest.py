@@ -71,9 +71,9 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
 from hikari.impl import stateless_cache
 from hikari.utilities import data_binding
-from hikari.utilities import time
 from hikari.utilities import net
 from hikari.utilities import routes
+from hikari.utilities import time
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:

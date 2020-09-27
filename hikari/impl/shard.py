@@ -46,8 +46,8 @@ from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.utilities import data_binding
-from hikari.utilities import time
 from hikari.utilities import net
+from hikari.utilities import time
 from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
@@ -757,11 +757,11 @@ class GatewayShardImpl(shard.GatewayShard):
         try:
             while not self._closing.is_set() and not self._closed.is_set():
                 if time.monotonic() - last_started_at < _BACKOFF_WINDOW:
-                    time = next(backoff)
-                    self._logger.info("backing off reconnecting for %.2fs", time)
+                    backoff_time = next(backoff)
+                    self._logger.info("backing off reconnecting for %.2fs", backoff_time)
 
                     try:
-                        await asyncio.wait_for(self._closing.wait(), timeout=time)
+                        await asyncio.wait_for(self._closing.wait(), timeout=backoff_time)
                         # We were told to close.
                         return
                     except asyncio.TimeoutError:
