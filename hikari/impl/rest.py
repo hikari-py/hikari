@@ -792,7 +792,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("nsfw", nsfw)
         body.put("bitrate", bitrate)
         body.put("user_limit", user_limit)
-        body.put("rate_limit_per_user", rate_limit_per_user)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
         body.put_snowflake("parent_id", parent_category)
         body.put_array(
             "permission_overwrites",
@@ -1759,7 +1759,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("verification", verification_level)
         body.put("notifications", default_message_notifications)
         body.put("explicit_content_filter", explicit_content_filter_level)
-        body.put("afk_timeout", afk_timeout)
+        body.put("afk_timeout", afk_timeout, conversion=time.timespan_to_int)
         body.put("preferred_locale", preferred_locale, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
@@ -1824,7 +1824,7 @@ class RESTClientImpl(rest_api.RESTClient):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -1853,7 +1853,7 @@ class RESTClientImpl(rest_api.RESTClient):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -1933,7 +1933,7 @@ class RESTClientImpl(rest_api.RESTClient):
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -1949,7 +1949,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("nsfw", nsfw)
         body.put("bitrate", bitrate)
         body.put("user_limit", user_limit)
-        body.put("rate_limit_per_user", rate_limit_per_user)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
         body.put_snowflake("category_id", category)
         body.put_array(
             "permission_overwrites",
