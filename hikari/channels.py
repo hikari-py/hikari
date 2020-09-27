@@ -65,6 +65,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import traits
     from hikari import webhooks
+    from hikari.api import special_endpoints
 
 
 @typing.final
@@ -318,6 +319,61 @@ class TextChannel(PartialChannel, abc.ABC):
     # This is a mixin, do not add slotted fields.
     __slots__: typing.Sequence[str] = ()
 
+    # TODO: add examples to this and the REST method this invokes.
+    def history(
+        self,
+        *,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages.Message]:
+        """Browse the message history for a given text channel.
+
+        Parameters
+        ----------
+        before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages before this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        after : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages after this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+        around : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+            If provided, fetch messages around this snowflakes. If you provide
+            a datetime object, it will be transformed into a snowflakes. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[hikari.messages.Message]
+            A iterator to fetch the messages.
+
+        Raises
+        ------
+        builtins.TypeError
+            If you specify more than one of `before`, `after`, `about`.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you lack permissions to read message history in the given
+            channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            The exceptions on this endpoint (other than `builtins.TypeError`) will only
+            be raised once the result is awaited or interacted with. Invoking
+            this function itself will not raise anything (other than
+            `builtins.TypeError`).
+        """  # noqa: E501 - Line too long
+        return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
+
     async def send(
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
@@ -456,60 +512,31 @@ class TextChannel(PartialChannel, abc.ABC):
             role_mentions=role_mentions,
         )
 
-    # TODO: add examples to this and the REST method this invokes.
-    def history(
-        self,
-        *,
-        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
-        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
-        around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[messages.Message]:
-        """Browse the message history for a given text channel.
+    def trigger_typing(self) -> special_endpoints.TypingIndicator:
+        """Trigger typing in a given channel.
 
-        Parameters
-        ----------
-        before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
-            If provided, fetch messages before this snowflakes. If you provide
-            a datetime object, it will be transformed into a snowflakes. This
-            may be any other Discord entity that has an ID. In this case, the
-            date the object was first created will be used.
-        after : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
-            If provided, fetch messages after this snowflakes. If you provide
-            a datetime object, it will be transformed into a snowflakes. This
-            may be any other Discord entity that has an ID. In this case, the
-            date the object was first created will be used.
-        around : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
-            If provided, fetch messages around this snowflakes. If you provide
-            a datetime object, it will be transformed into a snowflakes. This
-            may be any other Discord entity that has an ID. In this case, the
-            date the object was first created will be used.
+        This returns an object that can either be `await`ed to trigger typing
+        once, or used as an async context manager to keep typing until the
+        block completes.
+
+        ```py
+        await channel.trigger_typing()   # type for 10s
+
+        async with channel.trigger_typing():
+            await asyncio.sleep(35)            # keep typing until this finishes
+        ```
+
+        !!! note
+            Sending a message to this channel will stop the typing indicator. If
+            using an `async with`, it will start up again after a few seconds.
+            This is a limitation of Discord's API.
 
         Returns
         -------
-        hikari.iterators.LazyIterator[hikari.messages.Message]
-            A iterator to fetch the messages.
-
-        Raises
-        ------
-        builtins.TypeError
-            If you specify more than one of `before`, `after`, `about`.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you lack permissions to read message history in the given
-            channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint (other than `builtins.TypeError`) will only
-            be raised once the result is awaited or interacted with. Invoking
-            this function itself will not raise anything (other than
-            `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
-        return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
+        hikari.api.special_endpoints.TypingIndicator
+            The typing indicator object.
+        """
+        return self.app.rest.trigger_typing(self.id)
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
