@@ -4358,45 +4358,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_integration(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        integration: snowflakes.SnowflakeishOr[guilds.Integration],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Delete a guild's integration.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to delete the integration in. This may be the object
-            or the ID of an existing channel.
-        integration : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Integration]
-            The integration delete. This may be the object
-            or the ID of an existing integration.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         """Fetch a guilds's widget.
 
