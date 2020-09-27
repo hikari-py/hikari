@@ -211,6 +211,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageCreateEvent(MessageCreateEvent):
@@ -229,25 +230,17 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> users.User:
+    def author(self) -> guilds.Member:
         """Member or user that sent the message.
 
         Returns
         -------
-        typing.Union[hikari.users.User, hikari.guilds.Member]
-            The user that sent the message. If the member is cached
-            (the intents are enabled), then this will be the corresponding
-            member object instead (which is a specialization of the
-            user object you should otherwise expect).
+        hikari.guilds.Member
+            The member that sent the message.
         """
         member = self.message.member
-        if member is not None:
-            return member
-        member = self.app.cache.get_member(self.guild_id, self.author_id)
-        if member is not None:
-            return member
-
-        return super().author
+        assert member is not None, "no member given for guild message create event!"
+        return member
 
     @property
     def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
@@ -296,6 +289,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         return guild_id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageCreateEvent(MessageCreateEvent):
@@ -470,6 +464,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageUpdateEvent(MessageUpdateEvent):
@@ -565,6 +560,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         return guild_id
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageUpdateEvent(MessageUpdateEvent):
@@ -677,6 +673,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         """
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
@@ -732,6 +729,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         return self.app.cache.get_guild(self.guild_id)
 
 
+@attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
