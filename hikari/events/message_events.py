@@ -65,17 +65,6 @@ class MessageEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel(self) -> typing.Optional[channels.TextChannel]:
-        """Get the cached channel that this event concerns, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextChannel]
-            The cached channel, if known.
-        """
-
-    @property
-    @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
         """ID of the channel that this event concerns.
 
@@ -306,18 +295,6 @@ class DMMessageCreateEvent(MessageCreateEvent):
 
     shard: shard_.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
-
-    @property
-    def channel(self) -> typing.Optional[channels.DMChannel]:
-        """Channel that the message was sent in, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.DMChannel]
-            The channel that the message was sent in, if known and cached,
-            otherwise, `builtins.None`.
-        """
-        return self.app.cache.get_dm_channel(self.author_id)
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -579,23 +556,6 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
 
     shard: shard_.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
-
-    @property
-    def channel(self) -> typing.Optional[channels.DMChannel]:
-        """Channel that the message was sent in, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.DMChannel]
-            The channel that the message was sent in, if known and cached,
-            otherwise, `builtins.None`.
-
-            Likewise, if the author is not known, this will also return
-            `builtins.None`.
-        """
-        if (author_id := self.author_id) is not None:
-            return self.app.cache.get_dm_channel(author_id)
-        return None
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)

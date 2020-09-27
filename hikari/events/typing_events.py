@@ -89,17 +89,6 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel(self) -> typing.Optional[channels.TextChannel]:
-        """Get the cached channel, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextChannel]
-            The channel, if known.
-        """
-
-    @property
-    @abc.abstractmethod
     def user(self) -> typing.Optional[users.User]:
         """Get the cached user that is typing, if known.
 
@@ -278,17 +267,6 @@ class DMTypingEvent(TypingEvent):
 
     timestamp: datetime.datetime = attr.ib(repr=False)
     # <<inherited docstring from TypingEvent>>.
-
-    @property
-    def channel(self) -> typing.Optional[channels.DMChannel]:
-        """Get the cached channel, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.DMChannel]
-            The channel, if known.
-        """
-        return self.app.cache.get_dm_channel(self.user_id)
 
     @property
     def user(self) -> typing.Optional[users.User]:

@@ -78,33 +78,6 @@ class Cache(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def get_dm_channel(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        """Get a DM channel object from the cache.
-
-        Parameters
-        ----------
-        user_id : hikari.snowflakes.Snowflake
-            The ID of the user that the DM to get from the
-            cache is with.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.DMChannel]
-            The object of the DM that was found in the cache
-            or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_dm_channels_view(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
-        """Get a view of the DM channel objects in the cache.
-
-        Returns
-        -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.DMChannel]
-            The view of the user IDs to DM objects in the cache.
-        """
-
-    @abc.abstractmethod
     def get_emoji(self, emoji_id: snowflakes.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
         """Get a known custom emoji from the cache.
 
@@ -601,83 +574,6 @@ class MutableCache(Cache, abc.ABC):
         modifying methods will always raise `builtins.NotImplementedError` when
         they are called.
     """
-
-    @abc.abstractmethod
-    def clear_dms(self) -> CacheView[snowflakes.Snowflake, channels.DMChannel]:
-        """Remove all the DM channel objects from the cache.
-
-        Returns
-        -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.DMChannel]
-            The cache view of user IDs to the DM objects that
-            were removed from the cache.
-
-        Raises
-        ------
-        builtins.NotImplementedError
-            When called on a stateless cache implementation.
-        """
-
-    @abc.abstractmethod
-    def delete_dm(self, user_id: snowflakes.Snowflake, /) -> typing.Optional[channels.DMChannel]:
-        """Remove a DM channel object from the cache.
-
-        Parameters
-        ----------
-        user_id : hikari.snowflakes.Snowflake
-            The ID of the user that the DM channel to remove
-            from the cache it with.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.DMChannel]
-            The object of the DM that was removed from the
-            cache if found, else `builtins.None`
-
-        Raises
-        ------
-        builtins.NotImplementedError
-            When called on a stateless cache implementation.
-        """
-
-    @abc.abstractmethod
-    def set_dm(self, channel: channels.DMChannel, /) -> None:
-        """Add a DM object to the cache.
-
-        Parameters
-        ----------
-        channel : hikari.channels.DMChannel
-            The object of the DM to add to the cache.
-
-        Raises
-        ------
-        builtins.NotImplementedError
-            When called on a stateless cache implementation.
-        """
-
-    @abc.abstractmethod
-    def update_dm(
-        self, channel: channels.DMChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.DMChannel], typing.Optional[channels.DMChannel]]:
-        """Update a DM object in the cache.
-
-        Parameters
-        ----------
-        channel : hikari.channels.DMChannel
-            The object of the DM to update in the cache.
-
-        Returns
-        -------
-        typing.Tuple[typing.Optional[hikari.channels.DMChannel], typing.Optional[hikari.channels.DMChannel]]
-            A tuple of the old cached DM if found
-            (else `builtins.None`) and the new cached DM if it
-            could be cached (else `builtins.None`).
-
-        Raises
-        ------
-        builtins.NotImplementedError
-            When called on a stateless cache implementation.
-        """  # noqa E501: - Line too long
 
     @abc.abstractmethod
     def clear_emojis(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:

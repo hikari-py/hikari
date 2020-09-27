@@ -32,13 +32,10 @@ __all__: typing.List[str] = [
     "DMChannelEvent",
     "ChannelCreateEvent",
     "GuildChannelCreateEvent",
-    "DMChannelCreateEvent",
     "ChannelUpdateEvent",
     "GuildChannelUpdateEvent",
-    "DMChannelUpdateEvent",
     "ChannelDeleteEvent",
     "GuildChannelDeleteEvent",
-    "DMChannelDeleteEvent",
     "PinsUpdateEvent",
     "GuildPinsUpdateEvent",
     "DMPinsUpdateEvent",
@@ -280,28 +277,6 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
         return self.channel.guild_id
 
 
-@base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
-class DMChannelCreateEvent(DMChannelEvent, ChannelCreateEvent):
-    """Event fired when a private channel is created."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
-
-    channel: channels.PrivateChannel = attr.ib(repr=True)
-    """Private channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.PrivateChannel
-        The guild channel that was created.
-    """
-
-
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
@@ -349,28 +324,6 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
-
-
-@base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
-class DMChannelUpdateEvent(DMChannelEvent, ChannelUpdateEvent):
-    """Event fired when a private channel is edited."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
-
-    channel: channels.PrivateChannel = attr.ib(repr=True)
-    """Private channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.PrivateChannel
-        The private channel that was updated.
-    """
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
@@ -425,34 +378,6 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
-
-    if typing.TYPE_CHECKING:
-        # Channel will never be found.
-        async def fetch_channel(self) -> typing.NoReturn:
-            ...
-
-
-# TODO: can this actually ever get fired?
-@base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
-class DMChannelDeleteEvent(DMChannelEvent, ChannelDeleteEvent):
-    """Event fired when a private channel is deleted."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring>>.
-
-    channel: channels.PrivateChannel = attr.ib(repr=True)
-    """Private channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.PrivateChannel
-        The private channel that was deleted.
-    """
 
     if typing.TYPE_CHECKING:
         # Channel will never be found.

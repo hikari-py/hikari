@@ -27,7 +27,6 @@ __all__: typing.List[str] = [
     "EmptyCacheView",
     "GuildRecord",
     "BaseData",
-    "DMChannelData",
     "InviteData",
     "MemberData",
     "KnownCustomEmojiData",
@@ -35,7 +34,6 @@ __all__: typing.List[str] = [
     "MemberPresenceData",
     "VoiceStateData",
     "GenericRefWrapper",
-    "DMChannelCacheMapping",
     "copy_guild_channel",
     "GuildChannelCacheMappingView",
     "Cache3DMappingView",
@@ -63,7 +61,6 @@ from hikari import voices
 from hikari.api import cache
 from hikari.utilities import attr_extensions
 from hikari.utilities import collections
-from hikari.utilities import date
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
@@ -328,38 +325,6 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
             setattr(data, attribute, value)
 
         return data
-
-
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
-class DMChannelData(BaseData[channels.DMChannel]):
-    """A data model for storing DM data in an in-memory cache.
-
-    !!! note
-        This doesn't cover private group text channels as we won't ever receive
-        those over the gateway.
-    """
-
-    id: snowflakes.Snowflake = attr.ib()
-    name: typing.Optional[str] = attr.ib()
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
-    recipient_id: snowflakes.Snowflake = attr.ib()
-
-    def build_entity(self, **kwargs: typing.Any) -> channels.DMChannel:
-        return channels.DMChannel(
-            id=self.id,
-            name=self.name,
-            last_message_id=self.last_message_id,
-            type=channels.ChannelType.DM,
-            app=kwargs["app"],
-            recipient=kwargs["recipient"],
-        )
-
-    @classmethod
-    def build_from_entity(cls: typing.Type[DMChannelData], entity: channels.DMChannel) -> DMChannelData:
-        return cls(
-            id=entity.id, name=entity.name, last_message_id=entity.last_message_id, recipient_id=entity.recipient.id
-        )
 
 
 @attr_extensions.with_copy
@@ -685,78 +650,6 @@ class GenericRefWrapper(typing.Generic[ValueT]):
 
     object: ValueT = attr.ib()
     ref_count: int = attr.ib(default=0)
-
-
-class DMChannelCacheMapping(collections.ExtendedMutableMapping[snowflakes.Snowflake, DMChannelData]):
-    """A specialised Most-recently-used limited mapping for DMs.
-
-    This allows us to stop the private message cached from growing
-    un-controllably by removing old private channels rather than waiting for
-    delete events that'll never come or querying every guild the bot is in
-    (which sounds rather bad as far as scaling goes).
-
-    Parameters
-    ----------
-    expiry : datetime.timedelta
-        The timedelta of how long this should keep private channels for before
-        deleting them.
-
-    Raises
-    ------
-    ValueError
-        If `expiry` is a negative timedelta.
-    """
-
-    __slots__: typing.Sequence[str] = ("_channels", "_expiry")
-
-    def __init__(
-        self,
-        source: typing.Optional[typing.Dict[snowflakes.Snowflake, DMChannelData]] = None,
-        /,
-        *,
-        expiry: datetime.timedelta,
-    ) -> None:
-        if expiry <= datetime.timedelta():
-            raise ValueError("expiry time must be greater than 0 microseconds.")
-
-        self._channels = source or {}
-        self._expiry = expiry
-
-    def copy(self) -> DMChannelCacheMapping:
-        return DMChannelCacheMapping(self._channels.copy(), expiry=self._expiry)
-
-    def freeze(self) -> typing.Dict[snowflakes.Snowflake, DMChannelData]:
-        return self._channels.copy()
-
-    def _garbage_collect(self) -> None:
-        current_time = date.utc_datetime()
-        for channel_id, channel in self._channels.copy().items():
-            if channel.last_message_id and current_time - channel.last_message_id.created_at < self._expiry:
-                break
-
-            del self._channels[channel_id]
-
-    def __delitem__(self, sf: snowflakes.Snowflake) -> None:
-        del self._channels[sf]
-        self._garbage_collect()
-
-    def __getitem__(self, sf: snowflakes.Snowflake) -> DMChannelData:
-        return self._channels[sf]
-
-    def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
-        return iter(self._channels)
-
-    def __len__(self) -> int:
-        return len(self._channels)
-
-    def __setitem__(self, sf: snowflakes.Snowflake, value: DMChannelData) -> None:
-        self._garbage_collect()
-        #  Seeing as we rely on insertion order in _garbage_collect, we have to make sure that each item is added to
-        #  the end of the dict.
-        if value.last_message_id is not None and sf in self:
-            del self[sf]
-
-        self._channels[sf] = value
 
 
 def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:

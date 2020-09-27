@@ -32,28 +32,6 @@ class TestStatelessCache:
     def component(self):
         return stateless_cache.StatelessCacheImpl()
 
-    def test_clear_dms(self, component):
-        with pytest.raises(NotImplementedError):
-            assert component.clear_dms()
-
-    def test_delete_dm(self, component):
-        with pytest.raises(NotImplementedError):
-            assert component.delete_dm(123)
-
-    def test_get_dm_channel(self, component):
-        assert component.get_dm_channel(123) is None
-
-    def test_get_dm_channels_view(self, component):
-        assert component.get_dm_channels_view() == {}
-
-    def test_set_dm(self, component):
-        with pytest.raises(NotImplementedError):
-            assert component.set_dm(object())
-
-    def test_update_dm(self, component):
-        with pytest.raises(NotImplementedError):
-            assert component.update_dm(object())
-
     def test_clear_emojis(self, component):
         with pytest.raises(NotImplementedError):
             assert component.clear_emojis()

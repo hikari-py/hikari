@@ -67,7 +67,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelCreateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.DMChannelCreateEvent(app=self._app, shard=shard, channel=channel)
+            raise NotImplementedError("DM channel create events are undoumcneted behaviour")
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_update_event(
@@ -77,7 +77,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelUpdateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.DMChannelUpdateEvent(app=self._app, shard=shard, channel=channel)
+            raise NotImplementedError("DM channel update events are undocumented behaviour")
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_delete_event(
@@ -87,7 +87,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelDeleteEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            return channel_events.DMChannelDeleteEvent(app=self._app, shard=shard, channel=channel)
+            raise NotImplementedError("DM channel delete events are undocumented behaviour")
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_pins_update_event(
