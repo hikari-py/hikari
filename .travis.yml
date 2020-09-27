@@ -40,6 +40,7 @@ _linux_test_job: &linux_test_job
 env:
   global:
     - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
+    - CC_TEST_REPORTER_ID=bf39911ceca45a536d408ea6456ed67460c73754f1411fb45f5e957398d98348
 
 jobs:
   include:
