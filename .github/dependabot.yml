@@ -6,11 +6,9 @@ updates:
       interval: "daily"
     assignees:
       - "Nekokatt"
-      - "FasterSpeeding"
-      - "Davfsa"
     reviewers:
       - "Nekokatt"
-      - "FasterSpeeding"
+      - "Tandemdude"
       - "Davfsa"
     rebase-strategy: auto
     target-branch: master
