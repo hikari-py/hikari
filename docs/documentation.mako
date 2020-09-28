@@ -28,8 +28,9 @@
             # Ignore not being able to fetch inventory when not on CI
             if "CI" not in os.environ:
                 print(f"Not able to prefetch {i}. Will continue without it")
-            else:
-                raise ex from None
+                continue
+
+            raise
 
     located_external_refs = {}
     unlocatable_external_refs = set()

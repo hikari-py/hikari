@@ -175,32 +175,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         As a side note, you can always opt to leave this on the default value
         and then use an incremental `logging.config.dictConfig` that applies
         any additional changes on top of the base configuration, if you prefer.
-        An example of this is as follows:
+        An example of can be found in the `Example` section.
 
-        ```py
-        import os
-
-        from logging.config import dictConfig
-        from hikari import Bot, Intents
-
-        bot = Bot(token=os.environ["BOT_TOKEN"], intents=Intents.ALL, logs="INFO")
-
-        # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-        dictConfig({
-            "version": 1,
-            "incremental": True,
-            "loggers": {
-                "hikari.gateway": {
-                    "level": "DEBUG"
-                },
-                "hikari.ratelimits": {
-                    "level": "TRACE_HIKARI"
-                },
-            },
-        })
-        ```
-
-        Taking note that `"TRACE_HIKARI"` is a library-specific logging level
+        Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
@@ -220,6 +197,34 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         to allow you to contextually customise details such as sharding
         configuration without having to re-initialize the entire application
         each time.
+
+    Example
+    -------
+    Setting up logging using a dictionary configuration:
+
+    ```py
+    import os
+
+    from logging.config import dictConfig
+    from hikari import Bot, Intents
+
+    bot = Bot(token=os.environ["BOT_TOKEN"], intents=Intents.ALL, logs="INFO")
+
+    # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
+    dictConfig({
+        "version": 1,
+        "incremental": True,
+        "loggers": {
+            "hikari.gateway": {
+                "level": "DEBUG"
+            },
+            "hikari.ratelimits": {
+                "level": "TRACE_HIKARI"
+            },
+        },
+    })
+    ```
+
     """
 
     __slots__: typing.Sequence[str] = (
