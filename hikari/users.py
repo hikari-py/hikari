@@ -116,16 +116,25 @@ class PremiumType(int, enums.Enum):
 class PartialUser(snowflakes.Unique, abc.ABC):
     """A partial interface for a user.
 
-    Fields may or may not be present, and must be checked explicitly if so.
+    Fields may or may not be present, and should be explicitly checked
+    before using them to ensure they are not `hikari.undefined.UNDEFINED`.
 
-    This is pretty much the same as a normal user, but information may not be
-    present.
+    This is used for endpoints and events that only expose partial user
+    information.
+
+    For full user info, consider calling the `fetch_self` method to perform an
+    API call.
     """
 
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
+
+    @property
+    @abc.abstractmethod
+    def avatar_hash(self) -> undefined.UndefinedNoneOr[str]:
+        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
     @property
     @abc.abstractmethod
@@ -136,11 +145,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @abc.abstractmethod
     def username(self) -> undefined.UndefinedOr[str]:
         """Username for the user."""
-
-    @property
-    @abc.abstractmethod
-    def avatar_hash(self) -> undefined.UndefinedNoneOr[str]:
-        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
     @property
     @abc.abstractmethod
@@ -176,6 +180,21 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             The mention string to use.
         """
 
+    async def fetch_self(self) -> User:
+        """Get this user's up-to-date object by performing an API call.
+
+        Returns
+        -------
+        hikari.users.User
+            The requested user object.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the user is not found.
+        """
+        return await self.app.rest.fetch_user(user=self.id)
+
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class User(PartialUser, abc.ABC):
@@ -191,18 +210,36 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def avatar_hash(self) -> typing.Optional[str]:
+        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
+
+    @property
+    def avatar_url(self) -> typing.Optional[files.URL]:
+        """Avatar URL for the user, if they have one set.
+
+        May be `builtins.None` if no custom avatar is set. In this case, you
+        should use `default_avatar_url` instead.
+        """
+        return self.format_avatar()
+
+    @property
+    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+        """Default avatar for this user."""
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
+            urls.CDN_URL,
+            discriminator=int(self.discriminator) % 5,
+            file_format="png",
+        )
+
+    @property
+    @abc.abstractmethod
     def discriminator(self) -> str:
         """Discriminator for the user."""
 
     @property
     @abc.abstractmethod
-    def username(self) -> str:
-        """Username for the user."""
-
-    @property
-    @abc.abstractmethod
-    def avatar_hash(self) -> typing.Optional[str]:
-        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
+    def flags(self) -> UserFlag:
+        """Flag bits that are set for the user."""
 
     @property
     @abc.abstractmethod
@@ -213,11 +250,6 @@ class User(PartialUser, abc.ABC):
     @abc.abstractmethod
     def is_system(self) -> bool:
         """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
-
-    @property
-    @abc.abstractmethod
-    def flags(self) -> UserFlag:
-        """Flag bits that are set for the user."""
 
     @property
     @abc.abstractmethod
@@ -239,9 +271,9 @@ class User(PartialUser, abc.ABC):
         """
 
     @property
-    def avatar_url(self) -> files.URL:
-        """Avatar for the user, or the default avatar if not set."""
-        return self.format_avatar() or self.default_avatar
+    @abc.abstractmethod
+    def username(self) -> str:
+        """Username for the user."""
 
     def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar for this user, if set.
@@ -290,15 +322,6 @@ class User(PartialUser, abc.ABC):
             hash=self.avatar_hash,
             size=size,
             file_format=ext,
-        )
-
-    @property
-    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
-        """Placeholder default avatar for the user if no avatar is set."""
-        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            discriminator=int(self.discriminator) % 5,
-            file_format="png",
         )
 
 
@@ -358,25 +381,13 @@ class PartialUserImpl(PartialUser):
         """
         return f"<@{self.id}>"
 
+    async def fetch_self(self) -> User:
+        return await self.app.rest.fetch_user(user=self.id)
+
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
         return f"{self.username}#{self.discriminator}"
-
-    async def fetch_self(self) -> User:
-        """Get this user's up-to-date object.
-
-        Returns
-        -------
-        hikari.users.User
-            The requested user object.
-
-        Raises
-        ------
-        hikari.errors.NotFoundError
-            If the user is not found.
-        """
-        return await self.app.rest.fetch_user(user=self.id)
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)

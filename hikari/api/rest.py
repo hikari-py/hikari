@@ -3935,7 +3935,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the name for the role.
         permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the permissions for the role.
+            The permissions to give the role. This will default to setting
+            NO roles if left to the default value. This is in contrast to
+            default behaviour on Discord where some random permissions will
+            be set by default.
         color : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
             If provided, the role's color.
         colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]

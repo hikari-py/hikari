@@ -111,6 +111,7 @@ def _stub_init(self, kwargs: typing.Mapping[str, typing.Any]):
         setattr(self, attr, value)
 
 
+# TODO: replace all of these with mock_class_namespace
 def stub_class(klass, **kwargs: typing.Any):
     """Get an instance of a class with only attributes provided in the passed kwargs set."""
     if klass not in _stubbed_classes:
@@ -149,7 +150,9 @@ def mock_class_namespace(
             attr = getattr(klass, method_name)
 
             if inspect.isdatadescriptor(attr) or inspect.isgetsetdescriptor(attr):
-                namespace[method_name] = mock.PropertyMock(__isabstractmethod__=False)
+                # Do not use property mock here: it prevents us overwriting it later
+                # (e.g. when restubbing for specific test cases)
+                namespace[method_name] = mock.Mock(__isabstractmethod__=False)
             elif asyncio.iscoroutinefunction(attr):
                 namespace[method_name] = mock.AsyncMock(spec_set=attr, __isabstractmethod__=False)
             else:

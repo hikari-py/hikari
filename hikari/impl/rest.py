@@ -2137,6 +2137,9 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
+        if permissions is undefined.UNDEFINED:
+            permissions = permissions_.Permissions.NONE
+
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)

@@ -180,6 +180,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     __slots__: typing.Sequence[str] = ()
 
     def __init__(self) -> None:
+        # Only allow use of empty constructor here.
         super().__init__()
 
     def put(
@@ -208,11 +209,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         conversion : typing.Optional[typing.Callable[[typing.Any], JSONish]]
             The optional conversion to apply.
         """
-        if value is not undefined.UNDEFINED:
-            if conversion is not None:
-                self[key] = conversion(value)
-            else:
-                self[key] = value
+        if value is undefined.UNDEFINED:
+            return
+
+        if conversion is not None:
+            self[key] = conversion(value)
+        else:
+            self[key] = value
 
     def put_array(
         self,

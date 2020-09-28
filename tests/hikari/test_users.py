@@ -18,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import contextlib
+
 import mock
 import pytest
 
@@ -41,37 +43,21 @@ def test_PremiumType_str_operator():
 class TestUser:
     @pytest.fixture()
     def obj(self):
-        class StubUser(users.User):
-            app = None
-            id = 123
-            discriminator = "0001"
-            username = None
-            avatar_hash = None
-            is_bot = None
-            is_system = None
-            flags = None
-            mention = None
-
-        return StubUser()
+        return hikari_test_helpers.mock_class_namespace(users.User, slots=False)()
 
     def test_avatar_url_when_hash(self, obj):
         avatar = object()
-        obj.format_avatar = mock.Mock(return_value=avatar)
 
-        with mock.patch.object(users.User, "default_avatar", new=None):
+        with mock.patch.object(users.User, "format_avatar", return_value=avatar):
             assert obj.avatar_url is avatar
 
     def test_avatar_url_when_no_hash(self, obj):
-        avatar = object()
-        obj.format_avatar = mock.Mock(return_value=None)
-
-        with mock.patch.object(users.User, "default_avatar", new=avatar):
-            assert obj.avatar_url is avatar
+        with mock.patch.object(users.User, "format_avatar", return_value=None):
+            assert obj.avatar_url is None
 
     def test_format_avatar_when_no_hash(self, obj):
         obj.avatar_hash = None
-
-        assert obj.format_avatar(ext="png", size=2) is None
+        assert obj.format_avatar(ext="png", size=1024) is None
 
     def test_format_avatar_when_format_is_None_and_avatar_hash_is_for_gif(self, obj):
         obj.avatar_hash = "a_18dnf8dfbakfdh"
@@ -79,13 +65,13 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext=None, size=2) == "file"
+            assert obj.format_avatar(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            user_id=123,
+            user_id=obj.id,
             hash="a_18dnf8dfbakfdh",
-            size=2,
+            size=4096,
             file_format="gif",
         )
 
@@ -95,13 +81,13 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext=None, size=2) == "file"
+            assert obj.format_avatar(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            user_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2,
+            user_id=obj.id,
+            hash=obj.avatar_hash,
+            size=4096,
             file_format="png",
         )
 
@@ -111,18 +97,19 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext="url", size=2) == "file"
+            assert obj.format_avatar(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            user_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2,
+            user_id=obj.id,
+            hash=obj.avatar_hash,
+            size=4096,
             file_format="url",
         )
 
     def test_default_avatar(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
+        obj.discriminator = "1234"
 
         with mock.patch.object(
             routes, "CDN_DEFAULT_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
@@ -131,7 +118,7 @@ class TestUser:
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            discriminator=1,
+            discriminator=4,
             file_format="png",
         )
 
