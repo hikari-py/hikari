@@ -28,7 +28,7 @@ from tests.hikari import hikari_test_helpers
 class TestTypingIndicator:
     @pytest.fixture()
     def typing_indicator(self):
-        return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init=False)
+        return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
     def test___enter__(self, typing_indicator):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative

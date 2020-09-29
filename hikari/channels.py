@@ -687,7 +687,7 @@ class GuildChannel(PartialChannel):
         """
         try:
             shard_count = getattr(self.app, "shard_count")
-            assert isinstance(shard_count, int)
+            assert isinstance(shard_count, int), f"shard_count attr was expected to be int, but got {shard_count}"
             return snowflakes.calculate_shard_id(shard_count, self.guild_id)
         except (TypeError, AttributeError, NameError):
             pass

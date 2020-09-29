@@ -76,7 +76,7 @@ def stub_chunk_event(mock_app):
 class TestChunkStream:
     @pytest.mark.asyncio
     async def test__listener_when_fails_filter(self, stub_chunk_event, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream, _filters=iterators.All(()), _active=False, _app=mock_app
         )
         stream.filter(lambda _: False)
@@ -85,7 +85,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test__listener_when_fails_passes(self, stub_chunk_event, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
@@ -102,7 +102,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test__listener_when_queue_filled(self, stub_chunk_event, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
@@ -122,7 +122,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test__listener_when_chunks_finished(self, stub_chunk_event, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
@@ -143,7 +143,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___uses_queue_entry(self):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -162,7 +162,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___handles_time_out(self):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -176,7 +176,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_initial_chunk(self):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -199,7 +199,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test___anext___when_chunks_depleted(self):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=[]
         )
 
@@ -208,7 +208,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test___anext___when_stream_not_active(self):
-        stream = hikari_test_helpers.stub_class(stateful_guild_chunker.ChunkStream, _active=False)
+        stream = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker.ChunkStream, _active=False)
 
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
@@ -216,7 +216,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test_open_for_inactive_stream(self, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _active=False,
             _app=mock_app,
@@ -245,7 +245,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test_open_for_active_stream(self, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker.ChunkStream,
             _active=True,
             _app=mock_app,
@@ -263,12 +263,12 @@ class TestChunkStream:
 
 class TestTrackedChunks:
     def test___copy___when_missing_chunks_is_not_none(self):
-        obj = hikari_test_helpers.stub_class(
+        obj = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker._TrackedRequests,
             missing_chunk_indexes=[5, 6, 7, 8, 9],
             not_found_ids=[2, 4, 6, 7, 8],
         )
-        new_obj = hikari_test_helpers.stub_class(stateful_guild_chunker._TrackedRequests)
+        new_obj = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker._TrackedRequests)
 
         with mock.patch.object(attr_extensions, "copy_attrs", return_value=new_obj):
             result = copy.copy(obj)
@@ -281,10 +281,10 @@ class TestTrackedChunks:
         assert result.not_found_ids is not obj.not_found_ids
 
     def test___copy___when_missing_chunks_is_none(self):
-        obj = hikari_test_helpers.stub_class(
+        obj = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker._TrackedRequests, missing_chunk_indexes=None, not_found_ids=[2, 4, 6, 7, 8]
         )
-        new_obj = hikari_test_helpers.stub_class(stateful_guild_chunker._TrackedRequests)
+        new_obj = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker._TrackedRequests)
 
         with mock.patch.object(attr_extensions, "copy_attrs", return_value=new_obj):
             result = copy.copy(obj)
@@ -294,14 +294,14 @@ class TestTrackedChunks:
 
     def test_is_complete_when_complete(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init=False
+            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 42
         assert obj.is_complete is True
 
     def test_is_complete_when_timed_out(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init=False
+            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 83
         obj._mono_last_received = 3123452134
@@ -314,7 +314,7 @@ class TestTrackedChunks:
 
     def test_is_complete_when_not_timed_out(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init=False
+            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 83
         obj._mono_last_received = 3123452134
@@ -327,7 +327,7 @@ class TestTrackedChunks:
 
     def test_is_complete_when_not_yet_received(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init=False
+            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 84
         obj._mono_last_received = None
@@ -335,13 +335,13 @@ class TestTrackedChunks:
         assert obj.is_complete is False
 
     def test_received_chunks_when_no_chunks_received_yet(self):
-        obj = hikari_test_helpers.stub_class(
+        obj = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker._TrackedRequests, chunk_count=None, missing_chunk_indexes=None
         )
         assert obj.received_chunks == 0
 
     def test_received_chunks(self):
-        obj = hikari_test_helpers.stub_class(
+        obj = hikari_test_helpers.mock_entire_class_namespace(
             stateful_guild_chunker._TrackedRequests,
             chunk_count=25,
             missing_chunk_indexes=[15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
@@ -487,7 +487,7 @@ class TestStatefulGuildChunkerImpl:
 
     @pytest.mark.asyncio
     async def test_on_chunk_event_for_unknown_shard(self, mock_chunker):
-        event = hikari_test_helpers.stub_class(
+        event = hikari_test_helpers.mock_entire_class_namespace(
             shard_events.MemberChunkEvent, shard=mock.Mock(shard.GatewayShardImpl, id=42), nonce="42.hiebye"
         )
         assert await mock_chunker.consume_chunk_event(event) is None
@@ -495,7 +495,7 @@ class TestStatefulGuildChunkerImpl:
 
     @pytest.mark.asyncio
     async def test_on_chunk_event_for_unknown_nonce(self, mock_chunker):
-        event = hikari_test_helpers.stub_class(
+        event = hikari_test_helpers.mock_entire_class_namespace(
             shard_events.MemberChunkEvent, shard=mock.Mock(shard.GatewayShardImpl, id=42), nonce="42.hiebye"
         )
         mock_tracker = object()
@@ -534,7 +534,7 @@ class TestStatefulGuildChunkerImpl:
 
     @pytest.mark.asyncio
     async def test_on_chunk_event_when_initial_tracking_information_set(self, mock_chunker):
-        event = hikari_test_helpers.stub_class(
+        event = hikari_test_helpers.mock_entire_class_namespace(
             shard_events.MemberChunkEvent,
             shard=mock.Mock(shard.GatewayShardImpl, id=4),
             nonce="4.hiebye",
@@ -595,7 +595,7 @@ class TestStatefulGuildChunkerImpl:
     @pytest.mark.parametrize(
         "guild",
         [
-            hikari_test_helpers.stub_class(guilds.GatewayGuild, id=snowflakes.Snowflake(43123)),
+            hikari_test_helpers.mock_entire_class_namespace(guilds.GatewayGuild, id=snowflakes.Snowflake(43123)),
             43123,
             "43123",
             snowflakes.Snowflake(43123),

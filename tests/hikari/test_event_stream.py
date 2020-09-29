@@ -103,7 +103,7 @@ class TestEventStream:
 
     @pytest.mark.asyncio
     async def test___anext___when_stream_closed(self):
-        streamer = hikari_test_helpers.stub_class(event_stream.EventStream, _active=False)
+        streamer = hikari_test_helpers.mock_entire_class_namespace(event_stream.EventStream, _active=False)
 
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
@@ -112,7 +112,7 @@ class TestEventStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
-        streamer = hikari_test_helpers.stub_class(
+        streamer = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -129,7 +129,7 @@ class TestEventStream:
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
-        streamer = hikari_test_helpers.stub_class(
+        streamer = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -155,7 +155,7 @@ class TestEventStream:
     @hikari_test_helpers.timeout()
     async def test___anext__(self):
         mock_event = object()
-        streamer = hikari_test_helpers.stub_class(
+        streamer = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
@@ -181,7 +181,7 @@ class TestEventStream:
             event_stream.EventStream,
             close=mock.AsyncMock(),
             open=mock.AsyncMock(),
-            init=False,
+            init_=False,
             __anext__=mock.AsyncMock(side_effect=[mock_event_0, mock_event_1, mock_event_2]),
         )()
         streamer._active = False
@@ -192,7 +192,7 @@ class TestEventStream:
     def test___del___for_active_stream(self):
         mock_coroutine = object()
         close_method = mock.Mock(return_value=mock_coroutine)
-        streamer = hikari_test_helpers.mock_class_namespace(event_stream.EventStream, close=close_method, init=False)()
+        streamer = hikari_test_helpers.mock_class_namespace(event_stream.EventStream, close=close_method, init_=False)()
         streamer._event_type = events.Event
         streamer._active = True
 
@@ -210,7 +210,7 @@ class TestEventStream:
 
     def test___del___for_inactive_stream(self):
         close_method = mock.Mock()
-        streamer = hikari_test_helpers.mock_class_namespace(event_stream.EventStream, close=close_method, init=False)()
+        streamer = hikari_test_helpers.mock_class_namespace(event_stream.EventStream, close=close_method, init_=False)()
         streamer._event_type = events.Event
         streamer._active = False
 
@@ -229,7 +229,7 @@ class TestEventStream:
     @pytest.mark.asyncio
     async def test_close_for_active_stream(self, mock_app):
         mock_registered_listener = object()
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _app=mock_app,
             _event_type=events.Event,
@@ -245,7 +245,7 @@ class TestEventStream:
     async def test_close_for_active_stream_handles_value_error(self, mock_app):
         mock_registered_listener = object()
         mock_app.dispatcher.unsubscribe.side_effect = ValueError
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _app=mock_app,
             _event_type=events.Event,
@@ -258,7 +258,9 @@ class TestEventStream:
         assert stream._registered_listener is None
 
     def test_filter_for_inactive_stream(self):
-        stream = hikari_test_helpers.stub_class(event_stream.EventStream, _filters=iterators.All(()), _active=False)
+        stream = hikari_test_helpers.mock_entire_class_namespace(
+            event_stream.EventStream, _filters=iterators.All(()), _active=False
+        )
         first_pass = mock.Mock(attr=True)
         second_pass = mock.Mock(attr=True)
         first_fails = mock.Mock(attr=True)
@@ -276,7 +278,7 @@ class TestEventStream:
 
     @pytest.mark.asyncio
     async def test_filter_for_active_stream(self):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _active=True,
         )
@@ -294,7 +296,7 @@ class TestEventStream:
     @pytest.mark.asyncio
     async def test_open_for_inactive_stream(self, mock_app):
         mock_listener = object()
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _app=mock_app,
             _event_type=events.Event,
@@ -318,7 +320,7 @@ class TestEventStream:
 
     @pytest.mark.asyncio
     async def test_open_for_active_stream(self, mock_app):
-        stream = hikari_test_helpers.stub_class(
+        stream = hikari_test_helpers.mock_entire_class_namespace(
             event_stream.EventStream,
             _app=mock_app,
             _event_type=events.Event,

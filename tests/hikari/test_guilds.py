@@ -82,14 +82,14 @@ def test_PartialIntegration_str_operator():
 
 
 def test_Role_colour_property():
-    role_obj = hikari_test_helpers.stub_class(guilds.Role, color="color")
+    role_obj = hikari_test_helpers.mock_entire_class_namespace(guilds.Role, color="color")
     assert role_obj.colour == "color"
 
 
 class TestMember:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.stub_class(
+        return hikari_test_helpers.mock_entire_class_namespace(
             guilds.Member,
             user=mock.Mock(
                 users.User,
@@ -195,7 +195,7 @@ class TestMember:
 class TestPartialGuild:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.stub_class(
+        return hikari_test_helpers.mock_entire_class_namespace(
             guilds.PartialGuild, name="hikari", id=1234567890, app=mock.Mock(shard_count=4), icon_hash=None
         )
 
@@ -274,7 +274,9 @@ class TestPartialGuild:
 class TestGuildPreview:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.stub_class(guilds.GuildPreview, id=123, splash_hash=None, discovery_splash_hash=None)
+        return hikari_test_helpers.mock_entire_class_namespace(
+            guilds.GuildPreview, id=123, splash_hash=None, discovery_splash_hash=None
+        )
 
     def test_splash_url(self, obj):
         splash = object()
@@ -336,7 +338,7 @@ class TestGuild:
             get_role = None
             roles = None
 
-        return hikari_test_helpers.stub_class(
+        return hikari_test_helpers.mock_entire_class_namespace(
             StubGuild, id=123, splash_hash=None, discovery_splash_hash=None, banner_hash=None
         )
 

@@ -56,7 +56,7 @@ def test_Reaction_str_operator():
 
 @pytest.fixture()
 def message():
-    return hikari_test_helpers.stub_class(messages.Message, app=mock.Mock(rest=mock.AsyncMock()))
+    return hikari_test_helpers.mock_entire_class_namespace(messages.Message, app=mock.Mock(rest=mock.AsyncMock()))
 
 
 class TestMessage:
