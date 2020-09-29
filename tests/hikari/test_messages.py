@@ -73,6 +73,7 @@ class TestMessage:
         assert message.link == "https://discord.com/channels/@me/456/789"
 
 
+# TODO: this all needs to be moved to one test class.
 @pytest.mark.asyncio
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
