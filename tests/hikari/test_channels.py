@@ -47,7 +47,7 @@ class TestChannelFollow:
     async def test_fetch_channel(self, mock_app):
         mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
         mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
-        follow = channels.ChannelFollow(channel_id=snowflakes.Snowflake(9459234123), app=mock_app, webhook_id=3123123)
+        follow = channels.ChannelFollow(channel_id=snowflakes.Snowflake(9459234123), app=mock_app, webhook_id=snowflakes.Snowflake(3123123))
 
         result = await follow.fetch_channel()
 
@@ -58,7 +58,7 @@ class TestChannelFollow:
     async def test_fetch_webhook(self, mock_app):
         mock_webhook = object()
         mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock_webhook)
-        follow = channels.ChannelFollow(webhook_id=snowflakes.Snowflake(54123123), app=mock_app, channel_id=94949494)
+        follow = channels.ChannelFollow(webhook_id=snowflakes.Snowflake(54123123), app=mock_app, channel_id=snowflakes.Snowflake(94949494))
 
         result = await follow.fetch_webhook()
 
@@ -69,7 +69,7 @@ class TestChannelFollow:
     async def test_channel(self, mock_app):
         mock_channel = mock.MagicMock(spec=channels.GuildNewsChannel)
         mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
-        follow = channels.ChannelFollow(webhook_id=993883, app=mock_app, channel_id=snowflakes.Snowflake(696969))
+        follow = channels.ChannelFollow(webhook_id=snowflakes.Snowflake(993883), app=mock_app, channel_id=snowflakes.Snowflake(696969))
 
         result = follow.channel
 
