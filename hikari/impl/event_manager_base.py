@@ -40,7 +40,6 @@ from hikari.utilities import aio
 from hikari.utilities import data_binding
 from hikari.utilities import event_stream
 from hikari.utilities import reflect
-from hikari.utilities import ux
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
@@ -165,8 +164,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ) -> None:
         if event_type in self._listeners:
-            _LOGGER.log(
-                ux.TRACE,
+            _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
                 inspect.signature(callback),

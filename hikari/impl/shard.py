@@ -545,8 +545,6 @@ class GatewayShardImpl(shard.GatewayShard):
             raise ValueError("'nonce' can be no longer than 32 byte characters long.")
 
         await self._chunking_rate_limit.acquire()
-        message = "requesting guild members for guild %s%s"
-        self._logger.debug(message, int(guild), " with presences" if include_presences else "")
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)

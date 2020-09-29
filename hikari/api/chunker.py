@@ -61,6 +61,7 @@ class RequestInformation(typing.Protocol):
             or `builtins.None` if we haven't received a response to pull
             information from yet.
         """
+        raise NotImplementedError
 
     @property
     def chunk_count(self) -> typing.Optional[int]:
@@ -73,6 +74,7 @@ class RequestInformation(typing.Protocol):
             for this request or `builtins.None` if we haven't received a
             response to pull information from yet.
         """
+        raise NotImplementedError
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
@@ -83,6 +85,7 @@ class RequestInformation(typing.Protocol):
         hikari.snowflakes.Snowflake
             The ID of the guild this request is for.
         """
+        raise NotImplementedError
 
     @property
     def is_complete(self) -> bool:
@@ -96,6 +99,7 @@ class RequestInformation(typing.Protocol):
         builtins.bool
             Whether this chunk request is considered to be finished or not yet.
         """
+        raise NotImplementedError
 
     @property
     def last_received(self) -> typing.Optional[datetime.datetime]:
@@ -108,6 +112,7 @@ class RequestInformation(typing.Protocol):
             request or `builtins.None` if we haven't received any chunk events
             in response to this request yet.
         """
+        raise NotImplementedError
 
     @property
     def missing_chunk_indexes(self) -> typing.Optional[typing.Sequence[int]]:
@@ -120,6 +125,7 @@ class RequestInformation(typing.Protocol):
             received for this request or `builtins.None` if we haven't received
             a response to pull information from yet.
         """
+        raise NotImplementedError
 
     @property
     def nonce(self) -> str:
@@ -130,6 +136,7 @@ class RequestInformation(typing.Protocol):
         builtins.str
             The unique nonce that was generated for this request.
         """
+        raise NotImplementedError
 
     @property
     def not_found_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
@@ -142,6 +149,7 @@ class RequestInformation(typing.Protocol):
             A sequence of the snowflake IDs that were explicitly requested but
             weren't found.
         """
+        raise NotImplementedError
 
     @property
     def received_chunks(self) -> int:
@@ -153,6 +161,7 @@ class RequestInformation(typing.Protocol):
             The `builtins.int` count of how many chunks events we've received in
             response to this request so far.
         """
+        raise NotImplementedError
 
 
 class GuildChunker(abc.ABC):
@@ -330,5 +339,6 @@ class GuildChunker(abc.ABC):
             request the full list of members without `GUILD_PRESENCES`.
         """
 
+    @abc.abstractmethod
     async def close(self) -> None:
         """Close the guild chunker."""
