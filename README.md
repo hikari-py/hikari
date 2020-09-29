@@ -1,13 +1,13 @@
-[![hikarivers](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
-[![traviscomstats](https://travis-ci.com/nekokatt/hikari.svg?branch=master)](https://travis-ci.com/nekokatt/hikari)
-[![pyvers](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
-[![Maintainability](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/maintainability)](https://codeclimate.com/github/nekokatt/hikari/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/test_coverage)](https://codeclimate.com/github/nekokatt/hikari/test_coverage)
-[![prs](https://img.shields.io/github/issues-pr/nekokatt/hikari)](https://github.com/nekokatt/hikari/pulls)
-[![issues](https://img.shields.io/github/issues-raw/nekokatt/hikari)](https://github.com/nekokatt/hikari/issues)
-[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
-[![mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
-[![docs](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://nekokatt.github.io/hikari/hikari)
+[![Hikari PyPI version badge](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
+[![Travis CI Build Status badge](https://travis-ci.com/nekokatt/hikari.svg?branch=master)](https://travis-ci.com/nekokatt/hikari)
+[![Supported Python verisons badge](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
+[![Maintainability badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/maintainability)](https://codeclimate.com/github/nekokatt/hikari/maintainability)
+[![Test Coverage badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/test_coverage)](https://codeclimate.com/github/nekokatt/hikari/test_coverage)
+[![Open Pull Requests badge](https://img.shields.io/github/issues-pr/nekokatt/hikari)](https://github.com/nekokatt/hikari/pulls)
+[![Issues badge](https://img.shields.io/github/issues-raw/nekokatt/hikari)](https://github.com/nekokatt/hikari/issues)
+[![This project uses Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
+[![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
+[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://nekokatt.github.io/hikari/hikari)
 
 [![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
@@ -163,8 +163,8 @@ settings in the interpreter.
 
 ### `hikari[speedups]`
 
-If you have a C compiler (Microsoft VC++ Redis 14.0 or newer, or a modern copy
-of GCC/G++, Clang, etc), you can install hikari using
+If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a
+modern copy of GCC/G++, Clang, etc), you can install hikari using
 `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,  and
 `ciso8601`, which will provide you with a small performance boost.
 
