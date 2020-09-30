@@ -33,8 +33,8 @@ import urllib.parse
 import attr
 
 from hikari import files
-from hikari.utilities import attr_extensions
-from hikari.utilities import data_binding
+from hikari.internal import attr_extensions
+from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 

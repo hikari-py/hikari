@@ -41,8 +41,8 @@ from hikari import undefined
 from hikari import users
 from hikari import voices
 from hikari.api import cache
-from hikari.utilities import cache as cache_utility
-from hikari.utilities import collections
+from hikari.internal import cache as cache_utility
+from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import traits

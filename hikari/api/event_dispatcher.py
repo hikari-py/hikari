@@ -29,8 +29,8 @@ import asyncio
 import typing
 
 if typing.TYPE_CHECKING:
+    from hikari import event_stream
     from hikari.events import base_events
-    from hikari.utilities import event_stream
 
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)

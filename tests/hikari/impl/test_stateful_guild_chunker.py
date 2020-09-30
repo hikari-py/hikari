@@ -24,6 +24,7 @@ import copy
 import mock
 import pytest
 
+from hikari import event_stream
 from hikari import guilds
 from hikari import intents
 from hikari import iterators
@@ -33,9 +34,8 @@ from hikari.events import shard_events
 from hikari.impl import bot
 from hikari.impl import shard
 from hikari.impl import stateful_guild_chunker
-from hikari.utilities import attr_extensions
-from hikari.utilities import event_stream
-from hikari.utilities import time
+from hikari.internal import attr_extensions
+from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
 

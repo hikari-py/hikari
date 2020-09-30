@@ -41,7 +41,7 @@ import math
 import random
 import typing
 
-from hikari.utilities import time
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import types

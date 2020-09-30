@@ -30,7 +30,7 @@ import typing
 import attr
 
 from hikari import undefined
-from hikari.utilities import attr_extensions
+from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari import users as user_models
     from hikari import voices as voice_models
     from hikari import webhooks as webhook_models
-    from hikari.utilities import data_binding
+    from hikari.internal import data_binding
 
 
 @attr_extensions.with_copy

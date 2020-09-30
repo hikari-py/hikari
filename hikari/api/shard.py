@@ -28,7 +28,7 @@ import abc
 import typing
 
 from hikari import undefined
-from hikari.utilities import enums
+from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import datetime

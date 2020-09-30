@@ -53,15 +53,15 @@ import typing
 
 import attr
 
-from hikari.utilities import attr_extensions
-from hikari.utilities import enums
+from hikari.internal import attr_extensions
+from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_
     from hikari import messages
     from hikari import snowflakes
-    from hikari.utilities import data_binding
-    from hikari.utilities import routes
+    from hikari.internal import data_binding
+    from hikari.internal import routes
 
 
 @attr_extensions.with_copy

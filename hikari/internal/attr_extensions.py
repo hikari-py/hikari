@@ -36,7 +36,7 @@ import typing
 
 import attr
 
-from hikari.utilities import ux
+from hikari.internal import ux
 
 ModelT = typing.TypeVar("ModelT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"

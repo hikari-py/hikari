@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import voices
-    from hikari.utilities import time
+    from hikari.internal import time
 
 
 class TypingIndicator(abc.ABC):

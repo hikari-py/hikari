@@ -43,9 +43,9 @@ import typing
 import attr
 
 from hikari import snowflakes
-from hikari.utilities import attr_extensions
-from hikari.utilities import enums
-from hikari.utilities import flag
+from hikari.internal import attr_extensions
+from hikari.internal import enums
+from hikari.internal import flag
 
 if typing.TYPE_CHECKING:
     import datetime

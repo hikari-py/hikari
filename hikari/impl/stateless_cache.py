@@ -31,7 +31,7 @@ __all__: typing.List[str] = ["StatelessCacheImpl"]
 import typing
 
 from hikari.api import cache
-from hikari.utilities import cache as cache_utilities
+from hikari.internal import cache as cache_utilities
 
 if typing.TYPE_CHECKING:
     from hikari import channels

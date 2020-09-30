@@ -46,7 +46,7 @@ from hikari import colors
 from hikari import errors
 from hikari import files
 from hikari import undefined
-from hikari.utilities import attr_extensions
+from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

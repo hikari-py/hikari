@@ -26,7 +26,7 @@ import mock
 import pytest
 
 from hikari import errors
-from hikari.utilities import net
+from hikari.internal import net
 
 
 @pytest.mark.parametrize(

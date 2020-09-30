@@ -37,8 +37,8 @@ import typing
 import attr
 import yarl
 
-from hikari.utilities import attr_extensions
-from hikari.utilities import data_binding
+from hikari.internal import attr_extensions
+from hikari.internal import data_binding
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"

@@ -20,7 +20,7 @@
 # SOFTWARE.
 import typing
 
-from hikari.utilities import reflect
+from hikari.internal import reflect
 
 
 class TestResolveSignature:

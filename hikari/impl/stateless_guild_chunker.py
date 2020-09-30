@@ -27,9 +27,9 @@ __all__: typing.List[str] = ["StatelessGuildChunkerImpl"]
 
 import typing
 
+from hikari import event_stream
 from hikari import undefined
 from hikari.api import chunker
-from hikari.utilities import event_stream
 
 if typing.TYPE_CHECKING:
     from hikari import guilds

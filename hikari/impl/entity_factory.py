@@ -50,9 +50,9 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
-from hikari.utilities import attr_extensions
-from hikari.utilities import data_binding
-from hikari.utilities import time
+from hikari.internal import attr_extensions
+from hikari.internal import data_binding
+from hikari.internal import time
 
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
 

@@ -41,6 +41,7 @@ import warnings
 
 from hikari import config
 from hikari import errors
+from hikari import event_stream
 from hikari import intents as intents_
 from hikari import presences
 from hikari import traits
@@ -59,10 +60,9 @@ from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
-from hikari.utilities import aio
-from hikari.utilities import event_stream
-from hikari.utilities import time
-from hikari.utilities import ux
+from hikari.internal import aio
+from hikari.internal import time
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     from hikari.api import cache

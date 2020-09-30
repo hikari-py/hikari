@@ -23,7 +23,7 @@ import cProfile
 import enum as py_enum
 import timeit
 
-from hikari.utilities import enums as hikari_enum
+from hikari.internal import enums as hikari_enum
 
 
 class BasicPyEnum(str, py_enum.Enum):

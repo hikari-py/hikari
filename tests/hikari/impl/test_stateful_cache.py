@@ -31,8 +31,8 @@ from hikari import traits
 from hikari import users
 from hikari import voices
 from hikari.impl import stateful_cache
-from hikari.utilities import cache
-from hikari.utilities import collections
+from hikari.internal import cache
+from hikari.internal import collections
 from tests.hikari import hikari_test_helpers
 
 

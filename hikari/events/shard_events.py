@@ -39,8 +39,8 @@ import typing
 import attr
 
 from hikari.events import base_events
-from hikari.utilities import attr_extensions
-from hikari.utilities import collections
+from hikari.internal import attr_extensions
+from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import guilds

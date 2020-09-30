@@ -21,7 +21,7 @@
 import mock
 import pytest
 
-from hikari.utilities import enums
+from hikari.internal import enums
 
 
 class TestEnum:

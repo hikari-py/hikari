@@ -28,7 +28,7 @@ __all__: typing.List[str] = ["Permissions"]
 import enum
 import typing
 
-from hikari.utilities import flag
+from hikari.internal import flag
 
 
 @enum.unique

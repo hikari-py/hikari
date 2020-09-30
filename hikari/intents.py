@@ -27,7 +27,7 @@ __all__: typing.List[str] = ["Intents"]
 
 import typing
 
-from hikari.utilities import flag
+from hikari.internal import flag
 
 
 @typing.final

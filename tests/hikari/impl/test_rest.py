@@ -44,8 +44,8 @@ from hikari import users
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
-from hikari.utilities import net
-from hikari.utilities import routes
+from hikari.internal import net
+from hikari.internal import routes
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 

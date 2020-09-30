@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
-    from hikari.utilities import time
+    from hikari.internal import time
 
 
 class ConnectorFactory(abc.ABC):

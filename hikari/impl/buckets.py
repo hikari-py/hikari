@@ -210,10 +210,10 @@ import logging
 import typing
 
 from hikari.impl import rate_limits
-from hikari.utilities import aio
-from hikari.utilities import routes
-from hikari.utilities import time
-from hikari.utilities import ux
+from hikari.internal import aio
+from hikari.internal import routes
+from hikari.internal import time
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import types

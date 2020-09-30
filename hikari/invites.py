@@ -41,9 +41,9 @@ from hikari import files
 from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
-from hikari.utilities import attr_extensions
-from hikari.utilities import enums
-from hikari.utilities import routes
+from hikari.internal import attr_extensions
+from hikari.internal import enums
+from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     import datetime

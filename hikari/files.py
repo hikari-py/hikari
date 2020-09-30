@@ -59,9 +59,9 @@ import urllib.request
 import aiohttp.client
 import attr
 
-from hikari.utilities import aio
-from hikari.utilities import net
-from hikari.utilities import time
+from hikari.internal import aio
+from hikari.internal import net
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import types

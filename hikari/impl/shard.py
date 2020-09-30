@@ -45,10 +45,10 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import shard
 from hikari.impl import rate_limits
-from hikari.utilities import data_binding
-from hikari.utilities import net
-from hikari.utilities import time
-from hikari.utilities import ux
+from hikari.internal import data_binding
+from hikari.internal import net
+from hikari.internal import time
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import datetime

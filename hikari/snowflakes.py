@@ -37,7 +37,7 @@ import abc
 import datetime
 import typing
 
-from hikari.utilities import time
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     from hikari import guilds

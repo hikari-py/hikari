@@ -47,9 +47,9 @@ import typing
 import attr
 
 from hikari import snowflakes
-from hikari.utilities import attr_extensions
-from hikari.utilities import collections
-from hikari.utilities import enums
+from hikari.internal import attr_extensions
+from hikari.internal import collections
+from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import channels

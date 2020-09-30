@@ -24,7 +24,7 @@ import copy as stdlib_copy
 import attr
 import mock
 
-from hikari.utilities import attr_extensions
+from hikari.internal import attr_extensions
 
 
 def test_invalidate_shallow_copy_cache():

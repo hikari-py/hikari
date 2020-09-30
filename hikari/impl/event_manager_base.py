@@ -32,14 +32,14 @@ import typing
 import warnings
 
 from hikari import errors
+from hikari import event_stream
 from hikari import intents as intents_
 from hikari import traits
 from hikari.api import event_dispatcher
 from hikari.events import base_events
-from hikari.utilities import aio
-from hikari.utilities import data_binding
-from hikari.utilities import event_stream
-from hikari.utilities import reflect
+from hikari.internal import aio
+from hikari.internal import data_binding
+from hikari.internal import reflect
 
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard

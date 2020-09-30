@@ -38,7 +38,7 @@ import typing
 import colorlog  # type: ignore[import]
 
 from hikari import _about as about
-from hikari.utilities import net
+from hikari.internal import net
 
 if typing.TYPE_CHECKING:
     from hikari import config
