@@ -51,7 +51,6 @@ from hikari.internal import attr_extensions
 from hikari.internal import collection_types
 from hikari.internal import enums
 
-
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds

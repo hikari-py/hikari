@@ -107,17 +107,21 @@ for i in range(20):
         if sum(j for j in range(10)) < 0:
             raise RuntimeError
 
-    py_intflag_call_time_existing_composite = timeit.timeit(stmt="PyIntFlag(71)", number=10_000_000, globals=globals())
-    hikari_intflag_call_time_existing_composite = timeit.timeit(
-        stmt="HikariIntFlag(71)", number=10_000_000, globals=globals()
-    ) / 10
+    py_intflag_call_time_existing_composite = (
+        timeit.timeit(stmt="PyIntFlag(71)", number=10_000_000, globals=globals()) / 10
+    )
+    hikari_intflag_call_time_existing_composite = (
+        timeit.timeit(stmt="HikariIntFlag(71)", number=10_000_000, globals=globals()) / 10
+    )
 
     for j in range(1_000_000):
         if sum(j for j in range(10)) < 0:
             raise RuntimeError
 
     build_enums_time = timeit.timeit(stmt="build_enums()", number=10_000, globals=globals())
-    py_intflag_call_time_new_composite = timeit.timeit(stmt="build_enums(); PyIntFlag(71)", number=10_000, globals=globals())
+    py_intflag_call_time_new_composite = timeit.timeit(
+        stmt="build_enums(); PyIntFlag(71)", number=10_000, globals=globals()
+    )
     build_enums_time = min(timeit.timeit(stmt="build_enums()", number=10_000, globals=globals()), build_enums_time)
     py_intflag_call_time_new_composite -= build_enums_time
     py_intflag_call_time_new_composite *= 100
