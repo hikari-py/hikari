@@ -22,10 +22,8 @@
 """Implementation of parts of Python's `enum` protocol to be faster."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Enum"]
+__all__: typing.List[str] = ["Enum", "IntFlag"]
 
-import math
-import os
 import sys
 import types
 import typing
@@ -110,14 +108,10 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
 _Enum = NotImplemented
 
 
-def _attr_mutator(self, *_: typing.Any) -> typing.NoReturn:
-    raise TypeError("Cannot mutate enum members")
-
-
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
         try:
-            return cls._value2member_map_[value]
+            return cls._value_to_member_map_[value]
         except KeyError:
             # If we cant find the value, just return what got casted in
             return value
@@ -125,7 +119,7 @@ class _EnumMeta(type):
     def __dir__(cls) -> typing.List[str]:
         members = ["__class__", "__doc__", "__members__", "__module__"]
         try:
-            members += list(cls._name2member_map_)
+            members += list(cls._name_to_member_map_)
         finally:
             return members
 
@@ -135,7 +129,7 @@ class _EnumMeta(type):
             # recursively.
             raise AttributeError(name)
         try:
-            return cls._name2member_map_[name]
+            return cls._name_to_member_map_[name]
         except KeyError:
             try:
                 return super().__getattribute__(name)
@@ -143,10 +137,10 @@ class _EnumMeta(type):
                 raise AttributeError(name) from None
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name2member_map_[name]
+        return cls._name_to_member_map_[name]
 
     def __iter__(cls) -> typing.Iterator[str]:
-        yield cls._name2member_map_
+        yield from cls._name_to_member_map_
 
     @staticmethod
     def __new__(
@@ -163,19 +157,14 @@ class _EnumMeta(type):
 
         assert isinstance(namespace, _EnumNamespace)
 
-        try:
-            base, enum_type = bases
-        except ValueError:
-            raise TypeError("Expected two base classes for an enum") from None
-
-        if not issubclass(enum_type, _Enum):
-            raise TypeError("second base type for enum must be derived from Enum")
+        base, enum_type = bases
 
         new_namespace = {
             "__objtype__": base,
             "__enumtype__": enum_type,
-            "_name2member_map_": (name2member := {}),
-            "_value2member_map_": (value2member := {}),
+            "_name_to_member_map_": (name_to_member := {}),
+            "_value_to_member_map_": (value_to_member := {}),
+            "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
             **namespace,
@@ -190,13 +179,11 @@ class _EnumMeta(type):
             # invoke cls.__init__ if we do this, so we end up with two function
             # calls.
             member = cls.__new__(cls, value)
-            member.name = name
-            member.value = value
-            name2member[name] = member
-            value2member[value] = member
-
-        cls.__setattr__ = _attr_mutator
-        cls.__delattr__ = _attr_mutator
+            member._name_ = name
+            member._value_ = value
+            name_to_member[name] = member
+            value_to_member[value] = member
+            member_names.append(name)
 
         return cls
 
@@ -218,9 +205,14 @@ class _EnumMeta(type):
             if not isinstance(enum_type, _EnumMeta):
                 raise TypeError("Second base to an enum must be the enum type (derived from _EnumMeta) to be used")
 
+            if not issubclass(enum_type, _Enum):
+                raise TypeError("second base type for enum must be derived from Enum")
+
             return _EnumNamespace(base)
         except ValueError:
-            return _EnumNamespace(object)
+            if name == "Enum" and _Enum is NotImplemented:
+                return _EnumNamespace(object)
+            raise TypeError("Expected two base classes for an enum") from None
 
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__}>"
@@ -231,102 +223,144 @@ class _EnumMeta(type):
 class Enum(metaclass=_EnumMeta):
     """Re-implementation of parts of Python's `enum` to be faster."""
 
-    def __getattr__(self, name: str) -> typing.Any:
-        return getattr(self.value, name)
+    @property
+    def name(self) -> str:
+        return self._name_
+
+    @property
+    def value(self: _T) -> _T:
+        return self._value_
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
+        return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
 
     def __str__(self) -> str:
-        return f"{type(self).__name__}.{self.name}"
-
-
-class _IntFlagNamespace(dict):
-    def __init__(self) -> None:
-        super().__init__()
-        self.powers_of_2: typing.Dict[str, int] = {}
-        self.combined_fields: typing.Dict[str, typing.List[int]] = {}
-        self["__doc__"] = "An integer bitfield flag."
-
-    def __contains__(self, item: typing.Any) -> bool:
-        try:
-            _ = self[item]
-            return True
-        except KeyError:
-            return False
-
-    def __getitem__(self, name: str) -> typing.Any:
-        try:
-            return super().__getitem__(name)
-        except KeyError:
-            try:
-                return self.powers_of_2[name]
-            except KeyError:
-                try:
-                    return self.combined_fields[name]
-                except KeyError:
-                    raise KeyError(name) from None
-
-    def __setitem__(self, key: str, value: typing.Any) -> None:
-        if not isinstance(value, int):
-            super().__setitem__(key, value)
-
-        if value & value - 1:
-            self.powers_of_2[key] = value
-        else:
-            bits = set()
-            for bit_place in range(0, int(math.ceil(math.log2(value)))):
-                mask = value & bit_place
-                if mask:
-                    bits.add(mask)
-
-            for bit in bits:
-                if bit not in self.powers_of_2.values():
-                    # Don't allow specifying random combinations without each bit
-                    # being defined beforehand, as that is rubbish.
-                    raise ValueError(
-                        f"{key} defines combination bitfield value {value:x}, but one of the bits "
-                        f"({bit:x}) is not defined as a field before this value"
-                    )
-
-            self.combined_fields[key] = value
+        return f"{type(self).__name__}.{self._name_}"
 
 
 _IntFlag = NotImplemented
 
 
+def _name_resolver(names: typing.Dict[int, str], value: int) -> typing.Generator[str, typing.Any, None]:
+    bit = 1
+    while bit <= value:
+        if name := names.get(bit):
+            yield name
+        bit <<= 1
+
+
 class _IntFlagMeta(type):
+    def __call__(cls, value: typing.Any) -> typing.Any:
+        try:
+            return cls._value_to_member_map_[value]
+        except KeyError:
+            try:
+                # Try to get a cached value.
+                return cls._temp_members_[value]
+            except KeyError:
+                # If we cant find the value, just return what got casted in by generating a pseudomember
+                # and caching it. We cant use weakref because int is not weak referenceable, annoyingly.
+                # TODO: make the cache update thread-safe by using setdefault instead of assignment.
+                pseudomember = cls.__new__(cls, value)
+                cls._temp_members_[value] = value
+                pseudomember._real_name_ = None
+                pseudomember._value_ = value
+                return pseudomember
+
+    def __dir__(cls) -> typing.List[str]:
+        members = ["__class__", "__doc__", "__members__", "__module__"]
+        try:
+            members += list(cls._name_to_member_map_)
+        finally:
+            return members
+
+    def __iter__(cls) -> typing.Iterator[str]:
+        yield from cls._name_to_member_map_
+
     @classmethod
     def __prepare__(
         mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
-    ) -> typing.Union[typing.Dict[str, typing.Any], _IntFlagNamespace]:
+    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
         if _IntFlag is NotImplemented:
             if name != "IntFlag":
-                raise TypeError("First instance of _IntFlagMeta must be _IntFlag")
-            return {}
-        else:
-            if bases != (_IntFlag,):
-                raise TypeError("IntFlag must ONLY derive directly from IntFlag")
-            return _IntFlagNamespace()
+                raise TypeError("First instance of _IntFlagMeta must be IntFlag")
+            return _EnumNamespace(object)
+
+        try:
+            # Fails if Enum is not defined. We check this in `__new__` properly.
+            if len(bases) == 1 and bases[0] == _IntFlag:
+                return _EnumNamespace(int)
+        except ValueError:
+            raise TypeError("Cannot define another IntFlag base type")
 
     @staticmethod
     def __new__(
         mcs: typing.Type[_T],
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Union[typing.Dict[str, typing.Any], _IntFlagNamespace],
+        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
     ) -> _T:
         global _IntFlag
 
         if _IntFlag is NotImplemented:
-            int_flag = super().__new__(mcs, name, bases, namespace)
-            _IntFlag = int_flag
-            return int_flag
+            # noinspection PyRedundantParentheses
+            return (_IntFlag := super().__new__(mcs, name, bases, namespace))
 
-        assert isinstance(namespace, _IntFlagNamespace)
+        assert isinstance(namespace, _EnumNamespace)
+
+        new_namespace = {
+            "__objtype__": int,
+            "__enumtype__": _IntFlag,
+            "_name_to_member_map_": (name_to_member := {}),
+            "_value_to_member_map_": (value_to_member := {}),
+            "_powers_of_2_to_name_map_": (powers_of_2_map := {}),
+            "_temp_members_": {},
+            "_member_names_": (member_names := []),
+            # Required to be immutable by enum API itself.
+            "__members__": types.MappingProxyType(namespace.names_to_values),
+            "__new_pseudomember__": None,
+            **namespace,
+        }
+
+        cls = super().__new__(mcs, name, (int, *bases), new_namespace)
+
+        for name, value in namespace.names_to_values.items():
+            # Patching the member init call is around 100ns faster per call than
+            # using the default type.__call__ which would make us do the lookup
+            # in cls.__new__. Reason for this is that python will also always
+            # invoke cls.__init__ if we do this, so we end up with two function
+            # calls.
+            member = cls.__new__(cls, value)
+            member._real_name_ = name
+            member._value_ = value
+            name_to_member[name] = member
+            value_to_member[value] = member
+            member_names.append(name)
+
+            if not (value & value - 1):
+                powers_of_2_map[value] = name
+
+        return cls
+
+    def __repr__(cls) -> str:
+        return f"<enum {cls.__name__}>"
+
+    __str__ = __repr__
 
 
-# We have to use this fallback, or Pdoc will fail to document some stuff correctly...
-if os.getenv("PDOC3_GENERATING") == "1":  # pragma: no cover
-    from enum import Enum  # noqa: F811 - Redefinition intended
-    from enum import IntFlag  # noqa: F811 - Redefinition intended
+class IntFlag(metaclass=_IntFlagMeta):
+    @property
+    def name(self) -> str:
+        if self._name_ is None:
+            self._name_ = "|".join(_name_resolver(self._powers_of_2_to_name_map_, self._value_))
+        return self._name_
+
+    @property
+    def value(self):
+        return self._value_
+
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__}.{self.name}: {self.value!r}>"
+
+    def __str__(self) -> str:
+        return f"{type(self).__name__}.{self.name}"

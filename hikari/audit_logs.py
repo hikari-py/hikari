@@ -48,8 +48,9 @@ import attr
 
 from hikari import snowflakes
 from hikari.internal import attr_extensions
-from hikari.internal import collections
+from hikari.internal import collection_types
 from hikari.internal import enums
+
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -347,7 +348,7 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
-        return collections.get_index_or_slice(self.entries, index_or_slice)
+        return collection_types.get_index_or_slice(self.entries, index_or_slice)
 
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())

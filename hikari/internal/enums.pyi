@@ -30,7 +30,20 @@
 # we are using are just aliases from the enum types in the standard library.
 
 import enum as __enum
+from typing import TypeVar as __TypeVar
 
 Enum = __enum.Enum
 
-__all__ = ["Enum"]
+__FlagT = __TypeVar("__FlagT", bound=__enum.IntFlag)
+
+class IntFlag(__enum.IntFlag):
+    def split(self: __FlagT) -> typing.Sequence[__FlagT]:
+        ...
+    def has_any(self: __FlagT, *flags: __FlagT) -> bool:
+        ...
+    def has_all(self: __FlagT, *flags: __FlagT) -> bool:
+        ...
+    def has_none(self, *flags: __FlagT) -> bool:
+        ...
+
+__all__ = ["Enum", "IntFlag"]

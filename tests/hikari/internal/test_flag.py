@@ -142,32 +142,6 @@ class TestFlag:
             TestFlagType.QUX,
         )
 
-    def test_add_operator(self):
-        class TestFlagType(flag.Flag):
-            FOO = 0x1
-            BAR = 0x2
-            BAZ = 0x3
-            BORK = 0x4
-            QUX = 0x8
-
-        assert TestFlagType.BAZ + TestFlagType.BORK == TestFlagType.BAZ | TestFlagType.BORK
-        assert TestFlagType.BORK + TestFlagType.BAZ == TestFlagType.BAZ | TestFlagType.BORK
-        assert TestFlagType.BAZ + 4 == TestFlagType.BAZ | TestFlagType.BORK
-        assert 4 + TestFlagType.BAZ == TestFlagType.BAZ | TestFlagType.BORK
-
-    def test_sub_operator(self):
-        class TestFlagType(flag.Flag):
-            FOO = 0x1
-            BAR = 0x2
-            BAZ = 0x3
-            BORK = 0x4
-            QUX = 0x8
-
-        val = TestFlagType.BAZ | TestFlagType.BORK
-        assert val - TestFlagType.BAZ == TestFlagType.BORK
-        assert val - TestFlagType.QUX == val
-        assert (TestFlagType.BAZ | TestFlagType.QUX) - val == TestFlagType.QUX
-
     def test_str_operator(self):
         class TestFlagType(flag.Flag):
             FOO = 0x1

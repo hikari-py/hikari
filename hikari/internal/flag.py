@@ -152,14 +152,6 @@ class Flag(enum.IntFlag):
     def has_none(self, *flags: FlagT) -> bool:
         return not self.has_any(*flags)
 
-    def __add__(self: FlagT, other: typing.Union[int, FlagT]) -> FlagT:
-        return type(self)(self | other)
-
-    __radd__ = __add__
-
-    def __sub__(self: FlagT, other: typing.Union[int, FlagT]) -> FlagT:
-        return type(self)(self & ~other)
-
     def __str__(self) -> str:
         if hasattr(self, "name") and self.name is not None:
             return self.name
