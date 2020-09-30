@@ -27,6 +27,7 @@ __all__: typing.List[str] = ["Enum", "IntFlag"]
 import sys
 import types
 import typing
+from typing import Iterator
 
 _T = typing.TypeVar("_T")
 
@@ -249,6 +250,23 @@ def _name_resolver(names: typing.Dict[int, str], value: int) -> typing.Generator
         bit <<= 1
 
 
+class _NoOpIntFlagCacheMapping(typing.MutableMapping[int, str]):
+    def __setitem__(self, k: int, v: str) -> None:
+        pass
+
+    def __delitem__(self, v: int) -> None:
+        pass
+
+    def __getitem__(self, k: int) -> typing.NoReturn:
+        raise KeyError
+
+    def __len__(self) -> int:
+        return 0
+
+    def __iter__(self) -> Iterator[int]:
+        yield from ()
+
+
 class _IntFlagMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
         try:
@@ -308,13 +326,17 @@ class _IntFlagMeta(type):
 
         assert isinstance(namespace, _EnumNamespace)
 
+        powers_of_2_count = sum(not (value & value - 1) for value in namespace.names_to_values.values())
+
         new_namespace = {
             "__objtype__": int,
             "__enumtype__": _IntFlag,
             "_name_to_member_map_": (name_to_member := {}),
             "_value_to_member_map_": (value_to_member := {}),
             "_powers_of_2_to_name_map_": (powers_of_2_map := {}),
-            "_temp_members_": {},
+            # For huge enums, don't ever cache anything. We could consume masses of memory otherwise
+            # (e.g. Permissions)
+            "_temp_members_": {} if powers_of_2_count <= 10 else _NoOpIntFlagCacheMapping(),
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
