@@ -20,7 +20,6 @@
 # SOFTWARE.
 
 import enum as py_enum
-import gc
 import os
 import sys
 import timeit
@@ -90,48 +89,58 @@ if os.name != "nt":
 else:
     print("lol windows good luck")
 
-print("warming up")
+for i in range(20):
+    print("pass", i + 1)
 
+    for j in range(1_000_000):
+        if sum(j for j in range(10)) < 0:
+            raise RuntimeError
 
-for i in range(1_000_000):
-    if sum(i for i in range(10)) < 0:
-        raise RuntimeError
+    py_intflag_call_time_member = timeit.timeit(
+        setup="build_enums()", stmt="PyIntFlag(4)", number=10_000_000, globals=globals()
+    )
+    hikari_intflag_call_time_member = timeit.timeit(
+        setup="build_enums()", stmt="HikariIntFlag(4)", number=10_000_000, globals=globals()
+    )
 
-print("benchmark starts")
+    for j in range(1_000_000):
+        if sum(j for j in range(10)) < 0:
+            raise RuntimeError
 
-py_intflag_call_time_member = timeit.timeit(
-    setup="build_enums()", stmt="PyIntFlag(4)", number=1_000_000, globals=globals()
-)
-hikari_intflag_call_time_member = timeit.timeit(
-    setup="build_enums()", stmt="HikariIntFlag(4)", number=1_000_000, globals=globals()
-)
+    py_intflag_call_time_existing_composite = timeit.timeit(stmt="PyIntFlag(71)", number=10_000_000, globals=globals())
+    hikari_intflag_call_time_existing_composite = timeit.timeit(
+        stmt="HikariIntFlag(71)", number=10_000_000, globals=globals()
+    ) / 10
 
-build_enums_time = timeit.timeit(stmt="build_enums()", number=1_000, globals=globals())
-py_intflag_call_time_new_composite = timeit.timeit(stmt="build_enums(); PyIntFlag(71)", number=1_000, globals=globals())
-build_enums_time = min(timeit.timeit(stmt="build_enums()", number=1_000, globals=globals()), build_enums_time)
-py_intflag_call_time_new_composite -= build_enums_time
-py_intflag_call_time_new_composite *= 1000
+    for j in range(1_000_000):
+        if sum(j for j in range(10)) < 0:
+            raise RuntimeError
 
-py_intflag_call_time_existing_composite = timeit.timeit(stmt="PyIntFlag(71)", number=1_000_000, globals=globals())
-hikari_intflag_call_time_existing_composite = timeit.timeit(
-    stmt="HikariIntFlag(71)", number=1_000_000, globals=globals()
-)
+    build_enums_time = timeit.timeit(stmt="build_enums()", number=10_000, globals=globals())
+    py_intflag_call_time_new_composite = timeit.timeit(stmt="build_enums(); PyIntFlag(71)", number=10_000, globals=globals())
+    build_enums_time = min(timeit.timeit(stmt="build_enums()", number=10_000, globals=globals()), build_enums_time)
+    py_intflag_call_time_new_composite -= build_enums_time
+    py_intflag_call_time_new_composite *= 100
 
-build_enums_time = timeit.timeit(stmt="build_enums()", number=1_000, globals=globals())
-hikari_intflag_call_time_new_composite = timeit.timeit(
-    stmt="build_enums(); HikariIntFlag(71)", number=1_000, globals=globals()
-)
-build_enums_time = min(timeit.timeit(stmt="build_enums()", number=1_000, globals=globals()), build_enums_time)
-hikari_intflag_call_time_new_composite -= build_enums_time
-hikari_intflag_call_time_new_composite *= 1000
+    for j in range(1_000_000):
+        if sum(j for j in range(10)) < 0:
+            raise RuntimeError
 
-print("PyIntFlag.__call__(4) (existing member)", py_intflag_call_time_member, "µs")
-print("BasicHikariEnum.__call__(4) (existing member)", hikari_intflag_call_time_member, "µs")
+    build_enums_time = timeit.timeit(stmt="build_enums()", number=10_000, globals=globals())
+    hikari_intflag_call_time_new_composite = timeit.timeit(
+        stmt="build_enums(); HikariIntFlag(71)", number=10_000, globals=globals()
+    )
+    build_enums_time = min(timeit.timeit(stmt="build_enums()", number=10_000, globals=globals()), build_enums_time)
+    hikari_intflag_call_time_new_composite -= build_enums_time
+    hikari_intflag_call_time_new_composite *= 100
 
-print("PyIntFlag.__call__(71) (new composite member)", py_intflag_call_time_new_composite, "µs")
-print("BasicHikariEnum.__call__(71) (new composite member)", hikari_intflag_call_time_new_composite, "µs")
+    print("PyIntFlag.__call__(4) (existing member)", py_intflag_call_time_member, "µs")
+    print("HikariIntFlag.__call__(4) (existing member)", hikari_intflag_call_time_member, "µs")
 
-print("PyIntFlag.__call__(71) (existing composite member)", py_intflag_call_time_existing_composite, "µs")
-print("BasicHikariEnum.__call__(71) (existing composite member)", hikari_intflag_call_time_existing_composite, "µs")
+    print("PyIntFlag.__call__(71) (new composite member)", py_intflag_call_time_new_composite, "µs")
+    print("HikariIntFlag.__call__(71) (new composite member)", hikari_intflag_call_time_new_composite, "µs")
 
-print()
+    print("PyIntFlag.__call__(71) (existing composite member)", py_intflag_call_time_existing_composite, "µs")
+    print("HikariIntFlag.__call__(71) (existing composite member)", hikari_intflag_call_time_existing_composite, "µs")
+
+    print()

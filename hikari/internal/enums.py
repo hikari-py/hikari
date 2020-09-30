@@ -107,6 +107,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
 # a base metaclass, we have to give these values for _EnumMeta to not
 # flake out when initializing them.
 _Enum = NotImplemented
+_MAX_CACHED_MEMBERS = int(2 ** 12)
 
 
 class _EnumMeta(type):
@@ -250,39 +251,28 @@ def _name_resolver(names: typing.Dict[int, str], value: int) -> typing.Generator
         bit <<= 1
 
 
-class _NoOpIntFlagCacheMapping(typing.MutableMapping[int, str]):
-    def __setitem__(self, k: int, v: str) -> None:
-        pass
-
-    def __delitem__(self, v: int) -> None:
-        pass
-
-    def __getitem__(self, k: int) -> typing.NoReturn:
-        raise KeyError
-
-    def __len__(self) -> int:
-        return 0
-
-    def __iter__(self) -> Iterator[int]:
-        yield from ()
-
-
 class _IntFlagMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
+            temp_members = cls._temp_members_
+            # For huge enums, don't ever cache anything. We could consume masses of memory otherwise
+            # (e.g. Permissions)
             try:
                 # Try to get a cached value.
-                return cls._temp_members_[value]
+                return temp_members[value]
             except KeyError:
                 # If we cant find the value, just return what got casted in by generating a pseudomember
                 # and caching it. We cant use weakref because int is not weak referenceable, annoyingly.
                 # TODO: make the cache update thread-safe by using setdefault instead of assignment.
                 pseudomember = cls.__new__(cls, value)
-                cls._temp_members_[value] = value
+                temp_members[value] = value
                 pseudomember._real_name_ = None
                 pseudomember._value_ = value
+                if len(temp_members) > _MAX_CACHED_MEMBERS:
+                    temp_members.popitem()
+
                 return pseudomember
 
     def __dir__(cls) -> typing.List[str]:
@@ -334,9 +324,7 @@ class _IntFlagMeta(type):
             "_name_to_member_map_": (name_to_member := {}),
             "_value_to_member_map_": (value_to_member := {}),
             "_powers_of_2_to_name_map_": (powers_of_2_map := {}),
-            # For huge enums, don't ever cache anything. We could consume masses of memory otherwise
-            # (e.g. Permissions)
-            "_temp_members_": {} if powers_of_2_count <= 10 else _NoOpIntFlagCacheMapping(),
+            "_temp_members_": {},
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
