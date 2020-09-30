@@ -70,11 +70,11 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
 from hikari.impl import stateless_cache
-from hikari.utilities import data_binding
-from hikari.utilities import net
-from hikari.utilities import routes
-from hikari.utilities import time
-from hikari.utilities import ux
+from hikari.internal import data_binding
+from hikari.internal import net
+from hikari.internal import routes
+from hikari.internal import time
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

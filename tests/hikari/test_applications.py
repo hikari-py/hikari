@@ -24,7 +24,7 @@ import pytest
 from hikari import applications
 from hikari import urls
 from hikari import users
-from hikari.utilities import routes
+from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 

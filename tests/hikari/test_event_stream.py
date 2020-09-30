@@ -26,10 +26,10 @@ import weakref
 import mock
 import pytest
 
+from hikari import event_stream
 from hikari import events
 from hikari import iterators
 from hikari.impl import bot
-from hikari.utilities import event_stream
 from tests.hikari import hikari_test_helpers
 
 

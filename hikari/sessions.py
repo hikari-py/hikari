@@ -29,8 +29,8 @@ import typing
 
 import attr
 
-from hikari.utilities import attr_extensions
-from hikari.utilities import time
+from hikari.internal import attr_extensions
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime

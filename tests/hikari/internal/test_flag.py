@@ -20,7 +20,7 @@
 # SOFTWARE.
 import pytest
 
-from hikari.utilities import flag
+from hikari.internal import flag
 
 
 class TestFlag:

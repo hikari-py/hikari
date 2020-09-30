@@ -33,15 +33,15 @@ import typing
 
 import attr
 
+from hikari import event_stream
 from hikari import intents as intents_
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import chunker
 from hikari.events import shard_events
-from hikari.utilities import attr_extensions
-from hikari.utilities import collections
-from hikari.utilities import event_stream
-from hikari.utilities import time
+from hikari.internal import attr_extensions
+from hikari.internal import collections
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime

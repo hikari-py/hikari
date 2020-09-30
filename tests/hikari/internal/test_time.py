@@ -23,7 +23,7 @@ import datetime
 import mock
 import pytest
 
-from hikari.utilities import time
+from hikari.internal import time
 
 
 def test_parse_iso_8601_date_with_negative_timezone():

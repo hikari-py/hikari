@@ -41,10 +41,10 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
-from hikari.utilities import attr_extensions
-from hikari.utilities import data_binding
-from hikari.utilities import routes
-from hikari.utilities import time
+from hikari.internal import attr_extensions
+from hikari.internal import data_binding
+from hikari.internal import routes
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

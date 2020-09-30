@@ -58,10 +58,10 @@ from hikari import files
 from hikari import snowflakes
 from hikari import urls
 from hikari import users
-from hikari.utilities import attr_extensions
-from hikari.utilities import enums
-from hikari.utilities import flag
-from hikari.utilities import routes
+from hikari.internal import attr_extensions
+from hikari.internal import enums
+from hikari.internal import flag
+from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     import datetime

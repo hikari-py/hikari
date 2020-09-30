@@ -34,8 +34,8 @@ from hikari import intents
 from hikari import presences
 from hikari import undefined
 from hikari.impl import shard
-from hikari.utilities import aio
-from hikari.utilities import time
+from hikari.internal import aio
+from hikari.internal import time
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 

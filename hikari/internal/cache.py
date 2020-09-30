@@ -59,8 +59,8 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import voices
 from hikari.api import cache
-from hikari.utilities import attr_extensions
-from hikari.utilities import collections
+from hikari.internal import attr_extensions
+from hikari.internal import collections
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""

@@ -27,7 +27,7 @@ import pytest
 
 from hikari import snowflakes
 from hikari import undefined
-from hikari.utilities import data_binding
+from hikari.internal import data_binding
 
 
 @attr.s(slots=True)

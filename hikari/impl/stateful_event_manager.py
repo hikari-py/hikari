@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import shard as gateway_shard
     from hikari.events import guild_events as guild_events
-    from hikari.utilities import data_binding
+    from hikari.internal import data_binding
 
 
 class StatefulEventManagerImpl(event_manager_base.EventManagerBase):

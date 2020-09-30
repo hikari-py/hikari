@@ -40,7 +40,7 @@ import attr
 from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
-from hikari.utilities import attr_extensions
+from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     import types

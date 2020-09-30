@@ -22,7 +22,7 @@ import asyncio
 
 import pytest
 
-from hikari.utilities import aio
+from hikari.internal import aio
 from tests.hikari import hikari_test_helpers
 
 

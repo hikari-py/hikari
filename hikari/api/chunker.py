@@ -33,12 +33,12 @@ from hikari import undefined
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import event_stream
     from hikari import guilds
     from hikari import snowflakes
     from hikari import users as users_
     from hikari.api import shard as gateway_shard
     from hikari.events import shard_events
-    from hikari.utilities import event_stream
 
 
 class RequestInformation(typing.Protocol):

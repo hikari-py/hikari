@@ -37,7 +37,7 @@ from hikari.api import event_dispatcher
 from hikari.api import voice
 from hikari.events import voice_events
 from hikari.impl import bot
-from hikari.utilities import ux
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     _VoiceEventCallbackT = typing.Callable[[voice_events.VoiceEvent], typing.Coroutine[None, typing.Any, None]]

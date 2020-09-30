@@ -41,7 +41,7 @@ import abc
 import asyncio
 import typing
 
-from hikari.utilities import spel
+from hikari.internal import spel
 
 ValueT = typing.TypeVar("ValueT")
 """Type-hint of the type of the value returned by a lazy iterator."""

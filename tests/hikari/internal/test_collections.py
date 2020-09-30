@@ -27,7 +27,7 @@ import time
 
 import pytest
 
-from hikari.utilities import collections
+from hikari.internal import collections
 from tests.hikari import hikari_test_helpers
 
 
