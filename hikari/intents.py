@@ -268,7 +268,6 @@ class Intents(flag.Flag):
     DM_MESSAGES = 1 << 12
     """Subscribes to the following events:
 
-    * `CHANNEL_CREATE` (in private message channels (non-guild bound) only)
     * `MESSAGE_CREATE` (in private message channels (non-guild bound) only)
     * `MESSAGE_UPDATE` (in private message channels (non-guild bound) only)
     * `MESSAGE_DELETE` (in private message channels (non-guild bound) only)
