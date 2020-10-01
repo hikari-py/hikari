@@ -222,7 +222,7 @@ class GuildChunker(abc.ABC):
 
         Returns
         -------
-        hikari.utilities.event_stream.Streamer[hikari.events.shard_events.MemberChunkEvent]
+        hikari.event_stream.Streamer[hikari.events.shard_events.MemberChunkEvent]
             A stream of chunk events for the generated request.
         """
 

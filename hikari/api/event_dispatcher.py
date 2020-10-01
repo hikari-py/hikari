@@ -299,7 +299,7 @@ class EventDispatcher(abc.ABC):
 
         Returns
         -------
-        hikari.utilities.event_stream.Streamer[hikari.events.base_events.Event]
+        hikari.event_stream.Streamer[hikari.events.base_events.Event]
             The async iterator to handle streamed events. This must be started
             with `async with stream:` or `await stream.open()` before
             asynchronously iterating over it.

@@ -22,9 +22,7 @@
 """A sane Python framework for writing modern Discord bots.
 
 To get started, you will want to initialize an instance of `BotApp`
-(an alias for `hikari.impl.bot.BotApp`) for writing a bot, or `RESTApp` (an
-alias for `hikari.impl.rest.RESTApp`) if you only need to use
-the REST API.
+for writing a bot, or `RESTApp` if you only need to use the REST API.
 """
 
 from __future__ import annotations
