@@ -140,7 +140,9 @@ class ShardCloseCode(int, enums.Enum):
     @property
     def is_standard(self) -> bool:
         """Return `builtins.True` if this is a standard code."""
-        return (self.value // 1000) == 1
+        # Appears to be some MyPy bug where == is expected to
+        # return anything.
+        return bool((self.value // 1000) == 1)
 
     def __str__(self) -> str:
         return self.name
