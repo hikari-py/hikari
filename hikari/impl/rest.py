@@ -58,6 +58,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import iterators
+from hikari import permissions as permissions_
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -85,7 +86,6 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import invites
     from hikari import messages as messages_
-    from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import voices
     from hikari import webhooks
