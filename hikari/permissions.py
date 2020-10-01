@@ -170,7 +170,7 @@ class Permissions(flag.Flag):
     MOVE_MEMBERS = 1 << 24
     """Allows for moving of members between voice channels."""
 
-    USE_VAD = 1 << 25
+    USE_VOICE_ACTIVITY = 1 << 25
     """Allows for using voice-activity-detection in a voice channel."""
 
     CHANGE_NICKNAME = 1 << 26
