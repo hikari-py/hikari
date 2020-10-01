@@ -125,8 +125,10 @@ class VoiceServerUpdateEvent(VoiceEvent):
     raw_endpoint: str = attr.ib(repr=True)
     """Raw endpoint URL that Discord sent.
 
-    This will always be incorrect, because sending a correct URL would be too
-    useful to you.
+    !!! warning
+        This will always be wrong. See
+        https://github.com/discord/discord-api-docs/issues/2116
+        for more details.
 
     Returns
     -------
