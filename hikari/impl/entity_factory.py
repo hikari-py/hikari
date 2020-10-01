@@ -986,6 +986,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
         role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]]
+        # If Discord ever does start including this here without warning we don't want to duplicate the entry.
+        if guild_id not in role_ids:
+            role_ids.append(guild_id)
 
         joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"])
 

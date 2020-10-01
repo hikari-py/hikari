@@ -1430,7 +1430,26 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == [11111, 22222, 33333, 44444]
+        assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
+        assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.is_deaf is False
+        assert member.is_mute is True
+        assert isinstance(member, guild_models.Member)
+
+    def test_deserialize_member_when_guild_id_already_in_role_array(
+        self, entity_factory_impl, mock_app, member_payload, user_payload
+    ):
+        # While this isn't a legitimate case based on the current behaviour of the API, we still want to cover this
+        # to ensure no duplication occurs.
+        member_payload = {**member_payload, "guild_id": "76543325"}
+        member_payload["role_ids"] = [11111, 22222, 76543325, 33333, 44444]
+        member = entity_factory_impl.deserialize_member(member_payload)
+        assert member.app is mock_app
+        assert member.guild_id == 76543325
+        assert member.user == entity_factory_impl.deserialize_user(user_payload)
+        assert member.nickname == "foobarbaz"
+        assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
