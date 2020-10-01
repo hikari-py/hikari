@@ -346,7 +346,7 @@ class GatewayShardImpl(shard.GatewayShard):
     event_consumer
         A non-coroutine function consuming a `GatewayShardImpl`,
         a `builtins.str` event name, and a
-        `hikari.utilities.data_binding.JSONObject` event object as parameters.
+        `hikari.internal.data_binding.JSONObject` event object as parameters.
         This should return `builtins.None`, and will be called with each event
         that fires.
     http_settings : hikari.config.HTTPSettings

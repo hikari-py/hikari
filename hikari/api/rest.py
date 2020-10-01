@@ -174,7 +174,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new bitrate for the channel.
         user_limit : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
@@ -2888,7 +2888,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         afk_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
             If provided, the new afk channel. Requires `afk_timeout` to
             be set to work.
-        afk_timeout : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
+        afk_timeout : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new afk timeout.
         icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the new guild icon. Must be a 1024x1024 image or can be
@@ -3045,7 +3045,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the ammount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
@@ -3120,7 +3120,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.utilities.time.Intervalish]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the ammount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.

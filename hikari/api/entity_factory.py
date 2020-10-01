@@ -115,7 +115,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -130,7 +130,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -145,7 +145,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -164,7 +164,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -183,7 +183,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -198,7 +198,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -218,7 +218,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.utilities.data_binding.JSONObject
+        hikari.internal.data_binding.JSONObject
             The serialized representation of the permission overwrite.
         """
 
@@ -228,7 +228,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -243,7 +243,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -258,7 +258,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -278,7 +278,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -314,7 +314,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -350,7 +350,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -386,7 +386,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -422,7 +422,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -458,7 +458,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -495,7 +495,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -517,7 +517,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.utilities.data_binding.JSONObject, typing.List[hikari.files.Resource]]
+        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.List[hikari.files.Resource]]
             A tuple with two items in it. The first item will be the serialized
             embed representation. The second item will be a list of resources
             to upload with the embed.
@@ -533,7 +533,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -548,7 +548,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -565,7 +565,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
         guild_id : hikari.snowflakes.Snowflake
             The ID of the guild this emoji belongs to. This is used to ensure
@@ -586,7 +586,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -605,7 +605,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -624,7 +624,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -645,7 +645,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -685,7 +685,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
         guild_id : hikari.snowflakes.Snowflake
             The ID of the guild this role belongs to. This is used to ensure
@@ -704,7 +704,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -719,7 +719,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -734,7 +734,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -749,7 +749,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -764,7 +764,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -779,7 +779,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -807,7 +807,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -822,7 +822,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -837,7 +837,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -855,7 +855,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -870,7 +870,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -894,7 +894,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -933,7 +933,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -948,7 +948,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -973,7 +973,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Other Parameters
@@ -1014,7 +1014,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
@@ -1033,7 +1033,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.utilities.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
         Returns
