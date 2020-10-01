@@ -114,28 +114,33 @@ class GatewayError(HikariError):
 class ShardCloseCode(int, enums.Enum):
     """Reasons for a shard connection closure."""
 
-    NORMAL_CLOSURE = 1000
-    GOING_AWAY = 1001
-    PROTOCOL_ERROR = 1002
-    TYPE_ERROR = 1003
-    ENCODING_ERROR = 1007
-    POLICY_VIOLATION = 1008
-    TOO_BIG = 1009
-    UNEXPECTED_CONDITION = 1011
-    UNKNOWN_ERROR = 4000
-    UNKNOWN_OPCODE = 4001
-    DECODE_ERROR = 4002
-    NOT_AUTHENTICATED = 4003
-    AUTHENTICATION_FAILED = 4004
-    ALREADY_AUTHENTICATED = 4005
-    INVALID_SEQ = 4007
-    RATE_LIMITED = 4008
-    SESSION_TIMEOUT = 4009
-    INVALID_SHARD = 4010
-    SHARDING_REQUIRED = 4011
-    INVALID_VERSION = 4012
-    INVALID_INTENT = 4013
-    DISALLOWED_INTENT = 4014
+    NORMAL_CLOSURE = 1_000
+    GOING_AWAY = 1_001
+    PROTOCOL_ERROR = 1_002
+    TYPE_ERROR = 1_003
+    ENCODING_ERROR = 1_007
+    POLICY_VIOLATION = 1_008
+    TOO_BIG = 1_009
+    UNEXPECTED_CONDITION = 1_011
+    UNKNOWN_ERROR = 4_000
+    UNKNOWN_OPCODE = 4_001
+    DECODE_ERROR = 4_002
+    NOT_AUTHENTICATED = 4_003
+    AUTHENTICATION_FAILED = 4_004
+    ALREADY_AUTHENTICATED = 4_005
+    INVALID_SEQ = 4_007
+    RATE_LIMITED = 4_008
+    SESSION_TIMEOUT = 4_009
+    INVALID_SHARD = 4_010
+    SHARDING_REQUIRED = 4_011
+    INVALID_VERSION = 4_012
+    INVALID_INTENT = 4_013
+    DISALLOWED_INTENT = 4_014
+
+    @property
+    def is_standard(self) -> bool:
+        """Return `builtins.True` if this is a standard code."""
+        return (self.value // 1000) == 1
 
     def __str__(self) -> str:
         return self.name
