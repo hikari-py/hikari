@@ -205,109 +205,118 @@ class HTTPClientClosedError(HTTPError):
 class RESTErrorCode(int, enums.Enum):
     """Error codes provided as further info on errors returned by the REST API."""
 
+    UNKNOWN_ERROR = -1
+    """Error is not known."""
+
     GENERAL_ERROR = 0
     """A general error, no further info provided."""
 
-    UNKNOWN_APPLICATION = 10002
+    UNKNOWN_APPLICATION = 10_002
     """Unknown application provided."""
 
-    UNKNOWN_CHANNEL = 10003
+    UNKNOWN_CHANNEL = 10_003
     """Unknown channel provided."""
 
-    UNKNOWN_GUILD = 10004
+    UNKNOWN_GUILD = 10_004
     """Unknown guild provided."""
 
-    UNKNOWN_INTEGRATION = 10005
+    UNKNOWN_INTEGRATION = 10_005
     """Unknown integration provided."""
 
-    UNKNOWN_INVITE = 10006
+    UNKNOWN_INVITE = 10_006
     """Unknown invite provided."""
 
-    UNKNOWN_MEMBER = 10007
+    UNKNOWN_MEMBER = 10_007
     """Unknown member provided."""
 
-    UNKNOWN_MESSAGE = 10008
+    UNKNOWN_MESSAGE = 10_008
     """Unknown message provided."""
 
-    UNKNOWN_PERMISSION_OVERWRITE = 10009
+    UNKNOWN_PERMISSION_OVERWRITE = 10_009
     """Unknown permission overwrite provided."""
 
-    UNKNOWN_ROLE = 10011
+    UNKNOWN_ROLE = 10_011
     """Unknown role provided."""
 
-    UNKNOWN_USER = 10013
+    UNKNOWN_USER = 10_013
     """Unknown user provided."""
 
-    UNKNOWN_EMOJI = 10014
+    UNKNOWN_EMOJI = 10_014
     """Unknown emoji provided."""
 
-    UNKNOWN_WEBHOOK = 10015
+    UNKNOWN_WEBHOOK = 10_015
     """Unknown webhook provided."""
 
-    UNKNOWN_BAN = 10026
+    UNKNOWN_BAN = 10_026
     """Unknown ban provided."""
 
-    WRITE_LIMIT_HIT = 20028
+    ANNOUNCEMENT_LIMIT_HIT = 20_022
+    """Message can not be edited due to announcement rate limits."""
+
+    WRITE_LIMIT_HIT = 20_028
     """The global write limit on a channel has been hit."""
 
-    MAXIMUM_GUILDS = 30001
+    MAXIMUM_GUILDS = 30_001
     """Maximum number of guilds reached (100)."""
 
-    MAXIMUM_PINS = 30003
+    MAXIMUM_PINS = 30_003
     """Maximum number of pins reached for the channel (50)."""
 
-    MAXIMUM_ROLES = 30005
+    MAXIMUM_ROLES = 30_005
     """Maximum number of guild roles reached (250)."""
 
-    MAXIMUM_WEBHOOKS = 30007
+    MAXIMUM_WEBHOOKS = 30_007
     """Maximum number of webhooks in a channel reached (10)."""
 
-    MAXIMUM_REACTIONS = 30010
+    MAXIMUM_REACTIONS = 30_010
     """Maximum number of reactions on a message reached (20)."""
 
-    MAXIMUM_CHANNELS = 30013
+    MAXIMUM_CHANNELS = 30_013
     """Maximum number of guild channels reached (500)."""
 
-    MAXIMUM_INVITES = 30016
+    MAXIMUM_INVITES = 30_016
     """Maximum number of invites reached (1000)."""
 
-    REQUEST_TOO_LARGE = 40005
+    REQUEST_TOO_LARGE = 40_005
     """Request too large. Try sending something smaller in size."""
 
-    TEMPORARILY_DISABLED = 40006
+    TEMPORARILY_DISABLED = 40_006
     """This feature has been temporarily disabled server-side."""
 
-    ALREADY_CROSSPOSTED = 40033
+    ALREADY_CROSSPOSTED = 40_033
     """This message has already been crossposted."""
 
-    MISSING_ACCESS = 50001
+    MISSING_ACCESS = 50_001
     """Missing access."""
 
-    PROHIBITED_ON_DM = 50003
+    PROHIBITED_ON_DM = 50_003
     """Cannot execute action on a DM channel."""
 
-    NOT_MESSAGE_AUTHOR = 50005
+    NOT_MESSAGE_AUTHOR = 50_005
     """Cannot edit a message authored by another user."""
 
-    EMPTY_MESSAGE = 50006
+    EMPTY_MESSAGE = 50_006
     """Cannot send an empty message."""
 
-    USER_DM_CLOSED = 50007
+    USER_DM_CLOSED = 50_007
     """Cannot send messages to this user."""
 
-    MESSAGE_IN_VC = 50008
+    MESSAGE_IN_VC = 50_008
     """Cannot send messages in a voice channel."""
 
-    PINS_ONLY_ON_ORIGIN_CHANNEL = 50019
+    PINS_ONLY_ON_ORIGIN_CHANNEL = 50_019
     """A message can only be pinned to the channel it was sent in."""
 
-    PROHIBITED_ON_SYSTEM_MESSAGE = 50021
+    PROHIBITED_ON_SYSTEM_MESSAGE = 50_021
     """Cannot execute action on a system message."""
 
-    MESSAGE_TOO_OLD = 50034
+    MESSAGE_TOO_OLD = 50_034
     """A message provided was too old to bulk delete."""
 
-    SYSTEM_OVERLOADED = 130000
+    TWO_FACTOR_AUTHENTICATION_REQUIRED = 60_003
+    """2FA is required to use this endpoint."""
+
+    SYSTEM_OVERLOADED = 130_000
     """API resource is currently overloaded. Try again a little later."""
 
     def __str__(self) -> str:
