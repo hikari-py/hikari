@@ -45,8 +45,9 @@ This includes:
   - `pdoc3`
     - Generate documentation.
   - `pages`
-    - Generate final documentation.
-  - `deploy`
-    - Deployment to PyPI (will `master`).
+    - Generate webpage.
 
 All jobs will need to succeed before anything gets merged.
+
+Note that this rule may be skipped for `twemoji-mapping` if the
+problem is caused by a change Discord have made to their mapping.
