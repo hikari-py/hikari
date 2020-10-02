@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
 
 import abc
+import re
 import typing
 import unicodedata
 
@@ -42,6 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://github.com/twitter/twemoji/raw/master/assets/72x72/"
+_CUSTOM_EMOJI_REGEX: typing.Final[re.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -78,6 +80,30 @@ class Emoji(files.WebResource, abc.ABC):
     @abc.abstractmethod
     def mention(self) -> str:
         """Mention string to use to mention the emoji with."""
+
+    @classmethod
+    def parse(cls, string: str, /) -> Emoji:
+        """Parse a given string into an emoji object.
+
+        Parameters
+        ----------
+        string : builtins.str
+            The emoji object to parse.
+
+        Returns
+        -------
+        Emoji
+            The parsed emoji object. This will be a `CustomEmoji` if a custom
+            emoji ID or mention, or a `UnicodeEmoji` otherwise.
+
+        Raises
+        ------
+        builtins.ValueError
+            If a mention is given that has an invalid format.
+        """
+        if string.isdigit() or string.startswith("<") and string.endswith(">"):
+            return CustomEmoji.parse(string)
+        return UnicodeEmoji.parse(string)
 
 
 @attr_extensions.with_copy
@@ -183,21 +209,37 @@ class UnicodeEmoji(Emoji):
 
     @classmethod
     @typing.final
-    def from_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
+    def parse_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
         return cls(name="".join(map(chr, (codepoint, *codepoints))))
 
     @classmethod
     @typing.final
-    def from_emoji(cls, emoji: str) -> UnicodeEmoji:
-        """Create a unicode emoji from a raw emoji."""
-        return cls(name=emoji)
+    def parse_unicode_escape(cls, escape: str) -> UnicodeEmoji:
+        """Create a unicode emoji from a unicode escape string."""
+        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
 
     @classmethod
     @typing.final
-    def from_unicode_escape(cls, escape: str) -> UnicodeEmoji:
-        """Create a unicode emoji from a unicode escape string."""
-        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
+    def parse(cls, string: str, /) -> UnicodeEmoji:
+        """Parse a given string into a unicode emoji object.
+
+        Parameters
+        ----------
+        string : builtins.str
+            The emoji object to parse.
+
+        Returns
+        -------
+        UnicodeEmoji
+            The parsed UnicodeEmoji object.
+        """
+
+        # Ensure validity.
+        for i, codepoint in enumerate(string, start=1):
+            unicodedata.name(codepoint)
+
+        return cls(name=string)
 
 
 @attr_extensions.with_copy
@@ -225,11 +267,6 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         This will not be changed as stated here:
         https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
     """
-
-    app: traits.RESTAware = attr.ib(
-        repr=False, eq=False, hash=False, init=True, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
-    """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
@@ -273,6 +310,20 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         return routes.CDN_CUSTOM_EMOJI.compile(urls.CDN_URL, emoji_id=self.id, file_format=ext)
 
+    @classmethod
+    def parse(cls, string: str, /) -> CustomEmoji:
+        if string.isdigit():
+            return CustomEmoji(id=snowflakes.Snowflake(string), name=None, is_animated=None)
+
+        if emoji_match := _CUSTOM_EMOJI_REGEX.match(string):
+            return CustomEmoji(
+                id=snowflakes.Snowflake(emoji_match.group("id")),
+                name=emoji_match.group("name"),
+                is_animated=emoji_match.group("flags").lower() == "a",
+            )
+
+        raise ValueError("Expected an emoji ID or emoji mention")
+
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
@@ -281,6 +332,11 @@ class KnownCustomEmoji(CustomEmoji):
     This is a specialization of `CustomEmoji` that is from a guild that you
     _are_ part of. As a result, it contains a lot more information with it.
     """
+
+    app: traits.RESTAware = attr.ib(
+        repr=False, eq=False, hash=False, init=True, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """The client application that models may use for procedures."""
 
     guild_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to."""

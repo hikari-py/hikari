@@ -1303,8 +1303,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_custom_emoji(self, entity_factory_impl, mock_app, custom_emoji_payload):
         emoji = entity_factory_impl.deserialize_custom_emoji(custom_emoji_payload)
-        assert emoji.app is mock_app
-        assert emoji.id == 691225175349395456
+        assert emoji.id == snowflakes.Snowflake(691225175349395456)
         assert emoji.name == "test"
         assert emoji.is_animated is True
         assert isinstance(emoji, emoji_models.CustomEmoji)

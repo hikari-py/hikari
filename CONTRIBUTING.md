@@ -24,9 +24,9 @@ To push branches directly to the remote, you will have to name them like this:
 We have nox to help out with running pipelines locally and provides some helpful functionality.
 
 Nox is similar to tox, but uses a pure Python configuration instead of an
-INI based configuration. Nox and tox are both tools for generating virtual 
+INI based configuration. Nox and tox are both tools for generating virtual
 environments and running commands in those environments. Examples of usage
-include installing, configuring, and running flake8; running py.test, et 
+include installing, configuring, and running flake8; running py.test, et
 cetera.
 
 You can check all the available nox commands by running `nox -l`.
