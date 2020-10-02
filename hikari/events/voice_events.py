@@ -123,28 +123,26 @@ class VoiceServerUpdateEvent(VoiceEvent):
     """
 
     raw_endpoint: str = attr.ib(repr=True)
-    """Raw endpoint URL that Discord sent.
+    """Raw endpoint URI that Discord sent.
 
     !!! warning
-        This will always be wrong. See
-        https://github.com/discord/discord-api-docs/issues/2116
-        for more details.
+        This will not contain the scheme to use. Use the `endpoint` property
+        to get a representation that has this prepended.
 
     Returns
     -------
     builtins.str
-        The incorrect endpoint URL for the voice gateway server to connect to.
+        A scheme-less endpoint URI for the endpoint to use for a new voice
+        websocket.
     """
 
     @property
     def endpoint(self) -> str:
-        """URI for this voice server host, with the correct port and protocol.
+        """URI for this voice server host, with the correct scheme prepended.
 
         Returns
         -------
         builtins.str
             The URI to use to connect to the voice gateway.
         """
-        # Discord have had this wrong for like 4 years, bleh.
-        uri, _, _ = self.raw_endpoint.rpartition(":")
-        return f"wss://{uri}:443"
+        return f"wss://{self.raw_endpoint}"

@@ -234,7 +234,6 @@ class UnicodeEmoji(Emoji):
         UnicodeEmoji
             The parsed UnicodeEmoji object.
         """
-
         # Ensure validity.
         for i, codepoint in enumerate(string, start=1):
             unicodedata.name(codepoint)

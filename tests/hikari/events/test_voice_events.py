@@ -44,4 +44,4 @@ class TestVoiceServerUpdateEvent:
         )
 
     def test_endpoint_property(self, event):
-        assert event.endpoint == "wss://voice.discord.com:443"
+        assert event.endpoint == "wss://voice.discord.com:123"
