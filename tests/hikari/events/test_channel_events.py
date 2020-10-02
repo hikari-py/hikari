@@ -142,7 +142,7 @@ class TestInviteEvent:
     @pytest.fixture()
     def event(self):
         return hikari_test_helpers.mock_class_namespace(
-            channel_events.InviteEvent, slots=False, code=mock.PropertyMock(return_value="Jx4cNGG")
+            channel_events.InviteEvent, slots_=False, code=mock.PropertyMock(return_value="Jx4cNGG")
         )()
 
     async def test_fetch_invite(self, event):

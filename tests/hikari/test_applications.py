@@ -64,8 +64,9 @@ def test_Application_str_operator():
 class TestTeam:
     @pytest.fixture()
     def model(self):
-        klass = hikari_test_helpers.unslot_class(applications.Team)
-        return hikari_test_helpers.stub_class(klass, id=123, icon_hash="ahashicon")
+        return hikari_test_helpers.mock_class_namespace(
+            applications.Team, slots_=False, init_=False, id=123, icon_hash="ahashicon"
+        )()
 
     def test_icon_url_property(self, model):
         model.format_icon = mock.Mock(return_value="url")
@@ -98,8 +99,14 @@ class TestTeam:
 class TestApplication:
     @pytest.fixture()
     def model(self):
-        klass = hikari_test_helpers.unslot_class(applications.Application)
-        return hikari_test_helpers.stub_class(klass, id=123, icon_hash="ahashicon", cover_image_hash="ahashcover")
+        return hikari_test_helpers.mock_class_namespace(
+            applications.Application,
+            init_=False,
+            slots_=False,
+            id=123,
+            icon_hash="ahashicon",
+            cover_image_hash="ahashcover",
+        )()
 
     def test_icon_url_property(self, model):
         model.format_icon = mock.Mock(return_value="url")

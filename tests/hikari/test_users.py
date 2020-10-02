@@ -41,7 +41,7 @@ def test_PremiumType_str_operator():
 class TestUser:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.mock_class_namespace(users.User, slots=False)()
+        return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
     def test_avatar_url_when_hash(self, obj):
         avatar = object()
@@ -124,7 +124,7 @@ class TestUser:
 class TestPartialUserImpl:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.stub_class(
+        return hikari_test_helpers.mock_entire_class_namespace(
             users.PartialUserImpl, id=123, username="thomm.o", discriminator="8637", app=mock.Mock()
         )
 
@@ -150,7 +150,7 @@ class TestPartialUserImpl:
 class TestOwnUser:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.stub_class(users.OwnUser, app=mock.Mock())
+        return hikari_test_helpers.mock_entire_class_namespace(users.OwnUser, app=mock.Mock())
 
     async def test_fetch_self(self, obj):
         user = object()

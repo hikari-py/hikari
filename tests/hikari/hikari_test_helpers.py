@@ -112,7 +112,7 @@ def _stub_init(self, kwargs: typing.Mapping[str, typing.Any]):
 
 
 # TODO: replace all of these with mock_class_namespace
-def stub_class(klass, **kwargs: typing.Any):
+def mock_entire_class_namespace(klass, **kwargs: typing.Any):
     """Get an instance of a class with only attributes provided in the passed kwargs set."""
     if klass not in _stubbed_classes:
         namespace = {"__init__": _stub_init}
@@ -129,20 +129,22 @@ def stub_class(klass, **kwargs: typing.Any):
 
 def mock_class_namespace(
     klass,
+    /,
     *,
-    init: bool = True,
-    slots: typing.Optional[bool] = None,
-    implement_abstract_methods: bool = True,
+    init_: bool = True,
+    slots_: typing.Optional[bool] = None,
+    implement_abstract_methods_: bool = True,
+    rename_impl_: bool = True,
     **namespace: typing.Any,
 ):
     """Get a version of a class with the provided namespace fields set as class attributes."""
-    if slots or slots is None and hasattr(klass, "__slots__"):
+    if slots_ or slots_ is None and hasattr(klass, "__slots__"):
         namespace["__slots__"] = ()
 
-    if init is False:
+    if init_ is False:
         namespace["__init__"] = lambda _: None
 
-    if implement_abstract_methods and hasattr(klass, "__abstractmethods__"):
+    if implement_abstract_methods_ and hasattr(klass, "__abstractmethods__"):
         for method_name in klass.__abstractmethods__:
             if method_name in namespace:
                 continue
@@ -161,7 +163,9 @@ def mock_class_namespace(
     for attribute in namespace.keys():
         assert hasattr(klass, attribute), f"invalid namespace attribute {attribute!r} provided"
 
-    return type("Mock" + klass.__name__, (klass,), namespace)
+    name = "Mock" + klass.__name__ if rename_impl_ else klass.__name__
+
+    return type(name, (klass,), namespace)
 
 
 def retry(max_retries):
