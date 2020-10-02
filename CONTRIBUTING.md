@@ -21,11 +21,20 @@ To push branches directly to the remote, you will have to name them like this:
 
 # Nox
 
-We have nox to help out with running pipelines locally and provides some helpfull functionality.
+We have nox to help out with running pipelines locally and provides some helpful functionality.
+
+Nox is similar to tox, but uses a pure Python configuration instead of an
+INI based configuration. Nox and tox are both tools for generating virtual 
+environments and running commands in those environments. Examples of usage
+include installing, configuring, and running flake8; running py.test, et 
+cetera.
 
 You can check all the available nox commands by running `nox -l`.
 
 Before commiting we recomend you to run `nox` to run all important pipelines and make sure the pipelines wont fail.
+
+You may run a single pipeline with `nox -s name` or multiple pipelines with
+`nox --sessions name1 name3 name9`.
 
 # Pipelines
 
