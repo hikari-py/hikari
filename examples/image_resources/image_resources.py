@@ -39,7 +39,7 @@ async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
         # Do not respond to bots, webhooks, or messages without content or without a prefix.
         return
 
-    command, _, args = event.content[1:].partition(" ")
+    command, args = event.content[1:].split(" ", 1)
 
     if command == "image":
         await inspect_image(event, args.lstrip())
@@ -56,17 +56,10 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
     elif what.casefold() in ("guild", "server", "here", "this"):
         await event.message.reply("Guild icon", attachment=event.guild.icon_url)
 
-    # Show the image for the given custom emoji:
-    elif custom_emoji_match := re.match(r"<a?:([^:]+):(\d+)>", what):
-        name, emoji_id = custom_emoji_match.group(1), hikari.Snowflake(custom_emoji_match.group(2))
-        emoji = bot.cache.get_emoji(emoji_id)
-        await event.message.reply(f"Emoji {name}", attachment=emoji)
-
-    # If any content exists, try treating it as a unicode emoji; only upload if it is actually valid:
-    elif what.strip():
-        # If this is not a valid emoji, this will raise hikari.NotFoundError
-        emoji = hikari.UnicodeEmoji.from_emoji(what)
-        await event.message.reply("Unicode Emoji", attachment=emoji)
+    # Show the image for the given emoji if there is some content present.
+    elif what:
+        emoji = hikari.Emoji.parse(what)
+        await event.message.reply(emoji.name, attachment=emoji)
 
     # If nothing was given, we should just return the avatar of the person who ran the command:
     else:

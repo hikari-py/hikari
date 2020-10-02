@@ -468,7 +468,7 @@ class TestRESTClientImpl:
     @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),
         [
-            (emojis.CustomEmoji(id=123, name="rooYay", app=object(), is_animated=False), "rooYay:123"),
+            (emojis.CustomEmoji(id=123, name="rooYay", is_animated=False), "rooYay:123"),
             ("👌", "👌"),
             ("\N{OK HAND SIGN}", "\N{OK HAND SIGN}"),
             ("<:rooYay:123>", "rooYay:123"),

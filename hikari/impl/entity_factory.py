@@ -905,7 +905,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
         return emoji_models.CustomEmoji(
-            app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             is_animated=payload.get("animated", False),

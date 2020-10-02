@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory() as tempdir:
     for i, emoji in enumerate(mapping, start=1):
         emoji_surrogates = emoji["surrogates"]
         name = emoji["primaryName"]
-        emoji = emojis.UnicodeEmoji.from_emoji(emoji_surrogates)
+        emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
 
         if emoji.filename in known_files:
             valid_emojis.append((emoji_surrogates, name))

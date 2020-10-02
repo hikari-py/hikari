@@ -18,24 +18,74 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import mock
+import pytest
 
 from hikari import emojis
+from hikari import snowflakes
 
 
-def test_UnicodeEmoji_str_operator():
-    mock_emoji = mock.Mock(emojis.UnicodeEmoji)
-    mock_emoji.name = "\N{OK HAND SIGN}"
-    assert emojis.UnicodeEmoji.__str__(mock_emoji) == "\N{OK HAND SIGN}"
+class TestEmoji:
+    @pytest.mark.parametrize(
+        ("input", "output"),
+        [
+            ("12345", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=None)),
+            ("<:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
+            ("<bar:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
+            ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
+            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji(name="\N{OK HAND SIGN}")),
+            (
+                "\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}",
+                emojis.UnicodeEmoji(
+                    name="\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"
+                ),
+            ),
+        ],
+    )
+    def test_parse(self, input, output):
+        assert emojis.Emoji.parse(input) == output
 
 
-def test_CustomEmoji_str_operator():
-    mock_emoji = mock.Mock(emojis.CustomEmoji, emojis.CustomEmoji)
-    mock_emoji.name = "peepoSad"
-    assert emojis.CustomEmoji.__str__(mock_emoji) == "peepoSad"
+class TestUnicodeEmoji:
+    def test_str_operator(self):
+        assert emojis.UnicodeEmoji(name="\N{OK HAND SIGN}") == "\N{OK HAND SIGN}"
+
+    @pytest.mark.parametrize(
+        ("input", "output"),
+        [
+            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji(name="\N{OK HAND SIGN}")),
+            (
+                "\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}",
+                emojis.UnicodeEmoji(
+                    name="\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"
+                ),
+            ),
+        ],
+    )
+    def test_parse(self, input, output):
+        assert emojis.UnicodeEmoji.parse(input) == output
 
 
-def test_CustomEmoji_str_operator_when_name_is_None():
-    mock_emoji = mock.Mock(emojis.CustomEmoji, emojis.CustomEmoji, id=42069)
-    mock_emoji.name = None
-    assert emojis.CustomEmoji.__str__(mock_emoji) == "Unnamed emoji ID 42069"
+class TestCustomEmoji:
+    def test_str_operator_when_populated_name(self):
+        emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="peepoSad", is_animated=True)
+        assert str(emoji) == "peepoSad"
+
+    def test_str_operator_when_name_is_None(self):
+        emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=True)
+        assert str(emoji) == "Unnamed emoji ID 12345"
+
+    @pytest.mark.parametrize(
+        ("input", "output"),
+        [
+            ("12345", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=None)),
+            ("<:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
+            ("<bar:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
+            ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
+        ],
+    )
+    def test_parse(self, input, output):
+        assert emojis.CustomEmoji.parse(input) == output
+
+    def test_parse_unhappy_path(self):
+        with pytest.raises(ValueError, match="Expected an emoji ID or emoji mention"):
+            emojis.CustomEmoji.parse("xxx")
