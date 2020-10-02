@@ -223,7 +223,7 @@ class User(PartialUser, abc.ABC):
         return self.format_avatar()
 
     @property
-    def default_avatar(self) -> files.URL:  # noqa: D401 imperative mood check
+    def default_avatar_url(self) -> files.URL:  # noqa: D401 imperative mood check
         """Default avatar for this user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,

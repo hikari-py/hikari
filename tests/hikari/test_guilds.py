@@ -98,7 +98,7 @@ class TestMember:
                 discriminator="0001",
                 avatar_url="avatar",
                 avatar_hash="a_12asfdjk1213",
-                default_avatar="default avatar",
+                default_avatar_url="default avatar",
                 format_avatar=mock.Mock(return_value="formated avatar"),
                 is_bot=False,
                 is_system=True,
@@ -146,7 +146,7 @@ class TestMember:
         obj.user.format_avatar.assert_called_once_with(ext="png", size=1)
 
     def test_default_avatar_property(self, obj):
-        assert obj.default_avatar == "default avatar"
+        assert obj.default_avatar_url == "default avatar"
 
     def test_display_name_property_when_nickname(self, obj):
         assert obj.display_name == "davb"

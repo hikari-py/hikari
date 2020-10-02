@@ -30,6 +30,7 @@ REFORMATING_PATHS = [
     "hikari",
     "tests",
     "scripts",
+    "examples",
     "pipelines",
     "setup.py",
     "noxfile.py",

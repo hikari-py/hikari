@@ -338,8 +338,8 @@ class Member(users.User):
         return self.user.avatar_url
 
     @property
-    def default_avatar(self) -> files.URL:
-        return self.user.default_avatar
+    def default_avatar_url(self) -> files.URL:
+        return self.user.default_avatar_url
 
     @property
     def discriminator(self) -> str:

@@ -112,7 +112,7 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_DEFAULT_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.default_avatar == "file"
+            assert obj.default_avatar_url == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
