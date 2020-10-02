@@ -83,23 +83,6 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
             The ID of the channel this event relates to.
         """
 
-    # Annoyingly, looks like we'll have to keep re-overriding this prototype
-    # with more documentation if we want the docstring to match the typehint
-    # using inherited specialization patterns. Sad.
-    @property
-    @abc.abstractmethod
-    def channel(self) -> typing.Optional[channels.PartialChannel]:
-        """Get the cached channel that this event relates to, if known.
-
-        If not, return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
-        """
-
     @abc.abstractmethod
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
@@ -193,21 +176,6 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
-
-    @property
-    def channel(self) -> typing.Optional[channels.PrivateChannel]:
-        """Get the cached channel that this event relates to, if known.
-
-        If not, return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.PrivateChannel]
-            The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
-        """
-        # TODO: link up to cache once I have a way of accessing a private channel by its ID.
-        return None
 
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
@@ -405,20 +373,6 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
             or `builtins.None` if no pins are available.
         """
 
-    @property
-    @abc.abstractmethod
-    def channel(self) -> typing.Optional[channels.TextChannel]:
-        """Get the cached channel that this event relates to, if known.
-
-        If not, return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextChannel]
-            The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
-        """
-
     @abc.abstractmethod
     async def fetch_channel(self) -> channels.TextChannel:
         """Perform an API call to fetch the details about this channel.
@@ -513,21 +467,6 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
 
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
-
-    @property
-    def channel(self) -> typing.Optional[channels.DMChannel]:
-        """Get the cached channel that this event relates to, if known.
-
-        If not, return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.GuildTextChannel]
-            The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
-        """
-        # TODO: implement when there is a way to find private channels by ID in cache.
-        return None
 
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch the details about this channel.
