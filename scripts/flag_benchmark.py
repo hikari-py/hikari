@@ -24,7 +24,7 @@ import os
 import sys
 import timeit
 
-from hikari.utilities import enums as hikari_enum
+from hikari.internal import enums as hikari_enum
 
 PyIntFlag = None
 HikariIntFlag = None
@@ -45,7 +45,7 @@ def build_enums():
         ab = 3
         cde = 28
 
-    class HikariIntFlag(hikari_enum.IntFlag):
+    class HikariIntFlag(hikari_enum.Flag):
         a = 1
         b = 2
         c = 4
@@ -89,7 +89,7 @@ if os.name != "nt":
 else:
     print("lol windows good luck")
 
-for i in range(20):
+for i in range(5):
     print("pass", i + 1)
 
     for j in range(1_000_000):

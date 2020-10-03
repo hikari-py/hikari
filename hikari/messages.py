@@ -46,7 +46,6 @@ from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -107,9 +106,8 @@ class MessageType(int, enums.Enum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class MessageFlag(flag.Flag):
+class MessageFlag(enums.Flag):
     """Additional flags for message options."""
 
     NONE = 0

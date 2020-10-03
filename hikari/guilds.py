@@ -60,7 +60,6 @@ from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
@@ -220,9 +219,8 @@ class GuildPremiumTier(int, enums.Enum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class GuildSystemChannelFlag(flag.Flag):
+class GuildSystemChannelFlag(enums.Flag):
     """Defines which features are suppressed in the system channel."""
 
     NONE = 0

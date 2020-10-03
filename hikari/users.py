@@ -37,16 +37,14 @@ from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@enum.unique
 @typing.final
-class UserFlag(flag.Flag):
+class UserFlag(enums.Flag):
     """The known user flags that represent account badges."""
 
     NONE = 0

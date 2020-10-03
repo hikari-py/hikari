@@ -99,6 +99,9 @@
 
     from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
 
+    # Hikari Enum hack
+    from hikari.internal import enums
+
     # Allow imports to resolve properly.
     typing.TYPE_CHECKING = True
 
@@ -325,17 +328,17 @@
                 if hasattr(dobj.cls, "obj"):
                     for cls in dobj.cls.obj.mro():
                         if (descriptor := cls.__dict__.get(dobj.name)) is not None:
-                            is_descriptor = True
+                            is_descriptor = hasattr(descriptor, "__get__")
                             break
 
-                if is_descriptor:
+                if all(not c.isalpha() or c.isupper() for c in dobj.name):
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small> "
+                elif is_descriptor:
                     qual = QUAL_CACHED_PROPERTY if isinstance(descriptor, functools.cached_property) else QUAL_PROPERTY
                     prefix = f"<small class='text-muted'><em>{prefix}{qual}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
                     show_object = not simple_names
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
-                elif all(not c.isalpha() or c.isupper() for c in dobj.name):
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_CONST}</em></small> "
                 else:
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_VAR}</em></small> "
 
@@ -347,9 +350,9 @@
                 elif issubclass(dobj.obj, type):
                     qual += QUAL_METACLASS
                 else:
-                    if enum.Flag in dobj.obj.mro():
+                    if enums.Flag in dobj.obj.mro() or enum.Flag in dobj.obj.mro():
                         qual += QUAL_ENUM_FLAG
-                    elif enum.Enum in dobj.obj.mro():
+                    elif enums.Enum in dobj.obj.mro() or enum.Enum in dobj.obj.mro():
                         qual += QUAL_ENUM
                     elif hasattr(dobj.obj, "__attrs_attrs__"):
                         qual += QUAL_DATACLASS
@@ -520,7 +523,18 @@
                 print(v.name, type(ex).__name__, ex)
 
         if value:
-            return_type += f" = {value}"
+            for enum_mapping in ("_value2member_map_", "_value_to_member_map_"):
+                if mapping := getattr(v.cls.obj, enum_mapping, None):
+                    try:
+                        real_value = getattr(v.cls.obj, v.name)
+                        if real_value in mapping.values():
+                            #print("Documenting", v, "as enum member")
+                            return_type += f" = {real_value.value!r}"
+                            break
+                    except AttributeError:
+                        pass
+            else:
+                return_type += f" = {value}"
 
         if hasattr(parent, "mro"):
             name = f"{parent.__module__}.{parent.__qualname__}.{v.name}"

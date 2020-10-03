@@ -28,12 +28,11 @@ __all__: typing.List[str] = ["Permissions"]
 import enum
 import typing
 
-from hikari.internal import flag
+from hikari.internal import enums
 
 
-@enum.unique
 @typing.final
-class Permissions(flag.Flag):
+class Permissions(enums.Flag):
     """Represents the permissions available in a given channel or guild.
 
     This enum is an `enum.IntFlag`. This means that you can **combine multiple

@@ -45,7 +45,6 @@ import attr
 from hikari import snowflakes
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -160,9 +159,8 @@ class ActivitySecret:
     """The secret used for matching a party, if applicable."""
 
 
-@enum.unique
 @typing.final
-class ActivityFlag(flag.Flag):
+class ActivityFlag(enums.Flag):
     """Flags that describe what an activity includes.
 
     This can be more than one using bitwise-combinations.

@@ -30,20 +30,55 @@
 # we are using are just aliases from the enum types in the standard library.
 
 import enum as __enum
+from typing import AbstractSet as __AbstractSet
+from typing import Iterator as __Iterator
+from typing import Sequence as __Sequence
 from typing import TypeVar as __TypeVar
+from typing import Union as __Union
 
 Enum = __enum.Enum
 
 __FlagT = __TypeVar("__FlagT", bound=__enum.IntFlag)
 
-class IntFlag(__enum.IntFlag):
-    def split(self: __FlagT) -> typing.Sequence[__FlagT]:
+
+class Flag(__AbstractSet[int], __enum.Flag):
+    def all(self: __FlagT, *flags: __FlagT) -> bool:
         ...
-    def has_any(self: __FlagT, *flags: __FlagT) -> bool:
+    def any(self: __FlagT, *flags: __FlagT) -> bool:
         ...
-    def has_all(self: __FlagT, *flags: __FlagT) -> bool:
+    def difference(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT:
         ...
-    def has_none(self, *flags: __FlagT) -> bool:
+    def intersection(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT:
+        ...
+    def invert(self: __FlagT) -> __FlagT:
+        ...
+    def is_subset(self: __FlagT, other: __Union[int, __FlagT]) -> bool:
+        ...
+    def is_superset(self: __FlagT, other: __Union[int, __FlagT]) -> bool:
+        ...
+    def none(self, *flags: __FlagT) -> bool:
+        ...
+    def split(self: __FlagT) -> __Sequence[__FlagT]:
+        ...
+    def symmetric_difference(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT:
+        ...
+    def union(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT:
+        ...
+    def __bool__(self) -> bool:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __iter__(self: __FlagT) -> __Iterator[__FlagT]:
+        ...
+    def __len__(self) -> int:
         ...
 
-__all__ = ["Enum", "IntFlag"]
+    __contains__ = is_subset
+    __rand__ = __and__ = intersection
+    __ror__ = __or__ = union
+    __rsub__ = __sub__ = difference
+    __rxor__ = __xor__ = symmetric_difference
+    __invert__ = invert
+
+
+__all__ = ["Enum", "Flag"]

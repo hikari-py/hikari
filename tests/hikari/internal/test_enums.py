@@ -189,3 +189,203 @@ class TestEnum:
         returned = Enum["foo"]
         assert returned == Enum.foo
         assert type(returned) == Enum
+
+
+class TestIntFlag:
+    def test_is_instance_of_declaring_type(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+            QUXX = QUX | BORK
+
+        assert isinstance(TestFlagType.BORK, TestFlagType)
+        assert isinstance(TestFlagType.BORK, int)
+
+        assert isinstance(TestFlagType.QUXX, TestFlagType)
+        assert isinstance(TestFlagType.QUXX, int)
+
+    def test_and(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+            QUXX = QUX | BORK
+
+        assert TestFlagType.QUXX & TestFlagType.QUX == TestFlagType.QUX
+        assert TestFlagType.QUXX & TestFlagType.QUX == 0x8
+        assert isinstance(TestFlagType.QUXX & TestFlagType.QUX, TestFlagType)
+        assert isinstance(TestFlagType.QUXX & TestFlagType.QUX, int)
+
+    def test_bool(self):
+        class TestFlagType(enums.Flag):
+            BLEH = 0x0
+            FOO = 0x1
+            BAR = 0x2
+
+        assert not TestFlagType.BLEH
+        assert TestFlagType.FOO
+        assert TestFlagType.BAR
+
+    def test_int(self):
+        class TestFlagType(enums.Flag):
+            BLEH = 0x0
+            FOO = 0x1
+            BAR = 0x2
+
+        assert int(TestFlagType.BLEH) == 0x0
+        assert int(TestFlagType.FOO) == 0x1
+        assert int(TestFlagType.BAR) == 0x2
+
+        assert type(int(TestFlagType.BAR)) is int
+
+    def test_invert(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x4
+
+        assert ~TestFlagType.BAR == TestFlagType.FOO | TestFlagType.BAZ
+
+    def test_split(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        # Baz is a combined field technically, so we don't expect it to be output here
+        assert val.split() == [TestFlagType.BAR, TestFlagType.BORK, TestFlagType.FOO]
+
+    def test_has_any_positive_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert val.any(TestFlagType.FOO)
+        assert val.any(TestFlagType.BAR)
+        assert val.any(TestFlagType.BAZ)
+        assert val.any(TestFlagType.BORK)
+        # All present
+        assert val.any(TestFlagType.FOO, TestFlagType.BAR, TestFlagType.BAZ, TestFlagType.BORK)
+        # One present, one not
+        assert val.any(
+            TestFlagType.FOO,
+            TestFlagType.QUX,
+        )
+
+    def test_has_any_negative_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+            QUXX = 0x10
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert not val.any(TestFlagType.QUX)
+
+    def test_has_all_positive_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert val.all(TestFlagType.FOO)
+
+        assert val.all(TestFlagType.FOO, TestFlagType.BAR, TestFlagType.BAZ, TestFlagType.BORK)
+
+    def test_has_all_negative_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+            QUXX = 0x10
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert not val.all(TestFlagType.QUX)
+        assert not val.all(TestFlagType.BAZ, TestFlagType.QUX, TestFlagType.QUXX)
+
+    def test_has_none_positive_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+            QUXX = 0x10
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert val.none(TestFlagType.QUX)
+
+    def test_has_none_negative_case(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert not val.none(TestFlagType.FOO)
+        assert not val.none(TestFlagType.BAR)
+        assert not val.none(TestFlagType.BAZ)
+        assert not val.none(TestFlagType.BORK)
+        # All present
+        assert not val.none(TestFlagType.FOO, TestFlagType.BAR, TestFlagType.BAZ, TestFlagType.BORK)
+        # One present, one not
+        assert not val.none(
+            TestFlagType.FOO,
+            TestFlagType.QUX,
+        )
+
+    def test_str_operator(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+
+        assert str(val) == "TestFlagType.FOO|BAR|BORK"
+
+    def test_iter(self):
+        class TestFlagType(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
+        val = TestFlagType.BAZ | TestFlagType.BORK
+        val_iter = iter(val)
+        assert next(val_iter) == TestFlagType.BAR
+        assert next(val_iter) == TestFlagType.BORK
+        assert next(val_iter) == TestFlagType.FOO
+        with pytest.raises(StopIteration):
+            next(val_iter)
