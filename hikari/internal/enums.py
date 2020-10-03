@@ -392,6 +392,9 @@ class _FlagMeta(type):
             "_name_to_member_map_": (name_to_member := {}),
             "_value_to_member_map_": (value_to_member := {}),
             "_powers_of_2_to_member_map_": (powers_of_2_map := {}),
+            # We cant weakref, as we inherit from int. Turns out that is significantly
+            # slower anyway, so it isn't important for now. We just manually limit
+            # the cache size.
             "_temp_members_": {},
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
