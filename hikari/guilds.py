@@ -919,6 +919,17 @@ class Guild(PartialGuild, abc.ABC):
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
+    system_channel_flags: GuildSystemChannelFlag = attr.ib(eq=False, hash=False, repr=False)
+    """Return flags for the guild system channel.
+
+    These are used to describe which notifications are suppressed.
+
+    Returns
+    -------
+    GuildSystemChannelFlag
+        The system channel flags for this channel.
+    """
+
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the system channel or `builtins.None` if it is not enabled.
 
@@ -941,10 +952,6 @@ class Guild(PartialGuild, abc.ABC):
     If this information is unavailable or this is not enabled for the guild then
     this will be `builtins.None`.
     """
-
-    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
-    # to execute.
-    _system_channel_flags: int = attr.ib(eq=False, hash=False, repr=False)
 
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
@@ -982,19 +989,6 @@ class Guild(PartialGuild, abc.ABC):
     def splash_url(self) -> typing.Optional[files.URL]:
         """Splash for the guild, if set."""
         return self.format_splash()
-
-    @property
-    def system_channel_flags(self) -> GuildSystemChannelFlag:
-        """Return flags for the guild system channel.
-
-        These are used to describe which notifications are suppressed.
-
-        Returns
-        -------
-        GuildSystemChannelFlag
-            The system channel flags for this channel.
-        """
-        return GuildSystemChannelFlag(self._system_channel_flags)
 
     def format_banner(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image, if set.

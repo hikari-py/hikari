@@ -493,7 +493,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     assets: typing.Optional[presences.ActivityAssets] = attr.ib()
     secrets: typing.Optional[presences.ActivitySecret] = attr.ib()
     is_instance: typing.Optional[bool] = attr.ib()
-    flags: typing.Optional[int] = attr.ib()
+    flags: typing.Optional[presences.ActivityFlag] = attr.ib()
 
     @classmethod
     def build_from_entity(cls: typing.Type[RichActivityData], entity: presences.RichActivity) -> RichActivityData:

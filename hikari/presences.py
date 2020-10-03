@@ -240,20 +240,8 @@ class RichActivity(Activity):
     is_instance: typing.Optional[bool] = attr.ib(repr=False)
     """Whether this activity is an instanced game session."""
 
-    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
-    # to execute.
-    _flags: typing.Optional[int] = attr.ib(repr=False)
-
-    @property
-    def flags(self) -> typing.Optional[ActivityFlag]:
-        """Return flags describing the activity type.
-
-        Returns
-        -------
-        typing.Optional[ActivityFlag]
-            Flags, if present, otherwise `builtins.None`.
-        """
-        return ActivityFlag(self._flags) if self._flags is not None else None
+    flags: typing.Optional[ActivityFlag] = attr.ib(repr=False)
+    """Flags that describe what the activity includes, if present."""
 
 
 @typing.final

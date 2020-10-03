@@ -305,7 +305,7 @@ class Enum(metaclass=_EnumMeta):
         return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
 
     def __str__(self) -> str:
-        return f"{type(self).__name__}.{self._name_}"
+        return self._name_ or "NO_NAME"
 
 
 _Flag = NotImplemented
@@ -324,6 +324,11 @@ class _FlagMeta(type):
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
+            # We only need this ability here usually, so overloading operators
+            # is an overkill and would add more overhead.
+
+            value = int(value)
+
             if value < 0:
                 # Convert to a positive value instead.
                 return cls.__everything__ - ~value
@@ -722,7 +727,7 @@ class Flag(metaclass=_FlagMeta):
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"
+        return self.name or "NO_NAME"
 
     __contains__ = is_subset
     __rand__ = __and__ = intersection

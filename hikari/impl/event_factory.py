@@ -319,9 +319,9 @@ class EventFactoryImpl(event_factory.EventFactory):
         if len(user_payload) > 1:
             # PartialUser
             discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
-            flags: undefined.UndefinedOr[int] = undefined.UNDEFINED
+            flags: undefined.UndefinedOr[user_models.UserFlag] = undefined.UNDEFINED
             if "public_flags" in user_payload:
-                flags = int(user_payload["public_flags"])
+                flags = user_models.UserFlag(user_payload["public_flags"])
 
             user = user_models.PartialUserImpl(
                 app=self._app,
