@@ -49,7 +49,6 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import enum
 import typing
 
 import attr

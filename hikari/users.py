@@ -26,7 +26,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["PartialUser", "User", "OwnUser", "UserFlag", "PremiumType"]
 
 import abc
-import enum
 import typing
 
 import attr

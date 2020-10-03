@@ -370,7 +370,7 @@ class _FlagMeta(type):
             if len(bases) == 1 and bases[0] == _Flag:
                 return _EnumNamespace(int)
         except ValueError:
-            raise TypeError("Cannot define another Flag base type")
+            raise TypeError("Cannot define another Flag base type") from None
 
     @staticmethod
     def __new__(
@@ -655,7 +655,7 @@ class Flag(metaclass=_FlagMeta):
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
     def is_disjoint(self: _T, other: typing.Union[_T, int]) -> bool:
-        """Returns whether two sets have a intersection or not.
+        """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
         `builtins.False`. If no common flag values exist between them, then
@@ -664,14 +664,14 @@ class Flag(metaclass=_FlagMeta):
         return not (self & other)
 
     def is_subset(self: _T, other: typing.Union[_T, int]) -> bool:
-        """Returns whether another set contains this set or not.
+        """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
         return (self & other) == other
 
     def is_superset(self: _T, other: typing.Union[_T, int]) -> bool:
-        """Returns whether this set contains another set or not."""
+        """Return whether this set contains another set or not."""
         return (self & other) == self
 
     def none(self: _T, *flags: _T) -> bool:
@@ -702,7 +702,7 @@ class Flag(metaclass=_FlagMeta):
         )
 
     def symmetric_difference(self: _T, other: typing.Union[_T, int]) -> _T:
-        """Returns a set with the symmetric differences of two flag sets.
+        """Return a set with the symmetric differences of two flag sets.
 
         Equivalent to using the "XOR" `^` operator.
 

@@ -35,7 +35,6 @@ __all__: typing.List[str] = [
     "Message",
 ]
 
-import enum
 import typing
 
 import attr
