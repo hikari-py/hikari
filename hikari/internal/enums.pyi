@@ -30,7 +30,6 @@
 # we are using are just aliases from the enum types in the standard library.
 
 import enum as __enum
-from typing import AbstractSet as __AbstractSet
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
 from typing import TypeVar as __TypeVar
@@ -41,7 +40,7 @@ Enum = __enum.Enum
 __FlagT = __TypeVar("__FlagT", bound=__enum.IntFlag)
 
 
-class Flag(__AbstractSet[int], __enum.Flag):
+class Flag(__enum.IntFlag):
     def all(self: __FlagT, *flags: __FlagT) -> bool:
         ...
     def any(self: __FlagT, *flags: __FlagT) -> bool:
@@ -51,6 +50,8 @@ class Flag(__AbstractSet[int], __enum.Flag):
     def intersection(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT:
         ...
     def invert(self: __FlagT) -> __FlagT:
+        ...
+    def is_disjoint(self: __FlagT, other: __Union[int, __FlagT]) -> bool:
         ...
     def is_subset(self: __FlagT, other: __Union[int, __FlagT]) -> bool:
         ...
@@ -73,7 +74,9 @@ class Flag(__AbstractSet[int], __enum.Flag):
     def __len__(self) -> int:
         ...
 
-    __contains__ = is_subset
+    isdisjoint = is_disjoint
+    issuperset = is_superset
+    __contains__ = issubset = is_subset
     __rand__ = __and__ = intersection
     __ror__ = __or__ = union
     __rsub__ = __sub__ = difference

@@ -272,7 +272,7 @@ class PermissionOverwrite(snowflakes.Unique):
     @property
     def unset(self) -> permissions.Permissions:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
-        return permissions.Permissions(~(self.allow | self.deny))
+        return ~(self.allow | self.deny)
 
 
 @attr_extensions.with_copy

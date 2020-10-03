@@ -78,4 +78,4 @@ class TestMissingIntentError:
         return errors.MissingIntentError(intents.Intents.GUILD_BANS | intents.Intents.GUILD_EMOJIS)
 
     def test_str(self, error):
-        assert str(error) == "You are missing the following intent(s): GUILD_BANS | GUILD_EMOJIS"
+        assert str(error) == "You are missing the following intent(s): GUILD_BANS, GUILD_EMOJIS"

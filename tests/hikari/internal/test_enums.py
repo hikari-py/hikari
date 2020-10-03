@@ -372,7 +372,7 @@ class TestIntFlag:
 
         val = TestFlagType.BAZ | TestFlagType.BORK
 
-        assert str(val) == "TestFlagType.FOO|BAR|BORK"
+        assert str(val) == "FOO|BAR|BORK"
 
     def test_iter(self):
         class TestFlagType(enums.Flag):

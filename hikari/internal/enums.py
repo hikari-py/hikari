@@ -327,8 +327,6 @@ class _FlagMeta(type):
             # We only need this ability here usually, so overloading operators
             # is an overkill and would add more overhead.
 
-            value = int(value)
-
             if value < 0:
                 # Convert to a positive value instead.
                 return cls.__everything__ - ~value
@@ -344,7 +342,7 @@ class _FlagMeta(type):
                 # and caching it. We cant use weakref because int is not weak referenceable, annoyingly.
                 # TODO: make the cache update thread-safe by using setdefault instead of assignment.
                 pseudomember = cls.__new__(cls)
-                temp_members[value] = value
+                temp_members[value] = pseudomember
                 pseudomember._name_ = None
                 pseudomember._value_ = value
                 if len(temp_members) > _MAX_CACHED_MEMBERS:
@@ -356,7 +354,7 @@ class _FlagMeta(type):
         return cls._name_to_member_map_[name]
 
     def __iter__(cls) -> typing.Iterator[str]:
-        yield from cls._name_to_member_map_
+        yield from cls._name_to_member_map_.values()
 
     @classmethod
     def __prepare__(
@@ -409,7 +407,7 @@ class _FlagMeta(type):
             },
         }
 
-        cls = super().__new__(mcs, name, bases, new_namespace)
+        cls = super().__new__(mcs, name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
             # Patching the member init call is around 100ns faster per call than
@@ -417,7 +415,7 @@ class _FlagMeta(type):
             # in cls.__new__. Reason for this is that python will also always
             # invoke cls.__init__ if we do this, so we end up with two function
             # calls.
-            member = cls.__new__(cls)
+            member = cls.__new__(cls, value)
             member._name_ = name
             member._value_ = value
             name_to_member[name] = member
@@ -429,7 +427,7 @@ class _FlagMeta(type):
                 powers_of_2_map[value] = member
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
-        all_bits_member = cls.__new__(cls)
+        all_bits_member = cls.__new__(cls, all_bits)
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
         setattr(cls, "__everything__", all_bits_member)
@@ -649,7 +647,21 @@ class Flag(metaclass=_FlagMeta):
 
     def invert(self: _T) -> _T:
         """Return a set of all flags not in the current set."""
-        return self.__class__(~self._value_)
+        # value = 0
+        # for item in self.__class__:
+        #     if item._value_ ^ self._value_:
+        #         value |= item._value_
+        # return self.__class__(value)
+        return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
+
+    def is_disjoint(self: _T, other: typing.Union[_T, int]) -> bool:
+        """Returns whether two sets have a intersection or not.
+
+        If the two sets have an intersection, then this returns
+        `builtins.False`. If no common flag values exist between them, then
+        this returns `builtins.True`.
+        """
+        return not (self & other)
 
     def is_subset(self: _T, other: typing.Union[_T, int]) -> bool:
         """Returns whether another set contains this set or not.
@@ -703,8 +715,9 @@ class Flag(metaclass=_FlagMeta):
 
         Equivalent to using the "OR" `~` operator.
         """
-        return self.__class__(self._value_ & int(other))
+        return self.__class__(self._value_ | int(other))
 
+    isdisjoint = is_disjoint
     issubset = is_subset
     issuperset = is_superset
     # Exists since Python's `set` type is inconsistent with naming, so this
