@@ -404,10 +404,10 @@
             extra = f" = {dobj.obj}"
 
         classes = []
-        if dotted:
-            classes.append("dotted")
-        if css_classes:
-            classes.append(css_classes)
+        # if dotted:
+        #    classes.append("dotted")
+        # if css_classes:
+        #    classes.append(css_classes)
         class_str = " ".join(classes)
 
         if class_str.strip():
@@ -563,6 +563,7 @@
         params = f.params(annotate=show_type_annotations, link=link)
         return_type = get_annotation(f.return_annotation, '->')
         qual = QUAL_ASYNC_DEF if f._is_async else QUAL_DEF
+        anchored_name = f'<a title="{f.name}" href="{get_url_to_object_maybe_module(f)}" id="{f.refname}">{f.name}</a>'
 
         example_str = qual + f.name + "(" + ", ".join(params) + ")" + return_type
 
@@ -571,15 +572,15 @@
 
         if len(params) > 4 or len(params) > 0 and len(example_str) > 70:
             representation = "\n".join((
-                qual + " " + f.name + "(",
+                qual + " " + anchored_name + "(",
                 *(f"    {p}," for p in params),
                 ")" + return_type + ": ..."
             ))
 
         elif params:
-            representation = f"{qual} {f.name}({', '.join(params)}){return_type}: ..."
+            representation = f"{qual} {anchored_name}({', '.join(params)}){return_type}: ..."
         else:
-            representation = f"{qual} {f.name}(){return_type}: ..."
+            representation = f"{qual} {anchored_name}(){return_type}: ..."
 
         if f.module.name != f.obj.__module__:
             try:
