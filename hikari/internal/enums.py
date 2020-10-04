@@ -313,10 +313,22 @@ _Flag = NotImplemented
 
 def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Generator[str, typing.Any, None]:
     bit = 1
+    has_yielded = False
+    remaining = value
     while bit <= value:
-        if (member := members.get(bit)) & value == member:
-            yield member.name
+        if member := members.get(bit):
+            # Use ._value_ to prevent overhead of making new members each time.
+            # Also lets my testing logic for the cache size be more accurate.
+            if member._value_ & remaining == member._value_:
+                remaining ^= member._value_
+                yield member.name
+                has_yielded = True
         bit <<= 1
+
+    if not has_yielded:
+        yield f"UNKNOWN 0x{value:x}"
+    elif remaining:
+        yield hex(remaining)
 
 
 class _FlagMeta(type):
@@ -366,11 +378,12 @@ class _FlagMeta(type):
             return _EnumNamespace(object)
 
         try:
-            # Fails if Enum is not defined. We check this in `__new__` properly.
-            if len(bases) == 1 and bases[0] == _Flag:
+            # Fails if Enum is not defined.
+            if len(bases) == 1 and bases[0] == Flag:
                 return _EnumNamespace(int)
         except ValueError:
-            raise TypeError("Cannot define another Flag base type") from None
+            pass
+        raise TypeError("Cannot define another Flag base type") from None
 
     @staticmethod
     def __new__(
@@ -395,6 +408,9 @@ class _FlagMeta(type):
             # We cant weakref, as we inherit from int. Turns out that is significantly
             # slower anyway, so it isn't important for now. We just manually limit
             # the cache size.
+            # This also randomly ends up with a 0 value in it at the start
+            # during the next for loop. I cannot work out for the life of me
+            # why this happens.
             "_temp_members_": {},
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
@@ -602,7 +618,7 @@ class Flag(metaclass=_FlagMeta):
     def name(self) -> str:
         """Return the name of the flag combination as a `builtins.str`."""
         if self._name_ is None:
-            self._name_ = "|".join(_name_resolver(self._powers_of_2_to_member_map_, self._value_))
+            self._name_ = "|".join(_name_resolver(self._value_to_member_map_, self._value_))
         return self._name_
 
     @property
@@ -742,12 +758,20 @@ class Flag(metaclass=_FlagMeta):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
+    def __rsub__(self: _T, other: typing.Union[int, _T]) -> _T:
+        # This logic has to be reversed to be correct, since order matters for
+        # a subtraction operator. This also ensures `int - _T -> _T` is a valid
+        # case for us.
+        if not isinstance(other, self.__class__):
+            other = self.__class__(other)
+        return other - self
+
     def __str__(self) -> str:
         return self.name or "NO_NAME"
 
     __contains__ = is_subset
     __rand__ = __and__ = intersection
     __ror__ = __or__ = union
-    __rsub__ = __sub__ = difference
+    __sub__ = difference
     __rxor__ = __xor__ = symmetric_difference
     __invert__ = invert
