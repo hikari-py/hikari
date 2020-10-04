@@ -32,6 +32,7 @@
 import enum as __enum
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
+from typing import Type as __Type
 from typing import TypeVar as __TypeVar
 from typing import Union as __Union
 
@@ -72,6 +73,9 @@ class Flag(__enum.IntFlag):
     def __iter__(self: __FlagT) -> __Iterator[__FlagT]:
         ...
     def __len__(self) -> int:
+        ...
+    @staticmethod
+    def __new__(cls: __Type[__FlagT], value: typing.Any = 0) -> __FlagT:
         ...
 
     isdisjoint = is_disjoint

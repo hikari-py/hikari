@@ -60,7 +60,7 @@ from hikari import undefined
 from hikari import voices
 from hikari.api import cache
 from hikari.internal import attr_extensions
-from hikari.internal import collection_types
+from hikari.internal import collections
 
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
@@ -224,22 +224,22 @@ class GuildRecord:
     `typing.MutableSequence[str]` of invite codes.
     """
 
-    members: typing.Optional[collection_types.ExtendedMutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(
+    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(
         default=None
     )
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be `builtins.None` if no members are cached for this guild else
-    `hikari.internal.collection_types.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberData]`.
+    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberData]`.
     """
 
-    presences: typing.Optional[
-        collection_types.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]
-    ] = attr.ib(default=None)
+    presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = attr.ib(
+        default=None
+    )
     """A mapping of user IDs to objects of the presences cached for this guild.
 
     This will be `builtins.None` if no presences are cached for this guild else
-    `hikari.internal.collection_types.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberPresenceData]`.
+    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberPresenceData]`.
     """
 
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.ib(default=None)
@@ -249,13 +249,13 @@ class GuildRecord:
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of role IDs.
     """
 
-    voice_states: typing.Optional[
-        collection_types.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]
-    ] = attr.ib(default=None)
+    voice_states: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]] = attr.ib(
+        default=None
+    )
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
     This will be `builtins.None` if no voice states are cached for this guild else
-    `hikari.internal.collection_types.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
+    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
     """
 
     def __bool__(self) -> bool:
@@ -660,8 +660,7 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite)
-        for sf, overwrite in collection_types.copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in collections.copy_mapping(channel.permission_overwrites).items()
     }
     return channel
 

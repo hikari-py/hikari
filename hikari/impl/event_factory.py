@@ -45,7 +45,7 @@ from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
-from hikari.internal import collection_types
+from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
 
@@ -363,7 +363,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
-        message_ids = collection_types.SnowflakeSet(int(payload["id"]))
+        message_ids = collections.SnowflakeSet(int(payload["id"]))
 
         if "guild_id" in payload:
             return message_events.GuildMessageDeleteEvent(
@@ -387,9 +387,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
 
-        message_ids = collection_types.SnowflakeSet(
-            *(snowflakes.Snowflake(message_id) for message_id in payload["ids"])
-        )
+        message_ids = collections.SnowflakeSet(*(snowflakes.Snowflake(message_id) for message_id in payload["ids"]))
         channel_id = snowflakes.Snowflake(payload["channel_id"])
 
         if "guild_id" in payload:

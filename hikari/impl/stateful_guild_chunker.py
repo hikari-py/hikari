@@ -40,7 +40,7 @@ from hikari import undefined
 from hikari.api import chunker
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
-from hikari.internal import collection_types
+from hikari.internal import collections
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
@@ -216,7 +216,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
     def __init__(self, app: traits.BotAware, limit: int = 200) -> None:
         self._app = app
         self._limit = limit
-        self._tracked: typing.MutableMapping[int, collection_types.LimitedCapacityCacheMap[str, _TrackedRequests]] = {}
+        self._tracked: typing.MutableMapping[int, collections.LimitedCapacityCacheMap[str, _TrackedRequests]] = {}
 
     def _default_include_presences(
         self, guild_id: snowflakes.Snowflake, include_presences: undefined.UndefinedOr[bool]
@@ -302,7 +302,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         nonce = f"{shard_id}.{_random_nonce()}"
         if shard_id not in self._tracked:
-            self._tracked[shard_id] = collection_types.LimitedCapacityCacheMap(limit=self._limit)
+            self._tracked[shard_id] = collections.LimitedCapacityCacheMap(limit=self._limit)
 
         tracker = _TrackedRequests(guild_id=guild_id, nonce=nonce)
         self._tracked[shard_id][nonce] = tracker

@@ -42,7 +42,7 @@ from hikari import users
 from hikari import voices
 from hikari.api import cache
 from hikari.internal import cache as cache_utility
-from hikari.internal import collection_types
+from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import traits
@@ -101,32 +101,30 @@ class StatefulCacheImpl(cache.MutableCache):
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
     _app: traits.RESTAware
     _me: typing.Optional[users.OwnUser]
-    _emoji_entries: collection_types.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
-    _guild_channel_entries: collection_types.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
-    _guild_entries: collection_types.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
-    _invite_entries: collection_types.ExtendedMutableMapping[str, cache_utility.InviteData]
-    _role_entries: collection_types.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
-    _unknown_custom_emoji_entries: collection_types.ExtendedMutableMapping[
+    _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
+    _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
+    _guild_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
+    _invite_entries: collections.ExtendedMutableMapping[str, cache_utility.InviteData]
+    _role_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
+    _unknown_custom_emoji_entries: collections.ExtendedMutableMapping[
         snowflakes.Snowflake,
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
-    _user_entries: collection_types.ExtendedMutableMapping[
-        snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]
-    ]
+    _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
     _intents: intents_.Intents
 
     def __init__(self, app: traits.RESTAware, intents: intents_.Intents) -> None:
         self._app = app
         self._me = None
-        self._emoji_entries = collection_types.FreezableDict()
-        self._guild_channel_entries = collection_types.FreezableDict()
-        self._guild_entries = collection_types.FreezableDict()
-        self._invite_entries = collection_types.FreezableDict()
-        self._role_entries = collection_types.FreezableDict()
+        self._emoji_entries = collections.FreezableDict()
+        self._guild_channel_entries = collections.FreezableDict()
+        self._guild_entries = collections.FreezableDict()
+        self._invite_entries = collections.FreezableDict()
+        self._role_entries = collections.FreezableDict()
         # This is a purely internal cache used for handling the caching and de-duplicating of the unknown custom emojis
         # found attached to cached presence activities.
-        self._unknown_custom_emoji_entries = collection_types.FreezableDict()
-        self._user_entries = collection_types.FreezableDict()
+        self._unknown_custom_emoji_entries = collections.FreezableDict()
+        self._user_entries = collections.FreezableDict()
         self._intents = intents
 
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
@@ -292,7 +290,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_container = self._get_or_create_guild_record(emoji.guild_id)
 
         if guild_container.emojis is None:  # TODO: add test cases when it is not None?
-            guild_container.emojis = collection_types.SnowflakeSet()
+            guild_container.emojis = collections.SnowflakeSet()
 
         guild_container.emojis.add(emoji.id)
 
@@ -410,7 +408,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
     def clear_guild_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
         cached_channels = self._guild_channel_entries
-        self._guild_channel_entries = collection_types.FreezableDict()
+        self._guild_channel_entries = collections.FreezableDict()
 
         for guild_id, guild_record in self._guild_entries.freeze().items():
             if guild_record.channels is not None:
@@ -487,7 +485,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record = self._get_or_create_guild_record(channel.guild_id)
 
         if guild_record.channels is None:
-            guild_record.channels = collection_types.SnowflakeSet()
+            guild_record.channels = collections.SnowflakeSet()
 
         guild_record.channels.add(channel.id)
 
@@ -917,7 +915,7 @@ class StatefulCacheImpl(cache.MutableCache):
         member_data = cache_utility.MemberData.build_from_entity(member)
 
         if guild_record.members is None:  # TODO: test when this is not None
-            guild_record.members = collection_types.FreezableDict()
+            guild_record.members = collections.FreezableDict()
 
         if member.user.id not in guild_record.members:
             self._increment_user_ref_count(member.user.id)
@@ -1199,7 +1197,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
         guild_record = self._get_or_create_guild_record(presence.guild_id)
         if guild_record.presences is None:
-            guild_record.presences = collection_types.FreezableDict()
+            guild_record.presences = collections.FreezableDict()
 
         guild_record.presences[presence.user_id] = presence_data
 
@@ -1215,7 +1213,7 @@ class StatefulCacheImpl(cache.MutableCache):
             return cache_utility.EmptyCacheView()
 
         roles = self._role_entries
-        self._role_entries = collection_types.FreezableDict()
+        self._role_entries = collections.FreezableDict()
 
         for guild_id, guild_record in self._guild_entries.freeze().items():
             if guild_record.roles is not None:  # TODO: test coverage for this
@@ -1278,7 +1276,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record = self._get_or_create_guild_record(role.guild_id)
 
         if guild_record.roles is None:  # TODO: test when this is not None
-            guild_record.roles = collection_types.SnowflakeSet()
+            guild_record.roles = collections.SnowflakeSet()
 
         guild_record.roles.add(role.id)
 
@@ -1586,7 +1584,7 @@ class StatefulCacheImpl(cache.MutableCache):
         guild_record = self._get_or_create_guild_record(voice_state.guild_id)
 
         if guild_record.voice_states is None:  # TODO: test when this is not None
-            guild_record.voice_states = collection_types.FreezableDict()
+            guild_record.voice_states = collections.FreezableDict()
 
         # TODO: account for this method not setting the member in some cases later on
         self.set_member(voice_state.member)

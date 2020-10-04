@@ -31,6 +31,7 @@ import types
 import typing
 
 _T = typing.TypeVar("_T")
+_MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
 
 
 class _EnumNamespace(typing.Dict[str, typing.Any]):
@@ -108,7 +109,6 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
 # a base metaclass, we have to give these values for _EnumMeta to not
 # flake out when initializing them.
 _Enum = NotImplemented
-_MAX_CACHED_MEMBERS = int(2 ** 12)
 
 
 class _EnumMeta(type):
@@ -332,7 +332,7 @@ def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Gener
 
 
 class _FlagMeta(type):
-    def __call__(cls, value: typing.Any) -> typing.Any:
+    def __call__(cls, value: typing.Any = 0) -> typing.Any:
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
@@ -666,11 +666,6 @@ class Flag(metaclass=_FlagMeta):
 
     def invert(self: _T) -> _T:
         """Return a set of all flags not in the current set."""
-        # value = 0
-        # for item in self.__class__:
-        #     if item._value_ ^ self._value_:
-        #         value |= item._value_
-        # return self.__class__(value)
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
     def is_disjoint(self: _T, other: typing.Union[_T, int]) -> bool:
@@ -767,7 +762,7 @@ class Flag(metaclass=_FlagMeta):
         return other - self
 
     def __str__(self) -> str:
-        return self.name or "NO_NAME"
+        return self.name
 
     __contains__ = is_subset
     __rand__ = __and__ = intersection
