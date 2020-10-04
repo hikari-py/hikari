@@ -315,7 +315,7 @@ class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
-    """Event fired when a reaction is added to a guild message."""
+    """Event fired when a reaction is added to a private message."""
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
