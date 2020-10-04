@@ -30,6 +30,7 @@
 # we are using are just aliases from the enum types in the standard library.
 
 import enum as __enum
+from typing import Any as __Any
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
 from typing import Type as __Type
@@ -75,11 +76,12 @@ class Flag(__enum.IntFlag):
     def __len__(self) -> int:
         ...
     @staticmethod
-    def __new__(cls: __Type[__FlagT], value: typing.Any = 0) -> __FlagT:
+    def __new__(cls: __Type[__FlagT], value: __Any = 0) -> __FlagT:
         ...
 
     isdisjoint = is_disjoint
     issuperset = is_superset
+    symmetricdifference = symmetric_difference
     __contains__ = issubset = is_subset
     __rand__ = __and__ = intersection
     __ror__ = __or__ = union

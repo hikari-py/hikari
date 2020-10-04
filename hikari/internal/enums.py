@@ -738,6 +738,10 @@ class Flag(metaclass=_FlagMeta):
     # will prevent tripping people up unnecessarily because we do not
     # name inconsistently.
 
+    # This one isn't in Python's set, but the inconsistency is triggering my OCD
+    # so this is being defined anyway.
+    symmetricdifference = symmetric_difference
+
     def __bool__(self) -> bool:
         return bool(self._value_)
 
