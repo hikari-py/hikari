@@ -722,21 +722,21 @@
                 <div class="sep"></div>
             % endif
 
-            % if methods:
-                <h5>Methods</h5>
-                <dl>
-                    % for m in methods:
-                        ${show_func(m)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
-            % endif
-
             % if variables:
                 <h5>Variables and properties</h5>
                 <dl>
                     % for i in variables:
                         ${show_var(i)}
+                    % endfor
+                </dl>
+                <div class="sep"></div>
+            % endif
+
+            % if methods:
+                <h5>Methods</h5>
+                <dl>
+                    % for m in methods:
+                        ${show_func(m)}
                     % endfor
                 </dl>
                 <div class="sep"></div>
