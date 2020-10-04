@@ -404,10 +404,6 @@
             extra = f" = {dobj.obj}"
 
         classes = []
-        # if dotted:
-        #    classes.append("dotted")
-        # if css_classes:
-        #    classes.append(css_classes)
         class_str = " ".join(classes)
 
         if class_str.strip():
@@ -528,7 +524,6 @@
                     try:
                         real_value = getattr(v.cls.obj, v.name)
                         if real_value in mapping.values():
-                            #print("Documenting", v, "as enum member")
                             return_type += f" = {real_value.value!r}"
                             break
                     except AttributeError:
