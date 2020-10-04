@@ -994,7 +994,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         if sys.version_info >= (3, 9):
             _LOGGER.debug("shutting down default executor")
-            loop.run_until_complete(loop.shutdown_default_executor())
             with contextlib.suppress(NotImplementedError):
                 # This seems to raise a NotImplementedError when running with uvloop.
                 loop.run_until_complete(loop.shutdown_default_executor())
