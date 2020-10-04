@@ -210,22 +210,19 @@ class TestTimedCacheMap:
         mock_map["ok"] = "foo"
         assert list(mock_map.items())[2] == ("ok", "foo")
 
-    # TODO: fix this so that it is not flaky.
-    # https://travis-ci.org/github/nekokatt/hikari/jobs/724494888#L797
-    @pytest.mark.skip("flaky test, might fail on Windows runners.")
     @pytest.mark.asyncio
     async def test___setitem___garbage_collection(self):
         mock_map = collections.TimedCacheMap(
             expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
         )
-        mock_map.update({"OK": "no", "blam": "booga"})
+        mock_map["OK"] = "no"
         await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
-        assert mock_map == {"OK": "no", "blam": "booga"}
-        mock_map.update({"ayanami": "rei", "owo": "awoo"})
-        assert mock_map == {"OK": "no", "blam": "booga", "ayanami": "rei", "owo": "awoo"}
+        assert mock_map == {"OK": "no"}
+        mock_map["ayanami"] = "rei"
+        assert mock_map == {"OK": "no", "ayanami": "rei"}
         await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 2)
-        mock_map.update({"nyaa": "qt"})
-        assert mock_map == {"ayanami": "rei", "owo": "awoo", "nyaa": "qt"}
+        mock_map["nyaa"] = "qt"
+        assert mock_map == {"ayanami": "rei", "nyaa": "qt"}
 
 
 class TestLimitedCapacityCacheMap:

@@ -46,6 +46,7 @@ from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import net
 from hikari.internal import routes
+from hikari.internal import ux
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
@@ -117,8 +118,20 @@ class TestRestProvider:
         return StubRestClient()
 
     @pytest.fixture()
-    def rest_provider(self, rest_client):
-        return rest._RESTProvider(lambda: mock.Mock(), None, lambda: mock.Mock(), lambda: rest_client)
+    def cache(self):
+        return mock.Mock()
+
+    @pytest.fixture()
+    def executor(self):
+        return mock.Mock()
+
+    @pytest.fixture()
+    def entity_factory(self):
+        return mock.Mock()
+
+    @pytest.fixture()
+    def rest_provider(self, rest_client, cache, executor, entity_factory):
+        return rest._RESTProvider(lambda: entity_factory, executor, lambda: cache, lambda: rest_client)
 
     def test_rest_property(self, rest_provider, rest_client):
         assert rest_provider.rest == rest_client
@@ -128,6 +141,18 @@ class TestRestProvider:
 
     def test_proxy_settings_property(self, rest_provider, rest_client):
         assert rest_provider.proxy_settings == rest_client.proxy_settings
+
+    def test_entity_factory_property(self, rest_provider, entity_factory):
+        assert rest_provider.entity_factory == entity_factory
+
+    def test_cache_property(self, rest_provider, cache):
+        assert rest_provider.cache == cache
+
+    def test_executor_property(self, rest_provider, executor):
+        assert rest_provider.executor == executor
+
+    def test_me_property(self, rest_provider, cache):
+        assert rest_provider.me == cache.get_me()
 
 
 ###########
@@ -148,6 +173,24 @@ def rest_app():
 
 
 class TestRESTApp:
+    def test__init__when_connector_factory_is_None(self):
+        http_settings = object()
+
+        with mock.patch.object(rest, "BasicLazyCachedTCPConnectorFactory") as factory:
+            rest_app = rest.RESTApp(
+                connector_factory=None,
+                connector_owner=False,
+                executor=None,
+                http_settings=http_settings,
+                proxy_settings=None,
+                url=None,
+            )
+
+        factory.assert_called_once_with(http_settings)
+
+        assert rest_app._connector_factory is factory()
+        assert rest_app._connector_owner is True
+
     def test_executor_property(self, rest_app):
         mock_executor = object()
         rest_app._executor = mock_executor
@@ -166,10 +209,9 @@ class TestRESTApp:
     def test_acquire(self, rest_app):
         mock_event_loop = object()
         rest_app._event_loop = mock_event_loop
-        mock_entity_factory = object()
 
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl", return_value=mock_entity_factory))
+        _entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
         mock_client = stack.enter_context(mock.patch.object(rest, rest.RESTClientImpl.__qualname__))
         stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
 
@@ -179,7 +221,7 @@ class TestRESTApp:
         mock_client.assert_called_once_with(
             connector_factory=rest_app._connector_factory,
             connector_owner=rest_app._connector_owner,
-            entity_factory=mock_entity_factory,
+            entity_factory=_entity_factory(),
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
             proxy_settings=rest_app._proxy_settings,
@@ -187,6 +229,26 @@ class TestRESTApp:
             token_type="Type",
             rest_url=rest_app._url,
         )
+
+    def test_acquire_when_even_loop_not_set(self, rest_app):
+        mock_event_loop = object()
+
+        stack = contextlib.ExitStack()
+        _entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
+        stack.enter_context(mock.patch.object(rest, rest.RESTClientImpl.__qualname__))
+        stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
+
+        with stack:
+            rest_app.acquire(token="token", token_type="Type")
+
+        assert rest_app._event_loop is mock_event_loop
+
+        # This is just to test the lambdas so it counts towards coverage
+        assert _entity_factory.call_count == 1
+        factory = _entity_factory.call_args_list[0][0][0]
+        factory.entity_factory
+        factory.cache
+        factory.rest
 
     def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_app):
         rest_app._event_loop = object()
@@ -479,6 +541,19 @@ class TestRESTClientImpl:
     def test__transform_emoji_to_url_format(self, rest_client, emoji, expected_return):
         assert rest_client._transform_emoji_to_url_format(emoji) == expected_return
 
+    def test__stringify_http_message_when_body_is_None(self, rest_client):
+        headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
+        expected_return = "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
+        assert rest_client._stringify_http_message(headers, None) == expected_return
+
+    @pytest.mark.parametrize(("body", "expected"), [(bytes("hello :)", "ascii"), "hello :)"), (123, "123")])
+    def test__stringify_http_message_when_body_is_not_None(self, rest_client, body, expected):
+        headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
+        expected_return = (
+            f"    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**\n\n    {expected}"
+        )
+        assert rest_client._stringify_http_message(headers, body) == expected_return
+
     #######################
     # Non-async endpoints #
     #######################
@@ -743,6 +818,14 @@ class TestRESTClientImplAsync:
 
         return ExitException
 
+    async def test___aenter__and__aexit__(self, rest_client):
+        with mock.patch.object(rest_client, "close") as close:
+            async with rest_client as client:
+                assert client is rest_client
+                close.assert_not_called()
+
+        close.assert_awaited_once_with()
+
     @hikari_test_helpers.timeout()
     async def test__request_when_buckets_not_started(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
@@ -770,6 +853,7 @@ class TestRESTClientImplAsync:
         rest_client.buckets.is_started = True
         rest_client._token = None
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(exit_exception):
                 await rest_client._request(route)
@@ -784,12 +868,13 @@ class TestRESTClientImplAsync:
         rest_client.buckets.is_started = True
         rest_client._token = "token"
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(exit_exception):
                 await rest_client._request(route)
 
-            _, kwargs = mock_session.request.call_args_list[0]
-            assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
 
     @hikari_test_helpers.timeout()
     async def test__request_when_no_auth_passed(self, rest_client, exit_exception):
@@ -798,6 +883,7 @@ class TestRESTClientImplAsync:
         rest_client.buckets.is_started = True
         rest_client._token = "token"
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(exit_exception):
                 await rest_client._request(route, no_auth=True)
@@ -814,9 +900,9 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
         rest_client.buckets.is_started = True
-        rest_client._debug = False
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             assert (await rest_client._request(route)) is None
 
@@ -834,9 +920,9 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
         rest_client.buckets.is_started = True
-        rest_client._debug = True
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             assert (await rest_client._request(route)) == {"something": None}
 
@@ -851,9 +937,9 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
         rest_client.buckets.is_started = True
-        rest_client._debug = False
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(errors.HTTPError):
                 await rest_client._request(route)
@@ -868,10 +954,10 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
         rest_client.buckets.is_started = True
-        rest_client._debug = False
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._handle_error_response = mock.AsyncMock(side_effect=exit_exception)
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(exit_exception):
                 await rest_client._request(route)
@@ -886,11 +972,38 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=[rest_client._RetryRequest, exit_exception]))
         rest_client.buckets.is_started = True
-        rest_client._debug = False
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
             with pytest.raises(exit_exception):
                 await rest_client._request(route)
+
+    @pytest.mark.parametrize("logger_level", [ux.TRACE, ux.TRACE + 10])
+    @hikari_test_helpers.timeout()
+    async def test__request_logger(self, rest_client, exit_exception, logger_level):
+        class StubResponse:
+            status = http.HTTPStatus.NO_CONTENT
+            headers = {}
+            reason = "cause why not"
+
+            async def read(self):
+                return None
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
+        rest_client.buckets.is_started = True
+        rest_client._parse_ratelimits = mock.AsyncMock()
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+
+        with mock.patch.object(
+            rest, "_LOGGER", new=mock.Mock(getEffectiveLevel=mock.Mock(return_value=logger_level))
+        ) as logger:
+            with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+                await rest_client._request(route)
+
+        if logger_level > ux.TRACE:
+            assert logger.log.call_count == 0
+        else:
+            assert logger.log.call_count == 2
 
     async def test__handle_error_response(self, rest_client, exit_exception):
         mock_response = mock.Mock()
@@ -987,6 +1100,23 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(rest_client._RetryRequest):
+            await rest_client._parse_ratelimits(route, StubResponse())
+
+    async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client):
+        class StubResponse:
+            status = http.HTTPStatus.TOO_MANY_REQUESTS
+            content_type = rest._APPLICATION_JSON
+            headers = {
+                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
+                rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
+            }
+            real_url = "https://some.url"
+
+            async def json(self):
+                return {"retry_after": "4"}
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse())
 
     async def test_close_when__client_session_is_None(self, rest_client):

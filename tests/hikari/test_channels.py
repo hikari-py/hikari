@@ -186,6 +186,7 @@ class TestGroupDMChannel:
         assert model.format_icon() is None
 
 
+@pytest.mark.asyncio
 class TestTextChannel:
     @pytest.fixture()
     def model(self, mock_app):
@@ -196,7 +197,6 @@ class TestTextChannel:
             type=channels.ChannelType.GUILD_TEXT,
         )
 
-    @pytest.mark.asyncio
     async def test_history(self, model):
         model.app.rest.fetch_messages = mock.AsyncMock()
 
@@ -213,7 +213,6 @@ class TestTextChannel:
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
         )
 
-    @pytest.mark.asyncio
     async def test_send(self, model):
         model.app.rest.create_message = mock.AsyncMock()
         mock_attachment = object()
@@ -244,6 +243,13 @@ class TestTextChannel:
             user_mentions=[123, 456],
             role_mentions=[789, 567],
         )
+
+    def test_trigger_typing(self, model):
+        model.app.rest.trigger_typing = mock.Mock()
+
+        model.trigger_typing()
+
+        model.app.rest.trigger_typing.assert_called_once_with(12345679)
 
 
 class TestGuildChannel:
