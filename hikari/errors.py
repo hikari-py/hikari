@@ -457,10 +457,10 @@ class RateLimitedError(ClientHTTPResponseError):
     status: http.HTTPStatus = attr.ib(default=http.HTTPStatus.TOO_MANY_REQUESTS, init=False)
     """The HTTP status code for the response."""
 
-    reason: str = attr.ib(init=False)
-    """The error reason."""
+    message: str = attr.ib(init=False)
+    """The error message."""
 
-    @reason.default
+    @message.default
     def _(self) -> str:
         return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
 

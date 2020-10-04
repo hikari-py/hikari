@@ -603,8 +603,9 @@ class RESTClientImpl(rest_api.RESTClient):
             except self._RetryRequest:
                 continue
 
+    @staticmethod
     @typing.final
-    def _stringify_http_message(self, headers: data_binding.Headers, body: typing.Any) -> str:
+    def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
         string = "\n".join(
             f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
             for name, value in headers.items()
