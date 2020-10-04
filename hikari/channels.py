@@ -255,37 +255,24 @@ class PermissionOverwrite(snowflakes.Unique):
     )
     """The type of entity this overwrite targets."""
 
-    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
-    # to execute.
-    _allow: int = attr.ib(default=0, eq=False, hash=False, repr=False)
-    _deny: int = attr.ib(default=0, eq=False, hash=False, repr=False)
+    allow: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions,
+        default=permissions.Permissions.NONE,
+        eq=False,
+        hash=False,
+        repr=False,
+    )
+    """The permissions this overwrite allows."""
 
-    @property
-    def allow(self) -> permissions.Permissions:
-        """Return the permissions this overwrite allows.
-
-        Returns
-        -------
-        hikari.permissions.Permissions
-            Permissions explicitly allowed by this overwrite.
-        """
-        return permissions.Permissions(self._allow)
-
-    @property
-    def deny(self) -> permissions.Permissions:
-        """Return the permissions this overwrite denies.
-
-        Returns
-        -------
-        hikari.permissions.Permissions
-            Permissions explicitly denied by this overwrite.
-        """
-        return permissions.Permissions(self._deny)
+    deny: permissions.Permissions = attr.ib(
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
+    )
+    """The permissions this overwrite denies."""
 
     @property
     def unset(self) -> permissions.Permissions:
         """Bitfield of all permissions not explicitly allowed or denied by this overwrite."""
-        return permissions.Permissions(~(self.allow | self.deny))
+        return ~(self.allow | self.deny)
 
 
 @attr_extensions.with_copy

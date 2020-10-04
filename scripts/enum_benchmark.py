@@ -94,7 +94,7 @@ py_enum_delegate_to_map_time = timeit.timeit(
     "BasicPyEnum._value2member_map_['25']", number=1_000_000, globals=globals()
 )
 hikari_enum_delegate_to_map_time = timeit.timeit(
-    "BasicHikariEnum._value2member_map_['25']", number=1_000_000, globals=globals()
+    "BasicHikariEnum._value_to_member_map_['25']", number=1_000_000, globals=globals()
 )
 py_enum_getitem_time = timeit.timeit("BasicPyEnum['z']", number=1_000_000, globals=globals())
 hikari_enum_getitem_time = timeit.timeit("BasicHikariEnum['z']", number=1_000_000, globals=globals())
@@ -102,7 +102,7 @@ hikari_enum_getitem_time = timeit.timeit("BasicHikariEnum['z']", number=1_000_00
 print("BasicPyEnum.__call__('25')", py_enum_call_time, "µs")
 print("BasicHikariEnum.__call__('25')", hikari_enum_call_time, "µs")
 print("BasicPyEnum._value2member_map_['25']", py_enum_delegate_to_map_time, "µs")
-print("BasicHikariEnum._value2member_map['25']", hikari_enum_delegate_to_map_time, "µs")
+print("BasicHikariEnum._value_to_member_map['25']", hikari_enum_delegate_to_map_time, "µs")
 print("BasicPyEnum.__getitem__['z']", py_enum_getitem_time, "µs")
 print("BasicHikariEnum.__getitem__['z']", hikari_enum_getitem_time, "µs")
 

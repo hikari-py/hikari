@@ -121,7 +121,7 @@ class _GuildFields(_PartialGuildFields):
     widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     is_widget_enabled: typing.Optional[bool] = attr.ib()
-    system_channel_flags: int = attr.ib()
+    system_channel_flags: guild_models.GuildSystemChannelFlag = attr.ib()
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     max_video_channel_users: typing.Optional[int] = attr.ib()
     vanity_url_code: typing.Optional[str] = attr.ib()
@@ -191,8 +191,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: permission_models.Permissions,
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
-            audit_log_models.AuditLogChangeKey.ALLOW: int,
-            audit_log_models.AuditLogChangeKey.DENY: int,
+            audit_log_models.AuditLogChangeKey.ALLOW: permission_models.Permissions,
+            audit_log_models.AuditLogChangeKey.DENY: permission_models.Permissions,
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.INVITER_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
@@ -1754,6 +1754,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
         user_fields = self._set_user_attributes(payload)
+        flags = (
+            user_models.UserFlag(payload["public_flags"]) if "public_flags" in payload else user_models.UserFlag.NONE
+        )
         return user_models.UserImpl(
             app=self._app,
             id=user_fields.id,
@@ -1762,7 +1765,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             avatar_hash=user_fields.avatar_hash,
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
-            flags=int(payload.get("public_flags", 0)),
+            flags=flags,
         )
 
     def deserialize_my_user(self, payload: data_binding.JSONObject) -> user_models.OwnUser:

@@ -27,11 +27,11 @@ __all__: typing.List[str] = ["Intents"]
 
 import typing
 
-from hikari.internal import flag
+from hikari.internal import enums
 
 
 @typing.final
-class Intents(flag.Flag):
+class Intents(enums.Flag):
     """Represents an intent on the gateway.
 
     This is a bitfield representation of all the categories of event

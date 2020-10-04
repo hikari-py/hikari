@@ -26,7 +26,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["PartialUser", "User", "OwnUser", "UserFlag", "PremiumType"]
 
 import abc
-import enum
 import typing
 
 import attr
@@ -37,16 +36,14 @@ from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@enum.unique
 @typing.final
-class UserFlag(flag.Flag):
+class UserFlag(enums.Flag):
     """The known user flags that represent account badges."""
 
     NONE = 0
@@ -355,12 +352,8 @@ class PartialUserImpl(PartialUser):
     is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
-    _flags: undefined.UndefinedOr[int] = attr.ib(eq=False, hash=False)
-
-    @property
-    def flags(self) -> undefined.UndefinedOr[UserFlag]:
-        """Public flags for this user."""
-        return UserFlag(self._flags) if self._flags is not undefined.UNDEFINED else undefined.UNDEFINED
+    flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
+    """Public flags for this user."""
 
     @property
     def mention(self) -> str:
@@ -413,7 +406,6 @@ class UserImpl(PartialUserImpl, User):
     is_system: bool
     """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
 
-    _flags: int
     flags: UserFlag
     """The public flags for this user."""
 

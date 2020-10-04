@@ -35,7 +35,6 @@ __all__: typing.List[str] = [
     "Message",
 ]
 
-import enum
 import typing
 
 import attr
@@ -46,7 +45,6 @@ from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -107,9 +105,8 @@ class MessageType(int, enums.Enum):
         return self.name
 
 
-@enum.unique
 @typing.final
-class MessageFlag(flag.Flag):
+class MessageFlag(enums.Flag):
     """Additional flags for message options."""
 
     NONE = 0
@@ -353,30 +350,14 @@ class PartialMessage(snowflakes.Unique):
     message_reference: undefined.UndefinedNoneOr[MessageCrosspost] = attr.ib(repr=False)
     """The message's cross-posted reference data."""
 
+    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.ib(repr=False)
+    """The message's flags."""
+
     nonce: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
     """The message nonce.
 
     This is a string used for validating a message was sent.
     """
-
-    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
-    # to execute.
-    _flags: undefined.UndefinedNoneOr[int] = attr.ib(repr=False)
-
-    @property
-    def flags(self) -> undefined.UndefinedNoneOr[MessageFlag]:
-        """Return flags for thge message if known.
-
-        If no flags are set, this returns `builtins.None`.
-
-        If unknown, this returns `hikari.undefined.UNDEFINED`
-
-        Returns
-        -------
-        hikari.undefined.UndefinedNoneOr[MessageFlag]
-            The message flags, if known and set.
-        """
-        return MessageFlag(self._flags) if isinstance(self._flags, int) else self._flags
 
     @property
     def link(self) -> str:
@@ -914,9 +895,8 @@ class Message(PartialMessage):
     message_reference: typing.Optional[MessageCrosspost]
     """The message crossposted reference data."""
 
-    nonce: typing.Optional[str]
-    """The message nonce. This is a string used for validating a message was sent."""
-
-    _flags = typing.Optional[int]
     flags: typing.Optional[MessageFlag]
     """The message flags."""
+
+    nonce: typing.Optional[str]
+    """The message nonce. This is a string used for validating a message was sent."""

@@ -869,7 +869,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
-        _LOGGER.info("application started successfully in approx %.0f seconds", time.monotonic() - start_time)
+        _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
     def stream(
         self,

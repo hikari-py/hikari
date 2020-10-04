@@ -527,4 +527,4 @@ class MissingIntentError(HikariError, ValueError):
     """The combination of intents that are missing."""
 
     def __str__(self) -> str:
-        return f"You are missing the following intent(s): {str(self.intents)}"
+        return "You are missing the following intent(s): " + ", ".join(map(str, self.intents.split()))

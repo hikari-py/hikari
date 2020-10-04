@@ -37,7 +37,6 @@ __all__: typing.List[str] = [
     "Status",
 ]
 
-import enum
 import typing
 
 import attr
@@ -45,7 +44,6 @@ import attr
 from hikari import snowflakes
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.internal import flag
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -160,9 +158,8 @@ class ActivitySecret:
     """The secret used for matching a party, if applicable."""
 
 
-@enum.unique
 @typing.final
-class ActivityFlag(flag.Flag):
+class ActivityFlag(enums.Flag):
     """Flags that describe what an activity includes.
 
     This can be more than one using bitwise-combinations.
@@ -242,20 +239,8 @@ class RichActivity(Activity):
     is_instance: typing.Optional[bool] = attr.ib(repr=False)
     """Whether this activity is an instanced game session."""
 
-    # Flags are lazily loaded, due to the IntFlag mechanism being overly slow
-    # to execute.
-    _flags: typing.Optional[int] = attr.ib(repr=False)
-
-    @property
-    def flags(self) -> typing.Optional[ActivityFlag]:
-        """Return flags describing the activity type.
-
-        Returns
-        -------
-        typing.Optional[ActivityFlag]
-            Flags, if present, otherwise `builtins.None`.
-        """
-        return ActivityFlag(self._flags) if self._flags is not None else None
+    flags: typing.Optional[ActivityFlag] = attr.ib(repr=False)
+    """Flags that describe what the activity includes, if present."""
 
 
 @typing.final

@@ -94,8 +94,8 @@ class TestPermissionOverwrite:
         overwrite = channels.PermissionOverwrite(
             type=channels.PermissionOverwriteType.MEMBER, id=snowflakes.Snowflake(1234321)
         )
-        overwrite._allow = permissions.Permissions.CREATE_INSTANT_INVITE
-        overwrite._deny = permissions.Permissions.CHANGE_NICKNAME
+        overwrite.allow = permissions.Permissions.CREATE_INSTANT_INVITE
+        overwrite.deny = permissions.Permissions.CHANGE_NICKNAME
         assert overwrite.unset == permissions.Permissions(-67108866)
 
 
