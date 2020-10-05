@@ -25,12 +25,13 @@ import subprocess
 import time
 
 from pipelines import nox
+from pipelines import config
 
 REFORMATING_PATHS = [
-    "hikari",
-    "tests",
+    config.MAIN_PACKAGE,
+    config.TEST_PACKAGE,
     "scripts",
-    "examples",
+    config.EXAMPLE_SCRIPTS,
     "pipelines",
     "setup.py",
     "noxfile.py",

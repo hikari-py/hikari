@@ -127,7 +127,7 @@ This may be one of:
 - `aiohttp.StreamReader`
 """
 
-Resourceish = typing.Union["Resource[AsyncReader]", Pathish, Rawish]
+Resourceish = typing.Union["Resource", Pathish, Rawish]
 """Type hint representing a file or path to a file/URL/data URI.
 
 This may be one of:
