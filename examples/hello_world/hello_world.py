@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+"""A simple bot with only a `!ping` command."""
 
 import os
 
@@ -28,6 +29,7 @@ bot = hikari.BotApp(token=os.environ["BOT_TOKEN"])
 
 @bot.listen()
 async def on_message(event: hikari.MessageCreateEvent) -> None:
+    """Listen for messages being created."""
     if not event.is_human:
         # Do not respond to bots or webhooks!
         return

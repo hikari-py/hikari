@@ -18,30 +18,4 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import os as _os
-
-IS_CI = "CI" in _os.environ
-
-if "TRAVIS" in _os.environ:
-    CI_PROVIDER = "travis"
-else:
-    CI_PROVIDER = "other"
-
-# Packaging
-MAIN_PACKAGE = "hikari"
-TEST_PACKAGE = "tests"
-EXAMPLE_SCRIPTS = "examples"
-
-# Generating documentation and artifacts.
-ARTIFACT_DIRECTORY = "public"
-PAGES_DIRECTORY = "pages"
-DOCUMENTATION_DIRECTORY = "docs"
-ROOT_INDEX_SOURCE = "index.html"
-LOGO_SOURCE = "logo.png"
-
-# Linting and test configs.
-FLAKE8_REPORT = "public/flake8"
-MYPY_INI = "mypy.ini"
-PYTEST_INI = "pytest.ini"
-COVERAGE_INI = "coverage.ini"
-COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+"""Allows mypy to detect the scripts here."""

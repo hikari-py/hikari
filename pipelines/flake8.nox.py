@@ -34,6 +34,7 @@ def flake8(session: nox.Session) -> None:
         "--tee",
         config.MAIN_PACKAGE,
         config.TEST_PACKAGE,
+        config.EXAMPLE_SCRIPTS,
     )
 
 
@@ -51,4 +52,5 @@ def flake8_html(session: nox.Session) -> None:
         "--tee",
         config.MAIN_PACKAGE,
         config.TEST_PACKAGE,
+        config.EXAMPLE_SCRIPTS,
     )

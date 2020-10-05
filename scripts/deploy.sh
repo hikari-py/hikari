@@ -32,6 +32,9 @@ echo "==========================================================================
 cat hikari/_about.py
 echo "=========================================================================="
 
+echo "===== GENERATING STUB FILES ====="
+nox -s generate-stubs
+
 echo "===== DEPLOYING TO PYPI ====="
 python setup.py sdist bdist_wheel
 echo "-- Contents of . --"
@@ -42,6 +45,8 @@ ls -ahl dist
 
 echo "-- Checking generated dists --"
 python -m twine check dist/*
+echo
+echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="

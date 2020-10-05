@@ -28,4 +28,15 @@ fi
 
 SCRIPT=$(readlink -f "${0}")
 SCRIPT_PATH=$(dirname "${SCRIPT}")
-PYTHONPATH="${PYTHONPATH}:${SCRIPT_PATH}/../.." BOT_TOKEN="${1}" python3 "${SCRIPT_PATH}/$(basename "${SCRIPT_PATH}").py"
+
+# PYTHONPATH might not be set
+if [ $PYTHONPATH ]; then
+    PYTHONPATH="${PYTHONPATH}:${SCRIPT_PATH}/../.."
+else
+    PYTHONPATH="${SCRIPT_PATH}/../.."
+fi
+
+export PYTHONPATH
+export BOT_TOKEN="${1}"
+
+python3 "${SCRIPT_PATH}/$(basename "${SCRIPT_PATH}").py"
