@@ -142,7 +142,7 @@ class Unique(abc.ABC):
 
 
 def calculate_shard_id(
-    app_or_count: typing.Union[traits.ShardAware, int], guild: SnowflakeishOr["guilds.PartialGuild"]
+    app_or_count: typing.Union[traits.ShardAware, int], guild: SnowflakeishOr[guilds.PartialGuild]
 ) -> int:
     """Calculate the shard ID for a guild based on it's shard aware app or shard count.
 
