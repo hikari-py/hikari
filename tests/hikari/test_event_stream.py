@@ -102,8 +102,11 @@ class TestEventStream:
         assert stream._queue.get_nowait() is mock_event
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test___anext___when_stream_closed(self):
-        streamer = hikari_test_helpers.mock_entire_class_namespace(event_stream.EventStream, _active=False)
+        streamer = hikari_test_helpers.mock_class_namespace(event_stream.EventStream, _active=False)(
+            app=mock.Mock(), event_type=events.Event, timeout=float("inf")
+        )
 
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
@@ -112,29 +115,25 @@ class TestEventStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
-        streamer = hikari_test_helpers.mock_entire_class_namespace(
+        streamer = hikari_test_helpers.mock_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
-            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
-        )
+        )(app=mock.Mock(), event_type=events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME)
 
-        async for _ in streamer:
-            pytest.fail("streamer shouldn't have yielded anything")
-        else:
-            # Ensure we don't get a warning or error on del
-            streamer._active = False
+        async with streamer:
+            async for _ in streamer:
+                pytest.fail("streamer shouldn't have yielded anything")
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
-        streamer = hikari_test_helpers.mock_entire_class_namespace(
+        streamer = hikari_test_helpers.mock_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
-            _timeout=hikari_test_helpers.REASONABLE_SLEEP_TIME * 3,
-        )
+        )(app=mock.Mock(), event_type=events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
 
         async def add_event():
             await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
@@ -142,33 +141,28 @@ class TestEventStream:
 
         asyncio.create_task(add_event())
 
-        async for event in streamer:
-            assert event is mock_event
+        async with streamer:
+            async for event in streamer:
+                assert event is mock_event
+                return
 
-            # Ensure we don't get a warning or error on del
-            streamer._active = False
-            return
-
-        pytest.fail("streamer should've yielded something")
+            pytest.fail("streamer should've yielded something")
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext__(self):
         mock_event = object()
-        streamer = hikari_test_helpers.mock_entire_class_namespace(
+        streamer = hikari_test_helpers.mock_class_namespace(
             event_stream.EventStream,
             _active=True,
             _queue=asyncio.Queue(),
-            _timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
-        )
+        )(app=mock.Mock(), event_type=events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME)
         streamer._queue.put_nowait(mock_event)
 
-        async for event in streamer:
-            assert event is mock_event
-
-            # Ensure we don't get a warning or error on del
-            streamer._active = False
-            return
+        async with streamer:
+            async for event in streamer:
+                assert event is mock_event
+                return
 
         pytest.fail("streamer should've yielded something")
 
@@ -184,7 +178,7 @@ class TestEventStream:
             init_=False,
             __anext__=mock.AsyncMock(side_effect=[mock_event_0, mock_event_1, mock_event_2]),
         )()
-        streamer._active = False
+
         assert await streamer == [mock_event_0, mock_event_1, mock_event_2]
         streamer.open.assert_awaited_once()
         streamer.close.assert_awaited_once()
@@ -227,40 +221,41 @@ class TestEventStream:
         mock_app.dispatcher.unsubscribe.assert_not_called()
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test_close_for_active_stream(self, mock_app):
         mock_registered_listener = object()
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream,
-            _app=mock_app,
-            _event_type=events.Event,
-            _active=True,
-            _registered_listener=mock_registered_listener,
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock_app, event_type=events.Event, timeout=float("inf")
         )
+
+        await stream.open()
+        stream._registered_listener = mock_registered_listener
         await stream.close()
         mock_app.dispatcher.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test_close_for_active_stream_handles_value_error(self, mock_app):
         mock_registered_listener = object()
         mock_app.dispatcher.unsubscribe.side_effect = ValueError
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream,
-            _app=mock_app,
-            _event_type=events.Event,
-            _active=True,
-            _registered_listener=mock_registered_listener,
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock_app, event_type=events.Event, timeout=float("inf")
         )
+
+        await stream.open()
+        stream._registered_listener = mock_registered_listener
         await stream.close()
         mock_app.dispatcher.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
     def test_filter_for_inactive_stream(self):
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream, _filters=iterators.All(()), _active=False
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock.Mock(), event_type=events.Event, timeout=1
         )
+        stream._filters = iterators.All(())
         first_pass = mock.Mock(attr=True)
         second_pass = mock.Mock(attr=True)
         first_fails = mock.Mock(attr=True)
@@ -278,10 +273,10 @@ class TestEventStream:
 
     @pytest.mark.asyncio
     async def test_filter_for_active_stream(self):
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream,
-            _active=True,
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock.Mock(), event_type=events.Event, timeout=float("inf")
         )
+        stream._active = True
         mock_wrapping_iterator = object()
         predicate = object()
 
@@ -296,13 +291,14 @@ class TestEventStream:
     @pytest.mark.asyncio
     async def test_open_for_inactive_stream(self, mock_app):
         mock_listener = object()
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream,
-            _app=mock_app,
-            _event_type=events.Event,
-            _active=True,
-            _registered_listener=mock_listener,
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock_app,
+            event_type=events.Event,
+            timeout=float("inf"),
         )
+
+        stream._active = True
+        stream._registered_listener = mock_listener
 
         with mock.patch.object(event_stream, "_generate_weak_listener"):
             with mock.patch.object(weakref, "WeakMethod"):
@@ -319,13 +315,12 @@ class TestEventStream:
         stream._active = False
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
     async def test_open_for_active_stream(self, mock_app):
-        stream = hikari_test_helpers.mock_entire_class_namespace(
-            event_stream.EventStream,
-            _app=mock_app,
-            _event_type=events.Event,
-            _active=False,
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            app=mock_app, event_type=events.Event, timeout=float("inf")
         )
+        stream._active = False
         mock_listener = object()
         mock_listener_ref = object()
 

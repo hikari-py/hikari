@@ -131,7 +131,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_gc_calls_do_pass(self):
-        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager, slots_=False)() as mgr:
             mgr.do_gc_pass = mock.Mock()
             mgr.start(0.01, 33)
             try:
@@ -142,7 +142,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_still_rate_limited_are_kept_alive(self):
-        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager)() as mgr:
             bucket = mock.Mock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -157,7 +157,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_not_expired_are_kept_alive(self):
-        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager)() as mgr:
             bucket = mock.Mock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -172,7 +172,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_empty_but_not_rate_limited_and_expired_are_closed(self):
-        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager)() as mgr:
             bucket = mock.Mock()
             bucket.is_empty = True
             bucket.is_unknown = False
@@ -187,7 +187,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_do_gc_pass_any_buckets_that_are_not_empty_are_kept_alive(self):
-        with hikari_test_helpers.unslot_class(buckets.RESTBucketManager)() as mgr:
+        with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager)() as mgr:
             bucket = mock.Mock()
             bucket.is_empty = False
             bucket.is_unknown = True

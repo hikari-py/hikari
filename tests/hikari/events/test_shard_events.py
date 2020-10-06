@@ -18,52 +18,64 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import mock
 import pytest
 
+from hikari import snowflakes
 from hikari.events import shard_events
-from tests.hikari import hikari_test_helpers
 
 
 class TestMemberChunkEvent:
-    def test___getitem___with_slice(self):
+    @pytest.fixture()
+    def event(self):
+        return shard_events.MemberChunkEvent(
+            app=mock.Mock(),
+            shard=mock.Mock(),
+            guild_id=snowflakes.Snowflake(69420),
+            members={
+                snowflakes.Snowflake(1): mock.Mock(),
+                snowflakes.Snowflake(55): mock.Mock(),
+                snowflakes.Snowflake(99): mock.Mock(),
+                snowflakes.Snowflake(455): mock.Mock(),
+            },
+            chunk_count=1,
+            chunk_index=1,
+            not_found=(),
+            presences={},
+            nonce="blah",
+        )
+
+    def test___getitem___with_slice(self, event):
         mock_member_0 = object()
         mock_member_1 = object()
-        event = hikari_test_helpers.mock_entire_class_namespace(
-            shard_events.MemberChunkEvent,
-            members={1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1},
-        )
+        event.members = {1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1}
+
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 
-    def test___getitem___with_valid_index(self):
+    def test___getitem___with_valid_index(self, event):
         mock_member = object()
-        event = hikari_test_helpers.mock_entire_class_namespace(
-            shard_events.MemberChunkEvent, members={1: object(), 55: object(), 99: mock_member, 455: object()}
-        )
+        event.members[snowflakes.Snowflake(99)] = mock_member
         assert event[2] is mock_member
 
         with pytest.raises(IndexError):
             assert event[55]
 
-    def test___getitem___with_invalid_index(self):
-        event = hikari_test_helpers.mock_entire_class_namespace(
-            shard_events.MemberChunkEvent, members={1: object(), 55: object(), 99: object(), 455: object()}
-        )
-
+    def test___getitem___with_invalid_index(self, event):
         with pytest.raises(IndexError):
-            assert event[55]
+            assert event[123]
 
-    def test___iter___(self):
-        member_0 = object()
-        member_1 = object()
-        member_2 = object()
+    def test___iter___(self, event):
+        member_0 = mock.Mock()
+        member_1 = mock.Mock()
+        member_2 = mock.Mock()
 
-        event = hikari_test_helpers.mock_entire_class_namespace(
-            shard_events.MemberChunkEvent, members={234: member_0, 76: member_1, 999: member_2}
-        )
+        event.members = {
+            snowflakes.Snowflake(1): member_0,
+            snowflakes.Snowflake(2): member_1,
+            snowflakes.Snowflake(3): member_2,
+        }
+
         assert list(event) == [member_0, member_1, member_2]
 
-    def test___len___(self):
-        event = hikari_test_helpers.mock_entire_class_namespace(
-            shard_events.MemberChunkEvent, members={1: object(), 55: object(), 99: object(), 455: object()}
-        )
+    def test___len___(self, event):
         assert len(event) == 4

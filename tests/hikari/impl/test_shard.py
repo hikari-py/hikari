@@ -562,7 +562,7 @@ class TestGatewayShardImpl:
 
     @pytest.fixture(scope="module")
     def unslotted_client_type(self):
-        return hikari_test_helpers.unslot_class(shard.GatewayShardImpl)
+        return hikari_test_helpers.mock_class_namespace(shard.GatewayShardImpl, slots_=False)
 
     @pytest.fixture()
     def client(self, http_settings, proxy_settings, unslotted_client_type):

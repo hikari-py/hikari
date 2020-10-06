@@ -176,10 +176,7 @@ class TestInviteCreateEvent:
 class TestWebhookUpdateEvent:
     @pytest.fixture()
     def event(self):
-        obj = hikari_test_helpers.unslot_class(channel_events.WebhookUpdateEvent)(
-            app=mock.AsyncMock(), shard=None, channel_id=123, guild_id=456
-        )
-        return obj
+        return channel_events.WebhookUpdateEvent(app=mock.AsyncMock(), shard=mock.Mock(), channel_id=123, guild_id=456)
 
     async def test_fetch_channel_webhooks(self, event):
         await event.fetch_channel_webhooks()

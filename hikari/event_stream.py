@@ -182,7 +182,7 @@ class EventStream(Streamer[EventT]):
 
     async def __anext__(self) -> EventT:
         if not self._active:
-            raise TypeError("stream must be started with `await with` before entering it")
+            raise TypeError("stream must be started with `async with` before entering it")
 
         try:
             return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)

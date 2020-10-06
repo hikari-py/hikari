@@ -18,45 +18,79 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import datetime
 
 import mock
 import pytest
 
 from hikari import emojis
+from hikari import guilds
 from hikari import messages
-from tests.hikari import hikari_test_helpers
+from hikari import snowflakes
+from hikari import users
 
 
-def test_MessageType_str_operator():
-    message_type = messages.MessageType(10)
-    assert str(message_type) == "USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2"
+class TestMessageType:
+    def test_str_operator(self):
+        message_type = messages.MessageType(10)
+        assert str(message_type) == "USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2"
 
 
-def test_MessageFlag_str_operator():
-    flag = messages.MessageFlag(0)
-    assert str(flag) == "NONE"
+class TestMessageFlag:
+    def test_str_operator(self):
+        flag = messages.MessageFlag(0)
+        assert str(flag) == "NONE"
 
 
-def test_MessageActivityType_str_operator():
-    activity_type = messages.MessageActivityType(5)
-    assert str(activity_type) == "JOIN_REQUEST"
+class TestMessageActivityType:
+    def test_str_operator(self):
+        activity_type = messages.MessageActivityType(5)
+        assert str(activity_type) == "JOIN_REQUEST"
 
 
-def test_Attachment_str_operator():
-    attachment = messages.Attachment(
-        id=123, filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
-    )
-    assert str(attachment) == "super_cool_file.cool"
+class TestAttachment:
+    def test_str_operator(self):
+        attachment = messages.Attachment(
+            id=123, filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
+        )
+        assert str(attachment) == "super_cool_file.cool"
 
 
-def test_Reaction_str_operator():
-    reaction = messages.Reaction(emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"), count=42, is_me=True)
-    assert str(reaction) == "\N{OK HAND SIGN}"
+class TestReaction:
+    def test_str_operator(self):
+        reaction = messages.Reaction(emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"), count=42, is_me=True)
+        assert str(reaction) == "\N{OK HAND SIGN}"
 
 
 @pytest.fixture()
 def message():
-    return hikari_test_helpers.mock_entire_class_namespace(messages.Message, app=mock.Mock(rest=mock.AsyncMock()))
+    return messages.Message(
+        app=mock.AsyncMock(),
+        id=snowflakes.Snowflake(1234),
+        channel_id=snowflakes.Snowflake(5678),
+        guild_id=snowflakes.Snowflake(910112),
+        author=mock.Mock(spec_set=users.User),
+        member=mock.Mock(spec_set=guilds.Member),
+        content="blahblahblah",
+        timestamp=datetime.datetime.now().astimezone(),
+        edited_timestamp=None,
+        is_tts=False,
+        is_mentioning_everyone=False,
+        user_mentions=(),
+        role_mentions=(),
+        channel_mentions=(),
+        attachments=(),
+        embeds=(),
+        reactions=(),
+        is_pinned=True,
+        webhook_id=None,
+        type=messages.MessageType.DEFAULT,
+        activity=None,
+        application=None,
+        message_reference=None,
+        flags=None,
+        nonce=None,
+    )
 
 
 class TestMessage:

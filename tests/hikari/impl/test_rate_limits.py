@@ -130,7 +130,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio
     async def test_lock_schedules_throttle(self):
-        with hikari_test_helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
             limiter.unlock_later = mock.AsyncMock()
             limiter.throttle(0)
             await limiter.throttle_task
@@ -160,7 +160,7 @@ class TestManualRateLimiter:
                 popped_at.append(time.perf_counter())
                 return event_loop.create_future()
 
-        with hikari_test_helpers.unslot_class(rate_limits.ManualRateLimiter)() as limiter:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
             with mock.patch("asyncio.sleep", wraps=mock_sleep):
                 limiter.queue = MockList()
 
@@ -182,7 +182,9 @@ class TestManualRateLimiter:
 class TestWindowedBurstRateLimiter:
     @pytest.fixture()
     def ratelimiter(self):
-        inst = hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 3, 3)
+        inst = hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
+            __name__, 3, 3
+        )
         yield inst
         with contextlib.suppress(Exception):
             inst.close()
@@ -377,12 +379,16 @@ class TestWindowedBurstRateLimiter:
         assert rl.throttle_task is None
 
     def test_get_time_until_reset_if_not_rate_limited(self):
-        with hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
+            __name__, 0.01, 1
+        ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=False)
             assert rl.get_time_until_reset(420) == 0.0
 
     def test_get_time_until_reset_if_rate_limited(self):
-        with hikari_test_helpers.unslot_class(rate_limits.WindowedBurstRateLimiter)(__name__, 0.01, 1) as rl:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
+            __name__, 0.01, 1
+        ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=True)
             rl.reset_at = 420.4
             assert rl.get_time_until_reset(69.8) == 420.4 - 69.8

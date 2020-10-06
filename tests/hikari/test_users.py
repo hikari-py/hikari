@@ -21,6 +21,7 @@
 import mock
 import pytest
 
+from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -28,19 +29,22 @@ from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 
-def test_UserFlag_str_operator():
-    flag = users.UserFlag(1 << 17)
-    assert str(flag) == "EARLY_VERIFIED_DEVELOPER"
+class TestUserFlag:
+    def test_str_operator(self):
+        flag = users.UserFlag(1 << 17)
+        assert str(flag) == "EARLY_VERIFIED_DEVELOPER"
 
 
-def test_PremiumType_str_operator():
-    premium_type = users.PremiumType(1)
-    assert str(premium_type) == "NITRO_CLASSIC"
+class TestPremiumType:
+    def test_str_operator(self):
+        premium_type = users.PremiumType(1)
+        assert str(premium_type) == "NITRO_CLASSIC"
 
 
 class TestUser:
     @pytest.fixture()
     def obj(self):
+        # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
     def test_avatar_url_when_hash(self, obj):
@@ -124,8 +128,15 @@ class TestUser:
 class TestPartialUserImpl:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.mock_entire_class_namespace(
-            users.PartialUserImpl, id=123, username="thomm.o", discriminator="8637", app=mock.Mock()
+        return users.PartialUserImpl(
+            id=snowflakes.Snowflake(123),
+            app=mock.Mock(),
+            discriminator="8637",
+            username="thomm.o",
+            avatar_hash=None,
+            is_bot=False,
+            is_system=False,
+            flags=users.UserFlag.DISCORD_EMPLOYEE,
         )
 
     def test_str_operator(self, obj):
@@ -150,7 +161,21 @@ class TestPartialUserImpl:
 class TestOwnUser:
     @pytest.fixture()
     def obj(self):
-        return hikari_test_helpers.mock_entire_class_namespace(users.OwnUser, app=mock.Mock())
+        return users.OwnUser(
+            id=snowflakes.Snowflake(12345),
+            app=mock.Mock(),
+            discriminator="1234",
+            username="foobar",
+            avatar_hash="69420",
+            is_bot=False,
+            is_system=False,
+            flags=users.UserFlag.PARTNERED_SERVER_OWNER,
+            is_mfa_enabled=True,
+            locale="en-GB",
+            is_verified=False,
+            email="someone@example.com",
+            premium_type=None,
+        )
 
     async def test_fetch_self(self, obj):
         user = object()

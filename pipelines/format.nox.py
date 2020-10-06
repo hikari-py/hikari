@@ -24,8 +24,8 @@ import shutil
 import subprocess
 import time
 
-from pipelines import nox
 from pipelines import config
+from pipelines import nox
 
 REFORMATING_PATHS = [
     config.MAIN_PACKAGE,

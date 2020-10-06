@@ -43,7 +43,9 @@ class TestStatefulCacheImpl:
 
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
-        return hikari_test_helpers.unslot_class(stateful_cache.StatefulCacheImpl)(app=app_impl, intents=None)
+        return hikari_test_helpers.mock_class_namespace(stateful_cache.StatefulCacheImpl, slots_=False)(
+            app=app_impl, intents=None
+        )
 
     def test__build_emoji(self, cache_impl):
         emoji_data = cache.KnownCustomEmojiData(

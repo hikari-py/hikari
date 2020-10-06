@@ -162,7 +162,7 @@ class TestRestProvider:
 
 @pytest.fixture()
 def rest_app():
-    return hikari_test_helpers.unslot_class(rest.RESTApp)(
+    return hikari_test_helpers.mock_class_namespace(rest.RESTApp, slots_=False)(
         connector_factory=mock.Mock(),
         connector_owner=False,
         executor=None,
@@ -301,7 +301,7 @@ class TestRESTAppAsync:
 
 @pytest.fixture(scope="module")
 def rest_client_class():
-    return hikari_test_helpers.unslot_class(rest.RESTClientImpl)
+    return hikari_test_helpers.mock_class_namespace(rest.RESTClientImpl, slots_=False)
 
 
 @pytest.fixture()

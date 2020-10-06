@@ -21,7 +21,6 @@
 
 import asyncio
 import contextlib
-import copy
 import functools
 import inspect
 import os
@@ -47,60 +46,6 @@ REASONABLE_QUICK_RESPONSE_TIME = 0.2
 # How long to wait for before considering a test to be jammed in an unbreakable
 # condition, and thus acceptable to terminate the test and fail it.
 REASONABLE_TIMEOUT_AFTER = 10
-
-
-def mock_methods_on(obj, except_=(), also_mock=()):
-    # Mock any methods we don't care about. also_mock is a collection of attribute names that we can eval to access
-    # and mock specific application with a coroutine mock to mock other external application quickly :)
-    magics = ["__enter__", "__exit__", "__aenter__", "__aexit__", "__iter__", "__aiter__"]
-
-    except_ = set(except_)
-    also_mock = set(also_mock)
-    checked = set()
-
-    def predicate(name, member):
-        is_callable = callable(member)
-        has_name = bool(name)
-        name_is_allowed = name not in except_
-
-        if not name_is_allowed:
-            checked.add(name)
-
-        is_not_disallowed_magic = not name.startswith("__") or name in magics
-        # print(name, is_callable, has_name, name_is_allowed, is_not_disallowed_magic)
-        return is_callable and has_name and name_is_allowed and is_not_disallowed_magic
-
-    copy_ = copy.copy(obj)
-    for name, method in inspect.getmembers(obj):
-        if predicate(name, method):
-            # print('Mocking', name, 'on', type(obj))
-
-            if asyncio.iscoroutinefunction(method):
-                _mock = mock.AsyncMock()
-            else:
-                _mock = mock.Mock()
-
-            copy_.__dict__[name] = _mock
-
-    for expr in also_mock:
-        owner, _, attr = ("copy_." + expr).rpartition(".")
-        # sue me.
-        owner = eval(owner)  # noqa: S307 - Dont use `eval`
-        setattr(owner, attr, mock.Mock())
-
-    assert not (except_ - checked), f"Some attributes didn't exist, so were not mocked: {except_ - checked}"
-
-    return copy_
-
-
-_unslotted_classes = {}
-
-
-def unslot_class(klass):
-    """Get a modified version of a class without slots."""
-    if klass not in _unslotted_classes:
-        _unslotted_classes[klass] = type(klass.__name__ + "Unslotted", (klass,), {})
-    return _unslotted_classes[klass]
 
 
 _stubbed_classes = {}
