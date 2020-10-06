@@ -29,6 +29,7 @@ __all__: typing.List[str] = [
     "HikariInterrupt",
     "NotFoundError",
     "RateLimitedError",
+    "RateLimitTooLongError",
     "UnauthorizedError",
     "ForbiddenError",
     "BadRequestError",
@@ -414,12 +415,7 @@ class NotFoundError(ClientHTTPResponseError):
 
 @attr.s(auto_exc=True, kw_only=True, slots=True, repr=False, weakref_slot=False)
 class RateLimitedError(ClientHTTPResponseError):
-    """Raised when a non-global ratelimit that cannot be handled occurs.
-
-    This should only ever occur for specific routes that have additional
-    rate-limits applied to them by Discord. At the time of writing, the
-    PATCH CHANNEL _endpoint is the only one that knowingly implements this, and
-    does so by implementing rate-limits on the usage of specific fields only.
+    """Raised when a non-global rate limit that cannot be handled occurs.
 
     If you receive one of these, you should NOT try again until the given
     time has passed, either discarding the operation you performed, or waiting
@@ -432,14 +428,6 @@ class RateLimitedError(ClientHTTPResponseError):
     this, you may be able to send different requests that manipulate the same
     entities (in this case editing the same channel) that do not use the same
     collection of attributes as the previous request.
-
-    You should not usually see this occur, unless Discord vastly change their
-    ratelimit system without prior warning, which might happen in the future.
-
-    !!! note
-        If you receive this regularly, please file a bug report, or contact
-        Discord with the relevant debug information that can be obtained by
-        enabling debug logs and enabling the debug mode on the HTTP components.
     """
 
     route: routes.CompiledRoute = attr.ib()
@@ -457,6 +445,54 @@ class RateLimitedError(ClientHTTPResponseError):
     @message.default
     def _(self) -> str:
         return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
+
+
+@attr.s(auto_exc=True, kw_only=True, slots=True, repr=False, weakref_slot=False)
+class RateLimitTooLongError(HTTPError):
+    """Internal error raised if the wait for a rate limit is too long.
+
+    This is similar to `asyncio.TimeoutError` in the way that it is used,
+    but this will be raised pre-emptively and immediately if the period
+    of time needed to wait is greater than a user-defined limit.
+
+    This will almost always be route-specific. If you receive this, it is
+    unlikely that performing the same call for a different channel/guild/user
+    will also have this rate limit.
+    """
+
+    route: routes.CompiledRoute = attr.ib()
+    """The route that produced this error."""
+
+    retry_after: float = attr.ib()
+    """How many seconds to wait before you can retry this specific request."""
+
+    max_retry_after: float = attr.ib()
+    """How long the client is allowed to wait for at a maximum before raising."""
+
+    reset_at: float = attr.ib()
+    """UNIX timestamp of when this limit will be lifted."""
+
+    limit: int = attr.ib()
+    """The maximum number of calls per window for this rate limit."""
+
+    period: float = attr.ib()
+    """How long the rate limit window lasts for from start to end."""
+
+    # This may support other types of limits in the future, this currently
+    # exists to be self-documenting to the user and for future compatibility
+    # only.
+    @property
+    def remaining(self) -> typing.Literal[0]:
+        """The number of requests that are remaining in this window.
+
+        This will always be `0` symbolically.
+
+        Returns
+        -------
+        builtins.int
+            The number of requests remaining. Always `0`.
+        """
+        return 0
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
