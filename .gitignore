@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 
+# Stubgen defaults
+out/*
+
 # Virtual environments
 .venv*/
 venv*/
