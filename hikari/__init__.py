@@ -66,7 +66,12 @@ from hikari.messages import *
 from hikari.permissions import *
 from hikari.presences import *
 from hikari.sessions import *
-from hikari.snowflakes import *
+from hikari.snowflakes import SearchableSnowflakeish
+from hikari.snowflakes import SearchableSnowflakeishOr
+from hikari.snowflakes import Snowflake
+from hikari.snowflakes import Snowflakeish
+from hikari.snowflakes import SnowflakeishOr
+from hikari.snowflakes import Unique
 from hikari.traits import *
 from hikari.undefined import UNDEFINED
 from hikari.undefined import UndefinedNoneOr
@@ -79,3 +84,5 @@ from hikari.webhooks import *
 # Only expose this during documentation, as we need it to make anything visible.
 if _os.getenv("PDOC3_GENERATING") == "1":
     __all__ = [name for name in dir() if not name.startswith("_")]
+
+del _os
