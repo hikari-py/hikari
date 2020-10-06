@@ -105,9 +105,6 @@ class PremiumType(int, enums.Enum):
     NITRO = 2
     """Premium including all perks (e.g. 2 server boosts)."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialUser(snowflakes.Unique, abc.ABC):

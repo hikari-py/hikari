@@ -101,9 +101,6 @@ class MessageType(int, enums.Enum):
     CHANNEL_FOLLOW_ADD = 12
     """Channel follow add."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @typing.final
 class MessageFlag(enums.Flag):
@@ -146,9 +143,6 @@ class MessageActivityType(int, enums.Enum):
 
     JOIN_REQUEST = 5
     """Request to join an activity."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy

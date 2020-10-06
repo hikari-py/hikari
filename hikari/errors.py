@@ -144,9 +144,6 @@ class ShardCloseCode(int, enums.Enum):
         # return anything.
         return bool((self.value // 1000) == 1)
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayConnectionError(GatewayError):
@@ -325,9 +322,6 @@ class RESTErrorCode(int, enums.Enum):
 
     SYSTEM_OVERLOADED = 130_000
     """API resource is currently overloaded. Try again a little later."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)

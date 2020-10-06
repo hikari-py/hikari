@@ -94,9 +94,6 @@ class ActivityType(int, enums.Enum):
     COMPETING = 5
     """Shows up as `Competing in <name>`."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -258,9 +255,6 @@ class Status(str, enums.Enum):
 
     OFFLINE = "offline"
     """Offline or invisible/grey."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy

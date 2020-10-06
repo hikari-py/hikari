@@ -179,9 +179,6 @@ class OAuth2Scope(str, enums.Enum):
     This is used during authorization code grants.
     """
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @typing.final
 class ConnectionVisibility(int, enums.Enum):
@@ -192,9 +189,6 @@ class ConnectionVisibility(int, enums.Enum):
 
     EVERYONE = 1
     """Everyone can see the connection."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy
@@ -257,9 +251,6 @@ class TeamMembershipState(int, enums.Enum):
 
     ACCEPTED = 2
     """Denotes the user has accepted the invite and is now a member."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy

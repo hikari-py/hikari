@@ -60,9 +60,6 @@ class TargetUserType(int, enums.Enum):
     STREAM = 1
     """This invite is targeting a "Go Live" stream."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 class InviteCode(abc.ABC):
     """A representation of a guild/channel invite."""
