@@ -93,9 +93,6 @@ class ChannelType(int, enums.Enum):
     GUILD_STORE = 6
     """A channel that show's a game's store page."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -209,9 +206,6 @@ class PermissionOverwriteType(int, enums.Enum):
 
     MEMBER = 1
     """A permission overwrite that targets a specific guild member."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy

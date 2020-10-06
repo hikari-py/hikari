@@ -121,11 +121,6 @@ class AuditLogChangeKey(str, enums.Enum):
     COLOUR = COLOR
     """Alias for "COLOR"""
 
-    def __str__(self) -> str:
-        return self.name
-
-    __repr__ = __str__
-
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -181,9 +176,6 @@ class AuditLogEventType(int, enums.Enum):
     INTEGRATION_CREATE = 80
     INTEGRATION_UPDATE = 81
     INTEGRATION_DELETE = 82
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)

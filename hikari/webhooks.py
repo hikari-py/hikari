@@ -56,9 +56,6 @@ class WebhookType(int, enums.Enum):
     CHANNEL_FOLLOWER = 2
     """Channel Follower webhook."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)

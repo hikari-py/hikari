@@ -88,9 +88,6 @@ class GuildExplicitContentFilterLevel(int, enums.Enum):
     ALL_MEMBERS = 2
     """Filter all posts."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @typing.final
 class GuildFeature(str, enums.Enum):
@@ -157,9 +154,6 @@ class GuildFeature(str, enums.Enum):
     WELCOME_SCREEN_ENABLED = "WELCOME_SCREEN_ENABLED"
     """Guild has enabled the welcome screen."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 GuildFeatureish = typing.Union[str, GuildFeature]
 """Type hint for possible guild features.
@@ -180,9 +174,6 @@ class GuildMessageNotificationsLevel(int, enums.Enum):
     ONLY_MENTIONS = 1
     """Only notify users when they are @mentioned."""
 
-    def __str__(self) -> str:
-        return self.name
-
 
 @typing.final
 class GuildMFALevel(int, enums.Enum):
@@ -193,9 +184,6 @@ class GuildMFALevel(int, enums.Enum):
 
     ELEVATED = 1
     """MFA requirement."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @typing.final
@@ -213,9 +201,6 @@ class GuildPremiumTier(int, enums.Enum):
 
     TIER_3 = 3
     """Level 3 Nitro boost."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @typing.final
@@ -250,9 +235,6 @@ class GuildVerificationLevel(int, enums.Enum):
 
     VERY_HIGH = 4
     """Must have a verified phone number."""
-
-    def __str__(self) -> str:
-        return self.name
 
 
 @attr_extensions.with_copy
