@@ -47,7 +47,7 @@ jobs:
     # Linting
     - name: "Linting"
       language: python
-      python: "3.8.5"
+      python: "3.9.0"
       os: linux
       arch: amd64
       install: "pip install nox"
@@ -57,7 +57,7 @@ jobs:
 
     - name: "Twemoji Mapping Verification"
       language: python
-      python: "3.8.5"
+      python: "3.9.0"
       os: linux
       arch: amd64
       install: "pip install nox"
@@ -71,8 +71,8 @@ jobs:
       stage: test
       <<: *windows_test_job
 
-    - name: "Windows 10 CPython 3.9 Dev AMD64 Tests"
-      env: PYTHON_VERSION="3.9.0-rc1 --pre"
+    - name: "Windows 10 CPython 3.9.0 AMD64 Tests"
+      env: PYTHON_VERSION="3.9.0"
       arch: amd64
       stage: test
       <<: *windows_test_job
@@ -83,8 +83,8 @@ jobs:
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux CPython 3.9 Dev AMD64 Tests"
-      python: "3.9-dev"
+    - name: "Linux CPython 3.9.0 AMD64 Tests"
+      python: "3.9.0"
       arch: amd64
       stage: test
       <<: *linux_test_job
@@ -95,8 +95,8 @@ jobs:
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux CPython 3.9 Dev ARM64 Tests"
-      python: "3.9-dev"
+    - name: "Linux CPython 3.9.0 ARM64 Tests"
+      python: "3.9.0"
       arch: arm64
       stage: test
       <<: *linux_test_job
@@ -121,7 +121,7 @@ jobs:
       if: tag IS NOT present
       stage: test
       language: python
-      python: "3.8.5"
+      python: "3.9.0"
       arch: amd64
       os: linux
       install: pip install nox
@@ -131,7 +131,7 @@ jobs:
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
       stage: deploy
       language: python
-      python: "3.8.5"
+      python: "3.9.0"
       arch: amd64
       os: linux
       script: bash scripts/deploy.sh
