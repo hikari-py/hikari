@@ -1,4 +1,5 @@
 stages:
+  - prepare
   - test
   - deploy
   - webhooks
@@ -140,3 +141,31 @@ jobs:
         - secure: "pI5dipgdH406T7E4rylGI61COcAsNPjCW3gIQ++FEZH8knlqoSWMVAPXy5+NcNMvjnvIqy/N4bIpCjTcZx6CzX6UrpJJLejrclgYgH5wO/ntxFBpnmhUtA34qUjiomQLZb13qL2Fhs8ukLHnjhJJ0gsu3PAiOGxhLWSU2G8Rdh6BTtMPWd2zhM6HLE6odzYFvEQqDEgpQSGylbN/ah32H/HrvCP9X2bcBmHB8zLBtVRfZD96YeJ+/wyHI6RraBUh2tggw3WvUmXsOzknBjjRs0/IewNH0v78jWCZaOIRG9M4MT2COaNpgIi/iVDmN3P5CVzersoZBXa6c7PcuqEceMO4XYpeQ5h6i70c0Cs39SOi2roPlgx9FLfR2H9o93dyYz0vACJikFq4B9COXphIAXU28sA5ZZv/kEyFXr65flP7wVidEqN8T1U23wGrPz3s6k/nLi8F+6etwFG8bSy3heQe2MAtSkeKsOXqrHKC1d+DYPYxZabLJIKM87qVRceNGJ3BReyEQ4Ifw+c3PF/z4E6r9GOMiMqs73VCvDJ9CnMmwvq79tTK1avNsdnyQYBPRDbq45J98RTNFgQCTkjuQY6d7hxqXJaYEW8J1kpmRHE9tIEI6f41Cy2rUCvfzZzPtg14cX0iyK23hyaWWqX0IiEi/A2GS2+1cvFnmD/Ldh0="  # tp
         - secure: "K58TiRut4zgC34Mi3q1G9kvRWFw8TmYNk/YpstFo58dMw0By9CAXY0gAaywyPONVrnY5WVcGuXrPKQLCnVwzRWVT56jUIVnWClcbc/W1XG9whlzl52nssRG6wmo8wVQl9w3Csm2pEsNM9Th7ka3kZTHiV8tKmuscSjdQfEEfNHkE14D6oflsKa78LpD0BfzeJh1e8K3Y/K7P5sZOjdiOzCCnm7mGtQXYlSgxjwU8GkgZtDDtVpaY7uTHXnlDCvLAXSD1nxQarNy8rLVnTeetfFibZRSDeiqQHodQ6tBZRljsqc8zwbJsp8vZ2v3xeXvCMw+wjjTpRM7N6NIex/G80npnosKh7eIIdmC0tpEMhbUgbVjIY+LfgdtfbFYTdNuhOnNm4JB2X8U89Lwj5eat7Ji5z11LssxB6WVCpryDBdLktGiswy79NQ3M2LBdlL2l6FdlS/2wgOgsoKwh4jAh13UO2k+QFW3/epifn+xsqTFv0m+3i3L9gUidAY1SZqQ++LHZIcIk7Y8Ypl3qQNNt0Lgvx34f4BDRJXNr0Gd166e44XGRI/yI6bV39TN4/BhTsssUilqQziVgadBbRdQUT+xgjHGtj+yGu3qWIXD96nXLNAXWWYm4efN8+QEq3jylOwlLNAdEIjMx1tXxlgWOwMIQtt/D6UeoYyiLaZamYmQ="  # t
         - secure: "nOfWepKzhzYm0L8Mq/D3crBiHkAVrcn+AOdlNUVz3nKiWw646T1AAIaQ+lSclziZqV0r2dIeKe6hF994n8MWg05xDlf/xfhmO0PG7eTKclSWxWgq10vdM8XTgWg/2IJd/CYCS1rN6+/o0fXkZeRbPxrPa0qZFc/4fG3/m20zrpGn7LRATSPE3JJX0YFY9bddbCY3RCHIoX32gQI+n+QMczrfaWWyUuXac9k4C/RW3DmB3mVpML7dmbWg0Dr5uh9pJI5csM+apIvYksMAI8PBWIIIeEd83J44e1f5oXyHIcI+Pf+fu4expNyDi8emu5T5Dl998LC1j6NSkqxVKeXHuFFlkNVclPCNknBR3X5YD5UCydwYS8JNP+ut5WwOiBV3N/Pr4km5YzHyJkynUcTXC4PKqBBFZ7xAktwkPWl6zx6UKjLdSg+tDQkHbaA7B/OIWSJIpK0XypK3boRMI7TUiuVgzrolimz3dfE7/EHlHhjhqiDoopvwX0S9O1rXRVL1kvDO/Kl91WcYBkftXqRAbAWMgTVurwJw1LXaaCqe20jEKu8Bnc10PKI5Khe/iAJ+4CeEifJBpXU6lFIMhGquskkRTvxMatUv2jG0F1X1AEH4lCZpYP8eDRI/pBJQmbivrswZX9NSBJyN74W95Z0yN1jZP6OAxeVuSf6pgyK5Scg="  # dwh
+
+
+    # At the time of writing, Stackless Python does not have a publically
+    # accessible Docker image for Stackless Python 3.8.0. This means we have
+    # to manually build one and publish it in order to be able to use it
+    # from the other steps.
+    #
+    # Since this is somewhat slow, make sure to do this on a cronjob.
+    - name: "Build Stackless Python 3.8.0b3 image"
+      # Perform
+      if: |
+        fork = false && ( \
+          env(TRAVIS_EVENT_TYPE) = cron \
+          || sender = Nekokatt \
+          && commit_message ~= /\[rebuild containers\]/ \
+          && branch = master \
+          && tag IS NOT PRESENT \
+        )
+      env:
+        - DOCKER_DRIVER="overlay2"
+        - DOCKERFILE=pipelines/docker/stackless-3.8.0b3/Dockerfile
+        - IMAGE=stackless-python-hikari:3.8.0b3
+        - secure: "iT8BrzRDN7WMs2t8Iv2/6zKHf1sNbWngafQ5kNLumxwpK46h6EVEmBLj/GWZdlr0FZcWnf72QlXJZav+BtEAqmUeelZLYmp9RJKo8rXVKtpKBCcLVdVCDROMhnUb+7EHLO2LLub/0duIfdsoJWGZt/GwclJZ7106NH8RbTB+MdddAXkmbvQFN49FqBRfyqvJQZ25Tz23W+8r4m0joHkQx5+ojLuYlMsOHTpPz8esOAIbJh+zl0nY3zglLfbwCZHLXrbhg5Suq70Up9QCwes2Tp2lme2pOH96ynT+JDgGPRkV5yYuutyGqSNoGcCnsykDwoUXuQS/Ff+bzFbELgBkrYPnLn7y8NgBhydnUT7wD0TRuLPOh2ivyqhOCnfE9QN2en4uPBYAO8qA1+kxfeOZePstm/I/7dzGXmIn5Lv5AlJXWt8ubgu5H0FJin9FQWNTbmUywF7oCWSJIVSdddNj4xQG84t3d9xN7API+NWR3p6MTUaxNWQHHOsj9OuIQDgLszJi74jX+mSyeHYi2O7wS6x4whi83RxFgKyicMQCke4+OMBWIQykUekim5QLwe0KcvBPbTzJAzsOo+UkOm9s5GglARlhFDTRlfgJCbPDNea7FhcZqSlwf91GM5IVXa96UiZ/zMVzzb5Naldgn9NA61vM+T2V24cWZbCaIwozOpg="  # du
+        - secure: "cuk2Dy8SqdN/CpOAQqS1JPVbTGz8GRvU7xk/pPFJ9fQDgt7YS6LOTDAvywuGihS5pPFcf85oLscihW2sl90ewgr57QJcj+eXTYbpQORTDtV1c4dxTOYzJGkF8ZyXXCbZcmI6fNm2ejtKf1qD/tys0wIhlPFXN8aH1SpWCecXY4lA6ormH/Y3MdoaYy+rhHqo2Z011eOVwaCmy1F6Ur9yQUuWMGtXs77MV4VeBXGWl5eF4lninlGU0bnutL0XIJ6DUPn+V1uiMGL9pb5rc2T1/GjIsHC3/gmNj9fa3t6t3E6A7XpFyfO9jp5J4NGdb4gjPyXul9sMWputKLB+yP+F5EWpj90FseCa1DWl9yLf4I+DHkEHOuJHJTr++ATEShEds8z7r/x6giBIKXk46U3jcs/IEA0mPo6K+cYS4h+B3sXURs2HNTVOJYyGCxkr/CVVpuCSkTV3WOyzYtaLzXl0aGC3R83miHSb51CQITvQZq7SXseR0dMnflXIgBZTbWeKeoTlXq3qIOBEULI7z9lmZbvboN2LA4CwGNk1D/0dD9a+KipP3PMSRyp6bGBRsu1VxyF6YkdNl7Lx1edHH4UTbvgmrZv5qN6tDUMO9e9woPDp5EprH8RBx9EIE5lbxkkrP4zzzx1a7TDli0wg4jD7K86QOyOb99bLz6g2WFFIX0M="  # dat
+      stage: prepare
+      before_script: docker login -u "${DOCKER_USER}" -p "${DOCKER_ACCESS_TOKEN}"
+      script: docker build -t "${DOCKER_USER}/${IMAGE}" --file "${DOCKERFILE}" .
+      after_script: docker push "${DOCKER_USER}/${IMAGE}"
