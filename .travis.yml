@@ -78,6 +78,12 @@ jobs:
       stage: test
       <<: *windows_test_job
 
+    - name: "Windows 10 CPython 3.10 Dev AMD64 Tests"
+      env: PYTHON_VERSION="3.10.0-a1 --pre"
+      arch: amd64
+      stage: test
+      <<: *windows_test_job
+
     - name: "Linux CPython 3.8.5 AMD64 Tests"
       python: "3.8.5"
       arch: amd64
@@ -90,6 +96,12 @@ jobs:
       stage: test
       <<: *linux_test_job
 
+    - name: "Linux CPython 3.10 Dev AMD64 Tests"
+      python: "3.10-dev"
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
     - name: "Linux CPython 3.8.5 ARM64 Tests"
       python: "3.8.5"
       arch: arm64
@@ -98,6 +110,12 @@ jobs:
 
     - name: "Linux CPython 3.9 Dev ARM64 Tests"
       python: "3.9-dev"
+      arch: arm64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython 3.10 Dev ARM64 Tests"
+      python: "3.10-dev"
       arch: arm64
       stage: test
       <<: *linux_test_job
