@@ -176,8 +176,9 @@ async def all_of(
                     await f
                 except asyncio.CancelledError:
                     pass
+
+        gatherer.cancel()
         try:
-            gatherer.cancel()
-            await gatherer
+            await gatherer  # pragma: no cover - I tried everything to make this work with coverage, but no luck :(
         except asyncio.CancelledError:
             pass

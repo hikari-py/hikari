@@ -127,6 +127,8 @@ tuple_str_sad_test_data = [
     # Mixing ints and floats
     ("1.0, 1.0, 3", r'Expected exactly 1 decimal point "\." in blue channel'),
     ("1.0 2 3", r'Expected exactly 1 decimal point "\." in green channel'),
+    # Weird decimals out of range
+    ("0.1 2. 0.5", r"Expected green channel to be a decimal in the inclusive range of 0.0 and 1.0"),
     # Too many int digits
     ("0 25600 200", r"Expected 1 to 3 digits for green channel, got 5"),
     # Ints out of range
@@ -271,6 +273,7 @@ class TestColor:
     @pytest.mark.parametrize(
         ("input", "expected_result"),
         [
+            (colors.Color(0xFF051A), colors.Color(0xFF051A)),
             (0xFF051A, colors.Color(0xFF051A)),
             ((1, 0.5, 0), colors.Color(0xFF7F00)),
             ([0xFF, 0x5, 0x1A], colors.Color(0xFF051A)),

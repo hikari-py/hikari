@@ -251,6 +251,16 @@ class TestSupportsColor:
         assert getenv.call_count == 2
         getenv.assert_has_calls([mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0")])
 
+    @pytest.mark.parametrize("colorterm", ["truecolor", "24bit", "TRUECOLOR", "24BIT"])
+    def test_when_COLORTERM_has_correct_value(self, colorterm):
+        with mock.patch.object(os, "getenv", side_effect=["0", "0", colorterm]) as getenv:
+            assert ux.supports_color(True, False) is True
+
+        assert getenv.call_count == 3
+        getenv.assert_has_calls(
+            [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("COLORTERM", "")]
+        )
+
     def test_when_plat_is_Pocket_PC(self):
         stack = contextlib.ExitStack()
         getenv = stack.enter_context(mock.patch.object(os, "getenv", return_value="0"))

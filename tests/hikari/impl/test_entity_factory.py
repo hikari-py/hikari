@@ -1442,13 +1442,13 @@ class TestEntityFactoryImpl:
         # While this isn't a legitimate case based on the current behaviour of the API, we still want to cover this
         # to ensure no duplication occurs.
         member_payload = {**member_payload, "guild_id": "76543325"}
-        member_payload["role_ids"] = [11111, 22222, 76543325, 33333, 44444]
+        member_payload["roles"] = [11111, 22222, 76543325, 33333, 44444]
         member = entity_factory_impl.deserialize_member(member_payload)
         assert member.app is mock_app
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
+        assert member.role_ids == [11111, 22222, 76543325, 33333, 44444]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
@@ -2459,18 +2459,19 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["edited_timestamp"] = None
+        message_payload["member"] = None
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
+        assert partial_message.guild_id is not None
+        assert partial_message.member is None
 
-    def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
-        partial_message = entity_factory_impl.deserialize_partial_message(
-            {"id": 123, "channel_id": 456, "author": user_payload}
-        )
+    def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
+        partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
         assert partial_message.guild_id is None
-        assert partial_message.author is not None
+        assert partial_message.author is None
         assert partial_message.member is None
         assert partial_message.content is undefined.UNDEFINED
         assert partial_message.timestamp is undefined.UNDEFINED

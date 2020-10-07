@@ -355,6 +355,16 @@ class TestSnowflakeSet:
         # then
         assert sfs._ids.tolist() == expect
 
+    def test_add_all_when_empty_collection_passed(self):
+        started = [0, 122]
+        # given
+        sfs = collections.SnowflakeSet()
+        sfs._ids.extend(started)
+        # when
+        sfs.add_all([])
+        # then
+        assert sfs._ids.tolist() == started
+
     def test_clear_empties_buffer(self):
         # given
         sfs = collections.SnowflakeSet(123, 121, 999991, 121, 121, 124, 120)
@@ -409,6 +419,7 @@ class TestSnowflakeSet:
             ([9, 18, 27, 36, 45, 54, 63], 63, True),
             ([9, 18, 27, 36, 45, 54, 63], 64, False),
             ([9, 18, 27, 36, 45, 54, 63], 72, False),
+            ([12], "12", False),
         ],
     )
     def test_contains(self, start_with, look_for, expect):
