@@ -74,7 +74,7 @@ setuptools.setup(
         "CI": metadata.ci,
     },
     packages=setuptools.find_namespace_packages(include=[name + "*"]),
-    python_requires=">=3.8.0,<3.10",
+    python_requires=">=3.8.0,<3.11",
     install_requires=parse_requirements_file("requirements.txt"),
     extras_require={
         "speedups": parse_requirements_file("speedup-requirements.txt"),
@@ -92,6 +92,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: Stackless",
         "Topic :: Communications :: Chat",
