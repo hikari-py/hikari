@@ -154,8 +154,7 @@ jobs:
       if: |
         fork = false && ( \
           env(TRAVIS_EVENT_TYPE) = cron \
-          || sender = Nekokatt \
-          && commit_message ~= /\[rebuild containers\]/ \
+          || commit_message ~= /;;rebuild containers;;/ \
           && branch = master \
           && tag IS NOT PRESENT \
         )
