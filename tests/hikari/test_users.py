@@ -41,6 +41,21 @@ class TestPremiumType:
         assert str(premium_type) == "NITRO_CLASSIC"
 
 
+class TestPartialUser:
+    @pytest.fixture()
+    def obj(self):
+        # ABC, so must be stubbed.
+        return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
+
+    @pytest.mark.asyncio
+    async def test_fetch_self(self, obj):
+        obj.id = 123
+        obj.app = mock.AsyncMock()
+
+        assert await obj.fetch_self() is obj.app.rest.fetch_user.return_value
+        obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
+
+
 class TestUser:
     @pytest.fixture()
     def obj(self):

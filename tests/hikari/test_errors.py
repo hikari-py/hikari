@@ -27,6 +27,12 @@ from hikari import errors
 from hikari import intents
 
 
+class TestShardCloseCode:
+    @pytest.mark.parametrize(("code", "expected"), [(1000, True), (1001, True), (4000, False), (4014, False)])
+    def test_is_standard_property(self, code, expected):
+        assert errors.ShardCloseCode(code).is_standard is expected
+
+
 class TestGatewayError:
     @pytest.fixture()
     def error(self):

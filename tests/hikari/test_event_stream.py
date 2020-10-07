@@ -33,6 +33,20 @@ from hikari.impl import bot
 from tests.hikari import hikari_test_helpers
 
 
+@pytest.mark.asyncio
+async def test__generate_weak_listener_when_method_is_None():
+    def test():
+        return None
+
+    call_weak_method = event_stream._generate_weak_listener(test)
+
+    with pytest.raises(
+        TypeError,
+        match=r"dead weak referenced subscriber method cannot be executed, try actually closing your event streamers",
+    ):
+        await call_weak_method(None)
+
+
 class TestStreamer:
     @pytest.fixture(scope="module")
     def stub_streamer(self):
@@ -190,7 +204,7 @@ class TestEventStream:
         streamer._event_type = events.Event
         streamer._active = True
 
-        with mock.patch.object(asyncio, "ensure_future", return_value=mock_coroutine):
+        with mock.patch.object(asyncio, "ensure_future", side_effect=RuntimeError):
             with unittest.TestCase().assertLogs("hikari", level=logging.WARNING) as logging_watcher:
                 del streamer
 

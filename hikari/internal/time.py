@@ -110,20 +110,20 @@ def iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.datetime:
     return datetime.datetime.fromisoformat(datetime_str)
 
 
-# MyPy complains if this is not present, so only do this if MyPy isn't running!
-if not typing.TYPE_CHECKING:
-    try:
-        # CISO8601 is around 600x faster than modules like dateutil, which is
-        # going to be noticable on big bots where you are parsing hundreds of
-        # thousands of "joined_at" fields on users on startup.
-        import ciso8601
+try:  # pragma: no cover
+    # CISO8601 is around 600x faster than modules like dateutil, which is
+    # going to be noticable on big bots where you are parsing hundreds of
+    # thousands of "joined_at" fields on users on startup.
+    #
+    # ciso8601 doesn't have typing available, so ignore it.
+    import ciso8601  # type: ignore[import]
 
-        # Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
-        # but somewhat of a subset with some edge cases.
-        # See https://tools.ietf.org/html/rfc3339#section-5.6
-        iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339  # noqa: F811 redefined function
-    except ImportError:
-        pass
+    # Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
+    # but somewhat of a subset with some edge cases.
+    # See https://tools.ietf.org/html/rfc3339#section-5.6
+    iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339  # noqa: F811 - Redefined function
+except ImportError:
+    pass
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
