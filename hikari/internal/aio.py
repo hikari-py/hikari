@@ -179,6 +179,8 @@ async def all_of(
 
         gatherer.cancel()
         try:
-            await gatherer  # pragma: no cover - I tried everything to make this work with coverage, but no luck :(
+            # coverage.py will complain that this is not fully covered, as the
+            # "except" block will always be hit. This is intentional.
+            await gatherer  # pragma: no cover
         except asyncio.CancelledError:
             pass
