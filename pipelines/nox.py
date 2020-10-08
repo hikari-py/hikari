@@ -31,7 +31,7 @@ from nox.sessions import Session
 from pipelines import config
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "pytest", "pdoc3", "pages", "flake8", "mypy", "safety"]
+_options.sessions = ["reformat-code", "pytest", "flake8", "mypy", "safety", "pdoc3", "pages"]
 
 
 def session(*, only_if=lambda: True, reuse_venv: bool = False, **kwargs):
