@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import copy
+import pickle  # noqa: S403 Consider possible security implications associated with pickle module.
 
 import pytest
 
@@ -54,7 +55,7 @@ class TestUndefined:
     def test_deepcopy(self):
         assert copy.deepcopy(undefined.UNDEFINED) is undefined.UNDEFINED
 
-
-class TestUndefinedSentinel:
-    def test_new(self):
-        assert type(undefined.UndefinedType.UNDEFINED_VALUE.value)() is undefined.UNDEFINED
+    def test_can_pickle(self):
+        ser = pickle.dumps(undefined.UNDEFINED)
+        deser = pickle.loads(ser)  # noqa: S301 pickle loads is unsafe with untrusted data
+        assert deser is undefined.UNDEFINED
