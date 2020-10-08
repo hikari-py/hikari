@@ -214,6 +214,15 @@ class RESTApp(traits.ExecutorAware):
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
         `builtins.None`.
+    max_rate_limit : builtins.float
+        Maximum number of seconds to sleep for when rate limited. If a rate
+        limit occurs that is longer than this value, then a
+        `hikari.errors.RateLimitedError` will be raised instead of waiting.
+
+        This is provided since some endpoints may respond with non-sensible
+        rate limits.
+
+        Defaults to one minute if unspecified.
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
@@ -232,6 +241,7 @@ class RESTApp(traits.ExecutorAware):
         "_event_loop",
         "_executor",
         "_http_settings",
+        "_max_rate_limit",
         "_proxy_settings",
         "_url",
     )
@@ -243,6 +253,7 @@ class RESTApp(traits.ExecutorAware):
         connector_owner: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
+        max_rate_limit: float = 60,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
@@ -264,6 +275,7 @@ class RESTApp(traits.ExecutorAware):
         self._connector_owner = connector_owner
         self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
+        self._max_rate_limit = max_rate_limit
         self._url = url
 
     @property
@@ -309,6 +321,7 @@ class RESTApp(traits.ExecutorAware):
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
+            max_rate_limit=self._max_rate_limit,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
@@ -370,6 +383,13 @@ class RESTClientImpl(rest_api.RESTClient):
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking IO. Defaults to the `asyncio` thread
         pool if set to `builtins.None`.
+    max_rate_limit : builtins.float
+        Maximum number of seconds to sleep for when rate limited. If a rate
+        limit occurs that is longer than this value, then a
+        `hikari.errors.RateLimitedError` will be raised instead of waiting.
+
+        This is provided since some endpoints may respond with non-sensible
+        rate limits.
     token : hikari.undefined.UndefinedOr[builtins.str]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -414,12 +434,13 @@ class RESTClientImpl(rest_api.RESTClient):
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
+        max_rate_limit: float,
         proxy_settings: config.ProxySettings,
         token: typing.Optional[str],
         token_type: typing.Optional[str] = None,
         rest_url: typing.Optional[str],
     ) -> None:
-        self.buckets = buckets.RESTBucketManager()
+        self.buckets = buckets.RESTBucketManager(max_rate_limit)
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
 
@@ -517,11 +538,7 @@ class RESTClientImpl(rest_api.RESTClient):
         no_auth: bool = False,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
-        # of JSON response. If an error occurs, the response body is returned in the
-        # raised exception as a bytes object. This is done since the differences between
-        # the V6 and V7 API error messages are not documented properly, and there are
-        # edge cases such as Cloudflare issues where we may receive arbitrary data in
-        # the response instead of a JSON object.
+        # of JSON response.
 
         if not self.buckets.is_started:
             self.buckets.start()

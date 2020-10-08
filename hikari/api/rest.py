@@ -121,9 +121,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -199,9 +205,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing permissions to edit the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -245,9 +254,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             channel.
         hikari.errors.NotFoundError
             If the origin or target channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -275,9 +287,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `MANAGE_CHANNEL` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -369,9 +384,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -407,9 +425,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -444,9 +465,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `MANAGE_CHANNEL` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found in any guilds you are a member of.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -512,9 +536,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
             if provided.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -568,9 +595,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `SEND_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -610,9 +640,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `READ_MESSAGES` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -648,9 +681,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -686,9 +722,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -753,9 +792,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `READ_MESSAGE_HISTORY` in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -802,9 +844,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -946,9 +991,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             person you are trying to message has the DM's disabled.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -995,9 +1043,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             and `MANAGE_MESSAGES` permissions for the target channel.
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1136,9 +1187,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permission.
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1174,9 +1228,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             not sent by you.
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1267,9 +1324,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             are the first person to add the reaction).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1308,9 +1368,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1351,9 +1414,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1398,9 +1464,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1438,9 +1507,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1489,9 +1561,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel or message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1548,9 +1623,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1595,9 +1673,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the webhook is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1634,9 +1715,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1672,9 +1756,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1733,9 +1820,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the webhook is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1775,9 +1865,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the webhoook is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1926,9 +2019,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1947,9 +2043,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1972,9 +2071,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2005,9 +2107,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2037,9 +2142,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2062,9 +2170,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2122,9 +2233,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2170,9 +2284,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2203,9 +2320,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found or you own the guild.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2237,9 +2357,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the user is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2263,9 +2386,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2345,9 +2471,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If you own the guild or the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2373,9 +2502,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2406,9 +2538,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2464,9 +2599,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `VIEW_AUDIT_LOG` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2509,9 +2647,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild or the emoji are not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2544,9 +2685,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2607,9 +2751,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2669,9 +2816,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild or the emoji are not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2707,9 +2857,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild or the emoji are not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2740,9 +2893,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2785,9 +2941,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2821,9 +2980,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found or you are not part of the guild.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2933,9 +3095,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2963,9 +3128,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If you own the guild or if you are not in it.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2998,9 +3166,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3073,9 +3244,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3148,9 +3322,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3221,9 +3398,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3280,9 +3460,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3317,9 +3500,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3357,9 +3543,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3397,9 +3586,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3487,9 +3679,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3532,9 +3727,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3581,9 +3779,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild, user or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3630,9 +3831,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild, user or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3675,9 +3879,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3729,9 +3936,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3777,9 +3987,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3823,9 +4036,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.NotFoundError
             If the guild or user are not found or if the user
             is not banned.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3861,9 +4077,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3897,9 +4116,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3968,9 +4190,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4004,9 +4229,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4076,9 +4304,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4113,9 +4344,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4168,9 +4402,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `KICK_MEMBERS` permission.
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4232,9 +4469,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `KICK_MEMBERS` permission.
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4272,9 +4512,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4310,9 +4553,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4348,9 +4594,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4383,9 +4632,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4436,9 +4688,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4471,9 +4726,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be

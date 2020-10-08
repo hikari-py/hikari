@@ -180,6 +180,19 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
+    max_rate_limit : builtins.float
+        The max number of seconds to backoff for when rate limited. Anything
+        greater than this will instead raise an error.
+
+        This defaults to one minute if left to the default value. This is to
+        stop potentially indefinitely waiting on an endpoint, which is almost
+        never what you want to do if giving a response to a user.
+
+        You can set this to `float("inf")` to disable this check entirely.
+
+        Note that this only applies to the REST API component that communicates
+        with Discord, and will not affect sharding or third party HTTP endpoints
+        that may be in use.
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
@@ -262,6 +275,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
+        max_rate_limit: float = 60,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
@@ -325,6 +339,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
+            max_rate_limit=max_rate_limit,
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,

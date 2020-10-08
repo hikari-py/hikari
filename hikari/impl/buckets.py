@@ -209,6 +209,7 @@ import datetime
 import logging
 import typing
 
+from hikari import errors
 from hikari.impl import rate_limits
 from hikari.internal import aio
 from hikari.internal import routes
@@ -260,18 +261,31 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> asyncio.Future[None]:
+    def acquire(self, max_rate_limit: float = float("inf")) -> asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         !!! note
             You should afterwards invoke `RESTBucket.update_rate_limit` to
             update any rate limit information you are made aware of.
 
+        Parameters
+        ----------
+        max_rate_limit : builtins.float
+            The max number of seconds to backoff for when rate limited. Anything
+            greater than this will instead raise an error.
+
+            The default is an infinite value, which will thus never time out.
+
         Returns
         -------
         asyncio.Future[builtins.None]
             A future that should be awaited immediately. Once the future completes,
             you are allowed to proceed with your operation.
+
+
+            If the reset-after time for the bucket is greater than
+            `max_rate_limit`, then this will contain `RateLimitTooLongError`
+            as an exception.
         """
         return aio.completed_future(None) if self.is_unknown else super().acquire()
 
@@ -315,6 +329,12 @@ class RESTBucketManager:
     This is designed to provide bucketed rate limiting for Discord HTTP
     endpoints that respects the `X-RateLimit-Bucket` rate limit header. To do
     this, it makes the assumption that any limit can change at any time.
+
+    Parameters
+    ----------
+    max_rate_limit : builtins.float
+        The max number of seconds to backoff for when rate limited. Anything
+        greater than this will instead raise an error.
     """
 
     _POLL_PERIOD: typing.Final[typing.ClassVar[int]] = 20
@@ -325,6 +345,7 @@ class RESTBucketManager:
         "real_hashes_to_buckets",
         "closed_event",
         "gc_task",
+        "max_rate_limit",
     )
 
     routes_to_hashes: typing.Final[typing.MutableMapping[routes.Route, str]]
@@ -342,11 +363,18 @@ class RESTBucketManager:
     gc_task: typing.Optional[asyncio.Task[None]]
     """The internal garbage collector task."""
 
-    def __init__(self) -> None:
+    max_rate_limit: float
+    """The max number of seconds to backoff for when rate limited.
+
+    Anything greater than this will instead raise an error.
+    """
+
+    def __init__(self, max_rate_limit: float) -> None:
         self.routes_to_hashes = {}
         self.real_hashes_to_buckets = {}
         self.closed_event: asyncio.Event = asyncio.Event()
         self.gc_task: typing.Optional[asyncio.Task[None]] = None
+        self.max_rate_limit = max_rate_limit
 
     def __enter__(self) -> RESTBucketManager:
         return self
@@ -527,7 +555,21 @@ class RESTBucketManager:
             bucket = RESTBucket(real_bucket_hash, compiled_route)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
-        return bucket.acquire()
+        now = time.monotonic()
+
+        if bucket.is_rate_limited(now):
+            if bucket.reset_at > self.max_rate_limit:
+                raise errors.RateLimitTooLongError(
+                    route=compiled_route,
+                    retry_after=bucket.reset_at - now,
+                    max_retry_after=self.max_rate_limit,
+                    reset_at=bucket.reset_at,
+                    limit=bucket.limit,
+                    period=bucket.period,
+                    message="The request has been rejected, as you would be waiting for more than the max retry-after",
+                )
+
+        return bucket.acquire(self.max_rate_limit)
 
     def update_rate_limits(
         self,
