@@ -41,6 +41,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
+from hikari.impl import buckets
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
@@ -167,6 +168,7 @@ def rest_app():
         connector_owner=False,
         executor=None,
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
+        max_rate_limit=float("inf"),
         proxy_settings=mock.Mock(spec_set=config.ProxySettings),
         url="https://some.url",
     )
@@ -182,6 +184,7 @@ class TestRESTApp:
                 connector_owner=False,
                 executor=None,
                 http_settings=http_settings,
+                max_rate_limit=float("inf"),
                 proxy_settings=None,
                 url=None,
             )
@@ -224,6 +227,7 @@ class TestRESTApp:
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
+            max_rate_limit=float("inf"),
             proxy_settings=rest_app._proxy_settings,
             token="token",
             token_type="Type",
@@ -310,6 +314,7 @@ def rest_client(rest_client_class):
         connector_factory=mock.Mock(),
         connector_owner=False,
         http_settings=mock.Mock(spec=config.HTTPSettings),
+        max_rate_limit=float("inf"),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
         token_type="tYpe",
@@ -370,11 +375,29 @@ class StubModel(snowflakes.Unique):
 
 
 class TestRESTClientImpl:
+    def test__init__passes_max_rate_limit(self):
+        with mock.patch.object(buckets, "RESTBucketManager") as bucket:
+            rest.RESTClientImpl(
+                connector_factory=mock.Mock(),
+                connector_owner=True,
+                http_settings=mock.Mock(),
+                max_rate_limit=float("inf"),
+                proxy_settings=mock.Mock(),
+                token=None,
+                token_type=None,
+                rest_url=None,
+                executor=None,
+                entity_factory=None,
+            )
+
+        bucket.assert_called_once_with(float("inf"))
+
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
             token=None,
             token_type=None,
@@ -389,6 +412,7 @@ class TestRESTClientImpl:
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
             token="some_token",
             token_type=None,
@@ -403,6 +427,7 @@ class TestRESTClientImpl:
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
             token="some_token",
             token_type="tYpe",
@@ -417,6 +442,7 @@ class TestRESTClientImpl:
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
             token=None,
             token_type=None,
@@ -431,6 +457,7 @@ class TestRESTClientImpl:
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
             token=None,
             token_type=None,

@@ -210,7 +210,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -259,7 +259,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -292,7 +292,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -389,7 +389,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -430,7 +430,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -470,7 +470,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -541,7 +541,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -600,7 +600,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -645,7 +645,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -686,7 +686,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -727,7 +727,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -797,7 +797,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -849,7 +849,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -996,7 +996,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1048,7 +1048,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1192,7 +1192,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1233,7 +1233,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1329,7 +1329,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1373,7 +1373,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1419,7 +1419,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1469,7 +1469,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1512,7 +1512,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1566,7 +1566,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1628,7 +1628,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1678,7 +1678,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1720,7 +1720,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1761,7 +1761,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1825,7 +1825,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -1870,7 +1870,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2024,7 +2024,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2048,7 +2048,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2076,7 +2076,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2112,7 +2112,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2147,7 +2147,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2175,7 +2175,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2238,7 +2238,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2289,7 +2289,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2325,7 +2325,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2362,7 +2362,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2391,7 +2391,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2476,7 +2476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2507,7 +2507,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2543,7 +2543,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2604,7 +2604,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2652,7 +2652,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2690,7 +2690,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2756,7 +2756,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2821,7 +2821,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2862,7 +2862,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2898,7 +2898,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2946,7 +2946,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -2985,7 +2985,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3100,7 +3100,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3133,7 +3133,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3171,7 +3171,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3249,7 +3249,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3327,7 +3327,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3403,7 +3403,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3465,7 +3465,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3505,7 +3505,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3548,7 +3548,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3591,7 +3591,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3684,7 +3684,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3732,7 +3732,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3784,7 +3784,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3836,7 +3836,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3884,7 +3884,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3941,7 +3941,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -3992,7 +3992,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4041,7 +4041,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4082,7 +4082,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4121,7 +4121,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4195,7 +4195,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4234,7 +4234,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4309,7 +4309,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4349,7 +4349,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4407,7 +4407,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4474,7 +4474,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4517,7 +4517,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4558,7 +4558,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4599,7 +4599,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4637,7 +4637,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4693,7 +4693,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
@@ -4731,7 +4731,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes bucket-specific
+            rate-limits automatically. This includes most bucket-specific
             rate-limits and global rate-limits. In some rare edge cases,
             however, Discord implements other undocumented rules for
             rate-limiting, such as limits per attribute. These cannot be
