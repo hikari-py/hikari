@@ -52,6 +52,7 @@ if typing.TYPE_CHECKING:
         """
 
     UNDEFINED: typing.Literal[UndefinedType.UNDEFINED] = UndefinedType.UNDEFINED
+    """A sentinel singleton that denotes a missing or omitted value."""
 
 else:
     # Outside of MyPy, we do not do anything else.
@@ -89,8 +90,13 @@ else:
             return "UNDEFINED"
 
     UNDEFINED = UndefinedType()
-    setattr(UndefinedType, "__new__", NotImplemented)
+    """A sentinel singleton that denotes a missing or omitted value."""
 
+    def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
+        raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")
+
+    UndefinedType.__new__ = __new__
+    del __new__
 
 T = typing.TypeVar("T", covariant=True)
 UndefinedOr = typing.Union[T, UndefinedType]
