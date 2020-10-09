@@ -31,72 +31,72 @@ __all__: typing.List[str] = [
     "count",
 ]
 
-import enum
 import typing
 
 SelfT = typing.TypeVar("SelfT")
 
 
-class _UndefinedSentinel:
-    __slots__: typing.Sequence[str] = ()
+if typing.TYPE_CHECKING:
+    import enum as _enum
 
-    def __bool__(self) -> bool:
-        return False
+    # If MyPy is running, we define UNDEFINED as an enum, and as the only value.
+    # This tells MyPy that the value is an algebraic singleton, which allows
+    # `is` and `is not` to behave in the same way `isinstance` would.
+    class UndefinedType(_enum.Enum):
+        """The type of the `UNDEFINED` singleton sentinel value."""
 
-    def __copy__(self: SelfT) -> SelfT:
-        # This is meant to be a singleton
-        return self
+        UNDEFINED = _enum.auto()
+        """Undefined sentinel value.
 
-    def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
-        memo[id(self)] = self
+        This will behave as a false value in conditions.
+        """
 
-        # This is meant to be a singleton
-        return self
+    UNDEFINED: typing.Literal[UndefinedType.UNDEFINED] = UndefinedType.UNDEFINED
+    """A sentinel singleton that denotes a missing or omitted value."""
 
-    def __repr__(self) -> str:
-        return "UNDEFINED"
+else:
+    # Outside of MyPy, we do not do anything else.
 
-    def __str__(self) -> str:
-        return "UNDEFINED"
+    class UndefinedType:
+        """The type of the `UNDEFINED` singleton sentinel value."""
 
+        __slots__: typing.Sequence[str] = ()
 
-# Using an enum enables us to use typing.Literal. MyPy has a special case for
-# assuming that the number of instances of a specific enum is limited by design,
-# whereas using a constant value does not provide that. In short, this allows
-# MyPy to determine it can statically cast a value to a different type when
-# we do `is` and `is not` checks on values, which removes the need for casts.
-@typing.final
-class UndefinedType(_UndefinedSentinel, enum.Enum):
-    """Wrapper type around the undefined value.
+        def __bool__(self) -> bool:
+            return False
 
-    If you see this in a signature somewhere, it means you can pass a
-    value of `UNDEFINED` and it will be valid.
+        def __copy__(self: SelfT) -> SelfT:
+            # This is meant to be a singleton
+            return self
 
-    If you see this as the type of an attribute somewhere, it means that
-    the attribute may be `UNDEFINED` in some edge cases.
+        def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
+            memo[id(self)] = self
 
-    This exists to allow static type checkers to dereference this value
-    using `typing.Literal`, which aids in static type analysis by treating
-    this value as a true singleton. This can only be achieved by using
-    an `enum.Enum` of a single value to enforce this.
+            # This is meant to be a singleton
+            return self
 
-    For all other purposes, you can treat this as the type of the
-    `UNDEFINED` sentinel in this module. You should generally not need to
-    use this, however.
-    """
+        def __getstate__(self) -> typing.Any:
+            # Returning False tells pickle to not call `__setstate__` on unpickling.
+            return False
 
-    UNDEFINED_VALUE = _UndefinedSentinel()
+        def __repr__(self) -> str:
+            return "UNDEFINED"
 
+        def __reduce__(self) -> str:
+            # Returning a string makes pickle fetch from the module namespace.
+            return "UNDEFINED"
 
-# Prevent making any more instances as much as possible.
-setattr(_UndefinedSentinel, "__new__", lambda _: UNDEFINED)
-del _UndefinedSentinel
+        def __str__(self) -> str:
+            return "UNDEFINED"
 
-UNDEFINED: typing.Final[typing.Literal[UndefinedType.UNDEFINED_VALUE]] = UndefinedType.UNDEFINED_VALUE
-"""Undefined sentinel value.
+    UNDEFINED = UndefinedType()
+    """A sentinel singleton that denotes a missing or omitted value."""
 
-This will behave as a false value in conditions.
-"""
+    def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
+        raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")
+
+    UndefinedType.__new__ = __new__
+    del __new__
 
 T = typing.TypeVar("T", covariant=True)
 UndefinedOr = typing.Union[T, UndefinedType]
@@ -125,8 +125,11 @@ Consider `UndefinedOr[T]` semantically equivalent to `undefined` versus
 
 If in doubt, remember:
 
-- `UNDEFINED` means there is no value present.
-- `builtins.None` means the value is present and explicitly empty/null/void.
+- `UNDEFINED` means there is no value present, or that it has been left to
+    the default value.
+- `builtins.None` means the value is present and explicitly empty/null/void,
+    where this has a deterministic documented behaviour and no differentiation
+    is made between a `builtins.None` value, and one that has been omitted.
 """
 
 UndefinedNoneOr = typing.Union[UndefinedOr[T], None]

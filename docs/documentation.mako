@@ -229,6 +229,7 @@
                         module_part = module.find_ident(phrase.split('.')[0])
                         if not isinstance(module_part, pdoc.External):
                             print(f"Code reference `{phrase}` in module '{module.refname}' does not match any documented object.")
+                            print("Type", module_part.__class__, module_part)
 
                         bits = ident.name.split(".")[:-1]
 
