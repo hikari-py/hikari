@@ -1,14 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: pip
-    directory: "/" # Location of package manifests
+    directory: /
     schedule:
-      interval: "daily"
+      interval: weekly
+      day: sunday
     assignees:
-      - "Nekokatt"
+      - Nekokatt
     reviewers:
-      - "Nekokatt"
-      - "Tandemdude"
-      - "Davfsa"
+      - Nekokatt
     rebase-strategy: auto
     target-branch: master
