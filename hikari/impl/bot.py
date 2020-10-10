@@ -184,7 +184,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
 
-        This defaults to one minute if left to the default value. This is to
+        This defaults to five minutes if left to the default value. This is to
         stop potentially indefinitely waiting on an endpoint, which is almost
         never what you want to do if giving a response to a user.
 
@@ -275,7 +275,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
-        max_rate_limit: float = 60,
+        max_rate_limit: float = 300,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:

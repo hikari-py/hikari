@@ -222,7 +222,7 @@ class RESTApp(traits.ExecutorAware):
         This is provided since some endpoints may respond with non-sensible
         rate limits.
 
-        Defaults to one minute if unspecified.
+        Defaults to five minutes if unspecified.
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
@@ -253,7 +253,7 @@ class RESTApp(traits.ExecutorAware):
         connector_owner: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
-        max_rate_limit: float = 60,
+        max_rate_limit: float = 300,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
