@@ -58,12 +58,12 @@ jobs:
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux CPython 3.10-rc AMD64 Tests"
-      env: PYTHON_IMAGE="python:3.10-rc"
-      language: ruby
-      arch: amd64
-      stage: test
-      <<: *linux_test_job
+#    - name: "Linux CPython 3.10-rc AMD64 Tests"
+#      env: PYTHON_IMAGE="python:3.10-rc"
+#      language: ruby
+#      arch: amd64
+#      stage: test
+#      <<: *linux_test_job
 
     - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
       env: PYTHON_IMAGE="nekokatt/stackless-python-hikari:3.8.0b3"
