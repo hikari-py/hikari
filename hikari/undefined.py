@@ -36,67 +36,49 @@ import typing
 SelfT = typing.TypeVar("SelfT")
 
 
-if typing.TYPE_CHECKING:
-    import enum as _enum
+class UndefinedType:
+    """The type of the `UNDEFINED` singleton sentinel value."""
 
-    # If MyPy is running, we define UNDEFINED as an enum, and as the only value.
-    # This tells MyPy that the value is an algebraic singleton, which allows
-    # `is` and `is not` to behave in the same way `isinstance` would.
-    class UndefinedType(_enum.Enum):
-        """The type of the `UNDEFINED` singleton sentinel value."""
+    __slots__: typing.Sequence[str] = ()
 
-        UNDEFINED = _enum.auto()
-        """Undefined sentinel value.
+    def __bool__(self) -> bool:
+        return False
 
-        This will behave as a false value in conditions.
-        """
+    def __copy__(self: SelfT) -> SelfT:
+        # This is meant to be a singleton
+        return self
 
-    UNDEFINED: typing.Literal[UndefinedType.UNDEFINED] = UndefinedType.UNDEFINED
-    """A sentinel singleton that denotes a missing or omitted value."""
+    def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
+        memo[id(self)] = self
 
-else:
-    # Outside of MyPy, we do not do anything else.
+        # This is meant to be a singleton
+        return self
 
-    class UndefinedType:
-        """The type of the `UNDEFINED` singleton sentinel value."""
+    def __getstate__(self) -> typing.Any:
+        # Returning False tells pickle to not call `__setstate__` on unpickling.
+        return False
 
-        __slots__: typing.Sequence[str] = ()
+    def __repr__(self) -> str:
+        return "UNDEFINED"
 
-        def __bool__(self) -> bool:
-            return False
+    def __reduce__(self) -> str:
+        # Returning a string makes pickle fetch from the module namespace.
+        return "UNDEFINED"
 
-        def __copy__(self: SelfT) -> SelfT:
-            # This is meant to be a singleton
-            return self
+    def __str__(self) -> str:
+        return "UNDEFINED"
 
-        def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
-            memo[id(self)] = self
 
-            # This is meant to be a singleton
-            return self
+UNDEFINED = UndefinedType()
+"""A sentinel singleton that denotes a missing or omitted value."""
 
-        def __getstate__(self) -> typing.Any:
-            # Returning False tells pickle to not call `__setstate__` on unpickling.
-            return False
 
-        def __repr__(self) -> str:
-            return "UNDEFINED"
+def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
+    raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")
 
-        def __reduce__(self) -> str:
-            # Returning a string makes pickle fetch from the module namespace.
-            return "UNDEFINED"
 
-        def __str__(self) -> str:
-            return "UNDEFINED"
-
-    UNDEFINED = UndefinedType()
-    """A sentinel singleton that denotes a missing or omitted value."""
-
-    def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
-        raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")
-
-    UndefinedType.__new__ = __new__
-    del __new__
+UndefinedType.__new__ = __new__
+del __new__
 
 T = typing.TypeVar("T", covariant=True)
 UndefinedOr = typing.Union[T, UndefinedType]
