@@ -4,51 +4,100 @@ stages:
   - deploy
   - webhooks
 
-cache: pip
-
-_test_job: &test_job
-  install:
-    - ${PYTHON_COMMAND} -m pip install nox
-  before_script:
-    - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-    - chmod +x ./cc-test-reporter
-    - mkdir public > /dev/null 2>&1 || true
-    - ${PYTHON_COMMAND} -V
-  script:
-    - ${PYTHON_COMMAND} -m nox --sessions pytest
-    # Use --cov-append to make sure coverage covers speedup and non-speedup execution paths equally.
-    - ${PYTHON_COMMAND} -m nox --sessions pytest-speedups -- --cov-append
-  after_script:
-    - bash <(curl -s https://codecov.io/bash)
-    - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-
 _windows_test_job: &windows_test_job
   os: windows
   language: shell
   before_install:
     - choco install --no-progress python --version=${PYTHON_VERSION} -y
-  env:
-    - PYTHON_COMMAND="py -3"
-  <<: *test_job
+  script:
+    - export PYTHON_COMMAND="py -3"
+    - source scripts/test-job.sh
 
 _linux_test_job: &linux_test_job
   os: linux
-  language: python
-  env:
-    - PYTHON_COMMAND=python
-  <<: *test_job
-
-env:
-  global:
-    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
-    - CC_TEST_REPORTER_ID=bf39911ceca45a536d408ea6456ed67460c73754f1411fb45f5e957398d98348
+  language: shell
+  script:
+    - docker run --mount "type=bind,src=$(pwd),dst=/hikari" "${PYTHON_IMAGE}" /bin/bash -c "cd /hikari && bash /hikari/scripts/test-job.sh"
 
 jobs:
   include:
+    # Testing
+    #
+    # On Windows, we install Python from choco.
+    # On Linux, we use Docker to get the specific version we want, as Travis
+    # is no where near as quick to add newly released versions of Python to
+    # their repos for these jobs as the CPython docker team are to make releases
+    - name: "Windows 10 CPython 3.8.5 AMD64 Tests"
+      env: PYTHON_VERSION="3.8.5"
+      arch: amd64
+      stage: test
+      <<: *windows_test_job
+
+    - name: "Windows 10 CPython 3.9.0 AMD64 Tests"
+      env: PYTHON_VERSION="3.9.0"
+      arch: amd64
+      stage: test
+      <<: *windows_test_job
+
+    - name: "Windows 10 CPython 3.10.0-a1 AMD64 Tests"
+      env: PYTHON_VERSION="3.10.0-a1 --pre"
+      arch: amd64
+      stage: test
+      <<: *windows_test_job
+
+    - name: "Linux CPython 3.8.5 AMD64 Tests"
+      env: PYTHON_IMAGE="python:3.8.5"
+      language: ruby
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython 3.9.0 AMD64 Tests"
+      env: PYTHON_IMAGE="python:3.9.0"
+      language: ruby
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
+#    - name: "Linux CPython 3.10-rc AMD64 Tests"
+#      env: PYTHON_IMAGE="python:3.10-rc"
+#      language: ruby
+#      arch: amd64
+#      stage: test
+#      <<: *linux_test_job
+
+    - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
+      env: PYTHON_IMAGE="nekokatt/stackless-python-hikari:3.8.0b3"
+      language: ruby
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython 3.8.5 ARM64 Tests"
+      env: PYTHON_IMAGE="python:3.8.5"
+      language: ruby
+      arch: arm64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython 3.9.0 ARM64 Tests"
+      env: PYTHON_IMAGE="python:3.9.0"
+      language: ruby
+      arch: arm64
+      stage: test
+      <<: *linux_test_job
+
+#    - name: "Linux CPython 3.10-rc ARM64 Tests"
+#      env: PYTHON_IMAGE="python:3.10-rc"
+#      language: ruby
+#      arch: arm64
+#      stage: test
+#      <<: *linux_test_job
+
     # Linting
     - name: "Linting"
       language: python
-      python: "3.8.5"
+      python: 3.8
       os: linux
       arch: amd64
       install: "pip install nox"
@@ -58,7 +107,7 @@ jobs:
 
     - name: "Twemoji Mapping Verification"
       language: python
-      python: "3.8.5"
+      python: 3.8
       os: linux
       arch: amd64
       install: "pip install nox"
@@ -66,73 +115,22 @@ jobs:
       script:
         - python -m nox --sessions twemoji-test
 
-    - name: "Windows 10 CPython 3.8.5 AMD64 Tests"
-      env: PYTHON_VERSION="3.8.5"
-      arch: amd64
-      stage: test
-      <<: *windows_test_job
-
-    - name: "Windows 10 CPython 3.9 Dev AMD64 Tests"
-      env: PYTHON_VERSION="3.9.0-rc1 --pre"
-      arch: amd64
-      stage: test
-      <<: *windows_test_job
-
-    - name: "Linux CPython 3.8.5 AMD64 Tests"
-      python: "3.8.5"
-      arch: amd64
-      stage: test
-      <<: *linux_test_job
-
-    - name: "Linux CPython 3.9 Dev AMD64 Tests"
-      python: "3.9-dev"
-      arch: amd64
-      stage: test
-      <<: *linux_test_job
-
-    - name: "Linux CPython 3.8.5 ARM64 Tests"
-      python: "3.8.5"
-      arch: arm64
-      stage: test
-      <<: *linux_test_job
-
-    - name: "Linux CPython 3.9 Dev ARM64 Tests"
-      python: "3.9-dev"
-      arch: arm64
-      stage: test
-      <<: *linux_test_job
-
-    - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
-      language: ruby
-      arch: amd64
-      stage: test
-      script:
-        - >
-          docker run -it \
-              --mount type=bind,src=$(pwd),dst=/hikari \
-              nekokatt/stackless-python-hikari:3.8.0b3 \
-              /bin/bash -c "
-                  set -e
-                  cd /hikari
-                  pip install nox
-                  nox --sessions pytest
-                  bash <(curl -s https://codecov.io/bash)"
-
     - name: "Test building pages"
       if: tag IS NOT present
       stage: test
       language: python
-      python: "3.8.5"
+      python: 3.8
       arch: amd64
       os: linux
       install: pip install nox
       script: nox --sessions pdoc3 pages
 
+    # Deployments
     - name: "Deploy new release"
       if: tag IS present AND tag =~ /^\d+\.\d+\.\d+(\..*)?$/
       stage: deploy
       language: python
-      python: "3.8.5"
+      python: 3.8
       arch: amd64
       os: linux
       script: bash scripts/deploy.sh
