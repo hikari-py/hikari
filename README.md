@@ -19,6 +19,8 @@ that supports Discord's V8 REST API and Gateway.
 Built on good intentions and the hope that it will be extendable and reusable,
 rather than an obstacle for future development.
 
+Python 3.8, 3.9 and 3.10-dev are currently supported.
+
 ## Bots
 
 ```py

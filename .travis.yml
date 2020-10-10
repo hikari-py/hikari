@@ -38,6 +38,12 @@ jobs:
       stage: test
       <<: *windows_test_job
 
+    - name: "Windows 10 CPython 3.10.0-a1 AMD64 Tests"
+      env: PYTHON_VERSION="3.10.0-a1 --pre"
+      arch: amd64
+      stage: test
+      <<: *windows_test_job
+
     - name: "Linux CPython 3.8.5 AMD64 Tests"
       env: PYTHON_IMAGE="python:3.8.5"
       language: ruby
@@ -47,6 +53,20 @@ jobs:
 
     - name: "Linux CPython 3.9.0 AMD64 Tests"
       env: PYTHON_IMAGE="python:3.9.0"
+      language: ruby
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux CPython 3.10-rc AMD64 Tests"
+      env: PYTHON_IMAGE="python:3.10-rc"
+      language: ruby
+      arch: amd64
+      stage: test
+      <<: *linux_test_job
+
+    - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
+      env: PYTHON_IMAGE="nekokatt/stackless-python-hikari:3.8.0b3"
       language: ruby
       arch: amd64
       stage: test
@@ -66,10 +86,10 @@ jobs:
       stage: test
       <<: *linux_test_job
 
-    - name: "Linux Stackless Python 3.8.0 AMD64 Tests"
-      env: PYTHON_IMAGE="nekokatt/stackless-python-hikari:3.8.0b3"
+    - name: "Linux CPython 3.10-rc ARM64 Tests"
+      env: PYTHON_IMAGE="python:3.10-rc"
       language: ruby
-      arch: amd64
+      arch: arm64
       stage: test
       <<: *linux_test_job
 
