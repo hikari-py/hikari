@@ -17,5 +17,5 @@ if [ "$(uname -s | perl -ne 'print lc')-$(uname -m)" = "linux-x86_64" ]; then
     chmod +x ./cc-test-reporter
     ./cc-test-reporter after-build \
         --exit-code 0 \
-        --id       "bf39911ceca45a536d408ea6456ed67460c73754f1411fb45f5e957398d98348"
+        --id       "d40e64ea0ff74713f79365fea4378ab51a2141ad4fcf0fb118496bbf560d4192"
 fi
