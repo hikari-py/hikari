@@ -17,7 +17,14 @@ _linux_test_job: &linux_test_job
   os: linux
   language: shell
   script:
-    - docker run --mount "type=bind,src=$(pwd),dst=/hikari" "${PYTHON_IMAGE}" /bin/bash -c "cd /hikari && bash /hikari/scripts/test-job.sh"
+    # Inherit all enviroment variables into the docker
+    - env >> environ.list
+    - >
+      docker run
+      --env-file environ.list
+      --mount "type=bind,src=$(pwd),dst=/hikari"
+      "${PYTHON_IMAGE}"
+      /bin/bash -c "cd /hikari && bash /hikari/scripts/test-job.sh"
 
 jobs:
   include:
