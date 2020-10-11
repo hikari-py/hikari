@@ -6,8 +6,10 @@ updates:
       interval: weekly
       day: sunday
     assignees:
-      - Nekokatt
+      - davfsa
+      - FasterSpeeding
     reviewers:
-      - Nekokatt
+      - davfsa
+      - FasterSpeeding
     rebase-strategy: auto
     target-branch: master

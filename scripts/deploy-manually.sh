@@ -13,7 +13,7 @@ posix_read "Twine password" TWINE_PASSWORD
 posix_read "GitHub deploy token" GITHUB_TOKEN
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 posix_read "Tag" TRAVIS_TAG
-posix_read "Repo slug (e.g. nekokatt/hikari)" TRAVIS_REPO_SLUG
+posix_read "Repo slug (e.g. hikari-py/hikari)" TRAVIS_REPO_SLUG
 
 git checkout "${TRAVIS_TAG}"
 TRAVIS_COMMIT=$(git rev-parse HEAD)

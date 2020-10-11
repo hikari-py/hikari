@@ -1,5 +1,5 @@
-git config user.name "Nekokatt"
-git config user.email "69713762+nekokatt@users.noreply.github.com"
+git config user.name "davfsa"
+git config user.email "29100934+davfsa@users.noreply.github.com"
 
 rm public -Rf || true
 mkdir public
@@ -8,9 +8,9 @@ cd public || exit 1
 git init
 
 if [ -z ${CI+x} ]; then
-    git remote add origin git@github.com:nekokatt/hikari
+    git remote add origin git@github.com:hikari-py/hikari
 else
-    git remote add origin https://nekokatt:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
+    git remote add origin https://davfsa:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
 fi
 
 git checkout -B gh-pages
