@@ -16,6 +16,7 @@ if [ "$(uname -s | perl -ne 'print lc')-$(uname -m)" = "linux-x86_64" ]; then
     curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
     chmod +x ./cc-test-reporter
     ./cc-test-reporter after-build \
+        --debug \
         --exit-code 0 \
         --id       "bf39911ceca45a536d408ea6456ed67460c73754f1411fb45f5e957398d98348"
 fi
