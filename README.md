@@ -1,13 +1,13 @@
 [![Hikari PyPI version badge](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
-[![Travis CI Build Status badge](https://travis-ci.com/nekokatt/hikari.svg?branch=master)](https://travis-ci.com/nekokatt/hikari)
+[![Travis CI Build Status badge](https://travis-ci.com/hikari-py/hikari.svg?branch=master)](https://travis-ci.com/github/hikari-py/hikari)
 [![Supported Python verisons badge](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
-[![Maintainability badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/maintainability)](https://codeclimate.com/github/nekokatt/hikari/maintainability)
-[![Test Coverage badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/test_coverage)](https://codeclimate.com/github/nekokatt/hikari/test_coverage)
-[![Open Pull Requests badge](https://img.shields.io/github/issues-pr/nekokatt/hikari)](https://github.com/nekokatt/hikari/pulls)
-[![Issues badge](https://img.shields.io/github/issues-raw/nekokatt/hikari)](https://github.com/nekokatt/hikari/issues)
+[![Maintainability badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/maintainability)](https://codeclimate.com/github/hikari-py/hikari/maintainability)
+[![Test Coverage badge](https://api.codeclimate.com/v1/badges/f30a8854611922dfe3b1/test_coverage)](https://codeclimate.com/github/hikari-py/hikari/test_coverage)
+[![Open Pull Requests badge](https://img.shields.io/github/issues-pr/hikari-py/hikari)](https://github.com/hikari-py/hikari/pulls)
+[![Issues badge](https://img.shields.io/github/issues-raw/hikari-py/hikari)](https://github.com/hikari-py/hikari/issues)
 [![This project uses Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
-[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://nekokatt.github.io/hikari/hikari)
+[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/hikari)
 
 [![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
@@ -63,9 +63,9 @@ bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences
 to be received (you'd need to whitelist your application first to be able to start the bot
-if you do this). [Other options also exist](https://nekokatt.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp)
-such as [customising timeouts for requests](https://nekokatt.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
-and [enabling a proxy](https://nekokatt.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
+if you do this). [Other options also exist](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp)
+such as [customising timeouts for requests](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
 
 Also note that you could pass extra options to `bot.run` during development, for example:
 
@@ -80,7 +80,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://nekokatt.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp.run)
+[Many other helpful options](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or
@@ -226,4 +226,4 @@ everything builds and is correct.
 Check out the issues tab on GitHub. If you are nervous, look for issues
 marked as "good first issue" for something easy to start with!
 
-[![good-first-issues](https://img.shields.io/github/issues/nekokatt/hikari/good%20first%20issue)](https://github.com/nekokatt/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[![good-first-issues](https://img.shields.io/github/issues/hikari-py/hikari/good%20first%20issue)](https://github.com/hikari-py/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
