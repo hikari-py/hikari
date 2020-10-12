@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -e
 
 if [ -z "${PYTHON_COMMAND:+x}" ]; then
     export PYTHON_COMMAND=python
