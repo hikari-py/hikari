@@ -2196,7 +2196,7 @@ class TestRESTClientImplAsync:
             "bitrate": 64,
             "user_limit": 99,
             "rate_limit_per_user": 60,
-            "category_id": "321",
+            "parent_id": "321",
             "permission_overwrites": [{"id": "987"}, {"id": "654"}],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
