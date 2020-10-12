@@ -18,10 +18,14 @@ _linux_test_job: &linux_test_job
   language: shell
   script:
     # Inherit all enviroment variables into the docker
-    - env >> environ.list
+    #
+    # This code will generate the independent arguments to inherit all the enviroment variables.
+    # This is done instead of dumping `env` to a file and passing that to fix variables with
+    # new lines.
+    - ENV_ARGS=`env | sed -n '/^[^\t]/s/=.*//p' | sed '/^$/d' | sed 's/^/-e /g' | tr '\n' ' '`
     - >
       docker run
-      --env-file environ.list
+      $ENV_ARGS
       --mount "type=bind,src=$(pwd),dst=/hikari"
       "${PYTHON_IMAGE}"
       /bin/bash -c "cd /hikari && bash /hikari/scripts/test-job.sh"
@@ -46,11 +50,11 @@ jobs:
       stage: test
       <<: *windows_test_job
 
-    - name: "Windows 10 CPython 3.10.0-a1 AMD64 Tests"
-      env: PYTHON_VERSION="3.10.0-a1 --pre"
-      arch: amd64
-      stage: test
-      <<: *windows_test_job
+    # - name: "Windows 10 CPython 3.10.0-a1 AMD64 Tests"
+    #   env: PYTHON_VERSION="3.10.0-a1 --pre"
+    #   arch: amd64
+    #   stage: test
+    #   <<: *windows_test_job
 
     - name: "Linux CPython 3.8.5 AMD64 Tests"
       env: PYTHON_IMAGE="python:3.8.5"
