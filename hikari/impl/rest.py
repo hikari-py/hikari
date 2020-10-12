@@ -1968,7 +1968,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("bitrate", bitrate)
         body.put("user_limit", user_limit)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
-        body.put_snowflake("category_id", category)
+        body.put_snowflake("parent_id", category)
         body.put_array(
             "permission_overwrites",
             permission_overwrites,
