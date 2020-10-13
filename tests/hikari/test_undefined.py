@@ -59,3 +59,6 @@ class TestUndefined:
         ser = pickle.dumps(undefined.UNDEFINED)
         deser = pickle.loads(ser)  # noqa: S301 pickle loads is unsafe with untrusted data
         assert deser is undefined.UNDEFINED
+
+    def test__getstate__(self):
+        assert undefined.UNDEFINED.__getstate__() is False

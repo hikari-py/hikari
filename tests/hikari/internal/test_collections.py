@@ -20,11 +20,13 @@
 # SOFTWARE.
 import array as array_
 import asyncio
+import builtins
 import datetime
 import operator
 import sys
 import time
 
+import mock
 import pytest
 
 from hikari.internal import collections
@@ -487,3 +489,17 @@ def test_get_index_or_slice_with_slice():
 def test_get_index_or_slice_with_invalid_type():
     with pytest.raises(TypeError):
         collections.get_index_or_slice({}, object())
+
+
+def test_copy_mapping():
+    mock_mapping = mock.Mock(copy=mock.Mock())
+
+    assert collections.copy_mapping(mock_mapping) == mock_mapping.copy.return_value
+
+
+@pytest.mark.parametrize("error", [TypeError, AttributeError])
+def test_copy_mapping_on_error(error):
+    mock_mapping = mock.Mock(copy=mock.Mock(side_effect=error))
+
+    with mock.patch.object(builtins, "dict") as mock_dict:
+        assert collections.copy_mapping(mock_mapping) == mock_dict.return_value
