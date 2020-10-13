@@ -556,18 +556,17 @@ class RESTBucketManager:
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
         now = time.monotonic()
+        retry_after = bucket.reset_at - now
 
-        if bucket.is_rate_limited(now):
-            if bucket.reset_at > self.max_rate_limit:
-                raise errors.RateLimitTooLongError(
-                    route=compiled_route,
-                    retry_after=bucket.reset_at - now,
-                    max_retry_after=self.max_rate_limit,
-                    reset_at=bucket.reset_at,
-                    limit=bucket.limit,
-                    period=bucket.period,
-                    message="The request has been rejected, as you would be waiting for more than the max retry-after",
-                )
+        if bucket.is_rate_limited(now) and retry_after > self.max_rate_limit:
+            raise errors.RateLimitTooLongError(
+                route=compiled_route,
+                retry_after=retry_after,
+                max_retry_after=self.max_rate_limit,
+                reset_at=bucket.reset_at,
+                limit=bucket.limit,
+                period=bucket.period,
+            )
 
         return bucket.acquire(self.max_rate_limit)
 
