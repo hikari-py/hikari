@@ -422,8 +422,8 @@ def get_index_or_slice(
 def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
     """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy).
 
-    .. deprecated::
-        `MappedCollection` should be preferred over this.
+    !!! warning
+        For general use, `MappedCollection` should be preferred over this.
     """
     # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
     # try to use this where possible.
