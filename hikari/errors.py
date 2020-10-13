@@ -478,6 +478,16 @@ class RateLimitTooLongError(HTTPError):
     period: float = attr.ib()
     """How long the rate limit window lasts for from start to end."""
 
+    message: str = attr.ib(init=False)
+    """The error message."""
+
+    @message.default
+    def _(self) -> str:
+        return (
+            "The request has been rejected, as you would be waiting for more than"
+            f"the max retry-after ({self.max_retry_after}) on route {self.route}"
+        )
+
     # This may support other types of limits in the future, this currently
     # exists to be self-documenting to the user and for future compatibility
     # only.
@@ -493,6 +503,9 @@ class RateLimitTooLongError(HTTPError):
             The number of requests remaining. Always `0`.
         """
         return 0
+
+    def __str__(self) -> str:
+        return self.message
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
