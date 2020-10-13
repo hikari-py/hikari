@@ -33,7 +33,7 @@ SOFTWARE.
 
     show_source_code = True
 
-    git_link_template = "https://github.com/nekokatt/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}"
+    git_link_template = "https://github.com/hikari-py/hikari/blob/{commit}/{path}#L{start_line}-L{end_line}"
 
     link_prefix = ""
 
@@ -43,7 +43,7 @@ SOFTWARE.
 
 
     site_accent = "#ff029a"
-    site_logo = "https://nekokatt.github.io/hikari/logo.png"
+    site_logo = "https://hikari-py.github.io/hikari/logo.png"
     site_description = "A Discord Bot framework for modern Python and asyncio built on good intentions"
 
     # Versions of stuff
@@ -53,5 +53,5 @@ SOFTWARE.
     jquery_version = "3.5.1"
     popperjs_version = "1.16.0"
 
-    root_url = "https://github.com/nekokatt/hikari"
+    root_url = "https://github.com/hikari-py/hikari"
 %>
