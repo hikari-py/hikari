@@ -1034,8 +1034,9 @@ class RESTClientImpl(rest_api.RESTClient):
             embed = content
             content = undefined.UNDEFINED
 
+        # os.PathLike is missing @runtime_checkable causing mypy to complain
         elif undefined.count(attachment, attachments) == 2 and isinstance(
-            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)  # type: ignore[misc]
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
@@ -1430,8 +1431,9 @@ class RESTClientImpl(rest_api.RESTClient):
             embed = content
             content = undefined.UNDEFINED
 
+        # os.PathLike is missing @runtime_checkable causing mypy to complain
         elif undefined.count(attachment, attachments) == 2 and isinstance(
-            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)  # type: ignore[misc]
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
