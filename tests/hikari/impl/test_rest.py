@@ -2402,6 +2402,31 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
+    async def test_create_role_when_permissions_undefined(self, rest_client):
+        role = StubModel(456)
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "color": colors.Color.from_int(12345),
+            "hoist": True,
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            color=colors.Color.from_int(12345),
+            hoist=True,
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned == role
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
     async def test_create_role_when_color_and_colour_specified(self, rest_client):
         with pytest.raises(TypeError):
             await rest_client.create_role(

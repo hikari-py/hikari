@@ -82,7 +82,7 @@ from hikari.voices import *
 from hikari.webhooks import *
 
 # Only expose this during documentation, as we need it to make anything visible.
-if _os.getenv("PDOC3_GENERATING") == "1":
+if _os.getenv("PDOC3_GENERATING") == "1":  # pragma: no cover
     __all__ = [name for name in dir() if not name.startswith("_")]
 
 del _os

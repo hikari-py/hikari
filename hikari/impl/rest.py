@@ -718,17 +718,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # guild via a leaked webhook URL made people's clients exhibit this
         # behaviour.
 
-        # I realise remaining should never be less than zero, but quite frankly, I don't
-        # trust that voodoo type stuff will not ever occur with that value from them...
-        if remaining <= 0:
-            # We can retry and we will then abide by the updated bucket ratelimits.
-            _LOGGER.debug(
-                "rate-limited on bucket %s at %s. This is a bucket discrepancy, so we will retry at %s",
-                bucket,
-                compiled_route,
-                reset_date,
-            )
-
         # If the values are within 20% of eachother by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
