@@ -2527,8 +2527,11 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
         rest_client._entity_factory.deserialize_integration = mock.Mock(side_effect=[integration1, integration2])
 
-        assert await rest_client.fetch_integrations(StubModel(123)) == [integration1, integration2]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        assert await rest_client.fetch_integrations(StubModel(123), include_applications=True) == [
+            integration1,
+            integration2,
+        ]
+        rest_client._request.assert_awaited_once_with(expected_route, query={"include_applications": "true"})
         assert rest_client._entity_factory.deserialize_integration.call_count == 2
         rest_client._entity_factory.deserialize_integration.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]

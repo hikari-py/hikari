@@ -100,7 +100,7 @@ class _GuildChannelFields:
 class _IntegrationFields:
     id: snowflakes.Snowflake = attr.ib()
     name: str = attr.ib()
-    type: str = attr.ib()
+    type: typing.Union[guild_models.IntegrationType, str] = attr.ib()
     account: guild_models.IntegrationAccount = attr.ib()
 
 
@@ -1034,7 +1034,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return _IntegrationFields(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
-            type=payload["type"],
+            type=guild_models.IntegrationType(payload["type"]),
             account=account,
         )
 
@@ -1058,19 +1058,49 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_last_synced_at := payload.get("synced_at")) is not None:
             last_synced_at = time.iso8601_datetime_string_to_datetime(raw_last_synced_at)
 
+        expire_grace_period: typing.Optional[datetime.timedelta] = None
+        if (raw_expire_grace_period := payload.get("expire_grace_period")) is not None:
+            expire_grace_period = datetime.timedelta(days=raw_expire_grace_period)
+
+        expire_behavior: typing.Union[guild_models.IntegrationExpireBehaviour, int, None] = None
+        if (raw_expire_behavior := payload.get("expire_behavior")) is not None:
+            expire_behavior = guild_models.IntegrationExpireBehaviour(raw_expire_behavior)
+
+        user: typing.Optional[user_models.User] = None
+        if (raw_user := payload.get("user")) is not None:
+            user = self.deserialize_user(raw_user)
+
+        application: typing.Optional[guild_models.IntegrationApplication] = None
+        if (raw_application := payload.get("application")) is not None:
+            bot: typing.Optional[user_models.User] = None
+            if (raw_application_bot := raw_application.get("bot")) is not None:
+                bot = self.deserialize_user(raw_application_bot)
+
+            application = guild_models.IntegrationApplication(
+                id=snowflakes.Snowflake(raw_application["id"]),
+                name=raw_application["name"],
+                icon_hash=raw_application["icon"],
+                summary=raw_application["summary"],
+                description=raw_application["description"],
+                bot=bot,
+            )
+
         return guild_models.Integration(
             id=integration_fields.id,
             name=integration_fields.name,
             type=integration_fields.type,
             account=integration_fields.account,
             is_enabled=payload["enabled"],
-            is_syncing=payload["syncing"],
+            is_syncing=payload.get("syncing"),
+            is_revoked=payload.get("revoked"),
             role_id=role_id,
             is_emojis_enabled=payload.get("enable_emoticons"),
-            expire_behavior=guild_models.IntegrationExpireBehaviour(payload["expire_behavior"]),
-            expire_grace_period=datetime.timedelta(days=payload["expire_grace_period"]),
-            user=self.deserialize_user(payload["user"]),
+            expire_behavior=expire_behavior,
+            expire_grace_period=expire_grace_period,
+            user=user,
             last_synced_at=last_synced_at,
+            subscriber_count=payload.get("subscriber_count"),
+            application=application,
         )
 
     def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.GuildMemberBan:
@@ -1838,6 +1868,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.Webhook:
+        application_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
         return webhook_models.Webhook(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1848,4 +1882,5 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             avatar_hash=payload["avatar"],
             token=payload.get("token"),
+            application_id=application_id,
         )

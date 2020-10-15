@@ -2281,9 +2281,12 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_integrations(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        include_applications: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
-        raw_response = await self._request(route)
+        query = data_binding.StringMapBuilder()
+        query.put("include_applications", include_applications)
+        raw_response = await self._request(route, query=query)
         response = typing.cast(data_binding.JSONArray, raw_response)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_integration)
 
