@@ -304,6 +304,14 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     @property
+    def _dm_channel(self) -> typing.Optional[channels_.DMChannel]:
+        return self.user._dm_channel
+
+    @_dm_channel.setter
+    def _dm_channel(self, value: channels_.DMChannel) -> None:
+        self.user._dm_channel = value
+
+    @property
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app

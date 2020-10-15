@@ -39,7 +39,12 @@ from hikari.internal import enums
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
+    from hikari import embeds
+    from hikari import guilds
+    from hikari import messages
     from hikari import traits
+    from hikari import users
 
 
 @typing.final
@@ -122,6 +127,15 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def _dm_channel(self) -> typing.Optional[channels.DMChannel]:
+        ...
+
+    @_dm_channel.setter
+    def _dm_channel(self, value: channels.DMChannel) -> None:
+        ...
+
+    @property
+    @abc.abstractmethod
     def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
 
@@ -188,6 +202,171 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             If the user is not found.
         """
         return await self.app.rest.fetch_user(user=self.id)
+
+    async def fetch_dm_channel(self) -> channels.DMChannel:
+        """Fetch the DM channel for this user.
+
+        Returns
+        -------
+        hikari.channels.DMChannel
+            The requested channel.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the user is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if self._dm_channel is None:
+            self._dm_channel = await self.app.rest.create_dm_channel(self.id)
+
+        return self._dm_channel
+
+    async def send(
+        self,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        embed: undefined.UndefinedOr[embeds.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+        ] = undefined.UNDEFINED,
+    ) -> messages.Message:
+        """Send a message to this user in DM's.
+
+        Parameters
+        ----------
+        content : hikari.undefined.UndefinedOr[typing.Any]
+            If provided, the message contents. If
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
+            provided, then this will instead update the embed. This allows for
+            simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+            If provided, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
+        tts : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the message will be TTS (Text To Speech).
+        nonce : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, a nonce that can be used for optimistic message
+            sending.
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+            If provided, and `builtins.True`, all mentions will be parsed.
+            If provided, and `builtins.False`, no mentions will be parsed.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
+
+        !!! note
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `builtins.str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created message.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as the user not
+            being found, messages being empty with no attachments or embeds; messages
+            with more than 2000 characters in them, embeds that exceed one of the many
+            embed limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you lack permissions to send messages in the given user.
+        hikari.errors.NotFoundError
+            If the user is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        builtins.ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        builtins.TypeError
+            If both `attachment` and `attachments` are specified.
+
+        !!! warning
+            You are expected to make a connection to the gateway and identify
+            once before being able to use this endpoint for a bot.
+        """  # noqa: E501 - Line too long
+        channel = await self.fetch_dm_channel()
+
+        return await self.app.rest.create_message(
+            channel=channel.id,
+            content=content,
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce=nonce,
+            tts=tts,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+        )
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -352,6 +531,10 @@ class PartialUserImpl(PartialUser):
     flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
     """Public flags for this user."""
 
+    _dm_channel: typing.Optional[channels.DMChannel] = attr.ib(
+        eq=False, hash=False, init=False, repr=False, default=None
+    )
+
     @property
     def mention(self) -> str:
         """Return a raw mention string for the given user.
@@ -370,9 +553,6 @@ class PartialUserImpl(PartialUser):
             The mention string to use.
         """
         return f"<@{self.id}>"
-
-    async def fetch_self(self) -> User:
-        return await self.app.rest.fetch_user(user=self.id)
 
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
