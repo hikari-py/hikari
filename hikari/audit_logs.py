@@ -261,6 +261,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         -------
         hikari.messages.Message
             The message that's being pinned or unpinned.
+
         Raises
         ------
         hikari.errors.UnauthorizedError
@@ -321,6 +322,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
         -------
         hikari.channels.GuildTextChannel
             The guild text based channel where these message(s) were deleted.
+
         Raises
         ------
         hikari.errors.UnauthorizedError
@@ -371,6 +373,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         -------
         hikari.channels.GuildVoiceChannel
             The guild voice based channel where the member(s) have been moved to.
+
         Raises
         ------
         hikari.errors.UnauthorizedError
