@@ -45,6 +45,16 @@ import datetime
 import typing
 
 import attr
+from hikari.users import User
+
+from hikari import Permissions
+from hikari.channels import GuildVoiceChannel
+
+from hikari.channels import GuildTextChannel
+
+from hikari.messages import Message
+
+from hikari.channels import TextChannel
 
 from hikari import snowflakes
 from hikari.internal import attr_extensions
@@ -182,6 +192,9 @@ class AuditLogEventType(int, enums.Enum):
 class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
+    app: traits.RESTAware = attr.ib(repr=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    """The client application that models may use for procedures."""
+
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -216,6 +229,48 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     message_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
+    async def fetch_channel(self) -> TextChannel:
+        """Fetch the object of the channel where a pinned message is being targeted.
+
+        Returns
+        -------
+        hikari.channels.TextChannel
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, TextChannel)
+        return channel
+
+    async def fetch_message(self) -> Message:
+        """Fetch the object of the message that's being pinned or unpinned.
+
+                Returns
+                -------
+                hikari.messages.Message
+
+                Raises
+                ------
+                hikari.errors.UnauthorizedError
+                    If you are unauthorized to make the request (invalid/missing token).
+                hikari.errors.ForbiddenError
+                    If you are missing the `READ_MESSAGES` permission in the channel that the message is in.
+                hikari.errors.NotFoundError
+                    If the message is not found.
+                hikari.errors.InternalServerError
+                    If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_message(self.channel_id, self.message_id)
+
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -243,7 +298,29 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Extra information attached to the message delete audit entry."""
 
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
-    """The guild text based channel where these message(s) were deleted."""
+    """The ID of guild text based channel where these message(s) were deleted."""
+
+    async def fetch_channel(self) -> GuildTextChannel:
+        """Fetch the guild text based channel where these message(s) were deleted.
+
+        Returns
+        -------
+        hikari.channels.GuildTextChannel
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, GuildTextChannel)
+        return channel
 
 
 @attr_extensions.with_copy
@@ -260,7 +337,29 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
-    """The amount of members who were disconnected from voice in this entry."""
+    """The channel that the member(s) have been moved to"""
+
+    async def fetch_channel(self) -> GuildVoiceChannel:
+        """Fetch the guild text based channel where these message(s) were deleted.
+
+        Returns
+        -------
+        hikari.channels.GuildVoiceChannel
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, GuildVoiceChannel)
+        return channel
 
 
 class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
@@ -309,6 +408,36 @@ class AuditLogEntry(snowflakes.Unique):
 
     reason: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
+
+    async def fetch_user(self) -> User:
+        """Fetch the user who made this change.
+
+                Returns
+                -------
+                hikari.users.User
+                    The requested user
+
+                Raises
+                ------
+                hikari.errors.UnauthorizedError
+                    If you are unauthorized to make the request (invalid/missing token).
+                hikari.errors.NotFoundError
+                    If the user is not found.
+                hikari.errors.RateLimitTooLongError
+                    Raised in the event that a rate limit occurs that is
+                    longer than `max_rate_limit` when making a request.
+                hikari.errors.RateLimitedError
+                    Usually, Hikari will handle and retry on hitting
+                    rate-limits automatically. This includes most bucket-specific
+                    rate-limits and global rate-limits. In some rare edge cases,
+                    however, Discord implements other undocumented rules for
+                    rate-limiting, such as limits per attribute. These cannot be
+                    detected or handled normally by Hikari due to their undocumented
+                    nature, and will trigger this exception if they occur.
+                hikari.errors.InternalServerError
+                    If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_user(self.user_id)
 
 
 @attr_extensions.with_copy

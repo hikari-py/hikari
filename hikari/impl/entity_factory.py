@@ -337,61 +337,61 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for overwrite in payload
         }
 
-    @staticmethod
     def _deserialize_channel_overwrite_entry_info(
+        self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.ChannelOverwriteEntryInfo:
         return audit_log_models.ChannelOverwriteEntryInfo(
+            app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=channel_models.PermissionOverwriteType(payload["type"]),
             role_name=payload.get("role_name"),
         )
 
-    @staticmethod
-    def _deserialize_message_pin_entry_info(payload: data_binding.JSONObject) -> audit_log_models.MessagePinEntryInfo:
+    def _deserialize_message_pin_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MessagePinEntryInfo:
         return audit_log_models.MessagePinEntryInfo(
+            app=self._app,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
         )
 
-    @staticmethod
-    def _deserialize_member_prune_entry_info(payload: data_binding.JSONObject) -> audit_log_models.MemberPruneEntryInfo:
+    def _deserialize_member_prune_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MemberPruneEntryInfo:
         return audit_log_models.MemberPruneEntryInfo(
+            app=self._app,
             delete_member_days=datetime.timedelta(days=int(payload["delete_member_days"])),
             members_removed=int(payload["members_removed"]),
         )
 
-    @staticmethod
     def _deserialize_message_bulk_delete_entry_info(
+        self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.MessageBulkDeleteEntryInfo:
-        return audit_log_models.MessageBulkDeleteEntryInfo(count=int(payload["count"]))
+        return audit_log_models.MessageBulkDeleteEntryInfo(app=self._app, count=int(payload["count"]))
 
-    @staticmethod
     def _deserialize_message_delete_entry_info(
+        self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.MessageDeleteEntryInfo:
         return audit_log_models.MessageDeleteEntryInfo(
-            channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
-    @staticmethod
     def _deserialize_member_disconnect_entry_info(
+        self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.MemberDisconnectEntryInfo:
-        return audit_log_models.MemberDisconnectEntryInfo(count=int(payload["count"]))
+        return audit_log_models.MemberDisconnectEntryInfo(app=self._app, count=int(payload["count"]))
 
-    @staticmethod
-    def _deserialize_member_move_entry_info(payload: data_binding.JSONObject) -> audit_log_models.MemberMoveEntryInfo:
+    def _deserialize_member_move_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MemberMoveEntryInfo:
         return audit_log_models.MemberMoveEntryInfo(
-            channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
-    @staticmethod
     def _deserialize_unrecognised_audit_log_entry_info(
+        self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.UnrecognisedAuditLogEntryInfo:
-        return audit_log_models.UnrecognisedAuditLogEntryInfo(payload)
+        return audit_log_models.UnrecognisedAuditLogEntryInfo(app=self._app, payload=payload)
 
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
         entries = {}
