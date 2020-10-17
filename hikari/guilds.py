@@ -38,10 +38,12 @@ __all__: typing.List[str] = [
     "GuildVerificationLevel",
     "GuildPremiumTier",
     "GuildPreview",
+    "GuildMemberBan",
     "Member",
     "Integration",
-    "GuildMemberBan",
     "IntegrationAccount",
+    "IntegrationType",
+    "IntegrationApplication",
     "IntegrationExpireBehaviour",
     "PartialGuild",
     "PartialIntegration",
@@ -509,6 +511,16 @@ class Role(PartialRole):
         return self.color
 
 
+class IntegrationType(str, enums.Enum):
+    """The integration type."""
+
+    TWITCH = "twitch"
+
+    YOUTUBE = "youtube"
+
+    DISCORD_BOT = "discord"
+
+
 @typing.final
 class IntegrationExpireBehaviour(int, enums.Enum):
     """Behavior for expiring integration subscribers."""
@@ -537,6 +549,70 @@ class IntegrationAccount:
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class IntegrationApplication:
+    """An application that's linked to an integration."""
+
+    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of this entity."""
+
+    name: str = attr.ib(eq=False, hash=False, repr=True)
+    """The name of this application."""
+
+    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The icon hash of this application."""
+
+    summary: str = attr.ib(eq=False, hash=False, repr=False)
+    """The summary of this application."""
+
+    description: str = attr.ib(eq=False, hash=False, repr=False)
+    """The description of this application."""
+
+    bot: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    """The bot associated with this application."""
+
+    def format_avatar(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar for this application, if set.
+
+        Parameters
+        ----------
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            Defaults to `png`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the avatar, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.icon_hash is None:
+            return None
+
+        return routes.CDN_APPLICATION_ICON.compile_to_file(
+            urls.CDN_URL,
+            user_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def __str__(self) -> str:
+        return self.name
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class PartialIntegration(snowflakes.Unique):
     """A partial representation of an integration, found in audit logs."""
 
@@ -549,7 +625,7 @@ class PartialIntegration(snowflakes.Unique):
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this integration."""
 
-    type: str = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[IntegrationType, str] = attr.ib(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
     def __str__(self) -> str:
@@ -560,26 +636,35 @@ class PartialIntegration(snowflakes.Unique):
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
-    expire_behavior: typing.Union[IntegrationExpireBehaviour, int] = attr.ib(eq=False, hash=False, repr=False)
+    expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This will not be enacted until after `GuildIntegration.expire_grace_period`
     passes.
+
+    !!! note
+        This will always be `builtins.None` for Discord integrations.
     """
 
-    expire_grace_period: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
+    expire_grace_period: typing.Optional[datetime.timedelta] = attr.ib(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until
-    `GuildIntegration.expire_behavior` is enacted out on them
+    `GuildIntegration.expire_behavior` is enacted out on them.
+
+    !!! note
+        This will always be `builtins.None` for Discord integrations.
     """
 
     is_enabled: bool = attr.ib(eq=False, hash=False, repr=True)
     """Whether this integration is enabled."""
 
-    is_syncing: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_syncing: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether this integration is syncing subscribers/emojis."""
 
     is_emojis_enabled: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
     """Whether users under this integration are allowed to use it's custom emojis."""
+
+    is_revoked: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """Whether the integration has been revoked."""
 
     last_synced_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
     """The datetime of when this integration's subscribers were last synced."""
@@ -587,8 +672,18 @@ class Integration(PartialIntegration):
     role_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the managed role used for this integration's subscribers."""
 
-    user: users.User = attr.ib(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
+
+    subscriber_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The number of subscribers this integration has."""
+
+    application: typing.Optional[IntegrationApplication] = attr.ib(eq=False, hash=False, repr=False)
+    """The bot/OAuth2 application associated with this integration.
+
+    !!! note
+        This is only available for Discord integrations.
+    """
 
 
 @attr_extensions.with_copy

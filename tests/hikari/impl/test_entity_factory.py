@@ -432,6 +432,7 @@ class TestEntityFactoryImpl:
             "name": "hikari webhook",
             "avatar": "bb71f469c158984e265093a81b3397fb",
             "token": "ueoqrialsdfaKJLKfajslkdf",
+            "application_id": "1234567890",
         }
 
     @pytest.fixture()
@@ -1553,19 +1554,35 @@ class TestEntityFactoryImpl:
             "account": {"id": "6969", "name": "Blaze it"},
             "enabled": True,
             "syncing": False,
+            "revoked": True,
             "role_id": "98494949",
             "enable_emoticons": False,
             "expire_behavior": 1,
             "expire_grace_period": 7,
             "user": user_payload,
             "synced_at": "2015-04-26T06:26:56.936000+00:00",
+            "subscriber_count": 69,
+            "application": {
+                "id": "123",
+                "name": "some bot",
+                "icon": "123abc",
+                "summary": "same as desc",
+                "description": "same as desc2",
+                "bot": {
+                    "id": "456",
+                    "username": "some rando bot",
+                    "avatar": "123456avc",
+                    "discriminator": "6127",
+                    "bot": True,
+                },
+            },
         }
 
     def test_deserialize_integration(self, entity_factory_impl, integration_payload, user_payload):
         integration = entity_factory_impl.deserialize_integration(integration_payload)
         assert integration.id == 420
         assert integration.name == "blaze it"
-        assert integration.type == "youtube"
+        assert integration.type == guild_models.IntegrationType.YOUTUBE
         # IntegrationAccount
         assert integration.account.id == "6969"
         assert integration.account.name == "Blaze it"
@@ -1573,6 +1590,7 @@ class TestEntityFactoryImpl:
 
         assert integration.is_enabled is True
         assert integration.is_syncing is False
+        assert integration.is_revoked is True
         assert integration.role_id == 98494949
         assert integration.is_emojis_enabled is False
         assert integration.expire_behavior == guild_models.IntegrationExpireBehaviour.KICK
@@ -1581,9 +1599,25 @@ class TestEntityFactoryImpl:
         assert integration.last_synced_at == datetime.datetime(
             2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
         )
+        assert integration.subscriber_count == 69
+        # IntegrationApplication
+        assert integration.application.id == 123
+        assert integration.application.name == "some bot"
+        assert integration.application.icon_hash == "123abc"
+        assert integration.application.summary == "same as desc"
+        assert integration.application.description == "same as desc2"
+        assert integration.application.bot == entity_factory_impl.deserialize_user(
+            {
+                "id": "456",
+                "username": "some rando bot",
+                "avatar": "123456avc",
+                "discriminator": "6127",
+                "bot": True,
+            }
+        )
         assert isinstance(integration, guild_models.Integration)
 
-    def test_deserialize_guild_integration_with_null_and_unset_fields(self, entity_factory_impl, user_payload):
+    def test_deserialize_guild_integration_with_null_and_unset_fields(self, entity_factory_impl):
         integration = entity_factory_impl.deserialize_integration(
             {
                 "id": "420",
@@ -1591,17 +1625,41 @@ class TestEntityFactoryImpl:
                 "type": "youtube",
                 "account": {"id": "6969", "name": "Blaze it"},
                 "enabled": True,
-                "syncing": False,
                 "role_id": None,
-                "expire_behavior": 1,
-                "expire_grace_period": 7,
-                "user": user_payload,
                 "synced_at": None,
             }
         )
         assert integration.is_emojis_enabled is None
         assert integration.role_id is None
         assert integration.last_synced_at is None
+        assert integration.expire_grace_period is None
+        assert integration.expire_behavior is None
+        assert integration.user is None
+        assert integration.application is None
+        assert integration.is_revoked is None
+        assert integration.is_syncing is None
+        assert integration.subscriber_count is None
+
+    def test_deserialize_guild_integration_with_unset_bot(self, entity_factory_impl):
+        integration = entity_factory_impl.deserialize_integration(
+            {
+                "id": "420",
+                "name": "blaze it",
+                "type": "youtube",
+                "account": {"id": "6969", "name": "Blaze it"},
+                "enabled": True,
+                "role_id": None,
+                "synced_at": None,
+                "application": {
+                    "id": 123,
+                    "name": "some bot",
+                    "icon": "123abc",
+                    "summary": "same as desc",
+                    "description": "same as desc2",
+                },
+            }
+        )
+        assert integration.application.bot is None
 
     @pytest.fixture()
     def guild_member_ban_payload(self, user_payload):
@@ -3045,7 +3103,7 @@ class TestEntityFactoryImpl:
     # WEBHOOK MODELS #
     ##################
 
-    def test_deserialize_webhook(self, entity_factory_impl, mock_app, webhook_payload, user_payload):
+    def test_deserialize_webhook(self, entity_factory_impl, webhook_payload, user_payload):
         webhook = entity_factory_impl.deserialize_webhook(webhook_payload)
         assert webhook.id == 1234
         assert webhook.type == webhook_models.WebhookType.INCOMING
@@ -3055,14 +3113,16 @@ class TestEntityFactoryImpl:
         assert webhook.name == "hikari webhook"
         assert webhook.avatar_hash == "bb71f469c158984e265093a81b3397fb"
         assert webhook.token == "ueoqrialsdfaKJLKfajslkdf"
+        assert webhook.application_id == 1234567890
         assert isinstance(webhook, webhook_models.Webhook)
 
     def test_deserialize_webhook_with_null_and_unset_fields(self, entity_factory_impl):
         webhook = entity_factory_impl.deserialize_webhook(
-            {"id": "1234", "type": 1, "channel_id": "456", "name": None, "avatar": None}
+            {"id": "1234", "type": 1, "channel_id": "456", "name": None, "avatar": None, "application_id": None}
         )
         assert webhook.guild_id is None
         assert webhook.author is None
         assert webhook.name is None
         assert webhook.avatar_hash is None
         assert webhook.token is None
+        assert webhook.application_id is None

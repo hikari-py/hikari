@@ -104,6 +104,9 @@ class Webhook(snowflakes.Unique):
         channel settings.
     """
 
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the application that created this webhook."""
+
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
