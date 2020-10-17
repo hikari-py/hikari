@@ -309,14 +309,29 @@ class RESTErrorCode(int, enums.Enum):
     MESSAGE_IN_VC = 50_008
     """Cannot send messages in a voice channel."""
 
+    CHANNEL_VERIFICATION_TOO_HIGH = 50_009
+    """Channel verification level is too high for you to gain access."""
+
     PINS_ONLY_ON_ORIGIN_CHANNEL = 50_019
     """A message can only be pinned to the channel it was sent in."""
+
+    INVALID_INVITE_CODE = 50_020
+    """Invite code was either invalid or taken."""
 
     PROHIBITED_ON_SYSTEM_MESSAGE = 50_021
     """Cannot execute action on a system message."""
 
+    INVALID_RECIPIENTS = 50_033
+    """Invalid recipients."""
+
     MESSAGE_TOO_OLD = 50_034
     """A message provided was too old to bulk delete."""
+
+    REQUIRED_CHANNEL = 50_074
+    """Cannot delete a channel required for community guilds."""
+
+    REACTION_BLOCKED = 90_001
+    """The reaction was blocked."""
 
     TWO_FACTOR_AUTHENTICATION_REQUIRED = 60_003
     """2FA is required to use this endpoint."""

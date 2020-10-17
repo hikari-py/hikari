@@ -126,12 +126,6 @@ class GuildFeature(str, enums.Enum):
     PARTNERED = "PARTNERED"
     """Guild is partnered."""
 
-    PUBLIC = "PUBLIC"
-    """Guild is public, go figure."""
-
-    PUBLIC_DISABLED = "PUBLIC_DISABLED"
-    """Guild cannot be public."""
-
     RELAY_ENABLED = "RELAY_ENABLED"
     """Guild is using relays.
 
