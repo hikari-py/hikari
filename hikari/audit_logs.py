@@ -45,21 +45,16 @@ import datetime
 import typing
 
 import attr
-from hikari.users import User
-
-from hikari import Permissions
-from hikari.channels import GuildVoiceChannel
-
-from hikari.channels import GuildTextChannel
-
-from hikari.messages import Message
-
-from hikari.channels import TextChannel
 
 from hikari import snowflakes
+from hikari.channels import GuildTextChannel
+from hikari.channels import GuildVoiceChannel
+from hikari.channels import TextChannel
 from hikari.internal import attr_extensions
 from hikari.internal import collections
 from hikari.internal import enums
+from hikari.messages import Message
+from hikari.users import User
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -254,20 +249,20 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     async def fetch_message(self) -> Message:
         """Fetch the object of the message that's being pinned or unpinned.
 
-                Returns
-                -------
-                hikari.messages.Message
+        Returns
+        -------
+        hikari.messages.Message
 
-                Raises
-                ------
-                hikari.errors.UnauthorizedError
-                    If you are unauthorized to make the request (invalid/missing token).
-                hikari.errors.ForbiddenError
-                    If you are missing the `READ_MESSAGES` permission in the channel that the message is in.
-                hikari.errors.NotFoundError
-                    If the message is not found.
-                hikari.errors.InternalServerError
-                    If an internal error occurs on Discord while handling the request.
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel that the message is in.
+        hikari.errors.NotFoundError
+            If the message is not found.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_message(self.channel_id, self.message_id)
 
@@ -412,30 +407,30 @@ class AuditLogEntry(snowflakes.Unique):
     async def fetch_user(self) -> User:
         """Fetch the user who made this change.
 
-                Returns
-                -------
-                hikari.users.User
-                    The requested user
+        Returns
+        -------
+        hikari.users.User
+            The requested user
 
-                Raises
-                ------
-                hikari.errors.UnauthorizedError
-                    If you are unauthorized to make the request (invalid/missing token).
-                hikari.errors.NotFoundError
-                    If the user is not found.
-                hikari.errors.RateLimitTooLongError
-                    Raised in the event that a rate limit occurs that is
-                    longer than `max_rate_limit` when making a request.
-                hikari.errors.RateLimitedError
-                    Usually, Hikari will handle and retry on hitting
-                    rate-limits automatically. This includes most bucket-specific
-                    rate-limits and global rate-limits. In some rare edge cases,
-                    however, Discord implements other undocumented rules for
-                    rate-limiting, such as limits per attribute. These cannot be
-                    detected or handled normally by Hikari due to their undocumented
-                    nature, and will trigger this exception if they occur.
-                hikari.errors.InternalServerError
-                    If an internal error occurs on Discord while handling the request.
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_user(self.user_id)
 

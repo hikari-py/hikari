@@ -348,14 +348,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_name=payload.get("role_name"),
         )
 
-    def _deserialize_message_pin_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MessagePinEntryInfo:
+    def _deserialize_message_pin_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.MessagePinEntryInfo:
         return audit_log_models.MessagePinEntryInfo(
             app=self._app,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
         )
 
-    def _deserialize_member_prune_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MemberPruneEntryInfo:
+    def _deserialize_member_prune_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.MemberPruneEntryInfo:
         return audit_log_models.MemberPruneEntryInfo(
             app=self._app,
             delete_member_days=datetime.timedelta(days=int(payload["delete_member_days"])),
@@ -382,7 +386,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> audit_log_models.MemberDisconnectEntryInfo:
         return audit_log_models.MemberDisconnectEntryInfo(app=self._app, count=int(payload["count"]))
 
-    def _deserialize_member_move_entry_info(self, payload: data_binding.JSONObject) -> audit_log_models.MemberMoveEntryInfo:
+    def _deserialize_member_move_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.MemberMoveEntryInfo:
         return audit_log_models.MemberMoveEntryInfo(
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
