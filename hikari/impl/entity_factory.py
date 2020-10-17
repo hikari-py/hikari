@@ -397,7 +397,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payload: data_binding.JSONObject,
     ) -> audit_log_models.UnrecognisedAuditLogEntryInfo:
-        return audit_log_models.UnrecognisedAuditLogEntryInfo(app=self._app, payload=payload)
+        return audit_log_models.UnrecognisedAuditLogEntryInfo(payload=payload)
 
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
         entries = {}
