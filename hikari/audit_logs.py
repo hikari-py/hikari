@@ -260,7 +260,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         Returns
         -------
         hikari.messages.Message
-
+            The message that's being pinned or unpinned.
         Raises
         ------
         hikari.errors.UnauthorizedError
@@ -320,7 +320,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
         Returns
         -------
         hikari.channels.GuildTextChannel
-
+            The guild text based channel where these message(s) were deleted.
         Raises
         ------
         hikari.errors.UnauthorizedError
@@ -365,12 +365,12 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """The channel that the member(s) have been moved to"""
 
     async def fetch_channel(self) -> channels.GuildVoiceChannel:
-        """Fetch the guild text based channel where these message(s) were deleted.
+        """Fetch the guild voice based channel where the member(s) have been moved to.
 
         Returns
         -------
         hikari.channels.GuildVoiceChannel
-
+            The guild voice based channel where the member(s) have been moved to.
         Raises
         ------
         hikari.errors.UnauthorizedError
@@ -451,7 +451,7 @@ class AuditLogEntry(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.users.user]
-            The requested user
+            The user who made this change, if available
 
         Raises
         ------
