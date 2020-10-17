@@ -46,19 +46,15 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import snowflakes
-from hikari.channels import GuildTextChannel
-from hikari.channels import GuildVoiceChannel
-from hikari.channels import TextChannel
 from hikari.internal import attr_extensions
 from hikari.internal import collections
 from hikari.internal import enums
-from hikari.messages import Message
-from hikari.users import User
 
 if typing.TYPE_CHECKING:
-    from hikari import channels
     from hikari import guilds
+    from hikari import messages
     from hikari import traits
     from hikari import users as users_
     from hikari import webhooks as webhooks_
@@ -224,12 +220,13 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     message_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
-    async def fetch_channel(self) -> TextChannel:
+    async def fetch_channel(self) -> channels.TextChannel:
         """Fetch the object of the channel where a pinned message is being targeted.
 
         Returns
         -------
         hikari.channels.TextChannel
+            The channel where a pinned message is being targeted.
 
         Raises
         ------
@@ -239,14 +236,25 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, TextChannel)
+        assert isinstance(channel, channels.TextChannel)
         return channel
 
-    async def fetch_message(self) -> Message:
+    async def fetch_message(self) -> messages.Message:
         """Fetch the object of the message that's being pinned or unpinned.
 
         Returns
@@ -261,6 +269,17 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
             If you are missing the `READ_MESSAGES` permission in the channel that the message is in.
         hikari.errors.NotFoundError
             If the message is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -295,7 +314,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The ID of guild text based channel where these message(s) were deleted."""
 
-    async def fetch_channel(self) -> GuildTextChannel:
+    async def fetch_channel(self) -> channels.GuildTextChannel:
         """Fetch the guild text based channel where these message(s) were deleted.
 
         Returns
@@ -310,11 +329,22 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, GuildTextChannel)
+        assert isinstance(channel, channels.GuildTextChannel)
         return channel
 
 
@@ -334,7 +364,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
     """The channel that the member(s) have been moved to"""
 
-    async def fetch_channel(self) -> GuildVoiceChannel:
+    async def fetch_channel(self) -> channels.GuildVoiceChannel:
         """Fetch the guild text based channel where these message(s) were deleted.
 
         Returns
@@ -349,11 +379,22 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, GuildVoiceChannel)
+        assert isinstance(channel, channels.GuildVoiceChannel)
         return channel
 
 
@@ -404,12 +445,12 @@ class AuditLogEntry(snowflakes.Unique):
     reason: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
 
-    async def fetch_user(self) -> User:
+    async def fetch_user(self) -> typing.Optional[users_.User]:
         """Fetch the user who made this change.
 
         Returns
         -------
-        hikari.users.User
+        typing.Optional[hikari.users.user]
             The requested user
 
         Raises
@@ -432,6 +473,8 @@ class AuditLogEntry(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if self.user_id is None:
+            return None
         return await self.app.rest.fetch_user(self.user_id)
 
 
