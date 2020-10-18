@@ -3,8 +3,7 @@ updates:
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: weekly
-      day: sunday
+      interval: daily
     assignees:
       - davfsa
       - FasterSpeeding
