@@ -58,8 +58,8 @@ credentials.env
 # Profiling in pytest
 prof/
 
-# Generated stubs for MyPy --strict hackfixes.
-hikari/**/__init__.pyi
+# Generated stubs for MyPy --strict hackfixes
+__init__.pyi
 
 # Logs
 *.log
