@@ -222,6 +222,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
     async def fetch_channel(self) -> channels.TextChannel:
         """Fetch The channel where this message was pinned or unpinned.
+
         Returns
         -------
         hikari.channels.TextChannel
