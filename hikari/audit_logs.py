@@ -221,12 +221,11 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The ID of the message that's being pinned or unpinned."""
 
     async def fetch_channel(self) -> channels.TextChannel:
-        """Fetch the object of the channel where a pinned message is being targeted.
-
+        """Fetch The channel where this message was pinned or unpinned.
         Returns
         -------
         hikari.channels.TextChannel
-            The channel where a pinned message is being targeted.
+            The channel where this message was pinned or unpinned.
 
         Raises
         ------
@@ -454,7 +453,7 @@ class AuditLogEntry(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.users.user]
-            The user who made this change, if available
+            The user who made this change, if available.
 
         Raises
         ------
