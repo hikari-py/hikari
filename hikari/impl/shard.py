@@ -529,7 +529,7 @@ class GatewayShardImpl(shard.GatewayShard):
         if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
             raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
-        if include_presences is not undefined.UNDEFINED and not self._intents & intents_.Intents.GUILD_PRESENCES:
+        if include_presences and not self._intents & intents_.Intents.GUILD_PRESENCES:
             raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
         if users is not undefined.UNDEFINED and (query or limit):

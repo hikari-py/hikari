@@ -706,6 +706,19 @@ class TestGatewayShardImpl:
         with pytest.raises(errors.MissingIntentError):
             await client.request_guild_members(123, query="test", limit=1, include_presences=True)
 
+    async def test_request_guild_members_when_presences_false_and_GUILD_PRESENCES_not_enabled(self, client):
+        client._intents = intents.Intents.GUILD_INTEGRATIONS
+        client._ws = mock.Mock(send_json=mock.AsyncMock())
+
+        await client.request_guild_members(123, query="test", limit=1, include_presences=False)
+
+        client._ws.send_json.assert_awaited_once_with(
+            {
+                "op": 8,
+                "d": {"guild_id": "123", "query": "test", "presences": False, "limit": 1},
+            }
+        )
+
     @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
     async def test_request_guild_members_when_specifiying_users_with_limit_or_query(self, client, kwargs):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
