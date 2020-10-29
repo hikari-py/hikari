@@ -66,7 +66,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
 
     See Also
     --------
-    Event Stream: `hikari.utilities.event_stream.EventStream`
+    Event Stream: `hikari.event_stream.EventStream`
     """
 
     __slots__: typing.Sequence[str] = (
