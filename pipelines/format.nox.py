@@ -124,7 +124,7 @@ def remove_trailing_whitespaces() -> None:
 
     end = time.perf_counter()
 
-    remark = "Good job!" if not count else "Will now continue to run black."
+    remark = "Good job!" if not count else ""
     print(
         "\033[36mnox > I had to fix",
         count,
