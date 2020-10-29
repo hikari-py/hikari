@@ -787,7 +787,7 @@ class PartialGuild(snowflakes.Unique):
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
-    """A preview of a guild with the `GuildFeature.PUBLIC` feature."""
+    """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
@@ -955,7 +955,7 @@ class Guild(PartialGuild, abc.ABC):
     preferred_locale: str = attr.ib(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
-    This can only be change if `GuildFeature.PUBLIC` is in `Guild.features`
+    This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
     for this guild and will otherwise default to `en-US`.
     """
 
@@ -972,7 +972,7 @@ class Guild(PartialGuild, abc.ABC):
     """The channel ID of the channel where admins and moderators receive notices
     from Discord.
 
-    This is only present if `GuildFeature.PUBLIC` is in `Guild.features` for
+    This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
@@ -980,10 +980,10 @@ class Guild(PartialGuild, abc.ABC):
     """The voice region for the guild."""
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
-    """The ID of the channel where guilds with the `GuildFeature.PUBLIC`
+    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
     `features` display rules and guidelines.
 
-    If the `GuildFeature.PUBLIC` feature is not defined, then this is `builtins.None`.
+    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
     """
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)

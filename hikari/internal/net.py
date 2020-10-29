@@ -39,11 +39,8 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     real_url = str(response.real_url)
     raw_body = await response.read()
 
-    args = [
-        real_url,
-        response.headers,
-        raw_body,
-    ]
+    # Little hack to stop mypy from complaining when using `*args`
+    args: typing.List[typing.Any] = [real_url, response.headers, raw_body]
     try:
         json_body = await response.json()
         args.append(json_body.get("message", ""))

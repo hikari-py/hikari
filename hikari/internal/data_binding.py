@@ -29,19 +29,15 @@ __all__: typing.List[str] = [
     "JSONArray",
     "JSONish",
     "URLEncodedForm",
-    "MultipartForm",
-    "ContentDisposition",
     "dump_json",
     "load_json",
     "JSONObjectBuilder",
     "cast_json_array",
 ]
 
-import json
 import typing
 
-import aiohttp.client_reqrep
-import aiohttp.typedefs
+import aiohttp
 import multidict
 
 from hikari import snowflakes
@@ -57,12 +53,6 @@ Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str]]
 
 URLEncodedForm = aiohttp.FormData
 """Type hint for content of type application/x-www-form-encoded."""
-
-MultipartForm = aiohttp.FormData
-"""Type hint for content of type multipart/form-data."""
-
-ContentDisposition = aiohttp.client_reqrep.ContentDisposition
-"""Type hint for content disposition information."""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
 # See https://github.com/python/typing/issues/182
@@ -86,6 +76,8 @@ if typing.TYPE_CHECKING:
 
 
 else:
+    import json
+
     dump_json = json.dumps
     """Convert a Python type to a JSON string."""
 
