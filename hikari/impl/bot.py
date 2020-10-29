@@ -976,7 +976,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             _LOGGER.debug("Shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
             return new_shard
 
-        raise errors.GatewayError(f"Shard {shard_id} shut down immediately when starting")
+        raise errors.GatewayError(f"shard {shard_id} shut down immediately when starting")
 
     @staticmethod
     def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:

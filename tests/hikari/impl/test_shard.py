@@ -777,7 +777,7 @@ class TestGatewayShardImpl:
         create_task = stack.enter_context(mock.patch.object(asyncio, "create_task", side_effect=[run_task, waiter]))
         wait = stack.enter_context(mock.patch.object(asyncio, "wait", return_value=([run_task], [waiter])))
         stack.enter_context(
-            pytest.raises(asyncio.CancelledError, match="Shard 20 was closed before it could start successfully")
+            pytest.raises(asyncio.CancelledError, match="shard 20 was closed before it could start successfully")
         )
 
         with stack:
