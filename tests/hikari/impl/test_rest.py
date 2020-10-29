@@ -680,10 +680,10 @@ class TestRESTClientImpl:
     @pytest.mark.parametrize(
         "kwargs",
         [
-            dict(before=1234, after=1234),
-            dict(after=1234, around=1234),
-            dict(before=1234, around=1234),
-            dict(before=1234, after=1234, around=1234),
+            {"before": 1234, "after": 1234},
+            {"after": 1234, "around": 1234},
+            {"before": 1234, "around": 1234},
+            {"before": 1234, "after": 1234, "around": 1234},
         ],
     )
     def test_fetch_messages_when_more_than_one_kwarg_passed(self, rest_client, kwargs):
