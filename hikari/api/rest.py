@@ -4581,12 +4581,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to fetch the integrations for. This may be the object
             or the ID of an existing guild.
 
-        Other Parameters
-        ----------------
-        include_applications : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether to include bot and webhook integrations as
-            well as the Youtube and Twitch integrations.
-
         Returns
         -------
         typing.Sequence[hikari.guilds.Integration]
