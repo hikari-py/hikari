@@ -572,7 +572,7 @@ class GatewayShardImpl(shard.GatewayShard):
             # which implies the shard died before it could become ready/resume...
             self._run_task = None
             run_task.result()
-            raise asyncio.CancelledError(f"Shard {self._shard_id} was closed before it could start successfully")
+            raise asyncio.CancelledError(f"shard {self._shard_id} was closed before it could start successfully")
 
     async def update_presence(
         self,
@@ -809,6 +809,7 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _run_once(self) -> bool:
         self._handshake_completed.clear()
         dispatch_disconnect = False
+        exception = None
 
         exit_stack = contextlib.AsyncExitStack()
 
@@ -883,6 +884,10 @@ class GatewayShardImpl(shard.GatewayShard):
             finally:
                 heartbeat_task.cancel()
 
+        except Exception as ex:
+            exception = ex
+            raise
+
         finally:
             ws = self._ws
             self._ws = None
@@ -892,9 +897,13 @@ class GatewayShardImpl(shard.GatewayShard):
                 # afterwards.
                 self._event_consumer(self, "DISCONNECTED", {})
 
+            # Ignore errors if we are closing
+            if self._closing.is_set() or self._closed.is_set():
+                return False
+
             # Check if we made the socket close or handled it. If we didn't, we should always try to
             # reconnect, as aiohttp is probably closing it internally without telling us properly.
-            if not ws.sent_close:  # type: ignore[union-attr]
+            if exception is None and not ws.sent_close:  # type: ignore[union-attr]
                 return True
 
     async def _send_heartbeat(self) -> None:
