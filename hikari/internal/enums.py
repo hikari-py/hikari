@@ -44,13 +44,6 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
         self.values_to_names: typing.Dict[str, typing.Any] = {}
         self["__doc__"] = "An enumeration."
 
-    def __contains__(self, item: typing.Any) -> bool:
-        try:
-            _ = self[item]
-            return True
-        except KeyError:
-            return False
-
     def __getitem__(self, name: str) -> typing.Any:
         try:
             return super().__getitem__(name)
@@ -59,10 +52,6 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
                 return self.names_to_values[name]
             except KeyError:
                 raise KeyError(name) from None
-
-    def __iter__(self) -> typing.Iterator[str]:
-        yield from super().__iter__()
-        yield self.names_to_values
 
     def __setitem__(self, name: str, value: typing.Any) -> None:
         if name == "" or name == "mro":
@@ -97,8 +86,6 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
             # We must have defined some alias, so just register the name
             self.names_to_values[name] = value
             return
-        if not isinstance(value, self.base):
-            raise TypeError("Enum values must be an instance of the base type of the enum")
 
         self.names_to_values[name] = value
         self.values_to_names[value] = name
@@ -122,8 +109,11 @@ class _EnumMeta(type):
     def __getitem__(cls, name: str) -> typing.Any:
         return cls._name_to_member_map_[name]
 
-    def __iter__(cls) -> typing.Iterator[str]:
-        yield from cls._name_to_member_map_
+    def __contains__(cls, item: typing.Any) -> bool:
+        return item in cls._value_to_member_map_
+
+    def __iter__(cls) -> typing.Iterator[typing.Any]:
+        yield from cls._name_to_member_map_.values()
 
     @staticmethod
     def __new__(
@@ -183,7 +173,7 @@ class _EnumMeta(type):
         if _Enum is NotImplemented:
             if name != "Enum":
                 raise TypeError("First instance of _EnumMeta must be Enum")
-            return {}
+            return _EnumNamespace(object)
 
         try:
             # Fails if Enum is not defined. We check this in `__new__` properly.
@@ -191,17 +181,10 @@ class _EnumMeta(type):
 
             if isinstance(base, _EnumMeta):
                 raise TypeError("First base to an enum must be the type to combine with, not _EnumMeta")
-            if not isinstance(enum_type, _EnumMeta):
-                raise TypeError("Second base to an enum must be the enum type (derived from _EnumMeta) to be used")
-
-            if not issubclass(enum_type, _Enum):
-                raise TypeError("second base type for enum must be derived from Enum")
 
             return _EnumNamespace(base)
         except ValueError:
-            if name == "Enum" and _Enum is NotImplemented:
-                return _EnumNamespace(object)
-            raise TypeError("Expected two base classes for an enum") from None
+            raise TypeError("Expected exactly two base classes for an enum") from None
 
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__}>"
@@ -365,7 +348,7 @@ class _FlagMeta(type):
     def __getitem__(cls, name: str) -> typing.Any:
         return cls._name_to_member_map_[name]
 
-    def __iter__(cls) -> typing.Iterator[str]:
+    def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
 
     @classmethod
@@ -377,13 +360,10 @@ class _FlagMeta(type):
                 raise TypeError("First instance of _FlagMeta must be Flag")
             return _EnumNamespace(object)
 
-        try:
-            # Fails if Enum is not defined.
-            if len(bases) == 1 and bases[0] == Flag:
-                return _EnumNamespace(int)
-        except ValueError:
-            pass
-        raise TypeError("Cannot define another Flag base type") from None
+        # Fails if Flag is not defined.
+        if len(bases) == 1 and bases[0] == Flag:
+            return _EnumNamespace(int)
+        raise TypeError("Cannot define another Flag base type")
 
     @staticmethod
     def __new__(
@@ -761,9 +741,7 @@ class Flag(metaclass=_FlagMeta):
         # This logic has to be reversed to be correct, since order matters for
         # a subtraction operator. This also ensures `int - _T -> _T` is a valid
         # case for us.
-        if not isinstance(other, self.__class__):
-            other = self.__class__(other)
-        return other - self
+        return self.__class__(other) - self
 
     def __str__(self) -> str:
         return self.name
