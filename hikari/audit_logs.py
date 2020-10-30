@@ -453,7 +453,7 @@ class AuditLogEntry(snowflakes.Unique):
 
         Returns
         -------
-        typing.Optional[hikari.users.user]
+        typing.Optional[hikari.users.User]
             The user who made this change, if available.
 
         Raises
