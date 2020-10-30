@@ -1552,6 +1552,7 @@ class TestEntityFactoryImpl:
             "name": "blaze it",
             "type": "youtube",
             "account": {"id": "6969", "name": "Blaze it"},
+            "guild_id": "9292929292",
             "enabled": True,
             "syncing": False,
             "revoked": True,
@@ -1581,6 +1582,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_integration(self, entity_factory_impl, integration_payload, user_payload):
         integration = entity_factory_impl.deserialize_integration(integration_payload)
         assert integration.id == 420
+        assert integration.guild_id == 9292929292
         assert integration.name == "blaze it"
         assert integration.type == guild_models.IntegrationType.YOUTUBE
         # IntegrationAccount
@@ -1627,8 +1629,10 @@ class TestEntityFactoryImpl:
                 "enabled": True,
                 "role_id": None,
                 "synced_at": None,
-            }
+            },
+            guild_id=snowflakes.Snowflake(383838383883),
         )
+        assert integration.guild_id == 383838383883
         assert integration.is_emojis_enabled is None
         assert integration.role_id is None
         assert integration.last_synced_at is None
@@ -1644,6 +1648,7 @@ class TestEntityFactoryImpl:
         integration = entity_factory_impl.deserialize_integration(
             {
                 "id": "420",
+                "guild_id": "929292929",
                 "name": "blaze it",
                 "type": "youtube",
                 "account": {"id": "6969", "name": "Blaze it"},

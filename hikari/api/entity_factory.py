@@ -714,7 +714,12 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_integration(self, payload: data_binding.JSONObject) -> guild_models.Integration:
+    def deserialize_integration(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> guild_models.Integration:
         """Parse a raw payload from Discord into an integration object.
 
         Parameters
@@ -722,10 +727,23 @@ class EntityFactory(abc.ABC):
         payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
 
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this integration belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
         Returns
         -------
         hikari.guilds.Integration
             The deserialized integration object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload for the payload of
+            the integration.
         """
 
     @abc.abstractmethod

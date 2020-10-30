@@ -636,6 +636,9 @@ class PartialIntegration(snowflakes.Unique):
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
+    guild_id: snowflakes.Snowflake = attr.ib()
+    """The ID of the guild this integration belongs to."""
+
     expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 

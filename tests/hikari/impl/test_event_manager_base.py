@@ -48,7 +48,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base, "_LOGGER") as logger:
             event_manager.consume_raw_event(None, "UNEXISTING_EVENT", {})
 
-        logger.debug.assert_called_once_with("ignoring unknown event %s", "UNEXISTING_EVENT")
+        logger.debug.assert_called_once_with("ignoring unknown event %s:\n  %r", "UNEXISTING_EVENT", {})
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):

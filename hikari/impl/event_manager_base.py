@@ -84,7 +84,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         try:
             callback = getattr(self, "on_" + event_name.lower())
         except AttributeError:
-            _LOGGER.debug("ignoring unknown event %s", event_name)
+            _LOGGER.debug("ignoring unknown event %s:\n    %r", event_name, payload)
         else:
             asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
 

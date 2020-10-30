@@ -1053,7 +1053,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             account=integration_fields.account,
         )
 
-    def deserialize_integration(self, payload: data_binding.JSONObject) -> guild_models.Integration:
+    def deserialize_integration(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> guild_models.Integration:
         integration_fields = self._set_partial_integration_attributes(payload)
 
         role_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1093,6 +1098,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return guild_models.Integration(
             id=integration_fields.id,
+            guild_id=guild_id if guild_id is not undefined.UNDEFINED else snowflakes.Snowflake(payload["guild_id"]),
             name=integration_fields.name,
             type=integration_fields.type,
             account=integration_fields.account,
