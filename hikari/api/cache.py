@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
+    from hikari import messages
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
@@ -1578,6 +1579,81 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached voice state if found (else `builtins.None`)
             and the new cached voice state object if it could be cached
             (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractclassmethod
+    def delete_message(
+        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+    ) -> None:
+        """Remove a messages object from the cache.
+        
+        Parameters
+        ----------
+        message_ids : typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+            The IDs of the messages to remove the cache.
+        
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractclassmethod
+    def get_message(
+        self, message_id: snowflakes.Snowflake
+    ) -> typing.Optional[messages.PartialMessage]:
+        """Get a message object from the cache.
+
+        Parameters
+        ----------
+        message_id : hikari.snowflakes.Snowflake
+            The ID of the message to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[messages.PartialMessage]
+            The object of the message found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractclassmethod
+    def set_message(
+        self, message: messages.PartialMessage
+    ) -> None:
+        """Add a message object to the cache.
+
+        Parameters
+        ----------
+        message : messages.PartialMessage
+            The object of the message to add to the cache.
+        
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractclassmethod
+    def update_message(
+        self, message: messages.PartialMessage
+    ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:
+        """Update a message in the cache.
+
+        Parameters
+        ----------
+        message : messages.PartialMessage
+            The object of the message to update in the cache.
+        
+        Returns
+        -------
+        typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]
+            A tuple of the old cached message object if found (else `builtins.None`
+            and the new cached message object if it could be cached (else
+            `builtins.None`).
 
         Raises
         ------

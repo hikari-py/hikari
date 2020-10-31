@@ -147,6 +147,8 @@ class MemberUpdateEvent(MemberEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_member: guilds.Member = attr.ib()
+
     member: guilds.Member = attr.ib()
     """Member object for the member that was updated.
 

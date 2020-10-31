@@ -48,6 +48,8 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_user: users.OwnUser = attr.ib()
+
     user: users.OwnUser = attr.ib()
     """This application user.
 

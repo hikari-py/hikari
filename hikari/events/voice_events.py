@@ -80,6 +80,8 @@ class VoiceStateUpdateEvent(VoiceEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
+    old_state: voices.VoiceState = attr.ib(repr=True)
+
     state: voices.VoiceState = attr.ib(repr=True)
     """Voice state that this update contained.
 

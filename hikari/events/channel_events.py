@@ -279,6 +279,8 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_channel: channels.GuildChannel = attr.ib(repr=True)
+    
     channel: channels.GuildChannel = attr.ib(repr=True)
     """Guild channel that this event represents.
 

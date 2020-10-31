@@ -265,6 +265,8 @@ class GuildUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_guild: guilds.GatewayGuild = attr.ib()
+
     guild: guilds.GatewayGuild = attr.ib()
     """Guild that was just updated.
 
@@ -390,6 +392,8 @@ class EmojisUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
+    old_emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
+
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
     """Sequence of all emojis in this guild.
 
@@ -479,6 +483,8 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
+
+    old_presence: presences_.MemberPresence = attr.ib()
 
     presence: presences_.MemberPresence = attr.ib()
     """Member presence.

@@ -455,6 +455,8 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
+    old_message: messages.PartialMessage = attr.ib()
+
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>
 
@@ -551,6 +553,8 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
+    old_message: messages.PartialMessage = attr.ib()
+
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>
 
@@ -590,7 +594,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
             channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
         ), f"expected cached channel to be None or a GuildTextChannel/GuildNewsChannel, not {channel}"
         return channel
-
+        
     @property
     def message_id(self) -> snowflakes.Snowflake:
         """Get the ID of the first deleted message.

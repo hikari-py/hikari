@@ -42,6 +42,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
+    from hikari import messages
 
 
 @typing.final
@@ -389,4 +390,24 @@ class StatelessCacheImpl(cache.MutableCache):
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
     ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+        raise self._no_cache()
+
+    def delete_message(
+        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+    ) -> None:
+       raise self._no_cache()
+
+    def get_message(
+        self, message_id: snowflakes.Snowflake
+    ) -> typing.Optional[messages.PartialMessage]:
+        return None
+    
+    def set_message(
+        self, message: messages.PartialMessage
+    ) -> None:
+        raise self._no_cache()
+
+    def update_message(
+        self, message: messages.PartialMessage
+    ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:
         raise self._no_cache()

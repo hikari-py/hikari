@@ -46,6 +46,7 @@ from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import traits
+    from hikari import messages
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
@@ -96,6 +97,8 @@ class StatefulCacheImpl(cache.MutableCache):
         "_role_entries",
         "_unknown_custom_emoji_entries",
         "_user_entries",
+        "_message_entries",
+        "max_messages"
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
@@ -111,9 +114,11 @@ class StatefulCacheImpl(cache.MutableCache):
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
     _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
+    _message_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, messages.PartialMessage]
     _intents: intents_.Intents
+    max_messages: int
 
-    def __init__(self, app: traits.RESTAware, intents: intents_.Intents) -> None:
+    def __init__(self, app: traits.RESTAware, intents: intents_.Intents, max_messages: int) -> None:
         self._app = app
         self._me = None
         self._emoji_entries = collections.FreezableDict()
@@ -125,7 +130,9 @@ class StatefulCacheImpl(cache.MutableCache):
         # found attached to cached presence activities.
         self._unknown_custom_emoji_entries = collections.FreezableDict()
         self._user_entries = collections.FreezableDict()
+        self._message_entries = collections.FreezableDict()
         self._intents = intents
+        self.max_messages = max_messages
 
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
         if self._intents ^ intents:
@@ -1598,3 +1605,35 @@ class StatefulCacheImpl(cache.MutableCache):
         cached_voice_state = self.get_voice_state(voice_state.guild_id, voice_state.user_id)
         self.set_voice_state(voice_state)
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
+
+    def delete_message(
+        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+    ) -> None:
+        if isinstance(message_ids, snowflakes.Snowflake):
+            self._message_entries.pop(message_ids)
+        else:
+            for message_id in message_ids:
+                if message_id not in self._message_entries:
+                    continue
+
+                self._message_entries.pop(message_id)
+
+    def get_message(
+        self, message_id: snowflakes.Snowflake
+    ) -> typing.Optional[messages.PartialMessage]:
+        return self._message_entries.get(message_id)
+
+    def set_message(
+        self, message: messages.PartialMessage
+    ) -> None:
+        if len(self._message_entries) >= self.max_messages:
+            self._message_entries.popitem()
+            
+        self._message_entries[message.id] = message
+
+    def update_message(
+        self, message: messages.PartialMessage
+    ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:
+        cached_message = self.get_message(message.id)
+        self.set_message(message)
+        return cached_message, self.get_message(message.id)

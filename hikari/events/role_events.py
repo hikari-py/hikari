@@ -118,6 +118,8 @@ class RoleUpdateEvent(RoleEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_role: guilds.Role = attr.ib()
+
     role: guilds.Role = attr.ib()
     """Role that was updated.
 
