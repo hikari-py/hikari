@@ -94,6 +94,51 @@ class TestPartialRole:
         assert str(model) == "The Big Cool"
 
 
+def test_PartialApplication_str_operator():
+    mock_application = mock.Mock(guilds.PartialApplication)
+    mock_application.name = "beans"
+    assert guilds.PartialApplication.__str__(mock_application) == "beans"
+
+
+class TestPartialApplication:
+    @pytest.fixture()
+    def model(self):
+        return hikari_test_helpers.mock_class_namespace(
+            guilds.PartialApplication,
+            init_=False,
+            slots_=False,
+            id=123,
+            icon_hash="ahashicon",
+        )()
+
+    def test_icon_url_property(self, model):
+        model.format_icon = mock.Mock(return_value="url")
+
+        assert model.icon_url == "url"
+
+        model.format_icon.assert_called_once_with()
+
+    def test_format_icon_when_hash_is_None(self, model):
+        model.icon_hash = None
+
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.format_icon(ext="jpeg", size=1) is None
+
+        route.compile_to_file.assert_not_called()
+
+    def test_format_icon_when_hash_is_not_None(self, model):
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.format_icon(ext="jpeg", size=1) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
+        )
+
+
 class TestIntegrationAccount:
     @pytest.fixture()
     def model(self, mock_app):

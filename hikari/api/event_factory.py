@@ -328,7 +328,7 @@ class EventFactory(typing.Protocol):
     def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationCreateEvent:
-        """Parse a raw payload from Discord into a integration create event object.
+        """Parse a raw payload from Discord into an integration create event object.
 
         Parameters
         ----------
@@ -346,7 +346,7 @@ class EventFactory(typing.Protocol):
     def deserialize_integration_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationDeleteEvent:
-        """Parse a raw payload from Discord into a integration delete event object.
+        """Parse a raw payload from Discord into an integration delete event object.
 
         Parameters
         ----------
@@ -364,7 +364,7 @@ class EventFactory(typing.Protocol):
     def deserialize_integration_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationUpdateEvent:
-        """Parse a raw payload from Discord into a integration update event object.
+        """Parse a raw payload from Discord into an integration update event object.
 
         Parameters
         ----------
