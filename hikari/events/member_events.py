@@ -148,6 +148,12 @@ class MemberUpdateEvent(MemberEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_member: guilds.Member = attr.ib()
+    """Old member object from cache.
+    
+    Returns
+    -------
+    hikari.guilds.Member
+    """
 
     member: guilds.Member = attr.ib()
     """Member object for the member that was updated.

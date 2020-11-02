@@ -45,8 +45,8 @@ from hikari.internal import cache as cache_utility
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
-    from hikari import traits
     from hikari import messages
+    from hikari import traits
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
@@ -1607,16 +1607,15 @@ class StatefulCacheImpl(cache.MutableCache):
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
 
     def delete_message(
-        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+        self, message_id: snowflakes.Snowflake
     ) -> None:
-        if isinstance(message_ids, snowflakes.Snowflake):
-            self._message_entries.pop(message_ids)
-        else:
-            for message_id in message_ids:
-                if message_id not in self._message_entries:
-                    continue
+        self._message_entries.pop(message_id)
 
-                self._message_entries.pop(message_id)
+    def delete_messages(
+        self, message_ids: typing.Sequence[snowflakes.Snowflake]
+    ) -> None:
+        for message_id in message_ids:
+            self._message_entries.pop(message_id)
 
     def get_message(
         self, message_id: snowflakes.Snowflake

@@ -266,6 +266,12 @@ class GuildUpdateEvent(GuildEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_guild: guilds.GatewayGuild = attr.ib()
+    """Old guild object from cache.
+    
+    Returns
+    -------
+    hikari.guilds.Guild
+    """
 
     guild: guilds.GatewayGuild = attr.ib()
     """Guild that was just updated.
@@ -393,6 +399,12 @@ class EmojisUpdateEvent(GuildEvent):
     # <<inherited docstring from GuildEvent>>.
 
     old_emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
+    """Sequence of all old emojis in this guild from cache.
+    
+    Returns
+    -------
+    typing.Sequence[emojis_.KnownCustomEmoji]
+    """
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
     """Sequence of all emojis in this guild.
@@ -485,6 +497,12 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_presence: presences_.MemberPresence = attr.ib()
+    """Old member presence object from cache.
+    
+    Returns
+    -------
+    hikari.presences.MemberPresence
+    """
 
     presence: presences_.MemberPresence = attr.ib()
     """Member presence.

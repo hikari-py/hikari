@@ -49,6 +49,12 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_user: users.OwnUser = attr.ib()
+    """Old application user from cache.
+
+    Returns
+    -------
+    hikari.users.OwnUser
+    """
 
     user: users.OwnUser = attr.ib()
     """This application user.

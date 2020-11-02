@@ -456,6 +456,12 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from Event>>
 
     old_message: messages.PartialMessage = attr.ib()
+    """Old message object from cache.
+    
+    Returns
+    -------
+    hikari.messages.PartialMessage
+    """
 
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>
@@ -554,6 +560,12 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from Event>>
 
     old_message: messages.PartialMessage = attr.ib()
+    """Old message object from cache.
+    
+    Returns
+    -------
+    hikari.messages.PartialMessage
+    """
 
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>

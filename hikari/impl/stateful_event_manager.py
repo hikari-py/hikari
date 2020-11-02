@@ -28,10 +28,10 @@ __all__: typing.List[str] = ["StatefulEventManagerImpl"]
 import asyncio
 import typing
 
+from hikari import Snowflake
 from hikari import channels
 from hikari import intents as intents_
 from hikari import presences
-from hikari import Snowflake
 from hikari import traits
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
@@ -290,8 +290,6 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         self._cache.set_message(event.message)
         await self.dispatch(event)
 
-    # TODO: message cache.
-
     async def on_message_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-update for more info."""
         old = self._cache.get_message(Snowflake(payload["id"]))
@@ -308,7 +306,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
     async def on_message_delete_bulk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete-bulk for more info."""
         event = self._app.event_factory.deserialize_message_delete_bulk_event(shard, payload)
-        self._cache.delete_message(event.message_ids)
+        self._cache.delete_messages(event.message_ids)
         await self.dispatch(event)
 
     async def on_message_reaction_add(

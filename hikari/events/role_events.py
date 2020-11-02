@@ -119,6 +119,12 @@ class RoleUpdateEvent(RoleEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_role: guilds.Role = attr.ib()
+    """Old role object from cache.
+    
+    Returns
+    -------
+    hikari.guilds.Role
+    """
 
     role: guilds.Role = attr.ib()
     """Role that was updated.

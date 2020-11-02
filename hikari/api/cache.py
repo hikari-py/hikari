@@ -34,11 +34,11 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import presences
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
-    from hikari import messages
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
@@ -1586,15 +1586,32 @@ class MutableCache(Cache, abc.ABC):
             When called on a stateless cache implementation.
         """
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def delete_message(
-        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+        self, message_id: snowflakes.Snowflake
+    ) -> None:
+        """Remove a message object from the cache.
+        
+        Parameters
+        ----------
+        message_id : snowflakes.Snowflake
+            The ID of the messages to remove the cache.
+        
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+    
+    @abc.abstractmethod
+    def delete_messages(
+        self, message_ids: typing.Sequence[snowflakes.Snowflake]
     ) -> None:
         """Remove a messages object from the cache.
         
         Parameters
         ----------
-        message_ids : typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+        message_ids : typing.Sequence[snowflakes.Snowflake]
             The IDs of the messages to remove the cache.
         
         Raises
@@ -1603,7 +1620,7 @@ class MutableCache(Cache, abc.ABC):
             When called on a stateless cache implementation.
         """
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def get_message(
         self, message_id: snowflakes.Snowflake
     ) -> typing.Optional[messages.PartialMessage]:
@@ -1620,7 +1637,7 @@ class MutableCache(Cache, abc.ABC):
             The object of the message found in the cache or `builtins.None`.
         """
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def set_message(
         self, message: messages.PartialMessage
     ) -> None:
@@ -1637,7 +1654,7 @@ class MutableCache(Cache, abc.ABC):
             When called on a stateless cache implementation.
         """
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def update_message(
         self, message: messages.PartialMessage
     ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:

@@ -81,6 +81,12 @@ class VoiceStateUpdateEvent(VoiceEvent):
     # <<inherited docstring>>.
 
     old_state: voices.VoiceState = attr.ib(repr=True)
+    """Old voice state object from cache.
+    
+    Returns
+    -------
+    hikari.voices.VoiceState
+    """
 
     state: voices.VoiceState = attr.ib(repr=True)
     """Voice state that this update contained.

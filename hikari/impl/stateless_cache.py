@@ -38,11 +38,11 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import presences
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
-    from hikari import messages
 
 
 @typing.final
