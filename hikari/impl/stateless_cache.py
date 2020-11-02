@@ -393,7 +393,12 @@ class StatelessCacheImpl(cache.MutableCache):
         raise self._no_cache()
 
     def delete_message(
-        self, message_ids: typing.Union[typing.AbstractSet[snowflakes.Snowflake], snowflakes.Snowflake]
+        self, message_id: snowflakes.Snowflake
+    ) -> None:
+        raise self._no_cache()
+
+    def delete_messages(
+        self, message_ids: typing.Sequence[snowflakes.Snowflake]
     ) -> None:
        raise self._no_cache()
 
