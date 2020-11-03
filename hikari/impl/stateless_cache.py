@@ -392,24 +392,16 @@ class StatelessCacheImpl(cache.MutableCache):
     ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
         raise self._no_cache()
 
-    def delete_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> None:
+    def delete_message(self, message_id: snowflakes.Snowflake) -> None:
         raise self._no_cache()
 
-    def delete_messages(
-        self, message_ids: typing.Sequence[snowflakes.Snowflake]
-    ) -> None:
-       raise self._no_cache()
+    def delete_messages(self, message_ids: typing.AbstractSet[snowflakes.Snowflake]) -> None:
+        raise self._no_cache()
 
-    def get_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> typing.Optional[messages.PartialMessage]:
+    def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
         return None
-    
-    def set_message(
-        self, message: messages.PartialMessage
-    ) -> None:
+
+    def set_message(self, message: messages.PartialMessage) -> None:
         raise self._no_cache()
 
     def update_message(

@@ -1587,33 +1587,14 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> None:
+    def delete_message(self, message_id: snowflakes.Snowflake) -> None:
         """Remove a message object from the cache.
-        
+
         Parameters
         ----------
         message_id : snowflakes.Snowflake
             The ID of the messages to remove the cache.
-        
-        Raises
-        ------
-        builtins.NotImplementedError
-            When called on a stateless cache implementation.
-        """
-    
-    @abc.abstractmethod
-    def delete_messages(
-        self, message_ids: typing.Sequence[snowflakes.Snowflake]
-    ) -> None:
-        """Remove a messages object from the cache.
-        
-        Parameters
-        ----------
-        message_ids : typing.Sequence[snowflakes.Snowflake]
-            The IDs of the messages to remove the cache.
-        
+
         Raises
         ------
         builtins.NotImplementedError
@@ -1621,9 +1602,22 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> typing.Optional[messages.PartialMessage]:
+    def delete_messages(self, message_ids: typing.AbstractSet[snowflakes.Snowflake]) -> None:
+        """Remove a messages object from the cache.
+
+        Parameters
+        ----------
+        message_ids : typing.Sequence[snowflakes.Snowflake]
+            The IDs of the messages to remove the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractmethod
+    def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
         """Get a message object from the cache.
 
         Parameters
@@ -1638,16 +1632,14 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_message(
-        self, message: messages.PartialMessage
-    ) -> None:
+    def set_message(self, message: messages.PartialMessage) -> None:
         """Add a message object to the cache.
 
         Parameters
         ----------
         message : messages.PartialMessage
             The object of the message to add to the cache.
-        
+
         Raises
         ------
         builtins.NotImplementedError
@@ -1664,7 +1656,7 @@ class MutableCache(Cache, abc.ABC):
         ----------
         message : messages.PartialMessage
             The object of the message to update in the cache.
-        
+
         Returns
         -------
         typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]

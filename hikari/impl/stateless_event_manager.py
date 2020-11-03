@@ -77,7 +77,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_channel_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_channel_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_channel_update_event(shard, payload, None))
 
     async def on_channel_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-delete for more info."""
@@ -93,7 +93,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_guild_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_guild_update_event(shard, payload, None))
 
     async def on_guild_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-delete for more info."""
@@ -112,7 +112,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_emojis_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_guild_emojis_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_guild_emojis_update_event(shard, payload, None))
 
     async def on_guild_integrations_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -130,7 +130,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_guild_member_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_guild_member_update_event(shard, payload, None))
 
     async def on_guild_members_chunk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-members-chunk for more info."""
@@ -142,7 +142,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_role_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_guild_role_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_guild_role_update_event(shard, payload, None))
 
     async def on_guild_role_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-delete for more info."""
@@ -162,7 +162,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_message_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_message_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_message_update_event(shard, payload, None))
 
     async def on_message_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete for more info."""
@@ -198,7 +198,7 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_presence_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#presence-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_presence_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_presence_update_event(shard, payload, None))
 
     async def on_typing_start(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#typing-start for more info."""
@@ -206,11 +206,11 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_user_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#user-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_own_user_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_own_user_update_event(shard, payload, None))
 
     async def on_voice_state_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#voice-state-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_voice_state_update_event(shard, payload))
+        await self.dispatch(self._app.event_factory.deserialize_voice_state_update_event(shard, payload, None))
 
     async def on_voice_server_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#voice-server-update for more info."""

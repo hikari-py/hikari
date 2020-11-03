@@ -26,6 +26,7 @@ import pytest
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
+from hikari import messages
 from hikari import snowflakes
 from hikari import traits
 from hikari import users
@@ -44,7 +45,7 @@ class TestStatefulCacheImpl:
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
         return hikari_test_helpers.mock_class_namespace(stateful_cache.StatefulCacheImpl, slots_=False)(
-            app=app_impl, intents=None
+            app=app_impl, intents=None, max_messages=1
         )
 
     def test__build_emoji(self, cache_impl):
@@ -2473,3 +2474,40 @@ class TestStatefulCacheImpl:
                 mock.call(snowflakes.Snowflake(43123123), snowflakes.Snowflake(542134)),
             ]
         )
+
+    def test_delete_message(self, cache_impl):
+        message = mock.Mock(messages.Message)
+        cache._message_entries = collections.FreezableDict({1: message})
+
+        assert cache._message_entries.pop(1) is message
+        assert len(cache._message_entries) == 0
+
+    def test_delete_messages(self, cache_impl):
+        messages_ = [mock.Mock(messages.Message) for _ in range(5)]
+        cache._message_entries = collections.FreezableDict({i: m for i, m in zip(range(5), messages_)})
+
+        assert len(cache._message_entries) == 5
+        [cache._message_entries.pop(_id) for _id in cache._message_entries.copy()]
+        assert len(cache._message_entries) == 0
+
+    def test_get_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=123)
+        cache._message_entries = collections.FreezableDict({1: message})
+
+        assert cache._message_entries.get(1).id == 123
+
+    def test_set_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=123)
+        cache._message_entries = collections.FreezableDict()
+        cache._message_entries[1] = message
+
+        assert cache._message_entries.get(1).id == 123
+
+    def test_update_message(self, cache_impl):
+        message = mock.Mock(messages.Message, content="New test.")
+        old_message = mock.Mock(messages.Message, content="Old Test.")
+        cache._message_entries = collections.FreezableDict({1: message})
+
+        assert cache._message_entries.get(1).content == "New test."
+        cache._message_entries[1] = old_message
+        assert cache._message_entries.get(1).content == "Old Test."

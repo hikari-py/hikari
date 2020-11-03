@@ -98,7 +98,7 @@ class StatefulCacheImpl(cache.MutableCache):
         "_unknown_custom_emoji_entries",
         "_user_entries",
         "_message_entries",
-        "max_messages"
+        "max_messages",
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
@@ -1606,28 +1606,21 @@ class StatefulCacheImpl(cache.MutableCache):
         self.set_voice_state(voice_state)
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
 
-    def delete_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> None:
-        self._message_entries.pop(message_id)
+    def delete_message(self, message_id: snowflakes.Snowflake) -> None:
+        if message_id in self._message_entries:
+            self._message_entries.pop(message_id)
 
-    def delete_messages(
-        self, message_ids: typing.Sequence[snowflakes.Snowflake]
-    ) -> None:
+    def delete_messages(self, message_ids: typing.AbstractSet[snowflakes.Snowflake]) -> None:
         for message_id in message_ids:
             self._message_entries.pop(message_id)
 
-    def get_message(
-        self, message_id: snowflakes.Snowflake
-    ) -> typing.Optional[messages.PartialMessage]:
+    def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
         return self._message_entries.get(message_id)
 
-    def set_message(
-        self, message: messages.PartialMessage
-    ) -> None:
+    def set_message(self, message: messages.PartialMessage) -> None:
         if len(self._message_entries) >= self.max_messages:
             self._message_entries.popitem()
-            
+
         self._message_entries[message.id] = message
 
     def update_message(

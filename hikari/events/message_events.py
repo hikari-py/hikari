@@ -455,9 +455,9 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
-    old_message: messages.PartialMessage = attr.ib()
-    """Old message object from cache.
-    
+    old_message: typing.Optional[messages.PartialMessage] = attr.ib()
+    """Old message object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.messages.PartialMessage
@@ -559,9 +559,9 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
-    old_message: messages.PartialMessage = attr.ib()
-    """Old message object from cache.
-    
+    old_message: typing.Optional[messages.PartialMessage] = attr.ib()
+    """Old message object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.messages.PartialMessage
@@ -606,7 +606,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
             channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
         ), f"expected cached channel to be None or a GuildTextChannel/GuildNewsChannel, not {channel}"
         return channel
-        
+
     @property
     def message_id(self) -> snowflakes.Snowflake:
         """Get the ID of the first deleted message.

@@ -110,11 +110,17 @@ class TestChannelUpdateEvent:
 class TestGuildChannelUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return channel_events.GuildChannelUpdateEvent(app=None, channel=mock.Mock(), shard=None)
+        return channel_events.GuildChannelUpdateEvent(
+            app=None, channel=mock.Mock(), old_channel=mock.Mock(), shard=None
+        )
 
     def test_guild_id_property(self, event):
         event.channel.guild_id = 123
         assert event.guild_id == 123
+
+    def test_old_channel_id_property(self, event):
+        event.old_channel.id = 123
+        assert event.old_channel.id == 123
 
 
 class TestChannelDeleteEvent:

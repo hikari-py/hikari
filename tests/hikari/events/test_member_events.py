@@ -22,6 +22,7 @@
 import mock
 import pytest
 
+from hikari import guilds
 from hikari import snowflakes
 from hikari.events import member_events
 from tests.hikari import hikari_test_helpers
@@ -74,7 +75,9 @@ class TestMemberCreateEvent:
 class TestMemberUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return member_events.MemberUpdateEvent(app=None, shard=None, member=mock.Mock())
+        return member_events.MemberUpdateEvent(
+            app=None, shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member)
+        )
 
     def test_guild_property(self, event):
         event.member.guild_id = 123
@@ -84,3 +87,10 @@ class TestMemberUpdateEvent:
         user = object()
         event.member.user = user
         event.user == user
+
+    def test_old_user_property(self, event):
+        event.member.guild_id = 123
+        event.member.id = 456
+
+        assert event.member.guild_id == 123
+        assert event.member.id == 456

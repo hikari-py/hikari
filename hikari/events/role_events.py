@@ -118,9 +118,9 @@ class RoleUpdateEvent(RoleEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_role: guilds.Role = attr.ib()
-    """Old role object from cache.
-    
+    old_role: typing.Optional[guilds.Role] = attr.ib()
+    """Old role object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.guilds.Role

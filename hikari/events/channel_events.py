@@ -279,14 +279,14 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_channel: channels.GuildChannel = attr.ib(repr=True)
-    """Old guild channel object from cache.
-    
+    old_channel: typing.Optional[channels.GuildChannel] = attr.ib(repr=True)
+    """Old guild channel object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.channels.GuildChannel
     """
-    
+
     channel: channels.GuildChannel = attr.ib(repr=True)
     """Guild channel that this event represents.
 

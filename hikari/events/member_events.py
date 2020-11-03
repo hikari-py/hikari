@@ -147,9 +147,9 @@ class MemberUpdateEvent(MemberEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_member: guilds.Member = attr.ib()
-    """Old member object from cache.
-    
+    old_member: typing.Optional[guilds.Member] = attr.ib()
+    """Old member object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.guilds.Member

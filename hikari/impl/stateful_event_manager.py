@@ -203,7 +203,10 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_emojis_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
-        old = self._cache.get_emojis_view_for_guild(Snowflake(payload["guild_id"]))
+        old = [
+            self._app.entity_factory.deserialize_known_custom_emoji(emoji, guild_id=Snowflake(payload["guild_id"]))
+            for emoji in payload["emojis"]
+        ]
         event = self._app.event_factory.deserialize_guild_emojis_update_event(shard, payload, old)
         self._cache.clear_emojis_for_guild(event.guild_id)
 

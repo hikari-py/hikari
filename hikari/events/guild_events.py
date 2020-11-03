@@ -265,9 +265,9 @@ class GuildUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_guild: guilds.GatewayGuild = attr.ib()
-    """Old guild object from cache.
-    
+    old_guild: typing.Optional[guilds.Guild] = attr.ib()
+    """Old guild object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.guilds.Guild
@@ -398,9 +398,9 @@ class EmojisUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
-    old_emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
-    """Sequence of all old emojis in this guild from cache.
-    
+    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attr.ib()
+    """Sequence of all old emojis in this guild from cache or 'builtins.None'.
+
     Returns
     -------
     typing.Sequence[emojis_.KnownCustomEmoji]
@@ -496,9 +496,9 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_presence: presences_.MemberPresence = attr.ib()
-    """Old member presence object from cache.
-    
+    old_presence: typing.Optional[presences_.MemberPresence] = attr.ib()
+    """Old member presence object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.presences.MemberPresence

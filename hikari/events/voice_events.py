@@ -80,9 +80,9 @@ class VoiceStateUpdateEvent(VoiceEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
-    old_state: voices.VoiceState = attr.ib(repr=True)
-    """Old voice state object from cache.
-    
+    old_state: typing.Optional[voices.VoiceState] = attr.ib(repr=True)
+    """Old voice state object from cache or 'builtins.None'.
+
     Returns
     -------
     hikari.voices.VoiceState

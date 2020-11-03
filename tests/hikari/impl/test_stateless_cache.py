@@ -339,3 +339,22 @@ class TestStatelessCache:
     def test_update_voice_state(self, component):
         with pytest.raises(NotImplementedError):
             assert component.update_voice_state(object())
+
+    def test_delete_message(self, component):
+        with pytest.raises(NotImplementedError):
+            assert component.delete_message(123)
+
+    def test_delete_messages(self, component):
+        with pytest.raises(NotImplementedError):
+            assert component.delete_messages([123, 123, 123])
+
+    def test_get_message(self, component):
+        assert component.get_message(123) is None
+
+    def test_set_message(self, component):
+        with pytest.raises(NotImplementedError):
+            assert component.set_message(object())
+
+    def test_update_message(self, component):
+        with pytest.raises(NotImplementedError):
+            assert component.update_message(object())
