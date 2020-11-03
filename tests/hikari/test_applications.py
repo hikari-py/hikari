@@ -55,12 +55,6 @@ def test_Team_str_operator():
     assert str(team) == "Team 696969"
 
 
-def test_Application_str_operator():
-    mock_application = mock.Mock(applications.Application)
-    mock_application.name = "beans"
-    assert applications.Application.__str__(mock_application) == "beans"
-
-
 class TestTeam:
     @pytest.fixture()
     def model(self):
@@ -107,33 +101,6 @@ class TestApplication:
             icon_hash="ahashicon",
             cover_image_hash="ahashcover",
         )()
-
-    def test_icon_url_property(self, model):
-        model.format_icon = mock.Mock(return_value="url")
-
-        assert model.icon_url == "url"
-
-        model.format_icon.assert_called_once_with()
-
-    def test_format_icon_when_hash_is_None(self, model):
-        model.icon_hash = None
-
-        with mock.patch.object(
-            routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.format_icon(ext="jpeg", size=1) is None
-
-        route.compile_to_file.assert_not_called()
-
-    def test_format_icon_when_hash_is_not_None(self, model):
-        with mock.patch.object(
-            routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.format_icon(ext="jpeg", size=1) == "file"
-
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
-        )
 
     def test_cover_image_url_property(self, model):
         model.format_cover_image = mock.Mock(return_value="url")

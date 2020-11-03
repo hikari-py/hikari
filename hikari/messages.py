@@ -40,20 +40,20 @@ import typing
 import attr
 
 from hikari import files
+from hikari import guilds
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
+from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import applications
     from hikari import channels
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
-    from hikari import guilds
     from hikari import traits
     from hikari import users
 
@@ -245,6 +245,63 @@ class MessageCrosspost:
 
 
 @attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class MessageApplication(guilds.PartialApplication):
+    """The representation of an application used in messages."""
+
+    cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The CDN's hash of this application's cover image, used on the store."""
+
+    primary_sku_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    """The ID of the primary "Game SKU" of a game that's sold on Discord."""
+
+    @property
+    def cover_image_url(self) -> typing.Optional[files.URL]:
+        """Cover image used on the store.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no cover image exists.
+        """
+        return self.format_cover_image()
+
+    def format_cover_image(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the cover image used in the store, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no cover image exists.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
+        """
+        if self.cover_image_hash is None:
+            return None
+
+        return routes.CDN_APPLICATION_COVER.compile_to_file(
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=ext,
+        )
+
+
+@attr_extensions.with_copy
 @attr.s(slots=True, kw_only=True, init=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
@@ -338,7 +395,7 @@ class PartialMessage(snowflakes.Unique):
     activity: undefined.UndefinedNoneOr[MessageActivity] = attr.ib(repr=False)
     """The message's activity."""
 
-    application: undefined.UndefinedNoneOr[applications.Application] = attr.ib(repr=False)
+    application: undefined.UndefinedNoneOr[MessageApplication] = attr.ib(repr=False)
     """The message's application."""
 
     message_reference: undefined.UndefinedNoneOr[MessageCrosspost] = attr.ib(repr=False)
@@ -883,7 +940,7 @@ class Message(PartialMessage):
     activity: typing.Optional[MessageActivity]
     """The message activity."""
 
-    application: typing.Optional[applications.Application]
+    application: typing.Optional[MessageApplication]
     """The message application."""
 
     message_reference: typing.Optional[MessageCrosspost]

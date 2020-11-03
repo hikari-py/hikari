@@ -136,7 +136,9 @@ class Intents(enums.Flag):
     - `GUILD_BAN_ADD`
     - `GUILD_BAN_REMOVE`
     - `GUILD_EMOJIS_UPDATE`
-    - `GUILD_INTEGRATIONS_UPDATE`
+    - `INTEGRATION_CREATE`
+    - `INTEGRATION_DELETE`
+    - `INTEGRATION_UPDATE`
     - `INVITE_CREATE`
     - `INVITE_DELETE`
     - `CHANNEL_CREATE`
@@ -211,7 +213,9 @@ class Intents(enums.Flag):
     GUILD_INTEGRATIONS = 1 << 4
     """Subscribes to the following events:
 
-    * `GUILD_INTEGRATIONS_UPDATE`
+    * `INTEGRATION_CREATE`
+    * `INTEGRATION_DELETE`
+    * `INTEGRATION_UPDATE`
     """
 
     GUILD_WEBHOOKS = 1 << 5

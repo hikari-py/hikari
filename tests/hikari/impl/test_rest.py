@@ -2559,7 +2559,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_integration.call_count == 2
         rest_client._entity_factory.deserialize_integration.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+            [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
 
     async def test_fetch_widget(self, rest_client):

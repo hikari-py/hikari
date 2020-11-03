@@ -547,68 +547,91 @@ class IntegrationAccount:
         return self.name
 
 
+# This is here rather than in applications.py to avoid circular imports
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class IntegrationApplication:
-    """An application that's linked to an integration."""
+class PartialApplication(snowflakes.Unique):
+    """A partial representation of a Discord application."""
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.ib(
+        eq=True,
+        hash=True,
+        repr=True,
+    )
     """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this application."""
 
+    # TODO: default to None for consistency?
+    description: str = attr.ib(eq=False, hash=False, repr=False)
+    """The description of this application, or an empty string if undefined."""
+
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The icon hash of this application."""
+    """The CDN hash of this application's icon, if set."""
 
     summary: str = attr.ib(eq=False, hash=False, repr=False)
-    """The summary of this application."""
+    """This summary for this application's primary SKU if it's sold on Discord.
 
-    description: str = attr.ib(eq=False, hash=False, repr=False)
-    """The description of this application."""
+    Will be an empty string if undefined.
+    """
 
-    bot: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
-    """The bot associated with this application."""
+    def __str__(self) -> str:
+        return self.name
 
-    def format_avatar(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the avatar for this application, if set.
-
-        Parameters
-        ----------
-        ext : typing.Optional[builtins.str]
-            The ext to use for this URL, defaults to `png` or `gif`.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated).
-
-            Defaults to `png`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-            Will be ignored for default avatars.
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Team icon, if there is one.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `builtins.None` if not present.
+            The URL, or `builtins.None` if no icon exists.
+        """
+        return self.format_icon()
+
+    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon for this application.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
 
         Raises
         ------
         builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
         """
         if self.icon_hash is None:
             return None
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
             urls.CDN_URL,
-            user_id=self.id,
+            application_id=self.id,
             hash=self.icon_hash,
             size=size,
             file_format=ext,
         )
 
-    def __str__(self) -> str:
-        return self.name
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class IntegrationApplication(PartialApplication):
+    """An application that's linked to an integration."""
+
+    bot: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=False)
+    """The bot associated with this application."""
 
 
 @attr_extensions.with_copy
@@ -635,6 +658,9 @@ class PartialIntegration(snowflakes.Unique):
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
+
+    guild_id: snowflakes.Snowflake = attr.ib()
+    """The ID of the guild this integration belongs to."""
 
     expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attr.ib(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.

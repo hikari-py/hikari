@@ -249,13 +249,33 @@ class EventFactoryImpl(event_factory.EventFactory):
         ]
         return guild_events.EmojisUpdateEvent(app=self._app, shard=shard, guild_id=guild_id, emojis=emojis)
 
-    def deserialize_guild_integrations_update_event(
+    def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> guild_events.IntegrationsUpdateEvent:
-        return guild_events.IntegrationsUpdateEvent(
+    ) -> guild_events.IntegrationCreateEvent:
+        return guild_events.IntegrationCreateEvent(
+            app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
+        )
+
+    def deserialize_integration_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> guild_events.IntegrationDeleteEvent:
+        application_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
+        return guild_events.IntegrationDeleteEvent(
+            id=snowflakes.Snowflake(payload["id"]),
             app=self._app,
             shard=shard,
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            application_id=application_id,
+        )
+
+    def deserialize_integration_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> guild_events.IntegrationUpdateEvent:
+        return guild_events.IntegrationUpdateEvent(
+            app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
         )
 
     def deserialize_guild_member_add_event(
