@@ -38,6 +38,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
 from hikari import voices as voices_models
+from hikari.api import cache
 from hikari.api import event_factory
 from hikari.api import shard as gateway_shard
 from hikari.events import channel_events
@@ -257,7 +258,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
-        old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
+        old_emojis: typing.Optional[cache.CacheView[snowflakes.Snowflake, emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         emojis = [

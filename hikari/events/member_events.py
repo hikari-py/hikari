@@ -148,11 +148,9 @@ class MemberUpdateEvent(MemberEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_member: typing.Optional[guilds.Member] = attr.ib()
-    """Old member object from cache or 'builtins.None'.
+    """The old member object.
 
-    Returns
-    -------
-    hikari.guilds.Member
+    This will be `builtins.None` if member missing from the cache.
     """
 
     member: guilds.Member = attr.ib()

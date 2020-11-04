@@ -131,6 +131,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         This can be a viable alternative if you are providing a custom cache
         implementation, or simply do not want the overhead of maintaining a
         state in your application.
+    max_messages : int
+        Defaults to `300`. The maximum number of messages in the cache.
     executor : typing.Optional[concurrent.futures.Executor]
         Defaults to `builtins.None`. If non-`builtins.None`, then this executor
         is used instead of the `concurrent.futures.ThreadPoolExecutor` attached

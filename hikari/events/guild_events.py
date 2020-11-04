@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
     from hikari import voices
+    from hikari.api import cache
     from hikari.api import shard as gateway_shard
 
 
@@ -266,11 +267,9 @@ class GuildUpdateEvent(GuildEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_guild: typing.Optional[guilds.Guild] = attr.ib()
-    """Old guild object from cache or 'builtins.None'.
+    """The old guild object.
 
-    Returns
-    -------
-    hikari.guilds.Guild
+    This will be `builtins.None` if guild missing from the cache.
     """
 
     guild: guilds.GatewayGuild = attr.ib()
@@ -398,12 +397,10 @@ class EmojisUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
-    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attr.ib()
-    """Sequence of all old emojis in this guild from cache or 'builtins.None'.
+    old_emojis: typing.Optional[cache.CacheView[snowflakes.Snowflake, emojis_.KnownCustomEmoji]] = attr.ib()
+    """Sequence of all old emojis in this guild.
 
-    Returns
-    -------
-    typing.Sequence[emojis_.KnownCustomEmoji]
+    This will be `builtins.None` if it's missing from the cache.
     """
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.ib()
@@ -497,11 +494,9 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_presence: typing.Optional[presences_.MemberPresence] = attr.ib()
-    """Old member presence object from cache or 'builtins.None'.
+    """The old member presence object.
 
-    Returns
-    -------
-    hikari.presences.MemberPresence
+    This will be `builtins.None` if member presence missing from the cache.
     """
 
     presence: presences_.MemberPresence = attr.ib()

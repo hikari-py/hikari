@@ -114,7 +114,7 @@ class StatefulCacheImpl(cache.MutableCache):
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
     _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
-    _message_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, messages.PartialMessage]
+    _message_entries: collections.LimitedCapacityCacheMap[snowflakes.Snowflake, messages.PartialMessage]
     _intents: intents_.Intents
     max_messages: int
 
@@ -130,7 +130,7 @@ class StatefulCacheImpl(cache.MutableCache):
         # found attached to cached presence activities.
         self._unknown_custom_emoji_entries = collections.FreezableDict()
         self._user_entries = collections.FreezableDict()
-        self._message_entries = collections.FreezableDict()
+        self._message_entries = collections.LimitedCapacityCacheMap(limit=max_messages)
         self._intents = intents
         self.max_messages = max_messages
 
@@ -1606,21 +1606,26 @@ class StatefulCacheImpl(cache.MutableCache):
         self.set_voice_state(voice_state)
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
 
-    def delete_message(self, message_id: snowflakes.Snowflake) -> None:
-        if message_id in self._message_entries:
-            self._message_entries.pop(message_id)
+    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+        if not self._message_entries:
+            return cache_utility.EmptyCacheView()
+        
+        messages = self._message_entries
+        self._message_entries = collections.LimitedCapacityCacheMap(limit=self.max_messages)
 
-    def delete_messages(self, message_ids: typing.AbstractSet[snowflakes.Snowflake]) -> None:
-        for message_id in message_ids:
-            self._message_entries.pop(message_id)
+        return cache_utility.StatefulCacheMappingView(messages)
+
+    def delete_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
+        return self._message_entries.pop(message_id) if message_id in self._message_entries else None
 
     def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
         return self._message_entries.get(message_id)
+    
+    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+        cached_messages = self._message_entries.freeze()
+        return cache_utility.StatefulCacheMappingView(cached_messages)
 
     def set_message(self, message: messages.PartialMessage) -> None:
-        if len(self._message_entries) >= self.max_messages:
-            self._message_entries.popitem()
-
         self._message_entries[message.id] = message
 
     def update_message(

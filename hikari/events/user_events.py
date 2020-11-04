@@ -49,11 +49,9 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_user: typing.Optional[users.OwnUser] = attr.ib()
-    """Old application user from cache or 'builtins.None'.
+    """The old application user.
 
-    Returns
-    -------
-    hikari.users.OwnUser
+    This will be `builtins.None` if user missing from the cache.
     """
 
     user: users.OwnUser = attr.ib()

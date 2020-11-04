@@ -280,11 +280,9 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_channel: typing.Optional[channels.GuildChannel] = attr.ib(repr=True)
-    """Old guild channel object from cache or 'builtins.None'.
+    """The old guild channel object.
 
-    Returns
-    -------
-    hikari.channels.GuildChannel
+    This will be `builtins.None` if channel missing from the cache.
     """
 
     channel: channels.GuildChannel = attr.ib(repr=True)

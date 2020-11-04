@@ -119,11 +119,9 @@ class RoleUpdateEvent(RoleEvent):
     # <<inherited docstring from ShardEvent>>.
 
     old_role: typing.Optional[guilds.Role] = attr.ib()
-    """Old role object from cache or 'builtins.None'.
+    """The old role object.
 
-    Returns
-    -------
-    hikari.guilds.Role
+    This will be `builtins.None` if role missing from the cache.
     """
 
     role: guilds.Role = attr.ib()

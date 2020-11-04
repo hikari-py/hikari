@@ -456,11 +456,9 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from Event>>
 
     old_message: typing.Optional[messages.PartialMessage] = attr.ib()
-    """Old message object from cache or 'builtins.None'.
+    """The old message object.
 
-    Returns
-    -------
-    hikari.messages.PartialMessage
+    This will be `builtins.None` if message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.ib()
@@ -560,11 +558,9 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from Event>>
 
     old_message: typing.Optional[messages.PartialMessage] = attr.ib()
-    """Old message object from cache or 'builtins.None'.
+    """The old message object.
 
-    Returns
-    -------
-    hikari.messages.PartialMessage
+    This will be `builtins.None` if message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.ib()

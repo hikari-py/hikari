@@ -1587,13 +1587,13 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_message(self, message_id: snowflakes.Snowflake) -> None:
-        """Remove a message object from the cache.
+    def clear_messages(self) -> CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+        """Remove all message objects from the cache.
 
-        Parameters
-        ----------
-        message_id : snowflakes.Snowflake
-            The ID of the messages to remove the cache.
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.messages.PartialMessage]
+            A view of message objects that were removed from the cache.
 
         Raises
         ------
@@ -1602,13 +1602,19 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_messages(self, message_ids: typing.AbstractSet[snowflakes.Snowflake]) -> None:
-        """Remove a messages object from the cache.
+    def delete_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
+        """Remove a message object from the cache.
 
         Parameters
         ----------
-        message_ids : typing.Sequence[snowflakes.Snowflake]
-            The IDs of the messages to remove the cache.
+        message_id : hikari.snowflakes.Snowflake
+            The ID of the messages to remove the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.PartialMessage]
+            The object of the message that was removed from the cache if found,
+            else `builtins.None`.
 
         Raises
         ------
@@ -1627,8 +1633,18 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Optional[messages.PartialMessage]
+        typing.Optional[hikari.messages.PartialMessage]
             The object of the message found in the cache or `builtins.None`.
+        """
+    
+    @abc.abstractmethod
+    def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+        """Get a view of all the message objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.messages.PartialMessage]
+            A view of message objects found in the cache.
         """
 
     @abc.abstractmethod
@@ -1637,7 +1653,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        message : messages.PartialMessage
+        message : hikari.messages.PartialMessage
             The object of the message to add to the cache.
 
         Raises
@@ -1654,13 +1670,13 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        message : messages.PartialMessage
+        message : hikari.messages.PartialMessage
             The object of the message to update in the cache.
 
         Returns
         -------
-        typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]
-            A tuple of the old cached message object if found (else `builtins.None`
+        typing.Tuple[typing.Optional[hikari.messages.PartialMessage], typing.Optional[hikari.messages.PartialMessage]]
+            A tuple of the old cached message object if found (else `builtins.None`)
             and the new cached message object if it could be cached (else
             `builtins.None`).
 

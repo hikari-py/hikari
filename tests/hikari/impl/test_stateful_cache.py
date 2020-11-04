@@ -2475,39 +2475,48 @@ class TestStatefulCacheImpl:
             ]
         )
 
+    def test_clear_messages(self, cache_impl):
+        messages_ = {1: mock.Mock(messages.Message, id=123), 2: mock.Mock(messages.Message, id=456)}
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap(messages_, limit=10)
+
+        view = cache_impl.clear_messages()
+        assert view._data == messages_
+
     def test_delete_message(self, cache_impl):
         message = mock.Mock(messages.Message)
-        cache._message_entries = collections.FreezableDict({1: message})
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
 
-        assert cache._message_entries.pop(1) is message
-        assert len(cache._message_entries) == 0
-
-    def test_delete_messages(self, cache_impl):
-        messages_ = [mock.Mock(messages.Message) for _ in range(5)]
-        cache._message_entries = collections.FreezableDict({i: m for i, m in zip(range(5), messages_)})
-
-        assert len(cache._message_entries) == 5
-        [cache._message_entries.pop(_id) for _id in cache._message_entries.copy()]
-        assert len(cache._message_entries) == 0
+        assert cache_impl._message_entries.pop(1) is message
+        assert len(cache_impl._message_entries) == 0
 
     def test_get_message(self, cache_impl):
         message = mock.Mock(messages.Message, id=123)
-        cache._message_entries = collections.FreezableDict({1: message})
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
 
-        assert cache._message_entries.get(1).id == 123
+        assert cache_impl._message_entries.get(1).id == 123
+
+    def test_get_messages_view(self, cache_impl):
+        messages_ = {1: mock.Mock(messages.Message, id=1234567890)}
+
+        cache_impl._message_entries = collections.FreezableDict(messages_)
+        view = cache_impl.get_messages_view()
+
+        assert view._data == messages_
 
     def test_set_message(self, cache_impl):
         message = mock.Mock(messages.Message, id=123)
-        cache._message_entries = collections.FreezableDict()
-        cache._message_entries[1] = message
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap(limit=1)
+        cache_impl._message_entries[1] = message
 
-        assert cache._message_entries.get(1).id == 123
+        assert cache_impl._message_entries.get(1).id == 123
+        cache_impl._message_entries[2] = message
+        assert len(cache_impl._message_entries) == 1
 
     def test_update_message(self, cache_impl):
         message = mock.Mock(messages.Message, content="New test.")
         old_message = mock.Mock(messages.Message, content="Old Test.")
-        cache._message_entries = collections.FreezableDict({1: message})
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
 
-        assert cache._message_entries.get(1).content == "New test."
-        cache._message_entries[1] = old_message
-        assert cache._message_entries.get(1).content == "Old Test."
+        assert cache_impl._message_entries.get(1).content == "New test."
+        cache_impl._message_entries[1] = old_message
+        assert cache_impl._message_entries.get(1).content == "Old Test."

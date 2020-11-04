@@ -28,10 +28,10 @@ __all__: typing.List[str] = ["StatefulEventManagerImpl"]
 import asyncio
 import typing
 
-from hikari import Snowflake
 from hikari import channels
 from hikari import intents as intents_
 from hikari import presences
+from hikari import snowflakes
 from hikari import traits
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
@@ -96,7 +96,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_channel_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
-        old = self._cache.get_guild_channel(Snowflake(payload["id"]))
+        old = self._cache.get_guild_channel(snowflakes.Snowflake(payload["id"]))
         event = self._app.event_factory.deserialize_channel_update_event(shard, payload, old)
         assert isinstance(event.channel, channels.GuildChannel), "channel update events for DM channels are unexpected"
         self._cache.update_guild_channel(event.channel)
@@ -158,7 +158,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        old = self._cache.get_guild(Snowflake(payload["id"]))
+        old = self._cache.get_guild(snowflakes.Snowflake(payload["id"]))
         event = self._app.event_factory.deserialize_guild_update_event(shard, payload, old)
         self._cache.update_guild(event.guild)
 
@@ -203,10 +203,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_emojis_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
-        old = [
-            self._app.entity_factory.deserialize_known_custom_emoji(emoji, guild_id=Snowflake(payload["guild_id"]))
-            for emoji in payload["emojis"]
-        ]
+        old = self._cache.get_emojis_view_for_guild(snowflakes.Snowflake(payload["guild_id"]))
         event = self._app.event_factory.deserialize_guild_emojis_update_event(shard, payload, old)
         self._cache.clear_emojis_for_guild(event.guild_id)
 
@@ -238,7 +235,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-update for more info."""
-        old = self._cache.get_member(Snowflake(payload["guild_id"]), Snowflake(payload["user"]["id"]))
+        old = self._cache.get_member(
+            snowflakes.Snowflake(payload["guild_id"]), snowflakes.Snowflake(payload["user"]["id"])
+        )
         event = self._app.event_factory.deserialize_guild_member_update_event(shard, payload, old)
         self._cache.update_member(event.member)
         await self.dispatch(event)
@@ -264,7 +263,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_role_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-update for more info."""
-        old = self._cache.get_role(Snowflake(payload["role"]["id"]))
+        old = self._cache.get_role(snowflakes.Snowflake(payload["role"]["id"]))
         event = self._app.event_factory.deserialize_guild_role_update_event(shard, payload, old)
         self._cache.update_role(event.role)
         await self.dispatch(event)
@@ -295,7 +294,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_message_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-update for more info."""
-        old = self._cache.get_message(Snowflake(payload["id"]))
+        old = self._cache.get_message(snowflakes.Snowflake(payload["id"]))
         event = self._app.event_factory.deserialize_message_update_event(shard, payload, old)
         self._cache.update_message(event.message)
         await self.dispatch(event)
@@ -309,7 +308,7 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
     async def on_message_delete_bulk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete-bulk for more info."""
         event = self._app.event_factory.deserialize_message_delete_bulk_event(shard, payload)
-        self._cache.delete_messages(event.message_ids)
+        [self._cache.delete_message(_id) for _id in event.message_ids]
         await self.dispatch(event)
 
     async def on_message_reaction_add(
@@ -340,7 +339,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_presence_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#presence-update for more info."""
-        old = self._cache.get_presence(Snowflake(payload["guild_id"]), Snowflake(payload["user"]["id"]))
+        old = self._cache.get_presence(
+            snowflakes.Snowflake(payload["guild_id"]), snowflakes.Snowflake(payload["user"]["id"])
+        )
         event = self._app.event_factory.deserialize_presence_update_event(shard, payload, old)
 
         if event.presence.visible_status is presences.Status.OFFLINE:
@@ -364,7 +365,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_voice_state_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#voice-state-update for more info."""
-        old = self._cache.get_voice_state(Snowflake(payload["guild_id"]), Snowflake(payload["user_id"]))
+        old = self._cache.get_voice_state(
+            snowflakes.Snowflake(payload["guild_id"]), snowflakes.Snowflake(payload["user_id"])
+        )
         event = self._app.event_factory.deserialize_voice_state_update_event(shard, payload, old)
 
         if event.state.channel_id is None:

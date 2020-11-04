@@ -81,11 +81,9 @@ class VoiceStateUpdateEvent(VoiceEvent):
     # <<inherited docstring>>.
 
     old_state: typing.Optional[voices.VoiceState] = attr.ib(repr=True)
-    """Old voice state object from cache or 'builtins.None'.
+    """The old voice state.
 
-    Returns
-    -------
-    hikari.voices.VoiceState
+    This will be `builtins.None` if voice state missing from the cache.
     """
 
     state: voices.VoiceState = attr.ib(repr=True)
