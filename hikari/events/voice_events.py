@@ -83,7 +83,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
     old_state: typing.Optional[voices.VoiceState] = attr.ib(repr=True)
     """The old voice state.
 
-    This will be `builtins.None` if voice state missing from the cache.
+    This will be `builtins.None` if the voice state missing from the cache.
     """
 
     state: voices.VoiceState = attr.ib(repr=True)

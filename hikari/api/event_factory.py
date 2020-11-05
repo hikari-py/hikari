@@ -33,10 +33,8 @@ if typing.TYPE_CHECKING:
     from hikari import guilds as guild_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
-    from hikari import snowflakes
     from hikari import users as user_models
     from hikari import voices as voices_models
-    from hikari.api import cache
     from hikari.api import shard as gateway_shard
     from hikari.events import channel_events
     from hikari.events import guild_events
@@ -330,7 +328,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
-        old_emojis: typing.Optional[cache.CacheView[snowflakes.Snowflake, emojis_models.KnownCustomEmoji]],
+        old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         """Parse a raw payload from Discord into a guild emojis update event object.
 
@@ -340,7 +338,7 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
-        old_emojis : typing.Optional[cache.CacheView[snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]]
+        old_emojis : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
             The sequence of emojis or `builtins.None`.
 
         Returns

@@ -458,7 +458,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     old_message: typing.Optional[messages.PartialMessage] = attr.ib()
     """The old message object.
 
-    This will be `builtins.None` if message missing from the cache.
+    This will be `builtins.None` if the message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.ib()
@@ -560,7 +560,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     old_message: typing.Optional[messages.PartialMessage] = attr.ib()
     """The old message object.
 
-    This will be `builtins.None` if message missing from the cache.
+    This will be `builtins.None` if the message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.ib()

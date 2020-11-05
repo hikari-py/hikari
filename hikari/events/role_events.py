@@ -121,7 +121,7 @@ class RoleUpdateEvent(RoleEvent):
     old_role: typing.Optional[guilds.Role] = attr.ib()
     """The old role object.
 
-    This will be `builtins.None` if role missing from the cache.
+    This will be `builtins.None` if the role missing from the cache.
     """
 
     role: guilds.Role = attr.ib()

@@ -57,7 +57,6 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
     from hikari import voices
-    from hikari.api import cache
     from hikari.api import shard as gateway_shard
 
 
@@ -269,7 +268,7 @@ class GuildUpdateEvent(GuildEvent):
     old_guild: typing.Optional[guilds.Guild] = attr.ib()
     """The old guild object.
 
-    This will be `builtins.None` if guild missing from the cache.
+    This will be `builtins.None` if the guild missing from the cache.
     """
 
     guild: guilds.GatewayGuild = attr.ib()
@@ -397,7 +396,7 @@ class EmojisUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from GuildEvent>>.
 
-    old_emojis: typing.Optional[cache.CacheView[snowflakes.Snowflake, emojis_.KnownCustomEmoji]] = attr.ib()
+    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attr.ib()
     """Sequence of all old emojis in this guild.
 
     This will be `builtins.None` if it's missing from the cache.
@@ -496,7 +495,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     old_presence: typing.Optional[presences_.MemberPresence] = attr.ib()
     """The old member presence object.
 
-    This will be `builtins.None` if member presence missing from the cache.
+    This will be `builtins.None` if the member presence missing from the cache.
     """
 
     presence: presences_.MemberPresence = attr.ib()

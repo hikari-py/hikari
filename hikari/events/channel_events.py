@@ -282,7 +282,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     old_channel: typing.Optional[channels.GuildChannel] = attr.ib(repr=True)
     """The old guild channel object.
 
-    This will be `builtins.None` if channel missing from the cache.
+    This will be `builtins.None` if the channel missing from the cache.
     """
 
     channel: channels.GuildChannel = attr.ib(repr=True)

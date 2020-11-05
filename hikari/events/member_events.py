@@ -150,7 +150,7 @@ class MemberUpdateEvent(MemberEvent):
     old_member: typing.Optional[guilds.Member] = attr.ib()
     """The old member object.
 
-    This will be `builtins.None` if member missing from the cache.
+    This will be `builtins.None` if the member missing from the cache.
     """
 
     member: guilds.Member = attr.ib()
