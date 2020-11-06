@@ -2534,10 +2534,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["edited_timestamp"] = None
         message_payload["member"] = None
+        message_payload["application"]["primary_sku_id"] = None
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
         assert partial_message.guild_id is not None
         assert partial_message.member is None
+        assert partial_message.application.primary_sku_id is None
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
@@ -2686,6 +2688,12 @@ class TestEntityFactoryImpl:
         assert message.application is None
         assert message.message_reference is None
         assert message.nonce is None
+
+    def test_deserialize_message_with_no_primary_sku_id(self, entity_factory_impl, message_payload):
+        message_payload["application"]["primary_sku_id"] = None
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+        assert message.application.primary_sku_id is None
 
     ###################
     # PRESENCE MODELS #
