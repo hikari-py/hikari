@@ -27,7 +27,9 @@ from hikari import emojis
 from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
+from hikari import urls
 from hikari import users
+from hikari.internal import routes
 
 
 class TestMessageType:
@@ -60,6 +62,39 @@ class TestReaction:
     def test_str_operator(self):
         reaction = messages.Reaction(emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"), count=42, is_me=True)
         assert str(reaction) == "\N{OK HAND SIGN}"
+
+
+class TestMessageApplication:
+    @pytest.fixture()
+    def message_application(self):
+        return messages.MessageApplication(
+            id=123,
+            name="test app",
+            description="",
+            icon_hash="123abc",
+            summary="some summary",
+            cover_image_hash="abc123",
+            primary_sku_id=456,
+        )
+
+    def test_cover_image_url(self, message_application):
+        with mock.patch.object(messages.MessageApplication, "format_cover_image") as mock_cover_image:
+            assert message_application.cover_image_url is mock_cover_image()
+
+    def test_format_cover_image_when_hash_is_none(self, message_application):
+        message_application.cover_image_hash = None
+
+        assert message_application.format_cover_image() is None
+
+    def test_format_cover_image_when_hash_is_not_none(self, message_application):
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert message_application.format_cover_image(ext="jpeg", size=1000) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="abc123", size=1000, file_format="jpeg"
+        )
 
 
 @pytest.fixture()

@@ -553,11 +553,7 @@ class IntegrationAccount:
 class PartialApplication(snowflakes.Unique):
     """A partial representation of a Discord application."""
 
-    id: snowflakes.Snowflake = attr.ib(
-        eq=True,
-        hash=True,
-        repr=True,
-    )
+    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
     name: str = attr.ib(eq=False, hash=False, repr=True)
