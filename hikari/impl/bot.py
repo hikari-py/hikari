@@ -49,7 +49,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import users
 from hikari.api import cache as cache_
-from hikari.api import chunker as chunker_
 from hikari.api import entity_factory as entity_factory_
 from hikari.api import event_dispatcher
 from hikari.api import event_factory as event_factory_
@@ -67,7 +66,6 @@ from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     from hikari.api import cache
-    from hikari.api import chunker
     from hikari.api import rest as rest_
     from hikari.api import shard
     from hikari.impl import event_manager_base
@@ -119,9 +117,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
         Setting this to `builtins.None` will disable the banner being shown.
-    chunking_limit : typing.Optional[builtins.int]
-        Defaults to `200`. The maximum amount of requests that this chunker
-        should store information about for each shard.
     enable_cache : builtins.bool
         Defaults to `builtins.True`. If `builtins.False`, the application is
         configured to be mostly stateless. This means almost all cache calls
@@ -244,7 +239,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     __slots__: typing.Sequence[str] = (
         "_banner",
         "_cache",
-        "_chunker",
         "_closing_event",
         "_closed",
         "_entity_factory",
@@ -268,7 +262,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         *,
         allow_color: bool = True,
         banner: typing.Optional[str] = "hikari",
-        chunking_limit: int = 200,
         enable_cache: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
@@ -295,18 +288,15 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # Caching, chunking, and event subsystems.
         self._cache: cache.Cache
-        self._chunker: chunker.GuildChunker
         self._events: event_dispatcher.EventDispatcher
         events_obj: event_manager_base.EventManagerBase
 
         if enable_cache:
             from hikari.impl import stateful_cache
             from hikari.impl import stateful_event_manager
-            from hikari.impl import stateful_guild_chunker
 
             cache_obj = stateful_cache.StatefulCacheImpl(self, intents)
             self._cache = cache_obj
-            self._chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(self, chunking_limit)
 
             events_obj = stateful_event_manager.StatefulEventManagerImpl(self, cache_obj, intents)
             self._raw_event_consumer = events_obj.consume_raw_event
@@ -314,10 +304,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         else:
             from hikari.impl import stateless_cache
             from hikari.impl import stateless_event_manager
-            from hikari.impl import stateless_guild_chunker
 
             self._cache = stateless_cache.StatelessCacheImpl()
-            self._chunker = stateless_guild_chunker.StatelessGuildChunkerImpl()
 
             events_obj = stateless_event_manager.StatelessEventManagerImpl(self, intents)
             self._raw_event_consumer = events_obj.consume_raw_event
@@ -353,10 +341,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     @property
     def cache(self) -> cache_.Cache:
         return self._cache
-
-    @property
-    def chunker(self) -> chunker_.GuildChunker:
-        return self._chunker
 
     @property
     def dispatcher(self) -> event_dispatcher.EventDispatcher:
@@ -447,7 +431,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         calls = [
             ("rest", self._rest.close()),
-            ("chunker", self._chunker.close()),
             ("voice handler", self._voice.close()),
             *((f"shard {s.id}", s.close()) for s in self._shards.values()),
         ]
