@@ -932,6 +932,23 @@ class TestIntFlag:
             BORK = 0x4
             QUX = 0x8
 
+        val_iter = iter(TestFlag)
+        assert next(val_iter) == TestFlag.FOO
+        assert next(val_iter) == TestFlag.BAR
+        assert next(val_iter) == TestFlag.BAZ
+        assert next(val_iter) == TestFlag.BORK
+        assert next(val_iter) == TestFlag.QUX
+        with pytest.raises(StopIteration):
+            next(val_iter)
+
+    def test_flag_iter(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x3
+            BORK = 0x4
+            QUX = 0x8
+
         val = TestFlag.BAZ | TestFlag.BORK
         val_iter = iter(val)
         assert next(val_iter) == TestFlag.BAR

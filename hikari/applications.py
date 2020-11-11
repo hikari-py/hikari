@@ -365,25 +365,11 @@ class Team(snowflakes.Unique):
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class Application(snowflakes.Unique):
+class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
     app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
-
-    id: snowflakes.Snowflake = attr.ib(
-        eq=True,
-        hash=True,
-        repr=True,
-    )
-    """The ID of this entity."""
-
-    name: str = attr.ib(eq=False, hash=False, repr=True)
-    """The name of this application."""
-
-    # TODO: default to None for consistency?
-    description: str = attr.ib(eq=False, hash=False, repr=False)
-    """The description of this application, or an empty string if undefined."""
 
     is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """`builtins.True` if the bot associated with this application is public.
@@ -407,17 +393,8 @@ class Application(snowflakes.Unique):
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.ib(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    summary: str = attr.ib(eq=False, hash=False, repr=False)
-    """This summary for this application's primary SKU if it's sold on Discord.
-
-    Will be an empty string if undefined.
-    """
-
     verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False, repr=False)
     """The base64 encoded key used for the GameSDK's `GetTicket`."""
-
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The CDN hash of this application's icon, if set."""
 
     team: typing.Optional[Team] = attr.ib(eq=False, hash=False, repr=False)
     """The team this application belongs to.
@@ -439,54 +416,6 @@ class Application(snowflakes.Unique):
 
     cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
-
-    def __str__(self) -> str:
-        return self.name
-
-    @property
-    def icon_url(self) -> typing.Optional[files.URL]:
-        """Team icon, if there is one.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
-        """
-        return self.format_icon()
-
-    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the icon for this application.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
-
-        Raises
-        ------
-        builtins.ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
-        """
-        if self.icon_hash is None:
-            return None
-
-        return routes.CDN_APPLICATION_ICON.compile_to_file(
-            urls.CDN_URL,
-            application_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
-        )
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:

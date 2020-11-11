@@ -1552,6 +1552,7 @@ class TestEntityFactoryImpl:
             "name": "blaze it",
             "type": "youtube",
             "account": {"id": "6969", "name": "Blaze it"},
+            "guild_id": "9292929292",
             "enabled": True,
             "syncing": False,
             "revoked": True,
@@ -1581,6 +1582,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_integration(self, entity_factory_impl, integration_payload, user_payload):
         integration = entity_factory_impl.deserialize_integration(integration_payload)
         assert integration.id == 420
+        assert integration.guild_id == 9292929292
         assert integration.name == "blaze it"
         assert integration.type == guild_models.IntegrationType.YOUTUBE
         # IntegrationAccount
@@ -1627,8 +1629,10 @@ class TestEntityFactoryImpl:
                 "enabled": True,
                 "role_id": None,
                 "synced_at": None,
-            }
+            },
+            guild_id=snowflakes.Snowflake(383838383883),
         )
+        assert integration.guild_id == 383838383883
         assert integration.is_emojis_enabled is None
         assert integration.role_id is None
         assert integration.last_synced_at is None
@@ -1644,6 +1648,7 @@ class TestEntityFactoryImpl:
         integration = entity_factory_impl.deserialize_integration(
             {
                 "id": "420",
+                "guild_id": "929292929",
                 "name": "blaze it",
                 "type": "youtube",
                 "account": {"id": "6969", "name": "Blaze it"},
@@ -1656,6 +1661,8 @@ class TestEntityFactoryImpl:
                     "icon": "123abc",
                     "summary": "same as desc",
                     "description": "same as desc2",
+                    "cover_image": "SMKLdiosa89123u",
+                    "primary_sku_id": "499494949494994",
                 },
             }
         )
@@ -2392,6 +2399,7 @@ class TestEntityFactoryImpl:
             "icon": "2658b3029e775a931ffb49380073fa63",
             "cover_image": "58982a23790c4f22787b05d3be38a026",
             "summary": "asas",
+            "primary_sku_id": "499494949494994",
         }
 
     @pytest.fixture()
@@ -2505,7 +2513,15 @@ class TestEntityFactoryImpl:
         assert partial_message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
         assert isinstance(partial_message.activity, message_models.MessageActivity)
 
-        assert partial_message.application == entity_factory_impl.deserialize_application(partial_application_payload)
+        # Message Activity
+        assert partial_message.application.id == 456
+        assert partial_message.application.name == "hikari"
+        assert partial_message.application.description == "The best application"
+        assert partial_message.application.icon_hash == "2658b3029e775a931ffb49380073fa63"
+        assert partial_message.application.summary == "asas"
+        assert partial_message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
+        assert partial_message.application.primary_sku_id == 499494949494994
+        assert isinstance(partial_message.application, message_models.MessageApplication)
         # MessageCrosspost
         assert partial_message.message_reference.app is mock_app
         assert partial_message.message_reference.id == 306588351130107906
@@ -2518,10 +2534,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["edited_timestamp"] = None
         message_payload["member"] = None
+        message_payload["application"]["primary_sku_id"] = None
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
         assert partial_message.guild_id is not None
         assert partial_message.member is None
+        assert partial_message.application.primary_sku_id is None
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
@@ -2612,7 +2630,16 @@ class TestEntityFactoryImpl:
         assert message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
         assert isinstance(message.activity, message_models.MessageActivity)
 
-        assert message.application == entity_factory_impl.deserialize_application(partial_application_payload)
+        # MessageApplication
+        assert message.application.id == 456
+        assert message.application.name == "hikari"
+        assert message.application.description == "The best application"
+        assert message.application.icon_hash == "2658b3029e775a931ffb49380073fa63"
+        assert message.application.summary == "asas"
+        assert message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
+        assert message.application.primary_sku_id == 499494949494994
+        assert isinstance(message.application, message_models.MessageApplication)
+
         # MessageCrosspost
         assert message.message_reference.app is mock_app
         assert message.message_reference.id == 306588351130107906
@@ -2661,6 +2688,12 @@ class TestEntityFactoryImpl:
         assert message.application is None
         assert message.message_reference is None
         assert message.nonce is None
+
+    def test_deserialize_message_with_no_primary_sku_id(self, entity_factory_impl, message_payload):
+        message_payload["application"]["primary_sku_id"] = None
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+        assert message.application.primary_sku_id is None
 
     ###################
     # PRESENCE MODELS #

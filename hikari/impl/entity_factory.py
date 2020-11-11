@@ -1053,7 +1053,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             account=integration_fields.account,
         )
 
-    def deserialize_integration(self, payload: data_binding.JSONObject) -> guild_models.Integration:
+    def deserialize_integration(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> guild_models.Integration:
         integration_fields = self._set_partial_integration_attributes(payload)
 
         role_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1093,6 +1098,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return guild_models.Integration(
             id=integration_fields.id,
+            guild_id=guild_id if guild_id is not undefined.UNDEFINED else snowflakes.Snowflake(payload["guild_id"]),
             name=integration_fields.name,
             type=integration_fields.type,
             account=integration_fields.account,
@@ -1519,9 +1525,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 party_id=activity_payload.get("party_id"),
             )
 
-        application: undefined.UndefinedOr[application_models.Application] = undefined.UNDEFINED
+        application: undefined.UndefinedOr[message_models.MessageApplication] = undefined.UNDEFINED
         if "application" in payload:
-            application = self.deserialize_application(payload["application"])
+            application_payload = payload["application"]
+            primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
+            if (raw_primary_sku_id := application_payload.get("primary_sku_id")) is not None:
+                primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
+
+            application = message_models.MessageApplication(
+                id=snowflakes.Snowflake(application_payload["id"]),
+                name=application_payload["name"],
+                description=application_payload["description"],
+                icon_hash=application_payload["icon"],
+                summary=application_payload["summary"],
+                cover_image_hash=application_payload["cover_image"],
+                primary_sku_id=primary_sku_id,
+            )
 
         message_reference: undefined.UndefinedOr[message_models.MessageCrosspost] = undefined.UNDEFINED
         if "message_reference" in payload:
@@ -1632,6 +1651,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 else None,
             )
 
+        application: typing.Optional[message_models.MessageApplication] = None
+        if "application" in payload:
+            application_payload = payload["application"]
+            primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
+            if (raw_primary_sku_id := application_payload.get("primary_sku_id")) is not None:
+                primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
+
+            application = message_models.MessageApplication(
+                id=snowflakes.Snowflake(application_payload["id"]),
+                name=application_payload["name"],
+                description=application_payload["description"],
+                icon_hash=application_payload["icon"],
+                summary=application_payload["summary"],
+                cover_image_hash=application_payload["cover_image"],
+                primary_sku_id=primary_sku_id,
+            )
+
         return message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1654,7 +1690,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else None,
             type=message_models.MessageType(payload["type"]),
             activity=activity,
-            application=self.deserialize_application(payload["application"]) if "application" in payload else None,
+            application=application,
             message_reference=crosspost,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
             nonce=payload.get("nonce"),

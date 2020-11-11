@@ -338,10 +338,10 @@ class EventFactory(typing.Protocol):
             The parsed guild emojis update event object.
         """
 
-    def deserialize_guild_integrations_update_event(
+    def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> guild_events.IntegrationsUpdateEvent:
-        """Parse a raw payload from Discord into a guilds integrations update event object.
+    ) -> guild_events.IntegrationCreateEvent:
+        """Parse a raw payload from Discord into an integration create event object.
 
         Parameters
         ----------
@@ -352,8 +352,44 @@ class EventFactory(typing.Protocol):
 
         Returns
         -------
-        hikari.events.guild_events.IntegrationsUpdateEvent
-            The parsed guilds integrations update event object.
+        hikari.events.guild_events.IntegrationCreateEvent
+            The parsed integration create event object.
+        """
+
+    def deserialize_integration_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> guild_events.IntegrationDeleteEvent:
+        """Parse a raw payload from Discord into an integration delete event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.guild_events.IntegrationDeleteEvent
+            The parsed integration delete event object.
+        """
+
+    def deserialize_integration_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> guild_events.IntegrationUpdateEvent:
+        """Parse a raw payload from Discord into an integration update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.guild_events.IntegrationUpdateEvent
+            The parsed integration update event object.
         """
 
     def deserialize_guild_member_add_event(
