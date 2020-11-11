@@ -23,54 +23,88 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import intents
+from hikari.events import shard_events
 from hikari.impl import stateful_event_manager
 from tests.hikari import hikari_test_helpers
 
 
 class TestStatefulEventManagerImpl:
     @pytest.fixture()
-    def shard(self):
-        return object()
+    def app(self):
+        return mock.Mock()
 
     @pytest.fixture()
-    def event_manager(self):
+    def shard(self):
+        return mock.Mock()
+
+    @pytest.fixture()
+    def event_manager(self, app):
         obj = hikari_test_helpers.mock_class_namespace(stateful_event_manager.StatefulEventManagerImpl, slots_=False)(
-            mock.Mock(), mock.Mock(), object()
+            app, mock.Mock(), intents.Intents.ALL
         )
 
         obj.dispatch = mock.AsyncMock()
         return obj
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_connected(self, event_manager, shard):
-        ...
+    async def test_on_connected(self, event_manager, shard, app):
+        payload = {}
+        event = shard_events.ShardConnectedEvent(app=app, shard=shard)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_disconnected(self, event_manager, shard):
-        ...
+        await event_manager.on_connected(shard, payload)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_ready(self, event_manager, shard):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_resumed(self, event_manager, shard):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_channel_create(self, event_manager, shard):
-        ...
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_channel_update(self, event_manager, shard):
+    async def test_on_disconnected(self, event_manager, shard, app):
+        payload = {}
+        event = shard_events.ShardDisconnectedEvent(app=app, shard=shard)
+
+        await event_manager.on_disconnected(shard, payload)
+
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_ready(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(my_user=mock.Mock())
+
+        event_manager._app.event_factory.deserialize_ready_event.return_value = event
+
+        await event_manager.on_ready(shard, payload)
+
+        event_manager._cache.update_me.assert_called_once_with(event.my_user)
+        event_manager._app.event_factory.deserialize_ready_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_resumed(self, event_manager, shard, app):
+        payload = {}
+        event = shard_events.ShardResumedEvent(app=app, shard=shard)
+
+        await event_manager.on_resumed(shard, payload)
+
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_channel_create(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
+
+        event_manager._app.event_factory.deserialize_channel_create_event.return_value = event
+
+        await event_manager.on_channel_create(shard, payload)
+
+        event_manager._cache.set_guild_channel.assert_called_once_with(event.channel)
+        event_manager._app.event_factory.deserialize_channel_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_channel_update(self, event_manager, shard, app):
         payload = {"id": 123}
         old_channel = object()
-        event = mock.Mock(channel=mock.Mock(channels.GuildChannel, id=789))
+        event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
         event_manager._app.event_factory.deserialize_channel_update_event.return_value = event
         event_manager._cache.get_guild_channel.return_value = old_channel
@@ -84,23 +118,74 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_channel_delete(self, event_manager, shard):
-        ...
+    async def test_on_channel_delete(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(channel=mock.Mock(id=123))
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_channel_pins_update(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_channel_delete_event.return_value = event
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_create(self, event_manager, shard):
-        ...
+        await event_manager.on_channel_delete(shard, payload)
+
+        event_manager._cache.delete_guild_channel.assert_called_once_with(123)
+        event_manager._app.event_factory.deserialize_channel_delete_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_guild_update(self, event_manager, shard):
+    async def test_on_channel_pins_update(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_channel_pins_update_event.return_value = event
+
+        await event_manager.on_channel_pins_update(shard, payload)
+
+        event_manager._app.event_factory.deserialize_channel_pins_update_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_create(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(
+            guild=mock.Mock(id=123),
+            channels={"TestChannel": 456},
+            emojis={"TestEmoji": 789},
+            roles={"TestRole": 1234},
+            members={"TestMember": 5678},
+            presences={"TestPresence": 9012},
+            voice_states={"TestState": 345},
+        )
+
+        event_manager._app.event_factory.deserialize_guild_create_event.return_value = event
+        shard.request_guild_members = mock.AsyncMock()
+
+        await event_manager.on_guild_create(shard, payload)
+
+        event_manager._cache.update_guild.assert_called_once_with(event.guild)
+
+        event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_guild_channel.assert_called_once_with(456)
+
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_emoji.assert_called_once_with(789)
+
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_role.assert_called_once_with(1234)
+
+        event_manager._cache.clear_members_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_member.assert_called_once_with(5678)
+
+        event_manager._cache.clear_presences_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_presence.assert_called_once_with(9012)
+
+        event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_voice_state.assert_called_once_with(345)
+
+        event_manager._app.event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_update(self, event_manager, shard, app):
         payload = {"id": 123}
         old_guild = object()
         event = mock.Mock(roles={}, emojis={}, guild=mock.Mock(id=123))
@@ -112,31 +197,62 @@ class TestStatefulEventManagerImpl:
 
         event_manager._cache.get_guild.assert_called_once_with(123)
         event_manager._cache.update_guild.assert_called_once_with(event.guild)
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._app.event_factory.deserialize_guild_update_event.assert_called_once_with(
             shard, payload, old_guild
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_guild_delete(self, event_manager, shard):
-        ...
+    async def test_on_guild_delete(self, event_manager, shard, app):
+        payload = {"unavailable": False}
+        event = mock.Mock(guild_id=123)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_ban_add(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_guild_leave_event.return_value = event
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_ban_remove(self, event_manager, shard):
-        ...
+        await event_manager.on_guild_delete(shard, payload)
+
+        event_manager._cache.delete_guild.assert_called_once_with(123)
+        event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_invites_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_members_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_presences_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._app.event_factory.deserialize_guild_leave_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_guild_emojis_update(self, event_manager, shard):
+    async def test_on_guild_ban_add(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_guild_ban_add_event.return_value = event
+
+        await event_manager.on_guild_ban_add(shard, payload)
+
+        event_manager._app.event_factory.deserialize_guild_ban_add_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_ban_remove(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_guild_ban_remove_event.return_value = event
+
+        await event_manager.on_guild_ban_remove(shard, payload)
+
+        event_manager._app.event_factory.deserialize_guild_ban_remove_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_emojis_update(self, event_manager, shard, app):
         payload = {"guild_id": 123}
         old_emojis = {"Test": 123}
-        event = mock.Mock(emojis={})
+        event = mock.Mock(emojis={}, guild_id=123)
 
         event_manager._app.event_factory.deserialize_guild_emojis_update_event.return_value = event
         event_manager._cache.get_emojis_view_for_guild.return_value = old_emojis
@@ -144,28 +260,56 @@ class TestStatefulEventManagerImpl:
         await event_manager.on_guild_emojis_update(shard, payload)
 
         event_manager._cache.get_emojis_view_for_guild.assert_called_once_with(123)
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._app.event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(
             shard, payload, [123]
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_guild_integrations_update(self, event_manager, shard):
-        ...
+    async def test_on_guild_integrations_update(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_member_add(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_guild_integrations_update_event.return_value = event
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_member_remove(self, event_manager, shard):
-        ...
+        await event_manager.on_guild_integrations_update(shard, payload)
+
+        event_manager._app.event_factory.deserialize_guild_integrations_update_event.assert_called_once_with(
+            shard, payload
+        )
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_guild_member_update(self, event_manager, shard):
+    async def test_on_guild_member_add(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(user=object(), member=object())
+
+        event_manager._app.event_factory.deserialize_guild_member_add_event.return_value = event
+
+        await event_manager.on_guild_member_add(shard, payload)
+
+        event_manager._cache.update_user.assert_called_once_with(event.user)
+        event_manager._cache.update_member.assert_called_once_with(event.member)
+        event_manager._app.event_factory.deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_member_remove(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(user=mock.Mock(id=123), guild_id=456)
+
+        event_manager._app.event_factory.deserialize_guild_member_remove_event.return_value = event
+
+        await event_manager.on_guild_member_remove(shard, payload)
+
+        event_manager._cache.update_user.assert_called_once_with(event.user)
+        event_manager._cache.delete_member.assert_called_once_with(456, 123)
+        event_manager._app.event_factory.deserialize_guild_member_remove_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_member_update(self, event_manager, shard, app):
         payload = {"user": {"id": 123}, "guild_id": 456}
         old_member = object()
         event = mock.Mock(member=mock.Mock())
@@ -182,18 +326,37 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_guild_members_chunk(self, event_manager, shard):
-        ...
+    async def test_on_guild_members_chunk(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(members={"TestMember": 123}, presences={"TestPresences": 456})
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_guild_role_create(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_guild_member_chunk_event.return_value = event
+        event_manager._app.chunker.consume_chunk_event = mock.AsyncMock()
+
+        await event_manager.on_guild_members_chunk(shard, payload)
+
+        event_manager._cache.set_member.assert_called_once_with(123)
+        event_manager._cache.set_presence.assert_called_once_with(456)
+        event_manager._app.event_factory.deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
+        event_manager._app.chunker.consume_chunk_event.assert_awaited_once_with(event)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_guild_role_update(self, event_manager, shard):
+    async def test_on_guild_role_create(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(role=object())
+
+        event_manager._app.event_factory.deserialize_guild_role_create_event.return_value = event
+
+        await event_manager.on_guild_role_create(shard, payload)
+
+        event_manager._cache.set_role.assert_called_once_with(event.role)
+        event_manager._app.event_factory.deserialize_guild_role_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_role_update(self, event_manager, shard, app):
         payload = {"role": {"id": 123}}
         old_role = object()
         event = mock.Mock(role=mock.Mock())
@@ -210,28 +373,60 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_guild_role_delete(self, event_manager, shard):
-        ...
+    async def test_on_guild_role_delete(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(role_id=123)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_invite_create(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_guild_role_delete_event.return_value = event
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_invite_delete(self, event_manager, shard):
-        ...
+        await event_manager.on_guild_role_delete(shard, payload)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_create(self, event_manager, shard):
-        ...
+        event_manager._cache.delete_role.assert_called_once_with(123)
+        event_manager._app.event_factory.deserialize_guild_role_delete_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_message_update(self, event_manager, shard):
+    async def test_on_invite_create(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(invite="qwerty")
+
+        event_manager._app.event_factory.deserialize_invite_create_event.return_value = event
+
+        await event_manager.on_invite_create(shard, payload)
+
+        event_manager._cache.set_invite.assert_called_once_with("qwerty")
+        event_manager._app.event_factory.deserialize_invite_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_invite_delete(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(code="qwerty")
+
+        event_manager._app.event_factory.deserialize_invite_delete_event.return_value = event
+
+        await event_manager.on_invite_delete(shard, payload)
+
+        event_manager._cache.delete_invite.assert_called_once_with("qwerty")
+        event_manager._app.event_factory.deserialize_invite_delete_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_create(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(message=object())
+
+        event_manager._app.event_factory.deserialize_message_create_event.return_value = event
+
+        await event_manager.on_message_create(shard, payload)
+
+        event_manager._cache.set_message.assert_called_once_with(event.message)
+        event_manager._app.event_factory.deserialize_message_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_update(self, event_manager, shard, app):
         payload = {"id": 123}
         old_message = object()
         event = mock.Mock(message=mock.Mock())
@@ -248,38 +443,88 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_message_delete(self, event_manager, shard):
-        ...
+    async def test_on_message_delete(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(message_id=123)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_delete_bulk(self, event_manager, shard):
-        ...
+        event_manager._app.event_factory.deserialize_message_delete_event.return_value = event
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_reaction_add(self, event_manager, shard):
-        ...
+        await event_manager.on_message_delete(shard, payload)
 
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_reaction_remove(self, event_manager, shard):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_reaction_remove_all(self, event_manager, shard):
-        ...
-
-    @pytest.mark.skip(reason="TODO")
-    @pytest.mark.asyncio
-    async def test_on_message_reaction_remove_emoji(self, event_manager, shard):
-        ...
+        event_manager._cache.delete_message.assert_called_once_with(123)
+        event_manager._app.event_factory.deserialize_message_delete_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_presence_update(self, event_manager, shard):
+    async def test_on_message_delete_bulk(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(message_ids=[123, 456, 789])
+
+        event_manager._app.event_factory.deserialize_message_delete_bulk_event.return_value = event
+
+        await event_manager.on_message_delete_bulk(shard, payload)
+
+        assert len(event_manager._cache.delete_message.mock_calls) == 3
+        event_manager._app.event_factory.deserialize_message_delete_bulk_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_reaction_add(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_message_reaction_add_event.return_value = event
+
+        await event_manager.on_message_reaction_add(shard, payload)
+
+        event_manager._app.event_factory.deserialize_message_reaction_add_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_reaction_remove(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_event.return_value = event
+
+        await event_manager.on_message_reaction_remove(shard, payload)
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_event.assert_called_once_with(
+            shard, payload
+        )
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_reaction_remove_all(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_all_event.return_value = event
+
+        await event_manager.on_message_reaction_remove_all(shard, payload)
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_all_event.assert_called_once_with(
+            shard, payload
+        )
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_message_reaction_remove_emoji(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_emoji_event.return_value = event
+
+        await event_manager.on_message_reaction_remove_emoji(shard, payload)
+
+        event_manager._app.event_factory.deserialize_message_reaction_remove_emoji_event.assert_called_once_with(
+            shard, payload
+        )
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_presence_update(self, event_manager, shard, app):
         payload = {"user": {"id": 123}, "guild_id": 456}
         old_presence = object()
         event = mock.Mock(presence=mock.Mock())
@@ -296,13 +541,20 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_typing_start(self, event_manager, shard):
-        ...
+    async def test_on_typing_start(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_typing_start_event.return_value = event
+
+        await event_manager.on_typing_start(shard, payload)
+
+        event_manager._app.event_factory.deserialize_typing_start_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_user_update(self, event_manager, shard):
+    async def test_on_user_update(self, event_manager, shard, app):
         payload = {}
         old_user = object()
         event = mock.Mock(user=mock.Mock())
@@ -319,7 +571,7 @@ class TestStatefulEventManagerImpl:
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
-    async def test_on_voice_state_update(self, event_manager, shard):
+    async def test_on_voice_state_update(self, event_manager, shard, app):
         payload = {"user_id": 123, "guild_id": 456}
         old_state = object()
         event = mock.Mock(state=mock.Mock())
@@ -336,12 +588,26 @@ class TestStatefulEventManagerImpl:
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.skip(reason="TODO")
     @pytest.mark.asyncio
-    async def test_on_voice_server_update(self, event_manager, shard):
-        ...
+    async def test_on_voice_server_update(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
 
-    @pytest.mark.skip(reason="TODO")
+        event_manager._app.event_factory.deserialize_voice_server_update_event.return_value = event
+
+        await event_manager.on_voice_server_update(shard, payload)
+
+        event_manager._app.event_factory.deserialize_voice_server_update_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
     @pytest.mark.asyncio
-    async def test_on_webhooks_update(self, event_manager, shard):
-        ...
+    async def test_on_webhooks_update(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock()
+
+        event_manager._app.event_factory.deserialize_webhook_update_event.return_value = event
+
+        await event_manager.on_webhooks_update(shard, payload)
+
+        event_manager._app.event_factory.deserialize_webhook_update_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
