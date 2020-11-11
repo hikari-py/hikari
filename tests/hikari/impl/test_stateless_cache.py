@@ -350,7 +350,7 @@ class TestStatelessCache:
 
     def test_get_message(self, component):
         assert component.get_message(123) is None
-    
+
     def test_get_messages_view(self, component):
         assert component.get_messages_view() == {}
 

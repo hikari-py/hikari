@@ -1609,7 +1609,7 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
         if not self._message_entries:
             return cache_utility.EmptyCacheView()
-        
+
         messages = self._message_entries
         self._message_entries = collections.LimitedCapacityCacheMap(limit=self.max_messages)
 
@@ -1620,7 +1620,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
     def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
         return self._message_entries.get(message_id)
-    
+
     def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
         cached_messages = self._message_entries.freeze()
         return cache_utility.StatefulCacheMappingView(cached_messages)

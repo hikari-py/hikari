@@ -1636,7 +1636,7 @@ class MutableCache(Cache, abc.ABC):
         typing.Optional[hikari.messages.PartialMessage]
             The object of the message found in the cache or `builtins.None`.
         """
-    
+
     @abc.abstractmethod
     def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.PartialMessage]:
         """Get a view of all the message objects in the cache.
