@@ -114,11 +114,14 @@ class StatelessEventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#guild-emojis-update for more info."""
         await self.dispatch(self._app.event_factory.deserialize_guild_emojis_update_event(shard, payload, None))
 
-    async def on_guild_integrations_update(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-integrations-update for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_guild_integrations_update_event(shard, payload))
+    async def on_integration_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        await self.dispatch(self._app.event_factory.deserialize_integration_create_event(shard, payload))
+
+    async def on_integration_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        await self.dispatch(self._app.event_factory.deserialize_integration_delete_event(shard, payload))
+
+    async def on_integration_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        await self.dispatch(self._app.event_factory.deserialize_integration_update_event(shard, payload))
 
     async def on_guild_member_add(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-add for more info."""

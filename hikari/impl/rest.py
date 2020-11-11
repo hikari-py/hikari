@@ -2274,7 +2274,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONArray, raw_response)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_integration)
+        return data_binding.cast_json_array(
+            response, self._entity_factory.deserialize_integration, guild_id=snowflakes.Snowflake(guild)
+        )
 
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)

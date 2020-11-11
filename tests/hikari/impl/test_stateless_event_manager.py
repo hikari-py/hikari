@@ -182,16 +182,32 @@ class TestStatelessEventManager:
             shard, payload, None
         )
 
-    async def test_on_guild_integrations_update(self, event_manager, shard, payload):
+    async def test_on_integration_create(self, event_manager, shard, payload):
         event = object()
-        event_manager._app.event_factory.deserialize_guild_integrations_update_event = mock.Mock(return_value=event)
+        event_manager._app.event_factory.deserialize_integration_create_event = mock.Mock(return_value=event)
 
-        await event_manager.on_guild_integrations_update(shard, payload)
+        await event_manager.on_integration_create(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_guild_integrations_update_event.assert_called_once_with(
-            shard, payload
-        )
+        event_manager._app.event_factory.deserialize_integration_create_event.assert_called_once_with(shard, payload)
+
+    async def test_on_integration_delete(self, event_manager, shard, payload):
+        event = object()
+        event_manager._app.event_factory.deserialize_integration_delete_event = mock.Mock(return_value=event)
+
+        await event_manager.on_integration_delete(shard, payload)
+
+        event_manager.dispatch.assert_awaited_once_with(event)
+        event_manager._app.event_factory.deserialize_integration_delete_event.assert_called_once_with(shard, payload)
+
+    async def test_on_integration_update(self, event_manager, shard, payload):
+        event = object()
+        event_manager._app.event_factory.deserialize_integration_update_event = mock.Mock(return_value=event)
+
+        await event_manager.on_integration_update(shard, payload)
+
+        event_manager.dispatch.assert_awaited_once_with(event)
+        event_manager._app.event_factory.deserialize_integration_update_event.assert_called_once_with(shard, payload)
 
     async def test_on_guild_member_add(self, event_manager, shard, payload):
         event = object()
