@@ -239,7 +239,7 @@ class TestRESTBucketManager:
             mgr.acquire(route)
 
             # yes i test this twice, sort of. no, there isn't another way to verify this. sue me.
-            bucket.acquire.assert_called_once_with(float("inf"))
+            bucket.acquire.assert_called_once_with()
 
     @pytest.mark.asyncio
     async def test_acquire_route_returns_acquired_future(self):

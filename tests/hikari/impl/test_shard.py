@@ -65,7 +65,7 @@ class Test_V6GatewayTransport:
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
             transport = shard._GatewayTransport()
-            transport.logger = mock.Mock(getEffectiveLevel=mock.Mock(return_value=5))
+            transport.logger = mock.Mock(isEnabledFor=mock.Mock(return_value=True))
             transport.log_filterer = mock.Mock()
             yield transport
 

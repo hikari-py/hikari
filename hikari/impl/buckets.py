@@ -228,7 +228,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     """Represents a rate limit for an HTTP endpoint.
 
-    Component to represent an active rate limit bucket on a specific HTTP _route
+    Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
     This is somewhat similar to the `WindowedBurstRateLimiter` in how it
@@ -250,7 +250,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     __slots__: typing.Sequence[str] = ("compiled_route",)
 
     compiled_route: typing.Final[routes.CompiledRoute]
-    """The compiled _route that this rate limit is covering."""
+    """The compiled route that this rate limit is covering."""
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 1)
@@ -261,31 +261,18 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self, max_rate_limit: float = float("inf")) -> asyncio.Future[None]:
+    def acquire(self) -> asyncio.Future[None]:
         """Acquire time on this rate limiter.
 
         !!! note
             You should afterwards invoke `RESTBucket.update_rate_limit` to
             update any rate limit information you are made aware of.
 
-        Parameters
-        ----------
-        max_rate_limit : builtins.float
-            The max number of seconds to backoff for when rate limited. Anything
-            greater than this will instead raise an error.
-
-            The default is an infinite value, which will thus never time out.
-
         Returns
         -------
         asyncio.Future[builtins.None]
             A future that should be awaited immediately. Once the future completes,
             you are allowed to proceed with your operation.
-
-
-            If the reset-after time for the bucket is greater than
-            `max_rate_limit`, then this will contain `RateLimitTooLongError`
-            as an exception.
         """
         return aio.completed_future(None) if self.is_unknown else super().acquire()
 
@@ -353,7 +340,7 @@ class RESTBucketManager:
 
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
     """Maps full bucket hashes (`X-RateLimit-Bucket` appended with a hash of
-    major parameters used in that compiled _route) to their corresponding rate
+    major parameters used in that compiled route) to their corresponding rate
     limiters.
     """
 
@@ -428,7 +415,7 @@ class RESTBucketManager:
         """The garbage collector loop.
 
         This is designed to run in the background and manage removing unused
-        _route references from the rate-limiter collection to save memory.
+        route references from the rate-limiter collection to save memory.
 
         This will run forever until `RESTBucketManager.closed_event` is set.
         This will invoke `RESTBucketManager.do_gc_pass` periodically.
@@ -516,12 +503,12 @@ class RESTBucketManager:
         _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
     def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
-        """Acquire a bucket for the given _route.
+        """Acquire a bucket for the given route.
 
         Parameters
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
-            The _route to get the bucket for.
+            The route to get the bucket for.
 
         Returns
         -------
@@ -568,7 +555,7 @@ class RESTBucketManager:
                 period=bucket.period,
             )
 
-        return bucket.acquire(self.max_rate_limit)
+        return bucket.acquire()
 
     def update_rate_limits(
         self,
@@ -584,7 +571,7 @@ class RESTBucketManager:
         Parameters
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
-            The compiled _route to get the bucket for.
+            The compiled route to get the bucket for.
         bucket_header : typing.Optional[builtins.str]
             The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : builtins.int

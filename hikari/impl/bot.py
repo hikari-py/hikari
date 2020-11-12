@@ -659,7 +659,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
             # threadsafe if we want the user's application to still shut down if on a separate thread.
             # We log native thread IDs purely for debugging purposes.
-            if _LOGGER.getEffectiveLevel() <= ux.TRACE:
+            if _LOGGER.isEnabledFor(ux.TRACE):
                 _LOGGER.log(
                     ux.TRACE,
                     "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
