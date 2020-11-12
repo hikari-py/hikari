@@ -63,3 +63,7 @@ __init__.pyi
 
 # Logs
 *.log
+
+# Lightbulb and test bot
+lightbulb/
+test-bot.py

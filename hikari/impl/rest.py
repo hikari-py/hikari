@@ -34,6 +34,7 @@ __all__: typing.List[str] = [
 ]
 
 import asyncio
+import builtins
 import collections
 import contextlib
 import datetime
@@ -2078,7 +2079,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_days: undefined.UndefinedOr[builtins.int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         body = data_binding.JSONObjectBuilder()
