@@ -3919,7 +3919,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[int]
+        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
         reason : hikari.undefined.UndefinedOr[builtins.str]

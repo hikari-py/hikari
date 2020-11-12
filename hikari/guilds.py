@@ -57,6 +57,7 @@ import attr
 
 from hikari import files
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
@@ -73,7 +74,6 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import traits
-    from hikari import undefined
     from hikari import voices as voices_
 
 
@@ -438,6 +438,49 @@ class Member(users.User):
             An up-to-date view of this member.
         """
         return await self.app.rest.fetch_member(self.guild_id, self.id)
+
+    async def ban(
+        self,
+        *,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Ban this member from this guild.
+
+        Other Parameters
+        ----------------
+        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
+            If provided, the number of days to delete messages for.
+            This must be between 0 and 7.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `BAN_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.app.rest.ban_user(self.guild_id, self.id, delete_message_days=delete_message_days, reason=reason)
 
     def __str__(self) -> str:
         return str(self.user)
