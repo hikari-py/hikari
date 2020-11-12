@@ -240,9 +240,8 @@ class TestMember:
         assert result is mock_user.format_avatar.return_value
 
     async def test_ban(self, model, mock_user):
-        result = await mock_user.ban(reason="cuz u was meen")
-        mock_user.ban.assert_awaited_once_with(reason="cuz u was meen")
-        assert result is mock_user.ban.return_value
+        await model.ban(delete_message_days=10, reason="cuz u was meen")
+        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_days=10, reason="cuz u was meen")
 
     def test_default_avatar_url_property(self, model, mock_user):
         assert model.default_avatar_url is mock_user.default_avatar_url
