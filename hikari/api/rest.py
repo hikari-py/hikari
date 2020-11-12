@@ -25,7 +25,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["ConnectorFactory", "RESTClient"]
 
 import abc
-import builtins
 import typing
 
 from hikari import traits
@@ -3904,7 +3903,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: undefined.UndefinedOr[builtins.int] = undefined.UNDEFINED,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban a member from a guild.

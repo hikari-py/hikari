@@ -51,7 +51,6 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import builtins
 import typing
 
 import attr
@@ -443,7 +442,7 @@ class Member(users.User):
     async def ban(
         self,
         *,
-        delete_message_days: undefined.UndefinedOr[builtins.int] = undefined.UNDEFINED,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban this member from this guild.
