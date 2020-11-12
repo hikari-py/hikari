@@ -480,9 +480,7 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.ban_user(
-            self.guild_id, self.id, delete_message_days=delete_message_days, reason=reason
-        )
+        await self.app.rest.ban_user(self.guild_id, self.id, delete_message_days=delete_message_days, reason=reason)
 
     def __str__(self) -> str:
         return str(self.user)
