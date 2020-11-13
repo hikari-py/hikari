@@ -80,6 +80,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_channel: typing.Optional[channel_models.GuildChannel],
     ) -> channel_events.ChannelUpdateEvent:
         """Parse a raw payload from Discord into a channel update event object.
@@ -233,6 +234,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_guild: typing.Optional[guild_models.Guild],
     ) -> guild_events.GuildUpdateEvent:
         """Parse a raw payload from Discord into a guild update event object.
@@ -328,6 +330,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         """Parse a raw payload from Discord into a guild emojis update event object.
@@ -423,6 +426,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_member: typing.Optional[guild_models.Member],
     ) -> member_events.MemberUpdateEvent:
         """Parse a raw payload from Discord into a guild member update event object.
@@ -482,6 +486,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_role: typing.Optional[guild_models.Role],
     ) -> role_events.RoleUpdateEvent:
         """Parse a raw payload from Discord into a guild role update event object.
@@ -523,6 +528,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_presence: typing.Optional[presences_models.MemberPresence],
     ) -> guild_events.PresenceUpdateEvent:
         """Parse a raw payload from Discord into a presence update event object.
@@ -568,6 +574,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_message: typing.Optional[messages_models.PartialMessage],
     ) -> message_events.MessageUpdateEvent:
         """Parse a raw payload from Discord into a message update event object.
@@ -728,6 +735,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_user: typing.Optional[user_models.OwnUser],
     ) -> user_events.OwnUserUpdateEvent:
         """Parse a raw payload from Discord into a own user update event object.
@@ -773,6 +781,7 @@ class EventFactory(typing.Protocol):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_state: typing.Optional[voices_models.VoiceState],
     ) -> voice_events.VoiceStateUpdateEvent:
         """Parse a raw payload from Discord into a voice state update event object.

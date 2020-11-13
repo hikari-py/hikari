@@ -35,6 +35,7 @@ from hikari import errors
 from hikari import guilds
 from hikari import intents as intents_
 from hikari import invites
+from hikari import messages
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
@@ -45,7 +46,6 @@ from hikari.internal import cache as cache_utility
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
-    from hikari import messages
     from hikari import traits
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
@@ -98,7 +98,6 @@ class StatefulCacheImpl(cache.MutableCache):
         "_unknown_custom_emoji_entries",
         "_user_entries",
         "_message_entries",
-        "max_messages",
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
@@ -114,9 +113,8 @@ class StatefulCacheImpl(cache.MutableCache):
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
     _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
-    _message_entries: collections.LimitedCapacityCacheMap[snowflakes.Snowflake, messages.PartialMessage]
+    _message_entries: collections.LimitedCapacityCacheMap[snowflakes.Snowflake, messages.Message]
     _intents: intents_.Intents
-    max_messages: int
 
     def __init__(self, app: traits.RESTAware, intents: intents_.Intents, max_messages: int) -> None:
         self._app = app
@@ -132,7 +130,6 @@ class StatefulCacheImpl(cache.MutableCache):
         self._user_entries = collections.FreezableDict()
         self._message_entries = collections.LimitedCapacityCacheMap(limit=max_messages)
         self._intents = intents
-        self.max_messages = max_messages
 
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
         if self._intents ^ intents:
@@ -1606,31 +1603,59 @@ class StatefulCacheImpl(cache.MutableCache):
         self.set_voice_state(voice_state)
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
 
-    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
         if not self._message_entries:
             return cache_utility.EmptyCacheView()
 
-        messages = self._message_entries
-        self._message_entries = collections.LimitedCapacityCacheMap(limit=self.max_messages)
+        cached_messages = self._message_entries.copy()
+        self._message_entries.clear()
 
-        return cache_utility.StatefulCacheMappingView(messages)
+        return cache_utility.StatefulCacheMappingView(cached_messages)
 
-    def delete_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
+    def delete_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
         return self._message_entries.pop(message_id) if message_id in self._message_entries else None
 
-    def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
-        return self._message_entries.get(message_id)
+    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        message = self._message_entries.get(message_id)
+        if message:
+            message = copy.copy(message)
+            message.author = copy.copy(message.author)
 
-    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+        return message
+
+    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
         cached_messages = self._message_entries.freeze()
         return cache_utility.StatefulCacheMappingView(cached_messages)
 
-    def set_message(self, message: messages.PartialMessage) -> None:
-        self._message_entries[message.id] = message
+    def set_message(self, message: messages.Message, /) -> None:
+        self._message_entries[message.id] = copy.copy(message)
 
     def update_message(
-        self, message: messages.PartialMessage
-    ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:
+        self, message: typing.Union[messages.PartialMessage, messages.Message], /
+    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         cached_message = self.get_message(message.id)
-        self.set_message(message)
+        msg = copy.copy(cached_message)
+
+        if msg:
+            if not isinstance(message, messages.Message) and isinstance(message, messages.PartialMessage):
+                keys = [
+                    "content",
+                    "edited_timestamp",
+                    "is_mentioning_everyone",
+                    "user_mentions",
+                    "role_mentions",
+                    "channel_mentions",
+                    "embeds",
+                    "is_pinned",
+                ]
+
+                for key in keys:
+                    new_value = getattr(message, key)
+                    if new_value is not undefined.UNDEFINED:
+                        setattr(msg, key, new_value)
+
+                message = msg
+
+            self.set_message(message)
+
         return cached_message, self.get_message(message.id)

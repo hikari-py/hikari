@@ -392,22 +392,22 @@ class StatelessCacheImpl(cache.MutableCache):
     ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
         raise self._no_cache()
 
-    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
         raise self._no_cache()
 
-    def delete_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
+    def delete_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
         raise self._no_cache()
 
-    def get_message(self, message_id: snowflakes.Snowflake) -> typing.Optional[messages.PartialMessage]:
+    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
         return None
 
-    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.PartialMessage]:
+    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
         return cache_utilities.EmptyCacheView()
 
-    def set_message(self, message: messages.PartialMessage) -> None:
+    def set_message(self, message: messages.Message, /) -> None:
         raise self._no_cache()
 
     def update_message(
-        self, message: messages.PartialMessage
-    ) -> typing.Tuple[typing.Optional[messages.PartialMessage], typing.Optional[messages.PartialMessage]]:
+        self, message: typing.Union[messages.PartialMessage, messages.Message], /
+    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         raise self._no_cache()

@@ -79,6 +79,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_channel: typing.Optional[channel_models.GuildChannel],
     ) -> channel_events.ChannelUpdateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
@@ -209,6 +210,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_guild: typing.Optional[guild_models.Guild],
     ) -> guild_events.GuildUpdateEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
@@ -257,6 +259,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -307,6 +310,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_member: typing.Optional[guild_models.Member],
     ) -> member_events.MemberUpdateEvent:
         member = self._app.entity_factory.deserialize_member(payload)
@@ -332,6 +336,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_role: typing.Optional[guild_models.Role],
     ) -> role_events.RoleUpdateEvent:
         role = self._app.entity_factory.deserialize_role(
@@ -356,6 +361,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_presence: typing.Optional[presences_models.MemberPresence],
     ) -> guild_events.PresenceUpdateEvent:
         presence = self._app.entity_factory.deserialize_member_presence(payload)
@@ -403,6 +409,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_message: typing.Optional[messages_models.PartialMessage],
     ) -> message_events.MessageUpdateEvent:
         message = self._app.entity_factory.deserialize_partial_message(payload)
@@ -590,6 +597,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_user: typing.Optional[user_models.OwnUser],
     ) -> user_events.OwnUserUpdateEvent:
         return user_events.OwnUserUpdateEvent(
@@ -641,6 +649,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_state: typing.Optional[voices_models.VoiceState],
     ) -> voice_events.VoiceStateUpdateEvent:
         state = self._app.entity_factory.deserialize_voice_state(payload)

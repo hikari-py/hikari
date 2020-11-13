@@ -114,7 +114,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_guild_channel.assert_called_once_with(123)
         event_manager._cache.update_guild_channel.assert_called_once_with(event.channel)
         event_manager._app.event_factory.deserialize_channel_update_event.assert_called_once_with(
-            shard, payload, old_channel
+            shard, payload, old_channel=old_channel
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -200,7 +200,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._app.event_factory.deserialize_guild_update_event.assert_called_once_with(
-            shard, payload, old_guild
+            shard, payload, old_guild=old_guild
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -262,7 +262,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_emojis_view_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._app.event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(
-            shard, payload, [123]
+            shard, payload, old_emojis=[123]
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -344,7 +344,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_member.assert_called_once_with(456, 123)
         event_manager._cache.update_member.assert_called_once_with(event.member)
         event_manager._app.event_factory.deserialize_guild_member_update_event.assert_called_once_with(
-            shard, payload, old_member
+            shard, payload, old_member=old_member
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -391,7 +391,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_role.assert_called_once_with(123)
         event_manager._cache.update_role.assert_called_once_with(event.role)
         event_manager._app.event_factory.deserialize_guild_role_update_event.assert_called_once_with(
-            shard, payload, old_role
+            shard, payload, old_role=old_role
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -461,7 +461,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_message.assert_called_once_with(123)
         event_manager._cache.update_message.assert_called_once_with(event.message)
         event_manager._app.event_factory.deserialize_message_update_event.assert_called_once_with(
-            shard, payload, old_message
+            shard, payload, old_message=old_message
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -559,7 +559,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_presence.assert_called_once_with(456, 123)
         event_manager._cache.update_presence.assert_called_once_with(event.presence)
         event_manager._app.event_factory.deserialize_presence_update_event.assert_called_once_with(
-            shard, payload, old_presence
+            shard, payload, old_presence=old_presence
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -588,7 +588,7 @@ class TestStatefulEventManagerImpl:
 
         event_manager._cache.update_me.assert_called_once_with(event.user)
         event_manager._app.event_factory.deserialize_own_user_update_event.assert_called_once_with(
-            shard, payload, old_user
+            shard, payload, old_user=old_user
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -606,7 +606,7 @@ class TestStatefulEventManagerImpl:
         event_manager._cache.get_voice_state.assert_called_once_with(456, 123)
         event_manager._cache.update_voice_state.assert_called_once_with(event.state)
         event_manager._app.event_factory.deserialize_voice_state_update_event.assert_called_once_with(
-            shard, payload, old_state
+            shard, payload, old_state=old_state
         )
         event_manager.dispatch.assert_awaited_once_with(event)
 

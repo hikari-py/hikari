@@ -2477,16 +2477,18 @@ class TestStatefulCacheImpl:
 
     def test_clear_messages(self, cache_impl):
         messages_ = {1: mock.Mock(messages.Message, id=123), 2: mock.Mock(messages.Message, id=456)}
-        cache_impl._message_entries = collections.LimitedCapacityCacheMap(messages_, limit=10)
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap(messages_, limit=2)
 
         view = cache_impl.clear_messages()
-        assert view._data == messages_
+        assert view.get(1).id == 123
+        assert view.get(2).id == 456
 
     def test_delete_message(self, cache_impl):
-        message = mock.Mock(messages.Message)
+        message = mock.Mock(messages.Message, id=123)
         cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
 
-        assert cache_impl._message_entries.pop(1) is message
+        msg = cache_impl.delete_message(1)
+        assert msg.id == 123
         assert len(cache_impl._message_entries) == 0
 
     def test_get_message(self, cache_impl):
@@ -2513,10 +2515,10 @@ class TestStatefulCacheImpl:
         assert len(cache_impl._message_entries) == 1
 
     def test_update_message(self, cache_impl):
-        message = mock.Mock(messages.Message, content="New test.")
-        old_message = mock.Mock(messages.Message, content="Old Test.")
-        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
+        message = mock.Mock(messages.Message, id=1, content="New test.")
+        old_message = mock.Mock(messages.Message, id=1, content="Old test.")
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: old_message}, limit=1)
 
+        assert cache_impl._message_entries.get(1).content == "Old test."
+        cache_impl.update_message(message)
         assert cache_impl._message_entries.get(1).content == "New test."
-        cache_impl._message_entries[1] = old_message
-        assert cache_impl._message_entries.get(1).content == "Old Test."

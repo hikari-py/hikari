@@ -95,7 +95,9 @@ class TestStatelessEventManager:
         await event_manager.on_channel_update(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_channel_update_event.assert_called_once_with(shard, payload, None)
+        event_manager._app.event_factory.deserialize_channel_update_event.assert_called_once_with(
+            shard, payload, old_channel=None
+        )
 
     async def test_on_channel_delete(self, event_manager, shard, payload):
         event = object()
@@ -131,7 +133,9 @@ class TestStatelessEventManager:
         await event_manager.on_guild_update(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_guild_update_event.assert_called_once_with(shard, payload, None)
+        event_manager._app.event_factory.deserialize_guild_update_event.assert_called_once_with(
+            shard, payload, old_guild=None
+        )
 
     async def test_on_guild_delete(self, event_manager, shard):
         payload = {"unavailable": False}
@@ -179,7 +183,7 @@ class TestStatelessEventManager:
 
         event_manager.dispatch.assert_awaited_once_with(event)
         event_manager._app.event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(
-            shard, payload, None
+            shard, payload, old_emojis=None
         )
 
     async def test_on_integration_create(self, event_manager, shard, payload):
@@ -235,7 +239,7 @@ class TestStatelessEventManager:
 
         event_manager.dispatch.assert_awaited_once_with(event)
         event_manager._app.event_factory.deserialize_guild_member_update_event.assert_called_once_with(
-            shard, payload, None
+            shard, payload, old_member=None
         )
 
     async def test_on_guild_members_chunk(self, event_manager, shard, payload):
@@ -264,7 +268,7 @@ class TestStatelessEventManager:
 
         event_manager.dispatch.assert_awaited_once_with(event)
         event_manager._app.event_factory.deserialize_guild_role_update_event.assert_called_once_with(
-            shard, payload, None
+            shard, payload, old_role=None
         )
 
     async def test_on_guild_role_delete(self, event_manager, shard, payload):
@@ -310,7 +314,9 @@ class TestStatelessEventManager:
         await event_manager.on_message_update(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_message_update_event.assert_called_once_with(shard, payload, None)
+        event_manager._app.event_factory.deserialize_message_update_event.assert_called_once_with(
+            shard, payload, old_message=None
+        )
 
     async def test_on_message_delete(self, event_manager, shard, payload):
         event = object()
@@ -379,7 +385,9 @@ class TestStatelessEventManager:
         await event_manager.on_presence_update(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_presence_update_event.assert_called_once_with(shard, payload, None)
+        event_manager._app.event_factory.deserialize_presence_update_event.assert_called_once_with(
+            shard, payload, old_presence=None
+        )
 
     async def test_on_typing_start(self, event_manager, shard, payload):
         event = object()
@@ -397,7 +405,9 @@ class TestStatelessEventManager:
         await event_manager.on_user_update(shard, payload)
 
         event_manager.dispatch.assert_awaited_once_with(event)
-        event_manager._app.event_factory.deserialize_own_user_update_event.assert_called_once_with(shard, payload, None)
+        event_manager._app.event_factory.deserialize_own_user_update_event.assert_called_once_with(
+            shard, payload, old_user=None
+        )
 
     async def test_on_voice_state_update(self, event_manager, shard, payload):
         event = object()
@@ -407,7 +417,7 @@ class TestStatelessEventManager:
 
         event_manager.dispatch.assert_awaited_once_with(event)
         event_manager._app.event_factory.deserialize_voice_state_update_event.assert_called_once_with(
-            shard, payload, None
+            shard, payload, old_state=None
         )
 
     async def test_on_voice_server_update(self, event_manager, shard, payload):
