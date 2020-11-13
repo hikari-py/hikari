@@ -23,7 +23,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "MapT",
+    "ExtendedMapT",
     "KeyT",
     "ValueT",
     "SnowflakeSet",
@@ -46,7 +46,7 @@ import typing
 
 from hikari import snowflakes
 
-MapT = typing.TypeVar("MapT", bound="ExtendedMutableMapping[typing.Any, typing.Any]")
+ExtendedMapT = typing.TypeVar("ExtendedMapT", bound="ExtendedMutableMapping[typing.Any, typing.Any]")
 """Type-hint A type hint used for mapped collection objects."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 """Type-hint A type hint used for the type of a mapping's key."""
@@ -65,7 +65,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def copy(self: MapT) -> MapT:
+    def copy(self: ExtendedMapT) -> ExtendedMapT:
         """Return a copy of this mapped collection.
 
         Unlike simply doing `dict(mapping)`, this may rely on internal detail

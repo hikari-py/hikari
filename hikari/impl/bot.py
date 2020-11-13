@@ -219,26 +219,21 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     ```py
     import os
 
-    from logging.config import dictConfig
-    from hikari import Bot, Intents
-
-    bot = Bot(token=os.environ["BOT_TOKEN"], intents=Intents.ALL, logs="INFO")
+    import hikari
 
     # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-    dictConfig({
-        "version": 1,
-        "incremental": True,
-        "loggers": {
-            "hikari.gateway": {
-                "level": "DEBUG"
-            },
-            "hikari.ratelimits": {
-                "level": "TRACE_HIKARI"
+    bot = hikari.Bot(
+        token=os.environ["BOT_TOKEN"],
+        logs={
+            "version": 1,
+            "incremental": True,
+            "loggers": {
+                "hikari.gateway": {"level": "DEBUG"},
+                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
             },
         },
-    })
+    )
     ```
-
     """
 
     __slots__: typing.Sequence[str] = (
@@ -732,7 +727,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
-        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:

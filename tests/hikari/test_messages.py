@@ -100,7 +100,7 @@ class TestMessageApplication:
 @pytest.fixture()
 def message():
     return messages.Message(
-        app=mock.AsyncMock(),
+        app=None,
         id=snowflakes.Snowflake(1234),
         channel_id=snowflakes.Snowflake(5678),
         guild_id=snowflakes.Snowflake(910112),
@@ -110,10 +110,13 @@ def message():
         timestamp=datetime.datetime.now().astimezone(),
         edited_timestamp=None,
         is_tts=False,
-        is_mentioning_everyone=False,
-        user_mentions=(),
-        role_mentions=(),
-        channel_mentions=(),
+        mentions=messages.Mentions(
+            message=mock.Mock(),
+            users={},
+            role_ids=[],
+            channels={},
+            everyone=False,
+        ),
         attachments=(),
         embeds=(),
         reactions=(),
@@ -132,25 +135,43 @@ class TestMessage:
     def test_link_property_when_guild_is_not_none(self, message):
         message.id = 789
         message.channel_id = 456
-        message.guild_id = 123
+        message._guild_id = 123
         assert message.link == "https://discord.com/channels/123/456/789"
 
     def test_link_property_when_guild_is_none(self, message):
+        message.app = mock.Mock()
         message.id = 789
         message.channel_id = 456
-        message.guild_id = None
+        message._guild_id = None
+        message.app.cache.get_guild_channel.return_value = None
         assert message.link == "https://discord.com/channels/@me/456/789"
 
+    def test_guild_id_when_guild_is_not_none(self, message):
+        message._guild_id = 123
 
-# TODO: this all needs to be moved to one test class.
+        assert message.guild_id == 123
+
+    def test_guild_id_when_guild_is_none(self, message):
+        message.app = mock.Mock()
+        message._guild_id = None
+        message.channel_id = 890
+        message.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(guild_id=456))
+
+        assert message.guild_id == 456
+
+        message.app.cache.get_guild_channel.assert_called_once_with(890)
+
+
 @pytest.mark.asyncio
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
+        message.app = mock.AsyncMock()
         message.channel_id = 123
         await message.fetch_channel()
         message.app.rest.fetch_channel.assert_awaited_once_with(123)
 
     async def test_edit(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         embed = object()
@@ -175,6 +196,7 @@ class TestAsyncMessage:
         )
 
     async def test_reply(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         embed = object()
@@ -206,24 +228,28 @@ class TestAsyncMessage:
         )
 
     async def test_delete(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         await message.delete()
         message.app.rest.delete_message.assert_awaited_once_with(456, 123)
 
     async def test_add_reaction(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         await message.add_reaction("👌")
         message.app.rest.add_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌")
 
     async def test_remove_reaction(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         await message.remove_reaction("👌")
         message.app.rest.delete_my_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌")
 
     async def test_remove_reaction_with_user(self, message):
+        message.app = mock.AsyncMock()
         user = object()
         message.id = 123
         message.channel_id = 456
@@ -231,12 +257,14 @@ class TestAsyncMessage:
         message.app.rest.delete_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌", user=user)
 
     async def test_remove_all_reactions(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         await message.remove_all_reactions()
         message.app.rest.delete_all_reactions.assert_awaited_once_with(channel=456, message=123)
 
     async def test_remove_all_reactions_with_emoji(self, message):
+        message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
         await message.remove_all_reactions("👌")
