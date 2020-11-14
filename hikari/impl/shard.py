@@ -156,7 +156,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         timeout: typing.Optional[float] = None,
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
-        if self.logger.getEffectiveLevel() <= ux.TRACE:
+        if self.logger.isEnabledFor(ux.TRACE):
             filtered = self.log_filterer(pl)  # type: ignore
             self.logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
         return loads(pl)
@@ -169,7 +169,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
     ) -> None:
         pl = dumps(data)
-        if self.logger.getEffectiveLevel() <= ux.TRACE:
+        if self.logger.isEnabledFor(ux.TRACE):
             filtered = self.log_filterer(pl)  # type: ignore
             self.logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)

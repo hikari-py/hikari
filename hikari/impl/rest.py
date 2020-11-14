@@ -66,7 +66,7 @@ from hikari import urls
 from hikari import users
 from hikari.api import cache as cache_
 from hikari.api import rest as rest_api
-from hikari.impl import buckets
+from hikari.impl import buckets as buckets_
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
@@ -414,9 +414,10 @@ class RESTClientImpl(rest_api.RESTClient):
         "_proxy_settings",
         "_rest_url",
         "_token",
+        "_lock",
     )
 
-    buckets: buckets.RESTBucketManager
+    buckets: buckets_.RESTBucketManager
     """Bucket ratelimiter manager."""
 
     global_rate_limit: rate_limits.ManualRateLimiter
@@ -440,7 +441,7 @@ class RESTClientImpl(rest_api.RESTClient):
         token_type: typing.Optional[str] = None,
         rest_url: typing.Optional[str],
     ) -> None:
-        self.buckets = buckets.RESTBucketManager(max_rate_limit)
+        self.buckets = buckets_.RESTBucketManager(max_rate_limit)
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
 
@@ -452,6 +453,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self._executor = executor
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
+        self._lock = asyncio.Lock()
 
         if token is None:
             full_token = None
@@ -551,55 +553,61 @@ class RESTClientImpl(rest_api.RESTClient):
 
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
+        url = compiled_route.create_url(self._rest_url)
         while True:
             try:
-                url = compiled_route.create_url(self._rest_url)
-
-                # Wait for any rate-limits to finish.
-                await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
-
                 uuid = time.uuid()
 
-                if _LOGGER.getEffectiveLevel() <= ux.TRACE:
-                    _LOGGER.log(
-                        ux.TRACE,
-                        "%s %s %s\n%s",
-                        uuid,
+                # If we try to do more than 1 request to the same endpoint at
+                # the same time, there is a chance that we don't receive the
+                # ratelimits information before the next request comes along.
+                # Due to this, we risk getting ratelimited. This lock makes
+                # sure that there is only 1 request happening at the same time
+                # which stops this from happening.
+                async with self._lock:
+                    # Wait for any rate-limits to finish.
+                    await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
+
+                    if _LOGGER.isEnabledFor(ux.TRACE):
+                        _LOGGER.log(
+                            ux.TRACE,
+                            "%s %s %s\n%s",
+                            uuid,
+                            compiled_route.method,
+                            url,
+                            self._stringify_http_message(headers, json),
+                        )
+
+                    # Make the request.
+                    session = self._acquire_client_session()
+                    start = time.monotonic()
+                    response = await session.request(
                         compiled_route.method,
                         url,
-                        self._stringify_http_message(headers, json),
+                        headers=headers,
+                        params=query,
+                        json=json,
+                        data=form,
+                        allow_redirects=self._http_settings.max_redirects is not None,
+                        max_redirects=self._http_settings.max_redirects,
+                        proxy=self._proxy_settings.url,
+                        proxy_headers=self._proxy_settings.all_headers,
                     )
+                    time_taken = (time.monotonic() - start) * 1_000
 
-                # Make the request.
-                session = self._acquire_client_session()
-                start = time.monotonic()
-                response = await session.request(
-                    compiled_route.method,
-                    url,
-                    headers=headers,
-                    params=query,
-                    json=json,
-                    data=form,
-                    allow_redirects=self._http_settings.max_redirects is not None,
-                    max_redirects=self._http_settings.max_redirects,
-                    proxy=self._proxy_settings.url,
-                    proxy_headers=self._proxy_settings.all_headers,
-                )
-                time_taken = (time.monotonic() - start) * 1_000
+                    if _LOGGER.isEnabledFor(ux.TRACE):
+                        _LOGGER.log(
+                            ux.TRACE,
+                            "%s %s %s in %sms\n%s",
+                            uuid,
+                            response.status,
+                            response.reason,
+                            time_taken,
+                            self._stringify_http_message(response.headers, await response.read()),
+                        )
 
-                if _LOGGER.getEffectiveLevel() <= ux.TRACE:
-                    _LOGGER.log(
-                        ux.TRACE,
-                        "%s %s %s in %sms\n%s",
-                        uuid,
-                        response.status,
-                        response.reason,
-                        time_taken,
-                        self._stringify_http_message(response.headers, await response.read()),
-                    )
-
-                # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                await self._parse_ratelimits(compiled_route, response)
+                    # Ensure we are not rate limited, and update rate limiting headers where appropriate.
+                    await self._parse_ratelimits(compiled_route, response)
 
                 # Don't bother processing any further if we got NO CONTENT. There's not anything
                 # to check.
@@ -641,9 +649,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing.final
     async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
-        # Worth noting there is some bug on V6 that rate limits me immediately if I have an invalid token.
-        # https://github.com/discord/discord-api-docs/issues/1569
-
         # Handle rate limiting.
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
@@ -654,8 +659,6 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
         now_date = time.rfc7231_datetime_string_to_datetime(resp_headers[_DATE_HEADER])
 
-        is_rate_limited = response.status == http.HTTPStatus.TOO_MANY_REQUESTS
-
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
@@ -665,8 +668,29 @@ class RESTClientImpl(rest_api.RESTClient):
             reset_at_header=reset_date,
         )
 
-        if not is_rate_limited:
+        if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
             return
+
+        # Discord have started applying ratelimits to operations on some endpoints
+        # based on specific fields used in the JSON body.
+        # This does not get reflected in the headers. The first we know is when we
+        # get a 429.
+        # The issue is that we may get the same response if Discord dynamically
+        # adjusts the bucket ratelimits.
+        #
+        # We have no mechanism for handing field-based ratelimits, so if we get
+        # to here, but notice remaining is greater than zero, we should just error.
+        #
+        # Worth noting we still ignore the retry_after in the body. I have no clue
+        # if there is some weird edge case where a bucket rate limit can occur on
+        # top of a non-global one, but in this case this check will misbehave and
+        # instead of erroring, will trigger a backoff that might be 10 minutes or
+        # more...
+        #
+        # Seems Discord may raise this on some other undocumented cases, which
+        # is nice of them. Apparently some dude spamming slurs in the Python
+        # guild via a leaked webhook URL made people's clients exhibit this
+        # behaviour.
 
         # If we get ratelimited when running more than one bot under the same token,
         # or if the ratelimiting logic goes wrong, we will get a 429 and expect the
@@ -696,27 +720,6 @@ class RESTClientImpl(rest_api.RESTClient):
             self.global_rate_limit.throttle(body_retry_after)
 
             raise self._RetryRequest
-
-        # Discord have started applying ratelimits to operations on some endpoints
-        # based on specific fields used in the JSON body.
-        # This does not get reflected in the headers. The first we know is when we
-        # get a 429.
-        # The issue is that we may get the same response if Discord dynamically
-        # adjusts the bucket ratelimits.
-        #
-        # We have no mechanism for handing field-based ratelimits, so if we get
-        # to here, but notice remaining is greater than zero, we should just error.
-        #
-        # Worth noting we still ignore the retry_after in the body. I have no clue
-        # if there is some weird edge case where a bucket rate limit can occur on
-        # top of a non-global one, but in this case this check will misbehave and
-        # instead of erroring, will trigger a backoff that might be 10 minutes or
-        # more...
-        #
-        # Seems Discord may raise this on some other undocumented cases, which
-        # is nice of them. Apparently some dude spamming slurs in the Python
-        # guild via a leaked webhook URL made people's clients exhibit this
-        # behaviour.
 
         # If the values are within 20% of eachother by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some

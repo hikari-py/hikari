@@ -47,7 +47,6 @@ from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import net
 from hikari.internal import routes
-from hikari.internal import ux
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
@@ -1004,9 +1003,9 @@ class TestRESTClientImplAsync:
             with pytest.raises(exit_exception):
                 await rest_client._request(route)
 
-    @pytest.mark.parametrize("logger_level", [ux.TRACE, ux.TRACE + 10])
+    @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()
-    async def test__request_logger(self, rest_client, exit_exception, logger_level):
+    async def test__request_logger(self, rest_client, enabled):
         class StubResponse:
             status = http.HTTPStatus.NO_CONTENT
             headers = {}
@@ -1021,16 +1020,14 @@ class TestRESTClientImplAsync:
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
 
-        with mock.patch.object(
-            rest, "_LOGGER", new=mock.Mock(getEffectiveLevel=mock.Mock(return_value=logger_level))
-        ) as logger:
+        with mock.patch.object(rest, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=enabled))) as logger:
             with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
                 await rest_client._request(route)
 
-        if logger_level > ux.TRACE:
-            assert logger.log.call_count == 0
-        else:
+        if enabled:
             assert logger.log.call_count == 2
+        else:
+            assert logger.log.call_count == 0
 
     async def test__handle_error_response(self, rest_client, exit_exception):
         mock_response = mock.Mock()
