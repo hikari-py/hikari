@@ -1449,7 +1449,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # MESSAGE MODELS #
     ##################
 
-    def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
+    def deserialize_partial_message(  # noqa CFQ001 - Function too long
+        self, payload: data_binding.JSONObject
+    ) -> message_models.PartialMessage:
         author: typing.Optional[user_models.User] = None
         if author_pl := payload.get("author"):
             author = self.deserialize_user(author_pl)
@@ -1472,20 +1474,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
             else:
                 edited_timestamp = None
-
-        is_mentioning_everyone = payload["mention_everyone"] if "mention_everyone" in payload else undefined.UNDEFINED
-
-        user_mentions: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if "mentions" in payload:
-            user_mentions = [snowflakes.Snowflake(mention["id"]) for mention in payload["mentions"]]
-
-        role_mentions: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if "mention_roles" in payload:
-            role_mentions = [snowflakes.Snowflake(mention) for mention in payload["mention_roles"]]
-
-        channel_mentions: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if "mention_channels" in payload:
-            channel_mentions = [snowflakes.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
 
         attachments: undefined.UndefinedOr[typing.MutableSequence[message_models.Attachment]] = undefined.UNDEFINED
         if "attachments" in payload:
@@ -1554,7 +1542,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 else None,
             )
 
-        return message_models.PartialMessage(
+        message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -1565,10 +1553,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             timestamp=timestamp,
             edited_timestamp=edited_timestamp,
             is_tts=payload["tts"] if "tts" in payload else undefined.UNDEFINED,
-            is_mentioning_everyone=is_mentioning_everyone,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            channel_mentions=channel_mentions,
             attachments=attachments,
             embeds=embeds,
             reactions=reactions,
@@ -1580,7 +1564,35 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message_reference=message_reference,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             nonce=payload["nonce"] if "nonce" in payload else undefined.UNDEFINED,
+            # We initialize these next.
+            mentions=NotImplemented,
         )
+
+        channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channel_models.PartialChannel]]
+        channels = undefined.UNDEFINED
+        if raw_channels := payload.get("mention_channels"):
+            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
+
+        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, user_models.User]]
+        users = undefined.UNDEFINED
+        if raw_users := payload.get("mentions"):
+            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
+
+        role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED
+        if raw_role_ids := payload.get("mention_roles"):
+            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
+
+        everyone = payload.get("mention_everyone", undefined.UNDEFINED)
+
+        message.mentions = message_models.Mentions(
+            message=message,
+            users=users,
+            role_ids=role_ids,
+            channels=channels,
+            everyone=everyone,
+        )
+
+        return message
 
     def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         guild_id = snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
@@ -1594,14 +1606,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         edited_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
             edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
-
-        user_mentions = [snowflakes.Snowflake(mention["id"]) for mention in payload["mentions"]]
-        role_mentions = [snowflakes.Snowflake(mention) for mention in payload["mention_roles"]]
-        channel_mentions = (
-            [snowflakes.Snowflake(mention["id"]) for mention in payload["mention_channels"]]
-            if "mention_channels" in payload
-            else []
-        )
 
         attachments = []
         for attachment_payload in payload["attachments"]:
@@ -1668,7 +1672,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 primary_sku_id=primary_sku_id,
             )
 
-        return message_models.Message(
+        message = message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -1679,10 +1683,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             timestamp=time.iso8601_datetime_string_to_datetime(payload["timestamp"]),
             edited_timestamp=edited_timestamp,
             is_tts=payload["tts"],
-            is_mentioning_everyone=payload["mention_everyone"],
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            channel_mentions=channel_mentions,
             attachments=attachments,
             embeds=embeds,
             reactions=reactions,
@@ -1694,7 +1694,33 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message_reference=crosspost,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
             nonce=payload.get("nonce"),
+            # We initialize these next.
+            mentions=NotImplemented,
         )
+
+        channels: typing.Mapping[snowflakes.Snowflake, channel_models.PartialChannel] = {}
+        if raw_channels := payload.get("mention_channels"):
+            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
+
+        users: typing.Mapping[snowflakes.Snowflake, user_models.User] = {}
+        if raw_users := payload.get("mentions"):
+            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
+
+        role_ids: typing.Sequence[snowflakes.Snowflake] = []
+        if raw_role_ids := payload.get("mention_roles"):
+            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
+
+        everyone = payload.get("mention_everyone", False)
+
+        message.mentions = message_models.Mentions(
+            message=message,
+            users=users,
+            role_ids=role_ids,
+            channels=channels,
+            everyone=everyone,
+        )
+
+        return message
 
     ###################
     # PRESENCE MODELS #

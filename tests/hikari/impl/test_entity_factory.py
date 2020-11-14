@@ -2465,7 +2465,7 @@ class TestEntityFactoryImpl:
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
-        assert partial_message.guild_id == 678
+        assert partial_message._guild_id == 678
         assert partial_message.author == entity_factory_impl.deserialize_user(user_payload)
         assert partial_message.member == entity_factory_impl.deserialize_member(
             member_payload, user=partial_message.author, guild_id=snowflakes.Snowflake(678)
@@ -2478,10 +2478,10 @@ class TestEntityFactoryImpl:
             2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
         )
         assert partial_message.is_tts is True
-        assert partial_message.is_mentioning_everyone is True
-        assert partial_message.user_mentions == [5678]
-        assert partial_message.role_mentions == [987]
-        assert partial_message.channel_mentions == [456]
+        assert partial_message.mentions.everyone is True
+        assert partial_message.mentions.user_ids == [5678]
+        assert partial_message.mentions.role_ids == [987]
+        assert partial_message.mentions.channels_ids == [456]
         # Attachment
         assert len(partial_message.attachments) == 1
         attachment = partial_message.attachments[0]
@@ -2537,7 +2537,7 @@ class TestEntityFactoryImpl:
         message_payload["application"]["primary_sku_id"] = None
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
-        assert partial_message.guild_id is not None
+        assert partial_message._guild_id is not None
         assert partial_message.member is None
         assert partial_message.application.primary_sku_id is None
 
@@ -2546,17 +2546,17 @@ class TestEntityFactoryImpl:
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
-        assert partial_message.guild_id is None
+        assert partial_message._guild_id is None
         assert partial_message.author is None
         assert partial_message.member is None
         assert partial_message.content is undefined.UNDEFINED
         assert partial_message.timestamp is undefined.UNDEFINED
         assert partial_message.edited_timestamp is undefined.UNDEFINED
         assert partial_message.is_tts is undefined.UNDEFINED
-        assert partial_message.is_mentioning_everyone is undefined.UNDEFINED
-        assert partial_message.user_mentions is undefined.UNDEFINED
-        assert partial_message.role_mentions is undefined.UNDEFINED
-        assert partial_message.channel_mentions is undefined.UNDEFINED
+        assert partial_message.mentions.everyone is undefined.UNDEFINED
+        assert partial_message.mentions.user_ids is undefined.UNDEFINED
+        assert partial_message.mentions.role_ids is undefined.UNDEFINED
+        assert partial_message.mentions.channels_ids is undefined.UNDEFINED
         assert partial_message.attachments is undefined.UNDEFINED
         assert partial_message.embeds is undefined.UNDEFINED
         assert partial_message.reactions is undefined.UNDEFINED
@@ -2584,7 +2584,7 @@ class TestEntityFactoryImpl:
         assert message.app is mock_app
         assert message.id == 123
         assert message.channel_id == 456
-        assert message.guild_id == 678
+        assert message._guild_id == 678
         assert message.author == entity_factory_impl.deserialize_user(user_payload)
         assert message.member == entity_factory_impl.deserialize_member(
             member_payload, user=message.author, guild_id=snowflakes.Snowflake(678)
@@ -2595,10 +2595,10 @@ class TestEntityFactoryImpl:
             2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
         )
         assert message.is_tts is True
-        assert message.is_mentioning_everyone is True
-        assert message.user_mentions == [5678]
-        assert message.role_mentions == [987]
-        assert message.channel_mentions == [456]
+        assert message.mentions.everyone is True
+        assert message.mentions.user_ids == [5678]
+        assert message.mentions.role_ids == [987]
+        assert message.mentions.channels_ids == [456]
         # Attachment
         assert len(message.attachments) == 1
         attachment = message.attachments[0]
@@ -2674,12 +2674,13 @@ class TestEntityFactoryImpl:
 
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.app is mock_app
-        assert message.guild_id is None
+        assert message._guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
-        assert message.channel_mentions == []
-        assert message.role_mentions == []
-        assert message.channel_mentions == []
+        assert message.mentions.everyone is True
+        assert message.mentions.user_ids == []
+        assert message.mentions.role_ids == []
+        assert message.mentions.channels_ids == []
         assert message.attachments == []
         assert message.embeds == []
         assert message.reactions == []
