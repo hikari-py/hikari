@@ -2247,6 +2247,17 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
+    async def test_search_members(self, rest_client):
+        member = StubModel(645234123)
+        expected_route = routes.GET_GUILD_MEMBERS_SEARCH.compile(guild=645234123)
+        expected_query = {"query": "a name", "limit": "1000"}
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "764435"}])
+        rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
+
+        assert await rest_client.search_members(StubModel(645234123), "a name") == [member]
+        rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "764435"}, guild_id=645234123)
+        rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
+
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": "987"}

@@ -3607,6 +3607,52 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def search_members(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+    ) -> typing.Sequence[guilds.Member]:
+        """Search the members in a guild by nickname and username.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The object or ID of the guild to search members in.
+        name : str
+            The query to match username(s) and nickname(s) against.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Member]
+            A sequence of the members who matched the provided `name`.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
+            therefore will return all the members in one go rather than needing
+            to be asynchronously iterated over.
+        """
+
+    @abc.abstractmethod
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
