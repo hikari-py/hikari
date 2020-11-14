@@ -1634,10 +1634,12 @@ class StatefulCacheImpl(cache.MutableCache):
         self, message: typing.Union[messages.PartialMessage, messages.Message], /
     ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         cached_message = self.get_message(message.id)
-        msg = copy.copy(cached_message)
 
-        if msg:
-            if not isinstance(message, messages.Message) and isinstance(message, messages.PartialMessage):
+        if isinstance(message, messages.Message):
+            self.set_message(message)
+        else:
+            copied_message = copy.copy(cached_message)
+            if copied_message:
                 keys = [
                     "content",
                     "edited_timestamp",
@@ -1652,10 +1654,8 @@ class StatefulCacheImpl(cache.MutableCache):
                 for key in keys:
                     new_value = getattr(message, key)
                     if new_value is not undefined.UNDEFINED:
-                        setattr(msg, key, new_value)
+                        setattr(copied_message, key, new_value)
 
-                message = msg
-
-            self.set_message(message)
+                self.set_message(copied_message)
 
         return cached_message, self.get_message(message.id)
