@@ -32,6 +32,8 @@ import webbrowser
 from pipelines import config
 from pipelines import nox
 
+INDEX_PATH = f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE}"
+
 
 @nox.session(reuse_venv=True)
 @nox.inherit_environment_vars
@@ -39,6 +41,8 @@ def pdoc3(session: nox.Session) -> None:
     """Generate documentation with pdoc."""
     session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
     session.env["PDOC3_GENERATING"] = "1"
+
+    print("Building documentation...")
 
     session.run(
         "python",
@@ -54,6 +58,20 @@ def pdoc3(session: nox.Session) -> None:
     shutil.copyfile(
         os.path.join(config.DOCUMENTATION_DIRECTORY, config.LOGO_SOURCE),
         os.path.join(config.ARTIFACT_DIRECTORY, config.LOGO_SOURCE),
+    )
+
+    if shutil.which("npm") is None:
+        print("'npm' not installed, won't prebuild index")
+        exit(0 if "CI" not in os.environ else 1)
+
+    print("Prebuilding index...")
+    session.run("npm", "install", "lunr@2.3.7", external=True)
+    session.run(
+        "node",
+        "scripts/prebuild_index.js",
+        f"{INDEX_PATH}/index",
+        f"{INDEX_PATH}/prebuilt_index.js",
+        external=True,
     )
 
 
