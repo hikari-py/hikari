@@ -789,9 +789,6 @@ class PartialGuild(snowflakes.Unique):
     app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
-    features: typing.Sequence[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
-    """A list of the features in this guild."""
-
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
@@ -871,6 +868,9 @@ class PartialGuild(snowflakes.Unique):
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
+
+    features: typing.Sequence[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
 
     splash_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
@@ -970,6 +970,9 @@ class GuildPreview(PartialGuild):
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Guild(PartialGuild, abc.ABC):
     """A representation of a guild on Discord."""
+
+    features: typing.Sequence[GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
@@ -1265,11 +1268,17 @@ class RESTGuild(Guild):
     _roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.ib(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of role ID to role object."""
 
-    approximate_active_member_count: int = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild that are not offline."""
+    approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild that are not offline.
 
-    approximate_member_count: int = attr.ib(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild."""
+    This will be `builtins.None` when creating a guild.
+    """
+
+    approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild.
+
+    This will be `builtins.None` when creating a guild.
+    """
 
     max_presences: int = attr.ib(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild."""

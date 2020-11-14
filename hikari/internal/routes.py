@@ -392,6 +392,15 @@ GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(GET, "/guilds/{guild}/webhooks")
 
 GET_GUILD_BANNER_IMAGE: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget.png")
 
+# Templates
+DELETE_GUILD_TEMPLATE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/templates/{template}")
+GET_TEMPLATE: typing.Final[Route] = Route(GET, "/guilds/templates/{template}")
+GET_GUILD_TEMPLATES: typing.Final[Route] = Route(GET, "/guilds/{guild}/templates")
+PATCH_GUILD_TEMPLATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/templates/{template}")
+POST_GUILD_TEMPLATES: typing.Final[Route] = Route(POST, "/guilds/{guild}/templates")
+POST_TEMPLATE: typing.Final[Route] = Route(POST, "/guilds/templates/{template}")
+PUT_GUILD_TEMPLATE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/templates/{template}")
+
 # Invites
 GET_INVITE: typing.Final[Route] = Route(GET, "/invites/{invite_code}")
 DELETE_INVITE: typing.Final[Route] = Route(DELETE, "/invites/{invite_code}")

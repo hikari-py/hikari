@@ -603,6 +603,10 @@ class TestEntityFactoryImpl:
         )
         assert dm_channel.last_message_id is None
 
+    def test_deserialize_dm_channel_with_unsetfields(self, entity_factory_impl, user_payload):
+        dm_channel = entity_factory_impl.deserialize_dm({"id": "123", "type": 1, "recipients": [user_payload]})
+        assert dm_channel.last_message_id is None
+
     @pytest.fixture()
     def group_dm_channel_payload(self, user_payload):
         return {
@@ -637,13 +641,13 @@ class TestEntityFactoryImpl:
                 "name": "Secret Developer Group",
                 "icon": "123asdf123adsf",
                 "owner_id": "456",
-                "last_message_id": None,
                 "type": 3,
                 "recipients": [user_payload],
             }
         )
         assert group_dm.nicknames == {}
         assert group_dm.application_id is None
+        assert group_dm.last_message_id is None
 
     @pytest.fixture()
     def guild_category_payload(self, permission_overwrite_payload):
@@ -753,7 +757,6 @@ class TestEntityFactoryImpl:
                 "position": 6,
                 "permission_overwrites": [],
                 "topic": "¯\\_(ツ)_/¯",
-                "last_message_id": "123456",
                 "guild_id": "123123123",
             }
         )
@@ -761,6 +764,7 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.last_message_id is None
 
     def test_deserialize_guild_text_channel_with_null_fields(self, entity_factory_impl):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(
@@ -831,13 +835,13 @@ class TestEntityFactoryImpl:
                 "position": 0,
                 "permission_overwrites": [],
                 "topic": "Super Important Announcements",
-                "last_message_id": "456",
                 "guild_id": "4123",
             }
         )
         assert news_channel.is_nsfw is None
         assert news_channel.parent_id is None
         assert news_channel.last_pin_timestamp is None
+        assert news_channel.last_message_id is None
 
     def test_deserialize_guild_news_channel_with_null_fields(self, entity_factory_impl):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(
@@ -1887,14 +1891,14 @@ class TestEntityFactoryImpl:
                 "verification_level": 4,
                 "max_presences": 8,
                 "max_members": 9,
-                "approximate_member_count": 42,
-                "approximate_presence_count": 9,
             }
         )
         assert guild.max_video_channel_users is None
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None
+        assert guild.approximate_active_member_count is None
+        assert guild.approximate_member_count is None
 
     def test_deserialize_rest_guild_with_null_fields(self, entity_factory_impl):
         guild = entity_factory_impl.deserialize_rest_guild(
@@ -2951,6 +2955,143 @@ class TestEntityFactoryImpl:
         assert activity.secrets.join is None
         assert activity.secrets.spectate is None
         assert activity.secrets.match is None
+
+    ###################
+    # TEMPLATE MODELS #
+    ###################
+
+    @pytest.fixture()
+    def template_payload(self, guild_text_channel_payload, user_payload):
+        return {
+            "code": "4rDaewUKeYVj",
+            "name": "ttt",
+            "description": "eee",
+            "usage_count": 42,
+            "creator_id": "115590097100865541",
+            "creator": user_payload,
+            "created_at": "2020-12-15T01:54:35+00:00",
+            "updated_at": "2020-12-15T01:57:35+00:00",
+            "source_guild_id": "574921006817476608",
+            "serialized_source_guild": {
+                "name": "hikari",
+                "description": "a descript description",
+                "region": "europe",
+                "icon_hash": "27b75989b5b42aba51346a6b69d8fcfe",
+                "verification_level": 2,
+                "default_message_notifications": 1,
+                "explicit_content_filter": 2,
+                "preferred_locale": "en-GB",
+                "afk_timeout": 3600,
+                "roles": [
+                    {
+                        "id": "33",
+                        "name": "@everyone",
+                        "color": 0,
+                        "hoist": True,
+                        "mentionable": False,
+                        "permissions": "104189505",
+                    }
+                ],
+                "channels": [guild_text_channel_payload],
+                "afk_channel_id": "321123",
+                "system_channel_id": "8",
+                "system_channel_flags": 0,
+            },
+            "is_dirty": True,
+        }
+
+    def test_deserialize_template(
+        self, entity_factory_impl, mock_app, template_payload, user_payload, guild_text_channel_payload
+    ):
+        template = entity_factory_impl.deserialize_template(template_payload)
+        assert template.code == "4rDaewUKeYVj"
+        assert template.name == "ttt"
+        assert template.description == "eee"
+        assert template.usage_count == 42
+        assert template.creator == entity_factory_impl.deserialize_user(user_payload)
+        assert template.created_at == datetime.datetime(2020, 12, 15, 1, 54, 35, tzinfo=datetime.timezone.utc)
+        assert template.updated_at == datetime.datetime(2020, 12, 15, 1, 57, 35, tzinfo=datetime.timezone.utc)
+
+        # TemplateGuild
+        assert template.source_guild.app is mock_app
+        assert template.source_guild.id == 574921006817476608
+        assert template.source_guild.icon_hash == "27b75989b5b42aba51346a6b69d8fcfe"
+        assert template.source_guild.name == "hikari"
+        assert template.source_guild.description == "a descript description"
+        assert template.source_guild.region == "europe"
+        assert template.source_guild.verification_level is guild_models.GuildVerificationLevel.MEDIUM
+        assert (
+            template.source_guild.default_message_notifications
+            is guild_models.GuildMessageNotificationsLevel.ONLY_MENTIONS
+        )
+        assert template.source_guild.explicit_content_filter is guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
+        assert template.source_guild.preferred_locale == "en-GB"
+        assert template.source_guild.afk_timeout == datetime.timedelta(seconds=3600)
+
+        # TemplateRole
+        assert len(template.source_guild.roles) == 1
+        role = template.source_guild.roles[33]
+        assert role.app is mock_app
+        assert role.id == 33
+        assert role.name == "@everyone"
+        assert role.permissions == permission_models.Permissions(104189505)
+        assert role.color == color_models.Color(0)
+        assert role.is_hoisted is True
+        assert role.is_mentionable is False
+
+        assert template.source_guild.channels == {
+            123: entity_factory_impl.deserialize_channel(guild_text_channel_payload)
+        }
+        assert template.source_guild.afk_channel_id == 321123
+        assert template.source_guild.system_channel_id == 8
+        assert template.source_guild.system_channel_flags == guild_models.GuildSystemChannelFlag.NONE
+
+        assert template.is_dirty is True
+
+    def test_deserialize_template_with_null_fields(self, entity_factory_impl, template_payload, user_payload):
+        template = entity_factory_impl.deserialize_template(
+            {
+                "code": "4rDaewUKeYVj",
+                "name": "ttt",
+                "description": None,
+                "usage_count": 42,
+                "creator_id": "115590097100865541",
+                "creator": user_payload,
+                "created_at": "2020-12-15T01:54:35+00:00",
+                "updated_at": "2020-12-15T01:57:35+00:00",
+                "source_guild_id": "574921006817476608",
+                "serialized_source_guild": {
+                    "name": "hikari",
+                    "description": "a descript description",
+                    "region": "europe",
+                    "icon_hash": "27b75989b5b42aba51346a6b69d8fcfe",
+                    "verification_level": 2,
+                    "default_message_notifications": 1,
+                    "explicit_content_filter": 2,
+                    "preferred_locale": "en-GB",
+                    "afk_timeout": 3600,
+                    "roles": [
+                        {
+                            "id": "33",
+                            "name": "@everyone",
+                            "color": 0,
+                            "hoist": True,
+                            "mentionable": False,
+                            "permissions": "104189505",
+                        }
+                    ],
+                    "channels": [],
+                    "afk_channel_id": None,
+                    "system_channel_id": None,
+                    "system_channel_flags": 0,
+                },
+                "is_dirty": None,
+            }
+        )
+        assert template.description is None
+        assert template.source_guild.afk_channel_id is None
+        assert template.source_guild.system_channel_id is None
+        assert template.is_dirty is None
 
     ###############
     # USER MODELS #

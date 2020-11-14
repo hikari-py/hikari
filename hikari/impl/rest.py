@@ -87,6 +87,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
+    from hikari import templates
     from hikari import voices
     from hikari import webhooks
     from hikari.api import entity_factory as entity_factory_
@@ -1280,14 +1281,14 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels.TextChannel],
         name: str,
         *,
-        avatar: typing.Optional[files.Resourceish] = None,
+        avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
 
-        if avatar is not None:
+        if avatar is not undefined.UNDEFINED:
             avatar_resource = files.ensure_resource(avatar)
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
@@ -2399,3 +2400,94 @@ class RESTClientImpl(rest_api.RESTClient):
         raw_response = await self._request(route)
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_vanity_url(response)
+
+    async def create_template(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+    ) -> templates.Template:
+        route = routes.POST_GUILD_TEMPLATES.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_template(response)
+
+    async def create_guild_from_template(
+        self,
+        template: templates.Templateish,
+        name: str,
+        *,
+        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+    ) -> guilds.RESTGuild:
+        template = template if isinstance(template, str) else template.code
+        route = routes.POST_TEMPLATE.compile(template=template)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+
+        if icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_rest_guild(response)
+
+    async def delete_template(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        template: templates.Templateish,
+    ) -> templates.Template:
+        template = template if isinstance(template, str) else template.code
+        route = routes.DELETE_GUILD_TEMPLATE.compile(guild=guild, template=template)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_template(response)
+
+    async def edit_template(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        template: templates.Templateish,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+    ) -> templates.Template:
+        template = template if isinstance(template, str) else template.code
+        route = routes.PATCH_GUILD_TEMPLATE.compile(guild=guild, template=template)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_template(response)
+
+    async def fetch_template(self, template: templates.Templateish) -> templates.Template:
+        template = template if isinstance(template, str) else template.code
+        route = routes.GET_TEMPLATE.compile(template=template)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_template(response)
+
+    async def fetch_guild_templates(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Sequence[templates.Template]:
+        route = routes.GET_GUILD_TEMPLATES.compile(guild=guild)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_template)
+
+    async def sync_guild_template(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        template: templates.Templateish,
+    ) -> templates.Template:
+        template = template if isinstance(template, str) else template.code
+        route = routes.PUT_GUILD_TEMPLATE.compile(guild=guild, template=template)
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_template(response)

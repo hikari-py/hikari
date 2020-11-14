@@ -2635,3 +2635,100 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_vanity_url(StubModel(123)) == vanity_url
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_vanity_url.assert_called_once_with({"id": "789"})
+
+    async def test_create_template_without_description(self, rest_client):
+        expected_routes = routes.POST_GUILD_TEMPLATES.compile(guild=1235432)
+        rest_client._request = mock.AsyncMock(return_value={"code": "94949sdfkds"})
+
+        result = await rest_client.create_template(StubModel(1235432), "OKOKOK")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_routes, json={"name": "OKOKOK"})
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "94949sdfkds"})
+
+    async def test_create_template_with_description(self, rest_client):
+        expected_route = routes.POST_GUILD_TEMPLATES.compile(guild=4123123)
+        rest_client._request = mock.AsyncMock(return_value={"code": "76345345"})
+
+        result = await rest_client.create_template(StubModel(4123123), "33", description="43123123")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json={"name": "33", "description": "43123123"})
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "76345345"})
+
+    async def test_create_guild_from_template_without_icon(self, rest_client):
+        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
+        rest_client._request = mock.AsyncMock(return_value={"id": "543123123"})
+
+        result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name")
+        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json={"name": "ok a name"})
+        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
+
+    async def test_create_guild_from_template_with_icon(self, rest_client, file_resource):
+        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
+        rest_client._request = mock.AsyncMock(return_value={"id": "543123123"})
+        icon_resource = file_resource("icon data")
+
+        with mock.patch.object(files, "ensure_resource", return_value=icon_resource):
+            result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name", icon="icon.png")
+
+        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json={"name": "ok a name", "icon": "icon data"})
+        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
+
+    async def delete_template(self, rest_client):
+        expected_route = routes.DELETE_GUILD_TEMPLATE(guild=34123123, template="945949494394")
+        rest_client._request = mock.AsyncMock(return_value={"code": "oeoekfgkdkf"})
+
+        result = await rest_client.delete_template(StubModel(3123123), "eoiesri9er99")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "oeoekfgkdkf"})
+
+    async def test_edit_template_without_optionals(self, rest_client):
+        expected_route = routes.PATCH_GUILD_TEMPLATE.compile(guild=3412312, template="oeodsosda")
+        rest_client._request = mock.AsyncMock(return_value={"code": "9493293ikiwopop"})
+
+        result = await rest_client.edit_template(StubModel(3412312), "oeodsosda")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "9493293ikiwopop"})
+
+    async def test_edit_template_with_optionals(self, rest_client):
+        expected_route = routes.PATCH_GUILD_TEMPLATE.compile(guild=34123122, template="oeodsosda2")
+        rest_client._request = mock.AsyncMock(return_value={"code": "9493293ikiwopop"})
+
+        result = await rest_client.edit_template(
+            StubModel(34123122), "oeodsosda2", name="new name", description="i'm lazy"
+        )
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"name": "new name", "description": "i'm lazy"}
+        )
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "9493293ikiwopop"})
+
+    async def test_fetch_template(self, rest_client):
+        expected_route = routes.GET_TEMPLATE.compile(template="kodfskoijsfikoiok")
+        rest_client._request = mock.AsyncMock(return_value={"code": "KSDAOKSDKIO"})
+
+        result = await rest_client.fetch_template("kodfskoijsfikoiok")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "KSDAOKSDKIO"})
+
+    async def test_fetch_guild_templates(self, rest_client):
+        expected_route = routes.GET_GUILD_TEMPLATES.compile(guild=43123123)
+        rest_client._request = mock.AsyncMock(return_value=[{"code": "jirefu98ai90w"}])
+
+        result = await rest_client.fetch_guild_templates(StubModel(43123123))
+        assert result == [rest_client._entity_factory.deserialize_template.return_value]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "jirefu98ai90w"})
+
+    async def test_sync_guild_template(self, rest_client):
+        expected_route = routes.PUT_GUILD_TEMPLATE.compile(guild=431231, template="oeroeoeoeoeo")
+        rest_client._request = mock.AsyncMock(return_value={"code": "ldsaosdokskdoa"})
+
+        result = await rest_client.sync_guild_template(StubModel(431231), template="oeroeoeoeoeo")
+        assert result is rest_client._entity_factory.deserialize_template.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "ldsaosdokskdoa"})

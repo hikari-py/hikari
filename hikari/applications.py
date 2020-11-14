@@ -235,6 +235,9 @@ class OwnConnection:
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
+    features: typing.Sequence[guilds.GuildFeatureish] = attr.ib(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
+
     is_owner: bool = attr.ib(eq=False, hash=False, repr=True)
     """`builtins.True` when the current user owns this guild."""
 

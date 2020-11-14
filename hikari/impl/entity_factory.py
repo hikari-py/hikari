@@ -44,6 +44,7 @@ from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import templates as template_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -75,15 +76,6 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
 
 @attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
-class _PartialGuildFields:
-    id: snowflakes.Snowflake = attr.ib()
-    name: str = attr.ib()
-    icon_hash: str = attr.ib()
-    features: typing.Sequence[guild_models.GuildFeatureish] = attr.ib()
-
-
-@attr_extensions.with_copy
-@attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attr.ib()
     name: typing.Optional[str] = attr.ib()
@@ -106,7 +98,11 @@ class _IntegrationFields:
 
 @attr_extensions.with_copy
 @attr.s(init=True, kw_only=True, repr=False, slots=True, weakref_slot=False)
-class _GuildFields(_PartialGuildFields):
+class _GuildFields:
+    id: snowflakes.Snowflake = attr.ib()
+    name: str = attr.ib()
+    icon_hash: str = attr.ib()
+    features: typing.Sequence[guild_models.GuildFeatureish] = attr.ib()
     splash_hash: typing.Optional[str] = attr.ib()
     discovery_splash_hash: typing.Optional[str] = attr.ib()
     owner_id: snowflakes.Snowflake = attr.ib()
@@ -259,13 +255,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_own_guild(self, payload: data_binding.JSONObject) -> application_models.OwnGuild:
-        guild_fields = self._set_partial_guild_attributes(payload)
         return application_models.OwnGuild(
             app=self._app,
-            id=guild_fields.id,
-            name=guild_fields.name,
-            icon_hash=guild_fields.icon_hash,
-            features=guild_fields.features,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
             is_owner=bool(payload["owner"]),
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
@@ -497,7 +492,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_dm(self, payload: data_binding.JSONObject) -> channel_models.DMChannel:
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_last_message_id := payload["last_message_id"]) is not None:
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
 
         return channel_models.DMChannel(
@@ -511,7 +506,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_group_dm(self, payload: data_binding.JSONObject) -> channel_models.GroupDMChannel:
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_last_message_id := payload["last_message_id"]) is not None:
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
 
         if (raw_nicks := payload.get("nicks")) is not None:
@@ -593,7 +588,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_last_message_id := payload["last_message_id"]) is not None:
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
 
         last_pin_timestamp: typing.Optional[datetime.datetime] = None
@@ -628,7 +623,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_last_message_id := payload["last_message_id"]) is not None:
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
 
         last_pin_timestamp: typing.Optional[datetime.datetime] = None
@@ -1132,31 +1127,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.GuildMemberBan:
         return guild_models.GuildMemberBan(reason=payload["reason"], user=self.deserialize_user(payload["user"]))
 
-    @staticmethod
-    def _set_partial_guild_attributes(payload: data_binding.JSONObject) -> _PartialGuildFields:
-        features = []
-        for feature in payload["features"]:
-            features.append(guild_models.GuildFeature(feature))
-
-        return _PartialGuildFields(
-            id=snowflakes.Snowflake(payload["id"]),
-            name=payload["name"],
-            icon_hash=payload["icon"],
-            features=features,
-        )
-
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
-        guild_fields = self._set_partial_guild_attributes(payload)
+        guild_id = snowflakes.Snowflake(payload["id"])
         emojis = {
-            snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
+            snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_id)
             for emoji in payload["emojis"]
         }
         return guild_models.GuildPreview(
             app=self._app,
-            id=guild_fields.id,
-            name=guild_fields.name,
-            icon_hash=guild_fields.icon_hash,
-            features=guild_fields.features,
+            id=guild_id,
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
             splash_hash=payload["splash"],
             discovery_splash_hash=payload["discovery_splash"],
             emojis=emojis,
@@ -1166,7 +1148,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _set_guild_attributes(self, payload: data_binding.JSONObject) -> _GuildFields:
-        guild_fields = self._set_partial_guild_attributes(payload)
         afk_channel_id = payload["afk_channel_id"]
         default_message_notifications = guild_models.GuildMessageNotificationsLevel(
             payload["default_message_notifications"]
@@ -1183,10 +1164,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
         )
         return _GuildFields(
-            id=guild_fields.id,
-            name=guild_fields.name,
-            icon_hash=guild_fields.icon_hash,
-            features=guild_fields.features,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
             splash_hash=payload["splash"],
             # This is documented as always being present, but we have found old guilds where this is
             # not present. Quicker to just assume the documentation is wrong at this point than try
@@ -1218,8 +1199,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         guild_fields = self._set_guild_attributes(payload)
-        approximate_member_count = int(payload["approximate_member_count"])
-        approximate_active_member_count = int(payload["approximate_presence_count"])
+
+        approximate_member_count: typing.Optional[int] = None
+        if "approximate_member_count" in payload:
+            approximate_member_count = int(payload["approximate_member_count"])
+
+        approximate_active_member_count: typing.Optional[int] = None
+        if "approximate_presence_count" in payload:
+            approximate_active_member_count = int(payload["approximate_presence_count"])
+
         max_members = int(payload["max_members"])
 
         raw_max_presences = payload["max_presences"]
@@ -1375,13 +1363,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: typing.Optional[snowflakes.Snowflake] = None
         if "guild" in payload:
             guild_payload = payload["guild"]
-            guild_fields = self._set_partial_guild_attributes(guild_payload)
             guild = invite_models.InviteGuild(
                 app=self._app,
-                id=guild_fields.id,
-                name=guild_fields.name,
-                features=guild_fields.features,
-                icon_hash=guild_fields.icon_hash,
+                id=snowflakes.Snowflake(guild_payload["id"]),
+                name=guild_payload["name"],
+                features=[guild_models.GuildFeature(feature) for feature in guild_payload["features"]],
+                icon_hash=guild_payload["icon"],
                 splash_hash=guild_payload["splash"],
                 banner_hash=guild_payload["banner"],
                 description=guild_payload["description"],
@@ -1876,6 +1863,77 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             visible_status=presence_models.Status(payload["status"]),
             activities=activities,
             client_status=client_status,
+        )
+
+    ###################
+    # TEMPLATE MODELS #
+    ###################
+
+    def deserialize_template(self, payload: data_binding.JSONObject) -> template_models.Template:
+        source_guild_payload = payload["serialized_source_guild"]
+        # For some reason the guild ID isn't on the actual guild object in this special case.
+        guild_id = snowflakes.Snowflake(payload["source_guild_id"])
+        default_message_notifications = guild_models.GuildMessageNotificationsLevel(
+            source_guild_payload["default_message_notifications"]
+        )
+        explicit_content_filter = guild_models.GuildExplicitContentFilterLevel(
+            source_guild_payload["explicit_content_filter"]
+        )
+
+        roles: typing.MutableMapping[snowflakes.Snowflake, template_models.TemplateRole] = {}
+        for role_payload in source_guild_payload["roles"]:
+            role = template_models.TemplateRole(
+                app=self._app,
+                id=snowflakes.Snowflake(role_payload["id"]),
+                name=role_payload["name"],
+                permissions=permission_models.Permissions(int(role_payload["permissions"])),
+                color=color_models.Color(role_payload["color"]),
+                is_hoisted=role_payload["hoist"],
+                is_mentionable=role_payload["mentionable"],
+            )
+            roles[role.id] = role
+
+        channels = {}
+        for channel_payload in source_guild_payload["channels"]:
+            channel = typing.cast(
+                "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild_id)
+            )
+            channels[channel.id] = channel
+
+        afk_channel_id = source_guild_payload["afk_channel_id"]
+        system_channel_id = source_guild_payload["system_channel_id"]
+
+        source_guild = template_models.TemplateGuild(
+            app=self._app,
+            id=guild_id,
+            # For some reason in this case they use the key "icon_hash" rather than "icon".
+            # Cause Discord:TM:
+            icon_hash=source_guild_payload["icon_hash"],
+            name=source_guild_payload["name"],
+            description=source_guild_payload["description"],
+            region=source_guild_payload["region"],
+            verification_level=guild_models.GuildVerificationLevel(source_guild_payload["verification_level"]),
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter=explicit_content_filter,
+            preferred_locale=source_guild_payload["preferred_locale"],
+            afk_timeout=datetime.timedelta(seconds=source_guild_payload["afk_timeout"]),
+            roles=roles,
+            channels=channels,
+            afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
+            system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
+            system_channel_flags=guild_models.GuildSystemChannelFlag(source_guild_payload["system_channel_flags"]),
+        )
+
+        return template_models.Template(
+            code=payload["code"],
+            name=payload["name"],
+            description=payload["description"],
+            usage_count=payload["usage_count"],
+            creator=self.deserialize_user(payload["creator"]),
+            created_at=time.iso8601_datetime_string_to_datetime(payload["created_at"]),
+            updated_at=time.iso8601_datetime_string_to_datetime(payload["updated_at"]),
+            source_guild=source_guild,
+            is_dirty=payload["is_dirty"],
         )
 
     ###############

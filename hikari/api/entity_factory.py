@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import presences as presence_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
+    from hikari import templates as template_models
     from hikari import users as user_models
     from hikari import voices as voice_models
     from hikari import webhooks as webhook_models
@@ -939,6 +940,24 @@ class EntityFactory(abc.ABC):
             guild ID was passed for the `guild_id` parameter.
 
             If this is raised, no guild ID info was provided anywhere.
+        """
+
+    ###################
+    # TEMPLATE MODELS #
+    ###################
+
+    def deserialize_template(self, payload: data_binding.JSONObject) -> template_models.Template:
+        """Parse a raw payload from Discord into a template object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.templates.Template
+            The deserialized template object.
         """
 
     ###############
