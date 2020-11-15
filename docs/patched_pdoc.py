@@ -1,4 +1,26 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
+# Copyright (c) 2020 Nekokatt
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 def main():
     import json
     import os.path as path
@@ -60,10 +82,42 @@ def main():
         # If top module is a package, output the index in its subfolder, else, in the output dir
         main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")
         with cli._open_write_file(path.join(main_path, "index.js")) as f:
-            f.write("URLS=")
+            # JS code to make it work with web and with nodejs
+            f.write("; (function () { var index = {")
+            f.write("URLS:")
             json.dump(urls, f, indent=0, separators=(",", ":"))
-            f.write(";\nINDEX=")
+            f.write(",\nINDEX:")
             json.dump(index, f, indent=0, separators=(",", ":"))
+            # JS code to make it work with web and with nodejs:
+            #
+            #        }; (function (root, factory) {
+            #             if (typeof define === 'function' && define.amd) {
+            #                 define(factory);
+            #             }
+            #             else if (typeof exports === 'object') {
+            #                 module.exports = factory();
+            #             } else {
+            #                 root.index = factory();
+            #             }
+            #         }(this, function () {
+            #             return index;
+            #         }))
+            # })();
+            f.write(
+                "}; (function (root, factory) {"
+                "if (typeof define === 'function' && define.amd) {"
+                "define(factory);"
+                "}"
+                "else if (typeof exports === 'object') {"
+                "module.exports = factory();"
+                "} else {"
+                "root.index = factory();"
+                "}"
+                "}(this, function () {"
+                "return index;"
+                "}))"
+                "})();"
+            )
 
         # Generate search.html
         with cli._open_write_file(path.join(main_path, "search.html")) as f:
