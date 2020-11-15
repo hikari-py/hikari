@@ -2000,6 +2000,21 @@ class RESTClientImpl(rest_api.RESTClient):
             entity_factory=self._entity_factory, request_call=self._request, guild=guild
         )
 
+    async def search_members(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+    ) -> typing.Sequence[guilds.Member]:
+        route = routes.GET_GUILD_MEMBERS_SEARCH.compile(guild=guild)
+        query = data_binding.StringMapBuilder()
+        query.put("query", name)
+        query.put("limit", 1000)
+        raw_response = await self._request(route, query=query)
+        response = typing.cast(data_binding.JSONArray, raw_response)
+        return data_binding.cast_json_array(
+            response, self._entity_factory.deserialize_member, guild_id=snowflakes.Snowflake(guild)
+        )
+
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

@@ -367,6 +367,8 @@ PUT_GUILD_MEMBER: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{use
 GET_GUILD_MEMBERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/members")
 DELETE_GUILD_MEMBER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}")
 
+GET_GUILD_MEMBERS_SEARCH: typing.Final[Route] = Route(GET, "/guilds/{guild}/members/search")
+
 PUT_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
 DELETE_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}/roles/{role}")
 
