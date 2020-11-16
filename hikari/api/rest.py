@@ -1011,7 +1011,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def create_crossposts(
+    async def crosspost_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],

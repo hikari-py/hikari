@@ -1075,7 +1075,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_message(response)
 
-    async def create_crossposts(
+    async def crosspost_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
