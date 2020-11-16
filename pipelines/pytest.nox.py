@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Pytest integration."""
-import shutil
+import os
 
 from pipelines import config
 from pipelines import nox
@@ -57,7 +57,11 @@ def pytest_speedups(session: nox.Session) -> None:
 
 
 def _pytest(session: nox.Session, *py_flags: str) -> None:
-    shutil.rmtree(".coverage", ignore_errors=True)
+    try:
+        os.remove(".coverage")
+    except:
+        # Ignore errors
+        pass
     session.run("python", *py_flags, "-m", "pytest", *FLAGS, *session.posargs, config.TEST_PACKAGE)
 
 
