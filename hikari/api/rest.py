@@ -3604,6 +3604,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
+
+        !!! warning
+            This endpoint requires the `GUILD_MEMBERS` intent. Alternatively,
+            you can use `search_members` which doesn't require any intents.
         """
 
     @abc.abstractmethod
