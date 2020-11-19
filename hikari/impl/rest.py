@@ -1444,7 +1444,11 @@ class RESTClientImpl(rest_api.RESTClient):
 
         serialized_embeds: data_binding.JSONArray = []
 
-        if embeds is not undefined.UNDEFINED:
+        if embed is not undefined.UNDEFINED:
+            embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
+            serialized_embeds.append(embed_payload)
+            final_attachments.extend(embed_attachments)
+        elif embeds is not undefined.UNDEFINED:
             for embed in embeds:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
@@ -1479,6 +1483,81 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_message(response)
+
+    async def edit_webhook_message(
+        self,
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        token: str,
+        message: snowflakes.SnowflakeishOr[messages_.Message],
+        content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+        ] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        if not undefined.count(embed, embeds):
+            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+
+        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+            raise TypeError(
+                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "use 'embed' (singular) instead?"
+            )
+
+        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+            # Syntatic sugar, common mistake to accidentally send an embed
+            # as the content, so lets detect this and fix it for the user.
+            embed = content
+            content = undefined.UNDEFINED
+
+        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        body = data_binding.JSONObjectBuilder()
+        if undefined.count(mentions_everyone, user_mentions, role_mentions) != 3:
+            body.put(
+                "allowed_mentions", self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions)
+            )
+
+        if content is not None:
+            body.put("content", content, conversion=str)
+        else:
+            body.put("content", None)
+
+        serialized_embeds: data_binding.JSONArray = []
+        update_embeds: bool = False
+
+        if embed is not undefined.UNDEFINED:
+            update_embeds = True
+            if embed is not None:
+                embed_payload, _ = self._entity_factory.serialize_embed(embed)
+                serialized_embeds.append(embed_payload)
+        elif embeds is not undefined.UNDEFINED:
+            update_embeds = True
+            if embeds is not None:
+                for embed in embeds:
+                    embed_payload, _ = self._entity_factory.serialize_embed(embed)
+                    serialized_embeds.append(embed_payload)
+
+        if update_embeds:
+            body.put("embeds", serialized_embeds)
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_message(response)
+
+    async def delete_webhook_message(
+        self,
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        token: str,
+        message: snowflakes.SnowflakeishOr[messages_.Message],
+    ) -> None:
+        route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        await self._request(route)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
