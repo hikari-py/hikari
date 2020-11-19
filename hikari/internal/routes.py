@@ -427,6 +427,8 @@ DELETE_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(DELETE, "/webhooks/{webho
 POST_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}")
 POST_WEBHOOK_WITH_TOKEN_GITHUB: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/github")
 POST_WEBHOOK_WITH_TOKEN_SLACK: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/slack")
+PATCH_WEBHOOK_MESSAGE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/{message}")
+DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/{message}")
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
