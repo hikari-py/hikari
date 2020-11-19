@@ -28,6 +28,13 @@ __all__: typing.List[str] = ["EventFactory"]
 import typing
 
 if typing.TYPE_CHECKING:
+    from hikari import channels as channel_models
+    from hikari import emojis as emojis_models
+    from hikari import guilds as guild_models
+    from hikari import messages as messages_models
+    from hikari import presences as presences_models
+    from hikari import users as user_models
+    from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
     from hikari.events import channel_events
     from hikari.events import guild_events
@@ -70,7 +77,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_channel_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_channel: typing.Optional[channel_models.GuildChannel],
     ) -> channel_events.ChannelUpdateEvent:
         """Parse a raw payload from Discord into a channel update event object.
 
@@ -80,6 +91,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_channel : typing.Optional[hikari.channels.GuildChannel]
+            The guild channel object or `builtins.None`.
 
         Returns
         -------
@@ -218,7 +231,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_guild_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_guild: typing.Optional[guild_models.Guild],
     ) -> guild_events.GuildUpdateEvent:
         """Parse a raw payload from Discord into a guild update event object.
 
@@ -228,6 +245,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_guild : typing.Optional[hikari.guilds.Guild]
+            The guild object or `builtins.None`.
 
         Returns
         -------
@@ -308,7 +327,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_guild_emojis_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         """Parse a raw payload from Discord into a guild emojis update event object.
 
@@ -318,6 +341,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_emojis : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
+            The sequence of emojis or `builtins.None`.
 
         Returns
         -------
@@ -398,7 +423,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_guild_member_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_member: typing.Optional[guild_models.Member],
     ) -> member_events.MemberUpdateEvent:
         """Parse a raw payload from Discord into a guild member update event object.
 
@@ -408,6 +437,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_member: typing.Optional[hikari.guilds.Member]
+            The member object or `builtins.None`.
 
         Returns
         -------
@@ -452,7 +483,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_guild_role_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_role: typing.Optional[guild_models.Role],
     ) -> role_events.RoleUpdateEvent:
         """Parse a raw payload from Discord into a guild role update event object.
 
@@ -462,6 +497,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_role: typing.Optional[hikari.guilds.Role]
+            The role object or `builtins.None`.
 
         Returns
         -------
@@ -488,7 +525,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_presence_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_presence: typing.Optional[presences_models.MemberPresence],
     ) -> guild_events.PresenceUpdateEvent:
         """Parse a raw payload from Discord into a presence update event object.
 
@@ -498,6 +539,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_presence: typing.Optional[hikari.presences.MemberPresence]
+            The presence object or `builtins.None`.
 
         Returns
         -------
@@ -528,7 +571,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_message_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_message: typing.Optional[messages_models.PartialMessage],
     ) -> message_events.MessageUpdateEvent:
         """Parse a raw payload from Discord into a message update event object.
 
@@ -538,6 +585,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_message: typing.Optional[hikari.messages.PartialMessage]
+            The message object or `builtins.None`.
 
         Returns
         -------
@@ -683,7 +732,11 @@ class EventFactory(typing.Protocol):
         """
 
     def deserialize_own_user_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_user: typing.Optional[user_models.OwnUser],
     ) -> user_events.OwnUserUpdateEvent:
         """Parse a raw payload from Discord into a own user update event object.
 
@@ -693,6 +746,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_user: typing.Optional[hikari.users.OwnUser]
+            The OwnUser object or `builtins.None`.
 
         Returns
         -------
@@ -723,7 +778,11 @@ class EventFactory(typing.Protocol):
     ################
 
     def deserialize_voice_state_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_state: typing.Optional[voices_models.VoiceState],
     ) -> voice_events.VoiceStateUpdateEvent:
         """Parse a raw payload from Discord into a voice state update event object.
 
@@ -733,6 +792,8 @@ class EventFactory(typing.Protocol):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_state: typing.Optional[hikari.voices.VoiceState]
+            The VoiceState object or `builtins.None`.
 
         Returns
         -------

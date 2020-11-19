@@ -209,6 +209,7 @@ class TestGuildMessageUpdateEvent:
                 guild_id=snowflakes.Snowflake(54123123123),
                 channel_id=snowflakes.Snowflake(800001066),
             ),
+            old_message=mock.Mock(messages.Message, id=123),
             shard=mock.Mock(),
         )
 
@@ -261,6 +262,9 @@ class TestGuildMessageUpdateEvent:
         assert result is event.app.cache.get_guild.return_value
         event.app.cache.get_guild.assert_called_once_with(54123123123)
 
+    def test_old_message(self, event):
+        assert event.old_message.id == 123
+
 
 class TestDMMessageUpdateEvent:
     @pytest.fixture()
@@ -270,8 +274,12 @@ class TestDMMessageUpdateEvent:
             message=mock.Mock(
                 spec_set=messages.Message, author=mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(8000010662))
             ),
+            old_message=mock.Mock(messages.Message, id=123),
             shard=mock.Mock(),
         )
+
+    def test_old_message(self, event):
+        assert event.old_message.id == 123
 
 
 class TestMessageDeleteEvent:

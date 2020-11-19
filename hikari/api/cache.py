@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import presences
     from hikari import snowflakes
     from hikari import users
@@ -1578,6 +1579,106 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached voice state if found (else `builtins.None`)
             and the new cached voice state object if it could be cached
             (else `builtins.None`).
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractmethod
+    def clear_messages(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
+        """Remove all message objects from the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
+            A view of message objects that were removed from the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractmethod
+    def delete_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        """Remove a message object from the cache.
+
+        Parameters
+        ----------
+        message_id : hikari.snowflakes.Snowflake
+            The ID of the messages to remove the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.Message]
+            The object of the message that was removed from the cache if found,
+            else `builtins.None`.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractmethod
+    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        """Get a message object from the cache.
+
+        Parameters
+        ----------
+        message_id : hikari.snowflakes.Snowflake
+            The ID of the message to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.Message]
+            The object of the message found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
+        """Get a view of all the message objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
+            A view of message objects found in the cache.
+        """
+
+    @abc.abstractmethod
+    def set_message(self, message: messages.Message, /) -> None:
+        """Add a message object to the cache.
+
+        Parameters
+        ----------
+        message : hikari.messages.Message
+            The object of the message to add to the cache.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            When called on a stateless cache implementation.
+        """
+
+    @abc.abstractmethod
+    def update_message(
+        self, message: typing.Union[messages.PartialMessage, messages.Message], /
+    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+        """Update a message in the cache.
+
+        Parameters
+        ----------
+        message : typing.Union[hikari.messages.PartialMessage, hikari.messages.Message]
+            The object of the message to update in the cache.
+
+        Returns
+        -------
+        typing.Tuple[typing.Optional[hikari.messages.Message], typing.Optional[hikari.messages.Message]]
+            A tuple of the old cached message object if found (else `builtins.None`)
+            and the new cached message object if it could be cached (else
+            `builtins.None`).
 
         Raises
         ------

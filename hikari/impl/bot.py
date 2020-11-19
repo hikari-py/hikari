@@ -131,6 +131,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         This can be a viable alternative if you are providing a custom cache
         implementation, or simply do not want the overhead of maintaining a
         state in your application.
+    max_messages : int
+        Defaults to `300`. The maximum number of messages in the cache.
     executor : typing.Optional[concurrent.futures.Executor]
         Defaults to `builtins.None`. If non-`builtins.None`, then this executor
         is used instead of the `concurrent.futures.ThreadPoolExecutor` attached
@@ -265,6 +267,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         banner: typing.Optional[str] = "hikari",
         chunking_limit: int = 200,
         enable_cache: bool = True,
+        max_messages: int = 300,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
@@ -299,7 +302,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             from hikari.impl import stateful_event_manager
             from hikari.impl import stateful_guild_chunker
 
-            cache_obj = stateful_cache.StatefulCacheImpl(self, intents)
+            cache_obj = stateful_cache.StatefulCacheImpl(self, intents, max_messages)
             self._cache = cache_obj
             self._chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(self, chunking_limit)
 

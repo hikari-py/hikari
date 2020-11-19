@@ -26,6 +26,7 @@ import pytest
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
+from hikari import messages
 from hikari import snowflakes
 from hikari import traits
 from hikari import users
@@ -44,7 +45,7 @@ class TestStatefulCacheImpl:
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
         return hikari_test_helpers.mock_class_namespace(stateful_cache.StatefulCacheImpl, slots_=False)(
-            app=app_impl, intents=None
+            app=app_impl, intents=None, max_messages=1
         )
 
     def test__build_emoji(self, cache_impl):
@@ -2473,3 +2474,51 @@ class TestStatefulCacheImpl:
                 mock.call(snowflakes.Snowflake(43123123), snowflakes.Snowflake(542134)),
             ]
         )
+
+    def test_clear_messages(self, cache_impl):
+        messages_ = {1: mock.Mock(messages.Message, id=123), 2: mock.Mock(messages.Message, id=456)}
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap(messages_, limit=2)
+
+        view = cache_impl.clear_messages()
+        assert view.get(1).id == 123
+        assert view.get(2).id == 456
+
+    def test_delete_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=123)
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
+
+        msg = cache_impl.delete_message(1)
+        assert msg.id == 123
+        assert len(cache_impl._message_entries) == 0
+
+    def test_get_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=123)
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: message}, limit=1)
+
+        assert cache_impl._message_entries.get(1).id == 123
+
+    def test_get_messages_view(self, cache_impl):
+        messages_ = {1: mock.Mock(messages.Message, id=1234567890)}
+
+        cache_impl._message_entries = collections.FreezableDict(messages_)
+        view = cache_impl.get_messages_view()
+
+        assert view._data == messages_
+
+    def test_set_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=123)
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap(limit=1)
+        cache_impl._message_entries[1] = message
+
+        assert cache_impl._message_entries.get(1).id == 123
+        cache_impl._message_entries[2] = message
+        assert len(cache_impl._message_entries) == 1
+
+    def test_update_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=1, content="New test.")
+        old_message = mock.Mock(messages.Message, id=1, content="Old test.")
+        cache_impl._message_entries = collections.LimitedCapacityCacheMap({1: old_message}, limit=1)
+
+        assert cache_impl._message_entries.get(1).content == "Old test."
+        cache_impl.update_message(message)
+        assert cache_impl._message_entries.get(1).content == "New test."
