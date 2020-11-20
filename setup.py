@@ -92,8 +92,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        # TODO: enable when PyPI release with newest trove-classifiers dependency.
-        # "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: Stackless",
         "Topic :: Communications :: Chat",
