@@ -30,6 +30,7 @@ import logging
 import typing
 
 from hikari import channels
+from hikari import config
 from hikari import emojis
 from hikari import errors
 from hikari import guilds
@@ -116,7 +117,12 @@ class StatefulCacheImpl(cache.MutableCache):
     _message_entries: collections.LimitedCapacityCacheMap[snowflakes.Snowflake, messages.Message]
     _intents: intents_.Intents
 
-    def __init__(self, app: traits.RESTAware, intents: intents_.Intents, max_messages: int) -> None:
+    def __init__(
+        self, app: traits.RESTAware, intents: intents_.Intents, settings: typing.Optional[config.CacheSettings]
+    ) -> None:
+        if settings is None:
+            settings = config.CacheSettings()
+
         self._app = app
         self._me = None
         self._emoji_entries = collections.FreezableDict()
@@ -128,7 +134,7 @@ class StatefulCacheImpl(cache.MutableCache):
         # found attached to cached presence activities.
         self._unknown_custom_emoji_entries = collections.FreezableDict()
         self._user_entries = collections.FreezableDict()
-        self._message_entries = collections.LimitedCapacityCacheMap(limit=max_messages)
+        self._message_entries = collections.LimitedCapacityCacheMap(limit=settings.max_messages)
         self._intents = intents
 
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:

@@ -45,7 +45,7 @@ class TestStatefulCacheImpl:
     @pytest.fixture()
     def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
         return hikari_test_helpers.mock_class_namespace(stateful_cache.StatefulCacheImpl, slots_=False)(
-            app=app_impl, intents=None, max_messages=1
+            app=app_impl, intents=None, settings=None
         )
 
     def test__build_emoji(self, cache_impl):
