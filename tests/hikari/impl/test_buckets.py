@@ -19,7 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
-import datetime
 import time
 
 import mock
@@ -285,7 +284,7 @@ class TestRESTBucketManager:
             route = mock.Mock()
             route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
             mgr.routes_to_hashes[route.route] = "123"
-            mgr.update_rate_limits(route, "blep", 22, 23, datetime.datetime.now(), datetime.datetime.now())
+            mgr.update_rate_limits(route, "blep", 22, 23, 3.56)
             assert mgr.routes_to_hashes[route.route] == "blep"
             assert isinstance(mgr.real_hashes_to_buckets["blep;bobs"], buckets.RESTBucket)
 
@@ -297,7 +296,7 @@ class TestRESTBucketManager:
             mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
-            mgr.update_rate_limits(route, "123", 22, 23, datetime.datetime.now(), datetime.datetime.now())
+            mgr.update_rate_limits(route, "123", 22, 23, 7.65)
             assert mgr.routes_to_hashes[route.route] == "123"
             assert mgr.real_hashes_to_buckets["123;bobs"] is bucket
 
@@ -309,13 +308,10 @@ class TestRESTBucketManager:
             mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
-            date = datetime.datetime.now().replace(year=2004)
-            reset_at = datetime.datetime.now()
 
             with mock.patch.object(hikari_date, "monotonic", return_value=27):
-                expect_reset_at_monotonic = 27 + (reset_at - date).total_seconds()
-                mgr.update_rate_limits(route, "123", 22, 23, date, reset_at)
-                bucket.update_rate_limit.assert_called_once_with(22, 23, expect_reset_at_monotonic)
+                mgr.update_rate_limits(route, "123", 22, 23, 5.32)
+                bucket.update_rate_limit.assert_called_once_with(22, 23, 27 + 5.32)
 
     @pytest.mark.parametrize(("gc_task", "is_started"), [(None, False), (mock.Mock(spec_set=asyncio.Task), True)])
     def test_is_started(self, gc_task, is_started):

@@ -205,7 +205,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
-import datetime
 import logging
 import typing
 
@@ -563,8 +562,7 @@ class RESTBucketManager:
         bucket_header: str,
         remaining_header: int,
         limit_header: int,
-        date_header: datetime.datetime,
-        reset_at_header: datetime.datetime,
+        reset_after: float,
     ) -> None:
         """Update the rate limits for a bucket using info from a response.
 
@@ -578,16 +576,13 @@ class RESTBucketManager:
             The `X-RateLimit-Remaining` header cast to an `builtins.int`.
         limit_header : builtins.int
             The `X-RateLimit-Limit`header cast to an `builtins.int`.
-        date_header : datetime.datetime
-            The `Date` header value as a `datetime.datetime`.
-        reset_at_header : datetime.datetime
-            The `X-RateLimit-Reset` header value as a `datetime.datetime`.
+        reset_after : builtins.float
+            The `x-ratelimit-reset-after` cast to a `builtins.float`.
         """
         self.routes_to_hashes[compiled_route.route] = bucket_header
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
-        reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.monotonic() + reset_after
 
         if real_bucket_hash in self.real_hashes_to_buckets:
