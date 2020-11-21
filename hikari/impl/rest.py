@@ -739,12 +739,8 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.final
     def _generate_allowed_mentions(
         mentions_everyone: undefined.UndefinedOr[bool],
-        user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
-        ],
-        role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
-        ],
+        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
+        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
     ) -> data_binding.JSONObject:
         parsed_mentions: typing.List[str] = []
         allowed_mentions = {"parse": parsed_mentions}
@@ -1003,10 +999,10 @@ class RESTClientImpl(rest_api.RESTClient):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if not undefined.count(attachment, attachments):
@@ -1096,10 +1092,10 @@ class RESTClientImpl(rest_api.RESTClient):
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
@@ -1393,10 +1389,10 @@ class RESTClientImpl(rest_api.RESTClient):
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if not undefined.count(attachment, attachments):
@@ -1495,10 +1491,10 @@ class RESTClientImpl(rest_api.RESTClient):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if not undefined.count(embed, embeds):
@@ -1662,9 +1658,7 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
@@ -1747,9 +1741,7 @@ class RESTClientImpl(rest_api.RESTClient):
         name: str,
         image: files.Resourceish,
         *,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         route = routes.POST_GUILD_EMOJIS.compile(guild=guild)
@@ -1771,9 +1763,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         route = routes.PATCH_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
@@ -2100,9 +2090,7 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         voice_channel: undefined.UndefinedNoneOr[
@@ -2311,9 +2299,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
     ) -> int:
         route = routes.GET_GUILD_PRUNE.compile(guild=guild)
         query = data_binding.StringMapBuilder()
@@ -2331,9 +2317,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         compute_prune_count: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Optional[int]:
         route = routes.POST_GUILD_PRUNE.compile(guild=guild)

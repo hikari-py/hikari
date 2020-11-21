@@ -600,10 +600,10 @@ class PartialMessage(snowflakes.Unique):
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users_.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
@@ -636,7 +636,7 @@ class PartialMessage(snowflakes.Unique):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -646,7 +646,7 @@ class PartialMessage(snowflakes.Unique):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -729,10 +729,10 @@ class PartialMessage(snowflakes.Unique):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users_.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the given channel.
@@ -771,13 +771,13 @@ class PartialMessage(snowflakes.Unique):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, and `builtins.True`, all mentions will be parsed.
             If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or `hikari.users.PartialUser`
             derivatives to enforce mentioning specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             If provided, and `builtins.True`, all mentions will be parsed.
             If provided, and `builtins.False`, no mentions will be parsed.
             Alternatively this may be a collection of

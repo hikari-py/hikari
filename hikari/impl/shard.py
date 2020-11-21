@@ -523,7 +523,7 @@ class GatewayShardImpl(shard.GatewayShard):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:

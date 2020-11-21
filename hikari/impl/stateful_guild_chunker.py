@@ -89,7 +89,7 @@ class ChunkStream(event_stream.EventStream[shard_events.MemberChunkEvent]):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(app=app, event_type=shard_events.MemberChunkEvent, limit=limit, timeout=timeout)
         self._guild_id = guild_id
@@ -237,7 +237,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
         guild_id = snowflakes.Snowflake(guild)
         return ChunkStream(
@@ -296,7 +296,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> str:
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)

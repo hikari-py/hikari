@@ -179,7 +179,7 @@ class GuildChunker(abc.ABC):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
         """Request for a guild chunk.
 
@@ -204,7 +204,7 @@ class GuildChunker(abc.ABC):
             If not `""`, request the members which username starts with the string.
         query_limit : builtins.int
             Maximum number of members to send matching the query.
-        users : hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
 
         !!! note
@@ -295,7 +295,7 @@ class GuildChunker(abc.ABC):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> str:
         """Request for a guild chunk.
 
@@ -317,7 +317,7 @@ class GuildChunker(abc.ABC):
             If not `""`, request the members which username starts with the string.
         limit : builtins.int
             Maximum number of members to send matching the query.
-        users : hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
 
         !!! note

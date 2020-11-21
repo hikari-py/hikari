@@ -72,7 +72,7 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query_limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> event_stream.Streamer[shard_events.MemberChunkEvent]:
         return _EmptyStream()
 
@@ -99,7 +99,7 @@ class StatelessGuildChunkerImpl(chunker.GuildChunker):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         limit: int = 0,
         query: str = "",
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
     ) -> typing.NoReturn:
         raise NotImplementedError("This application is stateless, guild chunking operations are not implemented.")
 
