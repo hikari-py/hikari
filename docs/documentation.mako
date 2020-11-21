@@ -227,74 +227,56 @@
         if code_span.startswith("`") and code_span.endswith("`"):
             code_span = codespan[1:-1]
 
-        try:
-            # If it doesn't parse, it isn't a valid reference.
-            ast.parse(code_span)
+        # Extract identifiers.
+        items = list(re.finditer(r"(\w|\.)+", code_span))[::-1]
 
-            # Extract identifiers.
-            items = list(re.finditer(r"(\w|\.)+", code_span))[::-1]
+        # For each identifier, replace it with a link.
+        for match in items:
+            phrase = match.group()
 
-            # For each identifier, replace it with a link.
-            for match in items:
-                phrase = match.group()
+            ident = module.find_ident(phrase)
 
-                ident = module.find_ident(phrase)
+            if isinstance(ident, pdoc.External):
+                phrase = debuiltinify(ident.name)
 
-                if isinstance(ident, pdoc.External):
-                    phrase = debuiltinify(ident.name)
+                url = get_url_for_object_from_imports(phrase, ident)
 
-                    url = get_url_for_object_from_imports(phrase, ident)
+                if url is None:
+                    module_part = module.find_ident(phrase.split('.')[0])
+                    if not isinstance(module_part, pdoc.External):
+                        print(f"Code reference `{phrase}` in module '{module.refname}' does not match any documented object.")
+                        print("Type", module_part.__class__, module_part)
 
-                    if url is None:
-                        module_part = module.find_ident(phrase.split('.')[0])
-                        if not isinstance(module_part, pdoc.External):
-                            print(f"Code reference `{phrase}` in module '{module.refname}' does not match any documented object.")
-                            print("Type", module_part.__class__, module_part)
+                    bits = ident.name.split(".")[:-1]
 
-                        bits = ident.name.split(".")[:-1]
+                    while bits:
+                        partial_phrase = ".".join(bits)
+                        if partial_phrase in pdoc._global_context:
+                            url = pdoc._global_context[partial_phrase].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                            a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
+                            break
 
-                        while bits:
-                            partial_phrase = ".".join(bits)
-                            if partial_phrase in pdoc._global_context:
-                                url = pdoc._global_context[partial_phrase].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                                a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
-                                break
-
-                            bits = bits[:-1]
-                        else:
-                            a_tag = phrase
+                        bits = bits[:-1]
                     else:
-                        a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
-
-
+                        a_tag = phrase
                 else:
-                    url = ident.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
-                    a_tag = f"<a href={url!r}>{repr(ident.name)[1:-1]}</a>"
-
-                chunk = slice(*match.span())
-                code_span = "".join((
-                    code_span[:chunk.start],
-                    a_tag,
-                    code_span[chunk.stop:],
-                ))
-
-            if wrap_code:
-                code_span = code_span.replace('[', '\\[')
+                    a_tag = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
 
 
-        except SyntaxError:
-            """Raised if it wasn't a valid piece of Python that was given.
+            else:
+                url = ident.url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
+                a_tag = f"<a href={url!r}>{repr(ident.name)[1:-1]}</a>"
 
-            This can happen with `builtins.True`, `builtins.False` or
-            `builtins.None`
-            """
-            if code_span.startswith("builtins."):
-                phrase = debuiltinify(code_span)
-                url = discover_source(code_span)
-                code_span = f"<a href={url!r}>{repr(phrase)[1:-1]}</a>"
-
+            chunk = slice(*match.span())
+            code_span = "".join((
+                code_span[:chunk.start],
+                a_tag,
+                code_span[chunk.stop:],
+            ))
 
         if wrap_code:
+            code_span = code_span.replace('[', '\\[')
+
             # Wrapping in HTML <code> as opposed to backticks evaluates markdown */_ markers,
             # so let's escape them in text (but not in HTML tag attributes).
             # Backticks also cannot be used because html returned from `link()`

@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
-    This will only fire once per `_rest.run`/`_rest.start`, so is suitable for
+    This will only fire once per `bot.run` / `bot.start`, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
@@ -57,12 +57,6 @@ class StartingEvent(base_events.Event):
 
     If you want to do something _after_ the application has initialized, you
     should consider using `StartedEvent` instead.
-
-    See Also
-    --------
-    `StartedEvent`
-    `StoppingEvent`
-    `StoppedEvent`
     """
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -74,18 +68,12 @@ class StartingEvent(base_events.Event):
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
-    This will only fire once per `_rest.run`/`_rest.start`, so is suitable for
+    This will only fire once per `bot.run` / `bot.start`, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
     If you want to do something _before_ the application connects, you should
     consider using `StartingEvent` instead.
-
-    See Also
-    --------
-    `StartingEvent`
-    `StoppingEvent`
-    `StoppedEvent`
     """
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -99,7 +87,7 @@ class StoppingEvent(base_events.Event):
 
     This will fire before the connection is physically disconnected.
 
-    This will only fire once per `_rest.close`, so is suitable for
+    This will only fire once per `bot.close`, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
@@ -111,12 +99,6 @@ class StoppingEvent(base_events.Event):
 
     If you want to do something _after_ the disconnection has occurred, you
     should consider using `StoppedEvent` instead.
-
-    See Also
-    --------
-    `StartingEvent`
-    `StartedEvent`
-    `StoppedEvent`
     """
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -128,7 +110,7 @@ class StoppingEvent(base_events.Event):
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 
-    This will only fire once per `_rest.close`, so is suitable for
+    This will only fire once per `bot.close`, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
@@ -141,12 +123,6 @@ class StoppedEvent(base_events.Event):
     If you want to do something when the application is preparing to shut down,
     but _before_ any connection to discord is closed, you should consider using
     `StoppingEvent` instead.
-
-    See Also
-    --------
-    `StartingEvent`
-    `StartedEvent`
-    `StoppingEvent`
     """
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})

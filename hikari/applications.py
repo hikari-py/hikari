@@ -120,7 +120,7 @@ class OAuth2Scope(str, enums.Enum):
     GROUP_DM_JOIN = "gdm.join"
     """Enables joining users into a group DM.
 
-    !!! warn
+    !!! warning
         This cannot add the bot to a group DM.
     """
 
