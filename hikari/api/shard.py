@@ -220,7 +220,7 @@ class GatewayShard(abc.ABC):
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
         limit: int = 0,
-        users: undefined.UndefinedOr[typing.Sequence[snowflakes.SnowflakeishOr[users_.User]]] = undefined.UNDEFINED,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Request for a guild chunk.
@@ -238,7 +238,7 @@ class GatewayShard(abc.ABC):
             If not `""`, request the members which username starts with the string.
         limit: builtins.int
             Maximum number of members to send matching the query.
-        users: hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.users.User]]]
+        users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
         nonce: hikari.undefined.UndefinedOr[builtins.str]
             If provided, the nonce to be sent with guild chunks.

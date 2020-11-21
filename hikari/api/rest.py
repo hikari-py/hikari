@@ -872,10 +872,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
@@ -920,7 +920,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, and `builtins.True`, all user mentions will be detected.
             If provided, and `builtins.False`, all user mentions will be ignored
             if appearing in the message body.
@@ -928,7 +928,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             If provided, and `builtins.True`, all role mentions will be detected.
             If provided, and `builtins.False`, all role mentions will be ignored
             if appearing in the message body.
@@ -1068,10 +1068,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
@@ -1110,7 +1110,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             not changed. If `builtins.True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid user mentions will behave
@@ -1120,7 +1120,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             If provided, sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
             not changed. If `builtins.True`, all valid role mentions will behave
@@ -1896,10 +1896,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute a webhook.
@@ -1950,7 +1950,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, and `builtins.True`, all user mentions will be detected.
             If provided, and `builtins.False`, all user mentions will be ignored
             if appearing in the message body.
@@ -1958,7 +1958,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             If provided, and `builtins.True`, all role mentions will be detected.
             If provided, and `builtins.False`, all role mentions will be ignored
             if appearing in the message body.
@@ -2046,10 +2046,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[users.PartialUser]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
@@ -2088,7 +2088,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, and `builtins.True`, all user mentions will be detected.
             If provided, and `builtins.False`, all user mentions will be ignored
             if appearing in the message body.
@@ -2096,7 +2096,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
             If provided, and `builtins.True`, all role mentions will be detected.
             If provided, and `builtins.False`, all role mentions will be ignored
             if appearing in the message body.
@@ -2582,9 +2582,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
@@ -2609,7 +2607,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
-        roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
 
@@ -2879,9 +2877,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         image: files.Resourceish,
         *,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         """Create an emoji in a guild.
@@ -2899,7 +2895,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, a collection of the roles that will be able to
             use this emoji. This can be a `hikari.guilds.PartialRole` or
             the ID of an existing role.
@@ -2945,9 +2941,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> emojis.KnownCustomEmoji:
         """Edit an emoji in a guild.
@@ -2965,7 +2959,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new name for the emoji.
-        roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new collection of roles that will be able to
             use this emoji. This can be a `hikari.guilds.PartialRole` or
             the ID of an existing role.
@@ -3835,9 +3829,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         voice_channel: undefined.UndefinedNoneOr[
@@ -3863,7 +3855,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
             Requires the `MANAGE_ROLES` permission.
@@ -4587,9 +4579,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
     ) -> int:
         """Estimate the guild prune count.
 
@@ -4603,7 +4593,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         days : hikari.undefined.UndefinedOr[builtins.int]
             If provided, number of days to count prune for.
-        include_roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        include_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]]
             If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
@@ -4646,9 +4636,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         compute_prune_count: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        include_roles: undefined.UndefinedOr[
-            typing.Collection[snowflakes.SnowflakeishOr[guilds.PartialRole]]
-        ] = undefined.UNDEFINED,
+        include_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Optional[int]:
         """Begin the guild prune.
@@ -4666,7 +4654,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         compute_prune_count: hikari.snowflakes.SnowflakeishOr[builtins.bool]
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
-        include_roles : hikari.undefined.UndefinedOr[typing.Collection[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]]
+        include_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the role(s) to include. By default, this endpoint will
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
