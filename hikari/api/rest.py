@@ -3224,7 +3224,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
             If provided, the new guild owner.
 
-            !!! warn
+            !!! warning
                 You need to be the owner of the server to use this.
         splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new guild splash. Must be a 16:9 image and the

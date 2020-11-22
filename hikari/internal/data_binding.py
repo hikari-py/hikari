@@ -94,7 +94,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
-    !!! warn
+    !!! warning
         Because this subclasses `builtins.dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
@@ -163,7 +163,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     This speeds up generation of JSON payloads for low level HTTP and websocket
     API interaction.
 
-    !!! warn
+    !!! warning
         Because this subclasses `builtins.dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.

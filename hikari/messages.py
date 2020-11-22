@@ -444,7 +444,7 @@ class PartialMessage(snowflakes.Unique):
     `MessageUpdateEvent`, but for all other purposes should be treated as
     being optionally specified.
 
-    !!! warn
+    !!! warning
         All fields on this model except `channel` and `id` may be set to
         `hikari.undefined.UNDEFINED` (a singleton) if we have not
         received information about their state from Discord alongside field

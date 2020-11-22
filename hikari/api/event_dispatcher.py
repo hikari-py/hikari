@@ -354,15 +354,15 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        predicate
+        predicate : typing.Optional[typing.Callable[[hikari.events.base_events.Event], typing.Coroutine[typing.Any, typing.Any, builtins.None]]]
             A function taking the event as the single parameter.
             This should return `builtins.True` if the event is one you want to
             return, or `builtins.False` if the event should not be returned.
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
 
-            !!! warn
-                ASYNC PREDICATES ARE NOT SUPPORTED.
+            !!! warning
+                Async predicates are not supported.
         timeout : typing.Union[builtins.float, builtins.int, builtins.None]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
@@ -387,4 +387,4 @@ class EventDispatcher(abc.ABC):
         Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
         Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
         Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
-        """
+        """  # noqa: E501 - Line too long
