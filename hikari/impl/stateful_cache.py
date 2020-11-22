@@ -690,7 +690,6 @@ class StatefulCacheImpl(cache.MutableCache):
 
         cached_invites = {}
         cached_users = {}
-        invite_ids: typing.Iterable[str]
 
         # Tuple casts like this avoids edge case issues which would be caused by arrays being modified while we're
         # iterating over them.
@@ -1437,7 +1436,7 @@ class StatefulCacheImpl(cache.MutableCache):
 
         for user_id, voice_state in guild_record.voice_states.items():
             if voice_state.channel_id == channel_id:
-                cached_voice_states[voice_state.user_id] = voice_state
+                cached_voice_states[user_id] = voice_state
                 self._chainable_remove_voice_state_assets(voice_state, guild_record, cached_members, cached_users)
 
         if not guild_record.voice_states:
@@ -1649,10 +1648,7 @@ class StatefulCacheImpl(cache.MutableCache):
                 keys = [
                     "content",
                     "edited_timestamp",
-                    "is_mentioning_everyone",
-                    "user_mentions",
-                    "role_mentions",
-                    "channel_mentions",
+                    "mentions",
                     "embeds",
                     "is_pinned",
                 ]
