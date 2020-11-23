@@ -26,7 +26,7 @@ from __future__ import annotations
 import threading
 import traceback
 
-__all__: typing.List[str] = ["BotApp", "LoggerLevelT"]
+__all__: typing.List[str] = ["BotApp"]
 
 import asyncio
 import concurrent.futures
@@ -71,22 +71,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard
     from hikari.impl import event_manager_base
-
-LoggerLevelT = typing.Union[
-    int,
-    typing.Literal["TRACE_HIKARI"],
-    typing.Literal["DEBUG"],
-    typing.Literal["INFO"],
-    typing.Literal["WARNING"],
-    typing.Literal["ERROR"],
-    typing.Literal["CRITICAL"],
-]
-"""Type-hint for a valid logging level.
-
-This may be an `int` logging level (e.g. `logging.DEBUG`, `logging.CRITICAL`),
-or a capitalized string that matches one of `"TRACE_HIKARI"`, `"DEBUG"`,
-`"INFO"`, `"WARNING", `"ERROR"`, or `"CRITICAL"`.
-"""
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -269,7 +253,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
-        logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
+        logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
@@ -828,7 +812,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 continue
             if self._shards:
                 close_waiter = asyncio.create_task(self._closing_event.wait())
-                shard_joiners = [asyncio.ensure_future(s.join()) for s in self._shards.values()]
+                shard_joiners = [s.join() for s in self._shards.values()]
 
                 try:
                     # Attempt to wait for all started shards, for 5 seconds, along with the close
@@ -1023,14 +1007,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # If you ever change where this is called from, make sure to check the stacklevels are correct
         # or the code preview in the warning will be wrong...
-        if activity.type is presences.ActivityType.WATCHING:
-            warnings.warn(
-                "The WATCHING activity type is not officially recognised by Discord and may be removed from Hikari in "
-                "a future release.",
-                category=PendingDeprecationWarning,
-                stacklevel=3,
-            )
-        elif activity.type is presences.ActivityType.CUSTOM:
+        if activity.type is presences.ActivityType.CUSTOM:
             warnings.warn(
                 "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
                 "any effect if used.",

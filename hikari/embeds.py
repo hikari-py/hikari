@@ -526,11 +526,7 @@ class Embed:
             The offending line of code causing this warning was:"""
         )
 
-        warnings.warn(
-            message,
-            category=errors.HikariWarning,
-            stacklevel=3,
-        )
+        warnings.warn(message, category=errors.HikariWarning, stacklevel=3)
 
     @property
     def footer(self) -> typing.Optional[EmbedFooter]:
