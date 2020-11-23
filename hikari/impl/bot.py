@@ -148,6 +148,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
+    cache_settings : typing.Optional[hikari.config.CacheSettings]
+        Optional cache settings. If unspecified, will use the defaults.
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
@@ -267,6 +269,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         enable_cache: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
+        cache_settings: typing.Optional[config.CacheSettings] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         logs: typing.Union[None, LoggerLevelT, typing.Dict[str, typing.Any]] = "INFO",
@@ -299,7 +302,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             from hikari.impl import stateful_event_manager
             from hikari.impl import stateful_guild_chunker
 
-            cache_obj = stateful_cache.StatefulCacheImpl(self, intents)
+            cache_obj = stateful_cache.StatefulCacheImpl(self, intents, cache_settings)
             self._cache = cache_obj
             self._chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(self, chunking_limit)
 

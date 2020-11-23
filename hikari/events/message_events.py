@@ -455,6 +455,12 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
+    old_message: typing.Optional[messages.PartialMessage] = attr.ib()
+    """The old message object.
+
+    This will be `builtins.None` if the message missing from the cache.
+    """
+
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>
 
@@ -550,6 +556,12 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
 
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
+
+    old_message: typing.Optional[messages.PartialMessage] = attr.ib()
+    """The old message object.
+
+    This will be `builtins.None` if the message missing from the cache.
+    """
 
     message: messages.PartialMessage = attr.ib()
     # <<inherited docstring from MessageUpdateEvent>>

@@ -28,6 +28,7 @@ __all__: typing.List[str] = [
     "ProxySettings",
     "HTTPTimeoutSettings",
     "HTTPSettings",
+    "CacheSettings",
 ]
 
 import base64
@@ -387,4 +388,16 @@ class HTTPSettings:
     -------
     HTTPTimeoutSettings
         The HTTP timeout settings to use for connection timeouts.
+    """
+
+
+@attr_extensions.with_copy
+@attr.s(slots=True, kw_only=True, weakref_slot=False)
+class CacheSettings:
+    """Settings to control the cache."""
+
+    max_messages: int = attr.ib(default=300)
+    """The max number of messages to store in the cache at once.
+
+    Defaults to `300`.
     """

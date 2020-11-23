@@ -43,7 +43,9 @@ class TestRoleCreateEvent:
 class TestRoleUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return role_events.RoleUpdateEvent(app=None, shard=object(), role=mock.Mock(guilds.Role))
+        return role_events.RoleUpdateEvent(
+            app=None, shard=object(), role=mock.Mock(guilds.Role), old_role=mock.Mock(guilds.Role)
+        )
 
     def test_guild_id_property(self, event):
         event.role.guild_id = 123
@@ -52,3 +54,10 @@ class TestRoleUpdateEvent:
     def test_role_id_property(self, event):
         event.role.id = 123
         assert event.role_id == 123
+
+    def test_old_role(self, event):
+        event.old_role.guild_id = 123
+        event.old_role.id = 456
+
+        assert event.old_role.guild_id == 123
+        assert event.old_role.id == 456

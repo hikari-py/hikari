@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import presences
     from hikari import snowflakes
     from hikari import users
@@ -389,4 +390,24 @@ class StatelessCacheImpl(cache.MutableCache):
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
     ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+        raise self._no_cache()
+
+    def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
+        raise self._no_cache()
+
+    def delete_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        raise self._no_cache()
+
+    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        return None
+
+    def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
+        return cache_utilities.EmptyCacheView()
+
+    def set_message(self, message: messages.Message, /) -> None:
+        raise self._no_cache()
+
+    def update_message(
+        self, message: typing.Union[messages.PartialMessage, messages.Message], /
+    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         raise self._no_cache()
