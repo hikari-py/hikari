@@ -363,7 +363,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     @property
     def heartbeat_latency(self) -> float:
         latencies = [s.heartbeat_latency for s in self._shards.values() if not math.isnan(s.heartbeat_latency)]
-        return sum(latencies) if latencies else float("nan")
+        return sum(latencies) / len(latencies) if latencies else float("nan")
 
     @property
     def http_settings(self) -> config.HTTPSettings:
