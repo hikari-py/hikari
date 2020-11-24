@@ -92,12 +92,6 @@ def test_parse_iso_8601_date_with_no_fraction():
     assert date.microsecond == 0
 
 
-def test_parse_http_date():
-    rfc_timestamp = "Mon, 03 Jun 2019 17:54:26 GMT"
-    expected_timestamp = datetime.datetime(2019, 6, 3, 17, 54, 26, tzinfo=datetime.timezone.utc)
-    assert time.rfc7231_datetime_string_to_datetime(rfc_timestamp) == expected_timestamp
-
-
 def test_parse_discord_epoch_to_datetime():
     discord_timestamp = 37921278956
     expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)

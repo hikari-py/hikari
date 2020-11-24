@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "DISCORD_EPOCH",
-    "rfc7231_datetime_string_to_datetime",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
     "unix_epoch_to_datetime",
@@ -39,7 +38,6 @@ __all__: typing.List[str] = [
 ]
 
 import datetime
-import email.utils
 import time
 import typing
 import uuid as uuid_
@@ -65,28 +63,6 @@ References
 """
 
 _ISO_8601_FORMAT: typing.Final[str] = "%Y-%m-%dT%H:%M:%s"
-
-
-def rfc7231_datetime_string_to_datetime(date_str: str, /) -> datetime.datetime:
-    """Return the HTTP date as a datetime object.
-
-    Parameters
-    ----------
-    date_str : builtins.str
-        The RFC-2822 (section 3.3) compliant date string to parse.
-
-    Returns
-    -------
-    datetime.datetime
-        The HTTP date as a datetime object.
-
-    References
-    ----------
-    * [RFC-2822](https://www.ietf.org/rfc/rfc2822.txt)
-    * [Mozilla documentation for `Date` HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date)
-    """
-    # According to Mozilla, these are always going to be GMT (which is UTC).
-    return email.utils.parsedate_to_datetime(date_str).replace(tzinfo=datetime.timezone.utc)
 
 
 # Default to the standard lib parser, that isn't really ISO compliant but seems
