@@ -1530,10 +1530,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 primary_sku_id=primary_sku_id,
             )
 
-        message_reference: undefined.UndefinedOr[message_models.MessageCrosspost] = undefined.UNDEFINED
+        message_reference: undefined.UndefinedOr[message_models.MessageReference] = undefined.UNDEFINED
         if "message_reference" in payload:
             crosspost_payload = payload["message_reference"]
-            message_reference = message_models.MessageCrosspost(
+            message_reference = message_models.MessageReference(
                 app=self._app,
                 id=snowflakes.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None,
                 channel_id=snowflakes.Snowflake(crosspost_payload["channel_id"]),
@@ -1640,13 +1640,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 party_id=activity_payload.get("party_id"),
             )
 
-        crosspost: typing.Optional[message_models.MessageCrosspost] = None
+        crosspost: typing.Optional[message_models.MessageReference] = None
         if "message_reference" in payload:
             crosspost_payload = payload["message_reference"]
             crosspost_id = (
                 snowflakes.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
             )
-            crosspost = message_models.MessageCrosspost(
+            crosspost = message_models.MessageReference(
                 app=self._app,
                 id=crosspost_id,
                 channel_id=snowflakes.Snowflake(crosspost_payload["channel_id"]),

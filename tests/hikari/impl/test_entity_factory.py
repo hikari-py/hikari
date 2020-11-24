@@ -2522,7 +2522,7 @@ class TestEntityFactoryImpl:
         assert partial_message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
         assert partial_message.application.primary_sku_id == 499494949494994
         assert isinstance(partial_message.application, message_models.MessageApplication)
-        # MessageCrosspost
+        # MessageReference
         assert partial_message.message_reference.app is mock_app
         assert partial_message.message_reference.id == 306588351130107906
         assert partial_message.message_reference.channel_id == 278325129692446722
@@ -2640,7 +2640,7 @@ class TestEntityFactoryImpl:
         assert message.application.primary_sku_id == 499494949494994
         assert isinstance(message.application, message_models.MessageApplication)
 
-        # MessageCrosspost
+        # MessageReference
         assert message.message_reference.app is mock_app
         assert message.message_reference.id == 306588351130107906
         assert message.message_reference.channel_id == 278325129692446722
