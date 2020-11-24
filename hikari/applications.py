@@ -383,12 +383,8 @@ class Application(guilds.PartialApplication):
     Will be `builtins.None` if this application doesn't have a bot.
     """
 
-    owner: typing.Optional[users.User] = attr.ib(eq=False, hash=False, repr=True)
-    """The application's owner.
-
-    This should always be `builtins.None` in application objects retrieved outside
-    Discord's oauth2 flow.
-    """
+    owner: users.User = attr.ib(eq=False, hash=False, repr=True)
+    """The application's owner."""
 
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.ib(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""

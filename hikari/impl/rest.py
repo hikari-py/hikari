@@ -654,18 +654,14 @@ class RESTClientImpl(rest_api.RESTClient):
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
         remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
         bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER, "None")
-        reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
-        reset_date = datetime.datetime.fromtimestamp(reset_at, tz=datetime.timezone.utc)
-        now_date = time.rfc7231_datetime_string_to_datetime(resp_headers[_DATE_HEADER])
 
         self.buckets.update_rate_limits(
             compiled_route=compiled_route,
             bucket_header=bucket,
             remaining_header=remaining,
             limit_header=limit,
-            date_header=now_date,
-            reset_at_header=reset_date,
+            reset_after=reset_after,
         )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:

@@ -301,7 +301,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             is_bot_public=payload.get("bot_public"),
             is_bot_code_grant_required=payload.get("bot_require_code_grant"),
-            owner=self.deserialize_user(payload["owner"]) if "owner" in payload else None,
+            owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
             summary=payload["summary"],
             verify_key=bytes(payload["verify_key"], "utf-8") if "verify_key" in payload else None,

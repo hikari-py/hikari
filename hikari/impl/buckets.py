@@ -119,9 +119,6 @@ Once you have received your response, you are expected to extract the values of
 the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
-* `Date`:
-    the response date on the server. This should be parsed to a
-    `datetime.datetime` using `email.utils.parsedate_to_datetime`.
 * `X-RateLimit-Limit`:
     an `builtins.int` describing the max requests in the bucket from empty to
     being rate limited.
@@ -130,12 +127,9 @@ These headers are:
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
     a `builtins.str` containing the initial bucket hash.
-* `X-RateLimit-Reset`:
-    a `builtins.float` containing the number of seconds since
-    1st January 1970 at 0:00:00 UTC at which the current ratelimit window
-    resets. This should be parsed to a `datetime.datetime` using
-    `datetime.datetime.fromtimestamp`, passing `datetime.timezone.utc`
-    as `tz`.
+* `x-ratelimit-reset-after`:
+    a `builtins.float` containing the number of seconds when the current rate
+    limit bucket will reset with decimal millisecond precision.
 
 Each of the above values should be passed to the `update_rate_limits` method to
 ensure that the bucket you acquired time from is correctly updated should
@@ -171,7 +165,7 @@ on what attributes you send in a JSON or form data payload.
 No information is sent in headers about these specific limits. You will only
 be made aware that they exist once you get ratelimited. In the 429 ratelimited
 response, you will have the `"global"` attribute set to `builtins.False`, and a
-`"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset`
+`"reset_after"` attribute that differs entirely to the `x-ratelimit-reset-after`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. Hikari's
 `hikari.api.rest.RESTClient` implementation specifically uses the value furthest
@@ -205,7 +199,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
 
 import asyncio
-import datetime
 import logging
 import typing
 
@@ -563,8 +556,7 @@ class RESTBucketManager:
         bucket_header: str,
         remaining_header: int,
         limit_header: int,
-        date_header: datetime.datetime,
-        reset_at_header: datetime.datetime,
+        reset_after: float,
     ) -> None:
         """Update the rate limits for a bucket using info from a response.
 
@@ -578,16 +570,13 @@ class RESTBucketManager:
             The `X-RateLimit-Remaining` header cast to an `builtins.int`.
         limit_header : builtins.int
             The `X-RateLimit-Limit`header cast to an `builtins.int`.
-        date_header : datetime.datetime
-            The `Date` header value as a `datetime.datetime`.
-        reset_at_header : datetime.datetime
-            The `X-RateLimit-Reset` header value as a `datetime.datetime`.
+        reset_after : builtins.float
+            The `x-ratelimit-reset-after` cast to a `builtins.float`.
         """
         self.routes_to_hashes[compiled_route.route] = bucket_header
 
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
-        reset_after = (reset_at_header - date_header).total_seconds()
         reset_at_monotonic = time.monotonic() + reset_after
 
         if real_bucket_hash in self.real_hashes_to_buckets:

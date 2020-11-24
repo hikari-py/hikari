@@ -245,11 +245,11 @@ class TestEntityFactoryImpl:
                 "icon": "3123123",
                 "description": "I am an application",
                 "summary": "not a blank string",
+                "owner": owner_payload,
             }
         )
         assert application.is_bot_public is None
         assert application.is_bot_code_grant_required is None
-        assert application.owner is None
         assert application.rpc_origins is None
         assert application.verify_key is None
         assert application.team is None
@@ -267,6 +267,7 @@ class TestEntityFactoryImpl:
                 "description": "I am an application",
                 "summary": "not a blank string",
                 "team": None,
+                "owner": owner_payload,
             }
         )
         assert application.icon_hash is None
