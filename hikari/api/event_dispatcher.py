@@ -354,7 +354,7 @@ class EventDispatcher(abc.ABC):
         event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        predicate : typing.Optional[typing.Callable[[hikari.events.base_events.Event], typing.Coroutine[typing.Any, typing.Any, builtins.None]]]
+        predicate
             A function taking the event as the single parameter.
             This should return `builtins.True` if the event is one you want to
             return, or `builtins.False` if the event should not be returned.
