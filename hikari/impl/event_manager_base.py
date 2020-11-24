@@ -223,7 +223,8 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                     tasks.append(self._invoke_callback(callback, event))
 
             if cls in self._waiters:
-                for predicate, future in tuple(self._waiters[cls]):
+                waiter_set = self._waiters[cls]
+                for predicate, future in tuple(waiter_set):
                     try:
                         result = predicate(event)
                         if not result:
@@ -233,7 +234,6 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
                     else:
                         future.set_result(event)
 
-                    waiter_set = self._waiters[cls]
                     waiter_set.remove((predicate, future))
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
@@ -272,7 +272,11 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         pair = (predicate, future)
 
         waiter_set.add(pair)  # type: ignore[arg-type]
-        return await asyncio.wait_for(future, timeout=timeout)
+        try:
+            return await asyncio.wait_for(future, timeout=timeout)
+        except asyncio.TimeoutError:
+            waiter_set.remove(pair)  # type: ignore[arg-type]
+            raise
 
     @staticmethod
     async def _handle_dispatch(
