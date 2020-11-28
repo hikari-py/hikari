@@ -20,8 +20,8 @@
 # SOFTWARE.
 set -e
 
-VERSION=${TRAVIS_TAG}
-REF=${TRAVIS_COMMIT}
+VERSION=${GITHUB_TAG}
+REF=${GITHUB_COMMIT}
 
 echo "===== INSTALLING DEPENDENCIES ====="
 python -m pip install \

@@ -25,7 +25,7 @@
 # FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
 __author__ = "Nekokatt"
-__ci__ = "https://travis-ci.com/github/hikari-py/hikari"
+__ci__ = "https://github.com/hikari-py/hikari/actions"
 __copyright__ = "© 2020 Nekokatt"
 __coverage__ = "https://codeclimate.com/github/hikari-py/hikari"
 __discord_invite__ = "https://discord.gg/Jx4cNGG"

@@ -20,13 +20,6 @@
 # SOFTWARE.
 import os as _os
 
-IS_CI = "CI" in _os.environ
-
-if "TRAVIS" in _os.environ:
-    CI_PROVIDER = "travis"
-else:
-    CI_PROVIDER = "other"
-
 # Packaging
 MAIN_PACKAGE = "hikari"
 TEST_PACKAGE = "tests"

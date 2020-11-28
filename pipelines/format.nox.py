@@ -74,7 +74,6 @@ FILE_EXTS = (
     ".ps1",
     ".rb",
     ".pl",
-    ".travis.yml",
 )
 
 LINE_ENDING_PATHS = {
