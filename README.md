@@ -126,9 +126,9 @@ OAuth2 client implementations, such as
 Install hikari from PyPI with the following command:
 
 ```bash
-python -m pip install hikari -U --pre
+python -m pip install -U hikari
 # Windows users may need to run this instead...
-py -3 -m pip install hikari -U --pre
+py -3 -m pip install -U hikari
 ```
 
 ---
@@ -167,8 +167,8 @@ settings in the interpreter.
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a
 modern copy of GCC/G++, Clang, etc), you can install hikari using
-`pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,  and
-`ciso8601`, which will provide you with a small performance boost.
+`pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`
+and `ciso8601`, which will provide you with a small performance boost.
 
 ### `uvloop`
 
