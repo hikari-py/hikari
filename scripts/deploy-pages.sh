@@ -29,7 +29,7 @@ git init
 if [ -z ${CI+x} ]; then
     git remote add origin git@github.com:hikari-py/hikari
 else
-    git remote add origin https://davfsa:${GITHUB_TOKEN}@github.com/${TRAVIS_REPO_SLUG}
+    git remote add origin https://davfsa:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_SLUG}
 fi
 
 git checkout -B gh-pages

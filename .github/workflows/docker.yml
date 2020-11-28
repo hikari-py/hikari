@@ -1,0 +1,29 @@
+name: Docker
+
+on:
+  schedule: [cron: "0 0 * * 7"] # Every Sunday at 00:00
+
+  workflow_dispatch:
+
+jobs:
+  stackless:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_DRIVER=overlay2
+      DOCKERFILE=pipelines/docker/stackless-3.8.0b3/Dockerfile
+      IMAGE=stackless-python-hikari:3.8.0b3
+      DOCKER_USER=davfsa
+      DOCKER_ACCESS_TOKEN=${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Build Stackless Python 3.8.0b3 image
+        run: |
+          docker login -u "$DOCKER_USER" -p "$DOCKER_ACCESS_TOKEN"
+          docker build -t "$DOCKER_USER/$IMAGE" --file "$DOCKERFILE" .
+          docker push "$DOCKER_USER/$IMAGE"

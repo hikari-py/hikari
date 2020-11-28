@@ -22,14 +22,14 @@ import os
 
 import requests
 
-if os.getenv("TRAVIS_TAG"):
+if os.getenv("GITHUB_TOKEN"):
     webhook_url = os.environ["DEPLOY_WEBHOOK_URL"]
-    tag = os.environ["TRAVIS_TAG"]
-    build_no = os.environ["TRAVIS_BUILD_NUMBER"]
-    commit_sha = os.environ["TRAVIS_COMMIT"]
+    tag = os.environ["GITHUB_TAG"]
+    build_no = os.environ["GITHUB_BUILD_NUMBER"]
+    commit_sha = os.environ["GITHUB_COMMIT"]
 
     payload = dict(
-        username="Travis CI",
+        username="Github Actions",
         embeds=[
             dict(
                 title=f"{tag} has been deployed to PyPI",
@@ -48,4 +48,4 @@ if os.getenv("TRAVIS_TAG"):
         except:
             print(resp.content)
 else:
-    print("Skipping webhook, not on a tag.")
+    print("Skipping webhook, not on CI.")

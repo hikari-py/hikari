@@ -63,11 +63,3 @@ def _pytest(session: nox.Session, *py_flags: str) -> None:
         # Ignore errors
         pass
     session.run("python", *py_flags, "-m", "pytest", *FLAGS, *session.posargs, config.TEST_PACKAGE)
-
-
-@nox.inherit_environment_vars
-@nox.session(reuse_venv=False)
-def coveralls(session: nox.Session) -> None:
-    """Run coveralls. This has little effect outside TravisCI."""
-    session.install("-U", "python-coveralls")
-    session.run("coveralls")
