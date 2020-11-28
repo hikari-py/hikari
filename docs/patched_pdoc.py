@@ -32,7 +32,11 @@ def main():
 
     # We don't document stuff on the index of the documentation, but pdoc doesn't know that,
     # so we have to patch the function that generates the index.
-    def _patched_generate_lunr_search(top_module, index_docstrings, template_config):
+    def _patched_generate_lunr_search(modules, index_docstrings, template_config):
+        # This will only be called once due to how we generate the documentation, so we can ignore the rest
+        assert len(modules) == 1, "expected only 1 module to be generated, got more"
+        top_module = modules[0]
+
         def trim_docstring(docstring):
             return re.sub(
                 r"""
@@ -77,7 +81,7 @@ def main():
         index = []
         url_cache = {}
         recursive_add_to_index(top_module)
-        urls = [i[0] for i in sorted(url_cache.items(), key=lambda i: i[1])]
+        urls = sorted(url_cache.keys(), key=url_cache.__getitem__)
 
         # If top module is a package, output the index in its subfolder, else, in the output dir
         main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")

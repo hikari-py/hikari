@@ -28,10 +28,10 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <title>Search results in ${module.name.capitalize()}</title>
-        <meta name="description" content="Click here to view results">
+        <title>Search documentation - ${module.name.capitalize()}</title>
+        <meta name="description" content="Click here to view results"> 
 
-        <meta property="og:title" content="Search results in ${module.name.capitalize()}">
+        <meta property="og:title" content="Search documentation - ${module.name.capitalize()}">
 
         <meta property="og:type" content="website">
         <meta property="og:image" content="${site_logo}">
