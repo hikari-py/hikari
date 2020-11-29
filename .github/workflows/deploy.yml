@@ -9,7 +9,6 @@ jobs:
     needs: [test, linting, twemoji, pages]
 
     runs-on: ubuntu-latest
-    python-version: 3.8
 
     env:
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -25,6 +24,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
 
       - name: Deploy
         run: bash scripts/deploy.sh
