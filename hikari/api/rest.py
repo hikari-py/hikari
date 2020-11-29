@@ -870,6 +870,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -877,6 +878,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        reply_mention: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -917,6 +919,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             this must be less than 32 bytes. If not provided, then
             a null value is placed on the message instead. All users can
             see this value.
+        reply_message : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
+            If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -936,6 +940,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        reply_mention : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply_message`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -983,7 +992,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            being mentioned in the message content; if `reply_message` is
+            not found or not in the same channel as `channel`.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError

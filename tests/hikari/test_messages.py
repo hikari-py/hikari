@@ -128,6 +128,7 @@ def message():
         message_reference=None,
         flags=None,
         nonce=None,
+        referenced_message=None,
     )
 
 
@@ -203,6 +204,7 @@ class TestAsyncMessage:
         roles = [object()]
         attachment = object()
         attachments = [object()]
+        reference_messsage = object()
         await message.reply(
             content="test content",
             embed=embed,
@@ -210,9 +212,11 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
+            reply_message=reference_messsage,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
+            reply_mention=True,
         )
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -222,9 +226,11 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
+            reply_message=reference_messsage,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
+            reply_mention=True,
         )
 
     async def test_delete(self, message):

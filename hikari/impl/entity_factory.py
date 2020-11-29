@@ -1532,15 +1532,29 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         message_reference: undefined.UndefinedOr[message_models.MessageReference] = undefined.UNDEFINED
         if "message_reference" in payload:
-            crosspost_payload = payload["message_reference"]
+            message_reference_payload = payload["message_reference"]
+
+            message_reference_message_id: typing.Optional[snowflakes.Snowflake] = None
+            if "message_id" in message_reference_payload:
+                message_reference_message_id = snowflakes.Snowflake(message_reference_payload["message_id"])
+
+            message_reference_guild_id: typing.Optional[snowflakes.Snowflake] = None
+            if "guild_id" in message_reference_payload:
+                message_reference_guild_id = snowflakes.Snowflake(message_reference_payload["guild_id"])
+
             message_reference = message_models.MessageReference(
                 app=self._app,
-                id=snowflakes.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None,
-                channel_id=snowflakes.Snowflake(crosspost_payload["channel_id"]),
-                guild_id=snowflakes.Snowflake(crosspost_payload["guild_id"])
-                if "guild_id" in crosspost_payload
-                else None,
+                id=message_reference_message_id,
+                channel_id=snowflakes.Snowflake(message_reference_payload["channel_id"]),
+                guild_id=message_reference_guild_id,
             )
+
+        referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
+        if "referenced_message" in payload:
+            if (referenced_message_payload := payload["referenced_message"]) is not None:
+                referenced_message = self.deserialize_message(referenced_message_payload)
+            else:
+                referenced_message = None
 
         message = message_models.PartialMessage(
             app=self._app,
@@ -1562,6 +1576,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             activity=activity,
             application=application,
             message_reference=message_reference,
+            referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             nonce=payload["nonce"] if "nonce" in payload else undefined.UNDEFINED,
             # We initialize these next.
@@ -1594,7 +1609,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message
 
-    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
+    def deserialize_message(  # noqa CFQ001 - Function too long
+        self, payload: data_binding.JSONObject
+    ) -> message_models.Message:
         guild_id = snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         author = self.deserialize_user(payload["author"])
 
@@ -1640,20 +1657,31 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 party_id=activity_payload.get("party_id"),
             )
 
-        crosspost: typing.Optional[message_models.MessageReference] = None
+        message_reference: typing.Optional[message_models.MessageReference] = None
         if "message_reference" in payload:
-            crosspost_payload = payload["message_reference"]
-            crosspost_id = (
-                snowflakes.Snowflake(crosspost_payload["message_id"]) if "message_id" in crosspost_payload else None
-            )
-            crosspost = message_models.MessageReference(
+            message_reference_payload = payload["message_reference"]
+
+            message_reference_message_id: typing.Optional[snowflakes.Snowflake] = None
+            if "message_id" in message_reference_payload:
+                message_reference_message_id = snowflakes.Snowflake(message_reference_payload["message_id"])
+
+            message_reference_guild_id: typing.Optional[snowflakes.Snowflake] = None
+            if "guild_id" in message_reference_payload:
+                message_reference_guild_id = snowflakes.Snowflake(message_reference_payload["guild_id"])
+
+            message_reference = message_models.MessageReference(
                 app=self._app,
-                id=crosspost_id,
-                channel_id=snowflakes.Snowflake(crosspost_payload["channel_id"]),
-                guild_id=snowflakes.Snowflake(crosspost_payload["guild_id"])
-                if "guild_id" in crosspost_payload
-                else None,
+                id=message_reference_message_id,
+                channel_id=snowflakes.Snowflake(message_reference_payload["channel_id"]),
+                guild_id=message_reference_guild_id,
             )
+
+        referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
+        if "referenced_message" in payload:
+            if (referenced_message_payload := payload["referenced_message"]) is not None:
+                referenced_message = self.deserialize_message(referenced_message_payload)
+            else:
+                referenced_message = None
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
@@ -1691,7 +1719,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=message_models.MessageType(payload["type"]),
             activity=activity,
             application=application,
-            message_reference=crosspost,
+            message_reference=message_reference,
+            referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
             nonce=payload.get("nonce"),
             # We initialize these next.

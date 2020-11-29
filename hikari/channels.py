@@ -364,6 +364,7 @@ class TextChannel(PartialChannel, abc.ABC):
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -371,8 +372,9 @@ class TextChannel(PartialChannel, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        reply_mention: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages.Message:
-        """Create a message in the channel this message belongs to.
+        """Create a message in this channel.
 
         Parameters
         ----------
@@ -405,6 +407,8 @@ class TextChannel(PartialChannel, abc.ABC):
         nonce : hikari.undefined.UndefinedOr[builtins.str]
             If provided, a nonce that can be used for optimistic message
             sending.
+        reply_message : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
+            If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -422,6 +426,11 @@ class TextChannel(PartialChannel, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        reply_mention : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply_message`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -464,7 +473,8 @@ class TextChannel(PartialChannel, abc.ABC):
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            being mentioned in the message content; `reply_message` not found
+            or not in the same channel.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -491,9 +501,11 @@ class TextChannel(PartialChannel, abc.ABC):
             attachments=attachments,
             nonce=nonce,
             tts=tts,
+            reply_message=reply_message,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            reply_mention=reply_mention,
         )
 
     def trigger_typing(self) -> special_endpoints.TypingIndicator:
