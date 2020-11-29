@@ -61,8 +61,11 @@ def pdoc3(session: nox.Session) -> None:
     )
 
     if shutil.which("npm") is None:
-        print("'npm' not installed, won't prebuild index")
-        exit(0 if "CI" not in os.environ else 1)
+        message = "'npm' not installed, can't prebuild index"
+        if "CI" in os.environ:
+            session.error(message)
+
+        session.skip(message)
 
     print("Prebuilding index...")
     session.run("npm", "install", "lunr@2.3.7", external=True)

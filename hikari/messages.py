@@ -105,6 +105,9 @@ class MessageType(int, enums.Enum):
     CHANNEL_FOLLOW_ADD = 12
     """Channel follow add."""
 
+    REPLY = 19
+    """A message that replies to another message."""
+
 
 @typing.final
 class MessageFlag(enums.Flag):
@@ -358,7 +361,8 @@ class MessageReference:
     id: typing.Optional[snowflakes.Snowflake] = attr.ib(repr=True)
     """The ID of the original message.
 
-    This will be `builtins.None` for channel follow add messages.
+    This will be `builtins.None` for channel follow add messages. This may
+    point to a deleted message.
     """
 
     channel_id: snowflakes.Snowflake = attr.ib(repr=True)
@@ -534,6 +538,14 @@ class PartialMessage(snowflakes.Unique):
     """The message nonce.
 
     This is a string used for validating a message was sent.
+    """
+
+    referenced_message: undefined.UndefinedNoneOr[Message] = attr.ib(repr=False)
+    """The message that was replied to.
+
+    If `type` is `MessageType.REPLY` and `hikari.undefined.Undefined`, Discord's
+    backend didn't attempt to fetch the message, so the status is unknown. If
+    `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
     """
 
     @property
@@ -719,8 +731,9 @@ class PartialMessage(snowflakes.Unique):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
-        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
@@ -728,8 +741,9 @@ class PartialMessage(snowflakes.Unique):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        reply_mention: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> Message:
-        """Create a message in the given channel.
+        """Create a message in the channel this message belongs to.
 
         Parameters
         ----------
@@ -762,6 +776,8 @@ class PartialMessage(snowflakes.Unique):
         nonce : hikari.undefined.UndefinedOr[builtins.str]
             If provided, a nonce that can be used for optimistic message
             sending.
+        reply_message : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
+            If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -778,6 +794,11 @@ class PartialMessage(snowflakes.Unique):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        reply_mention : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply_message`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -820,7 +841,8 @@ class PartialMessage(snowflakes.Unique):
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            being mentioned in the message content; `reply_message` not found
+            or not in the same channel.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -847,9 +869,11 @@ class PartialMessage(snowflakes.Unique):
             attachments=attachments,
             nonce=nonce,
             tts=tts,
+            reply_message=reply_message,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            reply_mention=reply_mention,
         )
 
     async def delete(self) -> None:

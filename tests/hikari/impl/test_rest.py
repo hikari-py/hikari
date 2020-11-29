@@ -530,25 +530,25 @@ class TestRESTClientImpl:
     @pytest.mark.parametrize(
         ("function_input", "expected_output"),
         [
-            ((True, True, True), {"parse": ["everyone", "users", "roles"]}),
-            ((False, False, False), {"parse": []}),
-            ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), {"parse": []}),
-            ((undefined.UNDEFINED, True, True), {"parse": ["roles", "users"]}),
-            ((False, [123], [456]), {"parse": [], "users": ["123"], "roles": ["456"]}),
+            ((True, True, True, True), {"parse": ["everyone", "users", "roles"], "replied_user": True}),
+            ((False, False, False, False), {"parse": []}),
+            ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), {"parse": []}),
+            ((undefined.UNDEFINED, True, True, True), {"parse": ["roles", "users"], "replied_user": True}),
+            ((False, [123], [456], False), {"parse": [], "users": ["123"], "roles": ["456"]}),
             (
-                (True, [123, "123", 987], ["213", "456", 456]),
-                {"parse": ["everyone"], "users": ["123", "987"], "roles": ["213", "456"]},
+                (True, [123, "123", 987], ["213", "456", 456], True),
+                {"parse": ["everyone"], "users": ["123", "987"], "roles": ["213", "456"], "replied_user": True},
             ),
         ],
     )
     def test__generate_allowed_mentions(self, rest_client, function_input, expected_output):
         returned = rest_client._generate_allowed_mentions(*function_input)
-        if returned is not undefined.UNDEFINED:
-            for k in returned.keys():
-                returned[k] = sorted(returned[k])
+        for k, v in expected_output.items():
+            if isinstance(v, list):
+                returned[k] = sorted(v)
 
-        if expected_output is not undefined.UNDEFINED:
-            for k in expected_output.keys():
+        for k, v in expected_output.items():
+            if isinstance(v, list):
                 expected_output[k] = sorted(expected_output[k])
 
         assert returned == expected_output
