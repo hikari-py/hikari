@@ -543,7 +543,7 @@ class PartialMessage(snowflakes.Unique):
     referenced_message: undefined.UndefinedNoneOr[Message] = attr.ib(repr=False)
     """The message that was replied to.
 
-    If `type` is `MessageType.REPLY` and `hikari.undefined.Undefined`, Discord's
+    If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
     `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
     """

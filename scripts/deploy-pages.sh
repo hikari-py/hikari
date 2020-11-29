@@ -17,14 +17,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-git config user.name "davfsa"
-git config user.email "29100934+davfsa@users.noreply.github.com"
-
 rm public -Rf || true
 mkdir public
 nox --sessions pdoc3 pages
 cd public || exit 1
+
 git init
+git config user.name "davfsa"
+git config user.email "29100934+davfsa@users.noreply.github.com"
 
 if [ -z ${CI+x} ]; then
     git remote add origin git@github.com:hikari-py/hikari
