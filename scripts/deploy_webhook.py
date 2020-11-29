@@ -22,7 +22,7 @@ import os
 
 import requests
 
-if os.getenv("GITHUB_TOKEN"):
+if os.getenv("CI"):
     webhook_url = os.environ["DEPLOY_WEBHOOK_URL"]
     tag = os.environ["GITHUB_TAG"]
     build_no = os.environ["GITHUB_BUILD_NUMBER"]

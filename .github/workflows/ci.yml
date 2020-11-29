@@ -2,6 +2,7 @@ name: CI
 
 on: 
   push:
+    branches:
 
   pull_request:
 
@@ -24,7 +25,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.image }}
 
-    if: ! contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -55,7 +55,6 @@ jobs:
   linting:
     runs-on: ubuntu-latest
 
-    if: ! contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -75,7 +74,6 @@ jobs:
   twemoji:
     runs-on: ubuntu-latest
 
-    if: ! contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -95,7 +93,6 @@ jobs:
   pages:
     runs-on: ubuntu-latest
 
-    if: ! contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
