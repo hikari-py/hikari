@@ -6,8 +6,6 @@ on:
 
 jobs:
   deploy:
-    needs: [test, linting, twemoji, pages]
-
     runs-on: ubuntu-latest
 
     env:
