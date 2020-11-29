@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DOCKER_DRIVER=overlay2
-      DOCKERFILE=pipelines/docker/stackless-3.8.0b3/Dockerfile
-      IMAGE=stackless-python-hikari:3.8.0b3
-      DOCKER_USER=davfsa
-      DOCKER_ACCESS_TOKEN=${{ secrets.DOCKER_ACCESS_TOKEN }}
+      DOCKER_DRIVER: overlay2
+      DOCKERFILE: pipelines/docker/stackless-3.8.0b3/Dockerfile
+      IMAGE: stackless-python-hikari:3.8.0b3
+      DOCKER_USER: davfsa
+      DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
     steps:
       - name: Checkout repo

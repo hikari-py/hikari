@@ -12,13 +12,13 @@ jobs:
     python-version: 3.8
 
     env:
-      GITHUB_TOKEN=${{ secrets.GH_TOKEN }}
-      GITHUB_COMMIT=${{ github.sha }}
-      GITHUB_REPO_SLUG=${{ github.repository }}
-      GITHUB_BUILD_NUMBER=${{ github.run_number }}
-      DEPLOY_WEBHOOK_URL=${{ secrets.DEPLOY_WEBHOOK_URL }}
-      TWINE_USERNAME=${{ secrets.TWINE_USERNAME }}
-      TWINE_PASSWORD=${{ secrets.TWINE_PASSWORD }}
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      GITHUB_COMMIT: ${{ github.sha }}
+      GITHUB_REPO_SLUG: ${{ github.repository }}
+      GITHUB_BUILD_NUMBER: ${{ github.run_number }}
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
     steps:
       - name: Checkout repo
