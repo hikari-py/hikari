@@ -6,6 +6,8 @@ on:
 
 jobs:
   deploy:
+    needs: [test, linting, twemoji, pages]
+
     runs-on: ubuntu-latest
     python-version: 3.8
 
