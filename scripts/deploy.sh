@@ -20,8 +20,24 @@
 # SOFTWARE.
 set -e
 
+echo "Defined environment variables"
+env | grep -oP "^[^=]+" | sort
+
+if [ -z ${GITHUB_TAG+x} ]; then echo '$GITHUB_TAG environment variable is missing' && exit 1; fi
+if [ -z "${GITHUB_TAG}" ]; then echo '$GITHUB_TAG environment variable is empty' && exit 1; fi
+if [ -z ${GITHUB_SHA+x} ]; then echo '$GITHUB_SHA environment variable is missing' && exit 1; fi
+if [ -z "${GITHUB_SHA}" ]; then echo '$GITHUB_SHA environment variable is empty' && exit 1; fi
+if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
+if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
+if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
+if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
+if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
+if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable is empty' && exit 1; fi
+if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
+if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
+
 VERSION=${GITHUB_TAG}
-REF=${GITHUB_COMMIT}
+REF=${GITHUB_SHA}
 
 echo "===== INSTALLING DEPENDENCIES ====="
 python -m pip install \
@@ -31,18 +47,6 @@ python -m pip install \
     twine \
     requests \
     -r requirements.txt
-
-echo "Defined environment variables"
-env | grep -oP "^[^=]+" | sort
-
-if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
-if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
-if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
-if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
-if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable is empty' && exit 1; fi
-if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
-if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
 
 echo "-- Bumping repository version to ${VERSION} (ref: ${REF}) --"
 sed "s|^__version__.*|__version__ = \"${VERSION}\"|g" -i hikari/_about.py

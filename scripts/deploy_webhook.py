@@ -26,7 +26,7 @@ if os.getenv("CI"):
     webhook_url = os.environ["DEPLOY_WEBHOOK_URL"]
     tag = os.environ["GITHUB_TAG"]
     build_no = os.environ["GITHUB_BUILD_NUMBER"]
-    commit_sha = os.environ["GITHUB_COMMIT"]
+    commit_sha = os.environ["GITHUB_SHA"]
 
     payload = dict(
         username="Github Actions",

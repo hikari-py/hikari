@@ -35,8 +35,8 @@ posix_read "Tag" GITHUB_TAG
 posix_read "Repo slug (e.g. hikari-py/hikari)" GITHUB_REPO_SLUG
 
 git checkout "${GITHUB_TAG}"
-GITHUB_COMMIT=$(git rev-parse HEAD)
-echo "Detected GITHUB_COMMIT to be ${GITHUB_COMMIT}"
+GITHUB_SHA=$(git rev-parse HEAD)
+echo "Detected GITHUB_SHA to be ${GITHUB_SHA}"
 
 set -x
 rm public -Rf || true
