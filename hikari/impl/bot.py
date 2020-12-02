@@ -234,6 +234,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_executor",
         "_http_settings",
         "_intents",
+        "_is_alive",
         "_proxy_settings",
         "_raw_event_consumer",
         "_rest",
@@ -269,6 +270,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._banner = banner
         self._closing_event = asyncio.Event()
         self._closed = False
+        self._is_alive = False
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
         self._intents = intents
@@ -395,6 +397,10 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def rest(self) -> rest_.RESTClient:
         return self._rest
 
+    @property
+    def is_alive(self) -> bool:
+        return self._is_alive
+
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
         if not self._closing_event.is_set():
@@ -442,6 +448,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         # Clear out shard map
         self._shards.clear()
+        self._is_alive = False
 
         await self.dispatch(lifetime_events.StoppedEvent(app=self))
 
@@ -771,6 +778,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 ux.check_for_updates(self._http_settings, self._proxy_settings),
                 name="check for package updates",
             )
+        self._is_alive = False
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
         await self.dispatch(lifetime_events.StartingEvent(app=self))
         requirements = await requirements_task
@@ -836,7 +844,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 except asyncio.TimeoutError:
                     # If any shards stopped silently, we should close.
                     if any(not s.is_alive for s in self._shards.values()):
-                        _LOGGER.info("one of the shards has been manually shut down (no error), will now shut down")
+                        _LOGGER.warning("one of the shards has been manually shut down (no error), will now shut down")
+                        await self.close()
                         return
                     # new window starts.
 
@@ -844,7 +853,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     _LOGGER.critical("an exception occurred in one of the started shards during bot startup: %r", ex)
                     raise
 
-            started_shards = await aio.all_of(
+            await aio.all_of(
                 *(
                     self._start_one_shard(
                         activity=activity,
@@ -861,12 +870,13 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 )
             )
 
-            for started_shard in started_shards:
-                self._shards[started_shard.id] = started_shard
-
         await self.dispatch(lifetime_events.StartedEvent(app=self))
 
         _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
+
+    def _check_if_alive(self) -> None:
+        if self._is_alive:
+            raise errors.ComponentNotRunningError("bot is not running so it cannot be interacted with")
 
     def stream(
         self,
@@ -875,6 +885,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
     ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+        self._check_if_alive()
         return self._events.stream(event_type, timeout=timeout, limit=limit)
 
     def subscribe(
@@ -894,6 +905,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
     ) -> event_dispatcher.EventT_co:
+        self._check_if_alive()
         return await self._events.wait_for(event_type, timeout=timeout, predicate=predicate)
 
     async def update_presence(
@@ -904,6 +916,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
+        self._check_if_alive()
         self._validate_activity(activity)
 
         coros = [
@@ -949,6 +962,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             token=self._token,
             url=url,
         )
+        self._shards[new_shard.id] = new_shard
 
         start = time.monotonic()
         await aio.first_completed(new_shard.start(), self._closing_event.wait())

@@ -447,6 +447,21 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing
 
     __slots__: typing.Sequence[str] = ()
 
+    @property
+    def is_alive(self) -> bool:
+        """Check whether the bot is running or not.
+
+        This is useful as some functions might raise
+        `hikari.errors.ComponentNotRunningError` if this is
+        `builtins.False`.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the bot is running or not.
+        """
+        raise NotImplementedError
+
     async def join(self, until_close: bool = True) -> None:
         """Wait indefinitely until the application closes.
 

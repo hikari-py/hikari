@@ -115,7 +115,7 @@ class StoppedEvent(base_events.Event):
     closed within a coroutine function.
 
     !!! warning
-        The application will not proceed to leave the `_rest.run` call until all
+        The application will not proceed to leave the `bot.run` call until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring where a script may
         terminate the process before a callback can occur.

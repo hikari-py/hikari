@@ -33,6 +33,15 @@ class TestShardCloseCode:
         assert errors.ShardCloseCode(code).is_standard is expected
 
 
+class TestComponentNotRunningError:
+    @pytest.fixture()
+    def error(self):
+        return errors.ComponentNotRunningError("some reason")
+
+    def test_str(self, error):
+        assert str(error) == "some reason"
+
+
 class TestGatewayError:
     @pytest.fixture()
     def error(self):
