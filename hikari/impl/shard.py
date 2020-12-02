@@ -142,6 +142,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         # something disconnects, which makes aiohttp just shut down as if we
         # did it.
         if not self.sent_close:
+            self.sent_close = True
             self.logger.debug("sending close frame with code %s and message %s", int(code), message)
             try:
                 return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
@@ -500,7 +501,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         "shard.close() was called and the websocket was still alive -- "
                         "disconnecting immediately with GOING AWAY"
                     )
-                    await self._ws.close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
+                    await self._ws.send_close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
                 self._closing.set()
             finally:
                 self._chunking_rate_limit.close()
@@ -516,6 +517,23 @@ class GatewayShardImpl(shard.GatewayShard):
         """Wait for this shard to close, if running."""
         await self._closed.wait()
 
+    async def _send_json(
+        self,
+        data: data_binding.JSONObject,
+        compress: typing.Optional[int] = None,
+        *,
+        dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
+    ) -> None:
+        await self._total_rate_limit.acquire()
+
+        await self._ws.send_json(data=data, compress=compress, dumps=dumps)  # type: ignore[union-attr]
+
+    def _check_if_alive(self) -> None:
+        if not self.is_alive:
+            raise errors.ComponentNotRunningError(
+                f"shard {self._shard_id} is not running so it cannot be interacted with"
+            )
+
     async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -526,6 +544,7 @@ class GatewayShardImpl(shard.GatewayShard):
         users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        self._check_if_alive()
         if not query and not limit and not self._intents & intents_.Intents.GUILD_MEMBERS:
             raise errors.MissingIntentError(intents_.Intents.GUILD_MEMBERS)
 
@@ -554,7 +573,7 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
-        await self._ws.send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})  # type: ignore[union-attr]
+        await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
     async def start(self) -> None:
         if self._run_task is not None:
@@ -582,6 +601,7 @@ class GatewayShardImpl(shard.GatewayShard):
         activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
     ) -> None:
+        self._check_if_alive()
         presence_payload = self._serialize_and_store_presence_payload(
             idle_since=idle_since,
             afk=afk,
@@ -589,7 +609,7 @@ class GatewayShardImpl(shard.GatewayShard):
             status=status,
         )
         payload: data_binding.JSONObject = {_OP: _PRESENCE_UPDATE, _D: presence_payload}
-        await self._ws.send_json(payload)  # type: ignore[union-attr]
+        await self._send_json(payload)
 
     async def update_voice_state(
         self,
@@ -599,7 +619,8 @@ class GatewayShardImpl(shard.GatewayShard):
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
-        await self._ws.send_json(  # type: ignore[union-attr]
+        self._check_if_alive()
+        await self._send_json(
             {
                 _OP: _VOICE_STATE_UPDATE,
                 _D: {
@@ -661,7 +682,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         payload[_D]["presence"] = self._serialize_and_store_presence_payload()
 
-        await self._ws.send_json(payload)  # type: ignore[union-attr]
+        await self._send_json(payload)
 
     async def _heartbeat(self, heartbeat_interval: float) -> bool:
         # Return True if zombied or should reconnect, false if time to die forever.
@@ -734,7 +755,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return None
 
     async def _resume(self) -> None:
-        await self._ws.send_json(  # type: ignore[union-attr]
+        await self._send_json(
             {
                 _OP: _RESUME,
                 _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id},
@@ -907,11 +928,11 @@ class GatewayShardImpl(shard.GatewayShard):
                 return True
 
     async def _send_heartbeat(self) -> None:
-        await self._ws.send_json({_OP: _HEARTBEAT, _D: self._seq})  # type: ignore[union-attr]
+        await self._send_json({_OP: _HEARTBEAT, _D: self._seq})
         self._last_heartbeat_sent = time.monotonic()
 
     async def _send_heartbeat_ack(self) -> None:
-        await self._ws.send_json({_OP: _HEARTBEAT_ACK, _D: None})  # type: ignore[union-attr]
+        await self._send_json({_OP: _HEARTBEAT_ACK, _D: None})
 
     @staticmethod
     def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:

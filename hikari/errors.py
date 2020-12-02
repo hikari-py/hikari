@@ -27,6 +27,7 @@ __all__: typing.List[str] = [
     "HikariError",
     "HikariWarning",
     "HikariInterrupt",
+    "ComponentNotRunningError",
     "NotFoundError",
     "RateLimitedError",
     "RateLimitTooLongError",
@@ -98,6 +99,17 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
 
     signame: str = attr.ib()
     """The signal name that was raised."""
+
+
+@attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+class ComponentNotRunningError(HikariError):
+    """An exception thrown if trying to interact with a component that is not running."""
+
+    reason: str = attr.ib()
+    """A string to explain the issue."""
+
+    def __str__(self) -> str:
+        return self.reason
 
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
