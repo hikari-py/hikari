@@ -1755,7 +1755,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001  # TODO: what's CFQ001?
+    def deserialize_member_presence(  # noqa: CFQ001 - Max function length
         self,
         payload: data_binding.JSONObject,
         *,

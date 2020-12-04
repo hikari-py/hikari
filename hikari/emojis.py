@@ -270,9 +270,11 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
-    # TODO: document when this is None, or fix it to not be optional?
     name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
-    """The name of the emoji."""
+    """The name of the emoji.
+
+    This can be `builtins.None` in reaction events.
+    """
 
     is_animated: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
     """Whether the emoji is animated.
