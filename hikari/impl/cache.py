@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["StatefulCacheImpl"]
+__all__: typing.List[str] = ["CacheImpl"]
 
 import copy
 import logging
@@ -32,9 +32,7 @@ import typing
 from hikari import channels
 from hikari import config
 from hikari import emojis
-from hikari import errors
 from hikari import guilds
-from hikari import intents as intents_
 from hikari import invites
 from hikari import messages
 from hikari import presences
@@ -84,7 +82,7 @@ _VOID_MAPPING: typing.Final[typing.MutableMapping[typing.Any, typing.Any]] = _Vo
 
 
 #  TODO: do we want to hide entities that are marked as "deleted" and being kept alive by references?
-class StatefulCacheImpl(cache.MutableCache):
+class CacheImpl(cache.MutableCache):
     """In-memory cache implementation."""
 
     __slots__: typing.Sequence[str] = (
@@ -92,17 +90,18 @@ class StatefulCacheImpl(cache.MutableCache):
         "_emoji_entries",
         "_guild_channel_entries",
         "_guild_entries",
-        "_intents",
         "_invite_entries",
         "_me",
         "_role_entries",
         "_unknown_custom_emoji_entries",
         "_user_entries",
         "_message_entries",
+        "_settings",
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
     _app: traits.RESTAware
+    _settings: config.CacheSettings
     _me: typing.Optional[users.OwnUser]
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
     _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
@@ -114,16 +113,11 @@ class StatefulCacheImpl(cache.MutableCache):
         cache_utility.GenericRefWrapper[emojis.CustomEmoji],
     ]
     _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GenericRefWrapper[users.User]]
-    _message_entries: collections.LimitedCapacityCacheMap[snowflakes.Snowflake, messages.Message]
-    _intents: intents_.Intents
+    _message_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, messages.Message]
 
-    def __init__(
-        self, app: traits.RESTAware, intents: intents_.Intents, settings: typing.Optional[config.CacheSettings]
-    ) -> None:
-        if settings is None:
-            settings = config.CacheSettings()
-
+    def __init__(self, app: traits.RESTAware, settings: config.CacheSettings) -> None:
         self._app = app
+        self._settings = settings
         self._me = None
         self._emoji_entries = collections.FreezableDict()
         self._guild_channel_entries = collections.FreezableDict()
@@ -135,14 +129,12 @@ class StatefulCacheImpl(cache.MutableCache):
         self._unknown_custom_emoji_entries = collections.FreezableDict()
         self._user_entries = collections.FreezableDict()
         self._message_entries = collections.LimitedCapacityCacheMap(limit=settings.max_messages)
-        self._intents = intents
 
-    def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
-        if self._intents ^ intents:
-            raise errors.MissingIntentError(intents) from None
+    def _is_enabled_for(self, cache_type: str) -> bool:
+        if not self._settings.enabled:
+            return False
 
-    def _is_intent_enabled(self, intents: intents_.Intents, /) -> bool:
-        return (self._intents & intents) == intents
+        return bool(getattr(self._settings, cache_type))
 
     def _build_emoji(
         self,
@@ -215,6 +207,9 @@ class StatefulCacheImpl(cache.MutableCache):
         )
 
     def clear_emojis(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return cache_utility.EmptyCacheView()
+
         result = self._clear_emojis()
 
         for guild_id, guild_record in self._guild_entries.freeze().items():
@@ -227,9 +222,15 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_emojis_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return cache_utility.EmptyCacheView()
+
         return self._clear_emojis(guild_id)
 
     def delete_emoji(self, emoji_id: snowflakes.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return None
+
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if emoji_data is None:
             return None
@@ -253,6 +254,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return emoji
 
     def get_emoji(self, emoji_id: snowflakes.Snowflake, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return None
+
         return self._build_emoji(self._emoji_entries[emoji_id]) if emoji_id in self._emoji_entries else None
 
     def _get_emojis_view(  # TODO: split out the two cases (specific guild vs global)
@@ -283,14 +287,23 @@ class StatefulCacheImpl(cache.MutableCache):
         )
 
     def get_emojis_view(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return cache_utility.EmptyCacheView()
+
         return self._get_emojis_view()
 
     def get_emojis_view_for_guild(
         self, guild_id: snowflakes.Snowflake, /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_enabled_for("emojis"):
+            return cache_utility.EmptyCacheView()
+
         return self._get_emojis_view(guild_id=guild_id)
 
     def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
+        if not self._is_enabled_for("emojis"):
+            return None
+
         if emoji.user is not None:
             self.set_user(emoji.user)
             if emoji.id not in self._emoji_entries:
@@ -307,6 +320,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
     ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+        if not self._is_enabled_for("emojis"):
+            return (None, None)
+
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)
         return cached_emoji, self.get_emoji(emoji.id)

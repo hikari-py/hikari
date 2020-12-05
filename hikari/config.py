@@ -396,6 +396,15 @@ class HTTPSettings:
 class CacheSettings:
     """Settings to control the cache."""
 
+    enabled: bool = attr.ib(default=True)
+    """Whether to enable the cache.
+
+    If set to `False`, all the cache functionality will be disabled.
+    """
+
+    emojis: bool = attr.ib(default=True)
+    """Whether to enable the emojis cache."""
+
     max_messages: int = attr.ib(default=300)
     """The max number of messages to store in the cache at once.
 

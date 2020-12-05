@@ -23,6 +23,7 @@ import datetime
 import mock
 import pytest
 
+from hikari import config
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
@@ -31,21 +32,21 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import users
 from hikari import voices
-from hikari.impl import stateful_cache
+from hikari.impl import cache as cache_impl
 from hikari.internal import cache
 from hikari.internal import collections
 from tests.hikari import hikari_test_helpers
 
 
-class TestStatefulCacheImpl:
+class TestCacheImpl:
     @pytest.fixture()
     def app_impl(self):
         return mock.Mock(traits.RESTAware)
 
     @pytest.fixture()
-    def cache_impl(self, app_impl) -> stateful_cache.StatefulCacheImpl:
-        return hikari_test_helpers.mock_class_namespace(stateful_cache.StatefulCacheImpl, slots_=False)(
-            app=app_impl, intents=None, settings=None
+    def cache_impl(self, app_impl) -> cache_impl.CacheImpl:
+        return hikari_test_helpers.mock_class_namespace(cache_impl.CacheImpl, slots_=False)(
+            app=app_impl, settings=config.CacheSettings()
         )
 
     def test__build_emoji(self, cache_impl):
