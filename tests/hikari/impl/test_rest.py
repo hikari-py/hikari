@@ -1040,7 +1040,7 @@ class TestRESTClientImplAsync:
     async def test__parse_ratelimits_when_not_ratelimited(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.OK
-            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {}
 
             json = mock.AsyncMock()
 
@@ -1053,7 +1053,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {}
 
             async def json(self):
                 raise exit_exception
@@ -1066,7 +1066,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = "text/html"
-            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {}
             real_url = "https://some.url"
 
             async def read(self):
@@ -1080,7 +1080,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT"}
+            headers = {}
             real_url = "https://some.url"
 
             async def json(self):
@@ -1097,7 +1097,6 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
             headers = {
-                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
                 rest._X_RATELIMIT_REMAINING_HEADER: "0",
             }
             real_url = "https://some.url"
@@ -1114,7 +1113,6 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
             headers = {
-                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
                 rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
             }
             real_url = "https://some.url"
@@ -1130,10 +1128,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {
-                rest._DATE_HEADER: "Thu, 02 Jul 2020 20:55:08 GMT",
-                rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
-            }
+            headers = {}
             real_url = "https://some.url"
 
             async def json(self):
