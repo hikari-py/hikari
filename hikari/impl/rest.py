@@ -98,7 +98,6 @@ _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
 _BEARER_TOKEN_PREFIX: typing.Final[str] = "Bearer"  # nosec
 _BOT_TOKEN_PREFIX: typing.Final[str] = "Bot"  # nosec
-_DATE_HEADER: typing.Final[str] = sys.intern("Date")
 _HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
     f"AIOHTTP/{aiohttp.__version__} "
@@ -109,7 +108,6 @@ _X_AUDIT_LOG_REASON_HEADER: typing.Final[str] = sys.intern("X-Audit-Log-Reason")
 _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
-_X_RATELIMIT_RESET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 
 
