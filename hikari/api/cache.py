@@ -372,6 +372,31 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
+        """Get a message object from the cache.
+
+        Parameters
+        ----------
+        message_id : hikari.snowflakes.Snowflake
+            The ID of the message to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.Message]
+            The object of the message found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
+        """Get a view of all the message objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
+            A view of message objects found in the cache.
+        """
+
+    @abc.abstractmethod
     def get_presence(
         self, guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake, /
     ) -> typing.Optional[presences.MemberPresence]:
@@ -1620,31 +1645,6 @@ class MutableCache(Cache, abc.ABC):
         ------
         builtins.NotImplementedError
             When called on a stateless cache implementation.
-        """
-
-    @abc.abstractmethod
-    def get_message(self, message_id: snowflakes.Snowflake, /) -> typing.Optional[messages.Message]:
-        """Get a message object from the cache.
-
-        Parameters
-        ----------
-        message_id : hikari.snowflakes.Snowflake
-            The ID of the message to get from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or `builtins.None`.
-        """
-
-    @abc.abstractmethod
-    def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
-        """Get a view of all the message objects in the cache.
-
-        Returns
-        -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
-            A view of message objects found in the cache.
         """
 
     @abc.abstractmethod
