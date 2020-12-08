@@ -579,6 +579,11 @@ class BulkDeleteError(HikariError):
         total = deleted + len(self.messages_skipped)
         return 100 * deleted / total
 
+    def __str__(self) -> str:
+        deleted = len(self.messages_deleted)
+        total = deleted + len(self.messages_skipped)
+        return f"Error encountered when bulk deleting messages ({deleted}/{total} messages deleted)"
+
 
 @attr.s(auto_exc=True, slots=True, repr=False, init=False, weakref_slot=False)
 class VoiceError(HikariError):
