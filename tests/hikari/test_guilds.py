@@ -176,6 +176,9 @@ class TestRole:
             is_mentionable=True,
             permissions=permissions.Permissions.CONNECT,
             position=12,
+            bot_id=None,
+            integration_id=None,
+            is_premium_subscriber_role=False,
         )
 
     def test_colour_property(self, model):
