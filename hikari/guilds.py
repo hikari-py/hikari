@@ -551,6 +551,21 @@ class Role(PartialRole):
     and increase as you go up the hierarchy.
     """
 
+    bot_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the bot this role belongs to.
+
+    If `builtins.None`, this is not a bot role.
+    """
+
+    integration_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    """The ID of the integration this role belongs to.
+
+    If `builtins.None`, this is not a integration role.
+    """
+
+    is_premium_subscriber_role: bool = attr.ib(eq=False, hash=False, repr=True)
+    """Whether this role is the guild's nitro subscriber role."""
+
     @property
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""

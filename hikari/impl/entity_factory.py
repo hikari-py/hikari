@@ -1019,6 +1019,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: snowflakes.Snowflake,
     ) -> guild_models.Role:
+        bot_id: typing.Optional[snowflakes.Snowflake] = None
+        integration_id: typing.Optional[snowflakes.Snowflake] = None
+        is_premium_subscriber_role: bool = False
+        if "tags" in payload:
+            tags_payload = payload["tags"]
+            if "bot_id" in tags_payload:
+                bot_id = snowflakes.Snowflake(tags_payload["bot_id"])
+            if "integration_id" in tags_payload:
+                integration_id = snowflakes.Snowflake(tags_payload["integration_id"])
+            if "premium_subscriber" in tags_payload:
+                is_premium_subscriber_role = True
+
         return guild_models.Role(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1027,10 +1039,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             color=color_models.Color(payload["color"]),
             is_hoisted=payload["hoist"],
             position=int(payload["position"]),
-            # https://github.com/discord/discord-api-docs/pull/1843/commits/470677363ba88fbc1fe79228821146c6d6b488b9
             permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
             is_mentionable=payload["mentionable"],
+            bot_id=bot_id,
+            integration_id=integration_id,
+            is_premium_subscriber_role=is_premium_subscriber_role,
         )
 
     @staticmethod

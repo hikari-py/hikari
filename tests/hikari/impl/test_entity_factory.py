@@ -1519,6 +1519,11 @@ class TestEntityFactoryImpl:
             "permissions": "66321471",
             "managed": False,
             "mentionable": False,
+            "tags": {
+                "bot_id": "123",
+                "integration_id": "456",
+                "premium_subscriber": None,
+            },
         }
 
     def test_deserialize_role(self, entity_factory_impl, mock_app, guild_role_payload):
@@ -1533,7 +1538,17 @@ class TestEntityFactoryImpl:
         assert guild_role.permissions == permission_models.Permissions(66_321_471)
         assert guild_role.is_managed is False
         assert guild_role.is_mentionable is False
+        assert guild_role.bot_id == 123
+        assert guild_role.integration_id == 456
+        assert guild_role.is_premium_subscriber_role is True
         assert isinstance(guild_role, guild_models.Role)
+
+    def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
+        del guild_role_payload["tags"]
+        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
+        assert guild_role.bot_id is None
+        assert guild_role.integration_id is None
+        assert guild_role.is_premium_subscriber_role is False
 
     def test_deserialize_partial_integration(self, entity_factory_impl, partial_integration_payload):
         partial_integration = entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
