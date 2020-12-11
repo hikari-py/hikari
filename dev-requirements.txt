@@ -3,7 +3,7 @@
 ################
 
 # Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
-mock==4.0.2
+mock==4.0.3
 
 # Py.test stuff.
 pytest==6.1.2
