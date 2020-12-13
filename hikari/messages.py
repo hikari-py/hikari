@@ -475,7 +475,8 @@ class PartialMessage(snowflakes.Unique):
     If the message is not in a guild, this will be `builtins.None`.
 
     This will also be `builtins.None` in some cases such as when Discord updates
-    a message with an embed URL preview.
+    a message with an embed URL preview or in messages fetched from the
+    REST API.
     """
 
     content: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
