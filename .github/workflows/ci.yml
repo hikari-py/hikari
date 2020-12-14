@@ -5,13 +5,13 @@ on: [push, pull_request]
 jobs:
   test:
     strategy:
+      # Allows for matrix sub-jobs to fail without canceling the rest
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: [3.8, 3.9]
-        image: [null]
         include:
           - os: ubuntu-latest
-            python-version: null
             image: davfsa/stackless-python-hikari:3.8.0b3
 
     runs-on: ${{ matrix.os }}
