@@ -219,13 +219,13 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> guilds.Member:
-        """Member or user that sent the message.
+    def member(self) -> guilds.Member:
+        """Member object of the user that sent the message.
 
         Returns
         -------
         hikari.guilds.Member
-            The member that sent the message.
+            The member object of the user that sent the message.
         """
         member = self.message.member
         assert member is not None, "no member given for guild message create event!"
@@ -243,7 +243,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert isinstance(
-            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
+            channel, (channels.GuildNewsChannel, channels.GuildTextChannel, type(None))
         ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
         return channel
 
