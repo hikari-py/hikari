@@ -311,7 +311,6 @@ class TestStatefulEventManagerImpl:
 
         await event_manager.on_guild_member_add(shard, payload)
 
-        event_manager._cache.update_user.assert_called_once_with(event.user)
         event_manager._cache.update_member.assert_called_once_with(event.member)
         event_manager._app.event_factory.deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
@@ -325,7 +324,6 @@ class TestStatefulEventManagerImpl:
 
         await event_manager.on_guild_member_remove(shard, payload)
 
-        event_manager._cache.update_user.assert_called_once_with(event.user)
         event_manager._cache.delete_member.assert_called_once_with(456, 123)
         event_manager._app.event_factory.deserialize_guild_member_remove_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)

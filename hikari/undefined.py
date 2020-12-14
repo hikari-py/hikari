@@ -41,7 +41,7 @@ class UndefinedType:
 
     __slots__: typing.Sequence[str] = ()
 
-    def __bool__(self) -> bool:
+    def __bool__(self) -> typing.Literal[False]:
         return False
 
     def __copy__(self: SelfT) -> SelfT:

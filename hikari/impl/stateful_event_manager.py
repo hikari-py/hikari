@@ -229,15 +229,12 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
     async def on_guild_member_add(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-add for more info."""
         event = self._app.event_factory.deserialize_guild_member_add_event(shard, payload)
-        self._cache.update_user(event.user)  # TODO: do we still need this here if user is set in set member?
-        # or should those be switched?
         self._cache.update_member(event.member)
         await self.dispatch(event)
 
     async def on_guild_member_remove(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-remove for more info."""
         event = self._app.event_factory.deserialize_guild_member_remove_event(shard, payload)
-        self._cache.update_user(event.user)
         self._cache.delete_member(event.guild_id, event.user.id)
         await self.dispatch(event)
 
