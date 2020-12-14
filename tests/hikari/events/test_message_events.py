@@ -195,8 +195,8 @@ class TestGuildMessageCreateEvent:
         assert result is event.app.cache.get_guild.return_value
         event.app.cache.get_guild.assert_called_once_with(342123123)
 
-    def test_author_property(self, event):
-        assert event.author is event.message.member
+    def test_member_property(self, event):
+        assert event.member is event.message.member
 
 
 class TestGuildMessageUpdateEvent:

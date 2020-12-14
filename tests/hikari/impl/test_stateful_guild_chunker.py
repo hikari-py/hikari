@@ -155,6 +155,7 @@ class TestChunkStream:
 
         async for event in stream:
             assert event is mock_chunk
+            stream._active = False
             return
 
         pytest.fail("stream should've yielded something")
@@ -172,6 +173,8 @@ class TestChunkStream:
 
         async for _ in stream:
             pytest.fail("stream shouldn't have returned anything.")
+
+        stream._active = False
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
@@ -193,6 +196,7 @@ class TestChunkStream:
 
         async for event in stream:
             assert event is mock_chunk
+            stream._active = False
             return
 
         pytest.fail("stream should have yielded an event")
@@ -205,6 +209,8 @@ class TestChunkStream:
 
         async for _ in stream:
             pytest.fail("stream shouldn't have yielded anything.")
+
+        stream._active = False
 
     @pytest.mark.asyncio
     async def test___anext___when_stream_not_active(self):

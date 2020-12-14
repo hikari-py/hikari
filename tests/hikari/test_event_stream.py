@@ -190,6 +190,7 @@ class TestEventStream:
             close=mock.AsyncMock(),
             open=mock.AsyncMock(),
             init_=False,
+            _active=False,
             __anext__=mock.AsyncMock(side_effect=[mock_event_0, mock_event_1, mock_event_2]),
         )()
 
