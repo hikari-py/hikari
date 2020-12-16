@@ -434,6 +434,8 @@ class TestEntityFactoryImpl:
             "avatar": "bb71f469c158984e265093a81b3397fb",
             "token": "ueoqrialsdfaKJLKfajslkdf",
             "application_id": "1234567890",
+            "source_channel": {"id": "381871767846780666", "name": "announcements"},
+            "source_guild": {"id": "574921006817476608", "name": "Hikari API", "icon": "a363a8443211231232fdfb2e50e6"},
         }
 
     @pytest.fixture()
@@ -3305,6 +3307,16 @@ class TestEntityFactoryImpl:
         assert webhook.avatar_hash == "bb71f469c158984e265093a81b3397fb"
         assert webhook.token == "ueoqrialsdfaKJLKfajslkdf"
         assert webhook.application_id == 1234567890
+
+        assert webhook.source_channel == entity_factory_impl.deserialize_partial_channel(
+            {"id": "381871767846780666", "name": "announcements", "type": 5}
+        )
+
+        assert webhook.source_guild.id == 574921006817476608
+        assert webhook.source_guild.name == "Hikari API"
+        assert webhook.source_guild.icon_hash == "a363a8443211231232fdfb2e50e6"
+        assert isinstance(webhook.source_guild, guild_models.PartialGuild)
+
         assert isinstance(webhook, webhook_models.Webhook)
 
     def test_deserialize_webhook_with_null_and_unset_fields(self, entity_factory_impl):
@@ -3317,3 +3329,5 @@ class TestEntityFactoryImpl:
         assert webhook.avatar_hash is None
         assert webhook.token is None
         assert webhook.application_id is None
+        assert webhook.source_channel is None
+        assert webhook.source_guild is None
