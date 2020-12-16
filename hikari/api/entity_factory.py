@@ -946,6 +946,7 @@ class EntityFactory(abc.ABC):
     # TEMPLATE MODELS #
     ###################
 
+    @abc.abstractmethod
     def deserialize_template(self, payload: data_binding.JSONObject) -> template_models.Template:
         """Parse a raw payload from Discord into a template object.
 
