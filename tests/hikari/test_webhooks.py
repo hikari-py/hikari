@@ -43,6 +43,8 @@ class TestWebhook:
             avatar_hash=None,
             token="abc123bca",
             application_id=None,
+            source_channel=object(),
+            source_guild=object(),
         )
 
     def test_str(self, webhook):

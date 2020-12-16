@@ -2041,6 +2041,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_application_id := payload.get("application_id")) is not None:
             application_id = snowflakes.Snowflake(raw_application_id)
 
+        source_channel: typing.Optional[channel_models.PartialChannel] = None
+        if "source_channel" in payload:
+            raw_source_channel = payload["source_channel"]
+            # In this case the channel type isn't provided as we can safely
+            # assume it's a news channel.
+            raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
+            source_channel = self.deserialize_partial_channel(raw_source_channel)
+
+        source_guild: typing.Optional[guild_models.PartialGuild] = None
+        if "source_guild" in payload:
+            source_guild_payload = payload["source_guild"]
+            source_guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(source_guild_payload["id"]),
+                name=source_guild_payload["name"],
+                icon_hash=source_guild_payload["icon"],
+            )
+
         return webhook_models.Webhook(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2052,4 +2070,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             avatar_hash=payload["avatar"],
             token=payload.get("token"),
             application_id=application_id,
+            source_channel=source_channel,
+            source_guild=source_guild,
         )

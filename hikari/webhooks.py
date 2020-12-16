@@ -107,6 +107,18 @@ class Webhook(snowflakes.Unique):
     application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
+    source_channel: typing.Optional[channels_.PartialChannel] = attr.ib(eq=False, hash=False, repr=True)
+    """The partial object of the channel a `CHANNEL_FOLLOWER` webhook is following.
+
+    Will be `builtins.None` for other webhook types.
+    """
+
+    source_guild: typing.Optional[guilds_.PartialGuild] = attr.ib(eq=False, hash=False, repr=True)
+    """The partial object of the guild a `CHANNEL_FOLLOWER` webhook is following.
+
+    Will be `builtins.None` for other webhook types.
+    """
+
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
