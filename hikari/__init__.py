@@ -72,6 +72,7 @@ from hikari.snowflakes import Snowflake
 from hikari.snowflakes import Snowflakeish
 from hikari.snowflakes import SnowflakeishOr
 from hikari.snowflakes import Unique
+from hikari.templates import *
 from hikari.traits import *
 from hikari.undefined import UNDEFINED
 from hikari.undefined import UndefinedNoneOr

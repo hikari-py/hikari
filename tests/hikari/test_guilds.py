@@ -309,7 +309,6 @@ class TestPartialGuild:
     def model(self, mock_app):
         return guilds.PartialGuild(
             app=mock_app,
-            features=["foo", "bar", "baz"],
             id=snowflakes.Snowflake(90210),
             icon_hash="yeet",
             name="hikari",
