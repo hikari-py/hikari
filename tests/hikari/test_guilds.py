@@ -196,6 +196,7 @@ class TestMember:
             guild_id=snowflakes.Snowflake(456),
             is_deaf=True,
             is_mute=True,
+            is_pending=False,
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
             premium_since=None,

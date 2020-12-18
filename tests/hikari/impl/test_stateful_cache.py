@@ -1540,6 +1540,7 @@ class TestStatefulCacheImpl:
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             is_deaf=False,
             is_mute=True,
+            is_pending=False,
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = collections.FreezableDict(
@@ -1555,6 +1556,7 @@ class TestStatefulCacheImpl:
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
         assert member.is_mute is True
+        assert member.is_pending is False
 
     def test__build_member_for_passed_through_user(self, cache_impl):
         member_data = cache.MemberData(
@@ -1566,6 +1568,7 @@ class TestStatefulCacheImpl:
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             is_deaf=False,
             is_mute=True,
+            is_pending=False,
         )
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = collections.FreezableDict({})
@@ -1902,6 +1905,7 @@ class TestStatefulCacheImpl:
             premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
             is_deaf=True,
             is_mute=False,
+            is_pending=True,
         )
         cache_impl.set_user = mock.Mock()
         cache_impl._increment_user_ref_count = mock.Mock()
@@ -1927,6 +1931,7 @@ class TestStatefulCacheImpl:
         )
         assert member_entry.is_deaf is True
         assert member_entry.is_mute is False
+        assert member_entry.is_pending is True
         assert not hasattr(member_entry, "user")
 
     def test_set_member_doesnt_increment_user_ref_count_for_pre_cached_member(self, cache_impl):

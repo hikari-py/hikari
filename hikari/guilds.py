@@ -150,6 +150,9 @@ class GuildFeature(str, enums.Enum):
     WELCOME_SCREEN_ENABLED = "WELCOME_SCREEN_ENABLED"
     """Guild has enabled the welcome screen."""
 
+    MEMBER_VERIFICATION_GATE_ENABLED = "MEMBER_VERIFICATION_GATE_ENABLED"
+    """Guild has enabled member verification gate."""
+
 
 GuildFeatureish = typing.Union[str, GuildFeature]
 """Type hint for possible guild features.
@@ -259,15 +262,20 @@ class Member(users.User):
     is_deaf: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """`builtins.True` if this member is deafened in the current voice channel.
 
-    This will be `hikari.undefined.UndefinedType if it's state is
+    This will be `hikari.undefined.UNDEFINED` if it's state is
     unknown.
     """
 
     is_mute: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """`builtins.True` if this member is muted in the current voice channel.
 
-    This will be `hikari.undefined.UndefinedType if it's state is unknown.
+    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
     """
+
+    is_pending: undefined.UndefinedOr[bool] = attr.ib(repr=False)
+    """Whether the user has passed the guild's membership screening requirements.
+
+    This will be `hikari.undefined.UNDEFINED` if it's state is unknown."""
 
     joined_at: datetime.datetime = attr.ib(repr=True)
     """The datetime of when this member joined the guild they belong to."""
