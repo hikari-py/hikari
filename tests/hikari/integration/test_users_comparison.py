@@ -78,6 +78,7 @@ def make_guild_member(user_id, username):
         premium_since=None,
         is_deaf=False,
         is_mute=False,
+        is_pending=False,
     )
 
 

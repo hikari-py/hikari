@@ -394,6 +394,7 @@ class MemberData(BaseData[guilds.Member]):
     premium_since: typing.Optional[datetime.datetime] = attr.ib()
     is_deaf: undefined.UndefinedOr[bool] = attr.ib()
     is_mute: undefined.UndefinedOr[bool] = attr.ib()
+    is_pending: undefined.UndefinedOr[bool] = attr.ib()
     # meta-attribute
     has_been_deleted: bool = attr.ib(default=False)
     ref_count: int = attr.ib(default=0)
@@ -407,6 +408,7 @@ class MemberData(BaseData[guilds.Member]):
             premium_since=entity.premium_since,
             is_deaf=entity.is_deaf,
             is_mute=entity.is_mute,
+            is_pending=entity.is_pending,
             id=entity.user.id,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(entity.role_ids),
@@ -421,6 +423,7 @@ class MemberData(BaseData[guilds.Member]):
             premium_since=self.premium_since,
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
+            is_pending=self.is_pending,
             user=kwargs["user"],
         )
 

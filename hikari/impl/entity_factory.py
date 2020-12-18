@@ -1006,6 +1006,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_since=premium_since,
             is_deaf=payload["deaf"] if "deaf" in payload else undefined.UNDEFINED,
             is_mute=payload["mute"] if "mute" in payload else undefined.UNDEFINED,
+            is_pending=payload["pending"] if "pending" in payload else undefined.UNDEFINED,
         )
 
     def deserialize_role(
