@@ -194,14 +194,13 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
                     errors.ShardCloseCode.RATE_LIMITED,
                 )
 
-                # Assume we can always resume first.
                 raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
             elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
                 # May be caused by the server shutting us down.
                 # May be caused by Windows injecting an EOF if something disconnects, as some
                 # network drivers appear to do this.
-                raise errors.GatewayError("Socket has closed")
+                raise errors.GatewayConnectionError("Socket has closed")
 
             elif len(buff) != 0 and message.type != aiohttp.WSMsgType.BINARY:
                 raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
