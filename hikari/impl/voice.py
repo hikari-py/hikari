@@ -40,11 +40,9 @@ from hikari.impl import bot
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    _VoiceEventCallbackT = typing.Callable[[voice_events.VoiceEvent], typing.Coroutine[None, typing.Any, None]]
+    _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.VoiceConnection")
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.voice.management")
-
-_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.VoiceConnection")
 
 
 class VoiceComponentImpl(voice.VoiceComponent):
@@ -81,12 +79,12 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     async def connect_to(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
+        voice_connection_type: typing.Type[_VoiceConnectionT],
         *,
         deaf: bool = False,
         mute: bool = False,
-        voice_connection_type: typing.Type[_VoiceConnectionT],
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         guild_id = snowflakes.Snowflake(guild)

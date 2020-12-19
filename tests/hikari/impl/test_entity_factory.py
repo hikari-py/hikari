@@ -1552,6 +1552,13 @@ class TestEntityFactoryImpl:
         assert isinstance(guild_role, guild_models.Role)
 
     def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
+        guild_role_payload["tags"] = {}
+        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
+        assert guild_role.bot_id is None
+        assert guild_role.integration_id is None
+        assert guild_role.is_premium_subscriber_role is False
+
+    def test_deserialize_role_with_no_tags(self, entity_factory_impl, guild_role_payload):
         del guild_role_payload["tags"]
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
         assert guild_role.bot_id is None
@@ -3050,7 +3057,7 @@ class TestEntityFactoryImpl:
         assert template.source_guild.system_channel_id == 8
         assert template.source_guild.system_channel_flags == guild_models.GuildSystemChannelFlag.NONE
 
-        assert template.is_dirty is True
+        assert template.is_unsynced is True
 
     def test_deserialize_template_with_null_fields(self, entity_factory_impl, template_payload, user_payload):
         template = entity_factory_impl.deserialize_template(
@@ -3095,7 +3102,7 @@ class TestEntityFactoryImpl:
         assert template.description is None
         assert template.source_guild.afk_channel_id is None
         assert template.source_guild.system_channel_id is None
-        assert template.is_dirty is None
+        assert template.is_unsynced is False
 
     ###############
     # USER MODELS #

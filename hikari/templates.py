@@ -139,11 +139,6 @@ class TemplateGuild(guilds.PartialGuild):
     """Return flags for the guild system channel.
 
     These are used to describe which notifications are suppressed.
-
-    Returns
-    -------
-    GuildSystemChannelFlag
-        The system channel flags for this channel.
     """
 
 
@@ -176,7 +171,7 @@ class Template:
     source_guild: TemplateGuild = attr.ib(eq=False, hash=False, repr=True)
     """The partial object of the guild this template is based on."""
 
-    is_dirty: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_unsynced: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this template is missing changes from it's source guild."""
 
     def __str__(self) -> str:

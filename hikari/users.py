@@ -652,7 +652,7 @@ class OwnUser(UserImpl):
         return await self.app.rest.fetch_my_user()
 
     async def fetch_dm_channel(self) -> typing.NoReturn:
-        raise TypeError("Unable to send a DM to yourself")
+        raise TypeError("Unable to fetch your own DM channel")
 
     async def send(self) -> typing.NoReturn:  # type: ignore[override]
         raise TypeError("Unable to send a DM to yourself")
