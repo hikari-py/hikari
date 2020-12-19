@@ -58,7 +58,7 @@ class TestStatefulCacheImpl:
             is_animated=True,
             guild_id=snowflakes.Snowflake(65234123),
             role_ids=(snowflakes.Snowflake(1235123), snowflakes.Snowflake(763245234)),
-            user=cache.RefCell(object=mock_user),
+            user=cache.RefCell(mock_user),
             is_colons_required=False,
             is_managed=False,
             is_available=True,
@@ -93,10 +93,10 @@ class TestStatefulCacheImpl:
         assert emoji.user is None
 
     def test_clear_emojis(self, cache_impl):
-        mock_wrapped_user_1 = mock.Mock(cache.RefCell[users.User])
-        mock_wrapped_user_2 = mock.Mock(cache.RefCell[users.User])
-        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user=mock_wrapped_user_1)
-        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user=mock_wrapped_user_2)
+        mock_user_1 = mock.Mock(cache.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache.RefCell[users.User])
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user=mock_user_1)
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user=mock_user_2)
         mock_emoji_data_3 = mock.Mock(cache.KnownCustomEmojiData, user=None)
         mock_emoji_1 = mock.Mock(emojis.Emoji)
         mock_emoji_2 = mock.Mock(emojis.Emoji)
@@ -118,17 +118,17 @@ class TestStatefulCacheImpl:
         }
         assert cache_impl._emoji_entries == {}
         cache_impl._garbage_collect_user.assert_has_calls(
-            [mock.call(mock_wrapped_user_1, decrement=1), mock.call(mock_wrapped_user_2, decrement=1)]
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
         )
         cache_impl._build_emoji.assert_has_calls(
             [mock.call(mock_emoji_data_1), mock.call(mock_emoji_data_2), mock.call(mock_emoji_data_3)]
         )
 
     def test_clear_emojis_for_guild(self, cache_impl):
-        mock_wrapped_user_1 = mock.Mock(cache.RefCell[users.User])
-        mock_wrapped_user_2 = mock.Mock(cache.RefCell[users.User])
-        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user=mock_wrapped_user_1)
-        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user=mock_wrapped_user_2)
+        mock_user_1 = mock.Mock(cache.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache.RefCell[users.User])
+        mock_emoji_data_1 = mock.Mock(cache.KnownCustomEmojiData, user=mock_user_1)
+        mock_emoji_data_2 = mock.Mock(cache.KnownCustomEmojiData, user=mock_user_2)
         mock_emoji_data_3 = mock.Mock(cache.KnownCustomEmojiData, user=None)
         mock_other_emoji_data = mock.Mock(cache.KnownCustomEmojiData)
         emoji_ids = collections.SnowflakeSet()
@@ -158,7 +158,7 @@ class TestStatefulCacheImpl:
         cache_impl._garbage_collect_user = mock.Mock()
         emoji_mapping = cache_impl.clear_emojis_for_guild(snowflakes.Snowflake(432123123))
         cache_impl._garbage_collect_user.assert_has_calls(
-            [mock.call(mock_wrapped_user_1, decrement=1), mock.call(mock_wrapped_user_2, decrement=1)]
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
         )
         cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(432123123), guild_record)
         assert emoji_mapping == {
@@ -331,7 +331,7 @@ class TestStatefulCacheImpl:
 
     def test_set_emoji(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(654234))
-        mock_reffed_user = cache.RefCell(object=mock_user)
+        mock_reffed_user = cache.RefCell(mock_user)
         emoji = emojis.KnownCustomEmoji(
             app=cache_impl._app,
             id=snowflakes.Snowflake(5123123),
@@ -686,8 +686,8 @@ class TestStatefulCacheImpl:
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
-            inviter=cache.RefCell(object=mock_inviter),
-            target_user=cache.RefCell(object=mock_target_user),
+            inviter=cache.RefCell(mock_inviter),
+            target_user=cache.RefCell(mock_target_user),
             target_user_type=invites.TargetUserType.STREAM,
             uses=42,
             max_uses=999,
@@ -734,12 +734,10 @@ class TestStatefulCacheImpl:
         assert invite.target_user is None
 
     def test_clear_invites(self, cache_impl):
-        mock_wrapped_target_user = mock.Mock(cache.RefCell[users.User], ref_count=5)
-        mock_wrapped_inviter = mock.Mock(cache.RefCell[users.User], ref_count=3)
-        mock_invite_data_1 = mock.Mock(
-            cache.InviteData, target_user=mock_wrapped_target_user, inviter=mock_wrapped_inviter
-        )
-        mock_invite_data_2 = mock.Mock(cache.InviteData, target_user_id=None, inviter_id=None)
+        mock_target_user = mock.Mock(cache.RefCell[users.User], ref_count=5)
+        mock_inviter = mock.Mock(cache.RefCell[users.User], ref_count=3)
+        mock_invite_data_1 = mock.Mock(cache.InviteData, target_user=mock_target_user, inviter=mock_inviter)
+        mock_invite_data_2 = mock.Mock(cache.InviteData, target_user=None, inviter=None)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
         cache_impl._invite_entries = collections.FreezableDict(
@@ -750,17 +748,15 @@ class TestStatefulCacheImpl:
         assert cache_impl.clear_invites() == {"hiBye": mock_invite_1, "Lblalbla": mock_invite_2}
         assert cache_impl._invite_entries == {}
         cache_impl._garbage_collect_user.assert_has_calls(
-            [mock.call(mock_wrapped_target_user, decrement=1), mock.call(mock_wrapped_inviter, decrement=1)]
+            [mock.call(mock_target_user, decrement=1), mock.call(mock_inviter, decrement=1)], any_order=True
         )
         cache_impl._build_invite.assert_has_calls([mock.call(mock_invite_data_1), mock.call(mock_invite_data_2)])
 
     def test_clear_invites_for_guild(self, cache_impl):
-        mock_wrapped_target_user = mock.Mock(cache.RefCell[users.User], ref_count=4)
-        mock_wrapped_inviter = mock.Mock(cache.RefCell[users.User], ref_count=42)
-        mock_invite_data_1 = mock.Mock(
-            cache.InviteData, target_user=mock_wrapped_target_user, inviter=mock_wrapped_inviter
-        )
-        mock_invite_data_2 = mock.Mock(cache.InviteData, target_user_id=None, inviter_id=None)
+        mock_target_user = mock.Mock(cache.RefCell[users.User], ref_count=4)
+        mock_inviter = mock.Mock(cache.RefCell[users.User], ref_count=42)
+        mock_invite_data_1 = mock.Mock(cache.InviteData, target_user=mock_target_user, inviter=mock_inviter)
+        mock_invite_data_2 = mock.Mock(cache.InviteData, target_user=None, inviter=None)
         mock_other_invite_data = mock.Mock(cache.InviteData)
         mock_invite_1 = mock.Mock(invites.InviteWithMetadata)
         mock_invite_2 = mock.Mock(invites.InviteWithMetadata)
@@ -785,14 +781,9 @@ class TestStatefulCacheImpl:
         }
         assert cache_impl._invite_entries == {"oeoeoeoeoeoeoe": mock_other_invite_data}
         cache_impl._garbage_collect_user.assert_has_calls(
-            [mock.call(mock_wrapped_target_user, decrement=1), mock.call(mock_wrapped_inviter, decrement=1)]
+            [mock.call(mock_target_user, decrement=1), mock.call(mock_inviter, decrement=1)], any_order=True
         )
-        cache_impl._build_invite.assert_has_calls(
-            [
-                mock.call(mock_invite_data_1),
-                mock.call(mock_invite_data_2),
-            ]
-        )
+        cache_impl._build_invite.assert_has_calls([mock.call(mock_invite_data_1), mock.call(mock_invite_data_2)])
 
     def test_clear_invites_for_guild_unknown_invite_cache(self, cache_impl):
         mock_other_invite_data = mock.Mock(cache.InviteData)
@@ -820,16 +811,16 @@ class TestStatefulCacheImpl:
         cache_impl._build_invite.assert_not_called()
 
     def test_clear_invites_for_channel(self, cache_impl):
-        mock_wrapped_target_user = mock.Mock(cache.RefCell[users.User], ref_count=42)
-        mock_wrapped_inviter = mock.Mock(cache.RefCell[users.User], ref_count=280)
+        mock_target_user = mock.Mock(cache.RefCell[users.User], ref_count=42)
+        mock_inviter = mock.Mock(cache.RefCell[users.User], ref_count=280)
         mock_invite_data_1 = mock.Mock(
             cache.InviteData,
-            target_user=mock_wrapped_target_user,
-            inviter=mock_wrapped_inviter,
+            target_user=mock_target_user,
+            inviter=mock_inviter,
             channel_id=snowflakes.Snowflake(34123123),
         )
         mock_invite_data_2 = mock.Mock(
-            cache.InviteData, target_user_id=None, inviter_id=None, channel_id=snowflakes.Snowflake(34123123)
+            cache.InviteData, target_user=None, inviter=None, channel_id=snowflakes.Snowflake(34123123)
         )
         mock_other_invite_data = mock.Mock(cache.InviteData, channel_id=snowflakes.Snowflake(9484732))
         mock_other_invite_data_2 = mock.Mock(cache.InviteData)
@@ -857,7 +848,7 @@ class TestStatefulCacheImpl:
             snowflakes.Snowflake(999888777), snowflakes.Snowflake(34123123)
         ) == {"oeoeoeoeooe": mock_invite_1, "owowowowoowowow": mock_invite_2}
         cache_impl._garbage_collect_user.assert_has_calls(
-            [mock.call(mock_wrapped_target_user, decrement=1), mock.call(mock_wrapped_inviter, decrement=1)]
+            [mock.call(mock_target_user, decrement=1), mock.call(mock_inviter, decrement=1)], any_order=True
         )
         assert cache_impl._guild_entries[snowflakes.Snowflake(999888777)].invites == ["oeoeoeoeoeoeoe"]
         assert cache_impl._invite_entries == {"oeoeoeoeoeoeoe": mock_other_invite_data, "oeo": mock_other_invite_data_2}
@@ -935,6 +926,7 @@ class TestStatefulCacheImpl:
         )
         cache_impl._build_invite = mock.Mock(return_value=mock_invite)
         cache_impl._garbage_collect_user = mock.Mock()
+        # TODO: test this is called
         cache_impl._remove_guild_record_if_empty = mock.Mock()
         assert cache_impl.delete_invite("oooooooooooooo") is mock_invite
         cache_impl._build_invite.assert_called_once_with(mock_invite_data)
@@ -1154,7 +1146,7 @@ class TestStatefulCacheImpl:
     def test__build_member(self, cache_impl):
         mock_user = mock.MagicMock(users.User)
         member_data = cache.MemberData(
-            user=cache.RefCell(object=mock_user),
+            user=cache.RefCell(mock_user),
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
             role_ids=(snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123)),
@@ -1164,7 +1156,7 @@ class TestStatefulCacheImpl:
             is_mute=True,
             is_pending=False,
         )
-        member = cache_impl._build_member(cache.RefCell(object=member_data))
+        member = cache_impl._build_member(cache.RefCell(member_data))
         assert member.user == mock_user
         assert member.user is not mock_user
         assert member.guild_id == 6434435234
@@ -1177,41 +1169,29 @@ class TestStatefulCacheImpl:
         assert member.is_pending is False
 
     def test_clear_members(self, cache_impl):
-        mock_wrapped_user_1 = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(2123123)))
-        mock_wrapped_user_2 = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(212314423)))
-        mock_wrapped_user_3 = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(2123166623)))
-        mock_wrapped_user_4 = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(21237777123)))
-        mock_wrapped_user_5 = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(212399999123)))
+        mock_user_1 = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(2123123)))
+        mock_user_2 = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(212314423)))
+        mock_user_3 = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(2123166623)))
+        mock_user_4 = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(21237777123)))
+        mock_user_5 = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(212399999123)))
         mock_data_member_1 = cache.RefCell(
-            object=mock.Mock(
-                cache.MemberData,
-                user=mock_wrapped_user_1,
-                guild_id=snowflakes.Snowflake(43123123),
-                has_been_deleted=False,
+            mock.Mock(
+                cache.MemberData, user=mock_user_1, guild_id=snowflakes.Snowflake(43123123), has_been_deleted=False
             )
         )
         mock_data_member_2 = cache.RefCell(
-            object=mock.Mock(
-                cache.MemberData,
-                user=mock_wrapped_user_2,
-                guild_id=snowflakes.Snowflake(43123123),
-                has_been_deleted=False,
+            mock.Mock(
+                cache.MemberData, user=mock_user_2, guild_id=snowflakes.Snowflake(43123123), has_been_deleted=False
             )
         )
         mock_data_member_3 = cache.RefCell(
-            object=mock.Mock(
-                cache.MemberData, user=mock_wrapped_user_3, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False
-            )
+            mock.Mock(cache.MemberData, user=mock_user_3, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False)
         )
         mock_data_member_4 = cache.RefCell(
-            object=mock.Mock(
-                cache.MemberData, user=mock_wrapped_user_4, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False
-            )
+            mock.Mock(cache.MemberData, user=mock_user_4, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False)
         )
         mock_data_member_5 = cache.RefCell(
-            object=mock.Mock(
-                cache.MemberData, user=mock_wrapped_user_5, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False
-            )
+            mock.Mock(cache.MemberData, user=mock_user_5, guild_id=snowflakes.Snowflake(65234), has_been_deleted=False)
         )
         mock_member_1 = object()
         mock_member_2 = object()
@@ -1260,11 +1240,11 @@ class TestStatefulCacheImpl:
 
         cache_impl._garbage_collect_user.assert_has_calls(
             [
-                mock.call(mock_wrapped_user_1, decrement=1),
-                mock.call(mock_wrapped_user_2, decrement=1),
-                mock.call(mock_wrapped_user_3, decrement=1),
-                mock.call(mock_wrapped_user_4, decrement=1),
-                mock.call(mock_wrapped_user_5, decrement=1),
+                mock.call(mock_user_1, decrement=1),
+                mock.call(mock_user_2, decrement=1),
+                mock.call(mock_user_3, decrement=1),
+                mock.call(mock_user_4, decrement=1),
+                mock.call(mock_user_5, decrement=1),
             ]
         )
         cache_impl._remove_guild_record_if_empty.assert_has_calls(
@@ -1296,11 +1276,11 @@ class TestStatefulCacheImpl:
 
     def test_delete_member_for_known_member(self, cache_impl):
         mock_member = mock.Mock(guilds.Member)
-        mock_user = cache.RefCell(object=mock.Mock(id=snowflakes.Snowflake(67876)))
+        mock_user = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(67876)))
         mock_member_data = mock.Mock(
             cache.MemberData, user=mock_user, guild_id=snowflakes.Snowflake(42123), has_been_deleted=False
         )
-        mock_reffed_member = cache.RefCell(object=mock_member_data)
+        mock_reffed_member = cache.RefCell(mock_member_data)
         guild_record = cache.GuildRecord(members={snowflakes.Snowflake(67876): mock_reffed_member})
         cache_impl._guild_entries = collections.FreezableDict({snowflakes.Snowflake(42123): guild_record})
         cache_impl._remove_guild_record_if_empty = mock.Mock()
@@ -1314,7 +1294,7 @@ class TestStatefulCacheImpl:
         cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(42123), guild_record)
 
     def test_delete_member_for_known_hard_referenced_member(self, cache_impl):
-        mock_member = cache.RefCell(object=mock.Mock(has_been_deleted=False), ref_count=1)
+        mock_member = cache.RefCell(mock.Mock(has_been_deleted=False), ref_count=1)
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(42123): cache.GuildRecord(
@@ -1363,11 +1343,11 @@ class TestStatefulCacheImpl:
         cache_impl._build_member.assert_called_once_with(mock_member_data)
 
     def test_get_members_view(self, cache_impl):
-        mock_member_data_1 = cache.RefCell(object=object())
-        mock_member_data_2 = cache.RefCell(object=object())
-        mock_member_data_3 = cache.RefCell(object=object())
-        mock_member_data_4 = cache.RefCell(object=object())
-        mock_member_data_5 = cache.RefCell(object=object())
+        mock_member_data_1 = cache.RefCell(object())
+        mock_member_data_2 = cache.RefCell(object())
+        mock_member_data_3 = cache.RefCell(object())
+        mock_member_data_4 = cache.RefCell(object())
+        mock_member_data_5 = cache.RefCell(object())
         mock_member_1 = object()
         mock_member_2 = object()
         mock_member_3 = object()
@@ -1429,8 +1409,8 @@ class TestStatefulCacheImpl:
         assert members_mapping == {}
 
     def test_get_members_view_for_guild(self, cache_impl):
-        mock_member_data_1 = cache.RefCell(object=mock.Mock(cache.MemberData, has_been_deleted=False))
-        mock_member_data_2 = cache.RefCell(object=mock.Mock(cache.MemberData, has_been_deleted=False))
+        mock_member_data_1 = cache.RefCell(mock.Mock(cache.MemberData, has_been_deleted=False))
+        mock_member_data_2 = cache.RefCell(mock.Mock(cache.MemberData, has_been_deleted=False))
         mock_member_1 = mock.Mock(guilds.Member)
         mock_member_2 = mock.Mock(guilds.Member)
         guild_record = cache.GuildRecord(
@@ -1438,9 +1418,7 @@ class TestStatefulCacheImpl:
                 {
                     snowflakes.Snowflake(3214321): mock_member_data_1,
                     snowflakes.Snowflake(53224): mock_member_data_2,
-                    snowflakes.Snowflake(9000): cache.RefCell(
-                        object=mock.Mock(cache.MemberData, has_been_deleted=True)
-                    ),
+                    snowflakes.Snowflake(9000): cache.RefCell(mock.Mock(cache.MemberData, has_been_deleted=True)),
                 }
             )
         )
@@ -1454,7 +1432,7 @@ class TestStatefulCacheImpl:
 
     def test_set_member(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
-        mock_user_ref = cache.RefCell(object=mock_user)
+        mock_user_ref = cache.RefCell(mock_user)
         member_model = guilds.Member(
             guild_id=snowflakes.Snowflake(67345234),
             user=mock_user,
@@ -1587,41 +1565,41 @@ class TestStatefulCacheImpl:
         ...
 
     def test__garbage_collect_user_for_known_unreferenced_user(self, cache_impl):
-        mock_wrapped_user = mock.Mock(cache.RefCell, ref_count=1, object=mock.Mock(id=snowflakes.Snowflake(21231234)))
-        mock_wrapped_other_user = mock.Mock(cache.RefCell, ref_count=1)
+        mock_user = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=1)
+        mock_other_user = mock.Mock(cache.RefCell, ref_count=1)
         cache_impl._user_entries = collections.FreezableDict(
             {
-                snowflakes.Snowflake(21231234): mock_wrapped_user,
-                snowflakes.Snowflake(645234): mock_wrapped_other_user,
+                snowflakes.Snowflake(21231234): mock_user,
+                snowflakes.Snowflake(645234): mock_other_user,
             }
         )
-        assert cache_impl._garbage_collect_user(mock_wrapped_user, decrement=1) is None
-        assert cache_impl._user_entries == {snowflakes.Snowflake(645234): mock_wrapped_other_user}
+        assert cache_impl._garbage_collect_user(mock_user, decrement=1) is None
+        assert dict(cache_impl._user_entries) == {snowflakes.Snowflake(645234): mock_other_user}
 
     def test_garbage_collect_user_for_referenced_user(self, cache_impl):
-        mock_wrapped_user = mock.Mock(cache.RefCell, ref_count=2, object=mock.Mock(id=snowflakes.Snowflake(21231234)))
-        mock_other_wrapped_user = mock.Mock(cache.RefCell)
+        mock_user = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=2)
+        mock_other_user = mock.Mock(cache.RefCell)
         cache_impl._user_entries = collections.FreezableDict(
-            {snowflakes.Snowflake(21231234): mock_wrapped_user, snowflakes.Snowflake(645234): mock_other_wrapped_user}
+            {snowflakes.Snowflake(21231234): mock_user, snowflakes.Snowflake(645234): mock_other_user}
         )
-        assert cache_impl._garbage_collect_user(mock_wrapped_user, decrement=1) is None
+        assert cache_impl._garbage_collect_user(mock_user, decrement=1) is None
         assert cache_impl._user_entries == {
-            snowflakes.Snowflake(21231234): mock_wrapped_user,
-            snowflakes.Snowflake(645234): mock_other_wrapped_user,
+            snowflakes.Snowflake(21231234): mock_user,
+            snowflakes.Snowflake(645234): mock_other_user,
         }
-        assert mock_wrapped_user.ref_count == 1
+        assert mock_user.ref_count == 1
 
     def test_garbage_collect_user_for_unknown_user(self, cache_impl):
-        mock_wrapped_user = mock.Mock(cache.RefCell, ref_count=0, object=mock.Mock(id=snowflakes.Snowflake(21235432)))
-        cache_impl._user_entries = collections.FreezableDict({snowflakes.Snowflake(21231234): mock_wrapped_user})
-        assert cache_impl._garbage_collect_user(mock_wrapped_user) is None
-        assert cache_impl._user_entries == {snowflakes.Snowflake(21231234): mock_wrapped_user}
+        mock_user = cache.RefCell(mock.Mock(id=snowflakes.Snowflake(21235432), ref_count=0))
+        cache_impl._user_entries = collections.FreezableDict({snowflakes.Snowflake(21231234): mock_user})
+        assert cache_impl._garbage_collect_user(mock_user) is None
+        assert cache_impl._user_entries == {snowflakes.Snowflake(21231234): mock_user}
 
     def test_get_user_for_known_user(self, cache_impl):
         mock_user = mock.MagicMock(users.User)
         cache_impl._user_entries = collections.FreezableDict(
             {
-                snowflakes.Snowflake(21231234): cache.RefCell(object=mock_user),
+                snowflakes.Snowflake(21231234): cache.RefCell(mock_user),
                 snowflakes.Snowflake(645234): mock.Mock(cache.RefCell),
             }
         )
@@ -1633,8 +1611,8 @@ class TestStatefulCacheImpl:
         mock_user_2 = mock.MagicMock(users.User)
         cache_impl._user_entries = collections.FreezableDict(
             {
-                snowflakes.Snowflake(54123): cache.RefCell(object=mock_user_1),
-                snowflakes.Snowflake(76345): cache.RefCell(object=mock_user_2),
+                snowflakes.Snowflake(54123): cache.RefCell(mock_user_1),
+                snowflakes.Snowflake(76345): cache.RefCell(mock_user_2),
             }
         )
         assert cache_impl.get_users_view() == {
@@ -1652,7 +1630,6 @@ class TestStatefulCacheImpl:
         assert 6451234123 in cache_impl._user_entries
         assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object == mock_user
         assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object is not mock_user
-        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].ref_count == 0
 
     def test__set_user_carries_over_ref_count(self, cache_impl):
         mock_user = mock.MagicMock(users.User, id=snowflakes.Snowflake(6451234123))
@@ -1681,7 +1658,7 @@ class TestStatefulCacheImpl:
             is_streaming=False,
             is_suppressed=False,
             is_video_enabled=False,
-            member=cache.RefCell(object=mock_member_data),
+            member=cache.RefCell(mock_member_data),
             session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
         )
         current_voice_state = cache_impl._build_voice_state(voice_state_data)
@@ -1868,9 +1845,39 @@ class TestStatefulCacheImpl:
     def test_get_voice_states_view_for_guild(self, cache_impl):
         ...
 
-    @pytest.mark.skip(reason="TODO")
     def test_set_voice_state(self, cache_impl):
-        ...
+        mock_member = object()
+        mock_reffed_member = cache.RefCell(object())
+        voice_state = voices.VoiceState(
+            app=None,
+            channel_id=snowflakes.Snowflake(239211023123),
+            guild_id=snowflakes.Snowflake(43123123),
+            is_guild_muted=True,
+            is_guild_deafened=False,
+            is_self_muted=False,
+            is_self_deafened=True,
+            is_suppressed=False,
+            is_video_enabled=True,
+            is_streaming=True,
+            user_id=snowflakes.Snowflake(4531231),
+            member=mock_member,
+            session_id="kodfsoijkased9i8uos9i8uawe",
+        )
+        cache_impl._set_member = mock.Mock(return_value=mock_reffed_member)
+        cache_impl._increment_member_ref_count = mock.Mock()
+
+        assert cache_impl.set_voice_state(voice_state) is None
+        cache_impl._increment_member_ref_count.assert_called_with(mock_reffed_member)
+        cache_impl._set_member.assert_called_once_with(mock_member)
+        voice_state_data = cache_impl._guild_entries[43123123].voice_states[4531231]
+        assert voice_state_data.channel_id == 239211023123
+        assert voice_state_data.guild_id == 43123123
+        assert voice_state_data.is_guild_muted is True
+        assert voice_state_data.is_guild_deafened is False
+        assert voice_state_data.is_self_muted is False
+        assert voice_state_data.is_self_deafened is True
+        assert voice_state_data.member is mock_reffed_member
+        assert voice_state_data.session_id == "kodfsoijkased9i8uos9i8uawe"
 
     def test_update_voice_state(self, cache_impl):
         mock_old_voice_state = mock.Mock(voices.VoiceState)
@@ -1897,7 +1904,7 @@ class TestStatefulCacheImpl:
         mock_channel = mock.MagicMock()
         mock_mention_user = mock.MagicMock()
         mention_data = cache.MentionsData(
-            users={snowflakes.Snowflake(4231): cache.RefCell(object=mock_mention_user)},
+            users={snowflakes.Snowflake(4231): cache.RefCell(mock_mention_user)},
             role_ids=(snowflakes.Snowflake(21323123),),
             channels={snowflakes.Snowflake(4444): mock_channel},
             everyone=True,
@@ -1918,8 +1925,8 @@ class TestStatefulCacheImpl:
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
             guild_id=snowflakes.Snowflake(5555555),
-            author=cache.RefCell(object=mock_author),
-            member=cache.RefCell(object=member_data),
+            author=cache.RefCell(mock_author),
+            member=cache.RefCell(member_data),
             content="OKOKOK",
             timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
             edited_timestamp=datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
@@ -1936,10 +1943,10 @@ class TestStatefulCacheImpl:
             message_reference=mock_reference,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce="aNonce",
-            referenced_message=cache.RefCell(object=mock_referenced_message_data),
+            referenced_message=cache.RefCell(mock_referenced_message_data),
         )
 
-        result = cache_impl._build_message(cache.RefCell(object=message_data))
+        result = cache_impl._build_message(cache.RefCell(message_data))
         assert result.id == 32123123
         assert result.channel_id == 3123123123
         assert result.guild_id == 5555555
@@ -2002,7 +2009,7 @@ class TestStatefulCacheImpl:
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
             guild_id=snowflakes.Snowflake(5555555),
-            author=cache.RefCell(object=object()),
+            author=cache.RefCell(object()),
             member=None,
             content=None,
             timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
@@ -2023,7 +2030,8 @@ class TestStatefulCacheImpl:
             referenced_message=None,
         )
 
-        result = cache_impl._build_message(cache.RefCell(object=message_data))
+        result = cache_impl._build_message(cache.RefCell(message_data))
+        assert result.app is cache_impl._app
         assert result.member is None
         assert result.content is None
         assert result.edited_timestamp is None
@@ -2094,5 +2102,23 @@ class TestStatefulCacheImpl:
     def test_set_message(self, cache_impl):
         raise NotImplementedError
 
-    def test_update_message(self, cache_impl):
+    def test_update_message_for_full_message(self, cache_impl):
+        message = mock.Mock(messages.Message, id=snowflakes.Snowflake(45312312))
+        cached_message = object()
+        cache_impl.get_message = mock.Mock(side_effect=(None, cached_message))
+        cache_impl.set_message = mock.Mock()
+
+        assert cache_impl.update_message(message) == (None, cached_message)
+        cache_impl.set_message.assert_called_once_with(message)
+        cache_impl.get_message.assert_has_calls([mock.call(45312312), mock.call(45312312)])
+
+    def test_update_message_for_partial_message(self, cache_impl):
         raise NotImplementedError
+
+    def test_update_message_for_unknown_partial_message(self, cache_impl):
+        message = mock.Mock(messages.PartialMessage, id=snowflakes.Snowflake(2123123123))
+        cache_impl.get_message = mock.Mock(side_effect=(None, None))
+        cache_impl.set_message = mock.Mock()
+
+        assert cache_impl.update_message(message) == (None, None)
+        cache_impl.set_message.assert_not_called()

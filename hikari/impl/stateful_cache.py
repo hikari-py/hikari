@@ -599,7 +599,7 @@ class StatefulCacheImpl(cache.MutableCache):
     def _can_remove_member(
         member: cache_utility.RefCell[cache_utility.MemberData],
     ) -> bool:
-        return member.ref_count <= 0 and member.object.has_been_deleted
+        return member.ref_count < 1 and member.object.has_been_deleted
 
     def _increment_member_ref_count(
         self, member: cache_utility.RefCell[cache_utility.MemberData], *, increment: int = 1
@@ -709,10 +709,10 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
     def set_member(self, member: guilds.Member, /) -> None:
-        self._set_member(member, adding=True)
+        self._set_member(member, is_reference=False)
 
     def _set_member(
-        self, member: guilds.Member, /, *, adding: bool = False
+        self, member: guilds.Member, /, *, is_reference: bool = True
     ) -> cache_utility.RefCell[cache_utility.MemberData]:
         guild_record = self._get_or_create_guild_record(member.guild_id)
         user = self._set_user(member.user)
@@ -725,14 +725,15 @@ class StatefulCacheImpl(cache.MutableCache):
             self._increment_user_ref_count(member_data.user)
 
         try:
-            if not adding:
+            member_data.has_been_deleted = False
+            if is_reference:
                 member_data.has_been_deleted = guild_record.members[member.id].object.has_been_deleted
 
             guild_record.members[member.id].object = member_data
 
         except KeyError:
-            member_data.has_been_deleted = not adding
-            guild_record.members[member.id] = cache_utility.RefCell(object=member_data)
+            member_data.has_been_deleted = is_reference
+            guild_record.members[member.id] = cache_utility.RefCell(member_data)
 
         return guild_record.members[member.id]
 
@@ -859,7 +860,7 @@ class StatefulCacheImpl(cache.MutableCache):
                 emoji_data = self._unknown_custom_emoji_entries[emoji.id]
 
             else:
-                emoji_data = cache_utility.RefCell(object=copy.copy(emoji))
+                emoji_data = cache_utility.RefCell(copy.copy(emoji))
                 self._unknown_custom_emoji_entries[emoji.id] = emoji_data
 
             self._increment_unknown_custom_emoji_ref(emoji_data)
@@ -955,8 +956,8 @@ class StatefulCacheImpl(cache.MutableCache):
         return cached_role, self.get_role(role.id)
 
     @staticmethod
-    def _can_remove_user(user_data: typing.Optional[cache_utility.RefCell[users.User]]) -> bool:
-        return bool(user_data and user_data.ref_count == 0)
+    def _can_remove_user(user_data: cache_utility.RefCell[users.User]) -> bool:
+        return user_data.ref_count < 1
 
     def _increment_user_ref_count(self, user: cache_utility.RefCell[users.User], increment: int = 1) -> None:
         user.ref_count += increment
@@ -986,10 +987,12 @@ class StatefulCacheImpl(cache.MutableCache):
     def _set_user(self, user: users.User, /) -> cache_utility.RefCell[users.User]:
         try:
             self._user_entries[user.id].object = copy.copy(user)
+            cell = self._user_entries[user.id]
         except KeyError:
-            self._user_entries[user.id] = cache_utility.RefCell(object=copy.copy(user), ref_count=0)
+            cell = cache_utility.RefCell(copy.copy(user))
+            self._user_entries[user.id] = cell
 
-        return self._user_entries[user.id]
+        return cell
 
     def _build_voice_state(
         self,
@@ -1128,7 +1131,7 @@ class StatefulCacheImpl(cache.MutableCache):
         return message_data.object.build_entity(app=self._app)
 
     def _can_remove_message(self, message: cache_utility.RefCell[cache_utility.MessageData]) -> bool:
-        return message.object.id not in self._message_entries and message.ref_count <= 0
+        return message.object.id not in self._message_entries and message.ref_count < 1
 
     def _garbage_collect_message(
         self,
@@ -1225,39 +1228,36 @@ class StatefulCacheImpl(cache.MutableCache):
         if message.referenced_message and message.referenced_message is not undefined.UNDEFINED:
             referenced_message = self._set_message(message.referenced_message)
 
-        message_data = cache_utility.MessageData.build_from_entity(
-            message, author=author, member=member, mention_users=mention_users, referenced_message=referenced_message
-        )
-
-        if message.id in self._referenced_messages and not is_reference:
-            self._message_entries[message.id] = self._referenced_messages.pop(message.id)
-
-        increment_references: bool = False
-        if message.id in self._message_entries:
-            self._message_entries[message.id].object = message_data
-
-        elif not is_reference:
-            self._message_entries[message.id] = cache_utility.RefCell(object=message_data)
-            increment_references = True
-
-        elif message.id in self._referenced_messages:
-            self._referenced_messages[message.id].object = message_data
-
-        else:
-            self._referenced_messages[message.id] = cache_utility.RefCell(object=message_data)
-            increment_references = True
-
-        if increment_references:
-            self._increment_user_ref_count(author)
+        if message.id not in self._referenced_messages and message.id not in self._message_entries:
             if member:
                 self._increment_member_ref_count(member)
+
+            if referenced_message:
+                self._increment_message_ref_count(referenced_message)
 
             if mention_users is not undefined.UNDEFINED:
                 for user in mention_users.values():
                     self._increment_user_ref_count(user)
 
-            if referenced_message:
-                self._increment_message_ref_count(referenced_message)
+        message_data = cache_utility.MessageData.build_from_entity(
+            message, author=author, member=member, mention_users=mention_users, referenced_message=referenced_message
+        )
+
+        # Ensure any previously set message ref cell is in the right place before updating the cache.
+        if not is_reference and message.id in self._referenced_messages:
+            self._message_entries[message.id] = self._referenced_messages.pop(message.id)
+
+        if message.id in self._message_entries:
+            self._message_entries[message.id].object = message_data
+
+        elif not is_reference:
+            self._message_entries[message.id] = cache_utility.RefCell(message_data)
+
+        elif message.id in self._referenced_messages:
+            self._referenced_messages[message.id].object = message_data
+
+        else:
+            self._referenced_messages[message.id] = cache_utility.RefCell(message_data)
 
         return self._message_entries.get(message.id) or self._referenced_messages[message.id]
 
@@ -1278,6 +1278,13 @@ class StatefulCacheImpl(cache.MutableCache):
             ] = undefined.UNDEFINED
             if message.mentions.users is not undefined.UNDEFINED:
                 mention_user = {user_id: self._set_user(user) for user_id, user in message.mentions.users.items()}
+
+                # We want to ensure that any previously mentioned users are garbage collected if they're no longer
+                # being mentioned.
+                if cached_message_data.object.mentions.users is not undefined.UNDEFINED:
+                    for user_id, user in cached_message_data.object.mentions.users.items():
+                        if user_id not in mention_user:
+                            self._garbage_collect_user(user, decrement=1)
 
             cached_message_data.object.update(message, mention_users=mention_user)
 

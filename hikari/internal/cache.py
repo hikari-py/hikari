@@ -365,10 +365,10 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         target_user: typing.Optional[RefCell[users_.User]] = None,
     ) -> InviteData:
         if not inviter and invite.inviter:
-            inviter = RefCell(object=copy.copy(invite.inviter))
+            inviter = RefCell(copy.copy(invite.inviter))
 
         if not target_user and invite.target_user:
-            target_user = RefCell(object=copy.copy(invite.target_user))
+            target_user = RefCell(copy.copy(invite.target_user))
 
         return cls(
             code=invite.code,
@@ -414,7 +414,7 @@ class MemberData(BaseData[guilds.Member]):
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
-            user=user or RefCell(object=copy.copy(member.user)),
+            user=user or RefCell(copy.copy(member.user)),
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -457,7 +457,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
         user: typing.Optional[RefCell[users_.User]] = None,
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
-            user = RefCell(object=copy.copy(emoji.user))
+            user = RefCell(copy.copy(emoji.user))
 
         return cls(
             id=emoji.id,
@@ -519,7 +519,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             pass
 
         elif isinstance(activity.emoji, emojis.CustomEmoji):
-            emoji = RefCell(object=copy.copy(activity.emoji))
+            emoji = RefCell(copy.copy(activity.emoji))
 
         elif activity.emoji:
             emoji = activity.emoji.name
@@ -624,7 +624,7 @@ class MentionsData(BaseData[messages.Mentions]):
         users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
     ) -> MentionsData:
         if not users and mentions.users is not undefined.UNDEFINED:
-            users = {user_id: RefCell(object=copy.copy(user)) for user_id, user in mentions.users.items()}
+            users = {user_id: RefCell(copy.copy(user)) for user_id, user in mentions.users.items()}
 
         channels: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, "channels_.PartialChannel"]
@@ -664,7 +664,7 @@ class MentionsData(BaseData[messages.Mentions]):
             self.users = users
 
         elif mention.users is not undefined.UNDEFINED:
-            self.users = {user_id: RefCell(object=copy.copy(user)) for user_id, user in mention.users.items()}
+            self.users = {user_id: RefCell(copy.copy(user)) for user_id, user in mention.users.items()}
 
         if mention.role_ids is not undefined.UNDEFINED:
             self.role_ids = tuple(mention.role_ids)
@@ -735,20 +735,20 @@ class MessageData(BaseData[messages.Message]):
         referenced_message: typing.Optional[RefCell[MessageData]] = None,
     ) -> MessageData:
         if not member and message.member:
-            member = RefCell(object=MemberData.build_from_entity(message.member))
+            member = RefCell(MemberData.build_from_entity(message.member))
 
         if (
             not referenced_message
             and message.referenced_message
             and message.referenced_message is not undefined.UNDEFINED
         ):
-            referenced_message = RefCell(object=MessageData.build_from_entity(message.referenced_message))
+            referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
 
         return cls(
             id=message.id,
             channel_id=message.channel_id,
             guild_id=message.guild_id,
-            author=author or RefCell(object=copy.copy(message.author)),
+            author=author or RefCell(copy.copy(message.author)),
             member=member,
             content=message.content,
             timestamp=message.timestamp,
@@ -885,15 +885,33 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=voice_state.is_streaming,
             is_suppressed=voice_state.is_suppressed,
             is_video_enabled=voice_state.is_video_enabled,
-            member=member or RefCell(object=MemberData.build_from_entity(voice_state.member)),
+            member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
             session_id=voice_state.session_id,
         )
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
+@attr.s(slots=True, repr=True, hash=False, weakref_slot=True)
+class Cell(typing.Generic[ValueT]):
+    """Object used to store mutable references to a value in multiple places."""
+
+    object: ValueT = attr.ib(repr=True)
+
+    def copy(self) -> ValueT:
+        """Get a copy of the contents of this cell.
+
+        Returns
+        -------
+        ValueT
+            The copied contents of this cell.
+        """
+        return copy.copy(self.object)
+
+
+@attr_extensions.with_copy
+@attr.s(slots=True, repr=False, hash=False, weakref_slot=False)
 class RefCell(typing.Generic[ValueT]):
-    """Object used store mutable references to a value in multiple places.
+    """Object used to track mutable references to a value in multiple places.
 
     This is intended to enable reference counting for entities that are only kept
     alive by reference (e.g. the unknown emoji objects attached to presence
@@ -901,16 +919,16 @@ class RefCell(typing.Generic[ValueT]):
     the time spent building these entities for the objects that reference them.
     """
 
-    object: ValueT = attr.ib()
-    ref_count: int = attr.ib(default=0)
+    object: ValueT = attr.ib(repr=True)
+    ref_count: int = attr.ib(default=0, kw_only=True)
 
     def copy(self) -> ValueT:
-        """Copy the contents of this reference cell.
+        """Get a copy of the contents of this cell.
 
         Returns
         -------
         ValueT
-            The copied contents of this reference cell.
+            The copied contents of this cell.
         """
         return copy.copy(self.object)
 
@@ -939,7 +957,7 @@ def copy_guild_channel(channel: ChannelT) -> ChannelT:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in collections.copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in channel.permission_overwrites.items()
     }
     return channel
 

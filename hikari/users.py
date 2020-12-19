@@ -44,7 +44,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import messages
     from hikari import traits
-    from hikari import users
 
 
 @typing.final
@@ -225,7 +224,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
@@ -666,7 +665,7 @@ class OwnUser(UserImpl):
         reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]

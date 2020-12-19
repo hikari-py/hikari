@@ -29,10 +29,10 @@ __all__: typing.List[str] = [
     "SnowflakeSet",
     "ExtendedMutableMapping",
     "FreezableDict",
+    "WeakMap",
     "TimedCacheMap",
     "LimitedCapacityCacheMap",
     "get_index_or_slice",
-    "copy_mapping",
 ]
 
 import abc
@@ -43,6 +43,7 @@ import itertools
 import sys
 import time
 import typing
+import weakref
 
 from hikari import snowflakes
 
@@ -133,6 +134,43 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
+
+
+class WeakMap(ExtendedMutableMapping[KeyT, ValueT]):
+    """A mapping which weakly stores values.
+
+    Values will only stay alive in this mapping as long as there are separate
+    strong references to them.
+    """
+
+    __slots__: typing.Sequence[str] = ("_source",)
+
+    def __init__(self, source: typing.Optional[typing.Mapping[KeyT, ValueT]] = None, /) -> None:
+        self._source = weakref.WeakValueDictionary(source) if source else weakref.WeakValueDictionary()
+
+    def clear(self) -> None:
+        self._source.clear()
+
+    def copy(self) -> WeakMap[KeyT, ValueT]:
+        return WeakMap(self._source)
+
+    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+        return dict(self._source)
+
+    def __getitem__(self, key: KeyT) -> ValueT:
+        return self._source[key]
+
+    def __iter__(self) -> typing.Iterator[KeyT]:
+        return iter(self._source)
+
+    def __len__(self) -> int:
+        return len(self._source)
+
+    def __delitem__(self, key: KeyT) -> None:
+        del self._source[key]
+
+    def __setitem__(self, key: KeyT, value: ValueT) -> None:
+        self._source[key] = value
 
 
 class _FrozenDict(typing.MutableMapping[KeyT, ValueT]):
@@ -462,17 +500,3 @@ def get_index_or_slice(
             raise IndexError(index_or_slice) from None
 
     raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
-
-
-def copy_mapping(mapping: typing.Mapping[KeyT, ValueT]) -> typing.MutableMapping[KeyT, ValueT]:
-    """Logic for copying mappings that targets implementation specific copy impls (e.g. dict.copy).
-
-    !!! warning
-        For general use, `MappedCollection` should be preferred over this.
-    """
-    # dict.copy ranges from between roughly 2 times to 5 times more efficient than casting to a dict so we want to
-    # try to use this where possible.
-    try:
-        return mapping.copy()  # type: ignore[attr-defined, no-any-return]
-    except (AttributeError, TypeError):
-        return dict(mapping)
