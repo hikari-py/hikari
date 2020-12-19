@@ -1934,7 +1934,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             created_at=time.iso8601_datetime_string_to_datetime(payload["created_at"]),
             updated_at=time.iso8601_datetime_string_to_datetime(payload["updated_at"]),
             source_guild=source_guild,
-            is_dirty=payload["is_dirty"],
+            is_unsynced=bool(payload["is_dirty"]),
         )
 
     ###############

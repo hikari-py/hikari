@@ -67,32 +67,32 @@ class VoiceComponent(abc.ABC):
     @abc.abstractmethod
     async def connect_to(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
+        voice_connection_type: typing.Type[_VoiceConnectionT],
         *,
         deaf: bool = False,
         mute: bool = False,
-        voice_connection_type: typing.Type[_VoiceConnectionT],
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
-            The channel or channel ID to connect to.
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
             The guild to connect to.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
+            The channel or channel ID to connect to.
+        voice_connection_type : typing.Type[VoiceConnection]
+            The type of voice connection to use. This should be initialized
+            internally using the `IVoiceConnection.initialize`
+            `builtins.classmethod`.
         deaf : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel deafened (thus unable to hear other users).
         mute : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel muted (thus unable to send audio).
-        voice_connection_type : typing.Type[VoiceConnection]
-            The type of voice connection to use. This should be initialized
-            internally using the `IVoiceConnection.initialize`
-            `builtins.classmethod`.
         **kwargs : typing.Any
             Any arguments to provide to the `IVoiceConnection.initialize`
             method.

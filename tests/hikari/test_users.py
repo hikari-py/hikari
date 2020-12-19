@@ -270,3 +270,11 @@ class TestOwnUser:
         obj.app.rest.fetch_my_user = mock.AsyncMock(return_value=user)
         assert await obj.fetch_self() is user
         obj.app.rest.fetch_my_user.assert_awaited_once_with()
+
+    async def test_fetch_dm_channel(self, obj):
+        with pytest.raises(TypeError, match=r"Unable to fetch your own DM channel"):
+            await obj.fetch_dm_channel()
+
+    async def test_send(self, obj):
+        with pytest.raises(TypeError, match=r"Unable to send a DM to yourself"):
+            await obj.send()
