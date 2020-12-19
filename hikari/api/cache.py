@@ -45,7 +45,10 @@ _ValueT = typing.TypeVar("_ValueT")
 
 
 class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
-    """Interface describing an immutable snapshot view of part of a cache."""
+    """Interface describing an immutable snapshot view of part of a cache.
+
+    This can be treated as a normal `typing.Mapping` but with some special methods.
+    """
 
     __slots__: typing.Sequence[str] = ()
 
