@@ -408,6 +408,21 @@ class Member(users.User):
         return self.app.cache.get_presence(self.guild_id, self.id)
 
     @property
+    def roles(self) -> typing.Sequence[Role]:
+        """Return the roles the user has.
+
+        This will be empty if the roles are missing from the cache.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Role]
+            The roles the users has.
+        """
+        roles_view = self.app.cache.get_roles_view_for_guild(self.guild_id)
+
+        return [r for r in roles_view.values() if r.id in self.role_ids]
+
+    @property
     def top_role(self) -> typing.Optional[Role]:
         """Return the highest role the member has.
 
@@ -417,13 +432,7 @@ class Member(users.User):
             `builtins.None` if the cache is missing the roles information or
             the highest role the user has.
         """
-        roles_view = self.app.cache.get_roles_view_for_guild(self.guild_id)
-
-        roles = sorted(
-            (r for r in roles_view.values() if r.id in self.role_ids),
-            key=lambda r: r.position,
-            reverse=True,
-        )
+        roles = sorted(self.roles, key=lambda r: r.position, reverse=True)
 
         try:
             return next(iter(roles))
