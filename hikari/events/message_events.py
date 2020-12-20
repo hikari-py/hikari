@@ -44,6 +44,7 @@ import attr
 from hikari import channels
 from hikari import intents
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import users
 from hikari.events import base_events
@@ -54,7 +55,6 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import messages
-    from hikari import traits
     from hikari.api import shard as shard_
 
 
@@ -241,10 +241,11 @@ class GuildMessageCreateEvent(MessageCreateEvent):
             The channel that the message was sent in, if known and cached,
             otherwise, `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(
-            channel, (channels.GuildNewsChannel, channels.GuildTextChannel, type(None))
-        ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
+        assert isinstance(channel, (channels.GuildNewsChannel, channels.GuildTextChannel))
         return channel
 
     @property
@@ -261,6 +262,9 @@ class GuildMessageCreateEvent(MessageCreateEvent):
             The guild that this event occurred in, if cached. Otherwise,
             `builtins.None` instead.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_guild(self.guild_id)
 
     @property
@@ -488,7 +492,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 
         author = self.message.author
 
-        if author is not None:
+        if author is not None and isinstance(self.app, traits.CacheAware):
             member = self.app.cache.get_member(self.guild_id, author.id)
 
             if member is not None:
@@ -506,10 +510,11 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             The channel that the message was sent in, if known and cached,
             otherwise, `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(
-            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
-        ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
+        assert isinstance(channel, (channels.GuildNewsChannel, channels.GuildTextChannel))
         return channel
 
     @property
@@ -526,6 +531,9 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             The guild that this event occurred in, if cached. Otherwise,
             `builtins.None` instead.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_guild(self.guild_id)
 
     @property
@@ -597,10 +605,11 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
             if it is a normal message, or `hikari.channels.GuildNewsChannel` if
             sent in an announcement channel.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
-        ), f"expected cached channel to be None or a GuildTextChannel/GuildNewsChannel, not {channel}"
+        assert isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
         return channel
 
     @property
@@ -698,6 +707,9 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
             The gateway guild that this event corresponds to, if known and
             cached.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_guild(self.guild_id)
 
 

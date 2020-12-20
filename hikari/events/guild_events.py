@@ -92,6 +92,9 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild this event relates to, or `builtins.None` if not known.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
@@ -630,17 +633,6 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
             ID of the guild the event occurred in.
         """
         return self.presence.guild_id
-
-    # TODO: make this nicer, as it is inconsistent with stuff elsewhere I guess.
-    def get_cached_user(self) -> typing.Optional[users.User]:
-        """Get the full cached user, if it is available.
-
-        Returns
-        -------
-        typing.Optional[hikari.users.User]
-            The full cached user, or `builtins.None` if not cached.
-        """
-        return self.app.cache.get_user(self.user_id)
 
     async def fetch_user(self) -> users.User:
         """Perform an API call to fetch the user this event concerns.

@@ -49,6 +49,7 @@ import attr
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -63,7 +64,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import iterators
     from hikari import messages
-    from hikari import traits
     from hikari import webhooks
     from hikari.api import special_endpoints
 
@@ -178,7 +178,7 @@ class ChannelFollow:
         return await self.app.rest.fetch_webhook(self.webhook_id)
 
     @property
-    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
+    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
         """Get the channel being followed from the cache.
 
         !!! warning
@@ -187,12 +187,15 @@ class ChannelFollow:
 
         Returns
         -------
-        typing.Optional[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
+        typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, builtins.None]
             The object of the guild channel that was found in the cache or
             `builtins.None`. While this will usually be `GuildNewsChannel` or
             `builtins.None`, if the channel referenced has since lost it's news
             status then this will return a `GuildTextChannel`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert isinstance(channel, (GuildNewsChannel, GuildTextChannel))
         return channel

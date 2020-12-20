@@ -57,6 +57,7 @@ import attr
 
 from hikari import files
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -73,7 +74,6 @@ if typing.TYPE_CHECKING:
     from hikari import emojis as emojis_
     from hikari import permissions as permissions_
     from hikari import presences as presences_
-    from hikari import traits
     from hikari import voices as voices_
 
 
@@ -405,7 +405,10 @@ class Member(users.User):
         typing.Optional[hikari.presences.MemberPresence]
             The member presence, or `builtins.None` if not known.
         """
-        return self.app.cache.get_presence(self.guild_id, self.id)
+        if not isinstance(self.user.app, traits.CacheAware):
+            return None
+
+        return self.user.app.cache.get_presence(self.guild_id, self.user.id)
 
     @property
     def roles(self) -> typing.Sequence[Role]:
@@ -418,7 +421,10 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles_view = self.app.cache.get_roles_view_for_guild(self.guild_id)
+        if not isinstance(self.user.app, traits.CacheAware):
+            return []
+
+        roles_view = self.user.app.cache.get_roles_view_for_guild(self.guild_id)
 
         return [r for r in roles_view.values() if r.id in self.role_ids]
 
@@ -454,7 +460,7 @@ class Member(users.User):
         hikari.guilds.Member
             An up-to-date view of this member.
         """
-        return await self.app.rest.fetch_member(self.guild_id, self.id)
+        return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
     async def fetch_dm_channel(self) -> channels_.DMChannel:
         return await self.user.fetch_dm_channel()
@@ -500,7 +506,9 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.ban_user(self.guild_id, self.id, delete_message_days=delete_message_days, reason=reason)
+        await self.user.app.rest.ban_user(
+            self.guild_id, self.user.id, delete_message_days=delete_message_days, reason=reason
+        )
 
     def __str__(self) -> str:
         return str(self.user)
@@ -1365,11 +1373,17 @@ class GatewayGuild(Guild):
             A mapping of channel IDs to objects of the channels cached for the
             guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
     @property
     def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
         # <<inherited docstring from Guild>>.
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_emojis_view_for_guild(self.id)
 
     @property
@@ -1379,6 +1393,9 @@ class GatewayGuild(Guild):
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
             A mapping of user IDs to objects of the members cached for the guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_members_view_for_guild(self.id)
 
     @property
@@ -1389,11 +1406,17 @@ class GatewayGuild(Guild):
             A mapping of user IDs to objects of the presences cached for the
             guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_presences_view_for_guild(self.id)
 
     @property
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
         # <<inherited docstring from Guild>>.
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_roles_view_for_guild(self.id)
 
     @property
@@ -1406,6 +1429,9 @@ class GatewayGuild(Guild):
             A mapping of user IDs to objects of the voice states cached for the
             guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
         return self.app.cache.get_voice_states_view_for_guild(self.id)
 
     def get_channel(
@@ -1424,6 +1450,9 @@ class GatewayGuild(Guild):
         typing.Optional[hikari.channels.GuildChannel]
             The object of the guild channel found in cache or `builtins.None.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_guild_channel(snowflakes.Snowflake(channel))
 
     def get_emoji(
@@ -1442,6 +1471,9 @@ class GatewayGuild(Guild):
             The object of the custom emoji if found in cache, else
             `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_emoji(snowflakes.Snowflake(emoji))
 
     def get_member(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[Member]:
@@ -1457,6 +1489,9 @@ class GatewayGuild(Guild):
         typing.Optional[Member]
             The cached member object if found, else `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_member(self.id, snowflakes.Snowflake(user))
 
     def get_my_member(self) -> typing.Optional[Member]:
@@ -1469,6 +1504,9 @@ class GatewayGuild(Guild):
             This will be sent on each `hikari.events.guild_events.GuildAvailableEvent`,
             as well as any presence updates if you have opted into them.
         """
+        if not isinstance(self.app, traits.ShardAware):
+            return None
+
         me = self.app.me
         if me is None:
             return None
@@ -1488,6 +1526,9 @@ class GatewayGuild(Guild):
         typing.Optional[hikari.presences.MemberPresence]
             The cached presence object if found, else `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_presence(self.id, snowflakes.Snowflake(user))
 
     def get_role(self, role: snowflakes.SnowflakeishOr[Role]) -> typing.Optional[Role]:
@@ -1503,6 +1544,9 @@ class GatewayGuild(Guild):
         typing.Optional[Role]
             The object of the role found in cache, else `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_role(snowflakes.Snowflake(role))
 
     def get_voice_state(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[voices_.VoiceState]:
@@ -1518,4 +1562,7 @@ class GatewayGuild(Guild):
         typing.Optional[hikari.voices.VoiceState]
             The cached voice state object if found, else `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_voice_state(self.id, snowflakes.Snowflake(user))

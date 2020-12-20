@@ -128,6 +128,9 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             The gateway guild this event relates to, if known. Otherwise
             this will return `builtins.None`.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
@@ -152,6 +155,9 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             The cached channel this event relates to. If not known, this
             will return `builtins.None` instead.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_guild_channel(self.channel_id)
 
     async def fetch_channel(self) -> channels.GuildChannel:
@@ -436,6 +442,9 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             The cached channel this event relates to. If not known, this
             will return `builtins.None` instead.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert isinstance(channel, channels.GuildTextChannel)
         return channel
