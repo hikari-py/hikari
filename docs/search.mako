@@ -29,15 +29,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
         <title>Search documentation - ${module.name.capitalize()}</title>
-        <meta name="description" content="Click here to view results"> 
+        <meta name="description" content="Click here to view results">
 
         <meta property="og:title" content="Search documentation - ${module.name.capitalize()}">
 
         <meta property="og:type" content="website">
-        <meta property="og:image" content="${site_logo}">
+        <meta property="og:image" content="${site_logo_url}">
         <meta property="og:description" content="${site_description}">
         <meta property="theme-color" content="${site_accent}">
-        <link rel="shortcut icon" type="image/png" href="${site_logo}">
+        <link rel="shortcut icon" type="image/png" href="${'../' * module.url().count('/')}${site_logo_name}">
 
         ## Bootstrap 4 stylesheet
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/${bootstrap_version}/css/bootstrap.min.css">
@@ -69,9 +69,7 @@
             document.getElementById('info').textContent = "Searching...";
         </script>
 
-        <div class="container-xl">
-            <div class="container" id="search-results">
-            </div>
+        <div class="container" id="search-results">
         </div>
 
         ## Script dependencies for Bootstrap.

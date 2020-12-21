@@ -50,10 +50,10 @@
         % endif
 
         <meta property="og:type" content="website">
-        <meta property="og:image" content="${site_logo}">
+        <meta property="og:image" content="${site_logo_url}">
         <meta property="og:description" content="${site_description}">
         <meta property="theme-color" content="${site_accent}">
-        <link rel="shortcut icon" type="image/png" href="${site_logo}">
+        <link rel="shortcut icon" type="image/png" href="${'../' * module.url().count('/')}${site_logo_name}">
 
         ## Google Search Engine integration
         <!--<script async src="https://cse.google.com/cse.js?cx=017837193012385208679:pey8ky8gdqw"></script>

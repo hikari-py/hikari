@@ -51,10 +51,8 @@ This includes:
     - Vulnerability checking.
   - `twemoji-mapping`
     - Force test all discord emojis.
-  - `pdoc3`
-    - Generate documentation.
   - `pages`
-    - Generate webpage.
+    - Generate webpage + documentation.
 
 All jobs will need to succeed before anything gets merged.
 

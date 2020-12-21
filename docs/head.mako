@@ -20,6 +20,8 @@
 
 <%
     import hikari
+
+    DEPTH = '../' * module.url().count('/')
 %>
 
 
@@ -29,12 +31,12 @@
         <span class="navbar-toggler-icon"/>
     </button>
 
-    <a class="navbar-brand" href="${root_url}"><img class="d-inline-block align-top" src="${site_logo}" id="logo" alt="hikari logo" loading="lazy"/>Hikari <small>v${hikari.__version__}</small></a>
+    <a class="navbar-brand" href="${root_url}"><img class="d-inline-block align-top" src="${DEPTH}${site_logo_name}" id="logo" alt="hikari logo" loading="lazy"/>Hikari <small>v${hikari.__version__}</small></a>
 
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item"><a class="nav-link" href="/hikari/index.html">Home</a></li>
-            <li class="nav-item active"><a class="nav-link" href="/hikari/hikari/index.html">Documentation</a></li>
+            <li class="nav-item"><a class="nav-link" href="${DEPTH}index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link active" href="${DEPTH}documentation/index.html">Documentation</a></li>
             <li class="nav-item"><a class="nav-link" href="https://github.com/hikari-py/hikari">GitHub</a></li>
             <li class="nav-item"><a class="nav-link" href="https://pypi.org/project/hikari">PyPI</a></li>
             <li class="nav-item"><a class="nav-link" href="https://discord.gg/Jx4cNGG">Discord Server</a></li>

@@ -19,7 +19,7 @@
 # SOFTWARE.
 rm public -Rf || true
 mkdir public
-nox --sessions pdoc3 pages
+nox --sessions pages
 cd public || exit 1
 
 git init

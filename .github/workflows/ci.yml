@@ -104,4 +104,4 @@ jobs:
       - name: Build pages
         run: |
           pip install nox
-          nox -s pdoc3 pages
+          nox -s pages
