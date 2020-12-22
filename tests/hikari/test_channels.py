@@ -29,13 +29,12 @@ from hikari import files
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
-from hikari.impl import bot
 from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.BotApp)
+    return mock.Mock()
 
 
 class TestChannelType:
@@ -71,8 +70,7 @@ class TestChannelFollow:
         assert result is mock_webhook
         mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
 
-    @pytest.mark.asyncio
-    async def test_channel(self, mock_app):
+    def test_channel(self, mock_app):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
         mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
         follow = channels.ChannelFollow(
@@ -83,6 +81,13 @@ class TestChannelFollow:
 
         assert result is mock_channel
         mock_app.cache.get_guild_channel.assert_called_once_with(696969)
+
+    def test_channel_when_no_cache_trait(self):
+        follow = channels.ChannelFollow(
+            webhook_id=snowflakes.Snowflake(993883), app=object(), channel_id=snowflakes.Snowflake(696969)
+        )
+
+        assert follow.channel is None
 
 
 class TestPermissionOverwrite:
