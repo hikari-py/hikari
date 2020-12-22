@@ -460,3 +460,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_webhooks_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#webhooks-update for more info."""
         await self.dispatch(self._app.event_factory.deserialize_webhook_update_event(shard, payload))
+
+    async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
+        await self.dispatch(self._app.event_factory.deserialize_interaction_create_event(shard, payload))

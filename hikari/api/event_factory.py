@@ -40,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.events import channel_events
     from hikari.events import guild_events
+    from hikari.events import interaction_events
     from hikari.events import lifetime_events
     from hikari.events import member_events
     from hikari.events import message_events
@@ -452,6 +453,28 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.guild_events.PresenceUpdateEvent
             The parsed presence update event object.
+        """
+
+    ######################
+    # INTERACTION EVENTS #
+    ######################
+
+    def deserialize_interaction_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> interaction_events.InteractionCreateEvent:
+        """Parse a raw payload from Discord into a interaction create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.member_events.MemberCreateEvent
+            The parsed interaction create event object.
         """
 
     #################

@@ -86,6 +86,7 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari import audit_logs
+    from hikari import interactions
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
@@ -1171,7 +1172,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        if not undefined.count(attachment, attachments):
+        if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
         if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
@@ -1188,7 +1189,7 @@ class RESTClientImpl(rest_api.RESTClient):
             embed = content
             content = undefined.UNDEFINED
 
-        elif undefined.count(attachment, attachments) == 2 and isinstance(
+        elif undefined.all_undefined(attachment, attachments) and isinstance(
             content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
@@ -1272,7 +1273,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        if undefined.count(mentions_everyone, mentions_reply, user_mentions, role_mentions) != 4:
+        if not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
             body.put(
                 "allowed_mentions",
                 self._generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
@@ -1579,10 +1580,10 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        if not undefined.count(attachment, attachments):
+        if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if not undefined.count(embed, embeds):
+        if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
@@ -1597,13 +1598,13 @@ class RESTClientImpl(rest_api.RESTClient):
                 "use 'attachment' (singular) instead?"
             )
 
-        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+        if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntatic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
 
-        elif undefined.count(attachment, attachments) == 2 and isinstance(
+        elif undefined.all_undefined(attachment, attachments) and isinstance(
             content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
@@ -1695,7 +1696,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        if not undefined.count(embed, embeds):
+        if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
@@ -1704,7 +1705,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "use 'embed' (singular) instead?"
             )
 
-        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+        if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntatic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
@@ -1712,7 +1713,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
         body = data_binding.JSONObjectBuilder()
-        if undefined.count(mentions_everyone, user_mentions, role_mentions) != 3:
+        if not undefined.all_undefined(mentions_everyone, user_mentions, role_mentions):
             body.put(
                 "allowed_mentions",
                 self._generate_allowed_mentions(mentions_everyone, undefined.UNDEFINED, user_mentions, role_mentions),
@@ -2522,7 +2523,7 @@ class RESTClientImpl(rest_api.RESTClient):
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.count(color, colour):
+        if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         if permissions is undefined.UNDEFINED:
@@ -2563,7 +2564,7 @@ class RESTClientImpl(rest_api.RESTClient):
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.count(color, colour):
+        if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
@@ -2807,3 +2808,155 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
+
+    async def create_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        name: str,
+        description: str,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
+        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        route: routes.CompiledRoute
+        if guild is undefined.UNDEFINED:
+            route = routes.POST_APPLICATION_COMMAND.compile(application=application)
+
+        else:
+            route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=application, guild=guild)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+        body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_command(response)
+
+    async def delete_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> None:
+        route: routes.CompiledRoute
+        if guild is undefined.UNDEFINED:
+            route = routes.DELETE_APPLICATION_COMMAND.compile(application=application)
+
+        else:
+            route = routes.DELETE_APPLICATION_GUILD_COMMAND.compile(application=application, guild=guild)
+
+        await self._request(route)
+
+    async def edit_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        route: routes.CompiledRoute
+        if guild is undefined.UNDEFINED:
+            route = routes.PATCH_APPLICATION_COMMAND.compile(application=application)
+
+        else:
+            route = routes.PATCH_APPLICATION_GUILD_COMMAND.compile(application=application, guild=guild)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+        body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_command(response)
+
+    async def fetch_application_commands(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> typing.Sequence[interactions.Command]:
+        route: routes.CompiledRoute
+        if guild is undefined.UNDEFINED:
+            route = routes.GET_APPLICATION_COMMANDS.compile(application=application)
+
+        else:
+            route = routes.GET_APPLICATION_GUILD_COMMAND.compile(application=application, guild=guild)
+
+        raw_response = await self._request(route)
+        response = typing.cast(data_binding.JSONArray, raw_response)
+        return [self._entity_factory.deserialize_command(command) for command in response]
+
+    async def create_command_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
+        token: str,
+        response_type: interactions.InteractionResponseType,
+        /,
+        *,
+        content: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
+        mentions_everyone: undefined.UndefinedOr[bool],
+        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
+        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+    ) -> messages_.Message:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", response_type)
+
+        data = data_binding.JSONObjectBuilder()
+        data.put("content", content)
+        data.put("tts", tts)
+        data.put(
+            "allowed_mentions",
+            self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, undefined.UNDEFINED),
+        )
+        data.put_array("embeds", embeds, conversion=self._entity_factory.serialize_embed)
+
+        if data:
+            body["data"] = data
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_message(response)
+
+    async def delete_command_response(
+        self, interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction], token: str, /
+    ) -> None:
+        route = routes.DELETE_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        await self._request(route)
+
+    async def edit_command_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
+        token: str,
+        /,
+        *,
+        content: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool],
+        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
+        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+    ) -> messages_.Message:
+        route = routes.PATCH_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        body = data_binding.JSONObjectBuilder()
+        body.put("content", content)
+        body.put_array("embeds", embeds, conversion=self._entity_factory.serialize_embed)
+
+        if not undefined.all_undefined(mentions_everyone, user_mentions, role_mentions):
+            body.put(
+                "allowed_mentions",
+                self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, undefined.UNDEFINED),
+            )
+
+        raw_response = await self._request(route, json=body)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_message(response)
