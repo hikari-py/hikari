@@ -25,11 +25,12 @@
 # FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
 __author__ = "Nekokatt"
+__maintainer__ = "davfsa"
 __ci__ = "https://github.com/hikari-py/hikari/actions"
 __copyright__ = "© 2020 Nekokatt"
 __coverage__ = "https://codeclimate.com/github/hikari-py/hikari"
 __discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://hikari-py.github.io/hikari/hikari"
+__docs__ = "https://hikari-py.github.io/hikari/documentation"
 __email__ = "davfsa@gmail.com"
 __issue_tracker__ = "https://github.com/hikari-py/hikari/issues"
 __license__ = "MIT"

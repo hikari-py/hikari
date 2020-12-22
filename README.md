@@ -7,7 +7,7 @@
 [![Issues badge](https://img.shields.io/github/issues-raw/hikari-py/hikari)](https://github.com/hikari-py/hikari/issues)
 [![This project uses Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
-[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/hikari)
+[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/documentation)
 
 [![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
@@ -63,9 +63,9 @@ bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences
 to be received (you'd need to whitelist your application first to be able to start the bot
-if you do this). [Other options also exist](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp)
-such as [customising timeouts for requests](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
-and [enabling a proxy](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
+if you do this). [Other options also exist](https://hikari-py.github.io/hikari/documentation/impl/bot.html#hikari.impl.bot.BotApp)
+such as [customising timeouts for requests](https://hikari-py.github.io/hikari/documentation/config.html#hikari.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://hikari-py.github.io/hikari/documentation/config.html#hikari.config.ProxySettings).
 
 Also note that you could pass extra options to `bot.run` during development, for example:
 
