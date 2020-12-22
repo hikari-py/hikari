@@ -80,7 +80,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp.run)
+[Many other helpful options](https://hikari-py.github.io/hikari/documentation/impl/bot.html#hikari.impl.bot.BotApp.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or
