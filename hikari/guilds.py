@@ -151,7 +151,10 @@ class GuildFeature(str, enums.Enum):
     """Guild has enabled the welcome screen."""
 
     MEMBER_VERIFICATION_GATE_ENABLED = "MEMBER_VERIFICATION_GATE_ENABLED"
-    """Guild has enabled member verification gate."""
+    """Guild has enabled Membership Screening."""
+
+    PREVIEW_ENABLED = "PREVIEW_ENABLED"
+    """Guild can be viewed before Membership Screening is complete"""
 
 
 GuildFeatureish = typing.Union[str, GuildFeature]
