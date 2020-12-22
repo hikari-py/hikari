@@ -459,6 +459,25 @@ GET_WEBHOOK_MESSAGE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{toke
 PATCH_WEBHOOK_MESSAGE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/{message}")
 DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/{message}")
 
+# Applications
+GET_APPLICATION_COMMANDS: typing.Final[Route] = Route(GET, "/applications/{application}/commands")
+GET_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(GET, "/applications/{application}/guilds/{guild}/commands")
+DELETE_APPLICATION_COMMAND: typing.Final[Route] = Route(DELETE, "/applications/{application}/commands/{command}")
+DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
+    DELETE, "/applications/{application}/guilds/{guild}/commands/{command}"
+)
+PATCH_APPLICATION_COMMAND: typing.Final[Route] = Route(PATCH, "/applications/{application}/commands/{command}")
+PATCH_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
+    PATCH, "/applications/{application}/guilds/{guild}/commands/{command}"
+)
+POST_APPLICATION_COMMAND: typing.Final[Route] = Route(POST, "/applications/{application}/commands")
+POST_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(POST, "/applications/{application}/guilds/{guild}/commands")
+
+# Interactions
+DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{interaction}/{token}/messages/@original")
+POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(POST, "/interactions/{interaction}/{token}/callback")
+PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{interaction}/{token}/message/@original")
+
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")

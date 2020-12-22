@@ -29,6 +29,8 @@ __all__: typing.List[str] = [
     "UndefinedNoneOr",
     "UndefinedOr",
     "UndefinedType",
+    "all_undefined",
+    "any_undefined",
     "count",
 ]
 
@@ -122,6 +124,16 @@ UndefinedNoneOr = typing.Union[UndefinedOr[T], None]
 `UndefinedOr[typing.Optional[T]]`, which would expand to
 `typing.Union[UndefinedType, T, None]`.
 """
+
+
+def all_undefined(*items: typing.Any) -> bool:
+    """Get if all of the provided items are `UNDEFINED`."""
+    return all(item is UNDEFINED for item in items)
+
+
+def any_undefined(*items: typing.Any) -> bool:
+    """Get if any of the provided items are `UNDEFINED`."""
+    return any(item is UNDEFINED for item in items)
 
 
 def count(*items: typing.Any) -> int:
