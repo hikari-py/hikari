@@ -62,6 +62,7 @@ setuptools.setup(
     description="A sane Discord API for Python 3 built on asyncio and good intentions",
     long_description=long_description(),
     long_description_content_type="text/markdown",
+    author=metadata.author,
     maintainer=metadata.maintainer,
     maintainer_email=metadata.email,
     license=metadata.license,
