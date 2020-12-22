@@ -155,7 +155,7 @@ class GuildFeature(str, enums.Enum):
     """Guild has enabled Membership Screening."""
 
     PREVIEW_ENABLED = "PREVIEW_ENABLED"
-    """Guild can be viewed before Membership Screening is complete"""
+    """Guild can be viewed before Membership Screening is complete."""
 
 
 GuildFeatureish = typing.Union[str, GuildFeature]
