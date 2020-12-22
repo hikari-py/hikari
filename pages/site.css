@@ -40,8 +40,7 @@ a:hover {
  * Base structure
  */
 
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -79,20 +78,16 @@ body {
 }
 
 .cover-container {
+  overflow-y: auto;
   padding-left: 10% !important;
   padding-right: 10% !important;
   max-width: 100%;
   position: absolute;
-  justify-content: center;
 }
 
 /*
- * Header
- */
-.masthead-brand {
-  margin-bottom: 0;
-}
-
+* Header
+*/
 .nav-masthead .nav-link {
   padding: .25rem 0;
   font-weight: 700;
@@ -115,19 +110,9 @@ body {
   border-bottom-color: var(--light-fg);
 }
 
-@media (min-width: 48em) {
-  .masthead-brand {
-  float: left;
-  }
-  .nav-masthead {
-  /*float: right;*/
-  }
-}
-
-
 /*
- * Cover
- */
+* Cover
+*/
 .cover {
   padding: 0 1.5rem;
 }
@@ -137,15 +122,15 @@ body {
 }
 
 /*
- * Footer
- */
+* Footer
+*/
 .mastfoot {
   color: rgba(255, 255, 255, .2);
 }
 
 /*
- * Add text to the background
- */
+* Add text to the background
+*/
 .background-only-base {
   background: inherit;
   display: contents;
@@ -155,19 +140,19 @@ body {
   bottom: 0;
   right: 0;
   z-index: -1;
-  overflow: hidden;
 }
 
 .background-only {
-  padding-top: 100px;
-  filter: blur(2px) contrast(45%) brightness(50%);
   overflow: hidden;
+  padding-top: 10vh;
+  filter: blur(0.15em) contrast(45%) brightness(50%);
+  font-size: 0.7vmax;
 }
 
 /*
- * highlight.js
- * https://github.com/highlightjs/highlight.js/blob/master/src/styles/monokai-sublime.css
- */
+* highlight.js
+* https://github.com/highlightjs/highlight.js/blob/master/src/styles/monokai-sublime.css
+*/
 .hljs {
   display: block;
   overflow-x: hidden;

@@ -18,25 +18,31 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 
-* {
-    scrollbar-color: #202324 #454a4d;
-    scroll-behavior: smooth;
-}
-
 img#logo {
     border-radius: 15px;
     width: 30px;
     height: 30px;
     margin-right: 0.5em;
+    ## Hide alt when image is not there
+    text-indent: 100%;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 small.smaller {
     font-size: 0.75em;
 }
 
+html {
+    height: 100%;
+    scroll-behavior: smooth;
+    scrollbar-color: #202324 #454a4d;
+}
+
 body {
     background-color: #181A1B;
     color: #C9C5C0;
+    height: 100%;
 }
 
 h1 {
@@ -158,7 +164,7 @@ code {
     color: #DB61D9;
 }
 
-## Check this to change it 
+## Check this to change it
 code .active {
     color: #e83e8c;
 }

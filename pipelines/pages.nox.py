@@ -18,16 +18,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Pdoc documentation generation."""
+"""Website pages generation."""
+import contextlib
+import functools
+import http.server
+import logging
 import os
 import shutil
+import socket
+import threading
+import webbrowser
 
 from pipelines import config
 from pipelines import nox
 
 
 def copy_from_in(src: str, dest: str) -> None:
-    for parent, dirs, files in os.walk(src):
+    for parent, _, files in os.walk(src):
         sub_parent = os.path.relpath(parent, src)
 
         for file in files:
@@ -38,8 +45,83 @@ def copy_from_in(src: str, dest: str) -> None:
 
 
 @nox.session(reuse_venv=True)
-def pages(_: nox.Session) -> None:
-    """Generate static pages containing resources and tutorials."""
+@nox.inherit_environment_vars
+def pages(session: nox.Session) -> None:
+    """Generate website pages."""
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
+
+    # Static
+    print("Copying static objects...")
     copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
+
+    # Documentation
+    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    session.env["PDOC3_GENERATING"] = "1"
+
+    print("Building documentation...")
+    session.run(
+        "python",
+        "docs/patched_pdoc.py",
+        config.MAIN_PACKAGE,
+        "--html",
+        "--output-dir",
+        config.ARTIFACT_DIRECTORY,
+        "--template-dir",
+        config.DOCUMENTATION_DIRECTORY,
+        "--force",
+    )
+
+    # Rename `hikari` into `documentation`
+    print("Renaming output dir...")
+    print(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE} -> {config.ARTIFACT_DIRECTORY}/documentation")
+    shutil.rmtree(f"{config.ARTIFACT_DIRECTORY}/documentation", ignore_errors=True)
+    shutil.move(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE}", f"{config.ARTIFACT_DIRECTORY}/documentation")
+
+    # Pre-generated indexes
+    if shutil.which("npm") is None:
+        message = "'npm' not installed, can't prebuild index"
+        if "CI" in os.environ:
+            session.error(message)
+
+        session.skip(message)
+
+    print("Prebuilding index...")
+    session.run("npm", "install", "lunr@2.3.7", external=True)
+    session.run(
+        "node",
+        "scripts/prebuild_index.js",
+        f"{config.ARTIFACT_DIRECTORY}/documentation/index",
+        f"{config.ARTIFACT_DIRECTORY}/documentation/prebuilt_index.js",
+        external=True,
+    )
+
+
+class HTTPServerThread(threading.Thread):
+    def __init__(self) -> None:
+        logging.basicConfig(level="INFO")
+
+        super().__init__(name="HTTP Server", daemon=True)
+        # Use a socket to obtain a random free port to host the HTTP server on.
+        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+            sock.bind(("", 0))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.host, self.port = sock.getsockname()
+
+        handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=config.ARTIFACT_DIRECTORY)
+        self.server = http.server.HTTPServer((self.host, self.port), handler)
+
+    def run(self) -> None:
+        self.server.serve_forever()
+
+    def close(self) -> None:
+        self.server.shutdown()
+
+
+@nox.session(reuse_venv=True)
+def test_pages(_: nox.Session) -> None:
+    """Start an HTTP server for any generated pages in `/public`."""
+    with contextlib.closing(HTTPServerThread()) as thread:
+        thread.start()
+        webbrowser.open(f"http://{thread.host}:{thread.port}")
+        thread.join()

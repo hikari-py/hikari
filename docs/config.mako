@@ -41,7 +41,8 @@
 
 
     site_accent = "#ff029a"
-    site_logo = "https://hikari-py.github.io/hikari/logo.png"
+    site_logo_name = "logo.png"
+    site_logo_url = "https://hikari-py.github.io/hikari/logo.png"
     site_description = "A Discord Bot framework for modern Python and asyncio built on good intentions"
 
     # Versions of stuff
