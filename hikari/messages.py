@@ -560,6 +560,8 @@ class PartialMessage(snowflakes.Unique):
         if self._guild_id:
             return self._guild_id
 
+        if not isinstance(self.app, traits.CacheAware):
+            return None
         # Don't check the member, as if the guild_id is missing, the member
         # will always be missing too.
         channel = self.app.cache.get_guild_channel(self.channel_id)

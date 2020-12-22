@@ -65,13 +65,11 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.api import cache as cache_
 from hikari.api import rest as rest_api
 from hikari.impl import buckets as buckets_
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints
-from hikari.impl import stateless_cache
 from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import routes
@@ -142,12 +140,10 @@ class _RESTProvider(traits.RESTAware):
         self,
         entity_factory: typing.Callable[[], entity_factory_.EntityFactory],
         executor: typing.Optional[concurrent.futures.Executor],
-        cache: typing.Callable[[], cache_.Cache],
         rest: typing.Callable[[], rest_api.RESTClient],
     ) -> None:
         self._entity_factory = entity_factory
         self._executor = executor
-        self._cache = cache
         self._rest = rest
 
     @property
@@ -157,14 +153,6 @@ class _RESTProvider(traits.RESTAware):
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
-
-    @property
-    def cache(self) -> cache_.Cache:
-        return self._cache()
-
-    @property
-    def me(self) -> typing.Optional[users.OwnUser]:
-        return self._cache().get_me()
 
     @property
     def rest(self) -> rest_api.RESTClient:
@@ -306,11 +294,9 @@ class RESTApp(traits.ExecutorAware):
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        cache = stateless_cache.StatelessCacheImpl()
         provider = _RESTProvider(
             lambda: entity_factory,
             self._executor,
-            lambda: cache,
             lambda: rest_client,
         )
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
