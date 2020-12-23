@@ -42,14 +42,15 @@ from hikari import files
 from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
+from hikari import users
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
     from hikari import permissions as permissions_
     from hikari import traits
-    from hikari import users
 
 
 @typing.final
@@ -258,11 +259,8 @@ class TeamMembershipState(int, enums.Enum):
 
 @attr_extensions.with_copy
 @attr.s(eq=False, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
-class TeamMember:
+class TeamMember(users.User):
     """Represents a member of a Team."""
-
-    app: traits.RESTAware = attr.ib(repr=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
 
     membership_state: typing.Union[TeamMembershipState, int] = attr.ib(repr=False)
     """The state of this user's membership."""
@@ -279,6 +277,58 @@ class TeamMember:
 
     user: users.User = attr.ib(repr=True)
     """The user representation of this team member."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        """Return the app that is bound to the user object."""
+        return self.user.app
+
+    @property
+    def avatar_hash(self) -> typing.Optional[str]:
+        return self.user.avatar_hash
+
+    @property
+    def avatar_url(self) -> typing.Optional[files.URL]:
+        return self.user.avatar_url
+
+    @property
+    def default_avatar_url(self) -> files.URL:
+        return self.user.default_avatar_url
+
+    @property
+    def discriminator(self) -> str:
+        return self.user.discriminator
+
+    @property
+    def flags(self) -> users.UserFlag:
+        return self.user.flags
+
+    @property
+    def id(self) -> snowflakes.Snowflake:
+        return self.user.id
+
+    @id.setter
+    def id(self, value: snowflakes.Snowflake) -> None:
+        raise TypeError("Cannot mutate the ID of a member")
+
+    @property
+    def is_bot(self) -> bool:
+        return self.user.is_bot
+
+    @property
+    def is_system(self) -> bool:
+        return self.user.is_system
+
+    @property
+    def mention(self) -> str:
+        return self.user.mention
+
+    @property
+    def username(self) -> str:
+        return self.user.username
+
+    async def fetch_dm_channel(self) -> channels.DMChannel:
+        return await self.user.fetch_dm_channel()
 
     def __str__(self) -> str:
         return str(self.user)
