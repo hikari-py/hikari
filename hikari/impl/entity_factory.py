@@ -271,7 +271,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             members = {}
             for member_payload in team_payload["members"]:
                 team_member = application_models.TeamMember(
-                    app=self._app,
                     membership_state=application_models.TeamMembershipState(member_payload["membership_state"]),
                     permissions=member_payload["permissions"],
                     team_id=snowflakes.Snowflake(member_payload["team_id"]),
