@@ -67,6 +67,7 @@ from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import channels as channels_
+    from hikari import traits
     from hikari import users as users_
 
 ChannelT = typing.TypeVar("ChannelT", bound="channels_.GuildChannel")
@@ -259,9 +260,16 @@ class GuildRecord:
     `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
     """
 
-    def __bool__(self) -> bool:
+    def empty(self) -> bool:
+        """Check whether this guild record has any resources attached to it.
+
+        Returns
+        -------
+        bool
+            Whether this guild record has any resources attached to it.
+        """
         # As `.is_available` should be paired with `.guild`, we don't need to check both.
-        return any(
+        return not any(
             (
                 self.channels,
                 self.emojis,
@@ -288,14 +296,13 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def build_entity(self, **kwargs: typing.Any) -> ValueT:
+    def build_entity(self, app: traits.RESTAware, /) -> ValueT:
         """Build an entity object from this data object.
 
         Parameters
         ----------
-        kwargs : typing.Any
-            Extra fields to pass on to the entity's initialiser. These will take
-            priority over fields on the builder.
+        app : hikari.traits.RESTAware
+            The hikari application the built object should be bound to.
 
         Returns
         -------
@@ -335,7 +342,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     is_temporary: bool = attr.ib()
     created_at: datetime.datetime = attr.ib()
 
-    def build_entity(self, **kwargs: typing.Any) -> invites.InviteWithMetadata:
+    def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
             code=self.code,
             guild_id=self.guild_id,
@@ -350,7 +357,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             approximate_active_member_count=None,
             channel=None,
             guild=None,
-            app=kwargs["app"],
+            app=app,
             inviter=self.inviter.copy() if self.inviter else None,
             target_user=self.target_user.copy() if self.target_user else None,
         )
@@ -419,7 +426,7 @@ class MemberData(BaseData[guilds.Member]):
             role_ids=tuple(member.role_ids),
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> guilds.Member:
+    def build_entity(self, _: traits.RESTAware, /) -> guilds.Member:
         return guilds.Member(
             guild_id=self.guild_id,
             nickname=self.nickname,
@@ -472,7 +479,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             role_ids=tuple(emoji.role_ids),
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> emojis.KnownCustomEmoji:
+    def build_entity(self, app: traits.RESTAware, /) -> emojis.KnownCustomEmoji:
         return emojis.KnownCustomEmoji(
             id=self.id,
             name=self.name,
@@ -482,7 +489,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_colons_required=self.is_colons_required,
             is_managed=self.is_managed,
             is_available=self.is_available,
-            app=kwargs["app"],
+            app=app,
             user=self.user.copy() if self.user else None,
         )
 
@@ -545,7 +552,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             secrets=secrets,
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> presences.RichActivity:
+    def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
         emoji: typing.Optional[emojis.Emoji] = None
         if isinstance(self.emoji, RefCell):
             emoji = self.emoji.copy()
@@ -594,13 +601,13 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             client_status=copy.copy(presence.client_status),
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> presences.MemberPresence:
+    def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
         return presences.MemberPresence(
             user_id=self.user_id,
             guild_id=self.guild_id,
             visible_status=self.visible_status,
-            app=kwargs["app"],
-            activities=[activity.build_entity(**kwargs) for activity in self.activities],
+            app=app,
+            activities=[activity.build_entity(app) for activity in self.activities],
             client_status=copy.copy(self.client_status),
         )
 
@@ -640,16 +647,24 @@ class MentionsData(BaseData[messages.Mentions]):
             everyone=mentions.everyone,
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> messages.Mentions:
+    def build_entity(
+        self, _: traits.RESTAware, /, *, message: typing.Optional[messages.Message] = None
+    ) -> messages.Mentions:
         users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = undefined.UNDEFINED
         if self.users is not undefined.UNDEFINED:
             users = {user_id: user.copy() for user_id, user in self.users.items()}
 
+        channels: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
+        ] = undefined.UNDEFINED
+        if self.channels is not undefined.UNDEFINED:
+            channels = {channel_id: copy.copy(channel) for channel_id, channel in self.channels.items()}
+
         return messages.Mentions(
-            message=kwargs["message"],
+            message=message or NotImplemented,
             users=users,
             role_ids=self.role_ids,
-            channels=self.channels,
+            channels=channels,
             everyone=self.everyone,
         )
 
@@ -769,21 +784,21 @@ class MessageData(BaseData[messages.Message]):
             referenced_message=referenced_message,
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> messages.Message:
+    def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
         referenced_message: undefined.UndefinedNoneOr[messages.Message]
         if isinstance(self.referenced_message, RefCell):
-            referenced_message = self.referenced_message.object.build_entity(**kwargs)
+            referenced_message = self.referenced_message.object.build_entity(app)
 
         else:
             referenced_message = self.referenced_message
 
         message = messages.Message(
             id=self.id,
-            app=kwargs["app"],
+            app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
             author=self.author.copy(),
-            member=self.member.object.build_entity(**kwargs) if self.member else None,
+            member=self.member.object.build_entity(app) if self.member else None,
             content=self.content,
             timestamp=self.timestamp,
             edited_timestamp=self.edited_timestamp,
@@ -802,7 +817,7 @@ class MessageData(BaseData[messages.Message]):
             nonce=self.nonce,
             referenced_message=referenced_message,
         )
-        message.mentions = self.mentions.build_entity(message=message)
+        message.mentions = self.mentions.build_entity(app, message=message)
         return message
 
     def update(
@@ -849,8 +864,8 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     member: RefCell[MemberData] = attr.ib()
     session_id: str = attr.ib()
 
-    def build_entity(self, **kwargs: typing.Any) -> voices.VoiceState:
-        member = self.member.object.build_entity(**kwargs)
+    def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
+        member = self.member.object.build_entity(app)
         return voices.VoiceState(
             channel_id=self.channel_id,
             guild_id=self.guild_id,
@@ -863,7 +878,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_video_enabled=self.is_video_enabled,
             user_id=member.user.id,
             session_id=self.session_id,
-            app=kwargs["app"],
+            app=app,
             member=member,
         )
 

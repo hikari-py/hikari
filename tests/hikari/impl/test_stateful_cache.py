@@ -2050,9 +2050,11 @@ class TestStatefulCacheImpl:
         assert result.nonce is None
         assert result.referenced_message is None
 
+    @pytest.mark.skip(reason="TODO")
     def test_clear_messages(self, cache_impl):
         raise NotImplementedError
 
+    @pytest.mark.skip(reason="TODO")
     def test_delete_message(self, cache_impl):
         raise NotImplementedError
 
@@ -2099,6 +2101,7 @@ class TestStatefulCacheImpl:
             [mock.call(mock_message_data_1), mock.call(mock_message_data_2), mock.call(mock_message_data_3)]
         )
 
+    @pytest.mark.skip(reason="TODO")
     def test_set_message(self, cache_impl):
         raise NotImplementedError
 
@@ -2112,6 +2115,7 @@ class TestStatefulCacheImpl:
         cache_impl.set_message.assert_called_once_with(message)
         cache_impl.get_message.assert_has_calls([mock.call(45312312), mock.call(45312312)])
 
+    @pytest.mark.skip(reason="TODO")
     def test_update_message_for_partial_message(self, cache_impl):
         raise NotImplementedError
 
