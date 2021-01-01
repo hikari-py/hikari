@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
+# Copyright (c) 2021 davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,5 +38,4 @@ __T = __TypeVar("__T", covariant=True)
 UndefinedOr = __Union[__T, UndefinedType]
 UndefinedNoneOr = __Union[UndefinedOr[__T], None]
 
-def count(*items: __Any) -> int:
-    ...
+def count(*items: __Any) -> int: ...
