@@ -302,7 +302,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             # Windows will sometimes raise an aiohttp.ClientOSError
             # If we cannot do DNS lookup, this will fail with a ClientConnectionError
             # usually.
-            raise errors.GatewayConnectionError(f"Failed to connect to Discord: {ex!r}") from ex
+            raise errors.GatewayConnectionError(str(ex)) from None
 
         finally:
             await exit_stack.aclose()
@@ -797,8 +797,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 except errors.GatewayConnectionError as ex:
                     self._logger.error(
-                        "failed to communicate with server, reason was: %s. Will retry shortly",
-                        ex.__cause__,
+                        "failed to communicate with server, reason was: %r. Will retry shortly", ex.reason
                     )
 
                 except errors.GatewayServerClosedConnectionError as ex:
