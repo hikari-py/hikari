@@ -30,8 +30,8 @@ logging.basicConfig(level="DEBUG")
 host = "localhost"
 port = 8080
 
-gateway_route_v6 = "/gateway/v6"
-gateway_uri_v6 = f"ws://{host}:{port}{gateway_route_v6}"
+gateway_route_v8 = "/gateway/v8"
+gateway_uri_v8 = f"ws://{host}:{port}{gateway_route_v8}"
 heartbeat_interval = 5_000
 
 me_user_id = "1234567890"
@@ -50,16 +50,16 @@ me_public_flags = 0
 route_table = web.RouteTableDef()
 
 
-@route_table.get("/api/v6/gateway")
-def v6_get_gateway(_):
-    return web.json_response({"url": gateway_uri_v6})
+@route_table.get("/api/v8/gateway")
+def v8_get_gateway(_):
+    return web.json_response({"url": gateway_uri_v8})
 
 
-@route_table.get("/api/v6/gateway/bot")
-def v6_get_gateway_bot(_):
+@route_table.get("/api/v8/gateway/bot")
+def v8_get_gateway_bot(_):
     return web.json_response(
         {
-            "url": gateway_uri_v6,
+            "url": gateway_uri_v8,
             "shards": 1,
             "session_start_limit": {
                 "total": 1000,
@@ -70,8 +70,8 @@ def v6_get_gateway_bot(_):
     )
 
 
-@route_table.get("/api/v6/users/@me")
-def v6_get_my_user(_):
+@route_table.get("/api/v8/users/@me")
+def v8_get_my_user(_):
     body = {
         "id": me_user_id,
         "username": me_username,
@@ -89,15 +89,15 @@ def v6_get_my_user(_):
     return web.json_response(body)
 
 
-@route_table.get(gateway_route_v6)
-async def gateway_v6(req):
+@route_table.get(gateway_route_v8)
+async def gateway_v8(req):
     res = web.WebSocketResponse()
     await res.prepare(req)
-    await GatewayV6(res).run()
+    await GatewayV8(res).run()
     return res
 
 
-class GatewayV6:
+class GatewayV8:
     def __init__(self, ws: web.WebSocketResponse):
         self.ws = ws
         self.last_heartbeat = float("nan")

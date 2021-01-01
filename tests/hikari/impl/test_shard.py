@@ -61,7 +61,7 @@ def proxy_settings():
 
 
 @pytest.mark.asyncio
-class Test_V6GatewayTransport:
+class Test_GatewayTransport:
     @pytest.fixture()
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
@@ -456,9 +456,7 @@ class Test_V6GatewayTransport:
         stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
         stack.enter_context(
-            pytest.raises(
-                errors.GatewayError, match=r"Failed to connect to Discord: ClientConnectionError\('some error'\)"
-            )
+            pytest.raises(errors.GatewayConnectionError, match=r"Failed to connect to server: 'some error'")
         )
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -491,10 +489,9 @@ class Test_V6GatewayTransport:
         stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
         stack.enter_context(
             pytest.raises(
-                errors.GatewayError,
+                errors.GatewayConnectionError,
                 match=(
-                    r"Failed to connect to Discord: "
-                    r"WSServerHandshakeError\(None, None, status=123, message='some error'\)"
+                    r'Failed to connect to server: "WSServerHandshakeError\(None, None, status=123, message=\'some error\'\)"'
                 ),
             )
         )
@@ -529,10 +526,9 @@ class Test_V6GatewayTransport:
         stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
         stack.enter_context(
             pytest.raises(
-                errors.GatewayError,
+                errors.GatewayConnectionError,
                 match=(
-                    r"Failed to connect to Discord: WSServerHandshakeError"
-                    r"\(None, None, status=500, message='some error'\)"
+                    r'Failed to connect to server: "WSServerHandshakeError\(None, None, status=500, message=\'some error\'\)"'
                 ),
             )
         )

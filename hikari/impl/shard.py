@@ -302,7 +302,14 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             # Windows will sometimes raise an aiohttp.ClientOSError
             # If we cannot do DNS lookup, this will fail with a ClientConnectionError
             # usually.
-            raise errors.GatewayConnectionError(str(ex)) from None
+            #
+            # aiohttp.WSServerHandshakeError has a really bad str, so we use the repr instead.
+            if isinstance(ex, aiohttp.WSServerHandshakeError):
+                reason = repr(ex)
+            else:
+                reason = str(ex)
+
+            raise errors.GatewayConnectionError(reason) from None
 
         finally:
             await exit_stack.aclose()
@@ -315,7 +322,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
 
 @typing.final
 class GatewayShardImpl(shard.GatewayShard):
-    """Implementation of a V6 and V7 compatible gateway.
+    """Implementation of a V8 compatible gateway.
 
     Parameters
     ----------
@@ -336,8 +343,7 @@ class GatewayShardImpl(shard.GatewayShard):
         The initial status to set on login for the shard. Defaults to
         `hikari.presences.Status.ONLINE`.
     intents : hikari.intents.Intents
-        Collection of intents to use. Unlike on the V6 gateway, this is
-        MANDATORY.
+        Collection of intents to use.
     large_threshold : builtins.int
         The number of members to have in a guild for it to be considered large.
     shard_id : builtins.int

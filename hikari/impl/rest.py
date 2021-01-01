@@ -355,7 +355,7 @@ class RESTApp(traits.ExecutorAware):
 
 
 class RESTClientImpl(rest_api.RESTClient):
-    """Implementation of the V6 and V7-compatible Discord HTTP API.
+    """Implementation of the V8-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
     factory within the passed application instance to deserialize JSON responses

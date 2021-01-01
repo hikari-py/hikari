@@ -163,6 +163,9 @@ class ShardCloseCode(int, enums.Enum):
 class GatewayConnectionError(GatewayError):
     """An exception thrown if a connection issue occurs."""
 
+    def __str__(self) -> str:
+        return f"Failed to connect to server: {self.reason!r}"
+
 
 @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
 class GatewayServerClosedConnectionError(GatewayError):

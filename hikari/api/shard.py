@@ -63,7 +63,7 @@ class GatewayCompression(str, enums.Enum):
 
 
 class GatewayShard(abc.ABC):
-    """Interface for a definition of a V6/V7 compatible websocket gateway.
+    """Interface for a definition of a V8 compatible websocket gateway.
 
     Each instance should represent a single shard.
     """
