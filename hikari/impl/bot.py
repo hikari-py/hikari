@@ -779,7 +779,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 ux.check_for_updates(self._http_settings, self._proxy_settings),
                 name="check for package updates",
             )
-        self._is_alive = False
+
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
         await self.dispatch(lifetime_events.StartingEvent(app=self))
         requirements = await requirements_task
@@ -802,6 +802,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             )
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
+        self._is_alive = True
         _LOGGER.info(
             "planning to start %s session%s... you can start %s session%s before the next window starts at %s",
             len(shard_ids),
@@ -876,7 +877,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
     def _check_if_alive(self) -> None:
-        if self._is_alive:
+        if not self._is_alive:
             raise errors.ComponentNotRunningError("bot is not running so it cannot be interacted with")
 
     def stream(
