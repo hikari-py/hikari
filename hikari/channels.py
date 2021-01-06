@@ -179,7 +179,7 @@ class ChannelFollow:
         return await self.app.rest.fetch_webhook(self.webhook_id)
 
     @property
-    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
+    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
         """Get the channel being followed from the cache.
 
         !!! warning
@@ -195,7 +195,7 @@ class ChannelFollow:
             status then this will return a `GuildTextChannel`.
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(channel, (GuildNewsChannel, GuildTextChannel))
+        assert channel is None or isinstance(channel, (GuildNewsChannel, GuildTextChannel))
         return channel
 
 

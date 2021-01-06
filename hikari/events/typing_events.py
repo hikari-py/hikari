@@ -171,7 +171,7 @@ class GuildTypingEvent(TypingEvent):
     """
 
     @property
-    def channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel]:
+    def channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
         """Get the cached channel object this typing event occurred in.
 
         Returns
@@ -180,7 +180,7 @@ class GuildTypingEvent(TypingEvent):
             The channel.
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(
+        assert channel is None or isinstance(
             channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
         ), f"expected GuildTextChannel or GuildNewsChannel from cache, got {channel}"
         return channel

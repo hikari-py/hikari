@@ -438,7 +438,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             will return `builtins.None` instead.
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(channel, channels.GuildTextChannel)
+        assert channel is None or isinstance(channel, channels.GuildTextChannel)
         return channel
 
     async def fetch_channel(self) -> channels.GuildTextChannel:

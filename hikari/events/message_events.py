@@ -243,8 +243,8 @@ class GuildMessageCreateEvent(MessageCreateEvent):
             otherwise, `builtins.None`.
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(
-            channel, (channels.GuildNewsChannel, channels.GuildTextChannel, type(None))
+        assert channel is None or isinstance(
+            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
         ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
         return channel
 
@@ -508,7 +508,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             otherwise, `builtins.None`.
         """
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(
+        assert channel is None or isinstance(
             channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
         ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
         return channel
