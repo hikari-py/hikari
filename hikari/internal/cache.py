@@ -265,7 +265,7 @@ class GuildRecord:
 
         Returns
         -------
-        bool
+        builtins.bool
             Whether this guild record has any resources attached to it.
         """
         # As `.is_available` should be paired with `.guild`, we don't need to check both.
