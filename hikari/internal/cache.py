@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "StatefulCacheMappingView",
+    "CacheMappingView",
     "EmptyCacheView",
     "GuildRecord",
     "BaseData",
@@ -33,10 +33,12 @@ __all__: typing.List[str] = [
     "KnownCustomEmojiData",
     "RichActivityData",
     "MemberPresenceData",
+    "MentionsData",
+    "MessageData",
     "VoiceStateData",
-    "GenericRefWrapper",
+    "RefCell",
+    "unwrap_ref_cell",
     "copy_guild_channel",
-    "GuildChannelCacheMappingView",
     "Cache3DMappingView",
     "DataT",
     "KeyT",
@@ -50,11 +52,12 @@ import typing
 
 import attr
 
-from hikari import channels
+from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
 from hikari import iterators
+from hikari import messages
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
@@ -63,6 +66,12 @@ from hikari.api import cache
 from hikari.internal import attr_extensions
 from hikari.internal import collections
 
+if typing.TYPE_CHECKING:
+    from hikari import channels as channels_
+    from hikari import traits
+    from hikari import users as users_
+
+ChannelT = typing.TypeVar("ChannelT", bound="channels_.GuildChannel")
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
@@ -71,39 +80,34 @@ ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
 
 
-class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, ValueT]):
+class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, ValueT]):
     """A cache mapping view implementation used for representing cached data.
 
     Parameters
     ----------
-    items : typing.Mapping[KeyT, typing.Union[ValueT, DataT, GenericRefWrapper[ValueT]]]
+    items : typing.Mapping[KeyT, typing.Union[ValueT, DataT, RefCell[ValueT]]]
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
     builder : typing.Optional[typing.Callable[[DataT], ValueT]]
         The callable used to build entities before they're returned by the
         mapping. This is used to cover the case when items stores `DataT` objects.
-    unpack : bool
-        Whether to unpack items from their ref wrappers or not before returning
-        them. This accounts for when `items` is `GenericRefWrapper[ValueT]`.
     predicate : typing.Optional[typing.Callable[[typing.Any], bool]]
         A callable to use to determine whether entries should be returned or hidden,
         this should take in whatever raw type was passed for the value in `items`.
         This may be `builtins.None` if all entries should be exposed.
     """
 
-    __slots__: typing.Sequence[str] = ("_builder", "_data", "_unpack", "_predicate")
+    __slots__: typing.Sequence[str] = ("_builder", "_data", "_predicate")
 
     def __init__(
         self,
-        items: typing.Mapping[KeyT, typing.Union[ValueT, DataT, GenericRefWrapper[ValueT]]],
+        items: typing.Mapping[KeyT, typing.Union[ValueT, DataT]],
         *,
         builder: typing.Optional[typing.Callable[[DataT], ValueT]] = None,
-        unpack: bool = False,
         predicate: typing.Optional[typing.Callable[[typing.Any], bool]] = None,
     ) -> None:
         self._builder = builder
         self._data = items
-        self._unpack = unpack
         self._predicate = predicate
 
     @classmethod
@@ -121,9 +125,7 @@ class StatefulCacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[Key
 
         if self._builder is not None:
             entry = self._builder(entry)  # type: ignore[arg-type]
-        elif self._unpack:
-            assert isinstance(entry, GenericRefWrapper)
-            entry = self._copy(entry.object)
+
         else:
             entry = self._copy(entry)  # type: ignore[arg-type]
 
@@ -225,7 +227,7 @@ class GuildRecord:
     `typing.MutableSequence[str]` of invite codes.
     """
 
-    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberData]] = attr.ib(
+    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]] = attr.ib(
         default=None
     )
     """A mapping of user IDs to the objects of members cached for this guild.
@@ -259,9 +261,16 @@ class GuildRecord:
     `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
     """
 
-    def __bool__(self) -> bool:
+    def empty(self) -> bool:
+        """Check whether this guild record has any resources attached to it.
+
+        Returns
+        -------
+        builtins.bool
+            Whether this guild record has any resources attached to it.
+        """
         # As `.is_available` should be paired with `.guild`, we don't need to check both.
-        return any(
+        return not any(
             (
                 self.channels,
                 self.emojis,
@@ -288,16 +297,13 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def build_entity(self, **kwargs: typing.Any) -> ValueT:
+    def build_entity(self, app: traits.RESTAware, /) -> ValueT:
         """Build an entity object from this data object.
 
         Parameters
         ----------
-        target
-            The class of the entity object to build.
-        kwargs
-            Extra fields to pass on to the entity's initialiser. These will take
-            priority over fields on the builder.
+        app : hikari.traits.RESTAware
+            The hikari application the built object should be bound to.
 
         Returns
         -------
@@ -306,26 +312,18 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
     @classmethod
     @abc.abstractmethod
-    def build_from_entity(cls: typing.Type[DataT], entity: ValueT) -> DataT:
+    def build_from_entity(cls: typing.Type[DataT], entity: ValueT, /) -> DataT:
         """Build a data object from an initialised entity.
 
         Parameters
         ----------
-        entity
+        entity : ValueT
             The entity object to build a data class from.
 
         Returns
         -------
         The built data class.
         """
-
-    def replace(self: DataT, **kwargs: typing.Any) -> DataT:
-        data = copy.copy(self)
-
-        for attribute, value in kwargs.items():
-            setattr(data, attribute, value)
-
-        return data
 
 
 @attr_extensions.with_copy
@@ -336,8 +334,8 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     code: str = attr.ib()
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     channel_id: snowflakes.Snowflake = attr.ib()
-    inviter_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
-    target_user_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    inviter: typing.Optional[RefCell[users_.User]] = attr.ib()
+    target_user: typing.Optional[RefCell[users_.User]] = attr.ib()
     target_user_type: typing.Union[invites.TargetUserType, int, None] = attr.ib()
     uses: int = attr.ib()
     max_uses: typing.Optional[int] = attr.ib()
@@ -345,7 +343,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     is_temporary: bool = attr.ib()
     created_at: datetime.datetime = attr.ib()
 
-    def build_entity(self, **kwargs: typing.Any) -> invites.InviteWithMetadata:
+    def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
             code=self.code,
             guild_id=self.guild_id,
@@ -360,25 +358,38 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             approximate_active_member_count=None,
             channel=None,
             guild=None,
-            app=kwargs["app"],
-            inviter=kwargs["inviter"],
-            target_user=kwargs["target_user"],
+            app=app,
+            inviter=self.inviter.copy() if self.inviter else None,
+            target_user=self.target_user.copy() if self.target_user else None,
         )
 
     @classmethod
-    def build_from_entity(cls: typing.Type[InviteData], entity: invites.InviteWithMetadata) -> InviteData:
+    def build_from_entity(
+        cls,
+        invite: invites.InviteWithMetadata,
+        /,
+        *,
+        inviter: typing.Optional[RefCell[users_.User]] = None,
+        target_user: typing.Optional[RefCell[users_.User]] = None,
+    ) -> InviteData:
+        if not inviter and invite.inviter:
+            inviter = RefCell(copy.copy(invite.inviter))
+
+        if not target_user and invite.target_user:
+            target_user = RefCell(copy.copy(invite.target_user))
+
         return cls(
-            code=entity.code,
-            guild_id=entity.guild_id,
-            channel_id=entity.channel_id,
-            target_user_type=entity.target_user_type,
-            uses=entity.uses,
-            max_uses=entity.max_uses,
-            max_age=entity.max_age,
-            is_temporary=entity.is_temporary,
-            created_at=entity.created_at,
-            inviter_id=entity.inviter.id if entity.inviter is not None else None,
-            target_user_id=entity.target_user.id if entity.target_user is not None else None,
+            code=invite.code,
+            guild_id=invite.guild_id,
+            channel_id=invite.channel_id,
+            target_user_type=invite.target_user_type,
+            uses=invite.uses,
+            max_uses=invite.max_uses,
+            max_age=invite.max_age,
+            is_temporary=invite.is_temporary,
+            created_at=invite.created_at,
+            inviter=inviter,
+            target_user=target_user,
         )
 
 
@@ -387,7 +398,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
 class MemberData(BaseData[guilds.Member]):
     """A data model for storing member data in an in-memory cache."""
 
-    id: snowflakes.Snowflake = attr.ib()
+    user: RefCell[users_.User] = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
     nickname: undefined.UndefinedNoneOr[str] = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
@@ -398,24 +409,25 @@ class MemberData(BaseData[guilds.Member]):
     is_pending: undefined.UndefinedOr[bool] = attr.ib()
     # meta-attribute
     has_been_deleted: bool = attr.ib(default=False)
-    ref_count: int = attr.ib(default=0)
 
     @classmethod
-    def build_from_entity(cls: typing.Type[MemberData], entity: guilds.Member) -> MemberData:
+    def build_from_entity(
+        cls, member: guilds.Member, /, *, user: typing.Optional[RefCell[users_.User]] = None
+    ) -> MemberData:
         return cls(
-            guild_id=entity.guild_id,
-            nickname=entity.nickname,
-            joined_at=entity.joined_at,
-            premium_since=entity.premium_since,
-            is_deaf=entity.is_deaf,
-            is_mute=entity.is_mute,
-            is_pending=entity.is_pending,
-            id=entity.user.id,
+            guild_id=member.guild_id,
+            nickname=member.nickname,
+            joined_at=member.joined_at,
+            premium_since=member.premium_since,
+            is_deaf=member.is_deaf,
+            is_mute=member.is_mute,
+            is_pending=member.is_pending,
+            user=user or RefCell(copy.copy(member.user)),
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
-            role_ids=tuple(entity.role_ids),
+            role_ids=tuple(member.role_ids),
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> guilds.Member:
+    def build_entity(self, _: traits.RESTAware, /) -> guilds.Member:
         return guilds.Member(
             guild_id=self.guild_id,
             nickname=self.nickname,
@@ -425,7 +437,7 @@ class MemberData(BaseData[guilds.Member]):
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
             is_pending=self.is_pending,
-            user=kwargs["user"],
+            user=self.user.copy(),
         )
 
 
@@ -439,32 +451,36 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     is_animated: bool = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
-    user_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    user: typing.Optional[RefCell[users_.User]] = attr.ib()
     is_colons_required: bool = attr.ib()
     is_managed: bool = attr.ib()
     is_available: bool = attr.ib()
-    # meta-attributes
-    has_been_deleted: bool = attr.ib(default=False)  # We need test coverage for this systm
-    ref_count: int = attr.ib(default=0)
 
     @classmethod
     def build_from_entity(
-        cls: typing.Type[KnownCustomEmojiData], entity: emojis.KnownCustomEmoji
+        cls,
+        emoji: emojis.KnownCustomEmoji,
+        /,
+        *,
+        user: typing.Optional[RefCell[users_.User]] = None,
     ) -> KnownCustomEmojiData:
+        if not user and emoji.user:
+            user = RefCell(copy.copy(emoji.user))
+
         return cls(
-            id=entity.id,
-            name=entity.name,
-            is_animated=entity.is_animated,
-            guild_id=entity.guild_id,
-            is_colons_required=entity.is_colons_required,
-            is_managed=entity.is_managed,
-            is_available=entity.is_available,
-            user_id=entity.user.id if entity.user else None,
+            id=emoji.id,
+            name=emoji.name,
+            is_animated=emoji.is_animated,
+            guild_id=emoji.guild_id,
+            is_colons_required=emoji.is_colons_required,
+            is_managed=emoji.is_managed,
+            is_available=emoji.is_available,
+            user=user,
             # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
-            role_ids=tuple(entity.role_ids),
+            role_ids=tuple(emoji.role_ids),
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> emojis.KnownCustomEmoji:
+    def build_entity(self, app: traits.RESTAware, /) -> emojis.KnownCustomEmoji:
         return emojis.KnownCustomEmoji(
             id=self.id,
             name=self.name,
@@ -474,8 +490,8 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_colons_required=self.is_colons_required,
             is_managed=self.is_managed,
             is_available=self.is_available,
-            app=kwargs["app"],
-            user=kwargs["user"],
+            app=app,
+            user=self.user.copy() if self.user else None,
         )
 
 
@@ -492,7 +508,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     application_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     details: typing.Optional[str] = attr.ib()
     state: typing.Optional[str] = attr.ib()
-    emoji_id_or_name: typing.Union[snowflakes.Snowflake, str, None] = attr.ib()
+    emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = attr.ib()
     party: typing.Optional[presences.ActivityParty] = attr.ib()
     assets: typing.Optional[presences.ActivityAssets] = attr.ib()
     secrets: typing.Optional[presences.ActivitySecret] = attr.ib()
@@ -500,37 +516,51 @@ class RichActivityData(BaseData[presences.RichActivity]):
     flags: typing.Optional[presences.ActivityFlag] = attr.ib()
 
     @classmethod
-    def build_from_entity(cls: typing.Type[RichActivityData], entity: presences.RichActivity) -> RichActivityData:
-        emoji_id_or_name: typing.Union[snowflakes.Snowflake, str, None]
-        if entity.emoji is None:
-            emoji_id_or_name = None
-        elif isinstance(entity.emoji, emojis.CustomEmoji):
-            emoji_id_or_name = entity.emoji.id
-        else:
-            emoji_id_or_name = entity.emoji.name
+    def build_from_entity(
+        cls,
+        activity: presences.RichActivity,
+        /,
+        *,
+        emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None,
+    ) -> RichActivityData:
+        if emoji:
+            pass
 
-        timestamps = copy.copy(entity.timestamps) if entity.timestamps is not None else None
-        party = copy.copy(entity.party) if entity.party is not None else None
-        assets = copy.copy(entity.assets) if entity.assets is not None else None
-        secrets = copy.copy(entity.secrets) if entity.secrets is not None else None
+        elif isinstance(activity.emoji, emojis.CustomEmoji):
+            emoji = RefCell(copy.copy(activity.emoji))
+
+        elif activity.emoji:
+            emoji = activity.emoji.name
+
+        timestamps = copy.copy(activity.timestamps) if activity.timestamps is not None else None
+        party = copy.copy(activity.party) if activity.party is not None else None
+        assets = copy.copy(activity.assets) if activity.assets is not None else None
+        secrets = copy.copy(activity.secrets) if activity.secrets is not None else None
         return cls(
-            name=entity.name,
-            url=entity.url,
-            type=entity.type,
-            created_at=entity.created_at,
-            application_id=entity.application_id,
-            details=entity.details,
-            state=entity.state,
-            is_instance=entity.is_instance,
-            flags=entity.flags,
-            emoji_id_or_name=emoji_id_or_name,
+            name=activity.name,
+            url=activity.url,
+            type=activity.type,
+            created_at=activity.created_at,
+            application_id=activity.application_id,
+            details=activity.details,
+            state=activity.state,
+            is_instance=activity.is_instance,
+            flags=activity.flags,
+            emoji=emoji,
             timestamps=timestamps,
             party=party,
             assets=assets,
             secrets=secrets,
         )
 
-    def build_entity(self, **kwargs: typing.Any) -> presences.RichActivity:
+    def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
+        emoji: typing.Optional[emojis.Emoji] = None
+        if isinstance(self.emoji, RefCell):
+            emoji = self.emoji.copy()
+
+        elif self.emoji is not None:
+            emoji = emojis.UnicodeEmoji(self.emoji)
+
         return presences.RichActivity(
             name=self.name,
             url=self.url,
@@ -545,7 +575,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             party=copy.copy(self.party) if self.party is not None else None,
             assets=copy.copy(self.assets) if self.assets is not None else None,
             secrets=copy.copy(self.secrets) if self.secrets is not None else None,
-            emoji=kwargs["emoji"],
+            emoji=emoji,
         )
 
 
@@ -561,33 +591,261 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     client_status: presences.ClientStatus = attr.ib()
 
     @classmethod
-    def build_from_entity(
-        cls: typing.Type[MemberPresenceData], entity: presences.MemberPresence, **kwargs: typing.Any
-    ) -> MemberPresenceData:
+    def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
         # role_ids and activities are special cases as may be mutable sequences, therefor we ant to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
         return cls(
-            user_id=entity.user_id,
-            guild_id=entity.guild_id,
-            visible_status=entity.visible_status,
-            activities=tuple(RichActivityData.build_from_entity(activity) for activity in entity.activities),
-            client_status=copy.copy(entity.client_status),
+            user_id=presence.user_id,
+            guild_id=presence.guild_id,
+            visible_status=presence.visible_status,
+            activities=tuple(RichActivityData.build_from_entity(activity) for activity in presence.activities),
+            client_status=copy.copy(presence.client_status),
         )
 
-    def build_entity(
-        self,
-        **kwargs: typing.Any,
-    ) -> presences.MemberPresence:
-        presence_kwargs = kwargs["presence_kwargs"]
-        activities = [activity.build_entity(**kwargs_) for activity, kwargs_ in zip(self.activities, presence_kwargs)]
+    def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
         return presences.MemberPresence(
             user_id=self.user_id,
             guild_id=self.guild_id,
             visible_status=self.visible_status,
-            app=kwargs["app"],
-            activities=activities,
+            app=app,
+            activities=[activity.build_entity(app) for activity in self.activities],
             client_status=copy.copy(self.client_status),
         )
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
+class MentionsData(BaseData[messages.Mentions]):
+    """A model for storing message mentions data in an in-memory cache."""
+
+    users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attr.ib()
+    role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.ib()
+    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.ib()
+    everyone: undefined.UndefinedOr[bool] = attr.ib()
+
+    @classmethod
+    def build_from_entity(
+        cls,
+        mentions: messages.Mentions,
+        /,
+        *,
+        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
+    ) -> MentionsData:
+        if not users and mentions.users is not undefined.UNDEFINED:
+            users = {user_id: RefCell(copy.copy(user)) for user_id, user in mentions.users.items()}
+
+        channels: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.Snowflake, "channels_.PartialChannel"]
+        ] = undefined.UNDEFINED
+        if mentions.channels is not undefined.UNDEFINED:
+            channels = {channel_id: copy.copy(channel) for channel_id, channel in mentions.channels.items()}
+
+        return cls(
+            users=users,
+            role_ids=tuple(mentions.role_ids) if mentions.role_ids is not undefined.UNDEFINED else undefined.UNDEFINED,
+            # TODO: do we want to de-duplicate mention_channels?
+            channels=channels,
+            everyone=mentions.everyone,
+        )
+
+    def build_entity(
+        self, _: traits.RESTAware, /, *, message: typing.Optional[messages.Message] = None
+    ) -> messages.Mentions:
+        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = undefined.UNDEFINED
+        if self.users is not undefined.UNDEFINED:
+            users = {user_id: user.copy() for user_id, user in self.users.items()}
+
+        channels: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
+        ] = undefined.UNDEFINED
+        if self.channels is not undefined.UNDEFINED:
+            channels = {channel_id: copy.copy(channel) for channel_id, channel in self.channels.items()}
+
+        return messages.Mentions(
+            message=message or NotImplemented,
+            users=users,
+            role_ids=self.role_ids,
+            channels=channels,
+            everyone=self.everyone,
+        )
+
+    def update(
+        self,
+        mention: messages.Mentions,
+        /,
+        *,
+        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
+    ) -> None:
+        if users is not undefined.UNDEFINED:
+            self.users = users
+
+        elif mention.users is not undefined.UNDEFINED:
+            self.users = {user_id: RefCell(copy.copy(user)) for user_id, user in mention.users.items()}
+
+        if mention.role_ids is not undefined.UNDEFINED:
+            self.role_ids = tuple(mention.role_ids)
+
+        if mention.channels is not undefined.UNDEFINED:
+            self.channels = {channel_id: copy.copy(channel) for channel_id, channel in mention.channels.items()}
+
+        if mention.everyone is not undefined.UNDEFINED:
+            self.everyone = mention.everyone
+
+
+def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
+    return embeds_.Embed.from_received_embed(
+        title=embed.title,
+        description=embed.description,
+        url=embed.url,
+        color=embed.color,
+        timestamp=embed.timestamp,
+        image=copy.copy(embed.image) if embed.image else None,
+        thumbnail=copy.copy(embed.thumbnail) if embed.thumbnail else None,
+        video=copy.copy(embed.video) if embed.video else None,
+        author=copy.copy(embed.author) if embed.author else None,
+        provider=copy.copy(embed.provider) if embed.provider else None,
+        footer=copy.copy(embed.footer) if embed.footer else None,
+        fields=list(map(copy.copy, embed.fields)),  # type: ignore[arg-type]
+    )
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
+class MessageData(BaseData[messages.Message]):
+    """A model for storing message data in an in-memory cache."""
+
+    id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.ib()
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    author: RefCell[users_.User] = attr.ib()
+    member: typing.Optional[RefCell[MemberData]] = attr.ib()
+    content: typing.Optional[str] = attr.ib()
+    timestamp: datetime.datetime = attr.ib()
+    edited_timestamp: typing.Optional[datetime.datetime] = attr.ib()
+    is_tts: bool = attr.ib()
+    mentions: MentionsData = attr.ib()
+    attachments: typing.Sequence[messages.Attachment] = attr.ib()
+    embeds: typing.Sequence[embeds_.Embed] = attr.ib()
+    reactions: typing.Sequence[messages.Reaction] = attr.ib()
+    is_pinned: bool = attr.ib()
+    webhook_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    type: typing.Union[messages.MessageType, int] = attr.ib()
+    activity: typing.Optional[messages.MessageActivity] = attr.ib()
+    application: typing.Optional[messages.MessageApplication] = attr.ib()
+    message_reference: typing.Optional[messages.MessageReference] = attr.ib()
+    flags: typing.Optional[messages.MessageFlag] = attr.ib()
+    nonce: typing.Optional[str] = attr.ib()
+    referenced_message: undefined.UndefinedNoneOr[RefCell[MessageData]] = attr.ib()
+
+    @classmethod
+    def build_from_entity(
+        cls,
+        message: messages.Message,
+        /,
+        *,
+        author: typing.Optional[RefCell[users_.User]] = None,
+        member: typing.Optional[RefCell[MemberData]] = None,
+        mention_users: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
+        ] = undefined.UNDEFINED,
+        referenced_message: typing.Optional[RefCell[MessageData]] = None,
+    ) -> MessageData:
+        if not member and message.member:
+            member = RefCell(MemberData.build_from_entity(message.member))
+
+        if (
+            not referenced_message
+            and message.referenced_message
+            and message.referenced_message is not undefined.UNDEFINED
+        ):
+            referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
+
+        return cls(
+            id=message.id,
+            channel_id=message.channel_id,
+            guild_id=message.guild_id,
+            author=author or RefCell(copy.copy(message.author)),
+            member=member,
+            content=message.content,
+            timestamp=message.timestamp,
+            edited_timestamp=message.edited_timestamp,
+            is_tts=message.is_tts,
+            mentions=MentionsData.build_from_entity(message.mentions, users=mention_users),
+            attachments=tuple(map(copy.copy, message.attachments)),
+            embeds=tuple(map(_copy_embed, message.embeds)),
+            reactions=tuple(map(copy.copy, message.reactions)),
+            is_pinned=message.is_pinned,
+            webhook_id=message.webhook_id,
+            type=message.type,
+            activity=copy.copy(message.activity) if message.activity else None,
+            application=copy.copy(message.application) if message.application else None,
+            message_reference=copy.copy(message.message_reference) if message.message_reference else None,
+            flags=copy.copy(message.flags),
+            nonce=message.nonce,
+            referenced_message=referenced_message,
+        )
+
+    def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
+        referenced_message: undefined.UndefinedNoneOr[messages.Message]
+        if isinstance(self.referenced_message, RefCell):
+            referenced_message = self.referenced_message.object.build_entity(app)
+
+        else:
+            referenced_message = self.referenced_message
+
+        message = messages.Message(
+            id=self.id,
+            app=app,
+            channel_id=self.channel_id,
+            guild_id=self.guild_id,
+            author=self.author.copy(),
+            member=self.member.object.build_entity(app) if self.member else None,
+            content=self.content,
+            timestamp=self.timestamp,
+            edited_timestamp=self.edited_timestamp,
+            is_tts=self.is_tts,
+            mentions=NotImplemented,
+            attachments=tuple(map(copy.copy, self.attachments)),
+            embeds=tuple(map(_copy_embed, self.embeds)),
+            reactions=tuple(map(copy.copy, self.reactions)),
+            is_pinned=self.is_pinned,
+            webhook_id=self.webhook_id,
+            type=self.type,
+            activity=copy.copy(self.activity) if self.activity else None,
+            application=copy.copy(self.application) if self.application else None,
+            message_reference=copy.copy(self.message_reference) if self.message_reference else None,
+            flags=self.flags,
+            nonce=self.nonce,
+            referenced_message=referenced_message,
+        )
+        message.mentions = self.mentions.build_entity(app, message=message)
+        return message
+
+    def update(
+        self,
+        message: messages.PartialMessage,
+        /,
+        *,
+        mention_users: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
+        ] = undefined.UNDEFINED,
+    ) -> None:
+        if message.content is not undefined.UNDEFINED:
+            self.content = message.content
+
+        if message.edited_timestamp is not undefined.UNDEFINED:
+            self.edited_timestamp = message.edited_timestamp
+
+        if message.is_pinned is not undefined.UNDEFINED:
+            self.is_pinned = message.is_pinned
+
+        if message.attachments is not undefined.UNDEFINED:
+            self.attachments = tuple(map(copy.copy, message.attachments))
+
+        if message.embeds is not undefined.UNDEFINED:
+            self.embeds = tuple(map(_copy_embed, message.embeds))
+
+        self.mentions.update(message.mentions, users=mention_users)
 
 
 @attr_extensions.with_copy
@@ -604,10 +862,11 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_streaming: bool = attr.ib()
     is_suppressed: bool = attr.ib()
     is_video_enabled: bool = attr.ib()
-    user_id: snowflakes.Snowflake = attr.ib()
+    member: RefCell[MemberData] = attr.ib()
     session_id: str = attr.ib()
 
-    def build_entity(self, **kwargs: typing.Any) -> voices.VoiceState:
+    def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
+        member = self.member.object.build_entity(app)
         return voices.VoiceState(
             channel_id=self.channel_id,
             guild_id=self.guild_id,
@@ -618,33 +877,57 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=self.is_streaming,
             is_suppressed=self.is_suppressed,
             is_video_enabled=self.is_video_enabled,
-            user_id=self.user_id,
+            user_id=member.user.id,
             session_id=self.session_id,
-            app=kwargs["app"],
-            member=kwargs["member"],
+            app=app,
+            member=member,
         )
 
     @classmethod
-    def build_from_entity(cls: typing.Type[VoiceStateData], entity: voices.VoiceState) -> VoiceStateData:
+    def build_from_entity(
+        cls,
+        voice_state: voices.VoiceState,
+        /,
+        *,
+        member: typing.Optional[RefCell[MemberData]] = None,
+    ) -> VoiceStateData:
         return cls(
-            channel_id=entity.channel_id,
-            guild_id=entity.guild_id,
-            is_self_deafened=entity.is_self_deafened,
-            is_self_muted=entity.is_self_muted,
-            is_guild_deafened=entity.is_guild_deafened,
-            is_guild_muted=entity.is_guild_muted,
-            is_streaming=entity.is_streaming,
-            is_suppressed=entity.is_suppressed,
-            is_video_enabled=entity.is_video_enabled,
-            user_id=entity.user_id,
-            session_id=entity.session_id,
+            channel_id=voice_state.channel_id,
+            guild_id=voice_state.guild_id,
+            is_self_deafened=voice_state.is_self_deafened,
+            is_self_muted=voice_state.is_self_muted,
+            is_guild_deafened=voice_state.is_guild_deafened,
+            is_guild_muted=voice_state.is_guild_muted,
+            is_streaming=voice_state.is_streaming,
+            is_suppressed=voice_state.is_suppressed,
+            is_video_enabled=voice_state.is_video_enabled,
+            member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
+            session_id=voice_state.session_id,
         )
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, repr=False, hash=False, weakref_slot=False)
-class GenericRefWrapper(typing.Generic[ValueT]):
-    """An object used for wrapping entities in an in-memory cache.
+@attr.s(slots=True, repr=True, hash=False, weakref_slot=True)
+class Cell(typing.Generic[ValueT]):
+    """Object used to store mutable references to a value in multiple places."""
+
+    object: ValueT = attr.ib(repr=True)
+
+    def copy(self) -> ValueT:
+        """Get a copy of the contents of this cell.
+
+        Returns
+        -------
+        ValueT
+            The copied contents of this cell.
+        """
+        return copy.copy(self.object)
+
+
+@attr_extensions.with_copy
+@attr.s(slots=True, repr=False, hash=False, weakref_slot=False)
+class RefCell(typing.Generic[ValueT]):
+    """Object used to track mutable references to a value in multiple places.
 
     This is intended to enable reference counting for entities that are only kept
     alive by reference (e.g. the unknown emoji objects attached to presence
@@ -652,11 +935,37 @@ class GenericRefWrapper(typing.Generic[ValueT]):
     the time spent building these entities for the objects that reference them.
     """
 
-    object: ValueT = attr.ib()
-    ref_count: int = attr.ib(default=0)
+    object: ValueT = attr.ib(repr=True)
+    ref_count: int = attr.ib(default=0, kw_only=True)
+
+    def copy(self) -> ValueT:
+        """Get a copy of the contents of this cell.
+
+        Returns
+        -------
+        ValueT
+            The copied contents of this cell.
+        """
+        return copy.copy(self.object)
 
 
-def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
+def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
+    """Unwrap a `RefCell` instance to it's contents.
+
+    Parameters
+    ----------
+    cell : RefCell[ValueT]
+        The reference cell instance to unwrap
+
+    Returns
+    -------
+    ValueT
+        The reference cell's content.
+    """
+    return cell.copy()
+
+
+def copy_guild_channel(channel: ChannelT) -> ChannelT:
     """Logic for handling the copying of guild channel objects.
 
     This exists account for the permission overwrite objects attached to guild
@@ -664,22 +973,12 @@ def copy_guild_channel(channel: channels.GuildChannel) -> channels.GuildChannel:
     """
     channel = copy.copy(channel)
     channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in collections.copy_mapping(channel.permission_overwrites).items()
+        sf: copy.copy(overwrite) for sf, overwrite in channel.permission_overwrites.items()
     }
     return channel
 
 
-class GuildChannelCacheMappingView(StatefulCacheMappingView[snowflakes.Snowflake, channels.GuildChannel]):
-    """A special case of the mapping view implements copy logic that targets guild channels specifically."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @classmethod
-    def _copy(cls, value: channels.GuildChannel) -> channels.GuildChannel:
-        return copy_guild_channel(value)
-
-
-class Cache3DMappingView(StatefulCacheMappingView[snowflakes.Snowflake, cache.CacheView[KeyT, ValueT]]):
+class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[KeyT, ValueT]]):
     """A special case of the Mapping View which avoids copying the already immutable views contained within it."""
 
     __slots__: typing.Sequence[str] = ()

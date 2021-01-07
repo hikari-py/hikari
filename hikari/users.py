@@ -45,7 +45,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import messages
     from hikari import traits
-    from hikari import users
 
 
 @typing.final
@@ -226,7 +225,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
@@ -655,5 +654,23 @@ class OwnUser(UserImpl):
     async def fetch_dm_channel(self) -> typing.NoReturn:
         raise TypeError("Unable to fetch your own DM channel")
 
-    async def send(self) -> typing.NoReturn:  # type: ignore[override]
+    async def send(
+        self,
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        embed: undefined.UndefinedOr[embeds.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        reply_mention: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> typing.NoReturn:
         raise TypeError("Unable to send a DM to yourself")

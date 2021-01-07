@@ -29,6 +29,9 @@ from typing import TypeVar as __TypeVar
 from typing import Union as __Union
 
 class UndefinedType(__enum.Enum):
+    def __bool__(self) -> __Literal[False]:
+        ...
+
     UNDEFINED = __enum.auto()
 
 UNDEFINED: __Literal[UndefinedType.UNDEFINED] = UndefinedType.UNDEFINED

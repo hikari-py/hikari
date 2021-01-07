@@ -21,7 +21,6 @@
 # SOFTWARE.
 import array as array_
 import asyncio
-import builtins
 import datetime
 import operator
 import sys
@@ -173,6 +172,19 @@ class TestTimedCacheMap:
         del mock_map["ayanami"]
         assert mock_map == {"rei": "aww"}
 
+    @pytest.mark.asyncio
+    async def test___delitem___garbage_collection_on_expire_set(self):
+        expire_call = mock.Mock()
+        mock_map = collections.TimedCacheMap(
+            expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3),
+            on_expire=expire_call,
+        )
+        mock_map.update({"nyaa": "see", "awwo": "awoo2"})
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 6)
+        expire_call.assert_not_called()
+        mock_map.update({"ayanami": "shinji", "rei": "aww"})
+        expire_call.assert_has_calls((mock.call("see"), mock.call("awoo2")))
+
     def test___getitem___for_valid_entry(self):
         mock_map = collections.TimedCacheMap(expiry=datetime.timedelta(seconds=100))
         mock_map["OK"] = 42
@@ -293,6 +305,14 @@ class TestLimitedCapacityCacheMap:
         mock_map["eva"] = "Rei"
         mock_map.update({"shinji": "ikari"})
         assert mock_map == {"pacify": "me", "qt": "pie", "eva": "Rei", "shinji": "ikari"}
+
+    def test___setitem___when_limit_reached_and_expire_callback_set(self):
+        expire_callback = mock.Mock()
+        mock_map = collections.LimitedCapacityCacheMap(limit=4, on_expire=expire_callback)
+        mock_map.update({"bll": "no", "ieiei": "lslsl", "pacify": "me", "qt": "pie"})
+        mock_map["eva"] = "Rei"
+        mock_map.update({"shinji": "ikari"})
+        expire_callback.assert_has_calls((mock.call("no"), mock.call("lslsl")))
 
 
 class TestSnowflakeSet:
@@ -490,17 +510,3 @@ def test_get_index_or_slice_with_slice():
 def test_get_index_or_slice_with_invalid_type():
     with pytest.raises(TypeError):
         collections.get_index_or_slice({}, object())
-
-
-def test_copy_mapping():
-    mock_mapping = mock.Mock(copy=mock.Mock())
-
-    assert collections.copy_mapping(mock_mapping) == mock_mapping.copy.return_value
-
-
-@pytest.mark.parametrize("error", [TypeError, AttributeError])
-def test_copy_mapping_on_error(error):
-    mock_mapping = mock.Mock(copy=mock.Mock(side_effect=error))
-
-    with mock.patch.object(builtins, "dict") as mock_dict:
-        assert collections.copy_mapping(mock_mapping) == mock_dict.return_value
