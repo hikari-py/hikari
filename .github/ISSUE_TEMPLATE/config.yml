@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Question
+  - name: Discussions
+    url: https://github.com/hikari-py/hikari/discussions
+    about: A perfect place to ask questions and get help with issues you are having.
+  - name: Discord server
     url: https://discord.gg/Jx4cNGG
-    about: Please ask questions in our Discord server.
+    about: Joining our Discord server is an ideal way to ask questions, contact the maintainers, stay up to date with updates and get to know other developers.

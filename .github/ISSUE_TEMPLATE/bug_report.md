@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Got a bug? Let us know!
+about: Found a bug? Let us know so we can fix it!
 title: ''
 labels: bug
 assignees: ''
