@@ -47,6 +47,9 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 if typing.TYPE_CHECKING:
+    ConsumerT = typing.Callable[
+        [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
+    ]
     ListenerMapT = typing.MutableMapping[
         typing.Type[event_dispatcher.EventT_co],
         typing.MutableSequence[event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
@@ -70,23 +73,50 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = ("_app", "_consumers", "_intents", "_listeners", "_waiters")
 
     def __init__(self, app: traits.BotAware) -> None:
         self._app = app
+        self._consumers: typing.Dict[str, typing.List[ConsumerT]] = {}
         self._intents = app.intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
+
+        for name, member in inspect.getmembers(self):
+            if name.startswith("on_"):
+                self.add_raw_consumer(name[3:], member)
+
+    def add_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
+        name = name.casefold()
+        if name not in self._consumers:
+            self._consumers[name] = []
+
+        self._consumers[name].append(consumer)
+
+    def get_raw_consumers(self, name: str, /) -> typing.Sequence[ConsumerT]:
+        if consumers := self._consumers.get(name.casefold()):
+            return consumers.copy()
+
+        return []
+
+    def remove_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
+        name = name.casefold()
+        if name not in self._consumers or consumer not in self._consumers[name]:
+            raise LookupError(name, consumer)
+
+        self._consumers[name].remove(consumer)
 
     def consume_raw_event(
         self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
         try:
-            callback = getattr(self, "on_" + event_name.lower())
-        except AttributeError:
+            callbacks = self._consumers[event_name.casefold()]
+        except KeyError:
             _LOGGER.debug("ignoring unknown event %s:\n    %r", event_name, payload)
         else:
-            asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
+            asyncio.gather(
+                *(self._handle_dispatch(callback, shard, payload) for callback in callbacks), return_exceptions=True
+            )
 
     def subscribe(
         self,
@@ -280,9 +310,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     @staticmethod
     async def _handle_dispatch(
-        callback: typing.Callable[
-            [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
-        ],
+        callback: ConsumerT,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
     ) -> None:

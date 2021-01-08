@@ -44,6 +44,20 @@ class TestEventManagerBase:
 
         return EventManagerBaseImpl(mock.Mock())
 
+    def test___init___loads_consumers(self):
+        class StubManager(event_manager_base.EventManagerBase):
+            async def on_foo(self, event):
+                raise NotImplementedError
+
+            async def on_bar(self, event):
+                raise NotImplementedError
+
+            async def not_a_listener(self):
+                raise NotImplementedError
+
+        manager = StubManager(object(), object())
+        assert manager._consumers == {"foo": [manager.on_foo], "bar": [manager.on_bar]}
+
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_AttributeError(self, event_manager):
         with mock.patch.object(event_manager_base, "_LOGGER") as logger:
@@ -53,17 +67,22 @@ class TestEventManagerBase:
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
-        event_manager._handle_dispatch = mock.Mock()
-        event_manager.on_existing_event = mock.Mock()
+        side_effect = (object(), object())
+        event_manager._handle_dispatch = mock.Mock(side_effect=side_effect)
+        custom_listener = mock.Mock()
+        on_existing_event = mock.Mock()
+        event_manager._consumers["existing_event"] = [on_existing_event, custom_listener]
         shard = object()
 
-        with mock.patch("asyncio.create_task") as create_task:
+        with mock.patch("asyncio.gather") as gather:
             event_manager.consume_raw_event(shard, "EXISTING_EVENT", {"berp": "baz"})
 
-        event_manager._handle_dispatch.assert_called_once_with(event_manager.on_existing_event, shard, {"berp": "baz"})
-        create_task.assert_called_once_with(
-            event_manager._handle_dispatch(event_manager.on_existing_event, shard, {"berp": "baz"}),
-            name="dispatch EXISTING_EVENT",
+        event_manager._handle_dispatch.assert_has_calls(
+            [mock.call(on_existing_event, shard, {"berp": "baz"}), mock.call(custom_listener, shard, {"berp": "baz"})]
+        )
+        gather.assert_called_once_with(
+            *side_effect,
+            return_exceptions=True,
         )
 
     @pytest.mark.asyncio
