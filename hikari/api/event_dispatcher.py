@@ -31,12 +31,17 @@ import typing
 
 if typing.TYPE_CHECKING:
     from hikari import event_stream
+    from hikari.api import shard as gateway_shard
     from hikari.events import base_events
+    from hikari.internal import data_binding
 
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
     PredicateT = typing.Callable[[EventT_co], bool]
     CallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
+    ConsumerT = typing.Callable[
+        [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
+    ]
 
 
 class EventDispatcher(abc.ABC):
@@ -48,6 +53,76 @@ class EventDispatcher(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def add_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
+        """Register a given async callback to a raw event name.
+
+        Parameters
+        ----------
+        name : str
+            The case-insensitive name this event should be triggered based on.
+        consumer : typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]
+            The async function to invoke on each raw event. This should take
+            two positional arguments, the shard that this event is being
+            triggered by and this raw event's payload.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def get_raw_consumers(self, name: str, /) -> typing.Sequence[ConsumerT]:
+        """Get the async callbacks registered for a raw event.
+
+        Parameters
+        ----------
+        name : str
+            The case-insensitive name of the event to remove a raw consumer for.
+
+        Returns
+        -------
+        typing.Sequence[typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]]
+            A sequence of the found async functions registered for the provided
+            event name, this will be an empty sequence if no consumers were found.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def remove_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
+        """Remove a registered async raw event consumer callback.
+
+        Parameters
+        ----------
+        name : str
+            The case-insensitive name of the event to remove a raw consumer for.
+        consumer : typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]
+            The async function to remove from the registered raw consumers.
+
+        Raises
+        ------
+        LookupError
+            If the either `name` or `consumer` couldn't be found in the
+            registered raw consumers.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def consume_raw_event(
+        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
+    ) -> None:
+        """Consume a raw event.
+
+        Parameters
+        ----------
+        shard : hikari.api.gateway_shard.GatewayShard
+            Object of the shard that received this event.
+        event_name : str
+            The case-insensitive name of the event being triggered.
+        payload : hikari.internal.data_binding.JSONObject
+            Payload of the event being triggered.
+
+        Raises
+        ------
+        LookupError
+            If no registered raw consumers were found for the provided event
+            name.
+        """
 
     @abc.abstractmethod
     def dispatch(self, event: EventT_inv) -> asyncio.Future[typing.Any]:
@@ -388,4 +463,4 @@ class EventDispatcher(abc.ABC):
         Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
         Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
         Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
-        """  # noqa: E501 - Line too long
+        """

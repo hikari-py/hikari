@@ -43,6 +43,7 @@ from hikari.api import event_factory
 from hikari.api import shard as gateway_shard
 from hikari.events import channel_events
 from hikari.events import guild_events
+from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import reaction_events
@@ -138,6 +139,31 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_id=guild_id,
         )
 
+    def deserialize_invite_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.InviteCreateEvent:
+        invite = self._app.entity_factory.deserialize_invite_with_metadata(payload)
+        return channel_events.InviteCreateEvent(app=self._app, shard=shard, invite=invite)
+
+    def deserialize_invite_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.InviteDeleteEvent:
+
+        if "guild_id" not in payload:
+            raise TypeError("Expected guild invite delete, but received unexpected payload")
+
+        return channel_events.InviteDeleteEvent(
+            app=self._app,
+            shard=shard,
+            code=payload["code"],
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+        )
+
+    #################
+    # TYPING EVENTS #
+    ##################
+
     def deserialize_typing_start_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> typing_events.TypingEvent:
@@ -160,27 +186,6 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         return typing_events.DMTypingEvent(
             app=self._app, shard=shard, channel_id=channel_id, user_id=user_id, timestamp=timestamp
-        )
-
-    def deserialize_invite_create_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.InviteCreateEvent:
-        invite = self._app.entity_factory.deserialize_invite_with_metadata(payload)
-        return channel_events.InviteCreateEvent(app=self._app, shard=shard, invite=invite)
-
-    def deserialize_invite_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.InviteDeleteEvent:
-
-        if "guild_id" not in payload:
-            raise TypeError("Expected guild invite delete, but received unexpected payload")
-
-        return channel_events.InviteDeleteEvent(
-            app=self._app,
-            shard=shard,
-            code=payload["code"],
-            channel_id=snowflakes.Snowflake(payload["channel_id"]),
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
 
     ################
@@ -301,61 +306,6 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
         )
 
-    def deserialize_guild_member_add_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> member_events.MemberCreateEvent:
-        member = self._app.entity_factory.deserialize_member(payload)
-        return member_events.MemberCreateEvent(app=self._app, shard=shard, member=member)
-
-    def deserialize_guild_member_update_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-        *,
-        old_member: typing.Optional[guild_models.Member],
-    ) -> member_events.MemberUpdateEvent:
-        member = self._app.entity_factory.deserialize_member(payload)
-        return member_events.MemberUpdateEvent(app=self._app, shard=shard, member=member, old_member=old_member)
-
-    def deserialize_guild_member_remove_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> member_events.MemberDeleteEvent:
-        guild_id = snowflakes.Snowflake(payload["guild_id"])
-        user = self._app.entity_factory.deserialize_user(payload["user"])
-        return member_events.MemberDeleteEvent(app=self._app, shard=shard, guild_id=guild_id, user=user)
-
-    def deserialize_guild_role_create_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> role_events.RoleCreateEvent:
-        role = self._app.entity_factory.deserialize_role(
-            payload["role"],
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-        )
-        return role_events.RoleCreateEvent(app=self._app, shard=shard, role=role)
-
-    def deserialize_guild_role_update_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-        *,
-        old_role: typing.Optional[guild_models.Role],
-    ) -> role_events.RoleUpdateEvent:
-        role = self._app.entity_factory.deserialize_role(
-            payload["role"],
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-        )
-        return role_events.RoleUpdateEvent(app=self._app, shard=shard, role=role, old_role=old_role)
-
-    def deserialize_guild_role_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> role_events.RoleDeleteEvent:
-        return role_events.RoleDeleteEvent(
-            app=self._app,
-            shard=shard,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-            role_id=snowflakes.Snowflake(payload["role_id"]),
-        )
-
     # TODO: fix test case for this method. I managed to indent the return into the
     # `if(user_payload) > 1` without any tests failing!
     def deserialize_presence_update_event(
@@ -391,6 +341,85 @@ class EventFactoryImpl(event_factory.EventFactory):
         return guild_events.PresenceUpdateEvent(
             app=self._app, shard=shard, presence=presence, user=user, old_presence=old_presence
         )
+
+    #################
+    # MEMBER EVENTS #
+    #################
+
+    def deserialize_guild_member_add_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> member_events.MemberCreateEvent:
+        member = self._app.entity_factory.deserialize_member(payload)
+        return member_events.MemberCreateEvent(app=self._app, shard=shard, member=member)
+
+    def deserialize_guild_member_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_member: typing.Optional[guild_models.Member],
+    ) -> member_events.MemberUpdateEvent:
+        member = self._app.entity_factory.deserialize_member(payload)
+        return member_events.MemberUpdateEvent(app=self._app, shard=shard, member=member, old_member=old_member)
+
+    def deserialize_guild_member_remove_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> member_events.MemberDeleteEvent:
+        guild_id = snowflakes.Snowflake(payload["guild_id"])
+        user = self._app.entity_factory.deserialize_user(payload["user"])
+        return member_events.MemberDeleteEvent(app=self._app, shard=shard, guild_id=guild_id, user=user)
+
+    ###############
+    # ROLE EVENTS #
+    ###############
+
+    def deserialize_guild_role_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> role_events.RoleCreateEvent:
+        role = self._app.entity_factory.deserialize_role(
+            payload["role"],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+        )
+        return role_events.RoleCreateEvent(app=self._app, shard=shard, role=role)
+
+    def deserialize_guild_role_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_role: typing.Optional[guild_models.Role],
+    ) -> role_events.RoleUpdateEvent:
+        role = self._app.entity_factory.deserialize_role(
+            payload["role"],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+        )
+        return role_events.RoleUpdateEvent(app=self._app, shard=shard, role=role, old_role=old_role)
+
+    def deserialize_guild_role_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> role_events.RoleDeleteEvent:
+        return role_events.RoleDeleteEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            role_id=snowflakes.Snowflake(payload["role_id"]),
+        )
+
+    ###################
+    # LIFETIME EVENTS #
+    ###################
+
+    def deserialize_starting_event(self) -> lifetime_events.StartingEvent:
+        return lifetime_events.StartingEvent(app=self._app)
+
+    def deserialize_started_event(self) -> lifetime_events.StartedEvent:
+        return lifetime_events.StartedEvent(app=self._app)
+
+    def deserialize_stopping_event(self) -> lifetime_events.StoppingEvent:
+        return lifetime_events.StoppingEvent(app=self._app)
+
+    def deserialize_stopped_event(self) -> lifetime_events.StoppedEvent:
+        return lifetime_events.StoppedEvent(app=self._app)
 
     ##################
     # MESSAGE EVENTS #
@@ -466,6 +495,10 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
 
         raise NotImplementedError("DM bulk deletes are not documented behavior")
+
+    ###################
+    # REACTION EVENTS #
+    ###################
 
     def deserialize_message_reaction_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -574,7 +607,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
 
     ################
-    # OTHER EVENTS #
+    # SHARD EVENTS #
     ################
 
     def deserialize_ready_event(
@@ -594,16 +627,14 @@ class EventFactoryImpl(event_factory.EventFactory):
             unavailable_guilds=unavailable_guilds,
         )
 
-    def deserialize_own_user_update_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-        *,
-        old_user: typing.Optional[user_models.OwnUser],
-    ) -> user_events.OwnUserUpdateEvent:
-        return user_events.OwnUserUpdateEvent(
-            app=self._app, shard=shard, user=self._app.entity_factory.deserialize_my_user(payload), old_user=old_user
-        )
+    def deserialize_connected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardConnectedEvent:
+        return shard_events.ShardConnectedEvent(app=self._app, shard=shard)
+
+    def deserialize_disconnected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardDisconnectedEvent:
+        return shard_events.ShardDisconnectedEvent(app=self._app, shard=shard)
+
+    def deserialize_resumed_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardResumedEvent:
+        return shard_events.ShardResumedEvent(app=self._app, shard=shard)
 
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -640,6 +671,21 @@ class EventFactoryImpl(event_factory.EventFactory):
             not_found=not_found,
             presences=presences,
             nonce=nonce,
+        )
+
+    ###############
+    # USER EVENTS #
+    ###############
+
+    def deserialize_own_user_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_user: typing.Optional[user_models.OwnUser],
+    ) -> user_events.OwnUserUpdateEvent:
+        return user_events.OwnUserUpdateEvent(
+            app=self._app, shard=shard, user=self._app.entity_factory.deserialize_my_user(payload), old_user=old_user
         )
 
     ################

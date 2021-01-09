@@ -101,22 +101,23 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def remove_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
         name = name.casefold()
-        if name not in self._consumers or consumer not in self._consumers[name]:
-            raise LookupError(name, consumer)
 
-        self._consumers[name].remove(consumer)
+        try:
+            self._consumers[name].remove(consumer)
+
+        except ValueError:
+            raise LookupError(name, consumer) from None
+
+        if not self._consumers[name]:
+            del self._consumers[name]
 
     def consume_raw_event(
         self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
-        try:
-            callbacks = self._consumers[event_name.casefold()]
-        except KeyError:
-            _LOGGER.debug("ignoring unknown event %s:\n    %r", event_name, payload)
-        else:
-            asyncio.gather(
-                *(self._handle_dispatch(callback, shard, payload) for callback in callbacks), return_exceptions=True
-            )
+        callbacks = self._consumers[event_name.casefold()]
+        asyncio.gather(
+            *(self._handle_dispatch(callback, shard, payload) for callback in callbacks), return_exceptions=True
+        )
 
     def subscribe(
         self,
@@ -193,6 +194,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         event_type: typing.Type[event_dispatcher.EventT_co],
         callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
     ) -> None:
+        # TODO: should this error if it's not registered or should it not?
         if event_type in self._listeners:
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
@@ -322,7 +324,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
         except BaseException as ex:
             asyncio.get_running_loop().call_exception_handler(
                 {
-                    "message": "Exception occurred in internal event dispatch conduit",
+                    "message": "Exception occurred in raw event dispatch conduit",
                     "exception": ex,
                     "task": asyncio.current_task(),
                 }

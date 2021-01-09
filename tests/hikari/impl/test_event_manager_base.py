@@ -55,15 +55,64 @@ class TestEventManagerBase:
             async def not_a_listener(self):
                 raise NotImplementedError
 
-        manager = StubManager(object(), object())
+        manager = StubManager(mock.Mock(intents=42))
         assert manager._consumers == {"foo": [manager.on_foo], "bar": [manager.on_bar]}
+
+    def test_add_raw_consumer_for_new_event(self, event_manager):
+        listener = mock.Mock()
+        event_manager.add_raw_consumer("UNKNOWN EVENT", listener)
+
+        assert event_manager._consumers["unknown event"] == [listener]
+
+    def test_add_raw_consumer(self, event_manager):
+        listener = mock.Mock()
+        other_listener = mock.Mock()
+        event_manager._consumers["unknown event"] = [other_listener]
+        event_manager.add_raw_consumer("unknown event", listener)
+
+        assert event_manager._consumers["unknown event"] == [other_listener, listener]
+
+    def test_get_raw_consumers(self, event_manager):
+        listener = mock.Mock()
+        event_manager._consumers["an event"] = [listener]
+
+        assert event_manager.get_raw_consumers("an event") == [listener]
+        assert event_manager.get_raw_consumers("AN EVENT") == [listener]
+
+    def test_get_raw_consumers_for_unknown_event(self, event_manager):
+        assert event_manager.get_raw_consumers("unknown event") == []
+
+    def test_remove_raw_consumer(self, event_manager):
+        listener = mock.Mock()
+        other_listener = mock.Mock()
+        event_manager._consumers["an event"] = [listener, other_listener]
+
+        event_manager.remove_raw_consumer("an event", listener)
+
+        assert event_manager._consumers["an event"] == [other_listener]
+
+    def test_remove_raw_consumer_for_last_listener(self, event_manager):
+        listener = mock.Mock()
+        event_manager._consumers["an event"] = [listener]
+
+        event_manager.remove_raw_consumer("an event", listener)
+
+        assert "an event" not in event_manager._consumers
+
+    def test_remove_raw_consumer_for_unknown_event(self, event_manager):
+        with pytest.raises(LookupError):
+            event_manager.remove_raw_consumer("an event", mock.Mock())
+
+    def test_remove_raw_consumer_for_unknown_listener(self, event_manager):
+        event_manager._consumers["an event"] = [mock.Mock()]
+
+        with pytest.raises(LookupError):
+            event_manager.remove_raw_consumer("an event", mock.Mock())
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_AttributeError(self, event_manager):
-        with mock.patch.object(event_manager_base, "_LOGGER") as logger:
+        with pytest.raises(LookupError):
             event_manager.consume_raw_event(None, "UNEXISTING_EVENT", {})
-
-        logger.debug.assert_called_once_with("ignoring unknown event %s:\n    %r", "UNEXISTING_EVENT", {})
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
@@ -126,7 +175,7 @@ class TestEventManagerBase:
             event_loop,
             {
                 "exception": exc,
-                "message": "Exception occurred in internal event dispatch conduit",
+                "message": "Exception occurred in raw event dispatch conduit",
                 "task": current_task(),
             },
         )

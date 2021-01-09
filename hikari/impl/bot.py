@@ -46,7 +46,6 @@ from hikari import presences
 from hikari import traits
 from hikari import undefined
 from hikari.api import event_dispatcher
-from hikari.events import lifetime_events
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
@@ -69,6 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
+    from hikari.internal import data_binding
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -354,6 +354,20 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def is_alive(self) -> bool:
         return self._is_alive
 
+    def add_raw_consumer(self, name: str, consumer: event_dispatcher.ConsumerT, /) -> None:
+        self.dispatcher.add_raw_consumer(name, consumer)
+
+    def get_raw_consumers(self, name: str, /) -> typing.Sequence[event_dispatcher.ConsumerT]:
+        return self.dispatcher.get_raw_consumers(name)
+
+    def remove_raw_consumer(self, name: str, consumer: event_dispatcher.ConsumerT, /) -> None:
+        self.dispatcher.remove_raw_consumer(name, consumer)
+
+    def consume_raw_event(
+        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
+    ) -> None:
+        self.dispatcher.consume_raw_event(shard, event_name, payload)
+
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
         if not self._closing_event.is_set():
@@ -382,7 +396,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                     }
                 )
 
-        await self.dispatch(lifetime_events.StoppingEvent(app=self))
+        await self.dispatch(self.event_factory.deserialize_stopping_event())
 
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
@@ -403,7 +417,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._shards.clear()
         self._is_alive = False
 
-        await self.dispatch(lifetime_events.StoppedEvent(app=self))
+        await self.dispatch(self.event_factory.deserialize_stopped_event())
 
     def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
         return self._events.dispatch(event)
@@ -733,7 +747,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
             )
 
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
-        await self.dispatch(lifetime_events.StartingEvent(app=self))
+        await self.dispatch(self.event_factory.deserialize_starting_event())
         requirements = await requirements_task
 
         if shard_count is None:
@@ -824,7 +838,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
                 )
             )
 
-        await self.dispatch(lifetime_events.StartedEvent(app=self))
+        await self.dispatch(self.event_factory.deserialize_started_event())
 
         _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
@@ -905,7 +919,8 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
-            event_consumer=self._events.consume_raw_event,
+            dispatcher=self._events,
+            event_factory=self._event_factory,
             http_settings=self._http_settings,
             initial_activity=activity,
             initial_is_afk=afk,

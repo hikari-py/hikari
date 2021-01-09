@@ -39,6 +39,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.events import channel_events
     from hikari.events import guild_events
+    from hikari.events import lifetime_events
     from hikari.events import member_events
     from hikari.events import message_events
     from hikari.events import reaction_events
@@ -155,24 +156,6 @@ class EventFactory(typing.Protocol):
             The parsed webhook update event object.
         """
 
-    def deserialize_typing_start_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> typing_events.TypingEvent:
-        """Parse a raw payload from Discord into a typing start event object.
-
-        Parameters
-        ----------
-        shard : hikari.api.shard.GatewayShard
-            The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.typing_events.TypingEvent
-            The parsed typing start event object.
-        """
-
     def deserialize_invite_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.InviteCreateEvent:
@@ -207,6 +190,28 @@ class EventFactory(typing.Protocol):
         -------
         hikari.events.channel_events.InviteDeleteEvent
             The parsed invite delete event object.
+        """
+
+    #################
+    # TYPING EVENTS #
+    ##################
+
+    def deserialize_typing_start_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> typing_events.TypingEvent:
+        """Parse a raw payload from Discord into a typing start event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.typing_events.TypingEvent
+            The parsed typing start event object.
         """
 
     ################
@@ -405,6 +410,34 @@ class EventFactory(typing.Protocol):
             The parsed integration update event object.
         """
 
+    def deserialize_presence_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_presence: typing.Optional[presences_models.MemberPresence],
+    ) -> guild_events.PresenceUpdateEvent:
+        """Parse a raw payload from Discord into a presence update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+        old_presence: typing.Optional[hikari.presences.MemberPresence]
+            The presence object or `builtins.None`.
+
+        Returns
+        -------
+        hikari.events.guild_events.PresenceUpdateEvent
+            The parsed presence update event object.
+        """
+
+    #################
+    # MEMBER EVENTS #
+    #################
+
     def deserialize_guild_member_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> member_events.MemberCreateEvent:
@@ -464,6 +497,10 @@ class EventFactory(typing.Protocol):
         hikari.events.member_events.MemberDeleteEvent
             The parsed guild member remove event object.
         """
+
+    ###############
+    # ROLE EVENTS #
+    ###############
 
     def deserialize_guild_role_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -525,28 +562,44 @@ class EventFactory(typing.Protocol):
             The parsed guild role delete event object.
         """
 
-    def deserialize_presence_update_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-        *,
-        old_presence: typing.Optional[presences_models.MemberPresence],
-    ) -> guild_events.PresenceUpdateEvent:
-        """Parse a raw payload from Discord into a presence update event object.
+    ###################
+    # LIFETIME EVENTS #
+    ###################
 
-        Parameters
-        ----------
-        shard : hikari.api.shard.GatewayShard
-            The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
-            The dict payload to parse.
-        old_presence: typing.Optional[hikari.presences.MemberPresence]
-            The presence object or `builtins.None`.
+    def deserialize_starting_event(self) -> lifetime_events.StartingEvent:
+        """Build a starting event object.
 
         Returns
         -------
-        hikari.events.guild_events.PresenceUpdateEvent
-            The parsed presence update event object.
+        hikari.events.lifetime_events.StartingEvent
+            The built starting event object.
+        """
+
+    def deserialize_started_event(self) -> lifetime_events.StartedEvent:
+        """Build a started event object.
+
+        Returns
+        -------
+        hikari.events.lifetime_events.StartingEvent
+            The built started event object.
+        """
+
+    def deserialize_stopping_event(self) -> lifetime_events.StoppingEvent:
+        """Build a starting event object.
+
+        Returns
+        -------
+        hikari.events.lifetime_events.StartingEvent
+            The built starting event object.
+        """
+
+    def deserialize_stopped_event(self) -> lifetime_events.StoppedEvent:
+        """Build a stopped event object.
+
+        Returns
+        -------
+        hikari.events.lifetime_events.StartingEvent
+            The built starting event object.
         """
 
     ##################
@@ -636,6 +689,10 @@ class EventFactory(typing.Protocol):
             If a bulk delete occurs in a DM channel.
         """
 
+    ###################
+    # REACTION EVENTS #
+    ###################
+
     def deserialize_message_reaction_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionAddEvent:
@@ -709,7 +766,7 @@ class EventFactory(typing.Protocol):
         """
 
     ################
-    # OTHER EVENTS #
+    # SHARD EVENTS #
     ################
 
     def deserialize_ready_event(
@@ -731,6 +788,70 @@ class EventFactory(typing.Protocol):
         hikari.events.shard_events.ShardReadyEvent
             The parsed ready event object.
         """
+
+    def deserialize_connected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardConnectedEvent:
+        """Build a shard connected event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardReadyEvent
+            The built shard connected event object.
+        """
+
+    def deserialize_disconnected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardDisconnectedEvent:
+        """Build a shard disconnected event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardReadyEvent
+            The built shard disconnected event object.
+        """
+
+    def deserialize_resumed_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardResumedEvent:
+        """Build a shard resumed event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardReadyEvent
+            The built shard resumed event object.
+        """
+
+    def deserialize_guild_member_chunk_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> shard_events.MemberChunkEvent:
+        """Parse a raw payload from Discord into a member chunk event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.shard_events.MemberChunkEvent
+            The parsed member chunk object.
+        """
+
+    ###############
+    # USER EVENTS #
+    ###############
 
     def deserialize_own_user_update_event(
         self,
@@ -754,24 +875,6 @@ class EventFactory(typing.Protocol):
         -------
         hikari.events.user_events.OwnUserUpdateEvent
             The parsed own user update event object.
-        """
-
-    def deserialize_guild_member_chunk_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> shard_events.MemberChunkEvent:
-        """Parse a raw payload from Discord into a member chunk event object.
-
-        Parameters
-        ----------
-        shard : hikari.api.shard.GatewayShard
-            The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.shard_events.MemberChunkEvent
-            The parsed member chunk object.
         """
 
     ################
