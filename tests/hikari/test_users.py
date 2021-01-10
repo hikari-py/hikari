@@ -65,8 +65,8 @@ class TestPartialUser:
         role_mentions = [object(), object()]
         mock_channel = mock.Mock(id=456)
         mock_message = object()
-        reply_message = object()
-        reply_mention = object()
+        reply_to = object()
+        mentions_reply = object()
 
         obj.app = mock.Mock()
         obj.fetch_dm_channel = mock.AsyncMock(return_value=mock_channel)
@@ -80,11 +80,11 @@ class TestPartialUser:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_message=reply_message,
+            reply_to=reply_to,
             mentions_everyone=False,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
-            reply_mention=reply_mention,
+            mentions_reply=mentions_reply,
         )
 
         assert returned == mock_message
@@ -99,10 +99,10 @@ class TestPartialUser:
             nonce="nonce",
             tts=True,
             mentions_everyone=False,
-            reply_message=reply_message,
+            reply_to=reply_to,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
-            reply_mention=reply_mention,
+            mentions_reply=mentions_reply,
         )
 
 

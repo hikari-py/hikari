@@ -65,7 +65,7 @@
             @bot.listen()
             @command("hk.ping")
             async def ping(event: hikari.MessageCreateEvent) -> None:
-                await event.message.reply("Pong!")
+                await event.message.respond("Pong!")
 
 
             @bot.listen()
@@ -79,13 +79,13 @@
                     )
 
                 try:
-                    await event.message.reply("Please enter the first number")
+                    await event.message.respond("Please enter the first number")
                     e1 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
-                    await event.message.reply("Please enter the second number")
+                    await event.message.respond("Please enter the second number")
                     e2 = await bot.wait_for(hikari.MessageCreateEvent, predicate=is_number_check, timeout=30)
 
                 except asyncio.TimeoutError:
-                    await event.message.reply("You took too long...")
+                    await event.message.respond("You took too long...")
 
                 else:
                     val1 = int(e1.message.content)
@@ -93,7 +93,7 @@
 
                     embed = hikari.Embed(title="Result!", description=f"{val1} + {val2} = {val1 + val2}", color="#3f3")
 
-                    await event.message.reply(embed=embed)
+                    await event.message.respond(embed=embed)
 
 
             bot.run()

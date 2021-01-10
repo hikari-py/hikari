@@ -535,9 +535,9 @@ class TestRESTClientImpl:
             ((False, False, False, False), {"parse": []}),
             ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), {"parse": []}),
             ((undefined.UNDEFINED, True, True, True), {"parse": ["roles", "users"], "replied_user": True}),
-            ((False, [123], [456], False), {"parse": [], "users": ["123"], "roles": ["456"]}),
+            ((False, False, [123], [456]), {"parse": [], "users": ["123"], "roles": ["456"]}),
             (
-                (True, [123, "123", 987], ["213", "456", 456], True),
+                (True, True, [123, "123", 987], ["213", "456", 456]),
                 {"parse": ["everyone"], "users": ["123", "987"], "roles": ["213", "456"], "replied_user": True},
             ),
         ],

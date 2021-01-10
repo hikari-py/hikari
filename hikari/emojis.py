@@ -255,7 +255,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         >>> emojis = await bot.rest.fetch_guild_emojis(12345)
         >>> picks = random.choices(emojis, 5)
-        >>> await event.reply(files=picks)
+        >>> await event.respond(files=picks)
 
     !!! warning
         Discord will not provide information on whether these emojis are

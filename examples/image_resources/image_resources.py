@@ -60,28 +60,30 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
     if user_match := re.match(r"<@!?(\d+)>", what):
         user_id = hikari.Snowflake(user_match.group(1))
         user = bot.cache.get_user(user_id) or await bot.rest.fetch_user(user_id)
-        await event.message.reply("User avatar", attachment=user.avatar_url or user.default_avatar_url)
+        await event.message.respond("User avatar", attachment=user.avatar_url or user.default_avatar_url)
 
     # Show the guild icon:
     elif what.casefold() in ("guild", "server", "here", "this"):
         if event.guild is None:
-            await event.message.reply("Guild is missing from the cache :(")
+            await event.message.respond("Guild is missing from the cache :(")
             return
 
         icon = event.guild.icon_url
         if icon is None:
-            await event.message.reply("This guild doesn't have an icon")
+            await event.message.respond("This guild doesn't have an icon")
         else:
-            await event.message.reply("Guild icon", attachment=icon)
+            await event.message.respond("Guild icon", attachment=icon)
 
     # Show the image for the given emoji if there is some content present:
     elif what:
         emoji = hikari.Emoji.parse(what)
-        await event.message.reply(emoji.name, attachment=emoji)
+        await event.message.respond(emoji.name, attachment=emoji)
 
     # If nothing was given, we should just return the avatar of the person who ran the command:
     else:
-        await event.message.reply("Your avatar", attachment=event.author.avatar_url or event.author.default_avatar_url)
+        await event.message.respond(
+            "Your avatar", attachment=event.author.avatar_url or event.author.default_avatar_url
+        )
 
 
 bot.run()

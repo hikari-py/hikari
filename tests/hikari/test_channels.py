@@ -219,7 +219,7 @@ class TestTextChannel:
         mock_attachment = object()
         mock_embed = object()
         mock_attachments = [object(), object(), object()]
-        mock_reply_message = object()
+        mock_reply_to = object()
 
         await model.send(
             content="test content",
@@ -228,11 +228,11 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
-            reply_message=mock_reply_message,
+            reply_to=mock_reply_to,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],
-            reply_mention=True,
+            mentions_reply=True,
         )
 
         model.app.rest.create_message.assert_awaited_once_with(
@@ -243,11 +243,11 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
-            reply_message=mock_reply_message,
+            reply_to=mock_reply_to,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],
-            reply_mention=True,
+            mentions_reply=True,
         )
 
     def test_trigger_typing(self, model):
