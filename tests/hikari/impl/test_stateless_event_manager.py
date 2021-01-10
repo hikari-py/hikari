@@ -45,7 +45,7 @@ class TestStatelessEventManager:
     @pytest.fixture()
     def event_manager(self, app):
         obj = hikari_test_helpers.mock_class_namespace(stateless_event_manager.StatelessEventManagerImpl, slots_=False)(
-            app, object()
+            app
         )
         obj.dispatch = mock.AsyncMock()
         return obj
