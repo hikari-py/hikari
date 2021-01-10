@@ -36,7 +36,7 @@ async def on_message(event: hikari.MessageCreateEvent) -> None:
         return
 
     if event.content == "!ping":
-        await event.message.reply(f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms")
+        await event.message.respond(f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms")
 
 
 bot.run()

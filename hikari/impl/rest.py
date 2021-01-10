@@ -735,9 +735,9 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.final
     def _generate_allowed_mentions(
         mentions_everyone: undefined.UndefinedOr[bool],
+        mentions_reply: undefined.UndefinedOr[bool],
         user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
         role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
-        reply_mention: undefined.UndefinedOr[bool],
     ) -> data_binding.JSONObject:
         parsed_mentions: typing.List[str] = []
         allowed_mentions: typing.Dict[str, typing.Any] = {"parse": parsed_mentions}
@@ -745,7 +745,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if mentions_everyone is True:
             parsed_mentions.append("everyone")
 
-        if reply_mention is True:
+        if mentions_reply is True:
             allowed_mentions["replied_user"] = True
 
         if user_mentions is True:
@@ -997,15 +997,15 @@ class RESTClientImpl(rest_api.RESTClient):
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        reply_message: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_to: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        reply_mention: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
@@ -1038,12 +1038,12 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put(
             "allowed_mentions",
-            self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, reply_mention),
+            self._generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
         )
         body.put("content", content, conversion=str)
         body.put("nonce", nonce)
         body.put("tts", tts)
-        body.put("message_reference", reply_message, conversion=lambda m: {"message_id": str(int(m))})
+        body.put("message_reference", reply_to, conversion=lambda m: {"message_id": str(int(m))})
 
         final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
         if attachment is not undefined.UNDEFINED:
@@ -1096,6 +1096,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
@@ -1107,10 +1108,10 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        if undefined.count(mentions_everyone, user_mentions, role_mentions) != 3:
+        if undefined.count(mentions_everyone, mentions_reply, user_mentions, role_mentions) != 4:
             body.put(
                 "allowed_mentions",
-                self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, undefined.UNDEFINED),
+                self._generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
             )
 
         if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
@@ -1459,7 +1460,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put(
             "mentions",
-            self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, undefined.UNDEFINED),
+            self._generate_allowed_mentions(mentions_everyone, undefined.UNDEFINED, user_mentions, role_mentions),
         )
         body.put("content", content, conversion=str)
         body.put("embeds", serialized_embeds)
@@ -1526,7 +1527,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if undefined.count(mentions_everyone, user_mentions, role_mentions) != 3:
             body.put(
                 "allowed_mentions",
-                self._generate_allowed_mentions(mentions_everyone, user_mentions, role_mentions, undefined.UNDEFINED),
+                self._generate_allowed_mentions(mentions_everyone, undefined.UNDEFINED, user_mentions, role_mentions),
             )
 
         if content is not None:

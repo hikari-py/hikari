@@ -182,6 +182,7 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             mentions_everyone=True,
+            mentions_reply=False,
             user_mentions=False,
             role_mentions=roles,
             flags=messages.MessageFlag.URGENT,
@@ -192,9 +193,47 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             mentions_everyone=True,
+            mentions_reply=False,
             user_mentions=False,
             role_mentions=roles,
             flags=messages.MessageFlag.URGENT,
+        )
+
+    async def test_respond(self, message):
+        message.app = mock.AsyncMock()
+        message.id = 123
+        message.channel_id = 456
+        embed = object()
+        roles = [object()]
+        attachment = object()
+        attachments = [object()]
+        reference_messsage = object()
+        await message.respond(
+            content="test content",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            reply_to=reference_messsage,
+            mentions_everyone=True,
+            user_mentions=False,
+            role_mentions=roles,
+            mentions_reply=True,
+        )
+        message.app.rest.create_message.assert_awaited_once_with(
+            channel=456,
+            content="test content",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            reply_to=reference_messsage,
+            mentions_everyone=True,
+            user_mentions=False,
+            role_mentions=roles,
+            mentions_reply=True,
         )
 
     async def test_reply(self, message):
@@ -205,7 +244,6 @@ class TestAsyncMessage:
         roles = [object()]
         attachment = object()
         attachments = [object()]
-        reference_messsage = object()
         await message.reply(
             content="test content",
             embed=embed,
@@ -213,11 +251,10 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_message=reference_messsage,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
-            reply_mention=True,
+            mentions_reply=True,
         )
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -227,11 +264,11 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_message=reference_messsage,
+            reply_to=message,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
-            reply_mention=True,
+            mentions_reply=True,
         )
 
     async def test_delete(self, message):

@@ -37,7 +37,7 @@ async def ping(event: hikari.GuildMessageCreateEvent) -> None:
         return
 
     if event.content.startswith("hk.ping"):
-        await event.message.reply("Pong!")
+        await event.message.respond("Pong!")
 
 bot.run()
 ```
