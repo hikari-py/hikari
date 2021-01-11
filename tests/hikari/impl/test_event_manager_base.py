@@ -42,7 +42,7 @@ class TestEventManagerBase:
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None
 
-        return EventManagerBaseImpl(None, None)
+        return EventManagerBaseImpl(mock.Mock())
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_AttributeError(self, event_manager):

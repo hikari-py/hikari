@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["StatefulGuildChunkerImpl", "ChunkStream"]
+__all__: typing.List[str] = ["GuildChunkerImpl", "ChunkStream"]
 
 import asyncio
 import base64
@@ -38,7 +38,7 @@ from hikari import event_stream
 from hikari import intents as intents_
 from hikari import snowflakes
 from hikari import undefined
-from hikari.api import chunker
+from hikari.api import guild_chunker
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
 from hikari.internal import collections
@@ -200,7 +200,7 @@ class _TrackedRequests:
         self.last_received = time.utc_datetime()
 
 
-class StatefulGuildChunkerImpl(chunker.GuildChunker):
+class GuildChunkerImpl(guild_chunker.GuildChunker):
     """Guild chunker implementation.
 
     Parameters
@@ -252,7 +252,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
             users=users,
         )
 
-    async def get_request_status(self, nonce: str, /) -> typing.Optional[chunker.RequestInformation]:
+    async def get_request_status(self, nonce: str, /) -> typing.Optional[guild_chunker.RequestInformation]:
         try:
             shard_id = int(nonce.split(".", 1)[0])
         except ValueError:
@@ -262,7 +262,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
 
     async def list_requests_for_shard(
         self, shard: typing.Union[gateway_shard.GatewayShard, int], /
-    ) -> typing.Sequence[chunker.RequestInformation]:
+    ) -> typing.Sequence[guild_chunker.RequestInformation]:
         shard_id = shard if isinstance(shard, int) else shard.id
 
         if shard_id not in self._tracked:
@@ -272,7 +272,7 @@ class StatefulGuildChunkerImpl(chunker.GuildChunker):
 
     async def list_requests_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.GatewayGuild], /
-    ) -> typing.Sequence[chunker.RequestInformation]:
+    ) -> typing.Sequence[guild_chunker.RequestInformation]:
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         if shard_id not in self._tracked:

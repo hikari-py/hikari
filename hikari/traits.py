@@ -55,10 +55,10 @@ if typing.TYPE_CHECKING:
     from hikari import intents as intents_
     from hikari import users
     from hikari.api import cache as cache_
-    from hikari.api import chunker as chunker_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_dispatcher
     from hikari.api import event_factory as event_factory_
+    from hikari.api import guild_chunker
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
@@ -96,6 +96,7 @@ This is not expected to return anything.
 """
 
 
+@typing.runtime_checkable
 class NetworkSettingsAware(typing.Protocol):
     """Structural supertype for any component aware of network settings."""
 
@@ -135,7 +136,7 @@ class ChunkerAware(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def chunker(self) -> chunker_.GuildChunker:
+    def chunker(self) -> guild_chunker.GuildChunker:
         """Return the guild chunker component.
 
         Returns

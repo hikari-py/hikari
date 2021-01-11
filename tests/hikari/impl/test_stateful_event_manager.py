@@ -33,7 +33,7 @@ from tests.hikari import hikari_test_helpers
 class TestStatefulEventManagerImpl:
     @pytest.fixture()
     def app(self):
-        return mock.Mock()
+        return mock.Mock(intents=intents.Intents.ALL)
 
     @pytest.fixture()
     def shard(self):
@@ -42,7 +42,7 @@ class TestStatefulEventManagerImpl:
     @pytest.fixture()
     def event_manager(self, app):
         obj = hikari_test_helpers.mock_class_namespace(stateful_event_manager.StatefulEventManagerImpl, slots_=False)(
-            app, mock.Mock(), intents.Intents.ALL
+            app, mock.Mock()
         )
 
         obj.dispatch = mock.AsyncMock()

@@ -34,7 +34,6 @@ import warnings
 
 from hikari import errors
 from hikari import event_stream
-from hikari import intents as intents_
 from hikari import traits
 from hikari.api import event_dispatcher
 from hikari.events import base_events
@@ -73,9 +72,9 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     __slots__: typing.Sequence[str] = ("_app", "_intents", "_listeners", "_waiters")
 
-    def __init__(self, app: traits.BotAware, intents: intents_.Intents) -> None:
+    def __init__(self, app: traits.BotAware) -> None:
         self._app = app
-        self._intents = intents
+        self._intents = app.intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
