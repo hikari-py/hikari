@@ -32,9 +32,8 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.events import shard_events
-from hikari.impl import bot
+from hikari.impl import guild_chunker
 from hikari.impl import shard
-from hikari.impl import stateful_guild_chunker
 from hikari.internal import attr_extensions
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
@@ -42,7 +41,7 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def mock_app():
-    app = mock.Mock(bot.BotApp, shard_count=4)
+    app = mock.Mock(shard_count=4)
     app.shards = {
         0: mock.Mock(shard.GatewayShardImpl, request_guild_members=mock.AsyncMock()),
         1: mock.Mock(shard.GatewayShardImpl, request_guild_members=mock.AsyncMock()),
@@ -54,7 +53,7 @@ def mock_app():
 
 
 def test__random_nonce():
-    result = stateful_guild_chunker._random_nonce()
+    result = guild_chunker._random_nonce()
     assert isinstance(result, str)
     assert len(result) == 28
 
@@ -78,7 +77,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test__listener_when_fails_filter(self, stub_chunk_event, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream, _filters=iterators.All(()), _active=False, _app=mock_app
+            guild_chunker.ChunkStream, _filters=iterators.All(()), _active=False, _app=mock_app
         )
         stream.filter(lambda _: False)
         await stream._listener(stub_chunk_event)
@@ -87,7 +86,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test__listener_when_fails_passes(self, stub_chunk_event, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
             _missing_chunks=[2, 3, 4, 5, 6, 7, 9],
@@ -104,7 +103,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test__listener_when_queue_filled(self, stub_chunk_event, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
             _missing_chunks=[2, 3, 4, 5, 6, 7, 9],
@@ -124,7 +123,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test__listener_when_chunks_finished(self, stub_chunk_event, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _filters=iterators.All(()),
             _active=False,
             _missing_chunks=[5],
@@ -145,7 +144,7 @@ class TestChunkStream:
     @hikari_test_helpers.timeout()
     async def test___anext___uses_queue_entry(self):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
             _missing_chunks=None,
@@ -165,7 +164,7 @@ class TestChunkStream:
     @hikari_test_helpers.timeout()
     async def test___anext___handles_time_out(self):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
             _missing_chunks=None,
@@ -181,7 +180,7 @@ class TestChunkStream:
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_initial_chunk(self):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _active=True,
             _queue=asyncio.Queue(),
             _missing_chunks=None,
@@ -205,7 +204,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test___anext___when_chunks_depleted(self):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=[]
+            guild_chunker.ChunkStream, _active=True, _queue=asyncio.Queue(), _missing_chunks=[]
         )
 
         async for _ in stream:
@@ -215,7 +214,7 @@ class TestChunkStream:
 
     @pytest.mark.asyncio
     async def test___anext___when_stream_not_active(self):
-        stream = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker.ChunkStream, _active=False)
+        stream = hikari_test_helpers.mock_entire_class_namespace(guild_chunker.ChunkStream, _active=False)
 
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
@@ -224,7 +223,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test_open_for_inactive_stream(self, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _active=False,
             _app=mock_app,
             _guild_id=snowflakes.Snowflake(35412312312),
@@ -253,7 +252,7 @@ class TestChunkStream:
     @pytest.mark.asyncio
     async def test_open_for_active_stream(self, mock_app):
         stream = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker.ChunkStream,
+            guild_chunker.ChunkStream,
             _active=True,
             _app=mock_app,
             _guild_id=snowflakes.Snowflake(35412312312),
@@ -271,11 +270,11 @@ class TestChunkStream:
 class TestTrackedChunks:
     def test___copy___when_missing_chunks_is_not_none(self):
         obj = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker._TrackedRequests,
+            guild_chunker._TrackedRequests,
             missing_chunk_indexes=[5, 6, 7, 8, 9],
             not_found_ids=[2, 4, 6, 7, 8],
         )
-        new_obj = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker._TrackedRequests)
+        new_obj = hikari_test_helpers.mock_entire_class_namespace(guild_chunker._TrackedRequests)
 
         with mock.patch.object(attr_extensions, "copy_attrs", return_value=new_obj):
             result = copy.copy(obj)
@@ -289,9 +288,9 @@ class TestTrackedChunks:
 
     def test___copy___when_missing_chunks_is_none(self):
         obj = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker._TrackedRequests, missing_chunk_indexes=None, not_found_ids=[2, 4, 6, 7, 8]
+            guild_chunker._TrackedRequests, missing_chunk_indexes=None, not_found_ids=[2, 4, 6, 7, 8]
         )
-        new_obj = hikari_test_helpers.mock_entire_class_namespace(stateful_guild_chunker._TrackedRequests)
+        new_obj = hikari_test_helpers.mock_entire_class_namespace(guild_chunker._TrackedRequests)
 
         with mock.patch.object(attr_extensions, "copy_attrs", return_value=new_obj):
             result = copy.copy(obj)
@@ -301,40 +300,40 @@ class TestTrackedChunks:
 
     def test_is_complete_when_complete(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
+            guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 42
         assert obj.is_complete is True
 
     def test_is_complete_when_timed_out(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
+            guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 83
         obj._mono_last_received = 3123452134
 
         with mock.patch.object(
-            time, "monotonic_ns", return_value=obj._mono_last_received + stateful_guild_chunker.EXPIRY_TIME + 50
+            time, "monotonic_ns", return_value=obj._mono_last_received + guild_chunker.EXPIRY_TIME + 50
         ):
             assert obj.is_complete is True
             time.monotonic_ns.assert_called_once()
 
     def test_is_complete_when_not_timed_out(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
+            guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 83
         obj._mono_last_received = 3123452134
 
         with mock.patch.object(
-            time, "monotonic_ns", return_value=obj._mono_last_received + (stateful_guild_chunker.EXPIRY_TIME / 2)
+            time, "monotonic_ns", return_value=obj._mono_last_received + (guild_chunker.EXPIRY_TIME / 2)
         ):
             assert obj.is_complete is False
             time.monotonic_ns.assert_called_once()
 
     def test_is_complete_when_not_yet_received(self):
         obj = hikari_test_helpers.mock_class_namespace(
-            stateful_guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
+            guild_chunker._TrackedRequests, received_chunks=mock.PropertyMock(return_value=42), init_=False
         )()
         obj.chunk_count = 84
         obj._mono_last_received = None
@@ -343,26 +342,26 @@ class TestTrackedChunks:
 
     def test_received_chunks_when_no_chunks_received_yet(self):
         obj = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker._TrackedRequests, chunk_count=None, missing_chunk_indexes=None
+            guild_chunker._TrackedRequests, chunk_count=None, missing_chunk_indexes=None
         )
         assert obj.received_chunks == 0
 
     def test_received_chunks(self):
         obj = hikari_test_helpers.mock_entire_class_namespace(
-            stateful_guild_chunker._TrackedRequests,
+            guild_chunker._TrackedRequests,
             chunk_count=25,
             missing_chunk_indexes=[15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
         )
         assert obj.received_chunks == 14
 
 
-class TestStatefulGuildChunkerImpl:
+class TestGuildChunkerImpl:
     @pytest.fixture()
     def mock_chunker(self, mock_app):
-        return stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app)
+        return guild_chunker.GuildChunkerImpl(mock_app)
 
     def test__init__(self, mock_app):
-        chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app, 500)
+        chunker = guild_chunker.GuildChunkerImpl(mock_app, 500)
         assert chunker._app is mock_app
         assert chunker._tracked == {}
 
@@ -380,7 +379,7 @@ class TestStatefulGuildChunkerImpl:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test_fetch_members_for_guild(self, mock_app):
-        chunker = stateful_guild_chunker.StatefulGuildChunkerImpl(mock_app)
+        chunker = guild_chunker.GuildChunkerImpl(mock_app)
         stream = chunker.fetch_members_for_guild(
             guild=snowflakes.Snowflake(312312354),
             timeout=hikari_test_helpers.REASONABLE_SLEEP_TIME * 3,
@@ -474,17 +473,17 @@ class TestStatefulGuildChunkerImpl:
     @pytest.mark.asyncio
     async def test_list_chunk_statuses_for_guild_for_known_shard(self, mock_chunker):
         mock_tracked_info_0 = mock.MagicMock(
-            stateful_guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(379953393319542784)
+            guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(379953393319542784)
         )
         mock_tracked_info_1 = mock.MagicMock(
-            stateful_guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(379953393319542784)
+            guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(379953393319542784)
         )
         mock_chunker._tracked = {
             0: {
                 "0.owowo": mock_tracked_info_0,
-                "0.game": mock.Mock(stateful_guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(45123)),
+                "0.game": mock.Mock(guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(45123)),
                 "0.blam": mock_tracked_info_1,
-                "0.pow": mock.Mock(stateful_guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(53123)),
+                "0.pow": mock.Mock(guild_chunker._TrackedRequests, guild_id=snowflakes.Snowflake(53123)),
             }
         }
         result = await mock_chunker.list_requests_for_guild(379953393319542784)
@@ -524,9 +523,7 @@ class TestStatefulGuildChunkerImpl:
             presences={},
             nonce="2.billnye",
         )
-        tracker = stateful_guild_chunker._TrackedRequests(
-            nonce="4.hiebye", guild_id=snowflakes.Snowflake(140502780547694592)
-        )
+        tracker = guild_chunker._TrackedRequests(nonce="4.hiebye", guild_id=snowflakes.Snowflake(140502780547694592))
         mock_chunker._tracked = {2: {"2.blbll": object(), "2.billnye": tracker}}
 
         with mock.patch.object(time, "monotonic_ns", return_value=4242):
@@ -548,7 +545,7 @@ class TestStatefulGuildChunkerImpl:
             not_found=[snowflakes.Snowflake(54123123), snowflakes.Snowflake(65234)],
             chunk_index=6,
         )
-        tracker = stateful_guild_chunker._TrackedRequests(
+        tracker = guild_chunker._TrackedRequests(
             nonce="4.hiebye",
             guild_id=snowflakes.Snowflake(140502780547694592),
             average_chunk_size=150,
@@ -579,12 +576,12 @@ class TestStatefulGuildChunkerImpl:
     ):
         mock_app.shards[2].intents = intents.Intents.GUILD_MESSAGES
 
-        with mock.patch.object(stateful_guild_chunker, "_random_nonce", return_value="NonceNonceNonceNonce"):
+        with mock.patch.object(guild_chunker, "_random_nonce", return_value="NonceNonceNonceNonce"):
             result = await mock_chunker.request_guild_members(
                 745181921625243730,
             )
 
-            stateful_guild_chunker._random_nonce.assert_called_once()
+            guild_chunker._random_nonce.assert_called_once()
 
         assert result == "2.NonceNonceNonceNonce"
         assert len(mock_chunker._tracked[2]) == 1
@@ -614,12 +611,12 @@ class TestStatefulGuildChunkerImpl:
     ):
         mock_chunker._tracked[0] = {"randomNonce": object()}
 
-        with mock.patch.object(stateful_guild_chunker, "_random_nonce", return_value="AvEryCrYpToGraPhIcNoNcE"):
+        with mock.patch.object(guild_chunker, "_random_nonce", return_value="AvEryCrYpToGraPhIcNoNcE"):
             result = await mock_chunker.request_guild_members(
                 guild, include_presences=True, limit=53, query="Kiss", users=[snowflakes.Snowflake(1235432)]
             )
 
-            stateful_guild_chunker._random_nonce.assert_called_once()
+            guild_chunker._random_nonce.assert_called_once()
 
         assert result == "0.AvEryCrYpToGraPhIcNoNcE"
         assert len(mock_chunker._tracked[0]) == 2

@@ -26,7 +26,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["StatelessEventManagerImpl"]
 
-import logging
 import typing
 
 from hikari.events import shard_events
@@ -36,8 +35,6 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
-
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
 class StatelessEventManagerImpl(event_manager_base.EventManagerBase):

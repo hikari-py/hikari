@@ -865,8 +865,8 @@ class TestGatewayShardImpl:
         payload = {
             "channel_id": str(channel) if channel is not None else None,
             "guild_id": "6969420",
-            "deaf": self_deaf,
-            "mute": self_mute,
+            "self_deaf": self_deaf,
+            "self_mute": self_mute,
         }
 
         await client.update_voice_state("6969420", channel, self_mute=self_mute, self_deaf=self_deaf)

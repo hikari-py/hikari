@@ -24,12 +24,15 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["StatefulCacheImpl"]
+__all__: typing.List[str] = ["CacheImpl"]
 
 import copy
 import logging
+import sys
 import typing
 import warnings
+
+import attr
 
 from hikari import channels
 from hikari import config
@@ -51,14 +54,34 @@ from hikari.internal import collections
 if typing.TYPE_CHECKING:
     from hikari import traits
 
-_KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
+    _T = typing.TypeVar("_T")
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
-_ValueT = typing.TypeVar("_ValueT")
+
+# Constants for config
+ENABLE: typing.Final[str] = sys.intern("enable")
+GUILDS: typing.Final[str] = sys.intern("guilds")
+MEMBERS: typing.Final[str] = sys.intern("members")
+GUILD_CHANNELS: typing.Final[str] = sys.intern("guild_channels")
+ROLES: typing.Final[str] = sys.intern("roles")
+INVITES: typing.Final[str] = sys.intern("invites")
+EMOJIS: typing.Final[str] = sys.intern("emojis")
+PRESENCES: typing.Final[str] = sys.intern("presences")
+VOICE_STATES: typing.Final[str] = sys.intern("voice_states")
+MESSAGES: typing.Final[str] = sys.intern("messages")
 
 
 #  TODO: do we want to hide entities that are marked as "deleted" and being kept alive by references?
-class StatefulCacheImpl(cache.MutableCache):
-    """In-memory cache implementation."""
+class CacheImpl(cache.MutableCache):
+    """In-memory cache implementation.
+
+    Parameters
+    ----------
+    app : hikari.traits.BotAware
+        The object of the bot aware app this is bound to.
+    settings : hikari.config.CacheSettings
+        The cache settings to use.
+    """
 
     __slots__: typing.Sequence[str] = (
         "_app",
@@ -72,11 +95,12 @@ class StatefulCacheImpl(cache.MutableCache):
         "_unknown_custom_emoji_entries",
         "_user_entries",
         "_message_entries",
+        "_referenced_messages",
         "_settings",
+        "_settings_map",
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
-    _app: traits.RESTAware
     _me: typing.Optional[users.OwnUser]
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
     _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
@@ -94,16 +118,21 @@ class StatefulCacheImpl(cache.MutableCache):
     _referenced_messages: collections.ExtendedMutableMapping[
         snowflakes.Snowflake, cache_utility.RefCell[cache_utility.MessageData]
     ]
-    _intents: intents_.Intents
 
-    def __init__(
-        self, app: traits.RESTAware, intents: intents_.Intents, settings: typing.Optional[config.CacheSettings]
-    ) -> None:
-        if settings is None:
-            settings = config.CacheSettings()
-
+    def __init__(self, app: traits.BotAware, settings: config.CacheSettings) -> None:
         self._app = app
         self._me = None
+        self._intents = app.intents
+        self._settings = settings
+        # We store it like this for faster lookups as getattr is quite slow
+        self._settings_map = attr.asdict(settings)
+        self._create_cache()
+
+    @property
+    def settings(self) -> config.CacheSettings:
+        return self._settings
+
+    def _create_cache(self) -> None:
         self._emoji_entries = collections.FreezableDict()
         self._guild_channel_entries = collections.FreezableDict()
         self._guild_entries = collections.FreezableDict()
@@ -114,12 +143,11 @@ class StatefulCacheImpl(cache.MutableCache):
         self._unknown_custom_emoji_entries = collections.FreezableDict()
         self._user_entries = collections.FreezableDict()
         self._message_entries = collections.LimitedCapacityCacheMap(
-            limit=settings.max_messages, on_expire=self._on_message_expire
+            limit=self._settings.max_messages, on_expire=self._on_message_expire
         )
         self._referenced_messages = collections.FreezableDict()
-        self._intents = intents
-        self._settings = settings
 
+    # TODO: Setup this check or remove it
     def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
         if self._intents ^ intents:
             warnings.warn(
@@ -128,6 +156,19 @@ class StatefulCacheImpl(cache.MutableCache):
                 stacklevel=1,
             )
 
+    def _is_cache_enabled_for(self, setting: str) -> bool:
+        return bool(self._settings_map[ENABLE] and self._settings_map[setting])
+
+    @staticmethod
+    def _increment_ref_count(obj: cache_utility.RefCell[_T], increment: int = 1) -> None:
+        obj.ref_count += increment
+
+    def clear(self) -> None:
+        if not self._is_cache_enabled_for(ENABLE):
+            return None
+
+        self._create_cache()
+
     def _build_emoji(
         self,
         emoji_data: cache_utility.KnownCustomEmojiData,
@@ -135,6 +176,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return emoji_data.build_entity(self._app)
 
     def clear_emojis(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return cache_utility.EmptyCacheView()
+
         cached_emojis = self._emoji_entries
         self._emoji_entries = collections.FreezableDict()
 
@@ -151,6 +195,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_emojis_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.emojis:
@@ -167,6 +214,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_emojis, builder=self._build_emoji)
 
     def delete_emoji(self, emoji_id: snowflakes.Snowflakeish, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return None
+
         emoji_id = snowflakes.Snowflake(emoji_id)
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if not emoji_data:
@@ -185,15 +235,24 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._build_emoji(emoji_data)
 
     def get_emoji(self, emoji_id: snowflakes.Snowflakeish, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return None
+
         emoji_data = self._emoji_entries.get(snowflakes.Snowflake(emoji_id))
         return self._build_emoji(emoji_data) if emoji_data else None
 
     def get_emojis_view(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return cache_utility.EmptyCacheView()
+
         return cache_utility.CacheMappingView(self._emoji_entries.freeze(), builder=self._build_emoji)
 
     def get_emojis_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.emojis:
@@ -203,11 +262,14 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_emojis, builder=self._build_emoji)
 
     def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return None
+
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if emoji.user:
             user = self._set_user(emoji.user)
             if emoji.id not in self._emoji_entries:
-                self._increment_user_ref_count(user)
+                self._increment_ref_count(user)
 
         emoji_data = cache_utility.KnownCustomEmojiData.build_from_entity(emoji, user=user)
         self._emoji_entries[emoji.id] = emoji_data
@@ -221,6 +283,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
     ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+        if not self._is_cache_enabled_for(EMOJIS):
+            return None, None
+
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)
         return cached_emoji, self.get_emoji(emoji.id)
@@ -238,6 +303,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._guild_entries[guild_id]
 
     def clear_guilds(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return cache_utility.EmptyCacheView()
+
         cached_guilds = {}
 
         for guild_id, guild_record in self._guild_entries.freeze().items():
@@ -250,6 +318,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_guilds) if cached_guilds else cache_utility.EmptyCacheView()
 
     def delete_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record:
@@ -275,13 +346,22 @@ class StatefulCacheImpl(cache.MutableCache):
         return copy.copy(guild_record.guild)
 
     def get_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         guild_record = self._guild_entries.get(snowflakes.Snowflake(guild_id))
         return copy.copy(guild_record.guild) if guild_record and guild_record.guild else None
 
     def get_available_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         return self._get_guild(guild_id, availability=True)
 
     def get_unavailable_guild(self, guild_id: snowflakes.Snowflakeish) -> typing.Optional[guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         return self._get_guild(guild_id, availability=False)
 
     def _get_guilds_view(self, *, availability: bool) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
@@ -295,17 +375,29 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(results) if results else cache_utility.EmptyCacheView()
 
     def get_available_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return cache_utility.EmptyCacheView()
+
         return self._get_guilds_view(availability=True)
 
     def get_unavailable_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return cache_utility.EmptyCacheView()
+
         return self._get_guilds_view(availability=False)
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         guild_record = self._get_or_create_guild_record(guild.id)
         guild_record.guild = copy.copy(guild)
         guild_record.is_available = True
 
     def set_guild_availability(self, guild_id: snowflakes.Snowflakeish, is_available: bool, /) -> None:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None
+
         guild_record = self._guild_entries.get(snowflakes.Snowflake(guild_id))
         if guild_record and guild_record.guild:
             guild_record.is_available = is_available
@@ -313,6 +405,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_guild(
         self, guild: guilds.GatewayGuild, /
     ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+        if not self._is_cache_enabled_for(GUILDS):
+            return None, None
+
         guild = copy.copy(guild)
         cached_guild = self.get_guild(guild.id)
 
@@ -326,6 +421,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cached_guild, self.get_guild(guild.id)
 
     def clear_guild_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return cache_utility.EmptyCacheView()
+
         cached_channels = self._guild_channel_entries
         self._guild_channel_entries = collections.FreezableDict()
 
@@ -339,6 +437,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_guild_channels_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.channels:
@@ -350,6 +451,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_channels)
 
     def delete_guild_channel(self, channel_id: snowflakes.Snowflakeish, /) -> typing.Optional[channels.GuildChannel]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return None
+
         channel_id = snowflakes.Snowflake(channel_id)
         channel = self._guild_channel_entries.pop(channel_id, None)
 
@@ -366,6 +470,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return channel
 
     def get_guild_channel(self, channel_id: snowflakes.Snowflakeish, /) -> typing.Optional[channels.GuildChannel]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return None
+
         channel = self._guild_channel_entries.get(snowflakes.Snowflake(channel_id))
         return cache_utility.copy_guild_channel(channel) if channel else None
 
@@ -377,6 +484,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_guild_channels_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.channels:
@@ -402,6 +512,9 @@ class StatefulCacheImpl(cache.MutableCache):
         )
 
     def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return None
+
         self._guild_channel_entries[channel.id] = cache_utility.copy_guild_channel(channel)
         guild_record = self._get_or_create_guild_record(channel.guild_id)
 
@@ -413,6 +526,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_guild_channel(
         self, channel: channels.GuildChannel, /
     ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
+        if not self._is_cache_enabled_for(GUILD_CHANNELS):
+            return None, None
+
         cached_channel = self.get_guild_channel(channel.id)
         self.set_guild_channel(channel)
         return cached_channel, self.get_guild_channel(channel.id)
@@ -431,6 +547,9 @@ class StatefulCacheImpl(cache.MutableCache):
             self._garbage_collect_user(invite.target_user, decrement=1)
 
     def clear_invites(self) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         cached_invites = self._invite_entries
         self._invite_entries = collections.FreezableDict()
 
@@ -447,6 +566,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_invites_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
 
@@ -465,6 +587,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_invites_for_channel(
         self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         channel_id = snowflakes.Snowflake(channel_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -490,6 +615,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
     def delete_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return None
+
         invite_data = self._invite_entries.pop(code, None)
         if not invite_data:
             return None
@@ -508,15 +636,24 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._build_invite(invite_data)
 
     def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return None
+
         invite_data = self._invite_entries.get(code)
         return self._build_invite(invite_data) if invite_data else None
 
     def get_invites_view(self) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         return cache_utility.CacheMappingView(self._invite_entries.freeze(), builder=self._build_invite)
 
     def get_invites_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_entry = self._guild_entries.get(guild_id)
         if not guild_entry or not guild_entry.invites:
@@ -531,6 +668,9 @@ class StatefulCacheImpl(cache.MutableCache):
         channel_id: snowflakes.Snowflakeish,
         /,
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
+        if not self._is_cache_enabled_for(INVITES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         channel_id = snowflakes.Snowflake(channel_id)
         guild_entry = self._guild_entries.get(guild_id)
@@ -545,17 +685,20 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
     def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
+        if not self._is_cache_enabled_for(INVITES):
+            return None
+
         inviter: typing.Optional[cache_utility.RefCell[users.User]] = None
         if invite.inviter:
             inviter = self._set_user(invite.inviter)
             if invite.code not in self._invite_entries:
-                self._increment_user_ref_count(inviter)
+                self._increment_ref_count(inviter)
 
         target_user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if invite.target_user:
             target_user = self._set_user(invite.target_user)
             if invite.code not in self._invite_entries:
-                self._increment_user_ref_count(target_user)
+                self._increment_ref_count(target_user)
 
         self._invite_entries[invite.code] = cache_utility.InviteData.build_from_entity(
             invite, inviter=inviter, target_user=target_user
@@ -571,6 +714,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_invite(
         self, invite: invites.InviteWithMetadata, /
     ) -> typing.Tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+        if not self._is_cache_enabled_for(INVITES):
+            return None, None
+
         cached_invite = self.get_invite(invite.code)
         self.set_invite(invite)
         return cached_invite, self.get_invite(invite.code)
@@ -606,11 +752,6 @@ class StatefulCacheImpl(cache.MutableCache):
     ) -> bool:
         return member.ref_count < 1 and member.object.has_been_deleted
 
-    def _increment_member_ref_count(
-        self, member: cache_utility.RefCell[cache_utility.MemberData], *, increment: int = 1
-    ) -> None:
-        member.ref_count += increment
-
     def _garbage_collect_member(
         self,
         guild_record: cache_utility.GuildRecord,
@@ -623,7 +764,7 @@ class StatefulCacheImpl(cache.MutableCache):
             member.object.has_been_deleted = True
 
         if decrement is not None:
-            self._increment_member_ref_count(member, increment=-decrement)
+            self._increment_ref_count(member, -decrement)
 
         user_id = member.object.user.object.id
         if not guild_record.members or user_id not in guild_record.members:
@@ -644,12 +785,18 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_members(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return cache_utility.EmptyCacheView()
+
         views = ((guild_id, self.clear_members_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys())
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_members_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.members:
@@ -665,6 +812,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def delete_member(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[guilds.Member]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -686,6 +836,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_member(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[guilds.Member]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -698,6 +851,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_members_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return cache_utility.EmptyCacheView()
+
         views: typing.Mapping[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]] = {
             guild_id: cache_utility.CacheMappingView(view.members.freeze(), builder=self._build_member)  # type: ignore[type-var]
             for guild_id, view in self._guild_entries.items()
@@ -708,6 +864,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.members:
@@ -720,6 +879,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
     def set_member(self, member: guilds.Member, /) -> None:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return None
+
         self._set_member(member, is_reference=False)
 
     def _set_member(
@@ -733,7 +895,7 @@ class StatefulCacheImpl(cache.MutableCache):
             guild_record.members = collections.FreezableDict()
 
         if member.user.id not in guild_record.members:
-            self._increment_user_ref_count(member_data.user)
+            self._increment_ref_count(member_data.user)
 
         try:
             member_data.has_been_deleted = False
@@ -751,6 +913,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_member(
         self, member: guilds.Member, /
     ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+        if not self._is_cache_enabled_for(MEMBERS):
+            return None, None
+
         cached_member = self.get_member(member.guild_id, member.user.id)
         self.set_member(member)
         return cached_member, self.get_member(member.guild_id, member.user.id)
@@ -761,17 +926,11 @@ class StatefulCacheImpl(cache.MutableCache):
     ) -> presences.MemberPresence:
         return presence_data.build_entity(self._app)
 
-    @staticmethod
-    def _increment_unknown_custom_emoji_ref(
-        emoji: cache_utility.RefCell[emojis.CustomEmoji], increment: int = 1
-    ) -> None:
-        emoji.ref_count += increment
-
     def _garbage_collect_unknown_custom_emoji(
         self, emoji: cache_utility.RefCell[emojis.CustomEmoji], *, decrement: typing.Optional[int] = None
     ) -> None:
         if decrement is not None:
-            self._increment_unknown_custom_emoji_ref(emoji, -decrement)
+            self._increment_ref_count(emoji, -decrement)
 
         if emoji.ref_count < 1 and emoji.object.id in self._unknown_custom_emoji_entries:
             del self._unknown_custom_emoji_entries[emoji.object.id]
@@ -787,6 +946,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_presences(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return cache_utility.EmptyCacheView()
+
         views = (
             (guild_id, self.clear_presences_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys()
         )
@@ -795,6 +957,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_presences_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.presences:
@@ -812,6 +977,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def delete_presence(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[presences.MemberPresence]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -834,6 +1002,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_presence(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[presences.MemberPresence]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -845,6 +1016,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_presences_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return cache_utility.EmptyCacheView()
+
         views = {
             guild_id: cache_utility.CacheMappingView(guild_record.presences.freeze(), builder=self._build_presence)
             for guild_id, guild_record in self._guild_entries.items()
@@ -855,6 +1029,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_presences_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.presences:
@@ -863,6 +1040,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(guild_record.presences.freeze(), builder=self._build_presence)
 
     def set_presence(self, presence: presences.MemberPresence, /) -> None:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return None
+
         presence_data = cache_utility.MemberPresenceData.build_from_entity(presence)
         for activity, activity_data in zip(presence.activities, presence_data.activities):
             emoji = activity.emoji
@@ -877,7 +1057,7 @@ class StatefulCacheImpl(cache.MutableCache):
                 emoji_data = cache_utility.RefCell(copy.copy(emoji))
                 self._unknown_custom_emoji_entries[emoji.id] = emoji_data
 
-            self._increment_unknown_custom_emoji_ref(emoji_data)
+            self._increment_ref_count(emoji_data)
             activity_data.emoji = emoji_data
 
         guild_record = self._get_or_create_guild_record(presence.guild_id)
@@ -889,12 +1069,15 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_presence(
         self, presence: presences.MemberPresence, /
     ) -> typing.Tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+        if not self._is_cache_enabled_for(PRESENCES):
+            return None, None
+
         cached_presence = self.get_presence(presence.guild_id, presence.user_id)
         self.set_presence(presence)
         return cached_presence, self.get_presence(presence.guild_id, presence.user_id)
 
     def clear_roles(self) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
-        if not self._role_entries:
+        if not self._is_cache_enabled_for(ROLES) or not self._role_entries:
             return cache_utility.EmptyCacheView()
 
         roles = self._role_entries
@@ -910,6 +1093,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_roles_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
+        if not self._is_cache_enabled_for(ROLES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.roles:
@@ -923,6 +1109,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return view
 
     def delete_role(self, role_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.Role]:
+        if not self._is_cache_enabled_for(ROLES):
+            return None
+
         role_id = snowflakes.Snowflake(role_id)
         role = self._role_entries.pop(role_id, None)
         if not role:
@@ -939,15 +1128,24 @@ class StatefulCacheImpl(cache.MutableCache):
         return role
 
     def get_role(self, role_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.Role]:
+        if not self._is_cache_enabled_for(ROLES):
+            return None
+
         role = self._role_entries.get(snowflakes.Snowflake(role_id))
         return copy.copy(role) if role else None
 
     def get_roles_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
+        if not self._is_cache_enabled_for(ROLES):
+            return cache_utility.EmptyCacheView()
+
         return cache_utility.CacheMappingView(self._role_entries.freeze())
 
     def get_roles_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
+        if not self._is_cache_enabled_for(ROLES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.roles:
@@ -956,6 +1154,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView({role_id: self._role_entries[role_id] for role_id in guild_record.roles})
 
     def set_role(self, role: guilds.Role, /) -> None:
+        if not self._is_cache_enabled_for(ROLES):
+            return None
+
         self._role_entries[role.id] = role
         guild_record = self._get_or_create_guild_record(role.guild_id)
 
@@ -967,6 +1168,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def update_role(
         self, role: guilds.Role, /
     ) -> typing.Tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+        if not self._is_cache_enabled_for(ROLES):
+            return None, None
+
         cached_role = self.get_role(role.id)
         self.set_role(role)
         return cached_role, self.get_role(role.id)
@@ -975,14 +1179,11 @@ class StatefulCacheImpl(cache.MutableCache):
     def _can_remove_user(user_data: cache_utility.RefCell[users.User]) -> bool:
         return user_data.ref_count < 1
 
-    def _increment_user_ref_count(self, user: cache_utility.RefCell[users.User], increment: int = 1) -> None:
-        user.ref_count += increment
-
     def _garbage_collect_user(
         self, user: cache_utility.RefCell[users.User], *, decrement: typing.Optional[int] = None
     ) -> None:
         if decrement is not None:
-            self._increment_user_ref_count(user, -decrement)
+            self._increment_ref_count(user, -decrement)
 
         if self._can_remove_user(user) and user.object.id in self._user_entries:
             del self._user_entries[user.object.id]
@@ -1020,6 +1221,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_voice_states(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, voices.VoiceState]]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         views = (
             (guild_id, self.clear_voice_states_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys()
         )
@@ -1028,6 +1232,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_voice_states_for_channel(
         self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         channel_id = snowflakes.Snowflake(channel_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -1050,6 +1257,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def clear_voice_states_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
 
@@ -1068,6 +1278,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def delete_voice_state(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -1088,6 +1301,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_voice_state(
         self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
     ) -> typing.Optional[voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return None
+
         guild_id = snowflakes.Snowflake(guild_id)
         user_id = snowflakes.Snowflake(user_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -1097,6 +1313,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_voice_states_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, voices.VoiceState]]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         views = {
             guild_id: cache_utility.CacheMappingView(
                 guild_record.voice_states.freeze(), builder=self._build_voice_state
@@ -1109,6 +1328,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_voice_states_view_for_channel(
         self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         channel_id = snowflakes.Snowflake(channel_id)
         guild_record = self._guild_entries.get(guild_id)
@@ -1126,6 +1348,9 @@ class StatefulCacheImpl(cache.MutableCache):
     def get_voice_states_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return cache_utility.EmptyCacheView()
+
         guild_id = snowflakes.Snowflake(guild_id)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.voice_states:
@@ -1134,6 +1359,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(guild_record.voice_states.freeze(), builder=self._build_voice_state)
 
     def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return None
+
         guild_record = self._get_or_create_guild_record(voice_state.guild_id)
 
         if guild_record.voice_states is None:  # TODO: test when this is not None
@@ -1143,13 +1371,16 @@ class StatefulCacheImpl(cache.MutableCache):
         voice_state_data = cache_utility.VoiceStateData.build_from_entity(voice_state, member=member)
 
         if voice_state.user_id not in guild_record.voice_states:
-            self._increment_member_ref_count(member)
+            self._increment_ref_count(member)
 
         guild_record.voice_states[voice_state.user_id] = voice_state_data
 
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
     ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+        if not self._is_cache_enabled_for(VOICE_STATES):
+            return None, None
+
         cached_voice_state = self.get_voice_state(voice_state.guild_id, voice_state.user_id)
         self.set_voice_state(voice_state)
         return cached_voice_state, self.get_voice_state(voice_state.guild_id, voice_state.user_id)
@@ -1168,7 +1399,7 @@ class StatefulCacheImpl(cache.MutableCache):
         override_ref: bool = False,
     ) -> typing.Optional[cache_utility.RefCell[cache_utility.MessageData]]:
         if decrement is not None:
-            self._increment_message_ref_count(message, increment=-decrement)
+            self._increment_ref_count(message, -decrement)
 
         if not self._can_remove_message(message) or override_ref:
             return None
@@ -1194,17 +1425,12 @@ class StatefulCacheImpl(cache.MutableCache):
 
         return message
 
-    def _increment_message_ref_count(
-        self, message: cache_utility.RefCell[cache_utility.MessageData], *, increment: int = 1
-    ) -> None:
-        message.ref_count += increment
-
     def _on_message_expire(self, message: cache_utility.RefCell[cache_utility.MessageData], /) -> None:
         if not self._garbage_collect_message(message):
             self._referenced_messages[message.object.id] = message
 
     def clear_messages(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
-        if not self._message_entries:
+        if not self._is_cache_enabled_for(MESSAGES) or not self._message_entries:
             return cache_utility.EmptyCacheView()
 
         # As the only entry which references messages is other messages, this is enough for now.
@@ -1219,6 +1445,9 @@ class StatefulCacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_messages, builder=self._build_message)  # type: ignore[type-var]
 
     def delete_message(self, message_id: snowflakes.Snowflakeish, /) -> typing.Optional[messages.Message]:
+        if not self._is_cache_enabled_for(MESSAGES):
+            return None
+
         message_id = snowflakes.Snowflake(message_id)
         message_data = self._message_entries.pop(message_id, None)
 
@@ -1232,11 +1461,17 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._build_message(message_data)
 
     def get_message(self, message_id: snowflakes.Snowflakeish, /) -> typing.Optional[messages.Message]:
+        if not self._is_cache_enabled_for(MESSAGES):
+            return None
+
         message_id = snowflakes.Snowflake(message_id)
         message_data = self._message_entries.get(message_id) or self._referenced_messages.get(message_id)
         return self._build_message(message_data) if message_data else None
 
     def get_messages_view(self) -> cache.CacheView[snowflakes.Snowflake, messages.Message]:
+        if not self._is_cache_enabled_for(MESSAGES):
+            return cache_utility.EmptyCacheView()
+
         cached_messages = self._message_entries.freeze()
         cached_messages.update(self._referenced_messages)
         return cache_utility.CacheMappingView(cached_messages, builder=self._build_message)  # type: ignore[type-var]
@@ -1259,14 +1494,14 @@ class StatefulCacheImpl(cache.MutableCache):
 
         if message.id not in self._referenced_messages and message.id not in self._message_entries:
             if member:
-                self._increment_member_ref_count(member)
+                self._increment_ref_count(member)
 
             if referenced_message:
-                self._increment_message_ref_count(referenced_message)
+                self._increment_ref_count(referenced_message)
 
             if mention_users is not undefined.UNDEFINED:
                 for user in mention_users.values():
-                    self._increment_user_ref_count(user)
+                    self._increment_ref_count(user)
 
         message_data = cache_utility.MessageData.build_from_entity(
             message, author=author, member=member, mention_users=mention_users, referenced_message=referenced_message
@@ -1291,11 +1526,17 @@ class StatefulCacheImpl(cache.MutableCache):
         return self._message_entries.get(message.id) or self._referenced_messages[message.id]
 
     def set_message(self, message: messages.Message, /) -> None:
+        if not self._is_cache_enabled_for(MESSAGES):
+            return None
+
         self._set_message(message, is_reference=False)
 
     def update_message(
         self, message: typing.Union[messages.PartialMessage, messages.Message], /
     ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+        if not self._is_cache_enabled_for(MESSAGES):
+            return None, None
+
         cached_message = self.get_message(message.id)
 
         if isinstance(message, messages.Message):

@@ -30,17 +30,17 @@ import asyncio
 import logging
 import typing
 
-from hikari import channels
 from hikari import errors
-from hikari import guilds
 from hikari import snowflakes
-from hikari.api import event_dispatcher
 from hikari.api import voice
 from hikari.events import voice_events
-from hikari.impl import bot
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
+    from hikari import guilds
+    from hikari import traits
+
     _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="voice.VoiceConnection")
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.voice.management")
@@ -55,15 +55,11 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
 
-    def __init__(self, app: bot.BotApp, dispatcher: event_dispatcher.EventDispatcher) -> None:
+    def __init__(self, app: traits.BotAware) -> None:
         self._app = app
-        self._dispatcher = dispatcher
+        self._dispatcher = app.dispatcher
         self._connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection] = {}
-        self._dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
-
-    @property
-    def app(self) -> bot.BotApp:
-        return self._app
+        app.dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     @property
     def connections(self) -> typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]:

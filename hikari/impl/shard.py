@@ -621,7 +621,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
-        *,
+        *,  # TODO: make default to undefined
         self_mute: bool = False,
         self_deaf: bool = False,
     ) -> None:
@@ -632,8 +632,8 @@ class GatewayShardImpl(shard.GatewayShard):
                 _D: {
                     "guild_id": str(int(guild)),
                     "channel_id": str(int(channel)) if channel is not None else None,
-                    "mute": self_mute,
-                    "deaf": self_deaf,
+                    "self_mute": self_mute,
+                    "self_deaf": self_deaf,
                 },
             }
         )

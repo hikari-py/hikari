@@ -330,6 +330,7 @@ class Mentions:
 
         return bool(
             isinstance(app, traits.ShardAware)
+            and isinstance(app, traits.CacheAware)
             and (app.intents & intents_required) == intents_required
             and (not needs_guild or self._message.guild_id)
         )

@@ -49,14 +49,9 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
 
     __slots__: typing.Sequence[str] = ("_cache",)
 
-    def __init__(
-        self,
-        app: traits.BotAware,
-        cache: cache_.MutableCache,
-        intents: intents_.Intents,
-    ) -> None:
+    def __init__(self, app: traits.BotAware, cache: cache_.MutableCache) -> None:
         self._cache = cache
-        super().__init__(app=app, intents=intents)
+        super().__init__(app=app)
 
     async def on_connected(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
         """Handle connection events.
