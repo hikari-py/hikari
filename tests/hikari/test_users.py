@@ -65,7 +65,7 @@ class TestPartialUser:
         role_mentions = [object(), object()]
         mock_channel = mock.Mock(id=456)
         mock_message = object()
-        reply_to = object()
+        reply = object()
         mentions_reply = object()
 
         obj.app = mock.Mock()
@@ -80,7 +80,7 @@ class TestPartialUser:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_to=reply_to,
+            reply=reply,
             mentions_everyone=False,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -99,7 +99,7 @@ class TestPartialUser:
             nonce="nonce",
             tts=True,
             mentions_everyone=False,
-            reply_to=reply_to,
+            reply=reply,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,

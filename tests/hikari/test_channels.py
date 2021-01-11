@@ -219,7 +219,7 @@ class TestTextChannel:
         mock_attachment = object()
         mock_embed = object()
         mock_attachments = [object(), object(), object()]
-        mock_reply_to = object()
+        mock_reply = object()
 
         await model.send(
             content="test content",
@@ -228,7 +228,7 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
-            reply_to=mock_reply_to,
+            reply=mock_reply,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],
@@ -243,7 +243,7 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
-            reply_to=mock_reply_to,
+            reply=mock_reply,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],

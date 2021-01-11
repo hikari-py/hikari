@@ -742,7 +742,9 @@ class PartialMessage(snowflakes.Unique):
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        reply_to: undefined.UndefinedOr[snowflakes.SnowflakeishOr[PartialMessage]] = undefined.UNDEFINED,
+        reply: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[PartialMessage], bool
+        ] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -754,9 +756,6 @@ class PartialMessage(snowflakes.Unique):
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
-        !!! note
-            To reply to the message, please use `reply`.
-
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
@@ -788,8 +787,9 @@ class PartialMessage(snowflakes.Unique):
         nonce : hikari.undefined.UndefinedOr[builtins.str]
             If provided, a nonce that can be used for optimistic message
             sending.
-        reply_to : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
-            If provided, the message to reply to.
+        reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], builtins.bool]
+            If provided and `builtins.True`, reply to this message.
+            If provided and not `builtins.bool`, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -797,7 +797,7 @@ class PartialMessage(snowflakes.Unique):
             If provided, whether to mention the author of the message
             that is being replied to.
 
-            This will not do anything if not being used with `reply_to`.
+            This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             If provided, and `builtins.True`, all mentions will be parsed.
             If provided, and `builtins.False`, no mentions will be parsed.
@@ -853,7 +853,7 @@ class PartialMessage(snowflakes.Unique):
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; users in `user_mentions` not being
             mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content; `reply_to` not found
+            being mentioned in the message content; `reply` not found
             or not in the same channel.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -873,6 +873,9 @@ class PartialMessage(snowflakes.Unique):
             You are expected to make a connection to the gateway and identify
             once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
+        if reply is True:
+            reply = self
+
         return await self.app.rest.create_message(
             channel=self.channel_id,
             content=content,
@@ -881,160 +884,7 @@ class PartialMessage(snowflakes.Unique):
             attachments=attachments,
             nonce=nonce,
             tts=tts,
-            reply_to=reply_to,
-            mentions_everyone=mentions_everyone,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            mentions_reply=mentions_reply,
-        )
-
-    async def reply(
-        self,
-        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
-        *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
-        ] = undefined.UNDEFINED,
-        role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-        ] = undefined.UNDEFINED,
-    ) -> Message:
-        """Reply to this message.
-
-        !!! note
-            To create a message in the same channel as this message without
-            actually replying to it, use `respond`.
-
-        Parameters
-        ----------
-        content : hikari.undefined.UndefinedOr[typing.Any]
-            If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
-            in the content. Any other value here will be cast to a
-            `builtins.str`.
-
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
-
-            Likewise, if this is a `hikari.files.Resource`, then the
-            content is instead treated as an attachment if no `attachment` and
-            no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If provided, the message embed.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
-            If provided, the message attachment. This can be a resource,
-            or string of a path on your computer or a URL.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
-            If provided, the message attachments. These can be resources, or
-            strings consisting of paths on your computer or URLs.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, whether the message will be TTS (Text To Speech).
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, a nonce that can be used for optimistic message
-            sending.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, whether the message should parse @everyone/@here
-            mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, whether to mention the author of the message
-            that is being replied to.
-
-            This will not do anything if not being used with `reply_to`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
-            Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or `hikari.users.PartialUser`
-            derivatives to enforce mentioning specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
-            Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
-            specific roles.
-
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
-
-        Returns
-        -------
-        hikari.messages.Message
-            The created message.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            This may be raised in several discrete situations, such as messages
-            being empty with no attachments or embeds; messages with more than
-            2000 characters in them, embeds that exceed one of the many embed
-            limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content; `reply_to` not found
-            or not in the same channel.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you lack permissions to send messages in the given channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
-        builtins.TypeError
-            If both `attachment` and `attachments` are specified.
-
-        !!! warning
-            You are expected to make a connection to the gateway and identify
-            once before being able to use this endpoint for a bot.
-        """  # noqa: E501 - Line too long
-        return await self.app.rest.create_message(
-            channel=self.channel_id,
-            content=content,
-            embed=embed,
-            attachment=attachment,
-            attachments=attachments,
-            nonce=nonce,
-            tts=tts,
-            reply_to=self,
+            reply=reply,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,

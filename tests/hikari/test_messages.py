@@ -215,7 +215,7 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_to=reference_messsage,
+            reply=reference_messsage,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
@@ -229,14 +229,14 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_to=reference_messsage,
+            reply=reference_messsage,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
         )
 
-    async def test_reply(self, message):
+    async def test_respond_when_reply_is_True(self, message):
         message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
@@ -244,13 +244,14 @@ class TestAsyncMessage:
         roles = [object()]
         attachment = object()
         attachments = [object()]
-        await message.reply(
+        await message.respond(
             content="test content",
             embed=embed,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
             tts=True,
+            reply=True,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
@@ -264,7 +265,7 @@ class TestAsyncMessage:
             attachments=attachments,
             nonce="nonce",
             tts=True,
-            reply_to=message,
+            reply=message,
             mentions_everyone=True,
             user_mentions=False,
             role_mentions=roles,
