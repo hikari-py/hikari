@@ -50,6 +50,7 @@ from hikari.events import lifetime_events
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
+from hikari.impl import event_manager
 from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
@@ -62,15 +63,12 @@ if typing.TYPE_CHECKING:
 
     from hikari import event_stream
     from hikari import users
-
-    # from hikari.api import guild_chunker
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
-    from hikari.impl import event_manager_base
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
@@ -212,7 +210,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
-        # "_chunker",
         "_closing_event",
         "_closed",
         "_entity_factory",
@@ -223,7 +220,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         "_intents",
         "_is_alive",
         "_proxy_settings",
-        "_raw_event_consumer",
         "_rest",
         "_shards",
         "_token",
@@ -261,27 +257,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
         self._token = token
 
-        # Caching, chunking, and event subsystems.
+        # Caching
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
         self._cache = cache_impl.CacheImpl(self, cache_settings)
-        # self._chunker = guild_chunker_impl.GuildChunkerImpl(self, chunking_limit)
 
-        self._events: event_dispatcher.EventDispatcher
-        events_obj: event_manager_base.EventManagerBase
-
-        if cache_settings.enable:
-            from hikari.impl import stateful_event_manager
-
-            events_obj = stateful_event_manager.StatefulEventManagerImpl(self, self._cache)
-            self._raw_event_consumer = events_obj.consume_raw_event
-            self._events = events_obj
-
-        else:
-            from hikari.impl import stateless_event_manager
-
-            events_obj = stateless_event_manager.StatelessEventManagerImpl(self)
-            self._raw_event_consumer = events_obj.consume_raw_event
-            self._events = events_obj
+        # Event handling
+        self._events = event_manager.EventManagerImpl(self, self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
@@ -313,10 +294,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     @property
     def cache(self) -> cache_.Cache:
         return self._cache
-
-    # @property
-    # def chunker(self) -> guild_chunker.GuildChunker:
-    #     return self._chunker
 
     @property
     def dispatcher(self) -> event_dispatcher.EventDispatcher:
@@ -411,7 +388,6 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         calls = [
             ("rest", self._rest.close()),
-            # ("chunker", self._chunker.close()),
             ("voice handler", self._voice.close()),
             *((f"shard {s.id}", s.close()) for s in self._shards.values()),
         ]
@@ -929,7 +905,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
-            event_consumer=self._raw_event_consumer,
+            event_consumer=self._events.consume_raw_event,
             http_settings=self._http_settings,
             initial_activity=activity,
             initial_is_afk=afk,
