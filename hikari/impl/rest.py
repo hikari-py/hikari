@@ -997,7 +997,7 @@ class RESTClientImpl(rest_api.RESTClient):
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        reply_to: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1043,7 +1043,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("content", content, conversion=str)
         body.put("nonce", nonce)
         body.put("tts", tts)
-        body.put("message_reference", reply_to, conversion=lambda m: {"message_id": str(int(m))})
+        body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
         final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
         if attachment is not undefined.UNDEFINED:
