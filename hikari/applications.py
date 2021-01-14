@@ -476,7 +476,7 @@ class Application(guilds.PartialApplication):
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
     public_key: bytes = attr.field(eq=False, hash=False, repr=False)
-    """The key used for verifying interaction and GameSDK payload signatures."""
+    """The key used for verifying interaction and GameSDK payload signatures."""  # TODO: update these docs
 
     team: typing.Optional[Team] = attr.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.

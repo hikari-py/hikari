@@ -354,10 +354,16 @@ class EventFactoryImpl(event_factory.EventFactory):
     ######################
 
     def deserialize_interaction_create_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: typing.Optional[gateway_shard.GatewayShard],
+        payload: data_binding.JSONObject,
+        *,
+        application_id: snowflakes.Snowflake,
     ) -> interaction_events.InteractionCreateEvent:
         return interaction_events.InteractionCreateEvent(
-            app=self._app, shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
+            app=self._app,
+            shard=shard,
+            interaction=self._app.entity_factory.deserialize_interaction(payload, application_id=application_id),
         )
 
     #################

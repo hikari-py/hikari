@@ -26,7 +26,11 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.List[str] = [
+    "TypingIndicator",
+    "GuildBuilder",
+    "InteractionResponseBuilder",
+]
 
 import asyncio
 import datetime
@@ -37,12 +41,14 @@ import attr
 from hikari import channels
 from hikari import errors
 from hikari import files
+from hikari import interactions
 from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
 
@@ -53,12 +59,21 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import audit_logs
     from hikari import colors
+    from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+
+
+_MESSAGE_RESPONSE_TYPES: typing.Final[typing.FrozenSet[interactions.InteractionResponseType]] = frozenset(
+    (
+        interactions.InteractionResponseType.CHANNEL_MESSAGE,
+        interactions.InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    )
+)
 
 
 @typing.final
@@ -280,13 +295,13 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
-        if not undefined.count(color, colour):
+        if not undefined.any_undefined(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
         if len(self._roles) == 0:
             if name != "@everyone":
                 raise ValueError("First role must always be the '@everyone' role")
-            if undefined.count(color, colour, hoist, mentionable, position) != 5:
+            if not undefined.all_undefined(color, colour, hoist, mentionable, position):
                 raise ValueError(
                     "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
                 )
@@ -653,3 +668,115 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         log = self._entity_factory.deserialize_audit_log(response)
         self._first_id = str(min(log.entries.keys()))
         return log
+
+
+# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
+@attr_extensions.with_copy
+@attr.s(kw_only=False, slots=True, weakref_slot=False)
+class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionResponseBuilder`.
+
+    Parameters
+    ----------
+    type : hikari.interactions.InteractionResponseType
+        The type of interaction response this is.
+    """
+
+    # Required arguments.
+    _type: interactions.InteractionResponseType = attr.ib()
+
+    # Not-required arguments.
+    content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
+
+    # Key-word only not-required arguments.
+    is_tts: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    mentions_everyone: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    user_mentions: undefined.UndefinedOr[
+        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    role_mentions: undefined.UndefinedOr[
+        typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+
+    # Non-arguments.
+    _embeds: typing.List[embeds_.Embed] = attr.ib(factory=list, init=False)
+
+    @property
+    def embeds(self) -> typing.Sequence[embeds_.Embed]:
+        return self._embeds.copy()
+
+    @property
+    def type(self) -> interactions.InteractionResponseType:
+        return self._type
+
+    def add_embed(self, embed: embeds_.Embed, /) -> None:
+        self._embeds.append(embed)  # TODO: validation
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        data: data_binding.JSONObject = {}
+
+        # The docs are wrong and "content" isn't required.
+        if self.content is not undefined.UNDEFINED:
+            data["content"] = self.content
+
+        if self._embeds:
+            data["embeds"] = [entity_factory.serialize_embed(embed) for embed in self._embeds]
+
+        if self.is_tts is not undefined.UNDEFINED:
+            data["tts"] = self.is_tts
+
+        if not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions):
+            data["allowed_mentions"] = mentions.generate_allowed_mentions(
+                self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
+            )
+
+        is_message_response = self.type in _MESSAGE_RESPONSE_TYPES
+
+        if is_message_response and not data:
+            raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")
+
+        elif not is_message_response and data:
+            raise ValueError(f"Cannot include data for {self.type.name} responses.")
+
+        return {"type": self._type, "data": data}
+
+
+# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
+@attr_extensions.with_copy
+@attr.s(kw_only=False, slots=True, weakref_slot=False)
+class CommandBuilder(special_endpoints.CommandBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
+
+    # Required arguments.
+    _name: str = attr.ib()
+    _description: str = attr.ib()
+
+    # Key-word only not-required arguments.
+    id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+
+    # Non-arguments.
+    _options: typing.List[interactions.CommandOption] = attr.ib(factory=list, init=False)
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @property
+    def options(self) -> typing.Sequence[interactions.CommandOption]:
+        return self._options.copy()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def add_option(self, option: interactions.CommandOption) -> None:
+        self._options.append(option)  # TODO: validation
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        options = [entity_factory.serialize_command_option(option) for option in self._options]
+        data: data_binding.JSONObject = {"name": self._name, "description": self._description, "options": options}
+
+        if self.id is not undefined.UNDEFINED:
+            data["id"] = self.id
+
+        return data

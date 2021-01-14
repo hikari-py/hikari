@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
+    from hikari import snowflakes
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
@@ -466,21 +467,28 @@ class EventFactory(abc.ABC):
     # INTERACTION EVENTS #
     ######################
 
+    @abc.abstractmethod
     def deserialize_interaction_create_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: typing.Optional[gateway_shard.GatewayShard],
+        payload: data_binding.JSONObject,
+        *,
+        application_id: snowflakes.Snowflake,
     ) -> interaction_events.InteractionCreateEvent:
         """Parse a raw payload from Discord into a interaction create event object.
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
-            The shard that emitted this event.
+        shard : typing.Optional[hikari.api.shard.GatewayShard]
+            The shard that emitted this event if applicable else `builtins.None .
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        application_id : hikari.snowflakes.Snowflake
+            ID of the application this event is tied to.
 
         Returns
         -------
-        hikari.events.member_events.MemberCreateEvent
+        hikari.events.interaction_events.InteractionCreateEvent
             The parsed interaction create event object.
         """
 

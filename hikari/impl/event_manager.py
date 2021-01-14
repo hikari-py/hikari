@@ -32,6 +32,7 @@ import random
 import typing
 
 from hikari import channels
+from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
@@ -59,11 +60,34 @@ def _fixed_size_nonce() -> str:
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache",)
+    __slots__: typing.Sequence[str] = ("_application_id", "_application_id_lock", "_cache")
 
-    def __init__(self, app: traits.BotAware, /, *, cache: typing.Optional[cache_.MutableCache] = None) -> None:
+    def __init__(
+        self,
+        app: traits.BotAware,
+        /,
+        *,
+        application_id: typing.Optional[snowflakes.Snowflakeish] = None,
+        cache: typing.Optional[cache_.MutableCache] = None,
+    ) -> None:
+        self._application_id = snowflakes.Snowflake(application_id) if application_id is not None else None
+        self._application_id_lock = asyncio.Lock()
         self._cache = cache
         super().__init__(app=app)
+
+    async def _fetch_application_id(self) -> snowflakes.Snowflake:
+        async with self._application_id_lock:
+            if self._application_id is not None:
+                return self._application_id
+
+            try:
+                application: guilds.PartialApplication = await self._app.rest.fetch_application()
+
+            except errors.UnauthorizedError:
+                application = (await self._app.rest.fetch_authorization()).application
+
+            self._application_id = application.id
+            return self._application_id
 
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
@@ -468,4 +492,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
-        await self.dispatch(self._app.event_factory.deserialize_interaction_create_event(shard, payload))
+        application_id = self._application_id or await self._fetch_application_id()
+        await self.dispatch(
+            self._app.event_factory.deserialize_interaction_create_event(shard, payload, application_id=application_id)
+        )

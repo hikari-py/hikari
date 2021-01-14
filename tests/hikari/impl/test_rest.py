@@ -281,6 +281,7 @@ class TestRESTApp:
 
     def test_acquire(self, rest_app):
         mock_event_loop = object()
+        mock_application = object()
         rest_app._event_loop = mock_event_loop
 
         stack = contextlib.ExitStack()
@@ -289,9 +290,10 @@ class TestRESTApp:
         stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
 
         with stack:
-            rest_app.acquire(token="token", token_type="Type")
+            rest_app.acquire(token="token", token_type="Type", application=mock_application)
 
         mock_client.assert_called_once_with(
+            application=mock_application,
             cache=None,
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
@@ -346,6 +348,7 @@ def mock_cache():
 @pytest.fixture()
 def rest_client(rest_client_class, mock_cache):
     obj = rest_client_class(
+        application=None,
         cache=mock_cache,
         http_settings=mock.Mock(spec=config.HTTPSettings),
         max_rate_limit=float("inf"),
@@ -412,6 +415,7 @@ class TestRESTClientImpl:
     def test__init__passes_max_rate_limit(self):
         with mock.patch.object(buckets, "RESTBucketManager") as bucket:
             rest.RESTClientImpl(
+                application=None,
                 cache=None,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
@@ -458,6 +462,7 @@ class TestRESTClientImpl:
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
+            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -473,6 +478,7 @@ class TestRESTClientImpl:
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
+            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -502,6 +508,7 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
+            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -516,6 +523,7 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
+            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -621,32 +629,6 @@ class TestRESTClientImpl:
 
         with pytest.raises(errors.ComponentStateConflictError):
             assert rest_client._acquire_tcp_connector() is tcp_connector_mock
-
-    @pytest.mark.parametrize(
-        ("function_input", "expected_output"),
-        [
-            ((True, True, True, True), {"parse": ["everyone", "users", "roles"], "replied_user": True}),
-            ((False, False, False, False), {"parse": []}),
-            ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), {"parse": []}),
-            ((undefined.UNDEFINED, True, True, True), {"parse": ["roles", "users"], "replied_user": True}),
-            ((False, False, [123], [456]), {"parse": [], "users": ["123"], "roles": ["456"]}),
-            (
-                (True, True, [123, "123", 987], ["213", "456", 456]),
-                {"parse": ["everyone"], "users": ["123", "987"], "roles": ["213", "456"], "replied_user": True},
-            ),
-        ],
-    )
-    def test__generate_allowed_mentions(self, rest_client, function_input, expected_output):
-        returned = rest_client._generate_allowed_mentions(*function_input)
-        for k, v in expected_output.items():
-            if isinstance(v, list):
-                returned[k] = sorted(v)
-
-        for k, v in expected_output.items():
-            if isinstance(v, list):
-                expected_output[k] = sorted(expected_output[k])
-
-        assert returned == expected_output
 
     @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),

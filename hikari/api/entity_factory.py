@@ -953,14 +953,54 @@ class EntityFactory(abc.ABC):
     # INTERACTION MODELS #
     ######################
 
+    @abc.abstractmethod
     def deserialize_command(self, payload: data_binding.JSONObject) -> interaction_models.Command:
-        raise NotImplementedError
+        """Parse a raw payload from Discord into a command object.
 
-    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
-        raise NotImplementedError
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
 
+        Returns
+        -------
+        hikari.interaction_models.Command
+            The deserialized command object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_interaction(
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+    ) -> interaction_models.PartialInteraction:
+        """Parse a raw payload from Discord into a interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+        application_id : hikari.snowflakes.Snowflake
+            ID of the application this interaction is tied to.
+
+        Returns
+        -------
+        hikari.interaction_models.PartialInteraction
+            The deserialized interaction object.
+        """
+
+    @abc.abstractmethod
     def serialize_command_option(self, option: interaction_models.CommandOption) -> data_binding.JSONObject:
-        raise NotImplementedError
+        """Serialize a command option object to a json serializable dict.
+
+        Parameters
+        ----------
+        option: interaction_models.CommandOption
+            The command option object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the command option.
+        """
 
     #################
     # INVITE MODELS #

@@ -76,6 +76,7 @@ from hikari.impl.bot import BotApp
 from hikari.impl.rest import ClientCredentialsStrategy
 from hikari.impl.rest import RESTApp
 from hikari.intents import *
+from hikari.interactions import *
 from hikari.invites import *
 from hikari.iterators import *
 from hikari.messages import *

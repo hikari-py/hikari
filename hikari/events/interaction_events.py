@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
+# Copyright (c) 2021 davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,15 +20,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""TODO: this"""
-
+"""Events that fire when Interactions are modified."""
 from __future__ import annotations
+
+__slots__: typing.Sequence[str] = ["InteractionCreateEvent"]
 
 import typing
 
 import attr
 
-from hikari.events import shard_events
+from hikari.events import base_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
@@ -38,11 +40,27 @@ if typing.TYPE_CHECKING:
 
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
-class InteractionCreateEvent(shard_events.ShardEvent):
+class InteractionCreateEvent(base_events.Event):
+    """Event fired when an interaction is created."""
+
     app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
+    shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    """Shard that received this event.
+
+    Returns
+    -------
+    typing.Optional[hikari.api.shard.GatewayShard]
+        The shard that triggered the event. Will be `builtins.None` for events
+        triggered by a REST server.
+    """
 
     interaction: interactions.PartialInteraction = attr.ib(eq=True, hash=True, repr=True)
+    """Interaction that this event is related to.
+
+    Returns
+    -------
+    hikari.interactions.PartialInteraction
+        Object of the interaction that this event is related to.
+    """
