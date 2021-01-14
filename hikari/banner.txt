@@ -1,5 +1,5 @@
 
-  ${bold_red}oooo         o8o  oooo                            o8o      ${reset}${bold_white} 光 v${hikari_version} ${thin_white}[${hikari_git_sha1}]${reset}
+  ${bold_red}oooo         o8o  oooo                            o8o      ${reset}${bold_white} 光 ${hikari_version} ${thin_white}[${hikari_git_sha1}]${reset}
   ${red}`888         `"'  `888                            `"'       ${reset}${bold_white}${hikari_copyright}${thin_white} - ${hikari_license} license${reset}
   ${yellow} 888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo       ${reset}${bold_white}interpreter:   ${thin_white}${python_implementation} ${python_version}${reset}
   ${green} 888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888       ${reset}${bold_white}running on:    ${thin_white}${system_description}${reset}
