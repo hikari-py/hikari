@@ -649,6 +649,19 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         """
         return self.presence.guild_id
 
+    def get_user(self) -> typing.Optional[users.User]:
+        """Get the full cached user, if it is available.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.User]
+            The full cached user, or `builtins.None` if not cached.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_user(self.user_id)
+
     async def fetch_user(self) -> users.User:
         """Perform an API call to fetch the user this event concerns.
 

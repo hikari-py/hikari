@@ -614,7 +614,9 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
+        assert channel is None or isinstance(
+            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
+        ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
         return channel
 
     @property
