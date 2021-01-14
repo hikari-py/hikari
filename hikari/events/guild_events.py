@@ -214,6 +214,20 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The voice states active in the guild.
     """
 
+    request_nonce: typing.Optional[str] = attr.ib(repr=False, default=None)
+    """Nonce used to request the guild chunks.
+
+    This will be `builtins.None` if no chunks were requested.
+
+    !!! note
+        This is a syntetic field.
+
+    Returns
+    -------
+    typing.Optional[builtins.str]
+        The nonce used to request the guild chunks.
+    """
+
     @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.

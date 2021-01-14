@@ -34,7 +34,6 @@ __all__: typing.List[str] = [
     "EventFactoryAware",
     "ExecutorAware",
     "IntentsAware",
-    "ChunkerAware",
     "NetworkSettingsAware",
     "RESTAware",
     "ShardAware",
@@ -58,7 +57,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_dispatcher
     from hikari.api import event_factory as event_factory_
-    from hikari.api import guild_chunker
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
@@ -121,28 +119,6 @@ class NetworkSettingsAware(typing.Protocol):
         -------
         hikari.config.ProxySettings
             The proxy settings in use.
-        """
-        raise NotImplementedError
-
-
-@typing.runtime_checkable
-class ChunkerAware(typing.Protocol):
-    """Structural supertype for a guild chunker-aware object.
-
-    These are able to request member chunks for guilds via the gateway to
-    retrieve mass member and presence information in bulk.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    def chunker(self) -> guild_chunker.GuildChunker:
-        """Return the guild chunker component.
-
-        Returns
-        -------
-        hikari.api.chunker.GuildChunker
-            The guild chunker component.
         """
         raise NotImplementedError
 
@@ -452,7 +428,7 @@ class CacheAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, ChunkerAware, CacheAware, typing.Protocol):
+class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, CacheAware, typing.Protocol):
     """Structural supertype for a component that is aware of all internals."""
 
     __slots__: typing.Sequence[str] = ()
