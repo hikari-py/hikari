@@ -220,7 +220,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def member(self) -> guilds.Member:
+    def author(self) -> guilds.Member:
         """Member object of the user that sent the message.
 
         Returns
