@@ -164,6 +164,13 @@ class _UserFields:
     is_system: bool = attr.ib()
 
 
+class _InteractionDeserializeProto(typing.Protocol):
+    def __call__(
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+    ) -> interaction_models.PartialInteraction:
+        raise NotImplementedError
+
+
 class EntityFactoryImpl(entity_factory.EntityFactory):
     """Standard implementation for a serializer/deserializer.
 
@@ -242,11 +249,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
-        self._interaction_type_mapping: typing.Mapping[
-            interaction_models.InteractionType,
-            typing.Callable[[data_binding.JSONObject], interaction_models.PartialInteraction],
-        ] = {
-            interaction_models.InteractionType.PING: self._deserialize_partial_interaction,
+        self._interaction_type_mapping: typing.Mapping[int, _InteractionDeserializeProto] = {
             interaction_models.InteractionType.APPLICATION_COMMAND: self._deserialize_command_interaction,
         }
 
@@ -305,7 +308,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
 
         primary_sku_id = snowflakes.Snowflake(payload["primary_sku_id"]) if "primary_sku_id" in payload else None
-
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -314,9 +316,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot_public=payload.get("bot_public"),
             is_bot_code_grant_required=payload.get("bot_require_code_grant"),
             owner=self.deserialize_user(payload["owner"]),
-            rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
+            rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
-            public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
+            public_key=bytes.fromhex(payload["verify_key"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -331,7 +333,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:
         application_payload = payload["application"]
-        raw_verify_key = application_payload.get("verify_key")
         application = application_models.AuthorizationApplication(
             id=snowflakes.Snowflake(application_payload["id"]),
             name=application_payload["name"],
@@ -340,7 +341,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
-            public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+            public_key=bytes.fromhex(application_payload["verify_key"]),
             terms_of_service_url=application_payload.get("terms_of_service_url"),
             privacy_policy_url=application_payload.get("privacy_policy_url"),
         )
@@ -1156,9 +1157,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             joined_at=joined_at,
             nickname=payload.get("nick"),
             premium_since=premium_since,
-            is_deaf=payload["deaf"] if "deaf" in payload else undefined.UNDEFINED,
-            is_mute=payload["mute"] if "mute" in payload else undefined.UNDEFINED,
-            is_pending=payload["pending"] if "pending" in payload else undefined.UNDEFINED,
+            is_deaf=payload.get("deaf", undefined.UNDEFINED),
+            is_mute=payload.get("mute", undefined.UNDEFINED),
+            is_pending=payload.get("pending", undefined.UNDEFINED),
         )
 
     def deserialize_role(
@@ -1336,7 +1337,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(application_id) if application_id is not None else None,
             widget_channel_id=snowflakes.Snowflake(widget_channel_id) if widget_channel_id is not None else None,
             system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
-            is_widget_enabled=payload["widget_enabled"] if "widget_enabled" in payload else None,
+            is_widget_enabled=payload.get("widget_enabled"),
             system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
             rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
             max_video_channel_users=max_video_channel_users,
@@ -1416,7 +1417,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
-        is_large = payload["large"] if "large" in payload else None
+        is_large = payload.get("large")
         joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
         member_count = int(payload["member_count"]) if "member_count" in payload else None
 
@@ -1617,7 +1618,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=interaction_models.OptionType(payload["type"]),
             name=payload["name"],
             description=payload["description"],
-            is_first=payload.get("default", False),
             is_required=payload.get("required", False),
             choices=choices,
             options=suboptions,
@@ -1629,7 +1629,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
         return interaction_models.Command(
-            app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
@@ -1649,7 +1648,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_command_interaction(
-        self, payload: data_binding.JSONObject
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
     ) -> interaction_models.CommandInteraction:
         data_payload = payload["data"]
         options: typing.Optional[typing.List[interaction_models.CommandInteractionOption]] = None
@@ -1659,49 +1658,73 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         data = interaction_models.CommandInteractionData(
             id=snowflakes.Snowflake(data_payload["id"]), name=data_payload["name"], options=options
         )
-        guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+        guild_id: typing.Optional[snowflakes.Snowflake] = None
+        member: typing.Optional[interaction_models.InteractionMember] = None
+        if member_payload := payload.get("member"):
+            guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+            role_ids = [snowflakes.Snowflake(role_id) for role_id in member_payload["roles"]]
+            # If Discord ever does start including this here without warning we don't want to duplicate the entry.
+            if guild_id not in role_ids:
+                role_ids.append(guild_id)
+
+            premium_since: typing.Optional[datetime.datetime] = None
+            if (raw_premium_since := member_payload.get("premium_since")) is not None:
+                premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
+
+            # TODO: deduplicate member unmarshalling logic
+            member = interaction_models.InteractionMember(
+                user=self.deserialize_user(member_payload["user"]),
+                guild_id=guild_id,
+                role_ids=role_ids,
+                joined_at=time.iso8601_datetime_string_to_datetime(member_payload["joined_at"]),
+                premium_since=premium_since,
+                nickname=member_payload.get("nick"),
+                is_deaf=member_payload.get("deaf", undefined.UNDEFINED),
+                is_mute=member_payload.get("mute", undefined.UNDEFINED),
+                is_pending=member_payload.get("pending", undefined.UNDEFINED),
+                permissions=permission_models.Permissions(int(member_payload["permissions"])),
+            )
 
         return interaction_models.CommandInteraction(
             app=self._app,
+            application_id=application_id,
             id=snowflakes.Snowflake(payload["id"]),
             type=interaction_models.InteractionType(payload["type"]),
             data=data,
             guild_id=guild_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
-            # TODO: InteractionMember rather than Member
-            member=self.deserialize_member(payload["member"], guild_id=guild_id),
+            member=member,
             token=payload["token"],
             version=payload["version"],
         )
 
-    def _deserialize_partial_interaction(
-        self, payload: data_binding.JSONObject
+    def deserialize_interaction(
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
     ) -> interaction_models.PartialInteraction:
-        return interaction_models.PartialInteraction(
-            app=self._app,
-            id=snowflakes.Snowflake(payload["id"]),
-            type=interaction_models.InteractionType(payload["type"]),
-            token=payload["token"],
-            version=payload["version"],
-        )
-
-    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
         interaction_type = interaction_models.InteractionType(payload["type"])
 
         try:
             deserialize = self._interaction_type_mapping[interaction_type]
 
         except KeyError:
-            raise ValueError(f"Cannot deserialize unknown interaction type {interaction_type!r}") from None
+            return interaction_models.PartialInteraction(
+                app=self._app,
+                id=snowflakes.Snowflake(payload["id"]),
+                type=interaction_type,
+                token=payload["token"],
+                version=payload["version"],
+                application_id=application_id,
+            )
 
-        return deserialize(payload)
+        return deserialize(payload, application_id=application_id)
 
     def serialize_command_option(self, option: interaction_models.CommandOption) -> data_binding.JSONObject:
         payload: data_binding.JSONObject = {
             "type": option.type,
             "name": option.name,
             "description": option.description,
-            "default": option.is_first,
             "required": option.is_required,
         }
 
@@ -1849,14 +1872,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             author=author,
             member=member,
-            content=payload["content"] if "content" in payload else undefined.UNDEFINED,
+            content=payload.get("content", undefined.UNDEFINED),
             timestamp=timestamp,
             edited_timestamp=edited_timestamp,
-            is_tts=payload["tts"] if "tts" in payload else undefined.UNDEFINED,
+            is_tts=payload.get("tts", undefined.UNDEFINED),
             attachments=attachments,
             embeds=embeds,
             reactions=reactions,
-            is_pinned=payload["pinned"] if "pinned" in payload else undefined.UNDEFINED,
+            is_pinned=payload.get("pinned", undefined.UNDEFINED),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED,
             type=message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED,
             activity=activity,
@@ -1865,7 +1888,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             stickers=stickers,
-            nonce=payload["nonce"] if "nonce" in payload else undefined.UNDEFINED,
+            nonce=payload.get("nonce", undefined.UNDEFINED),
             # We initialize these next.
             mentions=NotImplemented,
         )

@@ -28,7 +28,6 @@ __all__: typing.List[str] = ["GatewayShardImpl"]
 
 import asyncio
 import contextlib
-import json
 import logging
 import platform
 import sys
@@ -156,7 +155,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: aiohttp.typedefs.JSONDecoder = json.loads,
+        loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         timeout: typing.Optional[float] = None,
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
@@ -170,7 +169,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         data: data_binding.JSONObject,
         compress: typing.Optional[int] = None,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
+        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
     ) -> None:
         pl = dumps(data)
         if self.logger.isEnabledFor(ux.TRACE):
@@ -534,7 +533,7 @@ class GatewayShardImpl(shard.GatewayShard):
         data: data_binding.JSONObject,
         compress: typing.Optional[int] = None,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
+        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
     ) -> None:
         await self._total_rate_limit.acquire()
 

@@ -64,7 +64,8 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import event_stream
     from hikari import guilds
-    from hikari import users as users_
+    from hikari import snowflakes
+    from hikari import users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
@@ -100,6 +101,10 @@ class BotApp(traits.BotAware):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
+    application : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+        Object or ID of the application this bot instance should be associated
+        with. If left as `builtins.None` then the client will try to work this
+        value out based on `token`.
     banner : typing.Optional[builtins.str]
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
@@ -235,6 +240,7 @@ class BotApp(traits.BotAware):
         token: str,
         *,
         allow_color: bool = True,
+        application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]] = None,
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
@@ -246,6 +252,16 @@ class BotApp(traits.BotAware):
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
+        if application is not None:
+            application = snowflakes.Snowflake(application)
+
+        elif token is not None:
+            try:
+                application = applications.get_token_id(token)
+
+            except ValueError:
+                pass
+
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
         self.print_banner(banner, allow_color, force_color)
@@ -265,7 +281,7 @@ class BotApp(traits.BotAware):
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Event handling
-        self._event_manager = event_manager_impl.EventManagerImpl(self, cache=self._cache)
+        self._event_manager = event_manager_impl.EventManagerImpl(self, application_id=application, cache=self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
@@ -277,7 +293,8 @@ class BotApp(traits.BotAware):
         self._voice = voice_impl.VoiceComponentImpl(self)
 
         # RESTful API.
-        self._rest = rest_impl.RESTClientImpl(
+        self._rest = rest_impl.RESTClientImpl(  # noqa: S106,S107 - Possible hardcoded password: 'Bot'
+            application=application,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
             connector_owner=True,
             entity_factory=self._entity_factory,

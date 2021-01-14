@@ -260,13 +260,13 @@ class TestEntityFactoryImpl:
                 "icon": "3123123",
                 "description": "I am an application",
                 "summary": "not a blank string",
+                "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
                 "owner": owner_payload,
             }
         )
         assert application.is_bot_public is None
         assert application.is_bot_code_grant_required is None
         assert application.rpc_origins is None
-        assert application.public_key is None
         assert application.team is None
         assert application.guild_id is None
         assert application.primary_sku_id is None
@@ -284,6 +284,7 @@ class TestEntityFactoryImpl:
                 "description": "I am an application",
                 "summary": "not a blank string",
                 "team": None,
+                "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
                 "owner": owner_payload,
             }
         )

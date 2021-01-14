@@ -43,6 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import files
     from hikari import guilds
+    from hikari import interactions
     from hikari import invites
     from hikari import iterators
     from hikari import messages as messages_
@@ -1029,6 +1030,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        # TODO: more concise typing
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1239,6 +1241,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        # TODO: more concise typing
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -2082,8 +2085,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def execute_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        # TODO: update docs
+        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
         token: str,
+        # TODO: more concise typing
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -2282,9 +2287,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        # TODO: update docs
+        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
+        # TODO: more concise typing
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -2421,7 +2428,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        # TODO: update docs
+        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
@@ -5851,7 +5859,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to sync a template in
+            The guild to sync a template in.
         template : hikari.templates.Templateish
             Object or ID of the template to sync.
 
@@ -5869,6 +5877,405 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If the guild or template is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_command(
+        self,
+        command: snowflakes.SnowflakeishOr[interactions.Command],
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def create_application_command(
+        self,
+        name: str,
+        description: str,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
+        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        """Create an application command.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The case-insensitive of the command.
+        description : builtins.str
+            The description to set for the command.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the specific guild this should be made for.
+            If left as `hikari.undefined.UNDEFINED` then this call will create
+            a global command rather than a guild specific one.
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.CommandOption]]
+            A sequence of up to 10 options for this command.
+
+        Returns
+        -------
+        hikari.interactions.Command
+            Object of the created command.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_commands(
+        self,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> typing.Sequence[interactions.Command]:
+        """Fetch the commands set for an application.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the commands for. If left as
+            `hikari.undefined.UNDEFINED` then this will only return the global
+            commands, otherwise this will only return the commands set exclusively
+            for the specific guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.interactions.Command]
+            A sequence of the commands declared for the provided application.
+            This will exclusively either contain the commands set for a specific
+            guild if `guild` is provided or the global commands if not.
+        """
+
+    @abc.abstractmethod
+    async def set_application_commands(
+        self,
+        commands: typing.Sequence[special_endpoints.CommandBuilder],
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> typing.Sequence[interactions.Command]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def delete_application_command(
+        self,
+        command: snowflakes.SnowflakeishOr[interactions.Command],
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> None:
+        """Delete a registered application command.
+
+        Parameters
+        ----------
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
+            Object or ID of the command to delete.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to delete a command for if this is a guild
+            specific command. Leave this as `hikari.undefined.UNDEFINED` to
+            delete a global command.
+        """
+
+    @abc.abstractmethod
+    async def edit_application_command(
+        self,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        """Edit a registered application command.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to edit a command for if this is a guild
+            specific command. Leave this as `hikari.undefined.UNDEFINED` to delete
+            a global command.
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            The name to set for the command. Leave as `hikari.undefined.UNDEFINED`
+            to not change.
+        description : hikari.undefined.UndefinedOr[builtins.str]
+            The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
+            to not change.
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.CommandOption]]
+            A sequence of up to 10 options to set for this command. Leave this as
+            `hikari.undefined.UNDEFINED` to not change.
+
+        Returns
+        -------
+        hikari.interactions.Command
+            The created command object.
+        """
+
+    # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
+    # See https://github.com/discord/discord-api-docs/issues/2490
+    @abc.abstractmethod
+    async def fetch_command_response(self, token: str, /) -> messages_.Message:
+        raise NotImplementedError
+
+    @abc.abstractmethod  # TODO: will this endpoint ever return a message?
+    async def create_command_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
+        token: str,
+        response_type: interactions.InteractionResponseType,
+        # TODO: more concise type
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+    ) -> None:
+        """Create the initial response for a interaction.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+        response_type : hikari.interactions.InteractionResponseType
+            The type of interaction response this is.
+
+        Other Parameters
+        ----------------
+        content : hikari.undefined.UndefinedOr[typing.Any]
+            If provided, the message contents. If
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.embeds.Embed` and no `embed` nor
+            no `embeds` kwarg is provided, then this will instead
+            update the embed. This allows for simpler syntax when
+            sending an embed alone.
+
+            Likewise, if this is a `hikari.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embeds.
+        tts : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the message will be read out by a screen
+            reader using Discord's TTS (text-to-speech) system.
+        nonce : hikari.undefined.UndefinedOr[builtins.str]
+            An arbitrary identifier to associate with the message. This
+            can be used to identify it later in received events. If provided,
+            this must be less than 32 bytes. If not provided, then
+            a null value is placed on the message instead. All users can
+            see this value.
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+            If provided, and `builtins.True`, all user mentions will be detected.
+            If provided, and `builtins.False`, all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
+            If provided, and `builtins.True`, all role mentions will be detected.
+            If provided, and `builtins.False`, all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
+
+        Raises
+        ------
+        builtins.ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        builtins.TypeError
+            If both `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    async def edit_command_response(
+        self,
+        token: str,
+        # TODO: more concise type
+        content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Edit the initial response to a command interaction.
+
+        Parameters
+        ----------
+        token : builtins.str
+            The interaction's token.
+
+        Other Parameters
+        ----------------
+        content : hikari.undefined.UndefinedNoneOr[typing.Any]
+            If provided, the message contents. If
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `builtins.str`.
+
+            If this is a `hikari.embeds.Embed` and no `embed` nor
+            no `embeds` kwarg is provided, then this will instead
+            update the embed. This allows for simpler syntax when
+            sending an embed alone.
+
+            Likewise, if this is a `hikari.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+        embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
+            If provided, the message embeds.
+        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+            If provided, and `builtins.True`, all user mentions will be detected.
+            If provided, and `builtins.False`, all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
+            If provided, and `builtins.True`, all role mentions will be detected.
+            If provided, and `builtins.False`, all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        !!! note
+            There is currently no documented way to clear attachments or edit
+            attachments from a previously sent message on Discord's API. To
+            do this, delete the message and re-send it. This also applies
+            to embed attachments.
+
+        !!! warning
+            If you specify one of `mentions_everyone`, `user_mentions`, or
+            `role_mentions`, then all others will default to `builtins.False`,
+            even if they were enabled previously.
+
+            This is a limitation of Discord's design. If in doubt, specify all three of
+            them each time.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The edited message.
+
+        Raises
+        ------
+        builtins.ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        builtins.TypeError
+            If both `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; users in `user_mentions` not being
+            mentioned in the message content; roles in `role_mentions` not
+            being mentioned in the message content.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or the message are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    async def delete_command_response(self, token: str, /) -> None:
+        """Delete the initial response of an interaction.
+
+        Parameters
+        ----------
+        token : builtins.str
+            The interaction's token.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

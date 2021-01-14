@@ -482,8 +482,8 @@ class Application(guilds.PartialApplication):
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.ib(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    public_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False, repr=False)
-    """The key used for verifying interaction and GameSDK payload signatures."""
+    public_key: bytes = attr.ib(eq=False, hash=False, repr=False)
+    """The key used for verifying interaction and GameSDK payload signatures."""  # TODO: update these docs
 
     team: typing.Optional[Team] = attr.ib(eq=False, hash=False, repr=False)
     """The team this application belongs to.
@@ -563,7 +563,7 @@ class Application(guilds.PartialApplication):
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to `AuthorizationInformation`."""
 
-    public_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False, repr=False)
+    public_key: bytes = attr.ib(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
