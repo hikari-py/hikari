@@ -20,30 +20,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import asyncio
+
 import mock
 import pytest
 
 from hikari import channels
 from hikari import intents
 from hikari.events import shard_events
-from hikari.impl import stateful_event_manager
+from hikari.impl import event_manager
+from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
 
-class TestStatefulEventManagerImpl:
+class TestEventManagerImpl:
     @pytest.fixture()
     def app(self):
-        return mock.Mock()
+        return mock.Mock(intents=intents.Intents.ALL)
 
     @pytest.fixture()
     def shard(self):
-        return mock.Mock()
+        return mock.Mock(id=987)
 
     @pytest.fixture()
     def event_manager(self, app):
-        obj = hikari_test_helpers.mock_class_namespace(stateful_event_manager.StatefulEventManagerImpl, slots_=False)(
-            app, mock.Mock(), intents.Intents.ALL
-        )
+        obj = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(app, mock.Mock())
 
         obj.dispatch = mock.AsyncMock()
         return obj
@@ -148,19 +149,73 @@ class TestStatefulEventManagerImpl:
     async def test_on_guild_create(self, event_manager, shard, app):
         payload = {}
         event = mock.Mock(
-            guild=mock.Mock(id=123),
+            guild=mock.Mock(id=123, is_large=False),
             channels={"TestChannel": 456},
             emojis={"TestEmoji": 789},
             roles={"TestRole": 1234},
             members={"TestMember": 5678},
             presences={"TestPresence": 9012},
             voice_states={"TestState": 345},
+            request_nonce=None,
         )
 
         event_manager._app.event_factory.deserialize_guild_create_event.return_value = event
         shard.request_guild_members = mock.AsyncMock()
 
         await event_manager.on_guild_create(shard, payload)
+
+        assert event.request_nonce is None
+        shard.request_guild_members.assert_not_called()
+
+        event_manager._cache.update_guild.assert_called_once_with(event.guild)
+
+        event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_guild_channel.assert_called_once_with(456)
+
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_emoji.assert_called_once_with(789)
+
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_role.assert_called_once_with(1234)
+
+        event_manager._cache.clear_members_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_member.assert_called_once_with(5678)
+
+        event_manager._cache.clear_presences_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_presence.assert_called_once_with(9012)
+
+        event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_voice_state.assert_called_once_with(345)
+
+        event_manager._app.event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_guild_create_when_request_chunks(self, event_manager, shard, app):
+        payload = {}
+        event = mock.Mock(
+            guild=mock.Mock(id=123, is_large=True),
+            channels={"TestChannel": 456},
+            emojis={"TestEmoji": 789},
+            roles={"TestRole": 1234},
+            members={"TestMember": 5678},
+            presences={"TestPresence": 9012},
+            voice_states={"TestState": 345},
+            request_nonce=None,
+        )
+
+        event_manager._app.event_factory.deserialize_guild_create_event.return_value = event
+        shard.request_guild_members = mock.Mock()
+
+        with mock.patch.object(asyncio, "create_task") as create_task:
+            with mock.patch.object(time, "uuid", return_value="uuid") as uuid:
+                await event_manager.on_guild_create(shard, payload)
+
+        uuid.assert_called_once_with()
+        nonce = "987.uuid"
+        assert event.request_nonce == nonce
+        shard.request_guild_members.assert_called_once_with(event.guild, include_presences=True, nonce=nonce)
+        create_task.assert_called_once_with(shard.request_guild_members(), name="987:123 guild create members request")
 
         event_manager._cache.update_guild.assert_called_once_with(event.guild)
 
@@ -351,16 +406,13 @@ class TestStatefulEventManagerImpl:
     async def test_on_guild_members_chunk(self, event_manager, shard, app):
         payload = {}
         event = mock.Mock(members={"TestMember": 123}, presences={"TestPresences": 456})
-
         event_manager._app.event_factory.deserialize_guild_member_chunk_event.return_value = event
-        event_manager._app.chunker.consume_chunk_event = mock.AsyncMock()
 
         await event_manager.on_guild_members_chunk(shard, payload)
 
         event_manager._cache.set_member.assert_called_once_with(123)
         event_manager._cache.set_presence.assert_called_once_with(456)
         event_manager._app.event_factory.deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
-        event_manager._app.chunker.consume_chunk_event.assert_awaited_once_with(event)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio

@@ -54,7 +54,7 @@
                 def decorator(fn):
                     @functools.wraps(fn)
                     async def wrapper(event):
-                        if not event.message.author.is_bot and event.message.content.startswith(name):
+                        if event.is_human and event.message.content.startswith(name):
                             await fn(event)
 
                     return wrapper

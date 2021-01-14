@@ -119,10 +119,6 @@ class TestRestProvider:
         return StubRestClient()
 
     @pytest.fixture()
-    def cache(self):
-        return mock.Mock()
-
-    @pytest.fixture()
     def executor(self):
         return mock.Mock()
 
@@ -131,8 +127,8 @@ class TestRestProvider:
         return mock.Mock()
 
     @pytest.fixture()
-    def rest_provider(self, rest_client, cache, executor, entity_factory):
-        return rest._RESTProvider(lambda: entity_factory, executor, lambda: cache, lambda: rest_client)
+    def rest_provider(self, rest_client, executor, entity_factory):
+        return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
 
     def test_rest_property(self, rest_provider, rest_client):
         assert rest_provider.rest == rest_client
@@ -146,14 +142,8 @@ class TestRestProvider:
     def test_entity_factory_property(self, rest_provider, entity_factory):
         assert rest_provider.entity_factory == entity_factory
 
-    def test_cache_property(self, rest_provider, cache):
-        assert rest_provider.cache == cache
-
     def test_executor_property(self, rest_provider, executor):
         assert rest_provider.executor == executor
-
-    def test_me_property(self, rest_provider, cache):
-        assert rest_provider.me == cache.get_me()
 
 
 ###########
@@ -251,7 +241,6 @@ class TestRESTApp:
         assert _entity_factory.call_count == 1
         factory = _entity_factory.call_args_list[0][0][0]
         factory.entity_factory
-        factory.cache
         factory.rest
 
     def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_app):

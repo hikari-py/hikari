@@ -138,8 +138,9 @@ def create_client_session(
         `builtins.True` to trust anything in environment variables
         and the `netrc` file, `builtins.False` to ignore it.
     ws_response_cls : typing.Type[aiohttp.ClientWebSocketResponse]
-        `builtins.True` to default to throwing exceptions if a request
-        fails, or `builtins.False` to default to not.
+        The websocket response class to use.
+
+        Defaults to `aiohttp.ClientWebSocketResponse`.
 
     Returns
     -------

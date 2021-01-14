@@ -93,6 +93,9 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild this event relates to, or `builtins.None` if not known.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
@@ -209,6 +212,20 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     -------
     typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
         The voice states active in the guild.
+    """
+
+    request_nonce: typing.Optional[str] = attr.ib(repr=False, default=None)
+    """Nonce used to request the guild chunks.
+
+    This will be `builtins.None` if no chunks were requested.
+
+    !!! note
+        This is a syntetic field.
+
+    Returns
+    -------
+    typing.Optional[builtins.str]
+        The nonce used to request the guild chunks.
     """
 
     @property
@@ -632,8 +649,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         """
         return self.presence.guild_id
 
-    # TODO: make this nicer, as it is inconsistent with stuff elsewhere I guess.
-    def get_cached_user(self) -> typing.Optional[users.User]:
+    def get_user(self) -> typing.Optional[users.User]:
         """Get the full cached user, if it is available.
 
         Returns
@@ -641,6 +657,9 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         typing.Optional[hikari.users.User]
             The full cached user, or `builtins.None` if not cached.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
         return self.app.cache.get_user(self.user_id)
 
     async def fetch_user(self) -> users.User:

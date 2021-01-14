@@ -276,10 +276,7 @@ class HikariVersion(distutils.version.StrictVersion):
             self.prerelease = None
 
 
-async def check_for_updates(
-    http_settings: config.HTTPSettings,
-    proxy_settings: config.ProxySettings,
-) -> None:
+async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
     """Perform a check for newer versions of the library, logging any found."""
     if about.__git_sha1__.casefold() == "head":
         # We are not in a PyPI release, return
@@ -313,7 +310,7 @@ async def check_for_updates(
                     # Don't encourage the user to upgrade from a stable to a dev release...
                     continue
 
-                if v.version == this_version.version:
+                if v.version == this_version.version and v.prerelease == this_version.prerelease:
                     continue
 
                 if v > this_version:

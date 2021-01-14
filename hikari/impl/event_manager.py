@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["StatefulEventManagerImpl"]
+__all__: typing.List[str] = ["EventManagerImpl"]
 
 import asyncio
 import typing
@@ -36,6 +36,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
@@ -44,19 +45,14 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
 
 
-class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
+class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache",)
+    __slots__: typing.Sequence[str] = ("_cache", "_cache_settings")
 
-    def __init__(
-        self,
-        app: traits.BotAware,
-        cache: cache_.MutableCache,
-        intents: intents_.Intents,
-    ) -> None:
+    def __init__(self, app: traits.BotAware, cache: cache_.MutableCache) -> None:
         self._cache = cache
-        super().__init__(app=app, intents=intents)
+        super().__init__(app=app)
 
     async def on_connected(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
         """Handle connection events.
@@ -150,10 +146,14 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         # When intents are enabled discord will only send other member objects on the guild create
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
-        if (event.guild.is_large or not presences_declared) and members_declared:
+        if members_declared and (event.guild.is_large or not presences_declared):
             # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
-            coroutine = shard.request_guild_members(event.guild, include_presences=bool(presences_declared))
-            asyncio.create_task(coroutine, name=f"{event.shard.id}:{event.guild.id} guild create members request")
+            nonce = f"{shard.id}.{time.uuid()}"
+            event.request_nonce = nonce
+            coroutine = shard.request_guild_members(
+                event.guild, include_presences=bool(presences_declared), nonce=nonce
+            )
+            asyncio.create_task(coroutine, name=f"{shard.id}:{event.guild.id} guild create members request")
 
         await self.dispatch(event)
 
@@ -258,7 +258,6 @@ class StatefulEventManagerImpl(event_manager_base.EventManagerBase):
         for presence in event.presences.values():
             self._cache.set_presence(presence)
 
-        await self._app.chunker.consume_chunk_event(event)
         await self.dispatch(event)
 
     async def on_guild_role_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:

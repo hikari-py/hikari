@@ -33,7 +33,7 @@ __all__: typing.List[str] = [
     "EntityFactoryAware",
     "EventFactoryAware",
     "ExecutorAware",
-    "ChunkerAware",
+    "IntentsAware",
     "NetworkSettingsAware",
     "RESTAware",
     "ShardAware",
@@ -54,7 +54,6 @@ if typing.TYPE_CHECKING:
     from hikari import intents as intents_
     from hikari import users
     from hikari.api import cache as cache_
-    from hikari.api import chunker as chunker_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_dispatcher
     from hikari.api import event_factory as event_factory_
@@ -95,6 +94,7 @@ This is not expected to return anything.
 """
 
 
+@typing.runtime_checkable
 class NetworkSettingsAware(typing.Protocol):
     """Structural supertype for any component aware of network settings."""
 
@@ -119,43 +119,6 @@ class NetworkSettingsAware(typing.Protocol):
         -------
         hikari.config.ProxySettings
             The proxy settings in use.
-        """
-        raise NotImplementedError
-
-
-@typing.runtime_checkable
-class CacheAware(typing.Protocol):
-    """Structural supertype for a cache-aware object.
-
-    Any cache-aware objects are able to access the Discord application cache.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    def cache(self) -> cache_.Cache:
-        """Return the immutable cache implementation for this object.
-
-        Returns
-        -------
-        hikari.api.cache.Cache
-            The cache component for this object.
-        """
-        raise NotImplementedError
-
-    @property
-    def me(self) -> typing.Optional[users.OwnUser]:
-        """Return the bot user, if known.
-
-        This should be available as soon as the bot has fired the
-        `hikari.events.lifetime_events.StartingEvent`.
-
-        Until then, this may or may not be `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.users.OwnUser]
-            The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError
 
@@ -252,29 +215,25 @@ class EventFactoryAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class ChunkerAware(typing.Protocol):
-    """Structural supertype for a guild chunker-aware object.
-
-    These are able to request member chunks for guilds via the gateway to
-    retrieve mass member and presence information in bulk.
-    """
+class IntentsAware(typing.Protocol):
+    """A component that is aware of the application intents."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def chunker(self) -> chunker_.GuildChunker:
-        """Return the guild chunker component.
+    def intents(self) -> intents_.Intents:
+        """Return the intents registered for the application.
 
         Returns
         -------
-        hikari.api.chunker.GuildChunker
-            The guild chunker component.
+        hikari.intents.Intents
+            The intents registered on this application.
         """
         raise NotImplementedError
 
 
 @typing.runtime_checkable
-class RESTAware(EntityFactoryAware, NetworkSettingsAware, ExecutorAware, CacheAware, typing.Protocol):
+class RESTAware(EntityFactoryAware, NetworkSettingsAware, ExecutorAware, typing.Protocol):
     """Structural supertype for a REST-aware object.
 
     These are able to perform REST API calls.
@@ -317,7 +276,7 @@ class VoiceAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, VoiceAware, typing.Protocol):
+class ShardAware(IntentsAware, NetworkSettingsAware, ExecutorAware, VoiceAware, typing.Protocol):
     """Structural supertype for a shard-aware object.
 
     These will expose a mapping of shards, the intents in use
@@ -356,13 +315,18 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
         raise NotImplementedError
 
     @property
-    def intents(self) -> intents_.Intents:
-        """Return the intents registered for the application.
+    def me(self) -> typing.Optional[users.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
 
         Returns
         -------
-        hikari.intents.Intents
-            The intents registered on this application.
+        typing.Optional[hikari.users.OwnUser]
+            The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError
 
@@ -443,7 +407,28 @@ class ShardAware(NetworkSettingsAware, ExecutorAware, CacheAware, ChunkerAware, 
 
 
 @typing.runtime_checkable
-class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, typing.Protocol):
+class CacheAware(typing.Protocol):
+    """Structural supertype for a cache-aware object.
+
+    Any cache-aware objects are able to access the Discord application cache.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def cache(self) -> cache_.Cache:
+        """Return the immutable cache implementation for this object.
+
+        Returns
+        -------
+        hikari.api.cache.Cache
+            The cache component for this object.
+        """
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, CacheAware, typing.Protocol):
     """Structural supertype for a component that is aware of all internals."""
 
     __slots__: typing.Sequence[str] = ()
