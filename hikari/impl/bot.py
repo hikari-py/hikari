@@ -262,7 +262,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Event handling
-        self._events = event_manager.EventManagerImpl(self, self._cache)
+        self._events = event_manager.EventManagerImpl(self, cache=self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
