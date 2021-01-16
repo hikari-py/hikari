@@ -467,6 +467,12 @@ class TestEventManagerImpl:
         )
 
     @pytest.mark.asyncio
+    async def test_on_guild_integrations_update(self, event_manager, shard):
+        assert await event_manager.on_guild_integrations_update(shard, {}) is None
+
+        event_manager.dispatch.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_on_integration_create(self, event_manager, shard, app):
         payload = {}
         event = mock.Mock()

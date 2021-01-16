@@ -250,6 +250,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         await self.dispatch(event)
 
+    async def on_guild_integrations_update(self, _: gateway_shard.GatewayShard, __: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#guild-integrations-update for more info."""
+        # This is only here to stop this being logged or dispatched as an "unknown event".
+        # This event is made redundant by INTEGRATION_CREATE/DELETE/UPDATE and is thus not parsed or dispatched.
+        return None
+
     async def on_integration_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         event = self._app.event_factory.deserialize_integration_create_event(shard, payload)
         await self.dispatch(event)
