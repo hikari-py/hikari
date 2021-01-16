@@ -275,6 +275,14 @@ class HikariVersion(distutils.version.StrictVersion):
         else:
             self.prerelease = None
 
+    def __str__(self) -> str:
+        vstring = ".".join(map(str, self.version))
+
+        if self.prerelease:
+            vstring = vstring + self.prerelease[0] + str(self.prerelease[1])
+
+        return vstring
+
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
     """Perform a check for newer versions of the library, logging any found."""

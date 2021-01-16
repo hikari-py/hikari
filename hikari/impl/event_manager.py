@@ -149,7 +149,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if members_declared and (event.guild.is_large or not presences_declared):
             # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
             nonce = f"{shard.id}.{time.uuid()}"
-            event.guild_chunk_nonce = nonce
+            event.chunk_nonce = nonce
             coroutine = shard.request_guild_members(
                 event.guild, include_presences=bool(presences_declared), nonce=nonce
             )
