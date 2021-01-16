@@ -27,6 +27,8 @@ from __future__ import annotations
 __all__: typing.List[str] = ["EventManagerImpl"]
 
 import asyncio
+import base64
+import random
 import typing
 
 from hikari import channels
@@ -45,6 +47,13 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.events import guild_events as guild_events
     from hikari.internal import data_binding
+
+
+def _fixed_size_nonce() -> str:
+    # This generates nonces of length 28 for use in member chunking.
+    head = time.monotonic_ns().to_bytes(8, "big")
+    tail = random.getrandbits(92).to_bytes(12, "big")
+    return base64.b64encode(head + tail).decode("ascii")
 
 
 class EventManagerImpl(event_manager_base.EventManagerBase):
@@ -168,7 +177,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             # to chunk small guilds.
             if members_declared and (event.guild.is_large or not presences_declared):
                 # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
-                nonce = f"{shard.id}.{time.uuid()}"
+                nonce = f"{shard.id}.{_fixed_size_nonce()}"
                 event.chunk_nonce = nonce
                 coroutine = shard.request_guild_members(
                     event.guild, include_presences=bool(presences_declared), nonce=nonce

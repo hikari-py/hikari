@@ -30,7 +30,6 @@ from hikari import intents
 from hikari import presences
 from hikari.events import shard_events
 from hikari.impl import event_manager
-from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
 
@@ -270,7 +269,7 @@ class TestEventManagerImpl:
         shard.request_guild_members = mock.Mock()
 
         with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch.object(time, "uuid", return_value="uuid") as uuid:
+            with mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid") as uuid:
                 await event_manager.on_guild_create(shard, payload)
 
         uuid.assert_called_once_with()
