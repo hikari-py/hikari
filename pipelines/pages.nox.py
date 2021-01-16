@@ -74,10 +74,10 @@ def pages(session: nox.Session) -> None:
     )
 
     # Rename `hikari` into `documentation`
-    print("Renaming output dir...")
-    print(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE} -> {config.ARTIFACT_DIRECTORY}/documentation")
-    shutil.rmtree(f"{config.ARTIFACT_DIRECTORY}/documentation", ignore_errors=True)
-    shutil.move(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE}", f"{config.ARTIFACT_DIRECTORY}/documentation")
+    # print("Renaming output dir...")
+    # print(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE} -> {config.ARTIFACT_DIRECTORY}/documentation")
+    # shutil.rmtree(f"{config.ARTIFACT_DIRECTORY}/documentation", ignore_errors=True)
+    # shutil.move(f"{config.ARTIFACT_DIRECTORY}/{config.MAIN_PACKAGE}", f"{config.ARTIFACT_DIRECTORY}/documentation")
 
     # Pre-generated indexes
     if shutil.which("npm") is None:

@@ -780,9 +780,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An iterator to fetch the messages.
 
         !!! note
-           This call is not a coroutine function, it returns a special type of
-           lazy iterator that will perform API calls as you iterate across it.
-           See `hikari.iterators` for the full API for this iterator type.
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -1566,9 +1566,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An iterator to fetch the users.
 
         !!! note
-           This call is not a coroutine function, it returns a special type of
-           lazy iterator that will perform API calls as you iterate across it.
-           See `hikari.iterators` for the full API for this iterator type.
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -2464,9 +2464,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The token's associated guilds.
 
         !!! note
-           This call is not a coroutine function, it returns a special type of
-           lazy iterator that will perform API calls as you iterate across it.
-           See `hikari.iterators` for the full API for this iterator type.
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -2774,9 +2774,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild's audit log.
 
         !!! note
-           This call is not a coroutine function, it returns a special type of
-           lazy iterator that will perform API calls as you iterate across it.
-           See `hikari.iterators` for the full API for this iterator type.
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -3763,9 +3763,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An iterator to fetch the members.
 
         !!! note
-           This call is not a coroutine function, it returns a special type of
-           lazy iterator that will perform API calls as you iterate across it.
-           See `hikari.iterators` for the full API for this iterator type.
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------

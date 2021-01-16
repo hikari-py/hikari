@@ -156,7 +156,7 @@ class TestEventManagerImpl:
             members={"TestMember": 5678},
             presences={"TestPresence": 9012},
             voice_states={"TestState": 345},
-            guild_chunk_nonce=None,
+            chunk_nonce=None,
         )
 
         event_manager._app.event_factory.deserialize_guild_create_event.return_value = event
@@ -164,7 +164,7 @@ class TestEventManagerImpl:
 
         await event_manager.on_guild_create(shard, payload)
 
-        assert event.guild_chunk_nonce is None
+        assert event.chunk_nonce is None
         shard.request_guild_members.assert_not_called()
 
         event_manager._cache.update_guild.assert_called_once_with(event.guild)
@@ -201,7 +201,7 @@ class TestEventManagerImpl:
             members={"TestMember": 5678},
             presences={"TestPresence": 9012},
             voice_states={"TestState": 345},
-            guild_chunk_nonce=None,
+            chunk_nonce=None,
         )
 
         event_manager._app.event_factory.deserialize_guild_create_event.return_value = event
@@ -213,7 +213,7 @@ class TestEventManagerImpl:
 
         uuid.assert_called_once_with()
         nonce = "987.uuid"
-        assert event.guild_chunk_nonce == nonce
+        assert event.chunk_nonce == nonce
         shard.request_guild_members.assert_called_once_with(event.guild, include_presences=True, nonce=nonce)
         create_task.assert_called_once_with(shard.request_guild_members(), name="987:123 guild create members request")
 

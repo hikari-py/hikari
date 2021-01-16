@@ -214,8 +214,8 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The voice states active in the guild.
     """
 
-    guild_chunk_nonce: typing.Optional[str] = attr.ib(repr=False, default=None)
-    """Nonce used to request the guild chunks.
+    chunk_nonce: typing.Optional[str] = attr.ib(repr=False, default=None)
+    """Nonce used to request the member chunks for this guild.
 
     This will be `builtins.None` if no chunks were requested.
 
@@ -225,7 +225,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     Returns
     -------
     typing.Optional[builtins.str]
-        The nonce used to request the guild chunks.
+        The nonce used to request the member chunks.
     """
 
     @property
