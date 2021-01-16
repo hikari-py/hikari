@@ -92,8 +92,8 @@ def pages(session: nox.Session) -> None:
     session.run(
         "node",
         "scripts/prebuild_index.js",
-        f"{config.ARTIFACT_DIRECTORY}/documentation/index",
-        f"{config.ARTIFACT_DIRECTORY}/documentation/prebuilt_index.js",
+        f"{config.ARTIFACT_DIRECTORY}/hikari/index",
+        f"{config.ARTIFACT_DIRECTORY}/hikari/prebuilt_index.js",
         external=True,
     )
 
