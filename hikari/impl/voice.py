@@ -53,13 +53,13 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "_dispatcher")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "_events")
 
     def __init__(self, app: traits.BotAware) -> None:
         self._app = app
-        self._dispatcher = app.dispatcher
+        self._events = app.event_manager
         self._connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection] = {}
-        app.dispatcher.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._events.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     @property
     def connections(self) -> typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]:
@@ -72,7 +72,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     async def close(self) -> None:
         await self.disconnect()
-        self._dispatcher.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._events.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def connect_to(
         self,
@@ -132,13 +132,13 @@ class VoiceComponentImpl(voice.VoiceComponent):
         state_event, server_event = await asyncio.wait_for(
             asyncio.gather(
                 # Voice state update:
-                self._dispatcher.wait_for(
+                self._events.wait_for(
                     voice_events.VoiceStateUpdateEvent,
                     timeout=None,
                     predicate=self._init_state_update_predicate(guild_id, user.id),
                 ),
                 # Server update:
-                self._dispatcher.wait_for(
+                self._events.wait_for(
                     voice_events.VoiceServerUpdateEvent,
                     timeout=None,
                     predicate=self._init_server_update_predicate(guild_id),

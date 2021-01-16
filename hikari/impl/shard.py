@@ -61,8 +61,8 @@ if typing.TYPE_CHECKING:
     from hikari import config
     from hikari import guilds
     from hikari import users as users_
-    from hikari.api import event_dispatcher
     from hikari.api import event_factory as event_factory_
+    from hikari.api import event_manager as event_manager_
 
 # Important attributes
 _D: typing.Final[str] = sys.intern("d")
@@ -328,8 +328,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     Parameters
     ----------
-    dispatcher : hikari.api.event_dispatcher.EventDispatcher
-        The dispatcher this shard should make calls to.
+    event_manager : hikari.api.event_manager.EventManager
+        The event manager this shard should make calls to.
     event_factory : hikari.api.event_factory.EventFactory
         The event factory this shard should use.
     token : builtins.str
@@ -389,7 +389,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_closed",
         "_closing",
         "_chunking_rate_limit",
-        "_dispatcher",
+        "_event_manager",
         "_event_factory",
         "_handshake_completed",
         "_heartbeat_latency",
@@ -419,8 +419,8 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         *,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
-        dispatcher: event_dispatcher.EventDispatcher,
         event_factory: event_factory_.EventFactory,
+        event_manager: event_manager_.EventManager,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
@@ -457,8 +457,8 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} chunking rate limit",
             *_CHUNKING_RATELIMIT,
         )
-        self._dispatcher = dispatcher
         self._event_factory = event_factory
+        self._event_manager = event_manager
         self._handshake_completed = asyncio.Event()
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
@@ -673,7 +673,7 @@ class GatewayShardImpl(shard.GatewayShard):
             self._handshake_completed.set()
 
         try:
-            self._dispatcher.consume_raw_event(self, name, data)
+            self._event_manager.consume_raw_event(self, name, data)
 
         except LookupError:
             self._logger.debug("ignoring unknown event %s:\n    %r", name, data)
@@ -861,7 +861,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         try:
             # Dispatch CONNECTED synthetic event.
-            self._dispatcher.dispatch(self._event_factory.deserialize_connected_event(self)),
+            self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self)),
             dispatch_disconnect = True
 
             heartbeat_task = await self._wait_for_hello()
@@ -931,7 +931,7 @@ class GatewayShardImpl(shard.GatewayShard):
             if dispatch_disconnect:
                 # If we managed to connect, we must always send the DISCONNECT event
                 # afterwards.
-                self._dispatcher.dispatch(self._event_factory.deserialize_disconnected_event(self)),
+                self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self)),
 
             # Ignore errors if we are closing
             if self._closing.is_set() or self._closed.is_set():

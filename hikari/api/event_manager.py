@@ -20,10 +20,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Core interface for components that dispatch events to the library."""
+"""Core interface for components that manage events in the library."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventDispatcher"]
+__all__: typing.List[str] = ["EventManager"]
 
 import abc
 import asyncio
@@ -44,12 +44,12 @@ if typing.TYPE_CHECKING:
     ]
 
 
-class EventDispatcher(abc.ABC):
-    """Base interface for event dispatcher implementations.
+class EventManager(abc.ABC):
+    """Base interface for event manager implementations.
 
-    This is a consumer of a `hikari.events.base_events.Event` object, and is
-    expected to invoke one or more corresponding event listeners where
-    appropriate.
+    This is a listener of a `hikari.events.base_events.Event` object and
+    consumer of raw event payloads, and is expected to invoke one or more
+    corresponding event listeners where appropriate.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -182,7 +182,7 @@ class EventDispatcher(abc.ABC):
         ```
 
         This event can be listened to elsewhere by subscribing to it with
-        `EventDispatcher.subscribe`.
+        `EventManager.subscribe`.
 
         ```py
         @bot.listen(EveryoneMentionedEvent)
@@ -200,9 +200,9 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
-        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
-        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Wait for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -245,9 +245,9 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
-        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
-        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
+        Listen: `hikari.api.event_manager.EventManager.listen`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Wait for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -312,7 +312,7 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Has listener: `hikari.api.event_dispatcher.EventDispatcher.has_listener`
+        Has listener: `hikari.api.event_manager.EventManager.has_listener`
         """
 
     @abc.abstractmethod
@@ -337,16 +337,16 @@ class EventDispatcher(abc.ABC):
         -------
         typing.Callable[[T], T]
             A decorator for a coroutine function that passes it to
-            `EventDispatcher.subscribe` before returning the function
+            `EventManager.subscribe` before returning the function
             reference.
 
         See Also
         --------
-        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
-        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
-        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
-        Unsubscribe: `hikari.api.event_dispatcher.EventDispatcher.unsubscribe`
-        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -408,11 +408,11 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
-        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
-        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
-        Unsubscribe: `hikari.api.event_dispatcher.EventDispatcher.unsubscribe`
-        Wait for: `hikari.api.event_dispatcher.EventDispatcher.wait_for`
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Listen: `hikari.api.event_manager.EventManager.listen`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -459,8 +459,8 @@ class EventDispatcher(abc.ABC):
 
         See Also
         --------
-        Listen: `hikari.api.event_dispatcher.EventDispatcher.listen`
-        Stream: `hikari.api.event_dispatcher.EventDispatcher.stream`
-        Subscribe: `hikari.api.event_dispatcher.EventDispatcher.subscribe`
-        Dispatch: `hikari.api.event_dispatcher.EventDispatcher.dispatch`
+        Listen: `hikari.api.event_manager.EventManager.listen`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
         """

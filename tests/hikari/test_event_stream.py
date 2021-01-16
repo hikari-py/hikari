@@ -234,7 +234,7 @@ class TestEventStream:
     async def test_close_for_inactive_stream(self, mock_app):
         stream = event_stream.EventStream(mock_app, events.Event, timeout=None, limit=None)
         await stream.close()
-        mock_app.dispatcher.unsubscribe.assert_not_called()
+        mock_app.event_manager.unsubscribe.assert_not_called()
 
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
@@ -247,7 +247,7 @@ class TestEventStream:
         await stream.open()
         stream._registered_listener = mock_registered_listener
         await stream.close()
-        mock_app.dispatcher.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
+        mock_app.event_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
@@ -255,7 +255,7 @@ class TestEventStream:
     @hikari_test_helpers.timeout()
     async def test_close_for_active_stream_handles_value_error(self, mock_app):
         mock_registered_listener = object()
-        mock_app.dispatcher.unsubscribe.side_effect = ValueError
+        mock_app.event_manager.unsubscribe.side_effect = ValueError
         stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
             app=mock_app, event_type=events.Event, timeout=float("inf")
         )
@@ -263,7 +263,7 @@ class TestEventStream:
         await stream.open()
         stream._registered_listener = mock_registered_listener
         await stream.close()
-        mock_app.dispatcher.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
+        mock_app.event_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
@@ -323,7 +323,7 @@ class TestEventStream:
                 weakref.WeakMethod.assert_not_called()
             event_stream._generate_weak_listener.assert_not_called()
 
-        mock_app.dispatcher.subscribe.assert_not_called()
+        mock_app.event_manager.subscribe.assert_not_called()
         assert stream._active is True
         assert stream._registered_listener is mock_listener
 
@@ -347,7 +347,7 @@ class TestEventStream:
                 weakref.WeakMethod.assert_called_once_with(stream._listener)
             event_stream._generate_weak_listener.assert_called_once_with(mock_listener_ref)
 
-        mock_app.dispatcher.subscribe.assert_called_once_with(events.Event, mock_listener)
+        mock_app.event_manager.subscribe.assert_called_once_with(events.Event, mock_listener)
         assert stream._active is True
         assert stream._registered_listener is mock_listener
 

@@ -35,7 +35,7 @@ import warnings
 from hikari import errors
 from hikari import event_stream
 from hikari import traits
-from hikari.api import event_dispatcher
+from hikari.api import event_manager
 from hikari.events import base_events
 from hikari.internal import aio
 from hikari.internal import data_binding
@@ -51,22 +51,20 @@ if typing.TYPE_CHECKING:
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
     ListenerMapT = typing.MutableMapping[
-        typing.Type[event_dispatcher.EventT_co],
-        typing.MutableSequence[event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
+        typing.Type[event_manager.EventT_co],
+        typing.MutableSequence[event_manager.CallbackT[event_manager.EventT_co]],
     ]
-    WaiterT = typing.Tuple[
-        event_dispatcher.PredicateT[event_dispatcher.EventT_co], asyncio.Future[event_dispatcher.EventT_co]
-    ]
+    WaiterT = typing.Tuple[event_manager.PredicateT[event_manager.EventT_co], asyncio.Future[event_manager.EventT_co]]
     WaiterMapT = typing.MutableMapping[
-        typing.Type[event_dispatcher.EventT_co], typing.MutableSet[WaiterT[event_dispatcher.EventT_co]]
+        typing.Type[event_manager.EventT_co], typing.MutableSet[WaiterT[event_manager.EventT_co]]
     ]
 
 
-def _default_predicate(_: event_dispatcher.EventT_inv) -> bool:
+def _default_predicate(_: event_manager.EventT_inv) -> bool:
     return True
 
 
-class EventManagerBase(event_dispatcher.EventDispatcher):
+class EventManagerBase(event_manager.EventManager):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`
@@ -121,11 +119,11 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def subscribe(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager.EventT_co],
+        callback: event_manager.CallbackT[event_manager.EventT_co],
         *,
         _nested: int = 0,
-    ) -> event_dispatcher.CallbackT[event_dispatcher.EventT_co]:
+    ) -> event_manager.CallbackT[event_manager.EventT_co]:
         if not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
@@ -151,7 +149,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         return callback
 
-    def _check_intents(self, event_type: typing.Type[event_dispatcher.EventT_co], nested: int) -> None:
+    def _check_intents(self, event_type: typing.Type[event_manager.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
         # could be enabled to receive this event.
         expected_intent_groups = base_events.get_required_intents_for(event_type)
@@ -172,12 +170,12 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def get_listeners(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager.EventT_co],
         *,
         polymorphic: bool = True,
-    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
+    ) -> typing.Collection[event_manager.CallbackT[event_manager.EventT_co]]:
         if polymorphic:
-            listeners: typing.List[event_dispatcher.CallbackT[event_dispatcher.EventT_co]] = []
+            listeners: typing.List[event_manager.CallbackT[event_manager.EventT_co]] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
                 if issubclass(subscribed_event_type, event_type):
                     listeners += subscribed_listeners
@@ -191,8 +189,8 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def unsubscribe(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
-        callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager.EventT_co],
+        callback: event_manager.CallbackT[event_manager.EventT_co],
     ) -> None:
         # TODO: should this error if it's not registered or should it not?
         if event_type in self._listeners:
@@ -209,14 +207,14 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None,
+        event_type: typing.Optional[typing.Type[event_manager.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]],
-        event_dispatcher.CallbackT[event_dispatcher.EventT_co],
+        [event_manager.CallbackT[event_manager.EventT_co]],
+        event_manager.CallbackT[event_manager.EventT_co],
     ]:
         def decorator(
-            callback: event_dispatcher.CallbackT[event_dispatcher.EventT_co],
-        ) -> event_dispatcher.CallbackT[event_dispatcher.EventT_co]:
+            callback: event_manager.CallbackT[event_manager.EventT_co],
+        ) -> event_manager.CallbackT[event_manager.EventT_co]:
             nonlocal event_type
 
             signature = reflect.resolve_signature(callback)
@@ -238,7 +236,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
         return decorator
 
-    def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: event_manager.EventT_inv) -> asyncio.Future[typing.Any]:
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
@@ -272,28 +270,28 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
 
     def stream(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+    ) -> event_stream.Streamer[event_manager.EventT_co]:
         self._check_intents(event_type, 1)
         return event_stream.EventStream(self._app, event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
-    ) -> event_dispatcher.EventT_co:
+        predicate: typing.Optional[event_manager.PredicateT[event_manager.EventT_co]] = None,
+    ) -> event_manager.EventT_co:
 
         if predicate is None:
             predicate = _default_predicate
 
         self._check_intents(event_type, 1)
 
-        future: asyncio.Future[event_dispatcher.EventT_co] = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[event_manager.EventT_co] = asyncio.get_event_loop().create_future()
 
         try:
             waiter_set = self._waiters[event_type]
@@ -331,7 +329,7 @@ class EventManagerBase(event_dispatcher.EventDispatcher):
             )
 
     async def _invoke_callback(
-        self, callback: event_dispatcher.CallbackT[event_dispatcher.EventT_inv], event: event_dispatcher.EventT_inv
+        self, callback: event_manager.CallbackT[event_manager.EventT_inv], event: event_manager.EventT_inv
     ) -> None:
         try:
             await callback(event)

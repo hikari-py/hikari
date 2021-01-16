@@ -45,11 +45,11 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import traits
 from hikari import undefined
-from hikari.api import event_dispatcher
+from hikari.api import event_manager as event_manager_
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
-from hikari.impl import event_manager
+from hikari.impl import event_manager as event_manager_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
@@ -73,7 +73,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
+class BotApp(traits.BotAware, event_manager_.EventManager):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot
@@ -262,7 +262,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Event handling
-        self._events = event_manager.EventManagerImpl(self, cache=self._cache)
+        self._events = event_manager_impl.EventManagerImpl(self, cache=self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
@@ -296,7 +296,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         return self._cache
 
     @property
-    def dispatcher(self) -> event_dispatcher.EventDispatcher:
+    def event_manager(self) -> event_manager_.EventManager:
         return self._events
 
     @property
@@ -354,19 +354,19 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
     def is_alive(self) -> bool:
         return self._is_alive
 
-    def add_raw_consumer(self, name: str, consumer: event_dispatcher.ConsumerT, /) -> None:
-        self.dispatcher.add_raw_consumer(name, consumer)
+    def add_raw_consumer(self, name: str, consumer: event_manager_.ConsumerT, /) -> None:
+        self._events.add_raw_consumer(name, consumer)
 
-    def get_raw_consumers(self, name: str, /) -> typing.Sequence[event_dispatcher.ConsumerT]:
-        return self.dispatcher.get_raw_consumers(name)
+    def get_raw_consumers(self, name: str, /) -> typing.Sequence[event_manager_.ConsumerT]:
+        return self._events.get_raw_consumers(name)
 
-    def remove_raw_consumer(self, name: str, consumer: event_dispatcher.ConsumerT, /) -> None:
-        self.dispatcher.remove_raw_consumer(name, consumer)
+    def remove_raw_consumer(self, name: str, consumer: event_manager_.ConsumerT, /) -> None:
+        self._events.remove_raw_consumer(name, consumer)
 
     def consume_raw_event(
         self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
     ) -> None:
-        self.dispatcher.consume_raw_event(shard, event_name, payload)
+        self._events.consume_raw_event(shard, event_name, payload)
 
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
@@ -419,12 +419,12 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
         await self.dispatch(self.event_factory.deserialize_stopped_event())
 
-    def dispatch(self, event: event_dispatcher.EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
         return self._events.dispatch(event)
 
     def get_listeners(
-        self, event_type: typing.Type[event_dispatcher.EventT_co], *, polymorphic: bool = True
-    ) -> typing.Collection[event_dispatcher.CallbackT[event_dispatcher.EventT_co]]:
+        self, event_type: typing.Type[event_manager_.EventT_co], *, polymorphic: bool = True
+    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         return self._events.get_listeners(event_type, polymorphic=polymorphic)
 
     async def join(self, until_close: bool = True) -> None:
@@ -435,9 +435,9 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         await aio.first_completed(*awaitables)
 
     def listen(
-        self, event_type: typing.Optional[typing.Type[event_dispatcher.EventT_co]] = None
+        self, event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None
     ) -> typing.Callable[
-        [event_dispatcher.CallbackT[event_dispatcher.EventT_co]], event_dispatcher.CallbackT[event_dispatcher.EventT_co]
+        [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
     ]:
         return self._events.listen(event_type)
 
@@ -848,31 +848,29 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
 
     def stream(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[event_dispatcher.EventT_co]:
+    ) -> event_stream.Streamer[event_manager_.EventT_co]:
         self._check_if_alive()
         return self._events.stream(event_type, timeout=timeout, limit=limit)
 
     def subscribe(
-        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
-    ) -> event_dispatcher.CallbackT[typing.Any]:
+        self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]
+    ) -> event_manager_.CallbackT[typing.Any]:
         return self._events.subscribe(event_type, callback)
 
-    def unsubscribe(
-        self, event_type: typing.Type[typing.Any], callback: event_dispatcher.CallbackT[typing.Any]
-    ) -> None:
+    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         self._events.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_dispatcher.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_dispatcher.PredicateT[event_dispatcher.EventT_co]] = None,
-    ) -> event_dispatcher.EventT_co:
+        predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
+    ) -> event_manager_.EventT_co:
         self._check_if_alive()
         return await self._events.wait_for(event_type, timeout=timeout, predicate=predicate)
 
@@ -919,7 +917,7 @@ class BotApp(traits.BotAware, event_dispatcher.EventDispatcher):
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
-            dispatcher=self._events,
+            event_manager=self._events,
             event_factory=self._event_factory,
             http_settings=self._http_settings,
             initial_activity=activity,

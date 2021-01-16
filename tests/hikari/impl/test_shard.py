@@ -564,7 +564,7 @@ class TestGatewayShardImpl:
     @pytest.fixture()
     def client(self, http_settings, proxy_settings, unslotted_client_type):
         return unslotted_client_type(
-            dispatcher=mock.Mock(),
+            event_manager=mock.Mock(),
             event_factory=mock.Mock(),
             url="wss://gateway.discord.gg",
             intents=intents.Intents.ALL,
@@ -582,7 +582,7 @@ class TestGatewayShardImpl:
     )
     def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
         g = shard.GatewayShardImpl(
-            dispatcher=mock.Mock(),
+            event_manager=mock.Mock(),
             event_factory=mock.Mock(),
             http_settings=http_settings,
             proxy_settings=proxy_settings,
@@ -598,7 +598,7 @@ class TestGatewayShardImpl:
     def test_using_etf_is_unsupported(self, http_settings, proxy_settings):
         with pytest.raises(NotImplementedError, match="Unsupported gateway data format: etf"):
             shard.GatewayShardImpl(
-                dispatcher=mock.Mock(),
+                event_manager=mock.Mock(),
                 event_factory=mock.Mock(),
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -882,7 +882,7 @@ class TestGatewayShardImpl:
         client._user_id = 0
         client._logger = mock.Mock()
         client._handshake_completed = mock.Mock()
-        client._dispatcher = mock.Mock()
+        client._event_manager = mock.Mock()
 
         pl = {
             "session_id": 101,
@@ -913,7 +913,7 @@ class TestGatewayShardImpl:
             8,
         )
         client._handshake_completed.set.assert_called_once_with()
-        client._dispatcher.consume_raw_event.assert_called_once_with(
+        client._event_manager.consume_raw_event.assert_called_once_with(
             client,
             "READY",
             pl,
@@ -924,37 +924,37 @@ class TestGatewayShardImpl:
         client._session_id = 123
         client._logger = mock.Mock()
         client._handshake_completed = mock.Mock()
-        client._dispatcher = mock.Mock()
+        client._event_manager = mock.Mock()
 
         client._dispatch("RESUME", 10, {})
 
         assert client._seq == 10
         client._logger.info.assert_called_once_with("shard has resumed [session:%s, seq:%s]", 123, 10)
         client._handshake_completed.set.assert_called_once_with()
-        client._dispatcher.consume_raw_event.assert_called_once_with(client, "RESUME", {})
+        client._event_manager.consume_raw_event.assert_called_once_with(client, "RESUME", {})
 
     def test__dipatch(self, client):
         client._logger = mock.Mock()
         client._handshake_completed = mock.Mock()
-        client._dispatcher = mock.Mock()
+        client._event_manager = mock.Mock()
 
         client._dispatch("EVENT NAME", 10, {"payload": None})
 
         client._logger.info.assert_not_called()
         client._logger.debug.assert_not_called()
         client._handshake_completed.set.assert_not_called()
-        client._dispatcher.consume_raw_event.assert_called_once_with(client, "EVENT NAME", {"payload": None})
+        client._event_manager.consume_raw_event.assert_called_once_with(client, "EVENT NAME", {"payload": None})
 
     async def test__dispatch_for_unknown_event(self, client):
         client._logger = mock.Mock()
         client._handshake_completed = mock.Mock()
-        client._dispatcher = mock.Mock(consume_raw_event=mock.Mock(side_effect=LookupError))
+        client._event_manager = mock.Mock(consume_raw_event=mock.Mock(side_effect=LookupError))
 
         client._dispatch("UNEXISTING_EVENT", 10, {"payload": None})
 
         client._logger.info.assert_not_called()
         client._handshake_completed.set.assert_not_called()
-        client._dispatcher.consume_raw_event.assert_called_once_with(client, "UNEXISTING_EVENT", {"payload": None})
+        client._event_manager.consume_raw_event.assert_called_once_with(client, "UNEXISTING_EVENT", {"payload": None})
         client._logger.debug.assert_called_once_with(
             "ignoring unknown event %s:\n    %r", "UNEXISTING_EVENT", {"payload": None}
         )
