@@ -29,7 +29,7 @@ __all__: typing.List[str] = [
     "EventT_inv",
     "PredicateT",
     "CacheAware",
-    "DispatcherAware",
+    "EventManagerAware",
     "EntityFactoryAware",
     "EventFactoryAware",
     "ExecutorAware",
@@ -55,8 +55,8 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import event_dispatcher
     from hikari.api import event_factory as event_factory_
+    from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
@@ -124,23 +124,22 @@ class NetworkSettingsAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class DispatcherAware(typing.Protocol):
-    """Structural supertype for a dispatcher-aware object.
+class EventManagerAware(typing.Protocol):
+    """Structural supertype for a event manager-aware object.
 
-    Dispatcher-aware components are able to register and dispatch
-    event listeners and waiters.
+    Event manager-aware components are able to manage event listeners and waiters.
     """
 
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def dispatcher(self) -> event_dispatcher.EventDispatcher:
-        """Return the event dispatcher for this object.
+    def event_manager(self) -> event_manager_.EventManager:
+        """Return the event manager for this object.
 
         Returns
         -------
-        hikari.api.event_dispatcher.EventDispatcher
-            The event dispatcher component.
+        hikari.api.event_manager.EventManager
+            The event manager component.
         """
         raise NotImplementedError
 
@@ -428,7 +427,7 @@ class CacheAware(typing.Protocol):
 
 
 @typing.runtime_checkable
-class BotAware(RESTAware, ShardAware, EventFactoryAware, DispatcherAware, CacheAware, typing.Protocol):
+class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, CacheAware, typing.Protocol):
     """Structural supertype for a component that is aware of all internals."""
 
     __slots__: typing.Sequence[str] = ()

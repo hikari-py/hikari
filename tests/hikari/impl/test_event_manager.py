@@ -28,7 +28,6 @@ import pytest
 from hikari import channels
 from hikari import intents
 from hikari import presences
-from hikari.events import shard_events
 from hikari.impl import event_manager
 from tests.hikari import hikari_test_helpers
 
@@ -59,24 +58,6 @@ class TestEventManagerImpl:
         return obj
 
     @pytest.mark.asyncio
-    async def test_on_connected(self, event_manager, shard, app):
-        payload = {}
-        event = shard_events.ShardConnectedEvent(app=app, shard=shard)
-
-        await event_manager.on_connected(shard, payload)
-
-        event_manager.dispatch.assert_awaited_once_with(event)
-
-    @pytest.mark.asyncio
-    async def test_on_disconnected(self, event_manager, shard, app):
-        payload = {}
-        event = shard_events.ShardDisconnectedEvent(app=app, shard=shard)
-
-        await event_manager.on_disconnected(shard, payload)
-
-        event_manager.dispatch.assert_awaited_once_with(event)
-
-    @pytest.mark.asyncio
     async def test_on_ready_stateful(self, event_manager, shard, app):
         payload = {}
         event = mock.Mock(my_user=mock.Mock())
@@ -103,11 +84,13 @@ class TestEventManagerImpl:
     @pytest.mark.asyncio
     async def test_on_resumed(self, event_manager, shard, app):
         payload = {}
-        event = shard_events.ShardResumedEvent(app=app, shard=shard)
 
         await event_manager.on_resumed(shard, payload)
 
-        event_manager.dispatch.assert_awaited_once_with(event)
+        event_manager._app.event_factory.deserialize_resumed_event.assert_called_once_with(shard)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_manager._app.event_factory.deserialize_resumed_event.return_value
+        )
 
     @pytest.mark.asyncio
     async def test_on_channel_create_stateful(self, event_manager, shard, app):

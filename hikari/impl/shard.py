@@ -61,6 +61,8 @@ if typing.TYPE_CHECKING:
     from hikari import config
     from hikari import guilds
     from hikari import users as users_
+    from hikari.api import event_factory as event_factory_
+    from hikari.api import event_manager as event_manager_
 
 # Important attributes
 _D: typing.Final[str] = sys.intern("d")
@@ -326,6 +328,18 @@ class GatewayShardImpl(shard.GatewayShard):
 
     Parameters
     ----------
+    event_manager : hikari.api.event_manager.EventManager
+        The event manager this shard should make calls to.
+    event_factory : hikari.api.event_factory.EventFactory
+        The event factory this shard should use.
+    token : builtins.str
+        The bot token to use.
+    url : builtins.str
+        The gateway URL to use. This should not contain a query-string or
+        fragments.
+
+    Other Parameters
+    ----------------
     compression : typing.Optional[buitlins.str]
         Compression format to use for the shard. Only supported values are
         `"payload_zlib_stream"` or `builtins.None` to disable it.
@@ -350,12 +364,6 @@ class GatewayShardImpl(shard.GatewayShard):
         The shard ID.
     shard_count : builtins.int
         The shard count.
-    event_consumer
-        A non-coroutine function consuming a `GatewayShardImpl`,
-        a `builtins.str` event name, and a
-        `hikari.internal.data_binding.JSONObject` event object as parameters.
-        This should return `builtins.None`, and will be called with each event
-        that fires.
     http_settings : hikari.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
     proxy_settings : hikari.config.ProxySettings
@@ -363,11 +371,6 @@ class GatewayShardImpl(shard.GatewayShard):
     data_format : builtins.str
         Data format to use for inbound data. Only supported format is
         `"json"`.
-    token : builtins.str
-        The bot token to use.
-    url : builtins.str
-        The gateway URL to use. This should not contain a query-string or
-        fragments.
 
     !!! note
         If all four of `initial_activity`, `initial_idle_since`,
@@ -386,7 +389,8 @@ class GatewayShardImpl(shard.GatewayShard):
         "_closed",
         "_closing",
         "_chunking_rate_limit",
-        "_event_consumer",
+        "_event_manager",
+        "_event_factory",
         "_handshake_completed",
         "_heartbeat_latency",
         "_http_settings",
@@ -415,6 +419,8 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         *,
         compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+        event_factory: event_factory_.EventFactory,
+        event_manager: event_manager_.EventManager,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
@@ -423,7 +429,6 @@ class GatewayShardImpl(shard.GatewayShard):
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
-        event_consumer: typing.Callable[[shard.GatewayShard, str, data_binding.JSONObject], None],
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         data_format: str = shard.GatewayDataFormat.JSON,
@@ -452,7 +457,8 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} chunking rate limit",
             *_CHUNKING_RATELIMIT,
         )
-        self._event_consumer = event_consumer
+        self._event_factory = event_factory
+        self._event_manager = event_manager
         self._handshake_completed = asyncio.Event()
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
@@ -666,7 +672,11 @@ class GatewayShardImpl(shard.GatewayShard):
             self._logger.info("shard has resumed [session:%s, seq:%s]", self._session_id, self._seq)
             self._handshake_completed.set()
 
-        self._event_consumer(self, name, data)
+        try:
+            self._event_manager.consume_raw_event(self, name, data)
+
+        except LookupError:
+            self._logger.debug("ignoring unknown event %s:\n    %r", name, data)
 
     async def _identify(self) -> None:
         payload: data_binding.JSONObject = {
@@ -851,7 +861,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         try:
             # Dispatch CONNECTED synthetic event.
-            self._event_consumer(self, "CONNECTED", {})
+            self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self)),
             dispatch_disconnect = True
 
             heartbeat_task = await self._wait_for_hello()
@@ -921,7 +931,7 @@ class GatewayShardImpl(shard.GatewayShard):
             if dispatch_disconnect:
                 # If we managed to connect, we must always send the DISCONNECT event
                 # afterwards.
-                self._event_consumer(self, "DISCONNECTED", {})
+                self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self)),
 
             # Ignore errors if we are closing
             if self._closing.is_set() or self._closed.is_set():

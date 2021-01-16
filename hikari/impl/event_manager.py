@@ -36,7 +36,6 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
 from hikari import traits
-from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.internal import time
 
@@ -65,24 +64,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         self._cache = cache
         super().__init__(app=app)
 
-    async def on_connected(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
-        """Handle connection events.
-
-        This is a synthetic event produced by the gateway implementation in
-        Hikari.
-        """
-        # TODO: this should be in entity factory
-        await self.dispatch(shard_events.ShardConnectedEvent(app=self._app, shard=shard))
-
-    async def on_disconnected(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
-        """Handle disconnection events.
-
-        This is a synthetic event produced by the gateway implementation in
-        Hikari.
-        """
-        # TODO: this should be in entity factory
-        await self.dispatch(shard_events.ShardDisconnectedEvent(app=self._app, shard=shard))
-
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
@@ -95,8 +76,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_resumed(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
-        # TODO: this should be in entity factory
-        await self.dispatch(shard_events.ShardResumedEvent(app=self._app, shard=shard))
+        await self.dispatch(self._app.event_factory.deserialize_resumed_event(shard))
 
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""

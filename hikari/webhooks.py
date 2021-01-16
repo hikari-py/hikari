@@ -385,7 +385,7 @@ class Webhook(snowflakes.Unique):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long) -> None:
+        """  # noqa: E501 - Line too long
         if self.token is None:
             raise ValueError("Cannot edit a message using a webhook where we don't know the token")
 
