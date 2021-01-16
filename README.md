@@ -63,9 +63,9 @@ bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences
 to be received (you'd need to whitelist your application first to be able to start the bot
-if you do this). [Other options also exist](https://hikari-py.github.io/hikari/documentation/impl/bot.html#hikari.impl.bot.BotApp)
-such as [customising timeouts for requests](https://hikari-py.github.io/hikari/documentation/config.html#hikari.config.HTTPSettings.timeouts)
-and [enabling a proxy](https://hikari-py.github.io/hikari/documentation/config.html#hikari.config.ProxySettings).
+if you do this). [Other options also exist](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp)
+such as [customising timeouts for requests](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
 
 Also note that you could pass extra options to `bot.run` during development, for example:
 
@@ -80,7 +80,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://hikari-py.github.io/hikari/documentation/impl/bot.html#hikari.impl.bot.BotApp.run)
+[Many other helpful options](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or
