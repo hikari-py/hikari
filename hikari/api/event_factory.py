@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["EventFactory"]
 
+import abc
 import typing
 
 if typing.TYPE_CHECKING:
@@ -51,7 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
 
 
-class EventFactory(typing.Protocol):
+class EventFactory(abc.ABC):
     """Interface for components that deserialize JSON events."""
 
     __slots__: typing.Sequence[str] = ()
@@ -60,6 +61,7 @@ class EventFactory(typing.Protocol):
     # CHANNEL EVENTS #
     ##################
 
+    @abc.abstractmethod
     def deserialize_channel_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ChannelCreateEvent:
@@ -78,6 +80,7 @@ class EventFactory(typing.Protocol):
             The parsed channel create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_channel_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -102,6 +105,7 @@ class EventFactory(typing.Protocol):
             The parsed  event object.
         """
 
+    @abc.abstractmethod
     def deserialize_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ChannelDeleteEvent:
@@ -120,6 +124,7 @@ class EventFactory(typing.Protocol):
             The parsed channel delete event object.
         """
 
+    @abc.abstractmethod
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.PinsUpdateEvent:
@@ -138,6 +143,7 @@ class EventFactory(typing.Protocol):
             The parsed channel pins update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_webhook_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.WebhookUpdateEvent:
@@ -156,6 +162,7 @@ class EventFactory(typing.Protocol):
             The parsed webhook update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_invite_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.InviteCreateEvent:
@@ -174,6 +181,7 @@ class EventFactory(typing.Protocol):
             The parsed invite create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_invite_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.InviteDeleteEvent:
@@ -196,6 +204,7 @@ class EventFactory(typing.Protocol):
     # TYPING EVENTS #
     ##################
 
+    @abc.abstractmethod
     def deserialize_typing_start_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> typing_events.TypingEvent:
@@ -218,6 +227,7 @@ class EventFactory(typing.Protocol):
     # GUILD EVENTS #
     ################
 
+    @abc.abstractmethod
     def deserialize_guild_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
@@ -236,6 +246,7 @@ class EventFactory(typing.Protocol):
             The parsed guild create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -260,6 +271,7 @@ class EventFactory(typing.Protocol):
             The parsed guild update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_leave_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildLeaveEvent:
@@ -278,6 +290,7 @@ class EventFactory(typing.Protocol):
             The parsed guild leave event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_unavailable_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildUnavailableEvent:
@@ -296,6 +309,7 @@ class EventFactory(typing.Protocol):
             The parsed guild unavailable event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_ban_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.BanCreateEvent:
@@ -314,6 +328,7 @@ class EventFactory(typing.Protocol):
             The parsed guild ban add event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_ban_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.BanDeleteEvent:
@@ -332,6 +347,7 @@ class EventFactory(typing.Protocol):
             The parsed guild ban remove event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_emojis_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -356,6 +372,7 @@ class EventFactory(typing.Protocol):
             The parsed guild emojis update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationCreateEvent:
@@ -374,6 +391,7 @@ class EventFactory(typing.Protocol):
             The parsed integration create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_integration_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationDeleteEvent:
@@ -392,6 +410,7 @@ class EventFactory(typing.Protocol):
             The parsed integration delete event object.
         """
 
+    @abc.abstractmethod
     def deserialize_integration_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationUpdateEvent:
@@ -410,6 +429,7 @@ class EventFactory(typing.Protocol):
             The parsed integration update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_presence_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -438,6 +458,7 @@ class EventFactory(typing.Protocol):
     # MEMBER EVENTS #
     #################
 
+    @abc.abstractmethod
     def deserialize_guild_member_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> member_events.MemberCreateEvent:
@@ -456,6 +477,7 @@ class EventFactory(typing.Protocol):
             The parsed guild member add event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_member_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -480,6 +502,7 @@ class EventFactory(typing.Protocol):
             The parsed guild member update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_member_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> member_events.MemberDeleteEvent:
@@ -502,6 +525,7 @@ class EventFactory(typing.Protocol):
     # ROLE EVENTS #
     ###############
 
+    @abc.abstractmethod
     def deserialize_guild_role_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> role_events.RoleCreateEvent:
@@ -520,6 +544,7 @@ class EventFactory(typing.Protocol):
             The parsed guild role create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_role_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -544,6 +569,7 @@ class EventFactory(typing.Protocol):
             The parsed guild role update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_role_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> role_events.RoleDeleteEvent:
@@ -566,6 +592,7 @@ class EventFactory(typing.Protocol):
     # LIFETIME EVENTS #
     ###################
 
+    @abc.abstractmethod
     def deserialize_starting_event(self) -> lifetime_events.StartingEvent:
         """Build a starting event object.
 
@@ -575,6 +602,7 @@ class EventFactory(typing.Protocol):
             The built starting event object.
         """
 
+    @abc.abstractmethod
     def deserialize_started_event(self) -> lifetime_events.StartedEvent:
         """Build a started event object.
 
@@ -584,6 +612,7 @@ class EventFactory(typing.Protocol):
             The built started event object.
         """
 
+    @abc.abstractmethod
     def deserialize_stopping_event(self) -> lifetime_events.StoppingEvent:
         """Build a starting event object.
 
@@ -593,6 +622,7 @@ class EventFactory(typing.Protocol):
             The built starting event object.
         """
 
+    @abc.abstractmethod
     def deserialize_stopped_event(self) -> lifetime_events.StoppedEvent:
         """Build a stopped event object.
 
@@ -606,6 +636,7 @@ class EventFactory(typing.Protocol):
     # MESSAGE EVENTS #
     ##################
 
+    @abc.abstractmethod
     def deserialize_message_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageCreateEvent:
@@ -624,6 +655,7 @@ class EventFactory(typing.Protocol):
             The parsed message create event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -648,6 +680,7 @@ class EventFactory(typing.Protocol):
             The parsed message update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
@@ -666,6 +699,7 @@ class EventFactory(typing.Protocol):
             The parsed message delete event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_delete_bulk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageDeleteEvent:
@@ -693,6 +727,7 @@ class EventFactory(typing.Protocol):
     # REACTION EVENTS #
     ###################
 
+    @abc.abstractmethod
     def deserialize_message_reaction_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionAddEvent:
@@ -711,6 +746,7 @@ class EventFactory(typing.Protocol):
             The parsed message reaction add event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_reaction_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteEvent:
@@ -729,6 +765,7 @@ class EventFactory(typing.Protocol):
             The parsed message reaction remove event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_reaction_remove_all_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteAllEvent:
@@ -747,6 +784,7 @@ class EventFactory(typing.Protocol):
             The parsed message reaction remove all event object.
         """
 
+    @abc.abstractmethod
     def deserialize_message_reaction_remove_emoji_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteEmojiEvent:
@@ -769,6 +807,7 @@ class EventFactory(typing.Protocol):
     # SHARD EVENTS #
     ################
 
+    @abc.abstractmethod
     def deserialize_ready_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -789,6 +828,7 @@ class EventFactory(typing.Protocol):
             The parsed ready event object.
         """
 
+    @abc.abstractmethod
     def deserialize_connected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardConnectedEvent:
         """Build a shard connected event object.
 
@@ -803,6 +843,7 @@ class EventFactory(typing.Protocol):
             The built shard connected event object.
         """
 
+    @abc.abstractmethod
     def deserialize_disconnected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardDisconnectedEvent:
         """Build a shard disconnected event object.
 
@@ -817,6 +858,7 @@ class EventFactory(typing.Protocol):
             The built shard disconnected event object.
         """
 
+    @abc.abstractmethod
     def deserialize_resumed_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardResumedEvent:
         """Build a shard resumed event object.
 
@@ -831,6 +873,7 @@ class EventFactory(typing.Protocol):
             The built shard resumed event object.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.MemberChunkEvent:
@@ -853,6 +896,7 @@ class EventFactory(typing.Protocol):
     # USER EVENTS #
     ###############
 
+    @abc.abstractmethod
     def deserialize_own_user_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -881,6 +925,7 @@ class EventFactory(typing.Protocol):
     # VOICE EVENTS #
     ################
 
+    @abc.abstractmethod
     def deserialize_voice_state_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -905,6 +950,7 @@ class EventFactory(typing.Protocol):
             The parsed voice state update event object.
         """
 
+    @abc.abstractmethod
     def deserialize_voice_server_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> voice_events.VoiceServerUpdateEvent:
