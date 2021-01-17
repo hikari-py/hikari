@@ -1,16 +1,16 @@
 ## Copyright (c) 2020 Nekokatt
 ## Copyright (c) 2021 davfsa
-
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-
+##
 ## The above copyright notice and this permission notice shall be included in all
 ## copies or substantial portions of the Software.
-
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,7 +18,6 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
-
 <%!
     import os
     import typing
@@ -342,7 +341,7 @@
                     prefix = f"<small class='text-muted'><em>{prefix}{qual}</em></small> "
                 elif dobj.module.name == "typing" or dobj.docstring and dobj.docstring.casefold().startswith(("type hint", "typehint", "type alias")):
                     show_object = not simple_names
-                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT} </em></small> "
+                    prefix = f"<small class='text-muted'><em>{prefix}{QUAL_TYPEHINT}</em></small> "
                 else:
                     prefix = f"<small class='text-muted'><em>{prefix}{QUAL_VAR}</em></small> "
 
@@ -454,9 +453,7 @@
 
         return text
 %>
-
 <%def name="ident(name)"><span class="ident">${name}</span></%def>
-
 <%def name="breadcrumb()">
     <%
         module_breadcrumb = []
@@ -482,8 +479,7 @@
         </ol>
     </nav>
 </%def>
-
-<%def name="show_var(v, is_nested=False)">
+<%def name="show_var(v)">
     <%
         return_type = get_annotation(v.type_annotation)
         parent = v.cls.obj if v.cls is not None else v.module.obj
@@ -551,13 +547,14 @@
             )
         )
     %>
-    <dt>
-        <pre><code class="python">${link(v, with_prefixes=True, anchor=True)}${return_type}</code></pre>
-    </dt>
-    <dd>${v.docstring | to_html}</dd>
+    <div id="${v.refname}" class="anchor">
+        <dt>
+            <pre><code class="python">${link(v, with_prefixes=True)}${return_type}</code></pre>
+        </dt>
+        <dd>${v.docstring | to_html}</dd>
+    </div>
 </%def>
-
-<%def name="show_func(f, is_nested=False)">
+<%def name="show_func(f)">
     <%
         params = f.params(annotate=show_type_annotations, link=link)
         return_type = get_annotation(f.return_annotation, '->')
@@ -602,27 +599,28 @@
                 )
             )
     %>
-    <dt>
-        <pre><code id="${f.refname}" class="hljs python">${representation}</code></pre>
-    </dt>
-    <dd>
-        % if inspect.isabstract(f.obj):
-            <strong>This function is abstract!</strong>
-        % endif
-        % if redirect:
-            ${show_desc(f, short=True)}
-            <strong>This function is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
-        % else:
-            ${show_desc(f)}
+    <div id="${f.refname}" class="anchor">
+        <dt>
+            <pre><code class="hljs python">${representation}</code></pre>
+        </dt>
+        <dd>
+            % if inspect.isabstract(f.obj):
+                <strong>This function is abstract!</strong>
+            % endif
+            % if redirect:
+                ${show_desc(f, short=True)}
+                <strong>This function is defined explicitly at ${link(ref, with_prefixes=False, fully_qualified=True)}. Visit that link to view the full documentation!</strong>
+            % else:
+                ${show_desc(f)}
 
-            ${show_source(f)}
-        % endif
-    </dd>
+                ${show_source(f)}
+            % endif
+        </dd>
+    </div>
     <div class="sep"></div>
 
 </%def>
-
-<%def name="show_class(c, is_nested=False)">
+<%def name="show_class(c)">
     <%
         variables = c.instance_variables(show_inherited_members, sort=sort_identifiers) + c.class_variables(show_inherited_members, sort=sort_identifiers)
         methods = c.methods(show_inherited_members, sort=sort_identifiers) + c.functions(show_inherited_members, sort=sort_identifiers)
@@ -668,83 +666,84 @@
                 )
             )
     %>
-    <dt>
-        % if redirect:
-            <h4 id="${c.refname}"><small class='text-muted'>reference to </small>${link(c, with_prefixes=True)}</h4>
-        % else:
-            <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
-        % endif
-    </dt>
-    <dd>
-        % if redirect:
-            <small>${show_desc(c, short=True)}</small>
-        % else:
-            <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
-
-            ${show_desc(c)}
-            <div class="sep"></div>
-            ${show_source(c)}
-            <div class="sep"></div>
-
-            % if subclasses:
-                <h5>Subclasses</h5>
-                <dl>
-                    % for sc in subclasses:
-                        % if not isinstance(sc, pdoc.External):
-                            <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                            <dd class="nested">${sc.docstring or sc.obj.__doc__ | glimpse, to_html}</dd>
-                        % endif
-                    % endfor
-                </dl>
-                <div class="sep"></div>
+    <div id="${c.refname}" class="anchor">
+        <dt>
+            % if redirect:
+                <h4><small class='text-muted'>reference to </small>${link(c, with_prefixes=True)}</h4>
+            % else:
+                <h4>${link(c, with_prefixes=True, simple_names=True)}</h4>
             % endif
+        </dt>
+        <dd>
+            % if redirect:
+                <small>${show_desc(c, short=True)}</small>
+            % else:
+                <pre><code id="${c.refname}" class="hljs python">${representation}</code></pre>
 
-            % if mro:
-                <h5>Method resolution order</h5>
-                <dl>
-                    <dt class="nested">${link(c, with_prefixes=True)}</dt>
-                    <dd class="nested"><em class="text-muted">That's this class!</em></dd>
-                    % for mro_c in mro:
-                        <%
-                            if mro_c.obj is None:
-                                module, _, cls = mro_c.qualname.rpartition(".")
-                                try:
-                                    cls = getattr(importlib.import_module(module), cls)
-                                    mro_c.docstring = cls.__doc__ or ""
-                                except:
-                                    pass
-                        %>
-
-                        <dt class="nested">${link(mro_c, with_prefixes=True, default_type="class")}</dt>
-                        <dd class="nested">${mro_c.docstring | glimpse, to_html}</dd>
-                    % endfor
-                </dl>
+                ${show_desc(c)}
                 <div class="sep"></div>
-            % endif
-
-            % if variables:
-                <h5>Variables and properties</h5>
-                <dl>
-                    % for i in variables:
-                        ${show_var(i)}
-                    % endfor
-                </dl>
+                ${show_source(c)}
                 <div class="sep"></div>
-            % endif
 
-            % if methods:
-                <h5>Methods</h5>
-                <dl>
-                    % for m in methods:
-                        ${show_func(m)}
-                    % endfor
-                </dl>
-                <div class="sep"></div>
+                % if subclasses:
+                    <h5>Subclasses</h5>
+                    <dl>
+                        % for sc in subclasses:
+                            % if not isinstance(sc, pdoc.External):
+                                <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
+                                <dd class="nested">${sc.docstring or sc.obj.__doc__ | glimpse, to_html}</dd>
+                            % endif
+                        % endfor
+                    </dl>
+                    <div class="sep"></div>
+                % endif
+
+                % if mro:
+                    <h5>Method resolution order</h5>
+                    <dl>
+                        <dt class="nested">${link(c, with_prefixes=True)}</dt>
+                        <dd class="nested"><em class="text-muted">That's this class!</em></dd>
+                        % for mro_c in mro:
+                            <%
+                                if mro_c.obj is None:
+                                    module, _, cls = mro_c.qualname.rpartition(".")
+                                    try:
+                                        cls = getattr(importlib.import_module(module), cls)
+                                        mro_c.docstring = cls.__doc__ or ""
+                                    except:
+                                        pass
+                            %>
+
+                            <dt class="nested">${link(mro_c, with_prefixes=True, default_type="class")}</dt>
+                            <dd class="nested">${mro_c.docstring | glimpse, to_html}</dd>
+                        % endfor
+                    </dl>
+                    <div class="sep"></div>
+                % endif
+
+                % if variables:
+                    <h5>Variables and properties</h5>
+                    <dl>
+                        % for i in variables:
+                            ${show_var(i)}
+                        % endfor
+                    </dl>
+                    <div class="sep"></div>
+                % endif
+
+                % if methods:
+                    <h5>Methods</h5>
+                    <dl>
+                        % for m in methods:
+                            ${show_func(m)}
+                        % endfor
+                    </dl>
+                    <div class="sep"></div>
+                % endif
             % endif
-        % endif
-    </dd>
+        </dd>
+    </div>
 </%def>
-
 <%def name="show_desc(d, short=False)">
     <%
         inherits = ' inherited' if d.inherits else ''
@@ -767,7 +766,6 @@
         ${docstring | glimpse, to_html}
     % endif
 </%def>
-
 <%def name="show_source(d)">
     % if (show_source_code or git_link_template) and d.source and d.obj is not getattr(d.inherits, 'obj', None):
         <% git_link = format_git_link(git_link_template, d) %>
@@ -905,7 +903,7 @@
                 <section class="definition">
                     <dl classes="no-nest root">
                         % for m in submodules:
-                            <dt>${link(m, simple_names=True, with_prefixes=True, anchor=True)}</dt>
+                            <dt>${link(m, simple_names=True, with_prefixes=True)}</dt>
                             <dd>${m.docstring | glimpse, to_html}</dd>
                         % endfor
                     </dl>

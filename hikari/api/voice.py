@@ -86,7 +86,7 @@ class VoiceComponent(abc.ABC):
             The channel or channel ID to connect to.
         voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
-            internally using the `IVoiceConnection.initialize`
+            internally using the `VoiceConnection.initialize`
             `builtins.classmethod`.
         deaf : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
@@ -95,7 +95,7 @@ class VoiceComponent(abc.ABC):
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel muted (thus unable to send audio).
         **kwargs : typing.Any
-            Any arguments to provide to the `IVoiceConnection.initialize`
+            Any arguments to provide to the `VoiceConnection.initialize`
             method.
 
 
