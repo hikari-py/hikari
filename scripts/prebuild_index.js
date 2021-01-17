@@ -28,23 +28,27 @@ const lunr = require('lunr');
 const fs = require('fs');
 
 const args = process.argv.slice(2);
-const index = require('./' + '../'.repeat(args[0].split("/").length - 2) + args[0]);
+const data = require('./' + '../'.repeat(args[0].split("/").length - 2) + args[0]);
 
+// i: id
+// r: ref
+// n: name
+// d: doc
 var idx = lunr(function () {
     this.ref('i');
-    this.field('ref', { boost: 10 });
-    this.field('name', { boost: 5 });
-    this.field('doc');
+    this.field('r', { boost: 10 });
+    this.field('n', { boost: 5 });
+    this.field('d');
     this.metadataWhitelist = ['position'];
-    index.INDEX.forEach((doc, i) => {
-        const parts = doc.ref.split('.');
-        doc['name'] = parts[parts.length - 1];
+    data.index.forEach((doc, i) => {
+        const parts = doc.r.split('.');
+        doc['n'] = parts[parts.length - 1];
         doc['i'] = i;
         this.add(doc);
     }, this);
 });
 
-fs.writeFile(args[1], "PREBUILT_INDEX=" + JSON.stringify(idx), function (err) {
+fs.writeFile(args[1], JSON.stringify(idx), function (err) {
     if (err) { throw err; };
     console.log('Prebuilt index saved to ' + args[1]);
 });

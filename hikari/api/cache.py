@@ -65,7 +65,7 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
 class Cache(abc.ABC):
     """Interface describing the operations a cache component should provide.
 
-    This will be used by the gateway and HTTP API to cache specific types of
+    This will be used by the gateway to cache specific types of
     objects that the application should attempt to remember for later, depending
     on how this is implemented. The requirement for this stems from the
     assumption by Discord that bot applications will maintain some form of

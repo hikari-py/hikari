@@ -1,16 +1,16 @@
 ## Copyright (c) 2020 Nekokatt
 ## Copyright (c) 2021 davfsa
-
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-
+##
 ## The above copyright notice and this permission notice shall be included in all
 ## copies or substantial portions of the Software.
-
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,7 @@ img#logo {
 }
 
 small.smaller {
-    font-size: 0.75em;
+    font-size: 0.50em;
 }
 
 html {
@@ -43,7 +43,7 @@ html {
 body {
     background-color: #181A1B;
     color: #C9C5C0;
-    height: 100%;
+    height: fit-content;
 }
 
 h1 {
@@ -93,6 +93,10 @@ a:hover {
     color: #64B1F2;
 }
 
+.container > h4 {
+    margin-top: 1.5em;
+}
+
 .jumbotron {
     background-color: #232627;
 }
@@ -120,6 +124,27 @@ ul.nested {
 
 h2#parameters::after {
     margin-left: 2em;
+}
+
+.anchor:target {
+    background-color: var(--dark);
+}
+
+@media screen and (max-width: 990px) {
+  .anchor:target {
+    margin-left: -2em;
+    padding-left: 2em;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .anchor:target {
+    border-radius: 0.5em; !important
+    margin-right: -2em;
+    padding-right: 2em;
+    margin-top: -1em;
+    padding-top: 1em;
+  }
 }
 
 dt {

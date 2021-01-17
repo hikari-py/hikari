@@ -105,3 +105,10 @@ jobs:
         run: |
           pip install nox
           nox -s pages
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pages
+          path: public
+          retention-days: 2

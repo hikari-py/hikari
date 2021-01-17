@@ -56,18 +56,23 @@ def main():
         def recursive_add_to_index(dobj):
             url = to_url_id(dobj.module)
             if url != 0:  # 0 is index.html
-                info = {
-                    "ref": dobj.refname,
-                    "url": url,
-                }
+                # r: ref
+                # u: url
+                # d: doc
+                # f: function
+                info = {"r": dobj.refname, "u": url}
                 if index_docstrings:
-                    info["doc"] = trim_docstring(dobj.docstring)
+                    info["d"] = trim_docstring(dobj.docstring)
                 if isinstance(dobj, pdoc.Function):
-                    info["func"] = 1
+                    info["f"] = 1
 
                 index.append(info)
 
             for member_dobj in getattr(dobj, "doc", {}).values():
+                if url == 0 and not isinstance(dobj, pdoc.Module):
+                    # Don't document anything that is not a submodule in root package
+                    continue
+
                 recursive_add_to_index(member_dobj)
 
         @lru_cache()
@@ -86,43 +91,8 @@ def main():
 
         # If top module is a package, output the index in its subfolder, else, in the output dir
         main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")
-        with cli._open_write_file(path.join(main_path, "index.js")) as f:
-            # JS code to make it work with web and with nodejs
-            f.write("; (function () { var index = {")
-            f.write("URLS:")
-            json.dump(urls, f, indent=0, separators=(",", ":"))
-            f.write(",\nINDEX:")
-            json.dump(index, f, indent=0, separators=(",", ":"))
-            # JS code to make it work with web and with nodejs:
-            #
-            #        }; (function (root, factory) {
-            #             if (typeof define === 'function' && define.amd) {
-            #                 define(factory);
-            #             }
-            #             else if (typeof exports === 'object') {
-            #                 module.exports = factory();
-            #             } else {
-            #                 root.index = factory();
-            #             }
-            #         }(this, function () {
-            #             return index;
-            #         }))
-            # })();
-            f.write(
-                "}; (function (root, factory) {"
-                "if (typeof define === 'function' && define.amd) {"
-                "define(factory);"
-                "}"
-                "else if (typeof exports === 'object') {"
-                "module.exports = factory();"
-                "} else {"
-                "root.index = factory();"
-                "}"
-                "}(this, function () {"
-                "return index;"
-                "}))"
-                "})();"
-            )
+        with cli._open_write_file(path.join(main_path, "index.json")) as f:
+            json.dump({"index": index, "urls": urls}, f)
 
         # Generate search.html
         with cli._open_write_file(path.join(main_path, "search.html")) as f:

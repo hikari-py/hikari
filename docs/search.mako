@@ -1,16 +1,16 @@
 ## Copyright (c) 2020 Nekokatt
 ## Copyright (c) 2021 davfsa
-
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-
+##
 ## The above copyright notice and this permission notice shall be included in all
 ## copies or substantial portions of the Software.
-
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,11 +18,9 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
-
 ########################### CONFIGURATION ##########################
 <%include file="config.mako"/>
 ############################ COMPONENTS ############################
-
 <!doctype html>
 <html lang="en">
     <head>
@@ -46,158 +44,173 @@
         <style>
             <%include file="css.mako"/>
         </style>
-
-
-        ## Provide LaTeX math support
-        <script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/${mathjax_version}/latest.js?config=TeX-AMS_CHTML'></script>
     </head>
 
     <body>
-
         <%include file="head.mako"/>
+        <script src="https://code.jquery.com/jquery-${jquery_version}.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js" integrity="sha512-HiJdkRySzXhiUcX2VweXaiy8yeY212ep/j51zR/z5IPCX4ZUOxaf6naJ/0dQL/2l+ZL+B9in/u4nT8QJZ/3mig==" crossorigin></script>
 
         <div class="jumbotron jumbotron-fluid">
             <div class="container">
                 <h1 class="display-4" id="title-banner">
                     <span id="info"></span> <code><span id="query"></span></code>
                     <small><span id="results-count"></span></small>
-                    <noscript>Your browser does not support JavaScript, so search functionality is not available!</noscript>
+                    <noscript>JavaScript is disabled, so search functionality is not available!</noscript>
                 </h1>
             </div>
         </div>
-        ## We do this here so that browsers that don't support JavaScript show the other message instead of this one
-        <script>
-            document.getElementById('info').textContent = "Searching...";
-        </script>
 
         <div class="container" id="search-results">
         </div>
 
-        ## Script dependencies for Bootstrap.
-        <script src="https://code.jquery.com/jquery-${jquery_version}.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@${popperjs_version}/dist/umd/popper.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/${bootstrap_version}/js/bootstrap.min.js"></script>
-
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js" integrity="sha512-HiJdkRySzXhiUcX2VweXaiy8yeY212ep/j51zR/z5IPCX4ZUOxaf6naJ/0dQL/2l+ZL+B9in/u4nT8QJZ/3mig==" crossorigin></script>
-        <script src="index.js"></script>
-        <script src="prebuilt_index.js"></script>
         <script>
-            'use strict';
-            var lunr_index;
-            search(decodeURIComponent(new URL(window.location).hash.substring(1)));
+        var Search = {
+            init() {
+                this._index = null;
+                this._data = null;
+                this._animate = true;
+                this._pending_query = new URL(window.location).searchParams.get('q');
 
-            async function search(query) {
-                if (!query) {
-                    $("#title-banner").text("No query provided, so there is nothing to search.");
+                if (!this._pending_query) {
+                    $("#info").text("No query provided, so there is nothing to search.");
                     return;
                 }
+                this._searching_animation();
+                this._load_resources();
+            },
 
-                lunr_index = await load_index().catch(err => {
-                    $("#title-banner").text("Failed to load search index");
-                    throw err;
-                });
+            _set_result(message, err) {
+                Search._animate = false;
+                $("#info").text(message);
 
-                await _search(query).catch(err => {
-                    var text;
-                    if (err.message) {
-                        text = "Uncaught error";
-                    } else {
-                        text = "Malformed query";
-                    }
-                    $("#title-banner").text(text);
+                if (err)
                     throw err;
+            },
+
+            _load_resources() {
+                $.ajax({
+                    type: "GET",
+                    url: "./index.json",
+                    dataType: "json",
+                    cache: true,
+                    timeout: 2000,
+                    complete: this._complete,
+                    success: function (data) {
+                        Search._data = data;
+                        Search._check_pending_query();
+                    },
                 });
-            }
-            async function load_index() {
-                try{
-                    return lunr.Index.load(PREBUILT_INDEX);
-                } catch {
-                    // No prebuilt index available, build instead.
-                    return lunr(function () {
-                        this.ref('i');
-                        this.field('ref', { boost: 10 });
-                        this.field('name', { boost: 5 });
-                        this.field('doc');
-                        this.metadataWhitelist = ['position'];
-                        index.INDEX.forEach((doc, i) => {
-                            const parts = doc.ref.split('.');
-                            doc['name'] = parts[parts.length - 1];
-                            doc['i'] = i;
-                            this.add(doc);
-                        }, this);
-                    });
+                $.ajax({
+                    type: "GET",
+                    url: "./prebuilt_index.json",
+                    dataType: "json",
+                    cache: true,
+                    timeout: 2000,
+                    complete: this._complete,
+                    success: function (data) {
+                        Search._index = lunr.Index.load(data);
+                        Search._check_pending_query();
+                    },
+                });
+            },
+
+            _complete(_, textstatus) {
+                if (textstatus != "success") {
+                    Search._set_result("Failed to load resource", "Failed to load resource");
                 }
-            }
-            async function _search(query) {
+            },
+
+            _check_pending_query() {
+                if (this._data !== null && this._index !== null && (q = this._pending_query) !== null) {
+                    this._pending_query = null;
+                    this._search(q);
+                }
+            },
+
+            _searching_animation() {
+                var i = 3;
+                function animate() {
+                    if (!Search._animate) {
+                        return;
+                    }
+                    $("#info").text("Searching" + ".".repeat(i));
+                    i = (i + 1) % 4;
+
+                    window.setTimeout(animate, 500);
+                }
+                animate();
+            },
+
+            _search(query) {
+                try {
+                    this._query(query)
+                } catch (err) {
+                    if (!err.message) {
+                        this._set_result("Malformed query", err);
+                    }
+                    this._set_result("Uncaught error", err);
+                }
+
+            },
+
+            _query(query) {
                 const initial_query = query;
-                const fuzziness = ${int(lunr_search.get('fuzziness', 1))};
+                const fuzziness = 0;
                 if (fuzziness) {
                     query = query.split(/\s+/)
-                            .map(str => str.includes('~') ? str : str + '~' + fuzziness).join(' ');
+                        .map(str => str.includes('~') ? str : str + '~' + fuzziness).join(' ');
                 }
-                const results = lunr_index.search(query);
-                $("#info").text("Showing results for");
+
+                const results = this._index.search(query);
+
+                var search_results_html = "";
+                results.forEach(function (result) {
+                    const dobj = Search._data.index[parseInt(result.ref)];
+                    const docstring = dobj.d;
+                    const url = Search._data.urls[dobj.u] + '#' + dobj.r;
+                    const pretty_name = dobj.r + (dobj.f ? '()' : '');
+                    var text = Object.values(result.matchData.metadata)
+                        .filter(({ d }) => d !== undefined)
+                        .map(({ d: { position } }) => {
+                            return position.map(([start, length]) => {
+                                const PAD_CHARS = 30;
+                                const end = start + length;
+                                return [
+                                    start,
+                                    (start - PAD_CHARS > 0 ? '…' : '') +
+                                    docstring.substring(start - PAD_CHARS, start) +
+                                    '<mark>' + docstring.slice(start, end) + '</mark>' +
+                                    docstring.substring(end, end + PAD_CHARS) +
+                                    (end + PAD_CHARS < docstring.length ? '…' : '')
+                                ];
+                            });
+                        })
+                        .flat()
+                        .sort(([pos1,], [pos2,]) => pos1 - pos2)
+                        .map(([, text]) => text)
+                        .join('')
+                        .replace(/……/g, '…');
+
+                    text = '<h4><a href="' + url + '"><code>' + pretty_name + '</code></a></h4><p>' + text + '</p>';
+                    search_results_html += text
+                });
+
+                this._set_result("Showing results for");
                 $("#query").text(initial_query);
+                document.getElementById('search-results').innerHTML = search_results_html;
 
                 if (results.length != 1) {
                     $("#results-count").text("(" + results.length + " results)");
                 } else {
                     $("#results-count").text("(1 result)");
                 }
+            },
+        }
 
-                results.forEach(function (result) {
-                    const dobj = index.INDEX[parseInt(result.ref)];
-                    const docstring = dobj.doc;
-                    const url = index.URLS[dobj.url] + '#' + dobj.ref;
-                    const pretty_name = dobj.ref + (dobj.func ? '()' : '');
-                    let text = Object.values(result.matchData.metadata)
-                            .filter(({doc}) => doc !== undefined)
-                            .map(({doc: {position}}) => {
-                                return position.map(([start, length]) => {
-                                    const PAD_CHARS = 30;
-                                    const end = start + length;
-                                    return [
-                                        start,
-                                        (start - PAD_CHARS > 0 ? '…' : '') +
-                                        docstring.substring(start - PAD_CHARS, start) +
-                                        '<mark>' + docstring.slice(start, end) + '</mark>' +
-                                        docstring.substring(end, end + PAD_CHARS) +
-                                        (end + PAD_CHARS < docstring.length ? '…' : '')
-                                    ];
-                                });
-                            })
-                            .flat()
-                            .sort(([pos1,], [pos2,]) => pos1 - pos2)
-                            .map(([, text]) => text)
-                            .join('')
-                            .replace(/……/g, '…');
-
-                    text = '<h4><a href="' + url + '"><code>' + pretty_name + '</code></a></h4><p>' + text + '</p>';
-                    document.getElementById('search-results').innerHTML += text;
-                });
-            }
-        </script>
-
-
-        <!-- Search script and dependencies -->
-        <script>
-            const input = document.getElementById('lunr-search');
-            input.disabled = false;
-            input.form.addEventListener('submit', (ev) => {
-                ev.preventDefault();
-                const url = new URL(window.location);
-                url.searchParams.set('q', input.value);
-                history.replaceState({}, null, url.toString());
-                search(input.value);
-            });
-            // On page load
-            const query = new URL(window.location).searchParams.get('q');
-            if (query)
-                search(query);
-            function search(query) {
-                const url = '${'../' * (module.url().count('/') - 1)}search.html#' + encodeURIComponent(query);
-                window.location.href = url;
-            };
+        $(document).ready(function () {
+            Search.init();
+        });
         </script>
     </body>
 </html>
