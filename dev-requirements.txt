@@ -8,7 +8,7 @@ mock==4.0.3
 # Py.test stuff.
 pytest==6.2.1
 pytest-asyncio==0.14.0
-pytest-cov==2.10.1
+pytest-cov==2.11.0
 pytest-randomly==3.5.0
 
 # Coverage testing.
