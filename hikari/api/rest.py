@@ -3857,7 +3857,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> guilds.Member:
         """Edit a guild member.
 
         Parameters
@@ -3903,6 +3903,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
 
         Raises
         ------
