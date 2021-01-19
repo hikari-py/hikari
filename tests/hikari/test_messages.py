@@ -130,6 +130,7 @@ def message():
         flags=None,
         nonce=None,
         referenced_message=None,
+        stickers=[],
     )
 
 

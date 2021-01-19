@@ -35,6 +35,8 @@ __all__: typing.List[str] = [
     "MessageReference",
     "PartialMessage",
     "Message",
+    "StickerFormatType",
+    "Sticker",
 ]
 
 import typing
@@ -153,6 +155,20 @@ class MessageActivityType(int, enums.Enum):
     """Request to join an activity."""
 
 
+@typing.final
+class StickerFormatType(int, enums.Enum):
+    """The formats types of a sticker's asset."""
+
+    PNG = 1
+    """A PNG sticker."""
+
+    APNG = 2
+    """A animated PNG sticker."""
+
+    LOTTIE = 3
+    """A lottie sticker."""
+
+
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
@@ -203,6 +219,44 @@ class Reaction:
 
     def __str__(self) -> str:
         return str(self.emoji)
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class Sticker(snowflakes.Unique):
+    """Represents the stickers found attached to messages on Discord."""
+
+    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """The ID of this entity."""
+
+    pack_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    """ID of the package this sticker belongs to."""
+
+    name: str = attr.ib(eq=False, hash=False, repr=True)
+    """The name of this sticker."""
+
+    description: str = attr.ib(eq=False, hash=False, repr=False)
+    """The description of this sticker."""
+
+    tags: typing.Sequence[str] = attr.ib(eq=False, hash=False, repr=True)
+    """A sequence of this sticker's tags."""
+
+    asset_hash: str = attr.ib(eq=False, hash=False, repr=False)
+    """The hash of this sticker's asset.
+
+    !!! note
+        The CDN endpoint for this hash is currently undocumented.
+    """
+
+    preview_asset_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The hash of this sticker's preview asset.
+
+    !!! note
+        The CDN endpoint for this hash is currently undocumented.
+    """
+
+    format_type: typing.Union[StickerFormatType, int] = attr.ib(eq=False, hash=False, repr=True)
+    """The format of this sticker's asset."""
 
 
 @attr_extensions.with_copy
@@ -536,6 +590,9 @@ class PartialMessage(snowflakes.Unique):
 
     flags: undefined.UndefinedNoneOr[MessageFlag] = attr.ib(repr=False)
     """The message flags."""
+
+    stickers: undefined.UndefinedOr[typing.Sequence[Sticker]] = attr.ib(repr=False)
+    """The stickers sent with this message."""
 
     nonce: undefined.UndefinedNoneOr[str] = attr.ib(repr=False)
     """The message nonce.
@@ -1122,6 +1179,9 @@ class Message(PartialMessage):
 
     flags: typing.Optional[MessageFlag]
     """The message flags."""
+
+    stickers: typing.Sequence[Sticker]
+    """The stickers sent with this message."""
 
     nonce: typing.Optional[str]
     """The message nonce. This is a string used for validating a message was sent."""

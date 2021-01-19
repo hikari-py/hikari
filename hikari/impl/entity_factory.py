@@ -1451,6 +1451,70 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # MESSAGE MODELS #
     ##################
 
+    def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
+        return message_models.MessageActivity(
+            type=message_models.MessageActivityType(payload["type"]), party_id=payload.get("party_id")
+        )
+
+    def _deserialize_message_application(self, payload: data_binding.JSONObject) -> message_models.MessageApplication:
+        primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_primary_sku_id := payload.get("primary_sku_id")) is not None:
+            primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
+
+        return message_models.MessageApplication(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            description=payload["description"],
+            icon_hash=payload["icon"],
+            summary=payload["summary"],
+            cover_image_hash=payload["cover_image"],
+            primary_sku_id=primary_sku_id,
+        )
+
+    def _deserialize_message_attachment(self, payload: data_binding.JSONObject) -> message_models.Attachment:
+        return message_models.Attachment(
+            id=snowflakes.Snowflake(payload["id"]),
+            filename=payload["filename"],
+            size=int(payload["size"]),
+            url=payload["url"],
+            proxy_url=payload["proxy_url"],
+            height=payload.get("height"),
+            width=payload.get("width"),
+        )
+
+    def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
+        return message_models.Reaction(
+            count=int(payload["count"]), emoji=self.deserialize_emoji(payload["emoji"]), is_me=payload["me"]
+        )
+
+    def _deserialize_message_reference(self, payload: data_binding.JSONObject) -> message_models.MessageReference:
+        message_reference_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if "message_id" in payload:
+            message_reference_message_id = snowflakes.Snowflake(payload["message_id"])
+
+        message_reference_guild_id: typing.Optional[snowflakes.Snowflake] = None
+        if "guild_id" in payload:
+            message_reference_guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+        return message_models.MessageReference(
+            app=self._app,
+            id=message_reference_message_id,
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            guild_id=message_reference_guild_id,
+        )
+
+    def _deserialize_sticker(self, payload: data_binding.JSONObject) -> message_models.Sticker:
+        return message_models.Sticker(
+            id=snowflakes.Snowflake(payload["id"]),
+            pack_id=snowflakes.Snowflake(payload["pack_id"]),
+            name=payload["name"],
+            description=payload["description"],
+            tags=[tag.strip() for tag in payload["tags"].split(",")] if "tags" in payload else [],
+            asset_hash=payload["asset"],
+            preview_asset_hash=payload["preview_asset"],
+            format_type=message_models.StickerFormatType(payload["format_type"]),
+        )
+
     def deserialize_partial_message(  # noqa CFQ001 - Function too long
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
@@ -1479,18 +1543,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         attachments: undefined.UndefinedOr[typing.MutableSequence[message_models.Attachment]] = undefined.UNDEFINED
         if "attachments" in payload:
-            attachments = []
-            for attachment_payload in payload["attachments"]:
-                attachment = message_models.Attachment(
-                    id=snowflakes.Snowflake(attachment_payload["id"]),
-                    filename=attachment_payload["filename"],
-                    size=int(attachment_payload["size"]),
-                    url=attachment_payload["url"],
-                    proxy_url=attachment_payload["proxy_url"],
-                    height=attachment_payload.get("height"),
-                    width=attachment_payload.get("width"),
-                )
-                attachments.append(attachment)
+            attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
 
         embeds: undefined.UndefinedOr[typing.Sequence[embed_models.Embed]] = undefined.UNDEFINED
         if "embeds" in payload:
@@ -1498,58 +1551,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         reactions: undefined.UndefinedOr[typing.MutableSequence[message_models.Reaction]] = undefined.UNDEFINED
         if "reactions" in payload:
-            reactions = []
-            for reaction_payload in payload["reactions"]:
-                reaction = message_models.Reaction(
-                    count=int(reaction_payload["count"]),
-                    emoji=self.deserialize_emoji(reaction_payload["emoji"]),
-                    is_me=reaction_payload["me"],
-                )
-                reactions.append(reaction)
+            reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
 
         activity: undefined.UndefinedOr[message_models.MessageActivity] = undefined.UNDEFINED
         if "activity" in payload:
-            activity_payload = payload["activity"]
-            activity = message_models.MessageActivity(
-                type=message_models.MessageActivityType(activity_payload["type"]),
-                party_id=activity_payload.get("party_id"),
-            )
+            activity = self._deserialize_message_activity(payload["activity"])
 
         application: undefined.UndefinedOr[message_models.MessageApplication] = undefined.UNDEFINED
         if "application" in payload:
-            application_payload = payload["application"]
-            primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_primary_sku_id := application_payload.get("primary_sku_id")) is not None:
-                primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
-
-            application = message_models.MessageApplication(
-                id=snowflakes.Snowflake(application_payload["id"]),
-                name=application_payload["name"],
-                description=application_payload["description"],
-                icon_hash=application_payload["icon"],
-                summary=application_payload["summary"],
-                cover_image_hash=application_payload["cover_image"],
-                primary_sku_id=primary_sku_id,
-            )
+            application = self._deserialize_message_application(payload["application"])
 
         message_reference: undefined.UndefinedOr[message_models.MessageReference] = undefined.UNDEFINED
         if "message_reference" in payload:
-            message_reference_payload = payload["message_reference"]
-
-            message_reference_message_id: typing.Optional[snowflakes.Snowflake] = None
-            if "message_id" in message_reference_payload:
-                message_reference_message_id = snowflakes.Snowflake(message_reference_payload["message_id"])
-
-            message_reference_guild_id: typing.Optional[snowflakes.Snowflake] = None
-            if "guild_id" in message_reference_payload:
-                message_reference_guild_id = snowflakes.Snowflake(message_reference_payload["guild_id"])
-
-            message_reference = message_models.MessageReference(
-                app=self._app,
-                id=message_reference_message_id,
-                channel_id=snowflakes.Snowflake(message_reference_payload["channel_id"]),
-                guild_id=message_reference_guild_id,
-            )
+            message_reference = self._deserialize_message_reference(payload["message_reference"])
 
         referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
         if "referenced_message" in payload:
@@ -1557,6 +1571,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 referenced_message = self.deserialize_message(referenced_message_payload)
             else:
                 referenced_message = None
+
+        stickers: undefined.UndefinedOr[typing.Sequence[message_models.Sticker]] = undefined.UNDEFINED
+        if "stickers" in payload:
+            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
 
         message = message_models.PartialMessage(
             app=self._app,
@@ -1580,6 +1598,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message_reference=message_reference,
             referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
+            stickers=stickers,
             nonce=payload["nonce"] if "nonce" in payload else undefined.UNDEFINED,
             # We initialize these next.
             mentions=NotImplemented,
@@ -1626,57 +1645,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
             edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
 
-        attachments = []
-        for attachment_payload in payload["attachments"]:
-            attachment = message_models.Attachment(
-                id=snowflakes.Snowflake(attachment_payload["id"]),
-                filename=attachment_payload["filename"],
-                size=int(attachment_payload["size"]),
-                url=attachment_payload["url"],
-                proxy_url=attachment_payload["proxy_url"],
-                height=attachment_payload.get("height"),
-                width=attachment_payload.get("width"),
-            )
-            attachments.append(attachment)
+        attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
-        reactions = []
         if "reactions" in payload:
-            for reaction_payload in payload["reactions"]:
-                reaction = message_models.Reaction(
-                    count=int(reaction_payload["count"]),
-                    emoji=self.deserialize_emoji(reaction_payload["emoji"]),
-                    is_me=reaction_payload["me"],
-                )
-                reactions.append(reaction)
+            reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
+
+        else:
+            reactions = []
 
         activity: typing.Optional[message_models.MessageActivity] = None
         if "activity" in payload:
-            activity_payload = payload["activity"]
-            activity = message_models.MessageActivity(
-                type=message_models.MessageActivityType(activity_payload["type"]),
-                party_id=activity_payload.get("party_id"),
-            )
+            activity = self._deserialize_message_activity(payload["activity"])
 
         message_reference: typing.Optional[message_models.MessageReference] = None
         if "message_reference" in payload:
-            message_reference_payload = payload["message_reference"]
-
-            message_reference_message_id: typing.Optional[snowflakes.Snowflake] = None
-            if "message_id" in message_reference_payload:
-                message_reference_message_id = snowflakes.Snowflake(message_reference_payload["message_id"])
-
-            message_reference_guild_id: typing.Optional[snowflakes.Snowflake] = None
-            if "guild_id" in message_reference_payload:
-                message_reference_guild_id = snowflakes.Snowflake(message_reference_payload["guild_id"])
-
-            message_reference = message_models.MessageReference(
-                app=self._app,
-                id=message_reference_message_id,
-                channel_id=snowflakes.Snowflake(message_reference_payload["channel_id"]),
-                guild_id=message_reference_guild_id,
-            )
+            message_reference = self._deserialize_message_reference(payload["message_reference"])
 
         referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
         if "referenced_message" in payload:
@@ -1687,20 +1672,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
-            application_payload = payload["application"]
-            primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_primary_sku_id := application_payload.get("primary_sku_id")) is not None:
-                primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
+            application = self._deserialize_message_application(payload["application"])
 
-            application = message_models.MessageApplication(
-                id=snowflakes.Snowflake(application_payload["id"]),
-                name=application_payload["name"],
-                description=application_payload["description"],
-                icon_hash=application_payload["icon"],
-                summary=application_payload["summary"],
-                cover_image_hash=application_payload["cover_image"],
-                primary_sku_id=primary_sku_id,
-            )
+        if "stickers" in payload:
+            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
+
+        else:
+            stickers = []
 
         message = message_models.Message(
             app=self._app,
@@ -1724,6 +1702,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message_reference=message_reference,
             referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
+            stickers=stickers,
             nonce=payload.get("nonce"),
             # We initialize these next.
             mentions=NotImplemented,
