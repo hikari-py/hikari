@@ -636,6 +636,36 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
+        """Parse a raw payload from Discord into a guild welcome screen object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.WelcomeScreen
+            The deserialized guild welcome screen object.
+        """
+
+    @abc.abstractmethod
+    def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
+        """Serialize a welcome channel object to a json serializable dict.
+
+        Parameters
+        ----------
+        welcome_channel : hikari.guilds.WelcomeChannel
+            The guild welcome channel object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the welcome channel.
+        """
+
+    @abc.abstractmethod
     def deserialize_member(
         self,
         payload: data_binding.JSONObject,

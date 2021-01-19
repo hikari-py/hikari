@@ -2616,6 +2616,84 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "456"})
 
+    async def test_fetch_welcome_screen(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=52341231)
+
+        result = await rest_client.fetch_welcome_screen(StubModel(52341231))
+
+        assert result is rest_client._entity_factory.deserialize_welcome_screen.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_welcome_screen.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+    async def test_fetch_welcome_screen_handles_204_response(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=None)
+        expected_route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=52341231)
+
+        result = await rest_client.fetch_welcome_screen(StubModel(52341231))
+
+        assert isinstance(result, guilds.WelcomeScreen)
+        assert result.description is None
+        assert result.channels == []
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_welcome_screen.assert_not_called()
+
+    async def test_edit_welcome_screen_with_optional_kwargs(self, rest_client):
+        mock_channel = object()
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
+
+        result = await rest_client.edit_welcome_screen(
+            StubModel(54123564), description="blam blam", enabled=True, channels=[mock_channel]
+        )
+
+        assert result is rest_client._entity_factory.deserialize_welcome_screen.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "description": "blam blam",
+                "enabled": True,
+                "welcome_channels": [rest_client._entity_factory.serialize_welcome_channel.return_value],
+            },
+        )
+        rest_client._entity_factory.deserialize_welcome_screen.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._entity_factory.serialize_welcome_channel.assert_called_once_with(mock_channel)
+
+    async def test_edit_welcome_screen_with_null_kwargs(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
+
+        result = await rest_client.edit_welcome_screen(StubModel(54123564), description=None, channels=None)
+
+        assert result is rest_client._entity_factory.deserialize_welcome_screen.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "description": None,
+                "welcome_channels": None,
+            },
+        )
+        rest_client._entity_factory.deserialize_welcome_screen.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._entity_factory.serialize_welcome_channel.assert_not_called()
+
+    async def test_edit_welcome_screen_without_optional_kwargs(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
+
+        result = await rest_client.edit_welcome_screen(StubModel(54123564))
+
+        assert result is rest_client._entity_factory.deserialize_welcome_screen.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+        rest_client._entity_factory.deserialize_welcome_screen.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
     async def test_fetch_vanity_url(self, rest_client):
         vanity_url = StubModel(789)
         expected_route = routes.GET_GUILD_VANITY_URL.compile(guild=123)
