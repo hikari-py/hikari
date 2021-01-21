@@ -1042,7 +1042,12 @@ class TestEntityFactoryImpl:
                 "height": 123,
                 "width": 456,
             },
-            "video": {"url": "https://somewhere.com/video.mp4", "height": 1234, "width": 4567},
+            "video": {
+                "url": "https://somewhere.com/video.mp4",
+                "height": 1234,
+                "width": 4567,
+                "proxy_url": "https://somewhere.com/proxy/video.mp4",
+            },
             "provider": {"name": "some name", "url": "https://somewhere.com/provider"},
             "author": {
                 "name": "some name",
@@ -1067,19 +1072,20 @@ class TestEntityFactoryImpl:
         assert embed.footer.icon.proxy_resource.url == "https://media.somewhere.com/footer.png"
         assert isinstance(embed.footer, embed_models.EmbedFooter)
         # EmbedImage
-        assert embed.image.url == "https://somewhere.com/image.png"
+        assert embed.image.resource.url == "https://somewhere.com/image.png"
         assert embed.image.proxy_resource.url == "https://media.somewhere.com/image.png"
         assert embed.image.height == 122
         assert embed.image.width == 133
         assert isinstance(embed.image, embed_models.EmbedImage)
         # EmbedThumbnail
-        assert embed.thumbnail.url == "https://somewhere.com/thumbnail.png"
+        assert embed.thumbnail.resource.url == "https://somewhere.com/thumbnail.png"
         assert embed.thumbnail.proxy_resource.url == "https://media.somewhere.com/thumbnail.png"
         assert embed.thumbnail.height == 123
         assert embed.thumbnail.width == 456
         assert isinstance(embed.thumbnail, embed_models.EmbedImage)
         # EmbedVideo
-        assert embed.video.url == "https://somewhere.com/video.mp4"
+        assert embed.video.resource.url == "https://somewhere.com/video.mp4"
+        assert embed.video.proxy_resource.url == "https://somewhere.com/proxy/video.mp4"
         assert embed.video.height == 1234
         assert embed.video.width == 4567
         assert isinstance(embed.video, embed_models.EmbedVideo)
@@ -1090,7 +1096,7 @@ class TestEntityFactoryImpl:
         # EmbedAuthor
         assert embed.author.name == "some name"
         assert embed.author.url == "https://somewhere.com/author-url"
-        assert embed.author.icon.url == "https://somewhere.com/author.png"
+        assert embed.author.icon.resource.url == "https://somewhere.com/author.png"
         assert embed.author.icon.proxy_resource.url == "https://media.somewhere.com/author.png"
         assert isinstance(embed.author, embed_models.EmbedAuthor)
         # EmbedField
@@ -1100,6 +1106,60 @@ class TestEntityFactoryImpl:
         assert field.value == "some value"
         assert field.is_inline is True
         assert isinstance(field, embed_models.EmbedField)
+
+    def test_deserialize_embed_with_partial_sub_fields(self, entity_factory_impl, embed_payload):
+        embed = entity_factory_impl.deserialize_embed(
+            {
+                "footer": {"text": "footer text"},
+                "image": {"url": "https://blahblah.blahblahblah"},
+                "thumbnail": {"url": "https://blahblah2.blahblahblah"},
+                "video": {"url": "https://blahblah3.blahblahblah"},
+                "provider": {"url": "https://blahbla5h.blahblahblah"},
+                "author": {"name": "author name"},
+            }
+        )
+        # EmbedFooter
+        assert embed.footer.text == "footer text"
+        assert embed.footer.icon is None
+        # EmbedImage
+        assert embed.image.resource.url == "https://blahblah.blahblahblah"
+        assert embed.image.proxy_resource is None
+        assert embed.image.width is None
+        assert embed.image.height is None
+        # EmbedThumbnail
+        assert embed.thumbnail.resource.url == "https://blahblah2.blahblahblah"
+        assert embed.thumbnail.proxy_resource is None
+        assert embed.thumbnail.height is None
+        assert embed.thumbnail.width is None
+        # EmbedVideo
+        assert embed.video.resource.url == "https://blahblah3.blahblahblah"
+        assert embed.video.proxy_resource is None
+        assert embed.video.height is None
+        assert embed.video.width is None
+        # EmbedProvider
+        assert embed.provider.name is None
+        assert embed.provider.url == "https://blahbla5h.blahblahblah"
+        # EmbedAuthor
+        assert embed.author.name == "author name"
+        assert embed.author.url is None
+        assert embed.author.icon is None
+
+    def test_deserialize_embed_with_other_null_sub_fields(self, entity_factory_impl, embed_payload):
+        embed = entity_factory_impl.deserialize_embed(
+            {
+                "footer": {"text": "footer text"},
+                "provider": {"name": "name name"},
+                "author": {"url": "urlurlurl"},
+                "fields": [{"name": "title", "value": "some value"}],
+            }
+        )
+        # EmbedProvider
+        assert embed.provider.name == "name name"
+        assert embed.provider.url is None
+        # EmbedAuthor
+        assert embed.author.name is None
+        assert embed.author.url == "urlurlurl"
+        assert embed.author.icon is None
 
     def test_deserialize_embed_with_partial_fields(self, entity_factory_impl, embed_payload):
         embed = entity_factory_impl.deserialize_embed(
