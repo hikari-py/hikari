@@ -2094,7 +2094,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> guilds.Member:
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("nick", nick)
@@ -2107,7 +2107,9 @@ class RESTClientImpl(rest_api.RESTClient):
         elif voice_channel is not undefined.UNDEFINED:
             body.put_snowflake("channel_id", voice_channel)
 
-        await self._request(route, json=body, reason=reason)
+        raw_response = await self._request(route, json=body, reason=reason)
+        response = typing.cast(data_binding.JSONObject, raw_response)
+        return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
     async def edit_my_nick(
         self,
