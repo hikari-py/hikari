@@ -711,27 +711,31 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         fields: typing.Optional[typing.MutableSequence[embed_models.EmbedField]] = None
 
         image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
-        if image_payload := payload.get("image"):
+        if (image_payload := payload.get("image")) and "url" in image_payload:
+            proxy = files.ensure_resource(image_payload["proxy_url"]) if "proxy_url" in image_payload else None
             image = embed_models.EmbedImage(
-                resource=files.ensure_resource(image_payload.get("url")),
-                proxy_resource=files.ensure_resource(image_payload.get("proxy_url")),
+                resource=files.ensure_resource(image_payload["url"]),
+                proxy_resource=proxy,
                 height=image_payload.get("height"),
                 width=image_payload.get("width"),
             )
 
         thumbnail: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
-        if thumbnail_payload := payload.get("thumbnail"):
+        if (thumbnail_payload := payload.get("thumbnail")) and "url" in thumbnail_payload:
+            proxy = files.ensure_resource(thumbnail_payload["proxy_url"]) if "proxy_url" in thumbnail_payload else None
             thumbnail = embed_models.EmbedImage(
-                resource=files.ensure_resource(thumbnail_payload.get("url")),
-                proxy_resource=files.ensure_resource(thumbnail_payload.get("proxy_url")),
+                resource=files.ensure_resource(thumbnail_payload["url"]),
+                proxy_resource=proxy,
                 height=thumbnail_payload.get("height"),
                 width=thumbnail_payload.get("width"),
             )
 
         video: typing.Optional[embed_models.EmbedVideo[files.AsyncReader]] = None
-        if video_payload := payload.get("video"):
+        if (video_payload := payload.get("video")) and "url" in video_payload:
+            raw_proxy_url = video_payload.get("proxy_url")
             video = embed_models.EmbedVideo(
-                resource=files.ensure_resource(video_payload.get("url")),
+                resource=files.ensure_resource(video_payload["url"]),
+                proxy_resource=files.ensure_resource(raw_proxy_url) if raw_proxy_url else None,
                 height=video_payload.get("height"),
                 width=video_payload.get("width"),
             )
@@ -745,9 +749,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if author_payload := payload.get("author"):
             icon = None
             if "icon_url" in author_payload:
+                raw_proxy_url = author_payload.get("proxy_icon_url")
                 icon = embed_models.EmbedResourceWithProxy(
-                    resource=files.ensure_resource(author_payload.get("icon_url")),
-                    proxy_resource=files.ensure_resource(author_payload.get("proxy_icon_url")),
+                    resource=files.ensure_resource(author_payload["icon_url"]),
+                    proxy_resource=files.ensure_resource(raw_proxy_url) if raw_proxy_url else None,
                 )
 
             author = embed_models.EmbedAuthor(
@@ -760,9 +765,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if footer_payload := payload.get("footer"):
             icon = None
             if "icon_url" in footer_payload:
+                raw_proxy_url = footer_payload.get("proxy_icon_url")
                 icon = embed_models.EmbedResourceWithProxy(
-                    resource=files.ensure_resource(footer_payload.get("icon_url")),
-                    proxy_resource=files.ensure_resource(footer_payload.get("proxy_icon_url")),
+                    resource=files.ensure_resource(footer_payload["icon_url"]),
+                    proxy_resource=files.ensure_resource(raw_proxy_url) if raw_proxy_url else None,
                 )
 
             footer = embed_models.EmbedFooter(text=footer_payload.get("text"), icon=icon)
