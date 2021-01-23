@@ -1516,7 +1516,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             icon_hash=payload["icon"],
             summary=payload["summary"],
-            cover_image_hash=payload["cover_image"],
+            cover_image_hash=payload.get("cover_image"),
             primary_sku_id=primary_sku_id,
         )
 
