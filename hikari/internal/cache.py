@@ -619,7 +619,7 @@ class MentionsData(BaseData[messages.Mentions]):
     """A model for storing message mentions data in an in-memory cache."""
 
     users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attr.ib()
-    role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.ib()
+    role_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attr.ib()
     channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.ib()
     everyone: undefined.UndefinedOr[bool] = attr.ib()
 
@@ -724,9 +724,9 @@ class MessageData(BaseData[messages.Message]):
     edited_timestamp: typing.Optional[datetime.datetime] = attr.ib()
     is_tts: bool = attr.ib()
     mentions: MentionsData = attr.ib()
-    attachments: typing.Sequence[messages.Attachment] = attr.ib()
-    embeds: typing.Sequence[embeds_.Embed] = attr.ib()
-    reactions: typing.Sequence[messages.Reaction] = attr.ib()
+    attachments: typing.Tuple[messages.Attachment, ...] = attr.ib()
+    embeds: typing.Tuple[embeds_.Embed, ...] = attr.ib()
+    reactions: typing.Tuple[messages.Reaction, ...] = attr.ib()
     is_pinned: bool = attr.ib()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     type: typing.Union[messages.MessageType, int] = attr.ib()
@@ -734,6 +734,7 @@ class MessageData(BaseData[messages.Message]):
     application: typing.Optional[messages.MessageApplication] = attr.ib()
     message_reference: typing.Optional[messages.MessageReference] = attr.ib()
     flags: typing.Optional[messages.MessageFlag] = attr.ib()
+    stickers: typing.Tuple[messages.Sticker, ...] = attr.ib()
     nonce: typing.Optional[str] = attr.ib()
     referenced_message: undefined.UndefinedNoneOr[RefCell[MessageData]] = attr.ib()
 
@@ -781,6 +782,7 @@ class MessageData(BaseData[messages.Message]):
             application=copy.copy(message.application) if message.application else None,
             message_reference=copy.copy(message.message_reference) if message.message_reference else None,
             flags=copy.copy(message.flags),
+            stickers=tuple(map(copy.copy, message.stickers)),
             nonce=message.nonce,
             referenced_message=referenced_message,
         )
@@ -815,6 +817,7 @@ class MessageData(BaseData[messages.Message]):
             application=copy.copy(self.application) if self.application else None,
             message_reference=copy.copy(self.message_reference) if self.message_reference else None,
             flags=self.flags,
+            stickers=tuple(map(copy.copy, self.stickers)),
             nonce=self.nonce,
             referenced_message=referenced_message,
         )

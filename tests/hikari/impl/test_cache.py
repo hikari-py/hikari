@@ -2029,6 +2029,7 @@ class TestCacheImpl:
         mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
+        mock_sticker = mock.MagicMock(messages.Sticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_applcation = mock.MagicMock(messages.MessageApplication)
@@ -2061,6 +2062,7 @@ class TestCacheImpl:
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
+            stickers=(mock_sticker,),
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2112,6 +2114,7 @@ class TestCacheImpl:
         assert result.message_reference == mock_reference
         assert result.message_reference is not mock_reference
         assert result.flags == messages.MessageFlag.CROSSPOSTED
+        assert result.stickers == (mock_sticker,)
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
 
@@ -2145,6 +2148,7 @@ class TestCacheImpl:
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce=None,
             referenced_message=None,
+            stickers=(),
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))

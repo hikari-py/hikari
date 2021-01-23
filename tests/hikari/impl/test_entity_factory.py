@@ -2624,6 +2624,18 @@ class TestEntityFactoryImpl:
                 "message_id": "306588351130107906",
             },
             "flags": 2,
+            "stickers": [
+                {
+                    "id": "749046696482439188",
+                    "name": "Thinking",
+                    "description": "very descript",
+                    "pack_id": "749043879713701898",
+                    "asset": "2be10a547ceb0116998f5bb878d5bc1c",
+                    "preview_asset": "078c91d6cb1a29820343149f2e2212cd",
+                    "format_type": 3,
+                    "tags": "curious, huh, what, confused, wut, 🤔, 😕, 🧐",
+                }
+            ],
             "nonce": "171000788183678976",
         }
 
@@ -2704,8 +2716,23 @@ class TestEntityFactoryImpl:
         assert partial_message.message_reference.id == 306588351130107906
         assert partial_message.message_reference.channel_id == 278325129692446722
         assert partial_message.message_reference.guild_id == 278325129692446720
+        assert isinstance(partial_message.message_reference, message_models.MessageReference)
 
         assert partial_message.flags == message_models.MessageFlag.IS_CROSSPOST
+
+        # Sticker
+        assert len(partial_message.stickers) == 1
+        sticker = partial_message.stickers[0]
+        assert sticker.id == 749046696482439188
+        assert sticker.name == "Thinking"
+        assert sticker.description == "very descript"
+        assert sticker.pack_id == 749043879713701898
+        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
+        assert sticker.preview_asset_hash == "078c91d6cb1a29820343149f2e2212cd"
+        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
+        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
+        assert isinstance(sticker, message_models.Sticker)
+
         assert partial_message.nonce == "171000788183678976"
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
@@ -2744,6 +2771,7 @@ class TestEntityFactoryImpl:
         assert partial_message.application is undefined.UNDEFINED
         assert partial_message.message_reference is undefined.UNDEFINED
         assert partial_message.flags is undefined.UNDEFINED
+        assert partial_message.stickers is undefined.UNDEFINED
         assert partial_message.nonce is undefined.UNDEFINED
 
     def test_deserialize_full_message(
@@ -2822,8 +2850,23 @@ class TestEntityFactoryImpl:
         assert message.message_reference.id == 306588351130107906
         assert message.message_reference.channel_id == 278325129692446722
         assert message.message_reference.guild_id == 278325129692446720
+        assert isinstance(message.message_reference, message_models.MessageReference)
 
         assert message.flags == message_models.MessageFlag.IS_CROSSPOST
+
+        # Sticker
+        assert len(message.stickers) == 1
+        sticker = message.stickers[0]
+        assert sticker.id == 749046696482439188
+        assert sticker.name == "Thinking"
+        assert sticker.description == "very descript"
+        assert sticker.pack_id == 749043879713701898
+        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
+        assert sticker.preview_asset_hash == "078c91d6cb1a29820343149f2e2212cd"
+        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
+        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
+        assert isinstance(sticker, message_models.Sticker)
+
         assert message.nonce == "171000788183678976"
 
     def test_deserialize_message_with_null_and_unset_fields(
@@ -2865,6 +2908,7 @@ class TestEntityFactoryImpl:
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
+        assert message.stickers == []
         assert message.nonce is None
 
     def test_deserialize_message_with_no_primary_sku_id(self, entity_factory_impl, message_payload):
