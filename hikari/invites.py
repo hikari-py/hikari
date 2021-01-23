@@ -131,6 +131,9 @@ class InviteGuild(guilds.PartialGuild):
     `features` for this guild. If not, this will always be `builtins.None`.
     """
 
+    welcome_screen: typing.Optional[guilds.WelcomeScreen] = attr.ib(eq=False, hash=False, repr=False)
+    """The welcome screen of a community guild shown to new members, if set."""
+
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
         """Splash for the guild, if set."""

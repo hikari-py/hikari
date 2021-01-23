@@ -1480,6 +1480,64 @@ class TestEntityFactoryImpl:
         assert entity_factory_impl.deserialize_guild_widget({"channel_id": None, "enabled": True}).channel_id is None
 
     @pytest.fixture()
+    def guild_welcome_screen_payload(self):
+        return {
+            "description": "What does the fox say? Nico Nico Nico NIIIIIIIIIIIIIIIIIIIIIII!!!!",
+            "welcome_channels": [
+                {
+                    "channel_id": "87656344532234",
+                    "description": "Follow for nothing",
+                    "emoji_id": None,
+                    "emoji_name": "📡",
+                },
+                {
+                    "channel_id": "89563452341234",
+                    "description": "Get help with cats",
+                    "emoji_id": 31231351234,
+                    "emoji_name": "dogGoesMeow",
+                },
+            ],
+        }
+
+    def test_deserialize_welcome_screen(self, entity_factory_impl, mock_app, guild_welcome_screen_payload):
+        welcome_screen = entity_factory_impl.deserialize_welcome_screen(guild_welcome_screen_payload)
+
+        assert welcome_screen.description == "What does the fox say? Nico Nico Nico NIIIIIIIIIIIIIIIIIIIIIII!!!!"
+
+        assert welcome_screen.channels[0].channel_id == 87656344532234
+        assert welcome_screen.channels[0].description == "Follow for nothing"
+        assert isinstance(welcome_screen.channels[0].emoji, emoji_models.UnicodeEmoji)
+        assert welcome_screen.channels[0].emoji.name == "📡"
+        assert isinstance(welcome_screen.channels[1].emoji, emoji_models.CustomEmoji)
+        assert welcome_screen.channels[1].emoji.name == "dogGoesMeow"
+        assert welcome_screen.channels[1].emoji.id == 31231351234
+        assert welcome_screen.channels[1].emoji.is_animated is None
+
+    def test_serialize_welcome_channel_with_custom_emoji(self, entity_factory_impl, mock_app):
+        channel = guild_models.WelcomeChannel(
+            channel_id=snowflakes.Snowflake(431231),
+            description="meow",
+            emoji=emoji_models.CustomEmoji(id=snowflakes.Snowflake(564123), name="boom", is_animated=None),
+        )
+        result = entity_factory_impl.serialize_welcome_channel(channel)
+
+        assert result == {"channel_id": "431231", "description": "meow", "emoji_id": "564123", "emoji_name": "boom"}
+
+    def test_serialize_welcome_channel_with_unicode_emoji(self, entity_factory_impl, mock_app):
+        channel = guild_models.WelcomeChannel(
+            channel_id=snowflakes.Snowflake(4312311), description="meow1", emoji=emoji_models.UnicodeEmoji("a")
+        )
+        result = entity_factory_impl.serialize_welcome_channel(channel)
+
+        assert result == {"channel_id": "4312311", "description": "meow1", "emoji_name": "a"}
+
+    def test_serialize_welcome_channel_with_no_emoji(self, entity_factory_impl, mock_app):
+        channel = guild_models.WelcomeChannel(channel_id=snowflakes.Snowflake(4312312), description="meow2", emoji=None)
+        result = entity_factory_impl.serialize_welcome_channel(channel)
+
+        assert result == {"channel_id": "4312312", "description": "meow2"}
+
+    @pytest.fixture()
     def member_payload(self, user_payload):
         return {
             "nick": "foobarbaz",
@@ -2309,7 +2367,9 @@ class TestEntityFactoryImpl:
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
     @pytest.fixture()
-    def invite_payload(self, partial_channel_payload, user_payload, alternative_user_payload):
+    def invite_payload(
+        self, partial_channel_payload, user_payload, alternative_user_payload, guild_welcome_screen_payload
+    ):
         return {
             "code": "aCode",
             "guild": {
@@ -2322,6 +2382,7 @@ class TestEntityFactoryImpl:
                 "features": ["FORCE_RELAY"],
                 "verification_level": 2,
                 "vanity_url_code": "I-am-very-vain",
+                "welcome_screen": guild_welcome_screen_payload,
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
@@ -2338,6 +2399,7 @@ class TestEntityFactoryImpl:
         invite_payload,
         partial_channel_payload,
         user_payload,
+        guild_welcome_screen_payload,
         alternative_user_payload,
     ):
         invite = entity_factory_impl.deserialize_invite(invite_payload)
@@ -2353,6 +2415,9 @@ class TestEntityFactoryImpl:
         assert invite.guild.description == "Describe me cute kitty."
         assert invite.guild.verification_level == guild_models.GuildVerificationLevel.MEDIUM
         assert invite.guild.vanity_url_code == "I-am-very-vain"
+        assert invite.guild.welcome_screen == entity_factory_impl.deserialize_welcome_screen(
+            guild_welcome_screen_payload
+        )
 
         assert invite.guild_id == 56188492224814744
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
@@ -2363,6 +2428,11 @@ class TestEntityFactoryImpl:
         assert invite.approximate_member_count == 84
         assert invite.approximate_active_member_count == 42
         assert isinstance(invite, invite_models.Invite)
+
+    def test_deserialize_invite_with_null_guild_fields(self, entity_factory_impl, invite_payload):
+        del invite_payload["guild"]["welcome_screen"]
+
+        assert entity_factory_impl.deserialize_invite(invite_payload).guild.welcome_screen is None
 
     def test_deserialize_invite_with_null_and_unset_fields(self, entity_factory_impl, partial_channel_payload):
         invite = entity_factory_impl.deserialize_invite(
@@ -2388,7 +2458,9 @@ class TestEntityFactoryImpl:
         assert invite.guild_id == 42
 
     @pytest.fixture()
-    def invite_with_metadata_payload(self, partial_channel_payload, user_payload, alternative_user_payload):
+    def invite_with_metadata_payload(
+        self, partial_channel_payload, user_payload, alternative_user_payload, guild_welcome_screen_payload
+    ):
         return {
             "code": "aCode",
             "guild": {
@@ -2401,6 +2473,7 @@ class TestEntityFactoryImpl:
                 "features": ["FORCE_RELAY"],
                 "verification_level": 2,
                 "vanity_url_code": "I-am-very-vain",
+                "welcome_screen": guild_welcome_screen_payload,
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
@@ -2423,6 +2496,7 @@ class TestEntityFactoryImpl:
         partial_channel_payload,
         user_payload,
         alternative_user_payload,
+        guild_welcome_screen_payload,
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
         assert invite_with_metadata.app is mock_app
@@ -2437,6 +2511,9 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.guild.description == "Describe me cute kitty."
         assert invite_with_metadata.guild.verification_level == guild_models.GuildVerificationLevel.MEDIUM
         assert invite_with_metadata.guild.vanity_url_code == "I-am-very-vain"
+        assert invite_with_metadata.guild.welcome_screen == entity_factory_impl.deserialize_welcome_screen(
+            guild_welcome_screen_payload
+        )
 
         assert invite_with_metadata.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite_with_metadata.inviter == entity_factory_impl.deserialize_user(user_payload)
@@ -2473,6 +2550,14 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.inviter is None
         assert invite_with_metadata.target_user is None
         assert invite_with_metadata.target_user_type is None
+
+    def test_deserialize_invite_with_metadata_with_null_guild_fields(
+        self, entity_factory_impl, invite_with_metadata_payload
+    ):
+        del invite_with_metadata_payload["guild"]["welcome_screen"]
+
+        result = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
+        assert result.guild.welcome_screen is None
 
     def test_max_age_when_zero(self, entity_factory_impl, invite_with_metadata_payload):
         invite_with_metadata_payload["max_age"] = 0

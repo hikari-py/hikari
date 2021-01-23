@@ -978,6 +978,46 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return guild_models.GuildWidget(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
 
+    def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
+        channels: typing.List[guild_models.WelcomeChannel] = []
+
+        for channel_payload in payload["welcome_channels"]:
+            emoji_id = channel_payload["emoji_id"]
+            emoji_name = channel_payload["emoji_name"]
+
+            emoji: typing.Optional[emoji_models.Emoji] = None
+            if emoji_id is not None and emoji_name is not None:
+                emoji = emoji_models.CustomEmoji(id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None)
+
+            elif emoji_name is not None:
+                emoji = emoji_models.UnicodeEmoji(emoji_name)
+
+            channels.append(
+                guild_models.WelcomeChannel(
+                    channel_id=snowflakes.Snowflake(channel_payload["channel_id"]),
+                    description=channel_payload["description"],
+                    emoji=emoji,
+                )
+            )
+
+        return guild_models.WelcomeScreen(description=payload["description"], channels=channels)
+
+    def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
+        payload: data_binding.JSONObject = {
+            "channel_id": str(welcome_channel.channel_id),
+            "description": welcome_channel.description,
+        }
+
+        if isinstance(welcome_channel.emoji, emoji_models.CustomEmoji):
+            payload["emoji_id"] = str(welcome_channel.emoji.id)
+            # TODO: do we need to include the name in this scenario?
+            payload["emoji_name"] = welcome_channel.emoji.name
+
+        elif welcome_channel.emoji is not None:
+            payload["emoji_name"] = welcome_channel.emoji.name
+
+        return payload
+
     def deserialize_member(
         self,
         payload: data_binding.JSONObject,
@@ -1370,6 +1410,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: typing.Optional[snowflakes.Snowflake] = None
         if "guild" in payload:
             guild_payload = payload["guild"]
+            raw_welcome_screen = guild_payload.get("welcome_screen")
+
             guild = invite_models.InviteGuild(
                 app=self._app,
                 id=snowflakes.Snowflake(guild_payload["id"]),
@@ -1381,6 +1423,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 description=guild_payload["description"],
                 verification_level=guild_models.GuildVerificationLevel(guild_payload["verification_level"]),
                 vanity_url_code=guild_payload["vanity_url_code"],
+                welcome_screen=self.deserialize_welcome_screen(raw_welcome_screen) if raw_welcome_screen else None,
             )
             guild_id = guild.id
         elif "guild_id" in payload:

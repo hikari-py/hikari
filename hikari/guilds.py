@@ -49,6 +49,8 @@ __all__: typing.List[str] = [
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
+    "WelcomeScreen",
+    "WelcomeChannel",
 ]
 
 import abc
@@ -796,6 +798,33 @@ class Integration(PartialIntegration):
     !!! note
         This is only available for Discord integrations.
     """
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=False, init=True, slots=True, weakref_slot=False)
+class WelcomeChannel:
+    """Used to represent channels on guild welcome screens."""
+
+    channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=False, repr=True)
+    """ID of the channel shown in the welcome screen."""
+
+    description: str = attr.ib(eq=True, hash=False, repr=False)
+    """The description shown for this channel."""
+
+    emoji: typing.Optional[emojis_.Emoji] = attr.ib(default=None, kw_only=True, eq=True, hash=False, repr=True)
+    """The emoji shown in the welcome screen channel if set else `builtins.None`."""
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+class WelcomeScreen:
+    """Used to represent guild welcome screens on Discord."""
+
+    description: typing.Optional[str] = attr.ib(eq=True, hash=False, repr=True)
+    """The guild's description shown in the welcome screen."""
+
+    channels: typing.Sequence[WelcomeChannel] = attr.ib(eq=True, hash=False, repr=True)
+    """An array of up to 5 of the channels shown in the welcome screen."""
 
 
 @attr_extensions.with_copy

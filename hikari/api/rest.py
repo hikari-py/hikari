@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import audit_logs
-    from hikari import channels
+    from hikari import channels as channels_
     from hikari import colors
     from hikari import embeds as embeds_
     from hikari import emojis
@@ -82,8 +82,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]
-    ) -> channels.PartialChannel:
+        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+    ) -> channels_.PartialChannel:
         """Fetch a channel.
 
         Parameters
@@ -144,7 +144,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -155,11 +155,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
-            typing.Sequence[channels.PermissionOverwrite]
+            typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent_category: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[channels_.GuildCategory]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels.PartialChannel:
+    ) -> channels_.PartialChannel:
         """Edit a channel.
 
         Parameters
@@ -225,9 +227,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def follow_channel(
         self,
-        news_channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
-        target_channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
-    ) -> channels.ChannelFollow:
+        news_channel: snowflakes.SnowflakeishOr[channels_.GuildNewsChannel],
+        target_channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+    ) -> channels_.ChannelFollow:
         """Follow a news channel to send messages to a target channel.
 
         Parameters
@@ -272,7 +274,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel]) -> None:
+    async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]) -> None:
         """Delete a channel in a guild, or close a DM.
 
         Parameters
@@ -312,8 +314,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
-        target: typing.Union[channels.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
         *,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -325,10 +327,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
         *,
-        target_type: channels.PermissionOverwriteType,
+        target_type: channels_.PermissionOverwriteType,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -338,12 +340,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
-            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels.PermissionOverwrite
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
         ],
         *,
-        target_type: undefined.UndefinedOr[channels.PermissionOverwriteType] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -404,9 +406,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_permission_overwrite(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.SnowflakeishOr[
-            typing.Union[channels.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
+            typing.Union[channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
         ],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
@@ -444,7 +446,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_invites(
-        self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch all invites pointing to the given guild channel.
 
@@ -485,7 +487,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_invite(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         *,
         max_age: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -555,7 +557,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def trigger_typing(
-        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
@@ -619,7 +621,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
     ) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
@@ -660,7 +662,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def pin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Pin an existing message in the given text channel.
@@ -701,7 +703,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def unpin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Unpin a given message from a given text channel.
@@ -742,7 +744,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def fetch_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
@@ -818,7 +820,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         """Fetch a specific message in the given text channel.
@@ -864,7 +866,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1025,7 +1027,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def crosspost_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.GuildNewsChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildNewsChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         """Broadcast an announcement message.
@@ -1073,7 +1075,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1223,7 +1225,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Delete a given message in a given channel.
@@ -1264,7 +1266,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         /,
         *messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
@@ -1312,7 +1314,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def add_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1360,7 +1362,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_my_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1404,7 +1406,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1450,7 +1452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
@@ -1500,7 +1502,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Delete all reactions from a message.
@@ -1543,7 +1545,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def fetch_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
@@ -1602,7 +1604,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_webhook(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
         name: str,
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1709,7 +1711,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_channel_webhooks(
         self,
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         """Fetch all channel webhooks.
 
@@ -1797,7 +1799,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.Webhook:
         """Edit a webhook.
@@ -2526,7 +2528,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels.DMChannel:
+    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
         """Create a DM channel with a user.
 
         Parameters
@@ -3196,20 +3198,22 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         explicit_content_filter_level: undefined.UndefinedOr[
             guilds.GuildExplicitContentFilterLevel
         ] = undefined.UNDEFINED,
-        afk_channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]] = undefined.UNDEFINED,
+        afk_channel: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
+        ] = undefined.UNDEFINED,
         afk_timeout: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         system_channel: undefined.UndefinedNoneOr[
-            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         rules_channel: undefined.UndefinedNoneOr[
-            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         public_updates_channel: undefined.UndefinedNoneOr[
-            snowflakes.SnowflakeishOr[channels.GuildTextChannel]
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3333,7 +3337,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_channels(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[channels.GuildChannel]:
+    ) -> typing.Sequence[channels_.GuildChannel]:
         """Fetch the channels in a guild.
 
         Parameters
@@ -3379,11 +3383,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
-            typing.Sequence[channels.PermissionOverwrite]
+            typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels.GuildTextChannel:
+    ) -> channels_.GuildTextChannel:
         """Create a text channel in a guild.
 
         Parameters
@@ -3457,11 +3461,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
-            typing.Sequence[channels.PermissionOverwrite]
+            typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels.GuildNewsChannel:
+    ) -> channels_.GuildNewsChannel:
         """Create a news channel in a guild.
 
         Parameters
@@ -3534,11 +3538,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
-            typing.Sequence[channels.PermissionOverwrite]
+            typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels.GuildVoiceChannel:
+    ) -> channels_.GuildVoiceChannel:
         """Create a voice channel in a guild.
 
         Parameters
@@ -3608,10 +3612,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
-            typing.Sequence[channels.PermissionOverwrite]
+            typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels.GuildCategory:
+    ) -> channels_.GuildCategory:
         """Create a category in a guild.
 
         Parameters
@@ -3666,7 +3670,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
     ) -> None:
         """Reposition the channels in a guild.
 
@@ -3854,7 +3858,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         voice_channel: undefined.UndefinedNoneOr[
-            snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]
+            snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
@@ -4888,7 +4892,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildWidget:
@@ -4920,6 +4924,110 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.ForbiddenError
             If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_welcome_screen(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.WelcomeScreen:
+        """Fetch a guild's welcome screen.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the welcome screen for.
+
+        Returns
+        -------
+        hikari.invites.WelcomeScreen
+            The requested welcome screen.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_welcome_screen(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        channels: undefined.UndefinedNoneOr[typing.Sequence[guilds.WelcomeChannel]] = undefined.UNDEFINED,
+    ) -> guilds.WelcomeScreen:
+        """Edit the welcome screen of a community guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            ID or object of the guild to edit the welcome screen for.
+
+        Other Parameters
+        ----------------
+        description : undefined.UndefinedNoneOr[builtins.str]
+            The description to set for the guild's welcome screen. This may be
+            `builtins.None` to unset the description or left as
+            `hikari.undefined.UNDEFINED` to leave the description unchanged.
+        enabled : undefined.UndefinedOr[builtins.bool]
+            Whether the guild's welcome screen should be enabled. Leave as
+            `hikari.undefined.UNDEFINED` to leave this unchanged.
+        channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChanne;]]
+            A sequence of up to 5 public channels to set in this guild's welcome
+            screen. This may be passed as `builtins.None` to remove all welcome
+            channels or left as `hikari.undefined.UNDEFINED` to leave unchanged.
+
+            !!! note
+                Custom emojis may only be included in a guild's welcome channels
+                if it's boost status is tier 2 or above.
+
+        Returns
+        -------
+        hikari.guilds.WelcomeScreen
+            The edited guild welcome screen.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If more than 5 welcome channels are provided or if a custom emoji
+            is included on a welcome channel in a guild that doesn't have tier
+            2 of above boost status or if a private channel is included as a
+            welcome channel.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission, are not part of
+            the guild or the guild doesn't have access to the community welcome
+            screen feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError
