@@ -2739,11 +2739,15 @@ class TestEntityFactoryImpl:
         message_payload["edited_timestamp"] = None
         message_payload["member"] = None
         message_payload["application"]["primary_sku_id"] = None
+        message_payload["application"]["icon"] = None
+        del message_payload["application"]["cover_image"]
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
         assert partial_message._guild_id is not None
         assert partial_message.member is None
         assert partial_message.application.primary_sku_id is None
+        assert partial_message.application.icon_hash is None
+        assert partial_message.application.cover_image_hash is None
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
@@ -2911,11 +2915,15 @@ class TestEntityFactoryImpl:
         assert message.stickers == []
         assert message.nonce is None
 
-    def test_deserialize_message_with_no_primary_sku_id(self, entity_factory_impl, message_payload):
+    def test_deserialize_message_with_unset_application_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["primary_sku_id"] = None
+        del message_payload["application"]["cover_image"]
+        message_payload["application"]["icon"] = None
 
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.application.primary_sku_id is None
+        assert message.application.cover_image_hash is None
+        assert message.application.icon_hash is None
 
     ###################
     # PRESENCE MODELS #
