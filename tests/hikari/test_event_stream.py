@@ -90,7 +90,7 @@ class TestEventStream:
         assert stream._queue.qsize() == 0
 
     @pytest.mark.asyncio
-    async def test__listener_when_filter_passes_and_queue_full(self):
+    async def test__listener_when_filter_passes_and_queue_full(self, mock_app):
         stream = event_stream.EventStream(mock_app, events.Event, timeout=None, limit=2)
         stream._queue.put_nowait(object())
         stream._queue.put_nowait(object())
@@ -103,7 +103,7 @@ class TestEventStream:
         assert stream._queue.get_nowait() is not mock_event
 
     @pytest.mark.asyncio
-    async def test__listener_when_filter_passes_and_queue_not_full(self):
+    async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app):
         stream = event_stream.EventStream(mock_app, events.Event, timeout=None, limit=None)
         stream._queue.put_nowait(object())
         stream._queue.put_nowait(object())

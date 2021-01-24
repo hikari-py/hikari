@@ -914,8 +914,8 @@ class TestGatewayShardImpl:
         )
         client._handshake_completed.set.assert_called_once_with()
         client._event_manager.consume_raw_event.assert_called_once_with(
-            client,
             "READY",
+            client,
             pl,
         )
 
@@ -931,7 +931,7 @@ class TestGatewayShardImpl:
         assert client._seq == 10
         client._logger.info.assert_called_once_with("shard has resumed [session:%s, seq:%s]", 123, 10)
         client._handshake_completed.set.assert_called_once_with()
-        client._event_manager.consume_raw_event.assert_called_once_with(client, "RESUME", {})
+        client._event_manager.consume_raw_event.assert_called_once_with("RESUME", client, {})
 
     def test__dipatch(self, client):
         client._logger = mock.Mock()
@@ -943,7 +943,7 @@ class TestGatewayShardImpl:
         client._logger.info.assert_not_called()
         client._logger.debug.assert_not_called()
         client._handshake_completed.set.assert_not_called()
-        client._event_manager.consume_raw_event.assert_called_once_with(client, "EVENT NAME", {"payload": None})
+        client._event_manager.consume_raw_event.assert_called_once_with("EVENT NAME", client, {"payload": None})
 
     async def test__dispatch_for_unknown_event(self, client):
         client._logger = mock.Mock()
@@ -954,7 +954,7 @@ class TestGatewayShardImpl:
 
         client._logger.info.assert_not_called()
         client._handshake_completed.set.assert_not_called()
-        client._event_manager.consume_raw_event.assert_called_once_with(client, "UNEXISTING_EVENT", {"payload": None})
+        client._event_manager.consume_raw_event.assert_called_once_with("UNEXISTING_EVENT", client, {"payload": None})
         client._logger.debug.assert_called_once_with(
             "ignoring unknown event %s:\n    %r", "UNEXISTING_EVENT", {"payload": None}
         )

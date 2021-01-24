@@ -45,7 +45,6 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import traits
 from hikari import undefined
-from hikari.api import event_manager as event_manager_
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
@@ -65,15 +64,15 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
+    from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
-    from hikari.internal import data_binding
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
 
 
-class BotApp(traits.BotAware, event_manager_.EventManager):
+class BotApp(traits.BotAware):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot
@@ -213,7 +212,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         "_closing_event",
         "_closed",
         "_entity_factory",
-        "_events",
+        "_event_manager",
         "_event_factory",
         "_executor",
         "_http_settings",
@@ -262,7 +261,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Event handling
-        self._events = event_manager_impl.EventManagerImpl(self, cache=self._cache)
+        self._event_manager = event_manager_impl.EventManagerImpl(self, cache=self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
@@ -297,7 +296,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
 
     @property
     def event_manager(self) -> event_manager_.EventManager:
-        return self._events
+        return self._event_manager
 
     @property
     def entity_factory(self) -> entity_factory_.EntityFactory:
@@ -354,19 +353,9 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
     def is_alive(self) -> bool:
         return self._is_alive
 
-    def add_raw_consumer(self, name: str, consumer: event_manager_.ConsumerT, /) -> None:
-        self._events.add_raw_consumer(name, consumer)
-
-    def get_raw_consumers(self, name: str, /) -> typing.Sequence[event_manager_.ConsumerT]:
-        return self._events.get_raw_consumers(name)
-
-    def remove_raw_consumer(self, name: str, consumer: event_manager_.ConsumerT, /) -> None:
-        self._events.remove_raw_consumer(name, consumer)
-
-    def consume_raw_event(
-        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
-    ) -> None:
-        self._events.consume_raw_event(shard, event_name, payload)
+    def _check_if_alive(self) -> None:
+        if not self._is_alive:
+            raise errors.ComponentNotRunningError("bot is not running so it cannot be interacted with")
 
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
@@ -396,7 +385,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
                     }
                 )
 
-        await self.dispatch(self.event_factory.deserialize_stopping_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
 
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
@@ -417,17 +406,19 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         self._shards.clear()
         self._is_alive = False
 
-        await self.dispatch(self.event_factory.deserialize_stopped_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
 
     def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
-        return self._events.dispatch(event)
+        return self._event_manager.dispatch(event)
 
     def get_listeners(
         self, event_type: typing.Type[event_manager_.EventT_co], *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
-        return self._events.get_listeners(event_type, polymorphic=polymorphic)
+        return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
     async def join(self, until_close: bool = True) -> None:
+        self._check_if_alive()
+
         awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
         if until_close:
             awaitables.append(self._closing_event.wait())
@@ -437,9 +428,10 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
     def listen(
         self, event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None
     ) -> typing.Callable[
-        [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
+        [event_manager_.CallbackT[event_manager_.EventT_co]],
+        event_manager_.CallbackT[event_manager_.EventT_co],
     ]:
-        return self._events.listen(event_type)
+        return self._event_manager.listen(event_type)
 
     @staticmethod
     def print_banner(banner: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
@@ -570,7 +562,15 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
             Defaults to `hikari.presences.Status.ONLINE`.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If bot is already running.
         """
+        if self._is_alive:
+            raise RuntimeError("bot is already running")
+
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
@@ -747,7 +747,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
             )
 
         requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
-        await self.dispatch(self.event_factory.deserialize_starting_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
         requirements = await requirements_task
 
         if shard_count is None:
@@ -838,13 +838,9 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
                 )
             )
 
-        await self.dispatch(self.event_factory.deserialize_started_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_started_event())
 
         _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
-
-    def _check_if_alive(self) -> None:
-        if not self._is_alive:
-            raise errors.ComponentNotRunningError("bot is not running so it cannot be interacted with")
 
     def stream(
         self,
@@ -854,15 +850,15 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         limit: typing.Optional[int] = None,
     ) -> event_stream.Streamer[event_manager_.EventT_co]:
         self._check_if_alive()
-        return self._events.stream(event_type, timeout=timeout, limit=limit)
+        return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
 
     def subscribe(
         self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]
     ) -> event_manager_.CallbackT[typing.Any]:
-        return self._events.subscribe(event_type, callback)
+        return self._event_manager.subscribe(event_type, callback)
 
     def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
-        self._events.unsubscribe(event_type, callback)
+        self._event_manager.unsubscribe(event_type, callback)
 
     async def wait_for(
         self,
@@ -872,7 +868,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
     ) -> event_manager_.EventT_co:
         self._check_if_alive()
-        return await self._events.wait_for(event_type, timeout=timeout, predicate=predicate)
+        return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
 
     async def update_presence(
         self,
@@ -917,8 +913,6 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         url: str,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
-            event_manager=self._events,
-            event_factory=self._event_factory,
             http_settings=self._http_settings,
             initial_activity=activity,
             initial_is_afk=afk,
@@ -929,6 +923,8 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
             proxy_settings=self._proxy_settings,
             shard_id=shard_id,
             shard_count=shard_count,
+            event_manager=self._event_manager,
+            event_factory=self._event_factory,
             token=self._token,
             url=url,
         )

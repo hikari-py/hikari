@@ -134,7 +134,7 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
 
 
 class _RESTProvider(traits.RESTAware):
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_executor", "_cache", "_rest")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_executor", "_rest")
 
     def __init__(
         self,

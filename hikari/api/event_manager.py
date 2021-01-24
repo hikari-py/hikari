@@ -55,73 +55,24 @@ class EventManager(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def add_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
-        """Register a given async callback to a raw event name.
-
-        Parameters
-        ----------
-        name : str
-            The case-insensitive name this event should be triggered based on.
-        consumer : typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]
-            The async function to invoke on each raw event. This should take
-            two positional arguments, the shard that this event is being
-            triggered by and this raw event's payload.
-        """  # noqa: E501 - Line too long
-
-    @abc.abstractmethod
-    def get_raw_consumers(self, name: str, /) -> typing.Sequence[ConsumerT]:
-        """Get the async callbacks registered for a raw event.
-
-        Parameters
-        ----------
-        name : str
-            The case-insensitive name of the event to remove a raw consumer for.
-
-        Returns
-        -------
-        typing.Sequence[typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]]
-            A sequence of the found async functions registered for the provided
-            event name, this will be an empty sequence if no consumers were found.
-        """  # noqa: E501 - Line too long
-
-    @abc.abstractmethod
-    def remove_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
-        """Remove a registered async raw event consumer callback.
-
-        Parameters
-        ----------
-        name : str
-            The case-insensitive name of the event to remove a raw consumer for.
-        consumer : typing.Callable[[gateway_shard.GatewayShard, hikari.internal.data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]]
-            The async function to remove from the registered raw consumers.
-
-        Raises
-        ------
-        LookupError
-            If the either `name` or `consumer` couldn't be found in the
-            registered raw consumers.
-        """  # noqa: E501 - Line too long
-
-    @abc.abstractmethod
     def consume_raw_event(
-        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
+        self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """Consume a raw event.
 
         Parameters
         ----------
-        shard : hikari.api.gateway_shard.GatewayShard
-            Object of the shard that received this event.
         event_name : str
             The case-insensitive name of the event being triggered.
+        shard : hikari.api.shard.GatewayShard
+            Object of the shard that received this event.
         payload : hikari.internal.data_binding.JSONObject
             Payload of the event being triggered.
 
         Raises
         ------
-        LookupError
-            If no registered raw consumers were found for the provided event
-            name.
+        builtins.LookupError
+            If there is no consumer for the event.
         """
 
     @abc.abstractmethod

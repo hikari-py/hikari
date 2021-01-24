@@ -71,51 +71,23 @@ class EventManagerBase(event_manager.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_consumers", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = ("_app", "_listeners", "_consumers", "_waiters")
 
     def __init__(self, app: traits.BotAware) -> None:
         self._app = app
-        self._consumers: typing.Dict[str, typing.List[ConsumerT]] = {}
-        self._intents = app.intents
+        self._consumers: typing.Dict[str, ConsumerT] = {}
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
-                self.add_raw_consumer(name[3:], member)
-
-    def add_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
-        name = name.casefold()
-        if name not in self._consumers:
-            self._consumers[name] = []
-
-        self._consumers[name].append(consumer)
-
-    def get_raw_consumers(self, name: str, /) -> typing.Sequence[ConsumerT]:
-        if consumers := self._consumers.get(name.casefold()):
-            return consumers.copy()
-
-        return []
-
-    def remove_raw_consumer(self, name: str, consumer: ConsumerT, /) -> None:
-        name = name.casefold()
-
-        try:
-            self._consumers[name].remove(consumer)
-
-        except ValueError:
-            raise LookupError(name, consumer) from None
-
-        if not self._consumers[name]:
-            del self._consumers[name]
+                self._consumers[name[3:]] = member
 
     def consume_raw_event(
-        self, shard: gateway_shard.GatewayShard, event_name: str, payload: data_binding.JSONObject
+        self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        callbacks = self._consumers[event_name.casefold()]
-        asyncio.gather(
-            *(self._handle_dispatch(callback, shard, payload) for callback in callbacks), return_exceptions=True
-        )
+        callback = self._consumers[event_name.casefold()]
+        asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
@@ -156,7 +128,7 @@ class EventManagerBase(event_manager.EventManager):
 
         if expected_intent_groups:
             for expected_intent_group in expected_intent_groups:
-                if (self._intents & expected_intent_group) == expected_intent_group:
+                if (self._app.intents & expected_intent_group) == expected_intent_group:
                     break
             else:
                 expected_intents_str = ", ".join(map(str, expected_intent_groups))

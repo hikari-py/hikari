@@ -20,21 +20,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Package metadata."""
+"""Typehints for `hikari.internal.protocol`."""
+from typing import Protocol as __Protocol
 
-# DO NOT ADD TYPE HINTS TO THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+class Protocol(__Protocol): ...
 
-__author__ = "Nekokatt"
-__maintainer__ = "davfsa"
-__ci__ = "https://github.com/hikari-py/hikari/actions"
-__copyright__ = "© 2021 davfsa"
-__coverage__ = "https://codeclimate.com/github/hikari-py/hikari"
-__discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://hikari-py.github.io/hikari/hikari"
-__email__ = "davfsa@gmail.com"
-__issue_tracker__ = "https://github.com/hikari-py/hikari/issues"
-__license__ = "MIT"
-__url__ = "https://github.com/hikari-py/hikari"
-__version__ = "SNAPSHOT"
-__git_sha1__ = "HEAD"
+__all__ = ["Protocol"]

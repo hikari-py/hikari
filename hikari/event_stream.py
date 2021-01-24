@@ -149,17 +149,25 @@ class EventStream(Streamer[EventT]):
         to the streamer.
     """
 
-    __slots__ = ("_active", "_app", "_event_type", "_filters", "_queue", "_registered_listener", "_timeout")
+    __slots__ = (
+        "_active",
+        "_event_manager",
+        "_event_type",
+        "_filters",
+        "_queue",
+        "_registered_listener",
+        "_timeout",
+    )
 
     def __init__(
         self,
-        app: traits.BotAware,
+        app: traits.EventManagerAware,
         event_type: typing.Type[EventT],
         *,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
     ) -> None:
-        self._app = app
+        self._event_manager = app.event_manager
         self._active = False
         self._event_type = event_type
         self._filters: iterators.All[EventT] = iterators.All(())
@@ -214,7 +222,7 @@ class EventStream(Streamer[EventT]):
     async def close(self) -> None:
         if self._active and self._registered_listener is not None:
             try:
-                self._app.event_manager.unsubscribe(self._event_type, self._registered_listener)
+                self._event_manager.unsubscribe(self._event_type, self._registered_listener)
             except ValueError:
                 pass
 
@@ -242,5 +250,5 @@ class EventStream(Streamer[EventT]):
             reference = weakref.WeakMethod(self._listener)  # type: ignore[arg-type]
             listener = _generate_weak_listener(reference)
             self._registered_listener = listener
-            self._app.event_manager.subscribe(self._event_type, listener)
+            self._event_manager.subscribe(self._event_type, listener)
             self._active = True

@@ -58,7 +58,7 @@ def _fixed_size_nonce() -> str:
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache", "_cache_settings")
+    __slots__: typing.Sequence[str] = ("_cache",)
 
     def __init__(self, app: traits.BotAware, /, *, cache: typing.Optional[cache_.MutableCache] = None) -> None:
         self._cache = cache
@@ -149,8 +149,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             for voice_state in event.voice_states.values():
                 self._cache.set_voice_state(voice_state)
 
-            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
-            presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
+            members_declared = self._app.intents & intents_.Intents.GUILD_MEMBERS
+            presences_declared = self._app.intents & intents_.Intents.GUILD_PRESENCES
 
             # When intents are enabled discord will only send other member objects on the guild create
             # payload if presence intents are also declared, so if this isn't the case then we also want
