@@ -111,6 +111,7 @@ jobs:
           nox -s pages
 
       - name: Upload artifacts
+        if: github.event_name != 'release'
         uses: actions/upload-artifact@v2
         with:
           name: pages

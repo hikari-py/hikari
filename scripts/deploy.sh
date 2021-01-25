@@ -73,8 +73,8 @@ echo
 echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
-echo "===== SENDING WEBHOOK ====="
-python scripts/deploy_webhook.py
-
 echo "===== DEPLOYING PAGES ====="
 source scripts/deploy-pages.sh
+
+echo "===== SENDING WEBHOOK ====="
+python scripts/deploy_webhook.py
