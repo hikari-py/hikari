@@ -583,7 +583,7 @@ class BotApp(traits.BotAware, event_manager_.EventManager):
         if coroutine_tracking_depth is not None:
             try:
                 # Provisionally defined in CPython, may be removed without notice.
-                loop.set_coroutine_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
             except AttributeError:
                 _LOGGER.log(
                     ux.TRACE, "cannot set coroutine tracking depth for %s, no functionality exists for this", loop
