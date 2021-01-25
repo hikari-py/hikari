@@ -879,8 +879,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 # of debugging. The case that there are `None` should be detected immediately by
                 # static type checkers, regardless.
 
-                name = str(field.name) if field.name is not None else None  # type: ignore[unreachable]
-                value = str(field.value) if field.value is not None else None  # type: ignore[unreachable]
+                name = str(field.name) if field.name is not None else None
+                value = str(field.value) if field.value is not None else None
 
                 if name is None:
                     raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")

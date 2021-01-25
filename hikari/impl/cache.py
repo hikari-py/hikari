@@ -1411,10 +1411,10 @@ class CacheImpl(cache.MutableCache):
             if guild_record:
                 self._garbage_collect_member(guild_record, message.object.member, decrement=1)
 
-        if message.object.referenced_message and message.object.referenced_message is not undefined.UNDEFINED:
+        if message.object.referenced_message:
             self._garbage_collect_message(message.object.referenced_message, decrement=1)
 
-        if message.object.mentions.users and message.object.mentions.users is not undefined.UNDEFINED:
+        if message.object.mentions.users:
             for user in message.object.mentions.users.values():
                 self._garbage_collect_user(user, decrement=1)
 
@@ -1489,7 +1489,7 @@ class CacheImpl(cache.MutableCache):
             mention_users = {user_id: self._set_user(user) for user_id, user in message.mentions.users.items()}
 
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
-        if message.referenced_message and message.referenced_message is not undefined.UNDEFINED:
+        if message.referenced_message:
             referenced_message = self._set_message(message.referenced_message)
 
         if message.id not in self._referenced_messages and message.id not in self._message_entries:
