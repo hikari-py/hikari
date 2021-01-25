@@ -223,7 +223,10 @@ class TestEntityFactoryImpl:
         assert application.owner == entity_factory_impl.deserialize_user(owner_payload)
         assert application.rpc_origins == ["127.0.0.0"]
         assert application.summary == "not a blank string"
-        assert application.verify_key == b"698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90"
+        assert (
+            application.verify_key
+            == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
+        )
         assert application.icon_hash == "iwiwiwiwiw"
         # Team
         assert application.team.id == 202020202
@@ -280,6 +283,59 @@ class TestEntityFactoryImpl:
         )
         assert application.icon_hash is None
         assert application.team is None
+
+    @pytest.fixture()
+    def authorization_information_payload(self, user_payload):
+        return {
+            "application": {
+                "id": "4123123123123",
+                "name": "abotnotabot",
+                "icon": "7c635c3cc8c7b109d254d8fcc1be85e6",
+                "description": "2123",
+                "summary": "dsasd",
+                "hook": True,
+                "bot_public": True,
+                "bot_require_code_grant": False,
+                "verify_key": "6f6b6f6b6f646f646f646f",
+            },
+            "scopes": ["identify", "guilds", "applications.commands.update"],
+            "expires": "2021-02-01T18:03:20.888000+00:00",
+            "user": user_payload,
+        }
+
+    def test_deserialize_authorization_information(
+        self, entity_factory_impl, authorization_information_payload, user_payload
+    ):
+        authorization_information = entity_factory_impl.deserialize_authorization_information(
+            authorization_information_payload
+        )
+        # AuthorizationApplication
+        application = authorization_information.application
+        assert application.id == 4123123123123
+        assert application.name == "abotnotabot"
+        assert application.description == "2123"
+        assert application.icon_hash == "7c635c3cc8c7b109d254d8fcc1be85e6"
+        assert application.summary == "dsasd"
+        assert application.verify_key == b"okokodododo"
+        assert application.is_bot_public is True
+        assert application.is_bot_code_grant_required is False
+        assert isinstance(application, application_models.AuthorizationApplication)
+
+        assert authorization_information.expires_at == datetime.datetime(
+            2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc
+        )
+        assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
+        assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
+
+    def test_test_deserialize_authorization_information_without_user(
+        self, entity_factory_impl, authorization_information_payload
+    ):
+        del authorization_information_payload["user"]
+        authorization_information = entity_factory_impl.deserialize_authorization_information(
+            authorization_information_payload
+        )
+
+        assert authorization_information.user is None
 
     #####################
     # AUDIT LOGS MODELS #

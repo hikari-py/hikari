@@ -170,7 +170,7 @@ class Route:
         return self.path_template
 
 
-def _cdn_valid_formats_converter(values: typing.Set[str]) -> typing.FrozenSet[str]:
+def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.FrozenSet[str]:
     return frozenset(v.lower() for v in values)
 
 
@@ -448,6 +448,7 @@ DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
+GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
 # Gateway
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")

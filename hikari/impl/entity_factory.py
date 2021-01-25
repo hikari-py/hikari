@@ -307,13 +307,36 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
             summary=payload["summary"],
-            verify_key=bytes(payload["verify_key"], "utf-8") if "verify_key" in payload else None,
+            verify_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             primary_sku_id=primary_sku_id,
             slug=payload.get("slug"),
             cover_image_hash=payload.get("cover_image"),
+        )
+
+    def deserialize_authorization_information(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.AuthorizationInformation:
+        application_payload = payload["application"]
+        raw_verify_key = application_payload.get("verify_key")
+        application = application_models.AuthorizationApplication(
+            id=snowflakes.Snowflake(application_payload["id"]),
+            name=application_payload["name"],
+            description=application_payload["description"],
+            icon_hash=application_payload.get("icon"),
+            summary=application_payload["summary"],
+            is_bot_public=application_payload.get("bot_public"),
+            is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
+            verify_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+        )
+
+        return application_models.AuthorizationInformation(
+            application=application,
+            scopes=payload["scopes"],
+            expires_at=time.iso8601_datetime_string_to_datetime(payload["expires"]),
+            user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
 
     #####################

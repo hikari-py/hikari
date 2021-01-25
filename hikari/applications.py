@@ -26,6 +26,8 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "Application",
+    "AuthorizationApplication",
+    "AuthorizationInformation",
     "ConnectionVisibility",
     "OAuth2Scope",
     "OwnConnection",
@@ -49,6 +51,8 @@ from hikari.internal import enums
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import channels
     from hikari import permissions as permissions_
     from hikari import traits
@@ -511,3 +515,42 @@ class Application(guilds.PartialApplication):
             size=size,
             file_format=ext,
         )
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class AuthorizationApplication(guilds.PartialApplication):
+    """The application model found attached to `AuthorizationInformation`."""
+
+    verify_key: typing.Optional[bytes] = attr.ib(eq=False, hash=False, repr=False)
+    """The base64 encoded key used for the GameSDK's `GetTicket`."""
+
+    is_bot_public: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=True)
+    """`builtins.True` if the bot associated with this application is public.
+
+    Will be `builtins.None` if this application doesn't have an associated bot.
+    """
+
+    is_bot_code_grant_required: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """`builtins.True` if this application's bot is requiring code grant for invites.
+
+    Will be `builtins.None` if this application doesn't have a bot.
+    """
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+class AuthorizationInformation:
+    """Model for the data returned by Get Current Authorization Information."""
+
+    application: AuthorizationApplication = attr.ib(eq=True, hash=False, repr=True)
+    """The current application."""
+
+    expires_at: datetime.datetime = attr.ib(eq=True, hash=False, repr=True)
+    """When the access token this data was retrieved with expires."""
+
+    scopes: typing.Sequence[str] = attr.ib(eq=True, hash=False, repr=True)
+    """A sequence of the scopes the current user has authorized the application for."""
+
+    user: typing.Optional[users.User] = attr.ib(eq=True, hash=False, repr=True)
+    """The user who has authorized this token if they included the `identify` scope."""
