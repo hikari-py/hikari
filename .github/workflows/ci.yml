@@ -119,7 +119,7 @@ jobs:
 
   deploy:
     # Only run on releases and if everything passes
-    if: github.event.release.published
+    if: github.event_name == 'release'
     needs: [test, linting, twemoji, pages]
 
     runs-on: ubuntu-20.04
