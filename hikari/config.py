@@ -254,7 +254,7 @@ class HTTPTimeoutSettings:
     def _(self, attrib: attr.Attribute[typing.Optional[float]], value: typing.Optional[float]) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
-        if value is not None and (not isinstance(value, (float, int)) or value <= 0):  # type: ignore[unreachable]
+        if value is not None and (not isinstance(value, (float, int)) or value <= 0):
             raise ValueError(f"HTTPTimeoutSettings.{attrib.name} must be None, or a POSITIVE float/int")
 
 
@@ -325,7 +325,7 @@ class HTTPSettings:
     def _(self, _: attr.Attribute[typing.Optional[int]], value: typing.Optional[int]) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
-        if value is not None and (not isinstance(value, int) or value <= 0):  # type: ignore[unreachable]
+        if value is not None and (not isinstance(value, int) or value <= 0):
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
     _ssl: typing.Union[bool, ssl_.SSLContext] = attr.ib(
