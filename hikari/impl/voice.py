@@ -28,6 +28,7 @@ __all__: typing.List[str] = ["VoiceComponentImpl"]
 
 import asyncio
 import logging
+import types
 import typing
 
 from hikari import errors
@@ -53,17 +54,16 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "_events")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections")
+
+    _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
+    connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
 
     def __init__(self, app: traits.BotAware) -> None:
         self._app = app
-        self._events = app.event_manager
-        self._connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection] = {}
-        self._events.subscribe(voice_events.VoiceEvent, self._on_voice_event)
-
-    @property
-    def connections(self) -> typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]:
-        return self._connections.copy()
+        self._connections = {}
+        self.connections = types.MappingProxyType(self._connections)
+        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def disconnect(self) -> None:
         if self._connections:
@@ -72,7 +72,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     async def close(self) -> None:
         await self.disconnect()
-        self._events.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def connect_to(
         self,
@@ -115,7 +115,9 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        user = self._app.cache.get_me()
+        user = None
+        if self._app.cache:
+            user = self._app.cache.get_me()
         if user is None:
             user = await self._app.rest.fetch_my_user()
 
@@ -132,13 +134,13 @@ class VoiceComponentImpl(voice.VoiceComponent):
         state_event, server_event = await asyncio.wait_for(
             asyncio.gather(
                 # Voice state update:
-                self._events.wait_for(
+                self._app.event_manager.wait_for(
                     voice_events.VoiceStateUpdateEvent,
                     timeout=None,
                     predicate=self._init_state_update_predicate(guild_id, user.id),
                 ),
                 # Server update:
-                self._events.wait_for(
+                self._app.event_manager.wait_for(
                     voice_events.VoiceServerUpdateEvent,
                     timeout=None,
                     predicate=self._init_server_update_predicate(guild_id),

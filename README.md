@@ -7,7 +7,7 @@
 [![Issues badge](https://img.shields.io/github/issues-raw/hikari-py/hikari)](https://github.com/hikari-py/hikari/issues)
 [![This project uses Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
-[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/documentation)
+[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/hikari)
 
 [![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 

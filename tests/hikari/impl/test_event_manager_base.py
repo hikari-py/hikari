@@ -56,82 +56,30 @@ class TestEventManagerBase:
                 raise NotImplementedError
 
         manager = StubManager(mock.Mock(intents=42))
-        assert manager._consumers == {"foo": [manager.on_foo], "bar": [manager.on_bar]}
-
-    def test_add_raw_consumer_for_new_event(self, event_manager):
-        listener = mock.Mock()
-        event_manager.add_raw_consumer("UNKNOWN EVENT", listener)
-
-        assert event_manager._consumers["unknown event"] == [listener]
-
-    def test_add_raw_consumer(self, event_manager):
-        listener = mock.Mock()
-        other_listener = mock.Mock()
-        event_manager._consumers["unknown event"] = [other_listener]
-        event_manager.add_raw_consumer("unknown event", listener)
-
-        assert event_manager._consumers["unknown event"] == [other_listener, listener]
-
-    def test_get_raw_consumers(self, event_manager):
-        listener = mock.Mock()
-        event_manager._consumers["an event"] = [listener]
-
-        assert event_manager.get_raw_consumers("an event") == [listener]
-        assert event_manager.get_raw_consumers("AN EVENT") == [listener]
-
-    def test_get_raw_consumers_for_unknown_event(self, event_manager):
-        assert event_manager.get_raw_consumers("unknown event") == []
-
-    def test_remove_raw_consumer(self, event_manager):
-        listener = mock.Mock()
-        other_listener = mock.Mock()
-        event_manager._consumers["an event"] = [listener, other_listener]
-
-        event_manager.remove_raw_consumer("an event", listener)
-
-        assert event_manager._consumers["an event"] == [other_listener]
-
-    def test_remove_raw_consumer_for_last_listener(self, event_manager):
-        listener = mock.Mock()
-        event_manager._consumers["an event"] = [listener]
-
-        event_manager.remove_raw_consumer("an event", listener)
-
-        assert "an event" not in event_manager._consumers
-
-    def test_remove_raw_consumer_for_unknown_event(self, event_manager):
-        with pytest.raises(LookupError):
-            event_manager.remove_raw_consumer("an event", mock.Mock())
-
-    def test_remove_raw_consumer_for_unknown_listener(self, event_manager):
-        event_manager._consumers["an event"] = [mock.Mock()]
-
-        with pytest.raises(LookupError):
-            event_manager.remove_raw_consumer("an event", mock.Mock())
+        assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
 
     @pytest.mark.asyncio
-    async def test_consume_raw_event_when_AttributeError(self, event_manager):
+    async def test_consume_raw_event_when_KeyError(self, event_manager):
+        event_manager._handle_dispatch = mock.Mock()
         with pytest.raises(LookupError):
-            event_manager.consume_raw_event(None, "UNEXISTING_EVENT", {})
+            event_manager.consume_raw_event("UNEXISTING_EVENT", mock.Mock(id=123), {})
+
+        event_manager._handle_dispatch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
-        side_effect = (object(), object())
-        event_manager._handle_dispatch = mock.Mock(side_effect=side_effect)
-        custom_listener = mock.Mock()
-        on_existing_event = mock.Mock()
-        event_manager._consumers["existing_event"] = [on_existing_event, custom_listener]
+        event_manager._handle_dispatch = mock.Mock()
+        on_existing_event = object()
+        event_manager._consumers = {"existing_event": on_existing_event}
         shard = object()
 
-        with mock.patch("asyncio.gather") as gather:
-            event_manager.consume_raw_event(shard, "EXISTING_EVENT", {"berp": "baz"})
+        with mock.patch("asyncio.create_task") as create_task:
+            event_manager.consume_raw_event("EXISTING_EVENT", shard, {"berp": "baz"})
 
-        event_manager._handle_dispatch.assert_has_calls(
-            [mock.call(on_existing_event, shard, {"berp": "baz"}), mock.call(custom_listener, shard, {"berp": "baz"})]
-        )
-        gather.assert_called_once_with(
-            *side_effect,
-            return_exceptions=True,
+        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
+        create_task.assert_called_once_with(
+            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}),
+            name="dispatch EXISTING_EVENT",
         )
 
     @pytest.mark.asyncio
@@ -230,7 +178,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_correct(self, event_manager):
-        event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
+        event_manager._app.intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
@@ -242,7 +190,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_incorrect(self, event_manager):
-        event_manager._intents = intents.Intents.GUILD_EMOJIS
+        event_manager._app.intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
