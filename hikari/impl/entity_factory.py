@@ -27,6 +27,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["EntityFactoryImpl"]
 
 import datetime
+import logging
 import typing
 
 import attr
@@ -57,6 +58,13 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+_ValueT = typing.TypeVar("_ValueT")
+
+
+def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
+    """Wrap a cast to ensure the value passed to it will first be cast to int."""
+    return lambda value: cast(int(value))
 
 
 def _deserialize_seconds_timedelta(seconds: typing.Union[str, int]) -> datetime.timedelta:
@@ -186,10 +194,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.POSITION: int,
             audit_log_models.AuditLogChangeKey.BITRATE: int,
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.PERMISSIONS: permission_models.Permissions,
+            audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
-            audit_log_models.AuditLogChangeKey.ALLOW: permission_models.Permissions,
-            audit_log_models.AuditLogChangeKey.DENY: permission_models.Permissions,
+            audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
+            audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.INVITER_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.MAX_USES: _deserialize_max_uses,
@@ -402,14 +410,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             changes = []
             if (change_payloads := entry_payload.get("changes")) is not None:
                 for change_payload in change_payloads:
-                    key: typing.Union[audit_log_models.AuditLogChangeKey, str]
-                    key = audit_log_models.AuditLogChangeKey(change_payload["key"])
+                    key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
+                        change_payload["key"]
+                    )
 
                     new_value: typing.Any = change_payload.get("new_value")
                     old_value: typing.Any = change_payload.get("old_value")
                     if value_converter := self._audit_log_entry_converters.get(key):
                         new_value = value_converter(new_value) if new_value is not None else None
                         old_value = value_converter(old_value) if old_value is not None else None
+
+                    elif __debug__ and not isinstance(key, audit_log_models.AuditLogChangeKey):
+                        _LOGGER.debug("Unknown audit log change key found %r", key)
 
                     changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
 
@@ -426,10 +438,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
             if (raw_option := entry_payload.get("options")) is not None:
-                option_converter = (
-                    self._audit_log_event_mapping.get(action_type)
-                    or self._deserialize_unrecognised_audit_log_entry_info  # noqa: W503
-                )
+                option_converter = self._audit_log_event_mapping.get(action_type)
+
+                if not option_converter:
+                    _LOGGER.debug("Unknown audit log action type found %r", action_type)
+                    option_converter = self._deserialize_unrecognised_audit_log_entry_info  # noqa: W503
+
                 options = option_converter(raw_option)
 
             entries[entry_id] = audit_log_models.AuditLogEntry(
