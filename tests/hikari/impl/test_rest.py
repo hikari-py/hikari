@@ -2709,6 +2709,74 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
 
+    async def test_fetch_guild_membership_gate(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"fields": []})
+        expected_route = routes.GET_GUILD_MEMBER_VERIFICATION.compile(guild=4213123123)
+
+        result = await rest_client.fetch_guild_membership_gate(StubModel(4213123123))
+
+        assert result is rest_client._entity_factory.deserialize_membership_gate.return_value
+        rest_client._entity_factory.deserialize_membership_gate.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_guild_membership_gate_handles_204(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=None)
+        expected_route = routes.GET_GUILD_MEMBER_VERIFICATION.compile(guild=65456)
+
+        result = await rest_client.fetch_guild_membership_gate(StubModel(65456))
+
+        assert isinstance(result, guilds.MembershipGate)
+        assert result.fields == []
+        assert result.description is None
+        assert result.updated_at is None
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_membership_gate.assert_not_called()
+
+    async def test_edit_guild_membership_gate_without_optionals(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER_VERIFICATION.compile(guild=12312314)
+        rest_client._request = mock.AsyncMock(return_value={"OK": "NO"})
+
+        result = await rest_client.edit_guild_membership_gate(StubModel(12312314))
+
+        assert result is rest_client._entity_factory.deserialize_membership_gate.return_value
+        rest_client._entity_factory.deserialize_membership_gate.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+
+    async def test_edit_guild_membership_gate_with_optionals(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER_VERIFICATION.compile(guild=3234123)
+        mock_field = object()
+        rest_client._request = mock.AsyncMock(return_value={"OK": "NOk"})
+        rest_client._entity_factory.serialize_membership_gate_field.return_value = {
+            "field_type": "SCREEN",
+            "label": "libal",
+            "required": False,
+        }
+
+        result = await rest_client.edit_guild_membership_gate(
+            StubModel(3234123),
+            description="get descript",
+            enabled=False,
+            fields=[mock_field],
+        )
+
+        assert result is rest_client._entity_factory.deserialize_membership_gate.return_value
+        rest_client._entity_factory.serialize_membership_gate_field.assert_called_once_with(mock_field)
+        rest_client._entity_factory.deserialize_membership_gate.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "description": "get descript",
+                "enabled": False,
+                "form_fields": '[{"field_type": "SCREEN", "label": "libal", "required": false}]',
+            },
+        )
+
     async def test_fetch_vanity_url(self, rest_client):
         vanity_url = StubModel(789)
         expected_route = routes.GET_GUILD_VANITY_URL.compile(guild=123)

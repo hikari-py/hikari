@@ -181,8 +181,7 @@ class EventManagerBase(event_manager.EventManager):
         self,
         event_type: typing.Optional[typing.Type[event_manager.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_manager.CallbackT[event_manager.EventT_co]],
-        event_manager.CallbackT[event_manager.EventT_co],
+        [event_manager.CallbackT[event_manager.EventT_co]], event_manager.CallbackT[event_manager.EventT_co]
     ]:
         def decorator(
             callback: event_manager.CallbackT[event_manager.EventT_co],

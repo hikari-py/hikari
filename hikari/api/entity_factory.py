@@ -707,6 +707,36 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_membership_gate(self, payload: data_binding.JSONObject) -> guild_models.MembershipGate:
+        """Parse a raw payload from Discord into a guild membership gate object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.MembershipGate
+            The deserialized guild membership gate object.
+        """
+
+    @abc.abstractmethod
+    def serialize_membership_gate_field(self, field: guild_models.MembershipGateField) -> data_binding.JSONObject:
+        """Serialize a membership gate field object to a json serializable dict.
+
+        Parameters
+        ----------
+        field : hikari.guilds.MembershipGateField
+            The membership gate field object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the membership gate field.
+        """
+
+    @abc.abstractmethod
     def deserialize_role(
         self,
         payload: data_binding.JSONObject,

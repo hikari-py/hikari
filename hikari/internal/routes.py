@@ -352,6 +352,9 @@ PATCH_GUILD_WIDGET: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/widget")
 GET_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(GET, "/guilds/{guild}/welcome-screen")
 PATCH_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/welcome-screen")
 
+GET_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(GET, "/guilds/{guild}/member-verification")
+PATCH_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/member-verification")
+
 GET_GUILD_EMOJI: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis/{emoji}")
 PATCH_GUILD_EMOJI: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/emojis/{emoji}")
 DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/{emoji}")
