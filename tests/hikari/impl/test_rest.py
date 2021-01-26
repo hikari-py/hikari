@@ -1155,17 +1155,17 @@ class TestRESTClientImplAsync:
         expected_route = routes.GET_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
         rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
-        rest_client._request = mock.AsyncMock(return_value={"payload"})
+        rest_client._request = mock.AsyncMock(return_value={"payload": "NO"})
 
         assert await rest_client.fetch_channel(StubModel(123)) == mock_object
         rest_client._request.assert_awaited_once_with(expected_route)
-        rest_client._entity_factory.deserialize_channel.assert_called_once_with({"payload"})
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
     async def test_edit_channel(self, rest_client):
         expected_route = routes.PATCH_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
         rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
-        rest_client._request = mock.AsyncMock(return_value={"payload"})
+        rest_client._request = mock.AsyncMock(return_value={"payload": "GO"})
         rest_client._entity_factory.serialize_permission_overwrite = mock.Mock(
             return_value={"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}
         )
@@ -1204,23 +1204,26 @@ class TestRESTClientImplAsync:
 
         assert result == mock_object
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="some reason :)")
-        rest_client._entity_factory.deserialize_channel.assert_called_once_with({"payload"})
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
     async def test_edit_channel_without_optionals(self, rest_client):
         expected_route = routes.PATCH_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
         rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
-        rest_client._request = mock.AsyncMock(return_value={"payload"})
+        rest_client._request = mock.AsyncMock(return_value={"payload": "no"})
 
         assert await rest_client.edit_channel(StubModel(123)) == mock_object
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
-        rest_client._entity_factory.deserialize_channel.assert_called_once_with({"payload"})
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
     async def test_delete_channel(self, rest_client):
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
 
-        await rest_client.delete_channel(StubModel(123))
+        result = await rest_client.delete_channel(StubModel(123))
+
+        assert result is rest_client._entity_factory.deserialize_channel.return_value
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_edit_permission_overwrites(self, rest_client):
@@ -1314,7 +1317,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_invite(self, rest_client):
         expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
         expected_json = {
             "max_age": 60,
             "max_uses": 4,
@@ -1324,7 +1327,7 @@ class TestRESTClientImplAsync:
             "target_user_type": invites.TargetUserType.STREAM,
         }
 
-        await rest_client.create_invite(
+        result = await rest_client.create_invite(
             StubModel(123),
             max_age=datetime.timedelta(minutes=1),
             max_uses=4,
@@ -1333,6 +1336,11 @@ class TestRESTClientImplAsync:
             target_user=StubModel(456),
             target_user_type=invites.TargetUserType.STREAM,
             reason="cause why not :)",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
+        rest_client._entity_factory.deserialize_invite_with_metadata.assert_called_once_with(
+            rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
 
@@ -1687,9 +1695,12 @@ class TestRESTClientImplAsync:
         input_invite = StubModel()
         input_invite.code = "Jx4cNGG"
         expected_route = routes.DELETE_INVITE.compile(invite_code="Jx4cNGG")
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"ok": "NO"})
 
-        await rest_client.delete_invite(input_invite)
+        result = await rest_client.delete_invite(input_invite)
+
+        assert result is rest_client._entity_factory.deserialize_invite.return_value
+        rest_client._entity_factory.deserialize_invite.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_my_user(self, rest_client):
@@ -1956,10 +1967,10 @@ class TestRESTClientImplAsync:
             "splash": "splash data",
             "banner": "banner data",
         }
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
         with mock.patch.object(files, "ensure_resource", side_effect=[icon_resource, splash_resource, banner_resource]):
-            await rest_client.edit_guild(
+            result = await rest_client.edit_guild(
                 StubModel(123),
                 name="hikari",
                 region="europe",
@@ -1979,6 +1990,8 @@ class TestRESTClientImplAsync:
                 reason="hikari best",
             )
 
+        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
+        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="hikari best")
 
     async def test_edit_guild_when_images_are_None(self, rest_client):
@@ -2000,9 +2013,9 @@ class TestRESTClientImplAsync:
             "splash": None,
             "banner": None,
         }
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"ok": "NO"})
 
-        await rest_client.edit_guild(
+        result = await rest_client.edit_guild(
             StubModel(123),
             name="hikari",
             region="europe",
@@ -2022,14 +2035,19 @@ class TestRESTClientImplAsync:
             reason="hikari best",
         )
 
+        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
+        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="hikari best")
 
     async def test_edit_guild_without_optionals(self, rest_client):
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {}
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"id": "42"})
 
-        await rest_client.edit_guild(StubModel(123))
+        result = await rest_client.edit_guild(StubModel(123))
+
+        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
+        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_fetch_guild_channels(self, rest_client):
@@ -2048,7 +2066,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_guild_text_channel(self, rest_client):
         guild = StubModel(123)
-        channel = StubModel(456)
+        channel = mock.Mock(channels.GuildTextChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
@@ -2081,7 +2099,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_guild_news_channel(self, rest_client):
         guild = StubModel(123)
-        channel = StubModel(456)
+        channel = mock.Mock(spec_set=channels.GuildNewsChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
@@ -2114,7 +2132,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_guild_voice_channel(self, rest_client):
         guild = StubModel(123)
-        channel = StubModel(456)
+        channel = mock.Mock(channels.GuildVoiceChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
@@ -2145,7 +2163,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_guild_category(self, rest_client):
         guild = StubModel(123)
-        category = StubModel(456)
+        category = mock.Mock(spec_set=channels.GuildCategory)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
         rest_client._create_guild_channel = mock.AsyncMock(return_value=category)
@@ -2168,7 +2186,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test__create_guild_channel(self, rest_client):
-        channel = StubModel(456)
+        channel = mock.Mock(spec_set=channels.GuildChannel)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
         expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
@@ -2632,7 +2650,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "456"})
 
     async def test_fetch_welcome_screen(self, rest_client):
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
         expected_route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=52341231)
 
         result = await rest_client.fetch_welcome_screen(StubModel(52341231))
@@ -2657,7 +2675,7 @@ class TestRESTClientImplAsync:
 
     async def test_edit_welcome_screen_with_optional_kwargs(self, rest_client):
         mock_channel = object()
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"go": "home", "you're": "drunk"})
         expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
 
         result = await rest_client.edit_welcome_screen(
@@ -2679,7 +2697,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.serialize_welcome_channel.assert_called_once_with(mock_channel)
 
     async def test_edit_welcome_screen_with_null_kwargs(self, rest_client):
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"go": "go", "power": "rangers"})
         expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
 
         result = await rest_client.edit_welcome_screen(StubModel(54123564), description=None, channels=None)
@@ -2698,7 +2716,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.serialize_welcome_channel.assert_not_called()
 
     async def test_edit_welcome_screen_without_optional_kwargs(self, rest_client):
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"screen": "NBO"})
         expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
 
         result = await rest_client.edit_welcome_screen(StubModel(54123564))

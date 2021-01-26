@@ -649,8 +649,6 @@ class EventFactoryImpl(event_factory.EventFactory):
         # Note, these IDs may be returned as ints or strings based on whether they're over a certain value.
         not_found = [snowflakes.Snowflake(sn) for sn in payload["not_found"]] if "not_found" in payload else []
 
-        nonce = typing.cast("typing.Optional[str]", payload.get("nonce"))
-
         if (presence_payloads := payload.get("presences")) is not None:
             presences = {
                 snowflakes.Snowflake(p["user"]["id"]): self._app.entity_factory.deserialize_member_presence(
@@ -670,7 +668,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             chunk_count=count,
             not_found=not_found,
             presences=presences,
-            nonce=nonce,
+            nonce=payload.get("nonce"),
         )
 
     ###############

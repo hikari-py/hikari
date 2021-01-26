@@ -274,7 +274,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]) -> None:
+    async def delete_channel(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+    ) -> channels_.PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
         Parameters
@@ -282,6 +284,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
             The channel to delete. This may be the object or the ID of an
             existing channel.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            Object of the channel that was deleted.
 
         Raises
         ------
@@ -2315,7 +2322,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: invites.Inviteish) -> None:
+    async def delete_invite(self, invite: invites.Inviteish) -> invites.Invite:
         """Delete an existing invite.
 
         Parameters
@@ -2323,6 +2330,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invite : hikari.invites.Inviteish
             The invite to delete. This may be an invite object or
             the code of an existing invite.
+
+        Returns
+        -------
+        hikari.invites.Invite
+            Object of the invite that was deleted.
 
         Raises
         ------
