@@ -316,7 +316,7 @@ def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Gener
 
 
 class _FlagMeta(type):
-    def __call__(cls, value: typing.Any = 0) -> typing.Any:
+    def __call__(cls, value: int = 0) -> typing.Any:
         try:
             return cls._value_to_member_map_[value]
         except KeyError:

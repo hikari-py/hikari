@@ -46,6 +46,13 @@ from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
 
 
+def test__with_int_cast():
+    cast = mock.Mock()
+
+    assert entity_factory._with_int_cast(cast)("42") is cast.return_value
+    cast.assert_called_once_with(42)
+
+
 def test__deserialize_seconds_timedelta():
     assert entity_factory._deserialize_seconds_timedelta(30) == datetime.timedelta(seconds=30)
 
