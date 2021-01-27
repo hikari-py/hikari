@@ -4997,16 +4997,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         description : undefined.UndefinedNoneOr[builtins.str]
-            The description to set for the guild's welcome screen. This may be
-            `builtins.None` to unset the description or left as
-            `hikari.undefined.UNDEFINED` to leave the description unchanged.
+            If provided, the description to set for the guild's welcome screen.
+            This may be `builtins.None` to unset the description.
         enabled : undefined.UndefinedOr[builtins.bool]
-            Whether the guild's welcome screen should be enabled. Leave as
-            `hikari.undefined.UNDEFINED` to leave this unchanged.
+            If provided, Whether the guild's welcome screen should be enabled.
         channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChanne;]]
-            A sequence of up to 5 public channels to set in this guild's welcome
-            screen. This may be passed as `builtins.None` to remove all welcome
-            channels or left as `hikari.undefined.UNDEFINED` to leave unchanged.
+            If provided, a sequence of up to 5 public channels to set in this
+            guild's welcome screen. This may be passed as `builtins.None` to
+            remove all welcome channels
 
             !!! note
                 Custom emojis may only be included in a guild's welcome channels
@@ -5028,6 +5026,105 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the `MANAGE_GUILD` permission, are not part of
             the guild or the guild doesn't have access to the community welcome
             screen feature.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_guild_membership_gate(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.MembershipGate:
+        """Fetch a guild's membership verification gate screen.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the member verification screen for
+
+        Returns
+        -------
+        hikari.guilds.MembershipGate
+            The requested membership verification gate screen.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild or if you are missing the
+            "MANAGE_GUILD" permission or if the guild does not have access to the
+            feature (is not a community guild).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_guild_membership_gate(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        fields: undefined.UndefinedOr[typing.Sequence[guilds.MembershipGateField]] = undefined.UNDEFINED,
+    ) -> guilds.MembershipGate:
+        """Edit the verification gate screen of a community guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            ID or object of the guild to edit the welcome screen for.
+
+        Other Parameters
+        ----------------
+        description : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new description to set. This may be passed as
+            `builtins.None` to remove the set description.
+        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the member screening feature should be enabled
+            or not.
+        fields : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.MembershipGateField]]
+            If provided, a sequence of the fields to set for this guild's
+            membership gating screen.
+
+        Returns
+        -------
+        hikari.guilds.MembershipGate
+            The edited guild membership verification gate screen.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission, are not part of
+            the guild or the guild doesn't have access to the community member
+            screening feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError

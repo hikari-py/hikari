@@ -2425,6 +2425,42 @@ class RESTClientImpl(rest_api.RESTClient):
         response = typing.cast(data_binding.JSONObject, raw_response)
         return self._entity_factory.deserialize_welcome_screen(response)
 
+    async def fetch_guild_membership_gate(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.MembershipGate:
+        route = routes.GET_GUILD_MEMBER_VERIFICATION.compile(guild=guild)
+        response = await self._request(route)
+
+        # If the member screen of a guild has never been set
+        # then Discord will respond with a 204 (no content).
+        if not response:
+            return guilds.MembershipGate(description=None, fields=[], updated_at=None)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_membership_gate(response)
+
+    async def edit_guild_membership_gate(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        fields: undefined.UndefinedOr[typing.Sequence[guilds.MembershipGateField]] = undefined.UNDEFINED,
+    ) -> guilds.MembershipGate:
+        route = routes.PATCH_GUILD_MEMBER_VERIFICATION.compile(guild=guild)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("description", description)
+        body.put("enabled", enabled)
+
+        if fields is not undefined.UNDEFINED:
+            raw_fields = [self._entity_factory.serialize_membership_gate_field(field) for field in fields]
+            body.put("form_fields", raw_fields, conversion=data_binding.dump_json)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_membership_gate(response)
+
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         raw_response = await self._request(route)
