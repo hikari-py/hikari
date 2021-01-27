@@ -1612,7 +1612,7 @@ class TestEntityFactoryImpl:
                 "premium_since": "2019-05-17T06:26:56.936000+00:00",
             }
         )
-        assert member.nickname is undefined.UNDEFINED
+        assert member.nickname is None
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is undefined.UNDEFINED

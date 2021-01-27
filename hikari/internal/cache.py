@@ -400,7 +400,7 @@ class MemberData(BaseData[guilds.Member]):
 
     user: RefCell[users_.User] = attr.ib()
     guild_id: snowflakes.Snowflake = attr.ib()
-    nickname: undefined.UndefinedNoneOr[str] = attr.ib()
+    nickname: typing.Optional[str] = attr.ib()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.ib()
     joined_at: datetime.datetime = attr.ib()
     premium_since: typing.Optional[datetime.datetime] = attr.ib()

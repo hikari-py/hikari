@@ -1048,7 +1048,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             role_ids=role_ids,
             joined_at=joined_at,
-            nickname=payload["nick"] if "nick" in payload else undefined.UNDEFINED,
+            nickname=payload.get("nick"),
             premium_since=premium_since,
             is_deaf=payload["deaf"] if "deaf" in payload else undefined.UNDEFINED,
             is_mute=payload["mute"] if "mute" in payload else undefined.UNDEFINED,
