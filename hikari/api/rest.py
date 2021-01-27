@@ -4997,16 +4997,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         description : undefined.UndefinedNoneOr[builtins.str]
-            The description to set for the guild's welcome screen. This may be
-            `builtins.None` to unset the description or left as
-            `hikari.undefined.UNDEFINED` to leave the description unchanged.
+            If provided, the description to set for the guild's welcome screen.
+            This may be `builtins.None` to unset the description.
         enabled : undefined.UndefinedOr[builtins.bool]
-            Whether the guild's welcome screen should be enabled. Leave as
-            `hikari.undefined.UNDEFINED` to leave this unchanged.
+            If provided, Whether the guild's welcome screen should be enabled.
         channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChanne;]]
-            A sequence of up to 5 public channels to set in this guild's welcome
-            screen. This may be passed as `builtins.None` to remove all welcome
-            channels or left as `hikari.undefined.UNDEFINED` to leave unchanged.
+            If provided, a sequence of up to 5 public channels to set in this
+            guild's welcome screen. This may be passed as `builtins.None` to
+            remove all welcome channels
 
             !!! note
                 Custom emojis may only be included in a guild's welcome channels
@@ -5107,16 +5105,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         description : hikari.undefined.UndefinedNoneOr[builtins.str]
-            The new description to set. This may be passed as `builtins.None` to
-            remove the set description or left as `hikari.undefined.UNDEFINED`
-            to leave the description unchanged.
+            If provided, the new description to set. This may be passed as
+            `builtins.None` to remove the set description.
         enabled : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether the member screening feature should be enabled or not.
-            Leave as `hikari.undefined.UNDEFINED` to leave unchanged.
+            If provided, whether the member screening feature should be enabled
+            or not.
         fields : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.MembershipGateField]]
-            A sequence of the fields to set for this guild's member screen.
-            This may be left as `hikari.undefined.UNDEFINED` to leave the fields
-            unchanged.
+            If provided, a sequence of the fields to set for this guild's
+            membership gating screen.
 
         Returns
         -------
