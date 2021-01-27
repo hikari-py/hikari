@@ -754,8 +754,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
     ) -> channels_.PartialChannel:
         route = routes.GET_CHANNEL.compile(channel=channel)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
     async def edit_channel(
@@ -794,8 +794,8 @@ class RESTClientImpl(rest_api.RESTClient):
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
     async def follow_channel(
@@ -809,14 +809,18 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("webhook_channel_id", target_channel)
 
-        raw_response = await self._request(route, json=body, reason=reason)
+        response = await self._request(route, json=body, reason=reason)
 
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel_follow(response)
 
-    async def delete_channel(self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]) -> None:
+    async def delete_channel(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+    ) -> channels_.PartialChannel:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
-        await self._request(route)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_channel(response)
 
     async def edit_permission_overwrites(
         self,
@@ -863,8 +867,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
 
     async def create_invite(
@@ -887,8 +891,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("unique", unique)
         body.put_snowflake("target_user_id", target_user)
         body.put("target_user_type", target_user_type)
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
@@ -902,8 +906,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
     ) -> typing.Sequence[messages_.Message]:
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_message)
 
     async def pin_message(
@@ -971,8 +975,8 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def create_message(
@@ -1054,13 +1058,13 @@ class RESTClientImpl(rest_api.RESTClient):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
                     form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
 
-                raw_response = await self._request(route, form=form)
+                response = await self._request(route, form=form)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, json=body)
+            response = await self._request(route, json=body)
 
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def crosspost_message(
@@ -1070,9 +1074,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_CROSSPOST.compile(channel=channel, message=message)
 
-        raw_response = await self._request(route)
+        response = await self._request(route)
 
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def edit_message(
@@ -1118,8 +1122,8 @@ class RESTClientImpl(rest_api.RESTClient):
         elif embed is None:
             body.put("embed", None)
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def delete_message(
@@ -1282,8 +1286,8 @@ class RESTClientImpl(rest_api.RESTClient):
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
     async def fetch_webhook(
@@ -1299,8 +1303,8 @@ class RESTClientImpl(rest_api.RESTClient):
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             no_auth = True
 
-        raw_response = await self._request(route, no_auth=no_auth)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, no_auth=no_auth)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
     async def fetch_channel_webhooks(
@@ -1308,8 +1312,8 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
 
     async def fetch_guild_webhooks(
@@ -1317,8 +1321,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[webhooks.Webhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
 
     async def edit_webhook(
@@ -1349,8 +1353,8 @@ class RESTClientImpl(rest_api.RESTClient):
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
     async def delete_webhook(
@@ -1467,13 +1471,13 @@ class RESTClientImpl(rest_api.RESTClient):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
                     form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
 
-                raw_response = await self._request(route, query=query, form=form, no_auth=True)
+                response = await self._request(route, query=query, form=form, no_auth=True)
             finally:
                 await stack.aclose()
         else:
-            raw_response = await self._request(route, query=query, json=body, no_auth=True)
+            response = await self._request(route, query=query, json=body, no_auth=True)
 
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def edit_webhook_message(
@@ -1539,8 +1543,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if update_embeds:
             body.put("embeds", serialized_embeds)
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def delete_webhook_message(
@@ -1555,32 +1559,36 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
-        raw_response = await self._request(route, no_auth=True)
-        response = typing.cast("typing.Mapping[str, str]", raw_response)
-        return response["url"]
+        response = await self._request(route, no_auth=True)
+        assert isinstance(response, dict)
+        url = response["url"]
+        assert isinstance(url, str)
+        return url
 
     async def fetch_gateway_bot(self) -> sessions.GatewayBot:
         route = routes.GET_GATEWAY_BOT.compile()
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_gateway_bot(response)
 
     async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
-        raw_response = await self._request(route, query=query)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
-    async def delete_invite(self, invite: invites.Inviteish) -> None:
+    async def delete_invite(self, invite: invites.Inviteish) -> invites.Invite:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
-        await self._request(route)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_invite(response)
 
     async def fetch_my_user(self) -> users.OwnUser:
         route = routes.GET_MY_USER.compile()
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_my_user(response)
 
     async def edit_my_user(
@@ -1600,14 +1608,14 @@ class RESTClientImpl(rest_api.RESTClient):
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_my_user(response)
 
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         route = routes.GET_MY_CONNECTIONS.compile()
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_own_connection)
 
     def fetch_my_guilds(
@@ -1638,14 +1646,14 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_dm(response)
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_application(response)
 
     async def add_user_to_guild(
@@ -1667,8 +1675,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
 
-        if (raw_response := await self._request(route, json=body)) is not None:
-            response = typing.cast(data_binding.JSONObject, raw_response)
+        if (response := await self._request(route, json=body)) is not None:
+            assert isinstance(response, dict)
             return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
         else:
             # User already is in the guild.
@@ -1676,14 +1684,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
 
     async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
 
     def fetch_audit_log(
@@ -1718,16 +1726,16 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> emojis.KnownCustomEmoji:
         route = routes.GET_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
     async def fetch_guild_emojis(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(
             response, self._entity_factory.deserialize_known_custom_emoji, guild_id=snowflakes.Snowflake(guild)
         )
@@ -1750,8 +1758,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body.put_snowflake_array("roles", roles)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
     async def edit_emoji(
@@ -1768,8 +1776,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put_snowflake_array("roles", roles)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
     async def delete_emoji(
@@ -1789,14 +1797,14 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
-        raw_response = await self._request(route, query=query)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
     async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_preview(response)
 
     async def edit_guild(
@@ -1878,8 +1886,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await asyncio.gather(*tasks)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
@@ -1890,8 +1898,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels_.GuildChannel]:
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         channel_sequence = data_binding.cast_json_array(response, self._entity_factory.deserialize_channel)
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast("typing.Sequence[channels_.GuildChannel]", channel_sequence)
@@ -1923,7 +1931,8 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        return typing.cast(channels_.GuildTextChannel, channel)
+        assert isinstance(channel, channels_.GuildTextChannel)
+        return channel
 
     async def create_guild_news_channel(
         self,
@@ -1952,7 +1961,8 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        return typing.cast(channels_.GuildNewsChannel, channel)
+        assert isinstance(channel, channels_.GuildNewsChannel)
+        return channel
 
     async def create_guild_voice_channel(
         self,
@@ -1979,7 +1989,8 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        return typing.cast(channels_.GuildVoiceChannel, channel)
+        assert isinstance(channel, channels_.GuildVoiceChannel)
+        return channel
 
     async def create_guild_category(
         self,
@@ -2000,7 +2011,8 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites=permission_overwrites,
             reason=reason,
         )
-        return typing.cast(channels_.GuildCategory, channel)
+        assert isinstance(channel, channels_.GuildCategory)
+        return channel
 
     async def _create_guild_channel(
         self,
@@ -2037,10 +2049,11 @@ class RESTClientImpl(rest_api.RESTClient):
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         channel = self._entity_factory.deserialize_channel(response)
-        return typing.cast(channels_.GuildChannel, channel)
+        assert isinstance(channel, channels_.GuildChannel)
+        return channel
 
     async def reposition_channels(
         self,
@@ -2057,8 +2070,8 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.Member:
         route = routes.GET_GUILD_MEMBER.compile(guild=guild, user=user)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
     def fetch_members(
@@ -2077,8 +2090,8 @@ class RESTClientImpl(rest_api.RESTClient):
         query = data_binding.StringMapBuilder()
         query.put("query", name)
         query.put("limit", 1000)
-        raw_response = await self._request(route, query=query)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route, query=query)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(
             response, self._entity_factory.deserialize_member, guild_id=snowflakes.Snowflake(guild)
         )
@@ -2109,8 +2122,8 @@ class RESTClientImpl(rest_api.RESTClient):
         elif voice_channel is not undefined.UNDEFINED:
             body.put_snowflake("channel_id", voice_channel)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
     async def edit_my_nick(
@@ -2194,16 +2207,16 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
     ) -> guilds.GuildMemberBan:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_member_ban(response)
 
     async def fetch_bans(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.GuildMemberBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_guild_member_ban)
 
     async def fetch_roles(
@@ -2211,8 +2224,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(
             response, self._entity_factory.deserialize_role, guild_id=snowflakes.Snowflake(guild)
         )
@@ -2244,8 +2257,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_role(response, guild_id=snowflakes.Snowflake(guild))
 
     async def reposition_roles(
@@ -2283,8 +2296,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_role(response, guild_id=snowflakes.Snowflake(guild))
 
     async def delete_role(
@@ -2308,8 +2321,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if include_roles is not undefined.UNDEFINED:
             roles = ",".join(str(int(role)) for role in include_roles)
             query.put("include_roles", roles)
-        raw_response = await self._request(route, query=query)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
         return int(response["pruned"])
 
     async def begin_guild_prune(
@@ -2326,8 +2339,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("days", days)
         body.put("compute_prune_count", compute_prune_count)
         body.put_snowflake_array("include_roles", include_roles)
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         pruned = response.get("pruned")
         return int(pruned) if pruned is not None else None
 
@@ -2336,8 +2349,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
 
     async def fetch_guild_invites(
@@ -2345,8 +2358,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
 
     async def fetch_integrations(
@@ -2354,16 +2367,16 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[guilds.Integration]:
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(
             response, self._entity_factory.deserialize_integration, guild_id=snowflakes.Snowflake(guild)
         )
 
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_widget(response)
 
     async def edit_widget(
@@ -2383,21 +2396,21 @@ class RESTClientImpl(rest_api.RESTClient):
         elif channel is not undefined.UNDEFINED:
             body.put_snowflake("channel", channel)
 
-        raw_response = await self._request(route, json=body, reason=reason)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_widget(response)
 
     async def fetch_welcome_screen(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.WelcomeScreen:
         route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=guild)
 
-        raw_response = await self._request(route)
+        response = await self._request(route)
 
         # If the welcome screen of a guild has never been set
         # then Discord will respond with a 204 (no content).
-        if not raw_response:
+        if not response:
             return guilds.WelcomeScreen(description=None, channels=[])
 
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
     async def edit_welcome_screen(
@@ -2421,8 +2434,8 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             body.put("welcome_channels", None)
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
     async def fetch_guild_membership_gate(
@@ -2463,8 +2476,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_vanity_url(response)
 
     async def create_template(
@@ -2478,8 +2491,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("description", description)
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
     async def create_guild_from_template(
@@ -2499,8 +2512,8 @@ class RESTClientImpl(rest_api.RESTClient):
             async with icon_resource.stream(executor=self._executor) as stream:
                 body.put("icon", await stream.data_uri())
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
     async def delete_template(
@@ -2510,8 +2523,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.DELETE_GUILD_TEMPLATE.compile(guild=guild, template=template)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
     async def edit_template(
@@ -2528,23 +2541,23 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
 
-        raw_response = await self._request(route, json=body)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
     async def fetch_template(self, template: templates.Templateish) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.GET_TEMPLATE.compile(template=template)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
     async def fetch_guild_templates(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[templates.Template]:
         route = routes.GET_GUILD_TEMPLATES.compile(guild=guild)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONArray, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, list)
         return data_binding.cast_json_array(response, self._entity_factory.deserialize_template)
 
     async def sync_guild_template(
@@ -2554,6 +2567,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.PUT_GUILD_TEMPLATE.compile(guild=guild, template=template)
-        raw_response = await self._request(route)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request(route)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)

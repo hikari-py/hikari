@@ -1399,9 +1399,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channels = {}
 
             for channel_payload in payload["channels"]:
-                channel = typing.cast(
-                    "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild.id)
-                )
+                channel = self.deserialize_channel(channel_payload, guild_id=guild.id)
+                assert isinstance(channel, channel_models.GuildChannel)
                 channels[channel.id] = channel
 
         presences: typing.Optional[typing.MutableMapping[snowflakes.Snowflake, presence_models.MemberPresence]] = None
@@ -1959,9 +1958,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         channels = {}
         for channel_payload in source_guild_payload["channels"]:
-            channel = typing.cast(
-                "channel_models.GuildChannel", self.deserialize_channel(channel_payload, guild_id=guild_id)
-            )
+            channel = self.deserialize_channel(channel_payload, guild_id=guild_id)
+            assert isinstance(channel, channel_models.GuildChannel)
             channels[channel.id] = channel
 
         afk_channel_id = source_guild_payload["afk_channel_id"]

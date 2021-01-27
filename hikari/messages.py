@@ -45,7 +45,6 @@ import attr
 
 from hikari import files
 from hikari import guilds
-from hikari import intents
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -335,10 +334,9 @@ class Mentions:
         if self.users is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        if self._ensure_cache(intents.Intents.GUILDS, True):
-            guild_id = typing.cast(snowflakes.Snowflake, self._message.guild_id)
-            app = typing.cast(traits.CacheAware, self._message.app)
-
+        if isinstance(self._message.app, traits.CacheAware) and self._message.guild_id is not None:
+            app = self._message.app
+            guild_id = self._message.guild_id
             return self._map_cache_maybe_discover(
                 self.users,
                 lambda user_id: app.cache.get_member(guild_id, user_id),
@@ -369,25 +367,14 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
-        if self._ensure_cache(intents.Intents.GUILDS, True):
-            app = typing.cast(traits.CacheAware, self._message.app)
-
+        if isinstance(self._message.app, traits.CacheAware) and self._message.guild_id is not None:
+            app = self._message.app
             return self._map_cache_maybe_discover(
                 self.roles,
                 app.cache.get_role,
             )
 
         return {}
-
-    def _ensure_cache(self, intents_required: intents.Intents, needs_guild: bool) -> bool:
-        app = self._message.app
-
-        return bool(
-            isinstance(app, traits.ShardAware)
-            and isinstance(app, traits.CacheAware)
-            and (app.intents & intents_required) == intents_required
-            and (not needs_guild or self._message.guild_id)
-        )
 
     @staticmethod
     def _map_cache_maybe_discover(

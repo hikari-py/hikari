@@ -240,8 +240,8 @@ class GuildBuilder(special_endpoints.GuildBuilder):
                 data_uri = await stream.data_uri()
                 payload.put("icon", data_uri)
 
-        raw_response = await self._request_call(route, json=payload)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request_call(route, json=payload)
+        assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
     def add_role(
@@ -415,8 +415,8 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         query.put(self._direction, self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
-        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
 
         if not chunk:
             return None
@@ -456,8 +456,8 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         query.put("after", self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
-        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
 
         if not chunk:
             return None
@@ -495,8 +495,8 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         query.put("before" if self._newest_first else "after", self._first_id)
         query.put("limit", 100)
 
-        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
-        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
 
         if not chunk:
             return None
@@ -535,8 +535,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         query.put("after", self._first_id)
         query.put("limit", 1000)
 
-        raw_chunk = await self._request_call(compiled_route=self._route, query=query)
-        chunk = typing.cast(data_binding.JSONArray, raw_chunk)
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
 
         if not chunk:
             return None
@@ -586,8 +586,8 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         query.put("event_type", self._action_type)
         query.put("before", self._first_id)
 
-        raw_response = await self._request_call(compiled_route=self._route, query=query)
-        response = typing.cast(data_binding.JSONObject, raw_response)
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
 
         if not response["audit_log_entries"]:
             raise StopAsyncIteration
