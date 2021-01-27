@@ -284,18 +284,16 @@ class Member(users.User):
     is_pending: undefined.UndefinedOr[bool] = attr.ib(repr=False)
     """Whether the user has passed the guild's membership screening requirements.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is unknown."""
+    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
+    """
 
     joined_at: datetime.datetime = attr.ib(repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
-    nickname: undefined.UndefinedNoneOr[str] = attr.ib(repr=True)
+    nickname: typing.Optional[str] = attr.ib(repr=True)
     """This member's nickname.
 
     This will be `builtins.None` if not set.
-
-    On member update events, this may not be included at all.
-    In this case, this will be undefined.
     """
 
     premium_since: typing.Optional[datetime.datetime] = attr.ib(repr=False)
