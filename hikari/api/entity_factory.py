@@ -156,6 +156,23 @@ class EntityFactory(abc.ABC):
             The deserialized application object.
         """
 
+    @abc.abstractmethod
+    def deserialize_authorization_information(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.AuthorizationInformation:
+        """Parse a raw payload from Discord into an authorization information object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.AuthorizationInformation
+            The deserialized authorization information object.
+        """
+
     #####################
     # AUDIT LOGS MODELS #
     #####################

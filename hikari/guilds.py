@@ -700,6 +700,7 @@ class PartialApplication(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
+    # TODO: default to None for consistency?
     summary: str = attr.ib(eq=False, hash=False, repr=False)
     """This summary for this application's primary SKU if it's sold on Discord.
 

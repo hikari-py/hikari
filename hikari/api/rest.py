@@ -2580,10 +2580,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application(self) -> applications.Application:
         """Fetch the token's associated application.
 
+        !!! warning
+            This endpoint can only be used with a Bot token. Using this with a
+            Bearer token will result in a `hikari.errors.UnauthorizedError`.
+
         Returns
         -------
         hikari.applications.Application
             The token's associated application.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    # THIS IS AN OAUTH2 FLOW ONLY
+    @abc.abstractmethod
+    async def fetch_authorization(self) -> applications.AuthorizationInformation:
+        """Fetch the token's authorization information.
+
+        !!! warning
+            This endpoint can only be used with a Bearer token. Using this
+            with a Bot token will result in a `hikari.errors.UnauthorizedError`.
+
+        Returns
+        -------
+        hikari.applications.AuthorizationInformation
+            The token's authorization information.
 
         Raises
         ------
@@ -4966,7 +5003,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.invites.WelcomeScreen
+        hikari.guilds.WelcomeScreen
             The requested welcome screen.
 
         Raises
@@ -5013,7 +5050,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This may be `builtins.None` to unset the description.
         enabled : undefined.UndefinedOr[builtins.bool]
             If provided, Whether the guild's welcome screen should be enabled.
-        channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChanne;]]
+        channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChannel]]
             If provided, a sequence of up to 5 public channels to set in this
             guild's welcome screen. This may be passed as `builtins.None` to
             remove all welcome channels

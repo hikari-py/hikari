@@ -430,7 +430,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, Cach
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
         status: presences.Status = presences.Status.ONLINE,
-        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
@@ -463,7 +463,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, Cach
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.Set[builtins.int]]
+        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
             The shard IDs to create shards for. If not `builtins.None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
             `builtins.None`, which means the Discord-recommended count is used
@@ -486,7 +486,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, Cach
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
-        shard_ids: typing.Optional[typing.Set[int]] = None,
+        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
@@ -513,7 +513,7 @@ class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, Cach
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.Set[builtins.int]]
+        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
             The shard IDs to create shards for. If not `builtins.None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
             `builtins.None`, which means the Discord-recommended count is used

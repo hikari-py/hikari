@@ -1789,6 +1789,18 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
 
+    async def test_fetch_authorization(self, rest_client):
+        expected_route = routes.GET_MY_AUTHORIZATION.compile()
+        rest_client._request = mock.AsyncMock(return_value={"application": {}})
+
+        result = await rest_client.fetch_authorization()
+
+        assert result is rest_client._entity_factory.deserialize_authorization_information.return_value
+        rest_client._entity_factory.deserialize_authorization_information.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_add_user_to_guild(self, rest_client):
         member = StubModel(789)
         expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)

@@ -1656,6 +1656,12 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_application(response)
 
+    async def fetch_authorization(self) -> applications.AuthorizationInformation:
+        route = routes.GET_MY_AUTHORIZATION.compile()
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_authorization_information(response)
+
     async def add_user_to_guild(
         self,
         access_token: str,
