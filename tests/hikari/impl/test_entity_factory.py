@@ -224,7 +224,7 @@ class TestEntityFactoryImpl:
         assert application.rpc_origins == ["127.0.0.0"]
         assert application.summary == "not a blank string"
         assert (
-            application.verify_key
+            application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
         assert application.icon_hash == "iwiwiwiwiw"
@@ -262,7 +262,7 @@ class TestEntityFactoryImpl:
         assert application.is_bot_public is None
         assert application.is_bot_code_grant_required is None
         assert application.rpc_origins is None
-        assert application.verify_key is None
+        assert application.public_key is None
         assert application.team is None
         assert application.guild_id is None
         assert application.primary_sku_id is None
@@ -316,7 +316,7 @@ class TestEntityFactoryImpl:
         assert application.description == "2123"
         assert application.icon_hash == "7c635c3cc8c7b109d254d8fcc1be85e6"
         assert application.summary == "dsasd"
-        assert application.verify_key == b"okokodododo"
+        assert application.public_key == b"okokodododo"
         assert application.is_bot_public is True
         assert application.is_bot_code_grant_required is False
         assert isinstance(application, application_models.AuthorizationApplication)

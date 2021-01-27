@@ -307,7 +307,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
             summary=payload["summary"],
-            verify_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
+            public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -329,7 +329,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             summary=application_payload["summary"],
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
-            verify_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+            public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
         )
 
         return application_models.AuthorizationInformation(
