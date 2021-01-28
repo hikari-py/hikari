@@ -1353,7 +1353,7 @@ class Guild(PartialGuild, abc.ABC):
         """Get an emoji from the cache by it's ID."""
 
     @abc.abstractmethod
-    def get_role(self, role: snowflakes.SnowflakeishOr[Role]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
 
 
@@ -1403,7 +1403,7 @@ class RESTGuild(Guild):
         # <<inherited docstring from Guild>>.
         return self._emojis.get(snowflakes.Snowflake(emoji))
 
-    def get_role(self, role: snowflakes.SnowflakeishOr[Role]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         # <<inherited docstring from Guild>>.
         return self._roles.get(snowflakes.Snowflake(role))
 
@@ -1512,13 +1512,13 @@ class GatewayGuild(Guild):
 
     def get_channel(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
     ) -> typing.Optional[channels_.GuildChannel]:
         """Get a cached channel that belongs to the guild by it's ID or object.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
             The object or ID of the guild channel to get from the cache.
 
         Returns
@@ -1529,7 +1529,7 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_guild_channel(snowflakes.Snowflake(channel))
+        return self.app.cache.get_guild_channel(channel)
 
     def get_emoji(
         self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
@@ -1550,14 +1550,14 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_emoji(snowflakes.Snowflake(emoji))
+        return self.app.cache.get_emoji(emoji)
 
-    def get_member(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[Member]:
+    def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> typing.Optional[Member]:
         """Get a cached member that belongs to the guild by it's user ID or object.
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.User]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The object or ID of the user to get the cached member for.
 
         Returns
@@ -1568,7 +1568,7 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_member(self.id, snowflakes.Snowflake(user))
+        return self.app.cache.get_member(self.id, user)
 
     def get_my_member(self) -> typing.Optional[Member]:
         """Return the cached member for the bot user in this guild, if known.
@@ -1589,12 +1589,14 @@ class GatewayGuild(Guild):
 
         return self.get_member(me.id)
 
-    def get_presence(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[presences_.MemberPresence]:
+    def get_presence(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> typing.Optional[presences_.MemberPresence]:
         """Get a cached presence that belongs to the guild by it's user ID or object.
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.User]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The object or ID of the user to get the cached presence for.
 
         Returns
@@ -1605,14 +1607,14 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_presence(self.id, snowflakes.Snowflake(user))
+        return self.app.cache.get_presence(self.id, user)
 
-    def get_role(self, role: snowflakes.SnowflakeishOr[Role]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a cached role that belongs to the guild by it's ID or object.
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[Role]
+        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
             The object or ID of the role to get for this guild from the cache.
 
         Returns
@@ -1623,14 +1625,16 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_role(snowflakes.Snowflake(role))
+        return self.app.cache.get_role(role)
 
-    def get_voice_state(self, user: snowflakes.SnowflakeishOr[users.User]) -> typing.Optional[voices_.VoiceState]:
+    def get_voice_state(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> typing.Optional[voices_.VoiceState]:
         """Get a cached voice state that belongs to the guild by it's user.
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.User]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             The object or ID of the user to get the cached voice state for.
 
         Returns
@@ -1641,4 +1645,4 @@ class GatewayGuild(Guild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_voice_state(self.id, snowflakes.Snowflake(user))
+        return self.app.cache.get_voice_state(self.id, user)
