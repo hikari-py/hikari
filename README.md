@@ -123,7 +123,7 @@ OAuth2 client implementations, such as
 
 ## Installation
 
-Install hikari from PyPI with the following command:
+Install Hikari from PyPI with the following command:
 
 ```bash
 python -m pip install -U hikari
@@ -139,9 +139,9 @@ You may wish to use a command framework on top of Hikari so that you can start
 writing a bot quickly without implementing your own command handler.
 
 Hikari does not include a command framework by default, so you will want to pick
-a third party library to do it.
+a third party library to do it:
 
-- [`lightbulb`](https://gitlab.com/tandemdude/lightbulb) - a simple and easy to
+- [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to
   use command framework for Hikari.
 
 ---
@@ -163,10 +163,13 @@ settings in the interpreter.
 - `python -OO bot.py` - second level optimisation - more features (**including
     all docstrings**) will be removed from the loaded code at runtime.
 
+**A minimum of first level of optimizations** is recommended when running bots in
+a production environment.
+
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a
-modern copy of GCC/G++, Clang, etc), you can install hikari using
+modern copy of GCC/G++, Clang, etc), you can install Hikari using
 `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`
 and `ciso8601`, which will provide you with a small performance boost.
 
@@ -203,6 +206,9 @@ Currently, this functionality does not yet exist.
 ---
 
 ## Developing Hikari
+
+To familiarize yourself a bit with the project, we recommend reading our
+[contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the
 repository.

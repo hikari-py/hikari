@@ -2,6 +2,14 @@
 
 First off, we would like to thank you for taking the time to help improve Hikari, it's greatly appreciated. We have some contribution guidelines that you should follow to ensure that your contribution is at it's best.
 
+# Code of conduct
+
+Hikari has a code of conduct that must be followed at all times by all the members of
+the project. Breaking the code of conduct can lead to a ban from the project and a report
+to GitHub.
+
+You can read the code of conduct [here](https://github.com/hikari-py/hikari/blob/master/CODE_OF_CONDUCT.md).
+
 # Branches
 
 We would like to keep consistency in how branches are named.
@@ -11,7 +19,7 @@ We would like to keep consistency in how branches are named.
 
 To push branches directly to the remote, you will have to name them like this:
   - `task/issue-number-small-info-on-branch`
-    - This should be the default for any commit that doesnt fall in any of the cases under.
+    - This should be the default for any commit that doesn't fall in any of the cases under.
   - `feature/issue-number-small-info-on-branch`
     - This should be used for branches that require more tasks to merge into before going as one MR into `master`.
   - `bugfix/issue-number-small-info-on-branch`
@@ -26,35 +34,30 @@ We have nox to help out with running pipelines locally and provides some helpful
 Nox is similar to tox, but uses a pure Python configuration instead of an
 INI based configuration. Nox and tox are both tools for generating virtual
 environments and running commands in those environments. Examples of usage
-include installing, configuring, and running flake8; running py.test, et
-cetera.
+include installing, configuring, and running flake8, running pytest, etc.
 
 You can check all the available nox commands by running `nox -l`.
 
-Before commiting we recomend you to run `nox` to run all important pipelines and make sure the pipelines wont fail.
+Before committing we recommend you to run `nox` to run all important pipelines and make sure the pipelines won't fail.
 
 You may run a single pipeline with `nox -s name` or multiple pipelines with
-`nox --sessions name1 name3 name9`.
+`nox -s name1 name3 name9`.
 
 # Pipelines
 
 We have several jobs to ensure that the code is at its best that in can be.
 
 This includes:
-  - `install`
-    - Test installation.
-  - `flake8`
-    - Linting.
-  - `mypy`
-    - Type checking.
-  - `safety`
-    - Vulnerability checking.
-  - `twemoji-mapping`
+  - `test`
+    - Run tests and installation of the package on different OS's and python versions.
+  - `linting`
+    - Linting (`flake8`), type checking (`mypy`), and safety (`safety`).
+  - `twemoji`
     - Force test all discord emojis.
   - `pages`
     - Generate webpage + documentation.
 
 All jobs will need to succeed before anything gets merged.
 
-Note that this rule may be skipped for `twemoji-mapping` if the
+Note that this rule may be skipped for `twemoji` if the
 problem is caused by a change Discord have made to their mapping.
