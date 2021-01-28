@@ -38,6 +38,12 @@ class TestFreezableDict:
         mock_map = collections.FreezableDict({"o": "NO", "bye": "blam", "foo": "bar"})
         assert mock_map == {"o": "NO", "bye": "blam", "foo": "bar"}
 
+    def test_clear(self):
+        mock_map = collections.FreezableDict({"foo": "bar", "crash": "balloon"})
+        mock_map.clear()
+
+        assert mock_map._data == {}
+
     def test_copy(self):
         mock_map = collections.FreezableDict({"foo": "bar", "crash": "balloon"})
         result = mock_map.copy()
@@ -124,6 +130,16 @@ class TestTimedCacheMap:
 
         with pytest.raises(ValueError, match="expiry time must be greater than 0 microseconds."):
             collections.TimedCacheMap(expiry=datetime.timedelta(seconds=-50))
+
+    def test_clear(self):
+        raw_map = {
+            "floom": (999999999999999999999999, "buebue"),
+            "bash": (999999999999999999999999, "bunny_time"),
+        }
+        mock_map = collections.TimedCacheMap(raw_map, expiry=datetime.timedelta(seconds=4523412))
+        mock_map.clear()
+
+        assert mock_map._data == {}
 
     def test_copy(self):
         raw_map = {
@@ -245,6 +261,12 @@ class TestLimitedCapacityCacheMap:
         raw_map = {"voo": "doo", "blam": "blast", "foo": "bye"}
         mock_map = collections.LimitedCapacityCacheMap(raw_map, limit=2)
         assert mock_map == {"blam": "blast", "foo": "bye"}
+
+    def test_clear(self):
+        mock_map = collections.LimitedCapacityCacheMap({"o": "n", "b": "a", "a": "v"}, limit=42)
+        mock_map.clear()
+
+        assert mock_map._data == {}
 
     def test_copy(self):
         mock_map = collections.LimitedCapacityCacheMap({"o": "n", "b": "a", "a": "v"}, limit=42)

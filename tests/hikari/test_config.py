@@ -20,9 +20,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import ssl
+
 import pytest
+import yarl
 
 from hikari import config as config_
+
+
+class TestSSLFactory:
+    def test_when_value_is_True(self):
+        returned = config_._ssl_factory(True)
+
+        assert returned.check_hostname is True
+        assert returned.verify_mode is ssl.CERT_REQUIRED
+
+    def test_when_value_is_False(self):
+        returned = config_._ssl_factory(False)
+
+        assert returned.check_hostname is False
+        assert returned.verify_mode is ssl.CERT_NONE
+
+    def test_when_value_is_non_bool(self):
+        value = object()
+        assert config_._ssl_factory(value) is value
 
 
 class TestBasicAuthHeader:
@@ -37,7 +58,57 @@ class TestBasicAuthHeader:
         assert str(config) == f"{config_._BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
 
+class TestHTTPTimeoutSettings:
+    @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
+    def test_max_redirects_validator_when_not_None_nor_int_nor_float(self, arg):
+        with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
+            config_.HTTPTimeoutSettings(**{arg: object()})
+
+    @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
+    def test_max_redirects_validator_when_negative_int(self, arg):
+        with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
+            config_.HTTPTimeoutSettings(**{arg: -1})
+
+    @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
+    def test_max_redirects_validator_when_negative_float(self, arg):
+        with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
+            config_.HTTPTimeoutSettings(**{arg: -1.1})
+
+    @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
+    @pytest.mark.parametrize("value", [1, 1.1, None])
+    def test_max_redirects_validator(self, arg, value):
+        config_.HTTPTimeoutSettings(**{arg: value})
+
+
+class TestHTTPSettings:
+    def test_max_redirects_validator_when_not_None_nor_int(self):
+        with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):
+            config_.HTTPSettings(max_redirects=object())
+
+    def test_max_redirects_validator_when_negative(self):
+        with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):
+            config_.HTTPSettings(max_redirects=-1)
+
+    @pytest.mark.parametrize("value", [1, None])
+    def test_max_redirects_validator(self, value):
+        config_.HTTPSettings(max_redirects=value)
+
+    def test_ssl(self):
+        mock_ssl = ssl.create_default_context()
+        config = config_.HTTPSettings(ssl=mock_ssl)
+
+        assert config.ssl is mock_ssl
+
+
 class TestProxySettings:
+    def test_url_validator_when_not_None_nor_str_nor_yarl_url(self):
+        with pytest.raises(ValueError, match=r"ProxySettings.url must be None, a str, or a yarl.URL instance"):
+            config_.ProxySettings(headers=None, auth=None, url=object())
+
+    @pytest.mark.parametrize("value", ["somewhere.com", None, yarl.URL("somewhere.com")])
+    def test_url_validator(self, value):
+        config_.ProxySettings(headers=None, auth=None, url=value)
+
     def test_all_headers_when_headers_and_auth_are_None(self):
         config = config_.ProxySettings(headers=None, auth=None)
         assert config.all_headers is None

@@ -602,6 +602,60 @@ class TestGuild:
         assert model.format_banner(ext="png", size=2048) is None
 
 
+class TestRestGuild:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return guilds.RESTGuild(
+            app=mock_app,
+            id=snowflakes.Snowflake(123),
+            splash_hash="splash_hash",
+            discovery_splash_hash="discovery_splash_hash",
+            banner_hash="banner_hash",
+            icon_hash="icon_hash",
+            features=[guilds.GuildFeature.ANIMATED_ICON],
+            name="some guild",
+            application_id=snowflakes.Snowflake(9876),
+            afk_channel_id=snowflakes.Snowflake(1234),
+            afk_timeout=datetime.timedelta(seconds=60),
+            default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
+            description=None,
+            explicit_content_filter=guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS,
+            is_widget_enabled=False,
+            max_video_channel_users=10,
+            mfa_level=guilds.GuildMFALevel.NONE,
+            owner_id=snowflakes.Snowflake(1111),
+            preferred_locale="en-GB",
+            premium_subscription_count=12,
+            premium_tier=guilds.GuildPremiumTier.TIER_3,
+            public_updates_channel_id=None,
+            region="london",
+            rules_channel_id=None,
+            system_channel_id=None,
+            vanity_url_code="yeet",
+            verification_level=guilds.GuildVerificationLevel.VERY_HIGH,
+            widget_channel_id=None,
+            system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
+            emojis={},
+            roles={},
+            approximate_active_member_count=1000,
+            approximate_member_count=100,
+            max_presences=100,
+            max_members=100,
+        )
+
+    def test_get_emoji(self, model):
+        emoji = object()
+        model._emojis = {snowflakes.Snowflake(123): emoji}
+
+        assert model.get_emoji(123) is emoji
+
+    def test_get_role(self, model):
+        role = object()
+        model._roles = {snowflakes.Snowflake(123): role}
+
+        assert model.get_role(123) is role
+
+
 class TestGatewayGuild:
     @pytest.fixture()
     def model(self, mock_app):
@@ -735,3 +789,19 @@ class TestGatewayGuild:
     def test_get_voice_state_when_no_cache_trait(self, model):
         model.app = object()
         assert model.get_voice_state(456) is None
+
+    def test_get_my_member_when_not_shardaware(self, model):
+        model.app = object()
+        assert model.get_my_member() is None
+
+    def test_get_my_member_when_no_me(self, model):
+        model.app.me = None
+        assert model.get_my_member() is None
+
+    def test_get_my_member(self, model):
+        model.app.me = mock.Mock(id=123)
+
+        with mock.patch.object(guilds.GatewayGuild, "get_member") as get_member:
+            assert model.get_my_member() is get_member.return_value
+
+        get_member.assert_called_once_with(123)

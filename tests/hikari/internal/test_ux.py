@@ -26,6 +26,7 @@ import os
 import platform
 import string
 import sys
+from distutils import version
 
 import colorlog
 import mock
@@ -362,23 +363,50 @@ class TestSupportsColor:
             )
 
 
-class TestHikariVersionParse:
+class TestHikariVersion:
     @pytest.mark.parametrize("v", ["1", "1.0.0dev2"])
     def test_when_version_number_is_invalid(self, v):
         with pytest.raises(ValueError, match=rf"invalid version number '{v}'"):
             ux.HikariVersion(v)
 
-    def test_when_patch(self):
+    def test_parse_when_patch(self):
         assert ux.HikariVersion("1.2.3").version == (1, 2, 3)
 
-    def test_when_no_patch(self):
+    def test_parse_when_no_patch(self):
         assert ux.HikariVersion("1.2").version == (1, 2, 0)
 
-    def test_when_prerelease(self):
+    def test_parse_when_prerelease(self):
         assert ux.HikariVersion("1.2.3.dev99").prerelease == (".dev", 99)
 
-    def test_when_no_prerelease(self):
+    def test_parse_when_no_prerelease(self):
         assert ux.HikariVersion("1.2.3").prerelease is None
+
+    def test_str_when_prerelease(self):
+        assert str(ux.HikariVersion("1.2.3.dev99")) == "1.2.3.dev99"
+
+    def test_str_when_no_prerelease(self):
+        assert str(ux.HikariVersion("1.2.3")) == "1.2.3"
+
+    def test_cmp_when_string(self):
+        version1 = ux.HikariVersion("1.2.3.dev99")
+
+        with mock.patch.object(ux, "HikariVersion") as hikari_version:
+            with mock.patch.object(version.StrictVersion, "_cmp", return_value=0) as cmp:
+                assert version1 == "4.5.6.dev98"
+
+        hikari_version.assert_called_once_with("4.5.6.dev98")
+        cmp.assert_called_once_with(hikari_version.return_value)
+
+    def test_cmp_when_not_str(self):
+        version1 = ux.HikariVersion("1.2.3.dev99")
+        version2 = ux.HikariVersion("4.5.6.dev98")
+
+        with mock.patch.object(ux, "HikariVersion") as hikari_version:
+            with mock.patch.object(version.StrictVersion, "_cmp", return_value=0) as cmp:
+                assert version1 == version2
+
+        hikari_version.assert_not_called()
+        cmp.assert_called_once_with(version2)
 
 
 @pytest.mark.asyncio

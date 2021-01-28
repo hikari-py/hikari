@@ -30,6 +30,9 @@ import functools
 import inspect
 import typing
 
+if typing.TYPE_CHECKING:
+    _T = typing.TypeVar("_T")
+
 EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
@@ -72,10 +75,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
     return signature.replace(parameters=params, return_annotation=return_annotation)
 
 
-T = typing.TypeVar("T")
-
-
-def profiled(call: typing.Callable[..., T]) -> typing.Callable[..., T]:  # pragma: no cover
+def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pragma: no cover
     """Decorate a callable and profile each invocation of it.
 
     Profile results are dumped to stdout.

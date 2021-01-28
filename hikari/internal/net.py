@@ -78,13 +78,16 @@ def create_tcp_connector(
 
     Parameters
     ----------
-    dns_cache: typing.Union[builtins.None, builtins.bool, int]
-        If `builtins.True`, DNS caching is used with a default TTL of 10 seconds.
-        If `builtins.False`, DNS cacheing is disabled. If an `builtins.int` is
-        given, then DNS caching is enabled with an explicit TTL set. If
-        `builtins.None`, the cache will be enabled and never invalitime.
     http_settings : config.HTTPSettings
         HTTP settings to use for the connector.
+
+    Optional Parameters
+    -------------------
+    dns_cache: typing.Union[builtins.None, builtins.bool, int]
+        If `builtins.True`, DNS caching is used with a default TTL of 10 seconds.
+        If `builtins.False`, DNS caching is disabled. If an `builtins.int` is
+        given, then DNS caching is enabled with an explicit TTL set. If
+        `builtins.None`, the cache will be enabled and never invalidate.
     limit : builtins.int
         Number of connections to allow in the pool at a maximum.
 

@@ -1023,11 +1023,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emoji_name = channel_payload["emoji_name"]
 
             emoji: typing.Optional[emoji_models.Emoji] = None
-            if emoji_id is not None and emoji_name is not None:
-                emoji = emoji_models.CustomEmoji(id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None)
-
-            elif emoji_name is not None:
-                emoji = emoji_models.UnicodeEmoji(emoji_name)
+            if emoji_name is not None:
+                if emoji_id is not None:
+                    emoji = emoji_models.CustomEmoji(
+                        id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None
+                    )
+                else:
+                    emoji = emoji_models.UnicodeEmoji(emoji_name)
 
             channels.append(
                 guild_models.WelcomeChannel(

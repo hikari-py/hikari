@@ -643,7 +643,6 @@ class TestGatewayShardImpl:
             with pytest.raises(errors.ComponentNotRunningError):
                 client._check_if_alive()
 
-    @hikari_test_helpers.assert_does_not_raise(errors.ComponentNotRunningError)
     def test_shard__check_if_alive_when_alive(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "is_alive", new=True):
             client._check_if_alive()

@@ -597,29 +597,6 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
     """
 
     @property
-    def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
-        """Get the cached channel the messages were sent in, if known.
-
-        Returns
-        -------
-        typing.Union[builtins.None, hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel]
-            The channel the messages were sent in, or `builtins.None` if not
-            known/cached.
-
-            This otherwise will always be a `hikari.channels.GuildTextChannel`
-            if it is a normal message, or `hikari.channels.GuildNewsChannel` if
-            sent in an announcement channel.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
-        ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
-        return channel
-
-    @property
     def message_id(self) -> snowflakes.Snowflake:
         """Get the ID of the first deleted message.
 
@@ -699,6 +676,29 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
 
     shard: shard_.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
+
+    @property
+    def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
+        """Get the cached channel the messages were sent in, if known.
+
+        Returns
+        -------
+        typing.Union[builtins.None, hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel]
+            The channel the messages were sent in, or `builtins.None` if not
+            known/cached.
+
+            This otherwise will always be a `hikari.channels.GuildTextChannel`
+            if it is a normal message, or `hikari.channels.GuildNewsChannel` if
+            sent in an announcement channel.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert channel is None or isinstance(
+            channel, (channels.GuildNewsChannel, channels.GuildTextChannel)
+        ), f"Cached channel ID is not a GuildNewsChannel or a GuildTextChannel, but a {type(channel).__name__}!"
+        return channel
 
     @property
     def guild(self) -> typing.Optional[guilds.GatewayGuild]:

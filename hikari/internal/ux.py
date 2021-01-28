@@ -283,6 +283,13 @@ class HikariVersion(distutils.version.StrictVersion):
 
         return vstring
 
+    # Again, not typed correctly on distutils
+    def _cmp(self, other: typing.Any) -> int:  # type: ignore[override]
+        if isinstance(other, str):
+            other = HikariVersion(other)
+
+        return super()._cmp(other)
+
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
     """Perform a check for newer versions of the library, logging any found."""
