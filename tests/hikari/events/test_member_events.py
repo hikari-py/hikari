@@ -34,13 +34,19 @@ class TestMemberEvent:
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             member_events.MemberEvent,
+            slots_=False,
             guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(123)),
-            user=mock.PropertyMock(return_value=mock.Mock(id=456)),
+            user=mock.Mock(id=456),
         )
         return cls()
 
     def test_user_id_property(self, event):
         event.user_id == 456
+
+    def test_guild_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.guild is None
 
     def test_guild_when_available(self, event):
         result = event.guild

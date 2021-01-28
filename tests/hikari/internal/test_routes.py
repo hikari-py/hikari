@@ -65,7 +65,6 @@ class TestCDNRoute:
         with pytest.raises(ValueError, match="/foo/bar must have at least one valid format set"):
             routes.CDNRoute("/foo/bar", set())
 
-    @hikari_test_helpers.assert_does_not_raise(ValueError)
     def test_any_formats_results_in_no_error(self):
         routes.CDNRoute("/foo/bar", {"do", "ray", "me"})
 
@@ -121,7 +120,6 @@ class TestCDNRoute:
         with pytest.raises(TypeError):
             route.compile("http://example.com", file_format="gif")
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_allowed_file_format_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, sizable=False)
         route.compile("http://example.com", file_format="png")
@@ -132,23 +130,19 @@ class TestCDNRoute:
             route.compile("http://example.com", file_format="gif", hash="boooob")
 
     @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_requesting_non_gif_on_non_animated_hash_does_not_raise_TypeError(self, format):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, sizable=False)
         route.compile("http://example.com", file_format=format, hash="boooob")
 
     @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_requesting_non_gif_on_animated_hash_does_not_raise_TypeError(self, format):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, sizable=False)
         route.compile("http://example.com", file_format=format, hash="a_boooob")
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_requesting_gif_on_animated_hash_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=False)
         route.compile("http://example.com", file_format="gif", hash="a_boooob")
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_requesting_gif_without_passing_hash_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=False)
         route.compile("http://example.com", file_format="gif")
@@ -158,17 +152,14 @@ class TestCDNRoute:
         with pytest.raises(TypeError):
             route.compile("http://example.com", file_format="png", hash="boooob", size=128)
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_passing_size_on_sizable_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=True)
         route.compile("http://example.com", file_format="png", hash="boooob", size=128)
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_passing_no_size_on_non_sizable_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=False)
         route.compile("http://example.com", file_format="png", hash="boooob")
 
-    @hikari_test_helpers.assert_does_not_raise(TypeError)
     def test_passing_no_size_on_sizable_does_not_raise_TypeError(self):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=True)
         route.compile("http://example.com", file_format="png", hash="boooob")
@@ -192,7 +183,6 @@ class TestCDNRoute:
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
     @pytest.mark.parametrize("size", [int(2 ** size) for size in range(4, 13)])
-    @hikari_test_helpers.assert_does_not_raise(ValueError)
     def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, sizable=True)
         route.compile("http://example.com", file_format="png", hash="boooob", size=size)

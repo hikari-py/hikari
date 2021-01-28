@@ -30,7 +30,6 @@ __all__: typing.List[str] = [
     "SnowflakeSet",
     "ExtendedMutableMapping",
     "FreezableDict",
-    "WeakMap",
     "TimedCacheMap",
     "LimitedCapacityCacheMap",
     "get_index_or_slice",
@@ -44,7 +43,6 @@ import itertools
 import sys
 import time
 import typing
-import weakref
 
 from hikari import snowflakes
 
@@ -135,43 +133,6 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
-
-
-class WeakMap(ExtendedMutableMapping[KeyT, ValueT]):
-    """A mapping which weakly stores values.
-
-    Values will only stay alive in this mapping as long as there are separate
-    strong references to them.
-    """
-
-    __slots__: typing.Sequence[str] = ("_source",)
-
-    def __init__(self, source: typing.Optional[typing.Mapping[KeyT, ValueT]] = None, /) -> None:
-        self._source = weakref.WeakValueDictionary(source) if source else weakref.WeakValueDictionary()
-
-    def clear(self) -> None:
-        self._source.clear()
-
-    def copy(self) -> WeakMap[KeyT, ValueT]:
-        return WeakMap(self._source)
-
-    def freeze(self) -> typing.Dict[KeyT, ValueT]:
-        return dict(self._source)
-
-    def __getitem__(self, key: KeyT) -> ValueT:
-        return self._source[key]
-
-    def __iter__(self) -> typing.Iterator[KeyT]:
-        return iter(self._source)
-
-    def __len__(self) -> int:
-        return len(self._source)
-
-    def __delitem__(self, key: KeyT) -> None:
-        del self._source[key]
-
-    def __setitem__(self, key: KeyT, value: ValueT) -> None:
-        self._source[key] = value
 
 
 class _FrozenDict(typing.MutableMapping[KeyT, ValueT]):

@@ -84,10 +84,10 @@ class TestTeamMember:
         assert model.is_system is model.user.is_system
 
     def test_mention_property(self, model):
-        assert model.app is model.user.app
+        assert model.mention is model.user.mention
 
     def test_username_property(self, model):
-        assert model.app is model.user.app
+        assert model.username is model.user.username
 
     @pytest.mark.asyncio
     async def test_fetch_dm_channel(self, model):

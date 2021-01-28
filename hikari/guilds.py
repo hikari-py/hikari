@@ -1577,8 +1577,6 @@ class GatewayGuild(Guild):
         -------
         typing.Optional[Member]
             The cached member for this guild, or `builtins.None` if not known.
-            This will be sent on each `hikari.events.guild_events.GuildAvailableEvent`,
-            as well as any presence updates if you have opted into them.
         """
         if not isinstance(self.app, traits.ShardAware):
             return None

@@ -337,9 +337,7 @@ class BotApp(traits.BotAware):
 
     @property
     def shard_count(self) -> int:
-        if self._shards:
-            return next(iter(self._shards.values())).shard_count
-        return 0
+        return next(iter(self._shards.values())).shard_count if self._shards else 0
 
     @property
     def voice(self) -> voice_.VoiceComponent:
@@ -585,9 +583,7 @@ class BotApp(traits.BotAware):
                 # Provisionally defined in CPython, may be removed without notice.
                 sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
             except AttributeError:
-                _LOGGER.log(
-                    ux.TRACE, "cannot set coroutine tracking depth for %s, no functionality exists for this", loop
-                )
+                _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
         # Throwing this in the handler will lead to lots of fun OS specific shenanigans. So, lets just
         # cache it for later, I guess.
@@ -770,12 +766,12 @@ class BotApp(traits.BotAware):
 
         self._is_alive = True
         _LOGGER.info(
-            "planning to start %s session%s... you can start %s session%s before the next window starts at %s",
-            len(shard_ids),
-            "s" if len(shard_ids) != 1 else "",
+            "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
             requirements.session_start_limit.remaining,
             "s" if requirements.session_start_limit.remaining != 1 else "",
             requirements.session_start_limit.reset_at,
+            len(shard_ids),
+            "s" if len(shard_ids) != 1 else "",
         )
 
         for window_start in range(0, shard_count, requirements.session_start_limit.max_concurrency):

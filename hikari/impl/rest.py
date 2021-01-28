@@ -96,8 +96,8 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
-_BEARER_TOKEN_PREFIX: typing.Final[str] = "Bearer"  # nosec
-_BOT_TOKEN_PREFIX: typing.Final[str] = "Bot"  # nosec
+_BEARER_TOKEN_PREFIX: typing.Final[str] = "Bearer"
+_BOT_TOKEN_PREFIX: typing.Final[str] = "Bot"
 _HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
     f"AIOHTTP/{aiohttp.__version__} "

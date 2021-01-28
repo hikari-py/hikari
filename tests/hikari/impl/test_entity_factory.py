@@ -1559,6 +1559,12 @@ class TestEntityFactoryImpl:
                     "emoji_id": 31231351234,
                     "emoji_name": "dogGoesMeow",
                 },
+                {
+                    "channel_id": "89563452341234",
+                    "description": "Get help with cats",
+                    "emoji_id": None,
+                    "emoji_name": None,
+                },
             ],
         }
 
@@ -2732,6 +2738,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "278325129692446720",
                 "message_id": "306588351130107906",
             },
+            "referenced_message": {"message_reference_payload": "testing"},
             "flags": 2,
             "stickers": [
                 {
@@ -2759,7 +2766,9 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         embed_payload,
     ):
-        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_message") as deserialize_message:
+            partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
@@ -2827,6 +2836,8 @@ class TestEntityFactoryImpl:
         assert partial_message.message_reference.guild_id == 278325129692446720
         assert isinstance(partial_message.message_reference, message_models.MessageReference)
 
+        assert partial_message.referenced_message is deserialize_message.return_value
+        deserialize_message.assert_called_once_with({"message_reference_payload": "testing"})
         assert partial_message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker
@@ -2849,6 +2860,9 @@ class TestEntityFactoryImpl:
         message_payload["member"] = None
         message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
+        message_payload["referenced_message"] = None
+        del message_payload["message_reference"]["message_id"]
+        del message_payload["message_reference"]["guild_id"]
         del message_payload["application"]["cover_image"]
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
         assert partial_message.edited_timestamp is None
@@ -2857,6 +2871,9 @@ class TestEntityFactoryImpl:
         assert partial_message.application.primary_sku_id is None
         assert partial_message.application.icon_hash is None
         assert partial_message.application.cover_image_hash is None
+        assert partial_message.message_reference.id is None
+        assert partial_message.message_reference.guild_id is None
+        assert partial_message.referenced_message is None
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
@@ -2883,6 +2900,7 @@ class TestEntityFactoryImpl:
         assert partial_message.activity is undefined.UNDEFINED
         assert partial_message.application is undefined.UNDEFINED
         assert partial_message.message_reference is undefined.UNDEFINED
+        assert partial_message.referenced_message is undefined.UNDEFINED
         assert partial_message.flags is undefined.UNDEFINED
         assert partial_message.stickers is undefined.UNDEFINED
         assert partial_message.nonce is undefined.UNDEFINED
@@ -2898,7 +2916,18 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         embed_payload,
     ):
-        message = entity_factory_impl.deserialize_message(message_payload)
+        referenced_message = object()
+        original = entity_factory_impl.deserialize_message
+
+        def side_effect(call_args):
+            if call_args == {"message_reference_payload": "testing"}:
+                return referenced_message
+
+            return original(call_args)
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_message", side_effect=side_effect):
+            message = entity_factory_impl.deserialize_message(message_payload)
+
         assert message.app is mock_app
         assert message.id == 123
         assert message.channel_id == 456
@@ -2965,6 +2994,7 @@ class TestEntityFactoryImpl:
         assert message.message_reference.guild_id == 278325129692446720
         assert isinstance(message.message_reference, message_models.MessageReference)
 
+        assert message.referenced_message is referenced_message
         assert message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker
@@ -3021,18 +3051,21 @@ class TestEntityFactoryImpl:
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
+        assert message.referenced_message is undefined.UNDEFINED
         assert message.stickers == []
         assert message.nonce is None
 
-    def test_deserialize_message_with_unset_application_fields(self, entity_factory_impl, message_payload):
+    def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["primary_sku_id"] = None
-        del message_payload["application"]["cover_image"]
         message_payload["application"]["icon"] = None
+        message_payload["referenced_message"] = None
+        del message_payload["application"]["cover_image"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.application.primary_sku_id is None
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
+        assert message.referenced_message is None
 
     ###################
     # PRESENCE MODELS #

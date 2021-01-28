@@ -182,6 +182,11 @@ class TestGuildMessageCreateEvent:
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(342123123)
 
+    def test_channel_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.channel is None
+
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
     def test_channel_property(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
@@ -189,6 +194,11 @@ class TestGuildMessageCreateEvent:
         result = event.channel
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(9121234)
+
+    def test_guild_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.guild is None
 
     def test_guild_property(self, event):
         result = event.guild
@@ -249,6 +259,11 @@ class TestGuildMessageUpdateEvent:
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)
 
+    def test_channel_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.channel is None
+
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
     def test_channel_property(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
@@ -256,6 +271,11 @@ class TestGuildMessageUpdateEvent:
         result = event.channel
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(800001066)
+
+    def test_guild_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.guild is None
 
     def test_guild_property(self, event):
         result = event.guild
@@ -306,6 +326,11 @@ class TestGuildMessageDeleteEvent:
             is_bulk=True,
         )
 
+    def test_channel_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.channel is None
+
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
     def test_channel_property(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
@@ -313,6 +338,11 @@ class TestGuildMessageDeleteEvent:
 
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
+
+    def test_guild_property_when_no_cache_trait(self, event):
+        event.app = object()
+
+        assert event.guild is None
 
     def test_guild_property(self, event):
         result = event.guild
