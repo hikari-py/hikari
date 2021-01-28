@@ -28,8 +28,6 @@ __all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
 import abc
 import typing
 
-import attr
-
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
@@ -78,7 +76,6 @@ class TypingIndicator(abc.ABC):
         ...
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(abc.ABC):
     """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
@@ -152,42 +149,7 @@ class GuildBuilder(abc.ABC):
     ```
     """
 
-    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.ib(
-        default=undefined.UNDEFINED
-    )
-    """Default message notification level that can be overwritten.
-
-    If not overridden, this will use the Discord default level.
-    """
-
-    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.ib(
-        default=undefined.UNDEFINED
-    )
-    """Explicit content filter level that can be overwritten.
-
-    If not overridden, this will use the Discord default level.
-    """
-
-    icon: undefined.UndefinedOr[files.Resourceish] = attr.ib(default=undefined.UNDEFINED)
-    """Guild icon to use that can be overwritten.
-
-    If not overridden, the guild will not have an icon.
-    """
-
-    region: undefined.UndefinedOr[voices.VoiceRegionish] = attr.ib(default=undefined.UNDEFINED)
-    """Guild voice channel region to use that can be overwritten.
-
-    If not overridden, the guild will use the default voice region for Discord.
-    """
-
-    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.ib(
-        default=undefined.UNDEFINED
-    )
-    """Verification level required to join the guild that can be overwritten.
-
-    If not overridden, the guild will use the default verification level for
-    Discord.
-    """
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -199,6 +161,97 @@ class GuildBuilder(abc.ABC):
         builtins.str
             The guild name.
         """
+
+    @property
+    @abc.abstractmethod
+    def default_message_notifications(self) -> undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel]:
+        """Default message notification level that can be overwritten.
+
+        If not overridden, this will use the Discord default level.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
+            The default message notification level, if overwritten.
+        """  # noqa: D401 - Imperative mood
+
+    @default_message_notifications.setter
+    def default_message_notifications(
+        self, default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel], /
+    ) -> None:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def explicit_content_filter_level(self) -> undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel]:
+        """Explicit content filter level that can be overwritten.
+
+        If not overridden, this will use the Discord default level.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[hikari.guilds.GuildExplicitContentFilterLevel]
+            The explicit content filter level, if overwritten.
+        """
+
+    @explicit_content_filter_level.setter
+    def explicit_content_filter_level(
+        self, explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel], /
+    ) -> None:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def icon(self) -> undefined.UndefinedOr[files.Resourceish]:
+        """Guild icon to use that can be overwritten.
+
+        If not overridden, the guild will not have an icon.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            The guild icon to use, if overwritten.
+        """
+
+    @icon.setter
+    def icon(self, icon: undefined.UndefinedOr[files.Resourceish], /) -> None:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def region(self) -> undefined.UndefinedOr[voices.VoiceRegionish]:
+        """Guild voice channel region to use that can be overwritten.
+
+        If not overridden, the guild will use the default voice region for Discord.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            The guild voice channel region to use, if overwritten.
+        """
+
+    @region.setter
+    def region(self, region: undefined.UndefinedOr[voices.VoiceRegionish], /) -> None:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
+        """Verification level required to join the guild that can be overwritten.
+
+        If not overridden, the guild will use the default verification level for
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[typing.Union[hikari.guilds.GuildVerificationLevel, builtins.int]]
+            The verification level required to join the guild, if overwritten.
+        """
+
+    @verification_level.setter
+    def verification_level(
+        self, verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]], /
+    ) -> None:
+        raise NotImplementedError
 
     @abc.abstractmethod
     async def create(self) -> guilds.RESTGuild:

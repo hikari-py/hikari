@@ -58,6 +58,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
+    from hikari import voices
     from hikari.api import entity_factory as entity_factory_
 
 
@@ -130,6 +131,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                     await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
 
 
+# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
@@ -209,13 +211,26 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     _entity_factory: entity_factory_.EntityFactory = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _executor: typing.Optional[concurrent.futures.Executor] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     _name: str = attr.ib()
-
-    # Optional args that we kept hidden.
-    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
-    _counter: int = attr.ib(default=0, init=False)
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
     ] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+
+    # Optional arguments.
+    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.ib(
+        default=undefined.UNDEFINED
+    )
+    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.ib(
+        default=undefined.UNDEFINED
+    )
+    icon: undefined.UndefinedOr[files.Resourceish] = attr.ib(default=undefined.UNDEFINED)
+    region: undefined.UndefinedOr[voices.VoiceRegionish] = attr.ib(default=undefined.UNDEFINED)
+    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.ib(
+        default=undefined.UNDEFINED
+    )
+
+    # Non-arguments
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
+    _counter: int = attr.ib(default=0, init=False)
     _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
 
     @property
