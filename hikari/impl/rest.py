@@ -1543,7 +1543,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if update_embeds:
             body.put("embeds", serialized_embeds)
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, no_auth=True)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1554,7 +1554,7 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
-        await self._request(route)
+        await self._request(route, no_auth=True)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
@@ -2486,18 +2486,29 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_vanity_url(response)
 
-    async def create_template(
+    async def fetch_template(self, template: templates.Templateish) -> templates.Template:
+        template = template if isinstance(template, str) else template.code
+        route = routes.GET_TEMPLATE.compile(template=template)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_template(response)
+
+    async def fetch_guild_templates(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Sequence[templates.Template]:
+        route = routes.GET_GUILD_TEMPLATES.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return data_binding.cast_json_array(response, self._entity_factory.deserialize_template)
+
+    async def sync_guild_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        name: str,
-        *,
-        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        template: templates.Templateish,
     ) -> templates.Template:
-        route = routes.POST_GUILD_TEMPLATES.compile(guild=guild)
-        body = data_binding.JSONObjectBuilder()
-        body.put("name", name)
-        body.put("description", description)
-        response = await self._request(route, json=body)
+        template = template if isinstance(template, str) else template.code
+        route = routes.PUT_GUILD_TEMPLATE.compile(guild=guild, template=template)
+        response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
@@ -2522,14 +2533,18 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
-    async def delete_template(
+    async def create_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        name: str,
+        *,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
     ) -> templates.Template:
-        template = template if isinstance(template, str) else template.code
-        route = routes.DELETE_GUILD_TEMPLATE.compile(guild=guild, template=template)
-        response = await self._request(route)
+        route = routes.POST_GUILD_TEMPLATES.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+        response = await self._request(route, json=body)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
@@ -2551,28 +2566,13 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    async def fetch_template(self, template: templates.Templateish) -> templates.Template:
-        template = template if isinstance(template, str) else template.code
-        route = routes.GET_TEMPLATE.compile(template=template)
-        response = await self._request(route)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_template(response)
-
-    async def fetch_guild_templates(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[templates.Template]:
-        route = routes.GET_GUILD_TEMPLATES.compile(guild=guild)
-        response = await self._request(route)
-        assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_template)
-
-    async def sync_guild_template(
+    async def delete_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         template: templates.Templateish,
     ) -> templates.Template:
         template = template if isinstance(template, str) else template.code
-        route = routes.PUT_GUILD_TEMPLATE.compile(guild=guild, template=template)
+        route = routes.DELETE_GUILD_TEMPLATE.compile(guild=guild, template=template)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)

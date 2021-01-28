@@ -221,16 +221,14 @@ class TestEventStream:
         streamer._event_type = events.Event
         streamer._active = True
 
-        with mock.patch.object(asyncio, "ensure_future", side_effect=RuntimeError):
-            with unittest.TestCase().assertLogs("hikari", level=logging.WARNING) as logging_watcher:
+        with mock.patch.object(asyncio, "ensure_future", side_effect=RuntimeError) as ensure_future:
+            with unittest.TestCase().assertLogs("hikari.event_stream", level=logging.WARNING) as logging_watcher:
                 del streamer
 
-                assert logging_watcher.output == [
-                    "WARNING:hikari:active 'Event' streamer fell out of scope before being closed"
-                ]
-
-            asyncio.ensure_future.assert_called_once_with(mock_coroutine)
-
+        assert logging_watcher.output == [
+            "WARNING:hikari.event_stream:active 'Event' streamer fell out of scope before being closed"
+        ]
+        ensure_future.assert_called_once_with(mock_coroutine)
         close_method.assert_called_once_with()
 
     def test___del___for_inactive_stream(self):

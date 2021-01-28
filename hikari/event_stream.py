@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 EventT = typing.TypeVar("EventT", bound="base_events.Event")
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_stream")
 
 
 class Streamer(iterators.LazyIterator[EventT], abc.ABC):

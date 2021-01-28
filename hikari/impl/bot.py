@@ -69,7 +69,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
 class BotApp(traits.BotAware):
@@ -410,7 +410,7 @@ class BotApp(traits.BotAware):
         return self._event_manager.dispatch(event)
 
     def get_listeners(
-        self, event_type: typing.Type[event_manager_.EventT_co], *, polymorphic: bool = True
+        self, event_type: typing.Type[event_manager_.EventT_co], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
@@ -565,6 +565,8 @@ class BotApp(traits.BotAware):
         ------
         builtins.RuntimeError
             If bot is already running.
+        builtins.TypeError
+            If `shard_ids` is passed without `shard_count`.
         """
         if self._is_alive:
             raise RuntimeError("bot is already running")
@@ -670,7 +672,7 @@ class BotApp(traits.BotAware):
                 if close_loop:
                     self._destroy_loop(loop)
 
-                _LOGGER.info("application has successfully terminated")
+                _LOGGER.info("successfully terminated")
 
                 if propagate_interrupts and interrupt is not None:
                     raise interrupt
@@ -728,7 +730,7 @@ class BotApp(traits.BotAware):
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         if shard_ids is not None and shard_count is None:
-            raise TypeError("Must pass shard_count if specifying shard_ids manually")
+            raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
         self._validate_activity(activity)
 
@@ -836,7 +838,7 @@ class BotApp(traits.BotAware):
 
         await self._event_manager.dispatch(self._event_factory.deserialize_started_event())
 
-        _LOGGER.info("application started successfully in approx %.2f seconds", time.monotonic() - start_time)
+        _LOGGER.info("started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
     def stream(
         self,
@@ -931,7 +933,7 @@ class BotApp(traits.BotAware):
         end = time.monotonic()
 
         if new_shard.is_alive:
-            _LOGGER.debug("Shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
+            _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
             return new_shard
 
         raise errors.GatewayError(f"shard {shard_id} shut down immediately when starting")
