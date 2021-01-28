@@ -193,12 +193,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_emojis, builder=self._build_emoji)
 
     def clear_emojis_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         if not self._is_cache_enabled_for(EMOJIS):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.emojis:
             return cache_utility.EmptyCacheView()
@@ -213,11 +213,13 @@ class CacheImpl(cache.MutableCache):
 
         return cache_utility.CacheMappingView(cached_emojis, builder=self._build_emoji)
 
-    def delete_emoji(self, emoji_id: snowflakes.Snowflakeish, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def delete_emoji(
+        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
+    ) -> typing.Optional[emojis.KnownCustomEmoji]:
         if not self._is_cache_enabled_for(EMOJIS):
             return None
 
-        emoji_id = snowflakes.Snowflake(emoji_id)
+        emoji_id = snowflakes.Snowflake(emoji)
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if not emoji_data:
             return None
@@ -234,11 +236,13 @@ class CacheImpl(cache.MutableCache):
 
         return self._build_emoji(emoji_data)
 
-    def get_emoji(self, emoji_id: snowflakes.Snowflakeish, /) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def get_emoji(
+        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
+    ) -> typing.Optional[emojis.KnownCustomEmoji]:
         if not self._is_cache_enabled_for(EMOJIS):
             return None
 
-        emoji_data = self._emoji_entries.get(snowflakes.Snowflake(emoji_id))
+        emoji_data = self._emoji_entries.get(snowflakes.Snowflake(emoji))
         return self._build_emoji(emoji_data) if emoji_data else None
 
     def get_emojis_view(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
@@ -248,13 +252,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(self._emoji_entries.freeze(), builder=self._build_emoji)
 
     def get_emojis_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         if not self._is_cache_enabled_for(EMOJIS):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.emojis:
             return cache_utility.EmptyCacheView()
 
@@ -317,11 +320,13 @@ class CacheImpl(cache.MutableCache):
 
         return cache_utility.CacheMappingView(cached_guilds) if cached_guilds else cache_utility.EmptyCacheView()
 
-    def delete_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+    def delete_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Optional[guilds.GatewayGuild]:
         if not self._is_cache_enabled_for(GUILDS):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record:
             return None
@@ -336,33 +341,38 @@ class CacheImpl(cache.MutableCache):
         return guild
 
     def _get_guild(
-        self, guild_id: snowflakes.Snowflakeish, /, *, availability: bool
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /, *, availability: bool
     ) -> typing.Optional[guilds.GatewayGuild]:
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.guild or guild_record.is_available is not availability:
             return None
 
         return copy.copy(guild_record.guild)
 
-    def get_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Optional[guilds.GatewayGuild]:
         if not self._is_cache_enabled_for(GUILDS):
             return None
 
-        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild_id))
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         return copy.copy(guild_record.guild) if guild_record and guild_record.guild else None
 
-    def get_available_guild(self, guild_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.GatewayGuild]:
+    def get_available_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Optional[guilds.GatewayGuild]:
         if not self._is_cache_enabled_for(GUILDS):
             return None
 
-        return self._get_guild(guild_id, availability=True)
+        return self._get_guild(guild, availability=True)
 
-    def get_unavailable_guild(self, guild_id: snowflakes.Snowflakeish) -> typing.Optional[guilds.GatewayGuild]:
+    def get_unavailable_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Optional[guilds.GatewayGuild]:
         if not self._is_cache_enabled_for(GUILDS):
             return None
 
-        return self._get_guild(guild_id, availability=False)
+        return self._get_guild(guild, availability=False)
 
     def _get_guilds_view(self, *, availability: bool) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         # We may have a guild record without a guild object in cases where we're caching other entities that belong to
@@ -394,11 +404,13 @@ class CacheImpl(cache.MutableCache):
         guild_record.guild = copy.copy(guild)
         guild_record.is_available = True
 
-    def set_guild_availability(self, guild_id: snowflakes.Snowflakeish, is_available: bool, /) -> None:
+    def set_guild_availability(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
+    ) -> None:
         if not self._is_cache_enabled_for(GUILDS):
             return None
 
-        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild_id))
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if guild_record and guild_record.guild:
             guild_record.is_available = is_available
 
@@ -435,12 +447,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_channels)
 
     def clear_guild_channels_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
         if not self._is_cache_enabled_for(GUILD_CHANNELS):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.channels:
             return cache_utility.EmptyCacheView()
@@ -450,11 +462,13 @@ class CacheImpl(cache.MutableCache):
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return cache_utility.CacheMappingView(cached_channels)
 
-    def delete_guild_channel(self, channel_id: snowflakes.Snowflakeish, /) -> typing.Optional[channels.GuildChannel]:
+    def delete_guild_channel(
+        self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
+    ) -> typing.Optional[channels.GuildChannel]:
         if not self._is_cache_enabled_for(GUILD_CHANNELS):
             return None
 
-        channel_id = snowflakes.Snowflake(channel_id)
+        channel_id = snowflakes.Snowflake(channel)
         channel = self._guild_channel_entries.pop(channel_id, None)
 
         if not channel:
@@ -469,11 +483,13 @@ class CacheImpl(cache.MutableCache):
 
         return channel
 
-    def get_guild_channel(self, channel_id: snowflakes.Snowflakeish, /) -> typing.Optional[channels.GuildChannel]:
+    def get_guild_channel(
+        self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
+    ) -> typing.Optional[channels.GuildChannel]:
         if not self._is_cache_enabled_for(GUILD_CHANNELS):
             return None
 
-        channel = self._guild_channel_entries.get(snowflakes.Snowflake(channel_id))
+        channel = self._guild_channel_entries.get(snowflakes.Snowflake(channel))
         return cache_utility.copy_guild_channel(channel) if channel else None
 
     def get_guild_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
@@ -482,13 +498,12 @@ class CacheImpl(cache.MutableCache):
         )
 
     def get_guild_channels_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
         if not self._is_cache_enabled_for(GUILD_CHANNELS):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.channels:
             return cache_utility.EmptyCacheView()
 
@@ -564,12 +579,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
     def clear_invites_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
 
         if not guild_record or not guild_record.invites:
@@ -585,13 +600,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
     def clear_invites_for_channel(
-        self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        channel_id = snowflakes.Snowflake(channel_id)
+        guild_id = snowflakes.Snowflake(guild)
+        channel_id = snowflakes.Snowflake(channel)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.invites:
             return cache_utility.EmptyCacheView()
@@ -614,10 +632,11 @@ class CacheImpl(cache.MutableCache):
 
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
-    def delete_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def delete_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return None
 
+        code = code if isinstance(code, str) else code.code
         invite_data = self._invite_entries.pop(code, None)
         if not invite_data:
             return None
@@ -635,10 +654,11 @@ class CacheImpl(cache.MutableCache):
 
         return self._build_invite(invite_data)
 
-    def get_invite(self, code: str, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def get_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return None
 
+        code = code if isinstance(code, str) else code.code
         invite_data = self._invite_entries.get(code)
         return self._build_invite(invite_data) if invite_data else None
 
@@ -649,12 +669,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(self._invite_entries.freeze(), builder=self._build_invite)
 
     def get_invites_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_entry = self._guild_entries.get(guild_id)
         if not guild_entry or not guild_entry.invites:
             return cache_utility.EmptyCacheView()
@@ -664,15 +684,15 @@ class CacheImpl(cache.MutableCache):
 
     def get_invites_view_for_channel(
         self,
-        guild_id: snowflakes.Snowflakeish,
-        channel_id: snowflakes.Snowflakeish,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> cache.CacheView[str, invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(INVITES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        channel_id = snowflakes.Snowflake(channel_id)
+        guild_id = snowflakes.Snowflake(guild)
+        channel_id = snowflakes.Snowflake(channel)
         guild_entry = self._guild_entries.get(guild_id)
         if not guild_entry or not guild_entry.invites:
             return cache_utility.EmptyCacheView()
@@ -792,12 +812,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_members_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
         if not self._is_cache_enabled_for(MEMBERS):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.members:
             return cache_utility.EmptyCacheView()
@@ -810,13 +830,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
     def delete_member(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[guilds.Member]:
         if not self._is_cache_enabled_for(MEMBERS):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.members:
             return None
@@ -834,13 +857,16 @@ class CacheImpl(cache.MutableCache):
         return self._build_member(member_data) if garbage_collected else None
 
     def get_member(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[guilds.Member]:
         if not self._is_cache_enabled_for(MEMBERS):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.members:
             return None
@@ -955,12 +981,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_presences_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]:
         if not self._is_cache_enabled_for(PRESENCES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.presences:
             return cache_utility.EmptyCacheView()
@@ -975,13 +1001,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_presences, builder=self._build_presence)
 
     def delete_presence(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[presences.MemberPresence]:
         if not self._is_cache_enabled_for(PRESENCES):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.presences:
             return None
@@ -1000,13 +1029,16 @@ class CacheImpl(cache.MutableCache):
         return self._build_presence(presence_data)
 
     def get_presence(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[presences.MemberPresence]:
         if not self._is_cache_enabled_for(PRESENCES):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.presences:
             return None
@@ -1027,13 +1059,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.Cache3DMappingView(views)
 
     def get_presences_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, presences.MemberPresence]:
         if not self._is_cache_enabled_for(PRESENCES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.presences:
             return cache_utility.EmptyCacheView()
 
@@ -1091,12 +1122,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(roles)
 
     def clear_roles_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
         if not self._is_cache_enabled_for(ROLES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.roles:
             return cache_utility.EmptyCacheView()
@@ -1108,11 +1139,11 @@ class CacheImpl(cache.MutableCache):
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return view
 
-    def delete_role(self, role_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.Role]:
+    def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
         if not self._is_cache_enabled_for(ROLES):
             return None
 
-        role_id = snowflakes.Snowflake(role_id)
+        role_id = snowflakes.Snowflake(role)
         role = self._role_entries.pop(role_id, None)
         if not role:
             return None
@@ -1127,11 +1158,11 @@ class CacheImpl(cache.MutableCache):
 
         return role
 
-    def get_role(self, role_id: snowflakes.Snowflakeish, /) -> typing.Optional[guilds.Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
         if not self._is_cache_enabled_for(ROLES):
             return None
 
-        role = self._role_entries.get(snowflakes.Snowflake(role_id))
+        role = self._role_entries.get(snowflakes.Snowflake(role))
         return copy.copy(role) if role else None
 
     def get_roles_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
@@ -1141,13 +1172,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(self._role_entries.freeze())
 
     def get_roles_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
         if not self._is_cache_enabled_for(ROLES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.roles:
             return cache_utility.EmptyCacheView()
 
@@ -1188,8 +1218,8 @@ class CacheImpl(cache.MutableCache):
         if self._can_remove_user(user) and user.object.id in self._user_entries:
             del self._user_entries[user.object.id]
 
-    def get_user(self, user_id: snowflakes.Snowflakeish, /) -> typing.Optional[users.User]:
-        user = self._user_entries.get(snowflakes.Snowflake(user_id))
+    def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> typing.Optional[users.User]:
+        user = self._user_entries.get(snowflakes.Snowflake(user))
         return user.copy() if user else None
 
     def get_users_view(self) -> cache.CacheView[snowflakes.Snowflake, users.User]:
@@ -1230,13 +1260,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_voice_states_for_channel(
-        self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        channel_id = snowflakes.Snowflake(channel_id)
+        guild_id = snowflakes.Snowflake(guild)
+        channel_id = snowflakes.Snowflake(channel)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.voice_states:
             return cache_utility.EmptyCacheView()
@@ -1255,12 +1288,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_voice_states, builder=self._build_voice_state)
 
     def clear_voice_states_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
+        guild_id = snowflakes.Snowflake(guild)
         guild_record = self._guild_entries.get(guild_id)
 
         if not guild_record or not guild_record.voice_states:
@@ -1276,13 +1309,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_voice_states, builder=self._build_voice_state)
 
     def delete_voice_state(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.voice_states:
             return None
@@ -1299,13 +1335,16 @@ class CacheImpl(cache.MutableCache):
         return self._build_voice_state(voice_state_data)
 
     def get_voice_state(
-        self, guild_id: snowflakes.Snowflakeish, user_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
     ) -> typing.Optional[voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return None
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        user_id = snowflakes.Snowflake(user_id)
+        guild_id = snowflakes.Snowflake(guild)
+        user_id = snowflakes.Snowflake(user)
         guild_record = self._guild_entries.get(guild_id)
         voice_data = guild_record.voice_states.get(user_id) if guild_record and guild_record.voice_states else None
         return self._build_voice_state(voice_data) if voice_data else None
@@ -1326,13 +1365,16 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.Cache3DMappingView(views)
 
     def get_voice_states_view_for_channel(
-        self, guild_id: snowflakes.Snowflakeish, channel_id: snowflakes.Snowflakeish, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        channel_id = snowflakes.Snowflake(channel_id)
+        guild_id = snowflakes.Snowflake(guild)
+        channel_id = snowflakes.Snowflake(channel)
         guild_record = self._guild_entries.get(guild_id)
         if not guild_record or not guild_record.voice_states:
             return cache_utility.EmptyCacheView()
@@ -1346,13 +1388,12 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_voice_states, builder=self._build_voice_state)
 
     def get_voice_states_view_for_guild(
-        self, guild_id: snowflakes.Snowflakeish, /
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, voices.VoiceState]:
         if not self._is_cache_enabled_for(VOICE_STATES):
             return cache_utility.EmptyCacheView()
 
-        guild_id = snowflakes.Snowflake(guild_id)
-        guild_record = self._guild_entries.get(guild_id)
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.voice_states:
             return cache_utility.EmptyCacheView()
 
@@ -1444,11 +1485,13 @@ class CacheImpl(cache.MutableCache):
 
         return cache_utility.CacheMappingView(cached_messages, builder=self._build_message)  # type: ignore[type-var]
 
-    def delete_message(self, message_id: snowflakes.Snowflakeish, /) -> typing.Optional[messages.Message]:
+    def delete_message(
+        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
+    ) -> typing.Optional[messages.Message]:
         if not self._is_cache_enabled_for(MESSAGES):
             return None
 
-        message_id = snowflakes.Snowflake(message_id)
+        message_id = snowflakes.Snowflake(message)
         message_data = self._message_entries.pop(message_id, None)
 
         if not message_data:
@@ -1460,11 +1503,13 @@ class CacheImpl(cache.MutableCache):
 
         return self._build_message(message_data)
 
-    def get_message(self, message_id: snowflakes.Snowflakeish, /) -> typing.Optional[messages.Message]:
+    def get_message(
+        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
+    ) -> typing.Optional[messages.Message]:
         if not self._is_cache_enabled_for(MESSAGES):
             return None
 
-        message_id = snowflakes.Snowflake(message_id)
+        message_id = snowflakes.Snowflake(message)
         message_data = self._message_entries.get(message_id) or self._referenced_messages.get(message_id)
         return self._build_message(message_data) if message_data else None
 
