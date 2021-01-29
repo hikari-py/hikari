@@ -1094,27 +1094,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_pending=payload["pending"] if "pending" in payload else undefined.UNDEFINED,
         )
 
-    def deserialize_membership_gate(self, payload: data_binding.JSONObject) -> guild_models.MembershipGate:
-        fields: typing.List[guild_models.MembershipGateField] = []
-        for field_payload in payload["form_fields"]:
-            fields.append(
-                guild_models.MembershipGateField(
-                    type=guild_models.VerificationGateFieldType(field_payload["field_type"]),
-                    label=field_payload["label"],
-                    values=field_payload["values"] if "values" in field_payload else [],
-                    is_required=field_payload["required"],
-                )
-            )
-
-        return guild_models.MembershipGate(
-            description=payload["description"],
-            fields=fields,
-            updated_at=time.iso8601_datetime_string_to_datetime(payload["version"]),
-        )
-
-    def serialize_membership_gate_field(self, field: guild_models.MembershipGateField) -> data_binding.JSONObject:
-        return {"field_type": field.type, "label": field.label, "values": field.values, "required": field.is_required}
-
     def deserialize_role(
         self,
         payload: data_binding.JSONObject,

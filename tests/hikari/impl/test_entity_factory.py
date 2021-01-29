@@ -1705,52 +1705,6 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 64234
 
     @pytest.fixture()
-    def member_screen_payload(self):
-        return {
-            "version": "2021-01-09T12:09:02.040000+00:00",
-            "form_fields": [
-                {
-                    "field_type": "TERMS",
-                    "label": "Read and agree to the server rules",
-                    "values": ["Be treated.", "Go Spam DM this guild's users."],
-                    "required": True,
-                },
-                {"field_type": "TERMS", "label": "Read ya dawg", "required": False},
-            ],
-            "description": "Welcome to this server server!",
-        }
-
-    def test_deserialize_membership_gate(self, entity_factory_impl, member_screen_payload):
-        screen = entity_factory_impl.deserialize_membership_gate(member_screen_payload)
-        assert screen.description == "Welcome to this server server!"
-        assert screen.updated_at == datetime.datetime(2021, 1, 9, 12, 9, 2, 40000, tzinfo=datetime.timezone.utc)
-
-        assert len(screen.fields) == 2
-        # MemberScreenField
-        field = screen.fields[0]
-        assert field.type is guild_models.VerificationGateFieldType.SERVER_RULES
-        assert field.label == "Read and agree to the server rules"
-        assert field.values == ["Be treated.", "Go Spam DM this guild's users."]
-        assert field.is_required is True
-        assert isinstance(field, guild_models.MembershipGateField)
-        assert screen.fields[1].values == []
-
-    def test_serialize_membership_gate_field(self, entity_factory_impl):
-        field = guild_models.MembershipGateField(
-            type=guild_models.VerificationGateFieldType.SERVER_RULES,
-            label="ok label",
-            values=["nom", "boomer"],
-            is_required=True,
-        )
-
-        assert entity_factory_impl.serialize_membership_gate_field(field) == {
-            "field_type": "TERMS",
-            "label": "ok label",
-            "values": ["nom", "boomer"],
-            "required": True,
-        }
-
-    @pytest.fixture()
     def guild_role_payload(self):
         return {
             "id": "41771983423143936",
