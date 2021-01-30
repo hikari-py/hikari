@@ -51,9 +51,6 @@ __all__: typing.List[str] = [
     "PartialRole",
     "WelcomeScreen",
     "WelcomeChannel",
-    "MembershipGate",
-    "MembershipGateField",
-    "VerificationGateFieldType",
 ]
 
 import abc
@@ -525,47 +522,6 @@ class Member(users.User):
 
     def __eq__(self, other: object) -> bool:
         return self.user == other
-
-
-@typing.final
-class VerificationGateFieldType(str, enums.Enum):
-    """Enum of the screen field types."""
-
-    SERVER_RULES = "TERMS"
-    """Field used to show the guild's rules."""
-
-
-@attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
-class MembershipGateField:
-    """Represents the field on a guild's `MembershipGate`."""
-
-    type: typing.Union[VerificationGateFieldType, int] = attr.ib(eq=True, hash=False, repr=True)
-    """The field's type."""
-
-    label: str = attr.ib(eq=True, hash=False, repr=True)
-    """The field's label."""
-
-    values: typing.Sequence[str] = attr.ib(eq=True, hash=False, repr=False)
-    """The values shown for the field."""
-
-    is_required: bool = attr.ib(eq=True, hash=False, repr=True)
-    """Whether users have to fill out to this field before joining."""
-
-
-@attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class MembershipGate:
-    """Represents the screen shown as a part of the guild member verification feature."""
-
-    description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The description shown in the guild's member verification screen."""
-
-    fields: typing.Sequence[MembershipGateField] = attr.ib(eq=False, hash=False, repr=True)
-    """The fields shown in the guild's member verification screen."""
-
-    updated_at: typing.Optional[datetime.datetime] = attr.ib(eq=True, hash=True, repr=True)
-    """When this was last updated."""
 
 
 @attr_extensions.with_copy
