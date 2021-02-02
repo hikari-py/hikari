@@ -41,7 +41,7 @@ import typing
 
 from hikari import presences
 from hikari import undefined
-from hikari.internal import protocol
+from hikari.internal import fast_protocol
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -59,7 +59,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import voice as voice_
 
 
-class NetworkSettingsAware(protocol.Protocol):
+@typing.runtime_checkable
+class NetworkSettingsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for any component aware of network settings."""
 
     __slots__: typing.Sequence[str] = ()
@@ -87,7 +88,8 @@ class NetworkSettingsAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class EventManagerAware(protocol.Protocol):
+@typing.runtime_checkable
+class EventManagerAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a event manager-aware object.
 
     event manager-aware components are able to manage event listeners and waiters.
@@ -107,7 +109,8 @@ class EventManagerAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class EntityFactoryAware(protocol.Protocol):
+@typing.runtime_checkable
+class EntityFactoryAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for an entity factory-aware object.
 
     These components will be able to construct library entities.
@@ -127,7 +130,8 @@ class EntityFactoryAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class ExecutorAware(protocol.Protocol):
+@typing.runtime_checkable
+class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for an executor-aware object.
 
     These components will contain an `executor` attribute that may return
@@ -153,7 +157,8 @@ class ExecutorAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class EventFactoryAware(protocol.Protocol):
+@typing.runtime_checkable
+class EventFactoryAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for an event factory-aware object.
 
     These components are able to construct library events.
@@ -173,7 +178,8 @@ class EventFactoryAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class IntentsAware(protocol.Protocol):
+@typing.runtime_checkable
+class IntentsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """A component that is aware of the application intents."""
 
     __slots__: typing.Sequence[str] = ()
@@ -190,7 +196,10 @@ class IntentsAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class RESTAware(EntityFactoryAware, NetworkSettingsAware, ExecutorAware, protocol.Protocol):
+@typing.runtime_checkable
+class RESTAware(
+    EntityFactoryAware, NetworkSettingsAware, ExecutorAware, fast_protocol.FastProtocolChecking, typing.Protocol
+):
     """Structural supertype for a REST-aware object.
 
     These are able to perform REST API calls.
@@ -210,7 +219,8 @@ class RESTAware(EntityFactoryAware, NetworkSettingsAware, ExecutorAware, protoco
         raise NotImplementedError
 
 
-class VoiceAware(protocol.Protocol):
+@typing.runtime_checkable
+class VoiceAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a voice-aware object.
 
     This is an object that provides a `voice` property to allow the creation
@@ -231,7 +241,15 @@ class VoiceAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class ShardAware(IntentsAware, NetworkSettingsAware, ExecutorAware, VoiceAware, protocol.Protocol):
+@typing.runtime_checkable
+class ShardAware(
+    IntentsAware,
+    NetworkSettingsAware,
+    ExecutorAware,
+    VoiceAware,
+    fast_protocol.FastProtocolChecking,
+    typing.Protocol,
+):
     """Structural supertype for a shard-aware object.
 
     These will expose a mapping of shards, the intents in use
@@ -361,7 +379,8 @@ class ShardAware(IntentsAware, NetworkSettingsAware, ExecutorAware, VoiceAware, 
         raise NotImplementedError
 
 
-class CacheAware(protocol.Protocol):
+@typing.runtime_checkable
+class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a cache-aware object.
 
     Any cache-aware objects are able to access the Discord application cache.
@@ -381,7 +400,16 @@ class CacheAware(protocol.Protocol):
         raise NotImplementedError
 
 
-class BotAware(RESTAware, ShardAware, EventFactoryAware, EventManagerAware, CacheAware, protocol.Protocol):
+@typing.runtime_checkable
+class BotAware(
+    RESTAware,
+    ShardAware,
+    EventFactoryAware,
+    EventManagerAware,
+    CacheAware,
+    fast_protocol.FastProtocolChecking,
+    typing.Protocol,
+):
     """Structural supertype for a component that is aware of all internals."""
 
     __slots__: typing.Sequence[str] = ()

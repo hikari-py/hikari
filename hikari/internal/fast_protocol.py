@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #
@@ -19,33 +20,28 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of parts of Python's `typing.Protocol` to be more performant."""
+"""A utility for faster `typing.Protocol` instance checks."""
 
 from __future__ import annotations
 
-__all__: typing.List[str] = []
+__all__: typing.List[str] = ["FastProtocolChecking"]
 
-import abc
 import typing
 
 if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
 _Protocol = NotImplemented
-IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
+_IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
 
 
 def _check_if_ignored(name: str) -> bool:
-    return name.startswith("_abc_") or name in IGNORED_ATTRS
+    return name.startswith("_abc_") or name in _IGNORED_ATTRS
 
 
-def _no_init(cls) -> None:
-    if type(cls)._is_protocol:
-        raise TypeError("Protocols cannot be instantiated")
-
-
-class _FastProtocol(abc.ABCMeta):
-    @staticmethod
+# This metaclass needs to subclass the same type as `typing.Protocol` to be
+# able to overwrite it
+class _FastProtocolChecking(type(typing.Protocol)):
     def __new__(
         cls: typing.Type[_T],
         cls_name: str,
@@ -55,62 +51,79 @@ class _FastProtocol(abc.ABCMeta):
         global _Protocol
 
         if _Protocol is NotImplemented:
-            if cls_name != "Protocol":
-                raise TypeError("First instance of _FastProtocol must be Protocol")
+            if cls_name != "FastProtocolChecking":
+                raise TypeError("First instance of _FastProtocolChecking must be FastProtocolChecking")
 
-            namespace = {"__init__": _no_init, "_is_protocol": True, "_attributes_": (), **namespace}
+            namespace["_attributes_"] = ()
             # noinspection PyRedundantParentheses
             return (_Protocol := super().__new__(cls, cls_name, bases, namespace))
 
-        if _Protocol not in bases:
-            namespace["_is_protocol"] = False
-
-        else:
+        if _Protocol in bases:
+            in_bases = True
             attributes = {attr for attr in namespace if not _check_if_ignored(attr)}
             attributes.update(
                 annot for annot in namespace.get("__annotations__", {}).keys() if not _check_if_ignored(annot)
             )
 
             for base in bases:
-                # Make sure its a valid Protocol and not a class that mocks the behaviour
-                if not (issubclass(base, typing.Generic) and base._is_protocol):
-                    raise TypeError(f"Protocols can only inherit from other protocols, got {base!r}")
+                if base in (typing.Protocol, _Protocol):
+                    continue
+
+                if _Protocol not in base.__bases__:
+                    raise TypeError(
+                        f"FastProtocolChecking can only inherit from other fast checking protocols, got {base!r}"
+                    )
+
                 attributes.update(base._attributes_)
 
-            namespace = {
-                "__init__": _no_init,
-                "_is_protocol": True,
-                "_attributes_": tuple(attributes),
-                **namespace,
-            }
+            namespace["_attributes_"] = tuple(attributes)
 
-        return super().__new__(cls, cls_name, bases, namespace)
+        else:
+            in_bases = False
 
-    def __instancecheck__(cls: _T, other: typing.Any) -> bool:
-        if not cls._is_protocol:
+        cls = super().__new__(cls, cls_name, bases, namespace)
+
+        if in_bases and not cls._is_protocol:
+            raise TypeError("FastProtocolChecking can only be used with protocols")
+
+        return cls
+
+    def __instancecheck__(self: _T, other: typing.Any) -> bool:
+        if not self._is_protocol:
             return super().__instancecheck__(other)
 
-        for i in cls._attributes_:
+        for i in self._attributes_:
             if not hasattr(other, i):
                 return False
 
         return True
 
 
-class Protocol(typing.Generic, metaclass=_FastProtocol):
-    """A faster implementation of `typing.Protocol`."""
+@typing.runtime_checkable
+class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
+    """An extension to make protocols with faster instance checks.
+
+    !!! note
+        All protocols that subclass this class must be decorated with
+        `@typing.runtime_checkable` to keep mypy happy.
+    """
 
     __slots__: typing.Sequence[str] = ()
 
-    def __init_subclass__(cls, *args, **kwargs):
+    def __init_subclass__(cls: _T, *args, **kwargs):
+        # typing sets their own subclasshook if its not there. We want to
+        # overwrite that one, but not any that was already defined, so we check
+        # this before typing does anything to it.
+        should_overwrite = "__subclasshook__" not in cls.__dict__
+
         super().__init_subclass__(*args, **kwargs)
 
-        if not cls._is_protocol:
+        if not should_overwrite:
             return
 
         def _subclass_hook(other: type) -> bool:
             for i in cls._attributes_:
-                if not hasattr(other, i):
+                if i not in other.__dict__:
                     return NotImplemented
 
             return True

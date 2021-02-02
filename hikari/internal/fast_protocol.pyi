@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #
@@ -20,9 +19,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Typehints for `hikari.internal.protocol`."""
-from typing import Protocol as __Protocol
 
-class Protocol(__Protocol): ...
+__all__ = ["FastProtocolChecking"]
 
-__all__ = ["Protocol"]
+import typing as __typing
+
+# This exist purely due to having to do a lot of hacky stuff to make it work with MyPy.
+# As far as MyPy is concerned, this is just another runtime protocol.
+@__typing.runtime_checkable
+class FastProtocolChecking(__typing.Protocol): ...
