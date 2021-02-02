@@ -1076,7 +1076,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def trigger_typing(
         self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
-    ) -> special_endpoints_impl.TypingIndicator:
+    ) -> special_endpoints.TypingIndicator:
         return special_endpoints_impl.TypingIndicator(
             request_call=self._request, channel=channel, rest_closed_event=self._closed_event
         )
@@ -1567,7 +1567,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def execute_webhook(
         self,
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1753,7 +1753,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_webhook_message(
         self,
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
@@ -1780,7 +1780,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_webhook_message(
         self,
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
@@ -2095,7 +2095,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route)
 
-    def guild_builder(self, name: str, /) -> special_endpoints_impl.GuildBuilder:
+    def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints_impl.GuildBuilder(
             entity_factory=self._entity_factory, executor=self._executor, request_call=self._request, name=name
         )
@@ -2855,7 +2855,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_command(response)
+        return self._entity_factory.deserialize_command(
+            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
 
     async def fetch_application_commands(
         self,
@@ -2870,7 +2872,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_command(command) for command in response]
+        guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
 
     async def create_application_command(
         self,
@@ -2894,7 +2897,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_command(response)
+        return self._entity_factory.deserialize_command(
+            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
 
     async def set_application_commands(
         self,
@@ -2910,7 +2915,37 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=[command.build(self._entity_factory) for command in commands])
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_command(payload) for payload in response]
+        guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        return [self._entity_factory.deserialize_command(payload, guild_id=guild_id) for payload in response]
+
+    async def edit_application_command(
+        self,
+        command: snowflakes.SnowflakeishOr[interactions.Command],
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> interactions.Command:
+        application = self._application_id or await self._fetch_application_id()
+        if guild is undefined.UNDEFINED:
+            route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
+
+        else:
+            route = routes.PATCH_APPLICATION_GUILD_COMMAND.compile(
+                application=application, command=command, guild=guild
+            )
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("description", description)
+        body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_command(
+            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
 
     async def delete_application_command(
         self,
@@ -2927,30 +2962,6 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         await self._request(route)
-
-    async def edit_application_command(
-        self,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        *,
-        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
-        application = self._application_id or await self._fetch_application_id()
-        if guild is undefined.UNDEFINED:
-            route = routes.PATCH_APPLICATION_COMMAND.compile(application=application)
-
-        else:
-            route = routes.PATCH_APPLICATION_GUILD_COMMAND.compile(application=application, guild=guild)
-
-        body = data_binding.JSONObjectBuilder()
-        body.put("name", name)
-        body.put("description", description)
-        body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
-
-        response = await self._request(route, json=body)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_command(response)
 
     # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
     # See https://github.com/discord/discord-api-docs/issues/2490
@@ -3014,7 +3025,8 @@ class RESTClientImpl(rest_api.RESTClient):
         elif embeds is not undefined.UNDEFINED:
             data.put("embeds", [raw_embed for raw_embed, _ in map(self._entity_factory.serialize_embed, embeds)])
 
-        await self._request(route, json=body)
+        body.put("data", data)
+        await self._request(route, json=body, no_auth=True)
 
     async def edit_command_response(
         self,
@@ -3045,4 +3057,4 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_command_response(self, token: str, /) -> None:
         application = self._application_id or await self._fetch_application_id()
         route = routes.DELETE_INTERACTION_RESPONSE.compile(application=application, token=token)
-        await self._request(route)
+        await self._request(route, no_auth=True)

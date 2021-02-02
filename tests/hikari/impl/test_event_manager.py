@@ -1089,3 +1089,50 @@ class TestEventManagerImpl:
 
         event_manager._app.event_factory.deserialize_webhook_update_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio
+    async def test_on_application_command_create(self, event_manager, shard, app):
+        payload = {"id": "4544333334dd44"}
+
+        await event_manager.on_application_command_create(shard, payload)
+
+        event_manager._app.event_factory.deserialize_command_create_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_manager._app.event_factory.deserialize_command_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_application_command_update(self, event_manager, shard, app):
+        payload = {"id": "454433333444"}
+
+        await event_manager.on_application_command_update(shard, payload)
+
+        event_manager._app.event_factory.deserialize_command_update_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_manager._app.event_factory.deserialize_command_update_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_application_command_delete(self, event_manager, shard, app):
+        payload = {"id": "4544444"}
+
+        await event_manager.on_application_command_delete(shard, payload)
+
+        event_manager._app.event_factory.deserialize_command_delete_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_manager._app.event_factory.deserialize_command_delete_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_interaction_create(self, event_manager, shard, app):
+        event_manager._application_id = 123123
+        payload = {"id": "123"}
+
+        await event_manager.on_interaction_create(shard, payload)
+
+        event_manager._app.event_factory.deserialize_interaction_create_event.assert_called_once_with(
+            shard, payload, application_id=123123
+        )
+        event_manager.dispatch.assert_awaited_once_with(
+            event_manager._app.event_factory.deserialize_interaction_create_event.return_value
+        )

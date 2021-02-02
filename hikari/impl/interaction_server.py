@@ -55,6 +55,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_client_
 
+    ListenerDictT = typing.Dict[
+        typing.Type[interaction_server.InteractionT],
+        interaction_server.MainListenerT[interaction_server.InteractionT],
+    ]
+
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
 
@@ -64,12 +69,7 @@ _PONG_RESPONSE_TYPE: typing.Final[int] = 1
 
 # HTTP status codes.
 _OK_STATUS: typing.Final[int] = 200
-_ACCEPTED_STATUS: typing.Final[int] = 202
-_NO_CONTENT_STATUS: typing.Final[int] = 204
 _BAD_REQUEST_STATUS: typing.Final[int] = 400
-_UNAUTHORIZED_STATUS: typing.Final[int] = 401
-_FORBIDDEN_STATUS: typing.Final[int] = 403
-_CONFLICT_STATUS: typing.Final[int] = 409
 _PAYLOAD_TOO_LARGE_STATUS: typing.Final[int] = 413
 _UNSUPPORTED_MEDIA_TYPE_STATUS: typing.Final[int] = 415
 _INTERNAL_SERVER_ERROR_STATUS: typing.Final[int] = 500
@@ -87,7 +87,7 @@ _ACK_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": interactions.I
 _PONG_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE})
 
 
-class _Response(interaction_server.Response):
+class _Response:
     __slots__: typing.Sequence[str] = ("_status_code", "_payload", "_headers")
 
     def __init__(
@@ -105,7 +105,7 @@ class _Response(interaction_server.Response):
             if not headers:
                 headers = {}
 
-            headers["Content-Type"] = content_type or _TEXT_CONTENT_TYPE
+            headers[_CONTENT_TYPE_KEY] = content_type or _TEXT_CONTENT_TYPE
 
         self._headers = headers
 
@@ -129,7 +129,7 @@ class InteractionServer(interaction_server.InteractionServer):
     ----------
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory instance this server should use.
-    event_factory : hikari.api.event_facotry.EventFactory
+    event_factory : hikari.api.event_factory.EventFactory
         The event factory instance this server should use.
 
     Other Parameters
@@ -138,15 +138,16 @@ class InteractionServer(interaction_server.InteractionServer):
         The JSON encoder this server should use. Defaults to `json.dumps`.
     events : typing.Optional[hikari.api.event_manager.EventManager]
         The event manager this server should dispatch all valid received events
-        to along side the main listener. If left as `builtins.None` then this
-        will call `InteractionServer.listener` on each event.
+        to along side the single dispatch listener. If left as `builtins.None`
+        then this will still call the relevant `InteractionServer.listeners`
+        callback.
     loads : aiohttp.typedefs.JSONDecoder
         The JSON decoder this server should use. Defaults to `json.loads`.
     public_key : bytes
         The public key this server should use for verifying request payloads from
         Discord. If left as `builtins.None` then the client will try to work this
         out using `rest_client`.
-    rest_client : hikari.rest_client.RESTClient
+    rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
     """
 
@@ -158,8 +159,8 @@ class InteractionServer(interaction_server.InteractionServer):
         "_events",
         "_future",
         "_hashes",
+        "_listeners",
         "_loads",
-        "_listener",
         "_rest_client",
         "_runner",
         "_server",
@@ -186,8 +187,8 @@ class InteractionServer(interaction_server.InteractionServer):
         self._events = event_manager
         self._future: asyncio.Future[None] = asyncio.Future()
         self._hashes: typing.Optional[typing.List[bytes]] = [] if de_duplicate else None
+        self._listeners: ListenerDictT[interactions.PartialInteraction] = {}
         self._loads = loads
-        self._listener: typing.Optional[interaction_server.MainListenerT] = None
         self._rest_client = rest_client
         self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._server = aiohttp.web.Application()
@@ -202,8 +203,10 @@ class InteractionServer(interaction_server.InteractionServer):
         return self._runner is not None
 
     @property
-    def listener(self) -> typing.Optional[interaction_server.MainListenerT]:
-        return self._listener
+    def listeners(
+        self,
+    ) -> interaction_server.ListenerMapT[interactions.PartialInteraction]:
+        return self._listeners.copy()
 
     def _check_duplication(self, body: bytes) -> bool:
         if self._hashes is not None:
@@ -358,9 +361,9 @@ class InteractionServer(interaction_server.InteractionServer):
             )
 
         result: typing.Optional[special_endpoints.InteractionResponseBuilder] = None
-        if self._listener:
+        if listener := self._listeners.get(type(event.interaction)):
             try:
-                result = await self._listener(event)
+                result = await listener(event.interaction)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(
@@ -454,9 +457,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 # Provisionally defined in CPython, may be removed without notice.
                 sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
             except AttributeError:
-                _LOGGER.log(
-                    ux.TRACE, "cannot set coroutine tracking depth for %s, no functionality exists for this", loop
-                )
+                _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
         loop.run_until_complete(
             self.start(
@@ -589,9 +590,14 @@ class InteractionServer(interaction_server.InteractionServer):
             await site.start()
 
     def set_listener(
-        self, listener: typing.Optional[interaction_server.MainListenerT], /, *, replace: bool = False
+        self,
+        interaction_type: typing.Type[interaction_server.InteractionT],
+        listener: typing.Optional[interaction_server.MainListenerT[interaction_server.InteractionT]],
+        /,
+        *,
+        replace: bool = False,
     ) -> None:
-        if not replace and self._listener:
-            raise TypeError("Main listener already set")
+        if not replace and interaction_type in self._listeners:
+            raise TypeError(f"Listener already set for {interaction_type!r}")
 
-        self._listener = listener
+        self._listeners[interaction_type] = listener  # type: ignore[assignment]

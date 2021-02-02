@@ -247,7 +247,7 @@ class EventManagerBase(event_manager.EventManager):
         limit: typing.Optional[int] = None,
     ) -> event_stream.Streamer[event_manager.EventT_co]:
         self._check_intents(event_type, 1)
-        return event_stream.EventStream(self._app, event_type, timeout=timeout, limit=limit)
+        return event_stream.EventStream(self, event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,

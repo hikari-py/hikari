@@ -27,7 +27,6 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "Command",
     "CommandChoice",
-    "CommandInteractionData",
     "CommandInteractionOption",
     "CommandInteraction",
     "CommandOption",
@@ -35,6 +34,7 @@ __all__: typing.List[str] = [
     "InteractionResponseType",
     "InteractionType",
     "OptionType",
+    "PartialInteraction",
 ]
 
 import typing
@@ -163,6 +163,8 @@ class CommandOption:
 class Command(snowflakes.Unique):
     """Represents an application command on Discord."""
 
+    app: traits.RESTAware = attr.ib(eq=False, hash=False, repr=False)
+
     id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
@@ -174,6 +176,33 @@ class Command(snowflakes.Unique):
 
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.ib(eq=False, hash=False, repr=False)
 
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+
+    async def fetch_self(self) -> Command:
+        return await self.app.rest.fetch_application_command(
+            self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
+        )
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[CommandOption]] = undefined.UNDEFINED,
+    ) -> Command:
+        return await self.app.rest.edit_application_command(
+            self.id,
+            undefined.UNDEFINED if self.guild_id is None else self.guild_id,
+            name=name,
+            description=description,
+            options=options,
+        )
+
+    async def delete(self) -> None:
+        await self.app.rest.delete_application_command(
+            self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
+        )
+
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -184,19 +213,6 @@ class CommandInteractionOption:
     # TODO: value may be changed to include json objects in the future
     # See https://github.com/discord/discord-api-docs/issues/2490
     value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.ib(eq=True, hash=False, repr=True)
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
-
-
-@attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
-class CommandInteractionData(snowflakes.Unique):
-    """Represents the data attached to a command interaction."""
-
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
-    # <<inherited docstring from Unique>>.
-
-    name: str = attr.ib(eq=False, hash=False, repr=True)
-
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
 
 
@@ -241,9 +257,6 @@ class PartialInteraction(snowflakes.Unique):
 class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
     """Represents a command interaction on Discord."""
 
-    data: CommandInteractionData = attr.ib(eq=False, hash=False, repr=False)
-    """Command interaction data provided for this event."""
-
     channel_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
 
@@ -267,10 +280,20 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
         contains the member's permissions in the current channel.
     """
 
-    @property
-    def webhook_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from ExecutableWebhook>>.
-        return self.application_id
+    user: users.User = attr.ib(eq=False, hash=False, repr=True)
+    """The user who triggered this command interaction."""
+
+    command_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    """ID of the command being invoked."""
+
+    command_name: str = attr.ib(eq=False, hash=False, repr=True)
+    """Name of the command being invoked."""
+
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
+    """Parameter values provided by the user invoking this command."""
+
+    async def fetch_initial_response(self) -> messages.Message:
+        return await self.app.rest.fetch_command_response(self.token)
 
     async def create_initial_response(
         self,
@@ -327,8 +350,8 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
             role_mentions=role_mentions,
         )
 
-    async def fetch_initial_response(self) -> messages.Message:
-        return await self.app.rest.fetch_command_response(self.token)
+    async def delete_initial_response(self) -> None:
+        await self.app.rest.delete_command_response(self.token)
 
     async def fetch_channel(self) -> channels.GuildChannel:
         """Fetch the guild channel this was triggered in.

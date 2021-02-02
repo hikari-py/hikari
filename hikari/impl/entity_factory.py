@@ -1607,7 +1607,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         choices: typing.Optional[typing.List[interaction_models.CommandChoice]] = None
         if raw_choices := payload.get("choices"):
             choices = [
-                interaction_models.CommandChoice(name=choice["name"], value=choice["vale"]) for choice in raw_choices
+                interaction_models.CommandChoice(name=choice["name"], value=choice["value"]) for choice in raw_choices
             ]
 
         suboptions: typing.Optional[typing.List[interaction_models.CommandOption]] = None
@@ -1623,17 +1623,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=suboptions,
         )
 
-    def deserialize_command(self, payload: data_binding.JSONObject) -> interaction_models.Command:
+    def deserialize_command(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> interaction_models.Command:
+        if guild_id is undefined.UNDEFINED:
+            raw_guild_id = payload["guild_id"]
+            guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
+
         options: typing.Optional[typing.List[interaction_models.CommandOption]] = None
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
         return interaction_models.Command(
+            app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             description=payload["description"],
             options=options,
+            guild_id=guild_id,
         )
 
     def _deserialize_interaction_command_option(
@@ -1655,12 +1666,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := data_payload.get("options"):
             options = [self._deserialize_interaction_command_option(option) for option in raw_options]
 
-        data = interaction_models.CommandInteractionData(
-            id=snowflakes.Snowflake(data_payload["id"]), name=data_payload["name"], options=options
-        )
-
         guild_id: typing.Optional[snowflakes.Snowflake] = None
-        member: typing.Optional[interaction_models.InteractionMember] = None
+        member: typing.Optional[interaction_models.InteractionMember]
         if member_payload := payload.get("member"):
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
@@ -1686,18 +1693,27 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 is_pending=member_payload.get("pending", undefined.UNDEFINED),
                 permissions=permission_models.Permissions(int(member_payload["permissions"])),
             )
+            # See https://github.com/discord/discord-api-docs/pull/2568
+            user = member.user
+
+        else:
+            member = None
+            user = self.deserialize_user(payload["user"])
 
         return interaction_models.CommandInteraction(
             app=self._app,
             application_id=application_id,
             id=snowflakes.Snowflake(payload["id"]),
             type=interaction_models.InteractionType(payload["type"]),
-            data=data,
             guild_id=guild_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
+            user=user,
             token=payload["token"],
             version=payload["version"],
+            command_id=snowflakes.Snowflake(data_payload["id"]),
+            command_name=data_payload["name"],
+            options=options,
         )
 
     def deserialize_interaction(

@@ -2086,7 +2086,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def execute_webhook(
         self,
         # TODO: update docs
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         # TODO: more concise typing
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
@@ -2288,7 +2288,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_webhook_message(
         self,
         # TODO: update docs
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         # TODO: more concise typing
@@ -2429,7 +2429,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_webhook_message(
         self,
         # TODO: update docs
-        webhook: typing.Union[snowflakes.Snowflakeish, webhooks.Webhook, guilds.PartialApplication],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
@@ -5901,6 +5901,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    async def fetch_application_commands(
+        self,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> typing.Sequence[interactions.Command]:
+        """Fetch the commands set for an application.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the commands for. If left as
+            `hikari.undefined.UNDEFINED` then this will only return the global
+            commands, otherwise this will only return the commands set exclusively
+            for the specific guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.interactions.Command]
+            A sequence of the commands declared for the provided application.
+            This will exclusively either contain the commands set for a specific
+            guild if `guild` is provided or the global commands if not.
+        """
+
+    @abc.abstractmethod
     async def create_application_command(
         self,
         name: str,
@@ -5934,29 +5957,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_application_commands(
-        self,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[interactions.Command]:
-        """Fetch the commands set for an application.
-
-        Other Parameters
-        ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to fetch the commands for. If left as
-            `hikari.undefined.UNDEFINED` then this will only return the global
-            commands, otherwise this will only return the commands set exclusively
-            for the specific guild.
-
-        Returns
-        -------
-        typing.Sequence[hikari.interactions.Command]
-            A sequence of the commands declared for the provided application.
-            This will exclusively either contain the commands set for a specific
-            guild if `guild` is provided or the global commands if not.
-        """
-
-    @abc.abstractmethod
     async def set_application_commands(
         self,
         commands: typing.Sequence[special_endpoints.CommandBuilder],
@@ -5965,29 +5965,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def delete_application_command(
-        self,
-        command: snowflakes.SnowflakeishOr[interactions.Command],
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> None:
-        """Delete a registered application command.
-
-        Parameters
-        ----------
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
-            Object or ID of the command to delete.
-
-        Other Parameters
-        ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild to delete a command for if this is a guild
-            specific command. Leave this as `hikari.undefined.UNDEFINED` to
-            delete a global command.
-        """
-
-    @abc.abstractmethod
     async def edit_application_command(
         self,
+        command: snowflakes.SnowflakeishOr[interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -5995,6 +5975,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
     ) -> interactions.Command:
         """Edit a registered application command.
+
+        Parameters
+        ----------
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
+            Object or ID of the command to modify.
 
         Other Parameters
         ----------------
@@ -6016,6 +6001,27 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.interactions.Command
             The created command object.
+        """
+
+    @abc.abstractmethod
+    async def delete_application_command(
+        self,
+        command: snowflakes.SnowflakeishOr[interactions.Command],
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> None:
+        """Delete a registered application command.
+
+        Parameters
+        ----------
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
+            Object or ID of the command to delete.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to delete a command for if this is a guild
+            specific command. Leave this as `hikari.undefined.UNDEFINED` to
+            delete a global command.
         """
 
     # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
@@ -6045,6 +6051,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
     ) -> None:
         """Create the initial response for a interaction.
+
+        !!! warning
+            Calling this on an interaction which already has an initial response
+            with further calls will result in this raising a
+            `hikari.errors.NotFoundError`. This includes if the REST interaction
+            server has already responded to the request.
 
         Parameters
         ----------
@@ -6122,7 +6134,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
-            If the interaction is not found.
+            If the interaction is not found or if the interaction's initial
+            response has already been created.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

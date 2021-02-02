@@ -37,7 +37,7 @@ from hikari import iterators
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari import traits
+    from hikari.api import event_manager as event_manager_
     from hikari.events import base_events  # noqa F401 - Unused (False positive)
 
 EventT = typing.TypeVar("EventT", bound="base_events.Event")
@@ -161,13 +161,13 @@ class EventStream(Streamer[EventT]):
 
     def __init__(
         self,
-        app: traits.EventManagerAware,
+        event_manager: event_manager_.EventManager,
         event_type: typing.Type[EventT],
         *,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
     ) -> None:
-        self._event_manager = app.event_manager
+        self._event_manager = event_manager
         self._active = False
         self._event_type = event_type
         self._filters: iterators.All[EventT] = iterators.All(())
