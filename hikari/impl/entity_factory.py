@@ -58,7 +58,7 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 _ValueT = typing.TypeVar("_ValueT")
 
 
@@ -364,8 +364,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
 
     def _deserialize_channel_overwrite_entry_info(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> audit_log_models.ChannelOverwriteEntryInfo:
         return audit_log_models.ChannelOverwriteEntryInfo(
             app=self._app,
@@ -393,22 +392,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_message_bulk_delete_entry_info(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> audit_log_models.MessageBulkDeleteEntryInfo:
         return audit_log_models.MessageBulkDeleteEntryInfo(app=self._app, count=int(payload["count"]))
 
     def _deserialize_message_delete_entry_info(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> audit_log_models.MessageDeleteEntryInfo:
         return audit_log_models.MessageDeleteEntryInfo(
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
     def _deserialize_member_disconnect_entry_info(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> audit_log_models.MemberDisconnectEntryInfo:
         return audit_log_models.MemberDisconnectEntryInfo(app=self._app, count=int(payload["count"]))
 
@@ -420,10 +416,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_unrecognised_audit_log_entry_info(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> audit_log_models.UnrecognisedAuditLogEntryInfo:
-        return audit_log_models.UnrecognisedAuditLogEntryInfo(payload=payload)
+        return audit_log_models.UnrecognisedAuditLogEntryInfo(app=self._app, payload=payload)
 
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
         entries = {}
@@ -437,13 +432,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                         change_payload["key"]
                     )
 
-                    new_value: typing.Any = change_payload.get("new_value")
-                    old_value: typing.Any = change_payload.get("old_value")
+                    new_value = change_payload.get("new_value")
+                    old_value = change_payload.get("old_value")
                     if value_converter := self._audit_log_entry_converters.get(key):
                         new_value = value_converter(new_value) if new_value is not None else None
                         old_value = value_converter(old_value) if old_value is not None else None
 
-                    elif __debug__ and not isinstance(key, audit_log_models.AuditLogChangeKey):
+                    elif not isinstance(key, audit_log_models.AuditLogChangeKey):
                         _LOGGER.debug("Unknown audit log change key found %r", key)
 
                     changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
@@ -465,7 +460,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
                 if not option_converter:
                     _LOGGER.debug("Unknown audit log action type found %r", action_type)
-                    option_converter = self._deserialize_unrecognised_audit_log_entry_info  # noqa: W503
+                    option_converter = self._deserialize_unrecognised_audit_log_entry_info
 
                 options = option_converter(raw_option)
 
@@ -835,7 +830,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             fields=fields,
         )
 
-    def serialize_embed(  # noqa: C901
+    def serialize_embed(  # noqa: C901 - Function too complex
         self,
         embed: embed_models.Embed,
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
@@ -910,12 +905,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             field_payloads: data_binding.JSONArray = []
             for i, field in enumerate(embed.fields):
 
-                # Yep, this is technically two unreachable branches. However, this is an incredibly
+                # Yep, these are technically two unreachable branches. However, this is an incredibly
                 # common mistake to make when working with embeds and not using a static type
                 # checker, so I have added these as additional safeguards for UX and ease
                 # of debugging. The case that there are `None` should be detected immediately by
                 # static type checkers, regardless.
-
                 name = str(field.name) if field.name is not None else None
                 value = str(field.value) if field.value is not None else None
 

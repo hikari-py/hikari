@@ -576,6 +576,20 @@ class TestEntityFactoryImpl:
         assert entry.options is None
         assert entry.reason is None
 
+    def test_deserialize_audit_log_with_unhandled_change_key(self, entity_factory_impl, audit_log_payload):
+        # Unset fields
+        audit_log_payload["audit_log_entries"][0]["changes"][0]["key"] = "name"
+
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+
+        assert len(audit_log.entries) == 1
+        entry = audit_log.entries[694026906592477214]
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == audit_log_models.AuditLogChangeKey.NAME
+        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
+        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
+
     def test_deserialize_audit_log_with_change_key_unknown(self, entity_factory_impl, audit_log_payload):
         # Unset fields
         audit_log_payload["audit_log_entries"][0]["changes"][0]["key"] = "unknown"
@@ -589,6 +603,19 @@ class TestEntityFactoryImpl:
         assert change.key == "unknown"
         assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
         assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
+
+    def test_deserialize_audit_log_with_action_type_unknown(self, entity_factory_impl, audit_log_payload):
+        # Unset fields
+        audit_log_payload["audit_log_entries"][0]["action_type"] = 1000
+        audit_log_payload["audit_log_entries"][0]["options"] = {"field1": "value1", "field2": 96}
+
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+
+        assert len(audit_log.entries) == 1
+        entry = audit_log.entries[694026906592477214]
+        assert entry.options.field1 == "value1"
+        assert entry.options.field2 == 96
+        assert isinstance(entry.options, audit_log_models.UnrecognisedAuditLogEntryInfo)
 
     ##################
     # CHANNEL MODELS #

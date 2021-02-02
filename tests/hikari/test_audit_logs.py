@@ -25,14 +25,36 @@ from hikari import audit_logs
 from hikari import snowflakes
 
 
-def test_AuditLogChangeKey_str_operator():
-    change_key = audit_logs.AuditLogChangeKey("owner_id")
-    assert str(change_key) == "OWNER_ID"
+class TestUnrecognisedAuditLogEntryInfo:
+    def test_eq_when_not_same_class(self):
+        audit_log = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload={})
+        # Unfortunately there is no other way to do this
+        returned = audit_logs.UnrecognisedAuditLogEntryInfo.__eq__(audit_log, object())
+        assert returned is NotImplemented
 
+    @pytest.mark.parametrize(
+        ("payload1", "payload2", "expected"),
+        [
+            ({"test": "test2"}, {"test": "test3"}, False),
+            ({}, {"test": "test2"}, False),
+            ({"test": "test2"}, {"test": "test2"}, True),
+        ],
+    )
+    def test_eq(self, payload1, payload2, expected):
+        audit_log = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload=payload1)
+        other = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload=payload2)
 
-def test_AuditLogEventType_str_operator():
-    event_type = audit_logs.AuditLogEventType(80)
-    assert str(event_type) == "INTEGRATION_CREATE"
+        assert (audit_log == other) is expected
+
+    def test_str(self):
+        audit_log = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload={"test": "test2", "test3": 98})
+
+        assert str(audit_log) == "UnrecognisedAuditLogEntryInfo(test='test2', test3=98)"
+
+    def test_repr(self):
+        audit_log = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload={"test": "test2", "test3": 98})
+
+        assert repr(audit_log) == "UnrecognisedAuditLogEntryInfo(test='test2', test3=98)"
 
 
 class TestAuditLog:

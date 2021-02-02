@@ -237,6 +237,7 @@ class EventManager(abc.ABC):
     def get_listeners(
         self,
         event_type: typing.Type[EventT_co],
+        /,
         *,
         polymorphic: bool = True,
     ) -> typing.Collection[CallbackT[EventT_co]]:

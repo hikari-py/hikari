@@ -396,3 +396,91 @@ class TestBotApp:
             ],
             any_order=False,
         )
+
+    def test_dispatch(self, bot, event_manager):
+        event = object()
+
+        assert bot.dispatch(event) is event_manager.dispatch.return_value
+
+        event_manager.dispatch.assert_called_once_with(event)
+
+    def test_get_listeners(self, bot, event_manager):
+        event = object()
+
+        assert bot.get_listeners(event, polymorphic=False) is event_manager.get_listeners.return_value
+
+        event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
+
+    @pytest.mark.asyncio
+    async def test_join_when_not_until_close(self, bot, event_manager):
+        shard0 = mock.Mock()
+        shard1 = mock.Mock()
+        shard2 = mock.Mock()
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+
+        with mock.patch.object(aio, "first_completed") as first_completed:
+            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+                await bot.join(until_close=False)
+
+        check_if_alive.assert_called_once_with()
+        first_completed.assert_awaited_once_with(
+            *(shard0.join.return_value, shard1.join.return_value, shard2.join.return_value)
+        )
+
+    @pytest.mark.asyncio
+    async def test_join_when_until_close(self, bot):
+        shard0 = mock.Mock()
+        shard1 = mock.Mock()
+        shard2 = mock.Mock()
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+        bot._closing_event = mock.Mock()
+
+        with mock.patch.object(aio, "first_completed") as first_completed:
+            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+                await bot.join(until_close=True)
+
+        check_if_alive.assert_called_once_with()
+        first_completed.assert_awaited_once_with(
+            *(
+                shard0.join.return_value,
+                shard1.join.return_value,
+                shard2.join.return_value,
+                bot._closing_event.wait(),
+            )
+        )
+
+    def test_listen(self, bot, event_manager):
+        event = object()
+
+        assert bot.listen(event) is event_manager.listen.return_value
+
+        event_manager.listen.assert_called_once_with(event)
+
+    def test_print_banner(self, bot):
+        with mock.patch.object(ux, "print_banner") as print_banner:
+            bot.print_banner("testing", False, True)
+
+        print_banner.assert_called_once_with("testing", False, True)
+
+    def test_run_when_already_running(self, bot):
+        bot._is_alive = True
+
+        with pytest.raises(RuntimeError, match=r"bot is already running"):
+            bot.run()
+
+    def test_run_when_shard_ids_specified_without_shard_count(self, bot):
+        with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
+            bot.run(shard_ids={1})
+
+    @pytest.mark.skip("TODO")
+    def test_run(self, bot):
+        ...
+
+    @pytest.mark.asyncio
+    async def test_start_when_shard_ids_specified_without_shard_count(self, bot):
+        with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
+            await bot.start(shard_ids={1})
+
+    @pytest.mark.skip("TODO")
+    def test_start(self, bot):
+        ...

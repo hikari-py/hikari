@@ -44,7 +44,7 @@ from hikari.internal import reflect
 if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 if typing.TYPE_CHECKING:
     ConsumerT = typing.Callable[
@@ -143,6 +143,7 @@ class EventManagerBase(event_manager.EventManager):
     def get_listeners(
         self,
         event_type: typing.Type[event_manager.EventT_co],
+        /,
         *,
         polymorphic: bool = True,
     ) -> typing.Collection[event_manager.CallbackT[event_manager.EventT_co]]:
