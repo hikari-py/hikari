@@ -27,7 +27,12 @@ import inspect
 import os
 import platform
 import sys
-import typing
+
+try:
+    import git  # type: ignore[import]
+except ImportError:
+    # No git module = git not installed
+    git = None
 
 from hikari import _about
 
@@ -36,12 +41,23 @@ def main() -> None:
     """Print package info and exit."""
     sourcefile = inspect.getsourcefile(_about)
     assert isinstance(sourcefile, str)
-    path: typing.Final[str] = os.path.abspath(os.path.dirname(sourcefile))
-    sha1: typing.Final[str] = _about.__git_sha1__[:8]
-    version: typing.Final[str] = _about.__version__
-    py_impl: typing.Final[str] = platform.python_implementation()
-    py_ver: typing.Final[str] = platform.python_version()
-    py_compiler: typing.Final[str] = platform.python_compiler()
+
+    path = os.path.abspath(os.path.dirname(sourcefile))
+    sha1 = _about.__git_sha1__[:8]
+    version = _about.__version__
+    py_impl = platform.python_implementation()
+    py_ver = platform.python_version()
+    py_compiler = platform.python_compiler()
+
+    # Provide a more helpful commit information if available
+    if sha1.casefold() == "head" and git:
+        try:
+            repo = git.Repo()
+            sha1 = str(repo.head.commit)[:8]
+        except (git.InvalidGitRepositoryError, git.NoSuchPathError):
+            # Repo not available
+            pass
+
     sys.stderr.write(f"hikari ({version}) [{sha1}]\n")
     sys.stderr.write(f"located at {path}\n")
     sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
