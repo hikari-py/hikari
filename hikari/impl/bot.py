@@ -63,7 +63,6 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import event_stream
     from hikari import guilds
-    from hikari import snowflakes
     from hikari import users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -280,7 +279,7 @@ class BotApp(traits.BotAware):
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Event handling
-        self._event_manager = event_manager_impl.EventManagerImpl(self, application_id=application, cache=self._cache)
+        self._event_manager = event_manager_impl.EventManagerImpl(self, cache=self._cache)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)

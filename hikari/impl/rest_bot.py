@@ -30,6 +30,7 @@ import typing
 
 from hikari import applications
 from hikari import config
+from hikari import snowflakes
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
 from hikari.impl import entity_factory as entity_factory_impl
@@ -44,7 +45,7 @@ if typing.TYPE_CHECKING:
     import ssl
 
     from hikari import guilds
-    from hikari import snowflakes
+    from hikari import interactions
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
@@ -190,6 +191,8 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
 
+        # TODO: raise if public_key's length isn't right when bytes
+
         if application is not None:
             application = snowflakes.Snowflake(application)
 
@@ -245,8 +248,10 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         return self._server.is_alive
 
     @property
-    def listener(self) -> typing.Optional[interaction_server_.MainListenerT]:
-        return self._server.listener
+    def listeners(
+        self,
+    ) -> interaction_server_.ListenerMapT[interactions.PartialInteraction]:
+        return self._server.listeners
 
     @property
     def interaction_server(self) -> interaction_server_.InteractionServer:
@@ -498,6 +503,11 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         )
 
     def set_listener(
-        self, listener: typing.Optional[interaction_server_.MainListenerT], /, *, replace: bool = False
+        self,
+        interaction_type: typing.Type[interaction_server_.InteractionT],
+        listener: typing.Optional[interaction_server_.MainListenerT[interaction_server_.InteractionT]],
+        /,
+        *,
+        replace: bool = False,
     ) -> None:
-        self._server.set_listener(listener, replace=replace)
+        self._server.set_listener(interaction_type, listener, replace=replace)

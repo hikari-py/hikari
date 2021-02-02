@@ -468,6 +468,69 @@ class EventFactory(abc.ABC):
     ######################
 
     @abc.abstractmethod
+    def deserialize_command_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandCreateEvent:
+        """Parse a raw payload from Discord into a command create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.interaction_events.CommandCreateEvent
+            The parsed command create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_command_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandUpdateEvent:
+        """Parse a raw payload from Discord into a command update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.interaction_events.CommandUpdateEvent
+            The parsed command update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_command_delete_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandDeleteEvent:
+        """Parse a raw payload from Discord into a command delete event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.interaction_events.CommandDeleteEvent
+            The parsed command delete event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_interaction_create_event(
         self,
         shard: typing.Optional[gateway_shard.GatewayShard],

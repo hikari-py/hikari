@@ -243,34 +243,40 @@ class TestEventStream:
 
     @pytest.mark.asyncio()
     @hikari_test_helpers.timeout()
-    async def test_close_for_active_stream(self, mock_app):
+    async def test_close_for_active_stream(self):
         mock_registered_listener = object()
-        stream = event_stream.EventStream(mock_app, event_type=events.Event, timeout=float("inf"))
+        mock_manager = mock.Mock()
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            event_manager=mock_manager, event_type=events.Event, timeout=float("inf")
+        )
 
         await stream.open()
         stream._registered_listener = mock_registered_listener
         await stream.close()
-        mock_app.event_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
+        mock_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
     @pytest.mark.asyncio()
     @hikari_test_helpers.timeout()
-    async def test_close_for_active_stream_handles_value_error(self, mock_app):
+    async def test_close_for_active_stream_handles_value_error(self):
         mock_registered_listener = object()
-        mock_app.event_manager.unsubscribe.side_effect = ValueError
-        stream = event_stream.EventStream(mock_app, event_type=events.Event, timeout=float("inf"))
+        mock_manager = mock.Mock()
+        mock_manager.unsubscribe.side_effect = ValueError
+        stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
+            event_manager=mock_manager, event_type=events.Event, timeout=float("inf")
+        )
 
         await stream.open()
         stream._registered_listener = mock_registered_listener
         await stream.close()
-        mock_app.event_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
+        mock_manager.unsubscribe.assert_called_once_with(events.Event, mock_registered_listener)
         assert stream._active is False
         assert stream._registered_listener is None
 
     def test_filter_for_inactive_stream(self):
         stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
-            app=mock.Mock(), event_type=events.Event, timeout=1
+            event_manager=mock.Mock(), event_type=events.Event, timeout=1
         )
         stream._filters = iterators.All(())
         first_pass = mock.Mock(attr=True)
@@ -291,7 +297,7 @@ class TestEventStream:
     @pytest.mark.asyncio()
     async def test_filter_for_active_stream(self):
         stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
-            app=mock.Mock(), event_type=events.Event, timeout=float("inf")
+            event_manager=mock.Mock(), event_type=events.Event, timeout=float("inf")
         )
         stream._active = True
         mock_wrapping_iterator = object()
@@ -306,10 +312,11 @@ class TestEventStream:
         stream._active = False
 
     @pytest.mark.asyncio()
-    async def test_open_for_inactive_stream(self, mock_app):
+    async def test_open_for_inactive_stream(self):
         mock_listener = object()
+        mock_manager = mock.Mock()
         stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
-            app=mock_app,
+            event_manager=mock_manager,
             event_type=events.Event,
             timeout=float("inf"),
         )
@@ -324,7 +331,7 @@ class TestEventStream:
                 weakref.WeakMethod.assert_not_called()
             event_stream._generate_weak_listener.assert_not_called()
 
-        mock_app.event_manager.subscribe.assert_not_called()
+        mock_manager.subscribe.assert_not_called()
         assert stream._active is True
         assert stream._registered_listener is mock_listener
 
@@ -333,9 +340,10 @@ class TestEventStream:
 
     @pytest.mark.asyncio()
     @hikari_test_helpers.timeout()
-    async def test_open_for_active_stream(self, mock_app):
+    async def test_open_for_active_stream(self):
+        mock_manager = mock.Mock()
         stream = hikari_test_helpers.mock_class_namespace(event_stream.EventStream)(
-            app=mock_app, event_type=events.Event, timeout=float("inf")
+            event_manager=mock_manager, event_type=events.Event, timeout=float("inf")
         )
         stream._active = False
         mock_listener = object()
@@ -348,7 +356,7 @@ class TestEventStream:
                 weakref.WeakMethod.assert_called_once_with(stream._listener)
             event_stream._generate_weak_listener.assert_called_once_with(mock_listener_ref)
 
-        mock_app.event_manager.subscribe.assert_called_once_with(events.Event, mock_listener)
+        mock_manager.subscribe.assert_called_once_with(events.Event, mock_listener)
         assert stream._active is True
         assert stream._registered_listener is mock_listener
 

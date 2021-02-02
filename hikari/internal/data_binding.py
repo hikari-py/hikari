@@ -86,7 +86,7 @@ if typing.TYPE_CHECKING:
     def dump_json(_: typing.Union[JSONArray, JSONObject], /) -> str:
         """Convert a Python type to a JSON string."""
 
-    def load_json(_: typing.AnyStr) -> typing.Union[JSONArray, JSONObject]:
+    def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
         """Convert a JSON string to a Python type."""
 
 

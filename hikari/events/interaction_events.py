@@ -20,11 +20,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that fire when Interactions are modified."""
+"""Events fired for interaction related changes."""
 from __future__ import annotations
 
-__slots__: typing.Sequence[str] = ["InteractionCreateEvent"]
+__all__: typing.Sequence[str] = [
+    "CommandEvent",
+    "CommandCreateEvent",
+    "CommandUpdateEvent",
+    "CommandDeleteEvent",
+    "InteractionCreateEvent",
+]
 
+import abc
 import typing
 
 import attr
@@ -36,6 +43,67 @@ if typing.TYPE_CHECKING:
     from hikari import interactions
     from hikari import traits
     from hikari.api import shard as gateway_shard
+
+
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class CommandEvent(base_events.Event, abc.ABC):
+    """Base class of events fired for application command changes."""
+
+    @property
+    @abc.abstractmethod
+    def command(self) -> interactions.Command:
+        """Object of the command this event is for.
+
+        Returns
+        -------
+        hikari.interactions.Command
+            The command this event is for.
+        """
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class CommandCreateEvent(CommandEvent):
+    """Event fired when a command is created for the current application."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    command: interactions.Command = attr.ib(eq=True, repr=True)
+    # <<inherited docstring from Event>>.
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class CommandUpdateEvent(CommandEvent):
+    """Event fired when a command is updated for the current application."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    command: interactions.Command = attr.ib(eq=True, repr=True)
+    # <<inherited docstring from Event>>.
+
+
+@attr_extensions.with_copy
+@attr.s(kw_only=True, slots=True, weakref_slot=False)
+class CommandDeleteEvent(CommandEvent):
+    """Event fired when a command is deleted for the current application."""
+
+    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    command: interactions.Command = attr.ib(eq=True, repr=True)
+    # <<inherited docstring from Event>>.
 
 
 @attr_extensions.with_copy

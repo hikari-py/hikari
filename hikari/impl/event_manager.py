@@ -32,7 +32,6 @@ import random
 import typing
 
 from hikari import channels
-from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
@@ -60,39 +59,28 @@ def _fixed_size_nonce() -> str:
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_application_id", "_application_id_lock", "_cache")
+    __slots__: typing.Sequence[str] = ("_application_id", "_cache")
 
     def __init__(
         self,
         app: traits.BotAware,
         /,
         *,
-        application_id: typing.Optional[snowflakes.Snowflakeish] = None,
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
-        self._application_id = snowflakes.Snowflake(application_id) if application_id is not None else None
-        self._application_id_lock = asyncio.Lock()
+        self._application_id: typing.Optional[snowflakes.Snowflake] = None
         self._cache = cache
         super().__init__(app=app)
 
-    async def _fetch_application_id(self) -> snowflakes.Snowflake:
-        async with self._application_id_lock:
-            if self._application_id is not None:
-                return self._application_id
-
-            try:
-                application: guilds.PartialApplication = await self._app.rest.fetch_application()
-
-            except errors.UnauthorizedError:
-                application = (await self._app.rest.fetch_authorization()).application
-
-            self._application_id = application.id
-            return self._application_id
+    def _get_application_id(self) -> snowflakes.Snowflake:
+        assert self._application_id is not None, "This should've been set by the READY event listener."
+        return self._application_id
 
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
         event = self._app.event_factory.deserialize_ready_event(shard, payload)
+        self._application_id = event.application_id
 
         if self._cache:
             self._cache.update_me(event.my_user)
@@ -490,9 +478,27 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#webhooks-update for more info."""
         await self.dispatch(self._app.event_factory.deserialize_webhook_update_event(shard, payload))
 
+    async def on_application_command_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#application-command-create for more info."""
+        await self.dispatch(self._app.event_factory.deserialize_command_create_event(shard, payload))
+
+    async def on_application_command_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#application-command-update for more info."""
+        await self.dispatch(self._app.event_factory.deserialize_command_update_event(shard, payload))
+
+    async def on_application_command_delete(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#application-command-delete for more info."""
+        await self.dispatch(self._app.event_factory.deserialize_command_delete_event(shard, payload))
+
     async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
-        application_id = self._application_id or await self._fetch_application_id()
+        application_id = self._get_application_id()
         await self.dispatch(
             self._app.event_factory.deserialize_interaction_create_event(shard, payload, application_id=application_id)
         )

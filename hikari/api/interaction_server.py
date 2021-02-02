@@ -28,15 +28,15 @@ __all__: typing.Sequence[str] = ["MainListenerT", "Response", "InteractionServer
 import abc
 import typing
 
-from hikari.internal import protocol
-
 if typing.TYPE_CHECKING:
+    from hikari import interactions
     from hikari.api import special_endpoints
-    from hikari.events import interaction_events
 
+
+InteractionT = typing.TypeVar("InteractionT", bound="interactions.PartialInteraction", covariant=True)
 
 MainListenerT = typing.Callable[
-    ["interaction_events.InteractionCreateEvent"],
+    [InteractionT],
     typing.Awaitable[typing.Optional["special_endpoints.InteractionResponseBuilder"]],
 ]
 """Type hint of a Interaction server's listener callback.
@@ -51,10 +51,12 @@ default to a `hikari.interactions.InteractionResponseType.ACKNOWLEDGE` response.
     For the standard implementation of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints.InteractionResponseBuilder`
-"""
+"""  # TODO: rewrite to account for inheritance
+
+ListenerMapT = typing.Mapping[typing.Type[InteractionT], MainListenerT[InteractionT]]
 
 
-class Response(protocol.Protocol):
+class Response(typing.Protocol):  # TODO: mypy doesn't treat protocol.Protocol like typing.Protocol
     """Protocol of the data returned by `InteractionServer.on_interaction`.
 
     This is used to instruct lower-level REST server logic on how it should
@@ -121,12 +123,14 @@ class InteractionServer(abc.ABC):
         """
 
     @property
-    def listener(self) -> typing.Optional[MainListenerT]:
-        """Return the listener function that's triggered for all received interactions.
+    @abc.abstractmethod
+    def listeners(self) -> ListenerMapT[interactions.PartialInteraction]:
+        """Return a mapping of the registered listener functions.
 
         Returns
         -------
-        typing.Optional[MainListenerT]
+        typing.Mapping[InteractionT, MainListenerT[InteractionT]]
+            A mapping of interaction event types to listener functions.
         """
 
     @abc.abstractmethod
@@ -171,13 +175,23 @@ class InteractionServer(abc.ABC):
         """Start the REST server then return."""
 
     @abc.abstractmethod
-    def set_listener(self, listener: typing.Optional[MainListenerT], /, *, replace: bool = False) -> None:
+    def set_listener(
+        self,
+        interaction_type: typing.Type[InteractionT],
+        listener: typing.Optional[MainListenerT[InteractionT]],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
         """Set the listener callback for this interaction server.
 
         Parameters
         ----------
-        listener : typing.Optional[MainListenerT]
-            The asynchronous listener callback to set or `builtins.None`.
+        interaction_type : typing.Type[InteractionT]
+            The type of interaction this listener should be registered for.
+        listener : typing.Optional[MainListenerT[InteractionT]]
+            The asynchronous listener callback to set or `builtins.None` to
+            unset the previous listener.
 
         Other Parameters
         ----------------

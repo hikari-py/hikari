@@ -460,33 +460,33 @@ PATCH_WEBHOOK_MESSAGE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{
 DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/{message}")
 
 # Applications
-GET_APPLICATION_COMMANDS: typing.Final[Route] = Route(GET, "/applications/{application}/commands")
 GET_APPLICATION_COMMAND: typing.Final[Route] = Route(GET, "/applications/{application}/commands/{command}")
-DELETE_APPLICATION_COMMAND: typing.Final[Route] = Route(DELETE, "/applications/{application}/commands/{command}")
+GET_APPLICATION_COMMANDS: typing.Final[Route] = Route(GET, "/applications/{application}/commands")
 PATCH_APPLICATION_COMMAND: typing.Final[Route] = Route(PATCH, "/applications/{application}/commands/{command}")
 POST_APPLICATION_COMMAND: typing.Final[Route] = Route(POST, "/applications/{application}/commands")
 PUT_APPLICATION_COMMANDS: typing.Final[Route] = Route(PUT, "/applications/{application}/commands")
+DELETE_APPLICATION_COMMAND: typing.Final[Route] = Route(DELETE, "/applications/{application}/commands/{command}")
 
-GET_APPLICATION_GUILD_COMMANDS: typing.Final[Route] = Route(GET, "/applications/{application}/guilds/{guild}/commands")
 GET_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
     GET, "/applications/{application}/guilds/{guild}/commands/{command}"
 )
-DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
-    DELETE, "/applications/{application}/guilds/{guild}/commands/{command}"
-)
+GET_APPLICATION_GUILD_COMMANDS: typing.Final[Route] = Route(GET, "/applications/{application}/guilds/{guild}/commands")
 PATCH_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
     PATCH, "/applications/{application}/guilds/{guild}/commands/{command}"
 )
 POST_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(POST, "/applications/{application}/guilds/{guild}/commands")
 PUT_APPLICATION_GUILD_COMMANDS: typing.Final[Route] = Route(PUT, "/applications/{application}/guilds/{guild}/commands")
+DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
+    DELETE, "/applications/{application}/guilds/{guild}/commands/{command}"
+)
 
 # Interactions
-DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{application}/{token}/messages/@original")
 # GET_INTERACTION_RESPONSE is a planned TODO on discord's end
 # See https://github.com/discord/discord-api-docs/issues/2490
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{application}/{token}/messages/@original")
 PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{application}/{token}/message/@original")
 POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(POST, "/interactions/{interaction}/{token}/callback")
+DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{application}/{token}/messages/@original")
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
