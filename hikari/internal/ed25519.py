@@ -70,14 +70,23 @@ def _build_verifier(call: typing.Callable[[bytes, bytes], None], exc: typing.Typ
             call(signature, timestamp + body)
             return True
 
-        except exc:  # TODO: should we handle assertion errors at all?
+        except exc:
             return False
 
     return verify
 
 
+def _verify_key(public_key: bytes, /) -> None:
+    if not isinstance(public_key, bytes):
+        raise ValueError("Invalid type passed for public key")
+
+    if len(public_key) != 32:
+        raise ValueError("Invalid public key passed")
+
+
 def build_slow_ed25519_verifier(public_key: bytes, /) -> VerifierT:
     """`VerifyBuilderT` implementation which will always be present."""
+    _verify_key(public_key)
     return _build_verifier(_pure_ed25519.VerifyingKey(public_key).verify, _pure_ed25519.BadSignatureError)
 
 
@@ -88,6 +97,7 @@ try:
     import ed25519 as _ed25519  # type: ignore[import]
 
     def _build_fast_ed25519_verifier(public_key: bytes, /) -> VerifierT:
+        _verify_key(public_key)
         return _build_verifier(_ed25519.VerifyingKey(public_key).verify, _ed25519.BadSignatureError)
 
     build_fast_ed25519_verifier = _build_fast_ed25519_verifier

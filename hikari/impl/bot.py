@@ -253,7 +253,7 @@ class BotApp(traits.BotAware):
         if application is not None:
             application = snowflakes.Snowflake(application)
 
-        elif token is not None:
+        else:
             try:
                 application = applications.get_token_id(token)
 

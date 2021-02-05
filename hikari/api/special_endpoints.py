@@ -589,7 +589,7 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.undefined.UndefinedOr[bool]
+        hikari.undefined.UndefinedOr[builtins.bool]
             Whether @everyone mentions should be enabled for this response.
             If left as `hikari.undefined.UNDEFINED` then they will be disabled.
         """

@@ -88,7 +88,7 @@ _PONG_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": _PONG_RESPONS
 
 
 class _Response:
-    __slots__: typing.Sequence[str] = ("_status_code", "_payload", "_headers")
+    __slots__: typing.Sequence[str] = ("_headers", "_payload", "_status_code")
 
     def __init__(
         self,
@@ -96,11 +96,8 @@ class _Response:
         payload: typing.Optional[str] = None,
         *,
         content_type: typing.Optional[str] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        headers: typing.Optional[typing.MutableMapping[str, str]] = None,
     ) -> None:
-        self._status_code = status_code
-        self._payload = payload.encode() if payload is not None else None
-
         if payload or content_type:
             if not headers:
                 headers = {}
@@ -108,18 +105,20 @@ class _Response:
             headers[_CONTENT_TYPE_KEY] = content_type or _TEXT_CONTENT_TYPE
 
         self._headers = headers
+        self._payload = payload.encode() if payload is not None else None
+        self._status_code = status_code
 
     @property
-    def status_code(self) -> int:
-        return self._status_code
+    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
+        return self._headers
 
     @property
     def payload(self) -> typing.Optional[bytes]:
         return self._payload
 
     @property
-    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
-        return self._headers
+    def status_code(self) -> int:
+        return self._status_code
 
 
 class InteractionServer(interaction_server.InteractionServer):
@@ -143,7 +142,7 @@ class InteractionServer(interaction_server.InteractionServer):
         callback.
     loads : aiohttp.typedefs.JSONDecoder
         The JSON decoder this server should use. Defaults to `json.loads`.
-    public_key : bytes
+    public_key : builtins.bytes
         The public key this server should use for verifying request payloads from
         Discord. If left as `builtins.None` then the client will try to work this
         out using `rest_client`.
@@ -152,6 +151,7 @@ class InteractionServer(interaction_server.InteractionServer):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_application_fetch_lock",
         "_application_id",
         "_dumps",
         "_entity_factory",
@@ -180,6 +180,7 @@ class InteractionServer(interaction_server.InteractionServer):
         event_manager: typing.Optional[event_manager_.EventManager] = None,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
+        self._application_fetch_lock = asyncio.Lock()
         self._application_id = application_id
         self._dumps = dumps
         self._entity_factory = entity_factory
@@ -221,15 +222,19 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def _fetch_application_information(self) -> typing.Tuple[snowflakes.Snowflake, ed25519.VerifierT]:
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
-        try:
-            application = (await self._rest_client.fetch_authorization()).application
+        async with self._application_fetch_lock:
+            if self._application_id and self._verify:
+                return self._application_id, self._verify
 
-        except errors.UnauthorizedError:
-            application = await self._rest_client.fetch_application()
+            try:
+                application = (await self._rest_client.fetch_authorization()).application
 
-        self._application_id = application.id
-        self._verify = ed25519.build_ed25519_verifier(application.public_key)
-        return self._application_id, self._verify
+            except errors.UnauthorizedError:
+                application = await self._rest_client.fetch_application()
+
+            self._application_id = application.id
+            self._verify = ed25519.build_ed25519_verifier(application.public_key)
+            return self._application_id, self._verify
 
     async def _on_cleanup(self, _: aiohttp.web.Application, /) -> None:
         if self._events:
@@ -315,10 +320,12 @@ class InteractionServer(interaction_server.InteractionServer):
         await self._future
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
-        if not self._application_id or not self._verify:
-            self._application_id, self._verify = await self._fetch_application_information()
+        application_id = self._application_id
+        verify = self._verify
+        if not application_id or not verify:
+            application_id, verify = await self._fetch_application_information()
 
-        if not self._verify(body, signature, timestamp):
+        if not verify(body, signature, timestamp):
             _LOGGER.info("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, "Invalid request signature")
 
@@ -344,7 +351,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         try:
             event = self._event_factory.deserialize_interaction_create_event(
-                None, payload, application_id=self._application_id
+                None, payload, application_id=application_id
             )
 
         except Exception as exc:
@@ -397,7 +404,7 @@ class InteractionServer(interaction_server.InteractionServer):
         asyncio_debug : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then debugging is
             enabled for the asyncio event loop in use.
-        backlog : int
+        backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         close_loop : builtins.bool
@@ -426,19 +433,19 @@ class InteractionServer(interaction_server.InteractionServer):
             unless you plan to implement your own signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port : typing.Optional[builtins.int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path : typing.Optional[builtins.str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address : typing.Optional[builtins.bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port : typing.Optional[builtins.bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
+        shutdown_timeout : builtins.float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
@@ -495,7 +502,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Other Parameters
         ----------------
-        backlog : int
+        backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         enable_signal_handlers : builtins.bool
@@ -508,19 +515,19 @@ class InteractionServer(interaction_server.InteractionServer):
             unless you plan to implement your own signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port : typing.Optional[builtins.int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path : typing.Optional[builtins.str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address : typing.Optional[builtins.bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port : typing.Optional[builtins.bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
+        shutdown_timeout : builtins.float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]

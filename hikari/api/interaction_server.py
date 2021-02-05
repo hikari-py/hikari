@@ -56,7 +56,7 @@ default to a `hikari.interactions.InteractionResponseType.ACKNOWLEDGE` response.
 ListenerMapT = typing.Mapping[typing.Type[InteractionT], MainListenerT[InteractionT]]
 
 
-class Response(typing.Protocol):  # TODO: mypy doesn't treat protocol.Protocol like typing.Protocol
+class Response(typing.Protocol):
     """Protocol of the data returned by `InteractionServer.on_interaction`.
 
     This is used to instruct lower-level REST server logic on how it should
@@ -66,15 +66,14 @@ class Response(typing.Protocol):  # TODO: mypy doesn't treat protocol.Protocol l
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def status_code(self) -> int:
-        """Status code that should be used to respond.
+    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
+        """Headers that should be added to the response if applicable.
 
         Returns
         -------
-        builtins.int
-            The response code to use for the response. This should be a valid
-            HTTP status code, for more information see
-            https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
+        typing.Optional[typing.Mapping[builtins.str, builtins.str]]
+            A mapping of string header names to string header values that should
+            be included in the response if applicable else `builtins.None`.
         """
         raise NotImplementedError
 
@@ -94,14 +93,15 @@ class Response(typing.Protocol):  # TODO: mypy doesn't treat protocol.Protocol l
         raise NotImplementedError
 
     @property
-    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
-        """Headers that should be added to the response if applicable.
+    def status_code(self) -> int:
+        """Status code that should be used to respond.
 
         Returns
         -------
-        typing.Optional[typing.Mapping[builtins.str, builtins.str]]
-            A mapping of string header names to string header values that should
-            be included in the response if applicable else `builtins.None`.
+        builtins.int
+            The response code to use for the response. This should be a valid
+            HTTP status code, for more information see
+            https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
         """
         raise NotImplementedError
 
@@ -118,7 +118,7 @@ class InteractionServer(abc.ABC):
 
         Returns
         -------
-        bool
+        builtins.bool
             Whether this interaction server is active
         """
 
@@ -152,11 +152,11 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        body : bytes
+        body : builtins.bytes
             The interaction payload.
-        signature : bytes
+        signature : builtins.bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : bytes
+        timestamp : builtins.bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -195,13 +195,13 @@ class InteractionServer(abc.ABC):
 
         Other Parameters
         ----------------
-        replace : bool
+        replace : builtins.bool
             Whether this call should replace the previously set listener or not,
             this call will raise a `builtins.ValueError` if set to `False` when
             a listener is already set.
 
         Raises
         ------
-        TypeError
+        builtins.TypeError
             If `replace` is `False` when a listener is already set.
         """
