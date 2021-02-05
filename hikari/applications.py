@@ -90,7 +90,7 @@ class ApplicationFlags(enums.Flag):
 
 
 @typing.final
-class ApplicationFlags(enums.Flag):
+class ApplicationFlags(enums.Flag):  # TODO: feeling a lil direly incomplete here
     """The known application flag bits."""
 
     GUILD_PRESENCES_INTENT = 1 << 13
@@ -494,7 +494,7 @@ class Application(guilds.PartialApplication):
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
     public_key: bytes = attr.ib(eq=False, hash=False, repr=False)
-    """The key used for verifying interaction and GameSDK payload signatures."""  # TODO: update these docs
+    """The key used for verifying interaction and GameSDK payload signatures."""
 
     team: typing.Optional[Team] = attr.ib(eq=False, hash=False, repr=False)
     """The team this application belongs to.

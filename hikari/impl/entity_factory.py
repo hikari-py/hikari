@@ -58,9 +58,19 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
+if typing.TYPE_CHECKING:
+
+    class _InteractionDeserializeProto(typing.Protocol):
+        def __call__(
+            self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+        ) -> interaction_models.PartialInteraction:
+            raise NotImplementedError
+
+    _ValueT = typing.TypeVar("_ValueT")
+
+
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
-_ValueT = typing.TypeVar("_ValueT")
 
 
 def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
@@ -162,13 +172,6 @@ class _UserFields:
     avatar_hash: str = attr.ib()
     is_bot: bool = attr.ib()
     is_system: bool = attr.ib()
-
-
-class _InteractionDeserializeProto(typing.Protocol):
-    def __call__(
-        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
-    ) -> interaction_models.PartialInteraction:
-        raise NotImplementedError
 
 
 class EntityFactoryImpl(entity_factory.EntityFactory):

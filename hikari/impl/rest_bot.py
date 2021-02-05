@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari import interactions
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
+    from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_
 
 
@@ -59,7 +60,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     ----------
     token : builtins.str
         The bot or application token to use.
-    token_type : typing.Union[hikari.applications.TokenType, str]
+    token_type : typing.Union[hikari.applications.TokenType, builtins.str]
         The type of token being passed, this may be "Bot" or "Bearer".
 
     Other Parameters
@@ -170,7 +171,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         "_server",
     )
 
-    def __init__(  # noqa: S106,S107 - Possible hardcoded password: 'Bot'
+    def __init__(
         self,
         token: str,
         # TODO: can we be more smart about this default for token_type?
@@ -180,6 +181,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         allow_color: bool = True,
         application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]] = None,
         banner: typing.Optional[str] = "hikari",
+        event_manager: typing.Optional[event_manager_.EventManager] = None,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
@@ -190,8 +192,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     ) -> None:
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
-
-        # TODO: raise if public_key's length isn't right when bytes
 
         if application is not None:
             application = snowflakes.Snowflake(application)
@@ -238,6 +238,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         self._server = interaction_server_impl.InteractionServer(
             application_id=application,
             entity_factory=self._entity_factory,
+            event_manager=event_manager,
             event_factory=self._event_factory,
             public_key=public_key,
             rest_client=self._rest,
@@ -344,7 +345,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         asyncio_debug : builtins.bool
             Defaults to `builtins.False`. If `builtins.True`, then debugging is
             enabled for the asyncio event loop in use.
-        backlog : int
+        backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : builtins.bool
@@ -383,19 +384,19 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
             unless you plan to implement your own signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port : typing.Optional[builtins.int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path : typing.Optional[builtins.str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address : typing.Optional[builtins.bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port : typing.Optional[builtins.bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
+        shutdown_timeout : builtins.float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
@@ -445,7 +446,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
 
         Other Parameters
         ----------------
-        backlog : int
+        backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : builtins.bool
@@ -461,19 +462,19 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
             unless you plan to implement your own signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port : typing.Optional[builtins.int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path : typing.Optional[builtins.str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address : typing.Optional[builtins.bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port : typing.Optional[builtins.bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
+        shutdown_timeout : builtins.float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]

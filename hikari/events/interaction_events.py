@@ -73,7 +73,7 @@ class CommandCreateEvent(CommandEvent):
     # <<docstring inherited from ShardEvent>>.
 
     command: interactions.Command = attr.ib(eq=True, repr=True)
-    # <<inherited docstring from Event>>.
+    # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
@@ -88,7 +88,7 @@ class CommandUpdateEvent(CommandEvent):
     # <<docstring inherited from ShardEvent>>.
 
     command: interactions.Command = attr.ib(eq=True, repr=True)
-    # <<inherited docstring from Event>>.
+    # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
@@ -103,7 +103,7 @@ class CommandDeleteEvent(CommandEvent):
     # <<docstring inherited from ShardEvent>>.
 
     command: interactions.Command = attr.ib(eq=True, repr=True)
-    # <<inherited docstring from Event>>.
+    # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
