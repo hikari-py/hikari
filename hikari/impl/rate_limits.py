@@ -54,33 +54,52 @@ class BaseRateLimiter(abc.ABC):
     """Base for any asyncio-based rate limiter being used.
 
     Supports being used as a synchronous context manager.
-
-    !!! warning
-        Async context manager support is not supported and will not be supported.
     """
 
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self) -> asyncio.Future[None]:
+    def acquire(self) -> typing.Awaitable[None]:
         """Acquire permission to perform a task that needs to have rate limit management enforced.
+
+        !!! note
+            You may alternatively asynchronously enter this rate-limiter as
+            a context manager (`async with rate_limiter:`) where both
+            `BaseRateLimiter.acquire` and `BaseRateLimiter.release` will be
+            implicitly called when the context is entered and exited.
 
         Returns
         -------
-        asyncio.Future[builtins.None]
-            A future that should be awaited. Once the future is complete, you
-            can proceed to execute your rate-limited task.
+        asyncio.AwaitableNone[builtins.None]
+            An awaitable that should be awaited. Once the awaitable is complete,
+            you can proceed to execute your rate-limited task.
+        """
+
+    @abc.abstractmethod
+    def release(self) -> None:
+        """Release this rate-limiter to allow further tasks to acquire it.
+
+        !!! warning
+            Dependent on implementation detail this lock may block a call
+            to `BaseRateLimiter.acquire` until it is released and releasing a
+            lock that's not been acquired may raise a `builtins.RuntimeError`.
         """
 
     @abc.abstractmethod
     def close(self) -> None:
         """Close the rate limiter, cancelling any internal tasks that are executing."""
 
-    def __enter__(self) -> BaseRateLimiter:
+    async def __aenter__(self) -> BaseRateLimiter:
+        await self.acquire()
         return self
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
-        self.close()
+    async def __aexit__(
+        self,
+        exception_type: typing.Optional[typing.Type[BaseException]],
+        exception: typing.Optional[BaseException],
+        exception_traceback: typing.Optional[types.TracebackType],
+    ) -> None:
+        self.release()
 
 
 class BurstRateLimiter(BaseRateLimiter, abc.ABC):
@@ -106,20 +125,6 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.throttle_task = None
         self.queue = []
         self._closed = False
-
-    @abc.abstractmethod
-    def acquire(self) -> asyncio.Future[typing.Any]:
-        """Acquire time on this rate limiter.
-
-        The implementation should define this.
-
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
-        """
 
     def close(self) -> None:
         """Close the rate limiter, and shut down any pending tasks.
@@ -178,16 +183,7 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global")
 
-    def acquire(self) -> asyncio.Future[typing.Any]:
-        """Acquire time on this rate limiter.
-
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
-        """
+    def acquire(self) -> asyncio.Future[None]:
         loop = asyncio.get_running_loop()
         future = loop.create_future()
 
@@ -196,6 +192,10 @@ class ManualRateLimiter(BurstRateLimiter):
         else:
             future.set_result(None)
         return future
+
+    def release(self) -> None:
+        # Unlike bucket rate-limits, we don't need to block global requests for the whole request.
+        return None
 
     def throttle(self, retry_after: float) -> None:
         """Perform the throttling rate limiter logic.
@@ -283,7 +283,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+    __slots__: typing.Sequence[str] = ("_lock", "reset_at", "remaining", "limit", "period")
 
     reset_at: float
     """The `time.monotonic_timestamp` that the limit window ends at."""
@@ -303,37 +303,35 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     def __init__(self, name: str, period: float, limit: int) -> None:
         super().__init__(name)
+        self._lock = asyncio.Lock()
         self.reset_at = 0.0
         self.remaining = 0
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> asyncio.Future[typing.Any]:
-        """Acquire time on this rate limiter.
-
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
-        """
+    async def acquire(self) -> None:
+        print("a")
+        await self._lock.acquire()
+        print("b")
         loop = asyncio.get_running_loop()
-        future = loop.create_future()
 
         # If we are rate limited, delegate invoking this to the throttler and spin it up
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
         if self.throttle_task is not None or self.is_rate_limited(time.monotonic()):
+            future = loop.create_future()
             self.queue.append(future)
             if self.throttle_task is None:
                 self.throttle_task = loop.create_task(self.throttle())
+
+            await future
+
         else:
             self.drip()
-            future.set_result(None)
 
-        return future
+    def release(self) -> None:
+        self._lock.release()
 
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.

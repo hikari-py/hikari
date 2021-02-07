@@ -102,9 +102,9 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aexit__(
         self,
-        exception_type: typing.Type[BaseException],
-        exception: BaseException,
-        exception_traceback: types.TracebackType,
+        exception_type: typing.Optional[typing.Type[BaseException]],
+        exception: typing.Optional[BaseException],
+        exception_traceback: typing.Optional[types.TracebackType],
     ) -> None:
         # This will always be true, but this keeps MyPy quiet.
         if self._task is not None:
@@ -115,7 +115,12 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
     async def _keep_typing(self) -> None:

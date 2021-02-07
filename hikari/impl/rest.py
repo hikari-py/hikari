@@ -446,7 +446,12 @@ class RESTApp(traits.ExecutorAware):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
 
@@ -603,7 +608,12 @@ class RESTClientImpl(rest_api.RESTClient):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
     @typing.final
@@ -663,19 +673,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
         url = compiled_route.create_url(self._rest_url)
         while True:
+            # Unlike bucket rate-limits, we don't need to block global requests for the whole request.
+            await self.global_rate_limit.acquire()
+            self.global_rate_limit.release()
+
             try:
                 uuid = time.uuid()
 
-                # If we try to do more than 1 request to the same endpoint at
-                # the same time, there is a chance that we don't receive the
-                # ratelimits information before the next request comes along.
-                # Due to this, we risk getting ratelimited. This lock makes
-                # sure that there is only 1 request happening at the same time
-                # which stops this from happening.
-                async with self._lock:
-                    # Wait for any rate-limits to finish.
-                    await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
-
+                async with self.buckets.acquire(compiled_route):
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
                             ux.TRACE,
@@ -770,16 +775,17 @@ class RESTClientImpl(rest_api.RESTClient):
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
         remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
-        bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER, "None")
+        bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER)
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
-        self.buckets.update_rate_limits(
-            compiled_route=compiled_route,
-            bucket_header=bucket,
-            remaining_header=remaining,
-            limit_header=limit,
-            reset_after=reset_after,
-        )
+        if bucket is not None:
+            self.buckets.update_rate_limits(
+                compiled_route=compiled_route,
+                bucket_header=bucket,
+                remaining_header=remaining,
+                limit_header=limit,
+                reset_after=reset_after,
+            )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
             return
@@ -811,7 +817,9 @@ class RESTClientImpl(rest_api.RESTClient):
         # isn't some weird edge case here somewhere in Discord's implementation.
         # We can safely retry if this happens.
         if remaining <= 0:
-            _LOGGER.warning("rate limited on bucket %s, maybe you are running more than one bot on this token?", bucket)
+            _LOGGER.warning(
+                "rate limited on bucket %s, maybe you are running more than one bot on this token?", bucket or "None"
+            )
             raise self._RetryRequest
 
         if response.content_type != _APPLICATION_JSON:

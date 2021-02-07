@@ -38,8 +38,11 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
-MAJOR_PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"\{(.*?)\}")
+# TODO: is the major parameter only the first parameter?
+MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")
 
+# TODO: is this set still complete?
+VALID_MAJOR_PARAMS = frozenset(("channel", "guild", "webhook"))
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
@@ -129,6 +132,7 @@ class Route:
     path_template: str = attr.ib(hash=True, eq=True)
     """The template string used for the path."""
 
+    # TODO: can a route have multiple major parameters?
     major_param: typing.Optional[str] = attr.ib(hash=False, eq=False)
     """The optional major parameter name."""
 
@@ -136,9 +140,10 @@ class Route:
         self.method = method
         self.path_template = path_template
 
-        self.major_param: typing.Optional[str]
-        match = MAJOR_PARAM_REGEX.search(path_template)
-        self.major_param = match.group(1) if match else None
+        self.major_param: typing.Optional[str] = None
+        if match := MAJOR_PARAM_REGEX.search(path_template):
+            if (param := match.group(1)) in VALID_MAJOR_PARAMS:
+                self.major_param = param
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
         """Generate a formatted `CompiledRoute` for this route.

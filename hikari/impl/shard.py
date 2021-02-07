@@ -536,9 +536,8 @@ class GatewayShardImpl(shard.GatewayShard):
         *,
         dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
     ) -> None:
-        await self._total_rate_limit.acquire()
-
-        await self._ws.send_json(data=data, compress=compress, dumps=dumps)  # type: ignore[union-attr]
+        async with self._total_rate_limit:
+            await self._ws.send_json(data=data, compress=compress, dumps=dumps)  # type: ignore[union-attr]
 
     def _check_if_alive(self) -> None:
         if not self.is_alive:
@@ -575,8 +574,6 @@ class GatewayShardImpl(shard.GatewayShard):
         if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
             raise ValueError("'nonce' can be no longer than 32 byte characters long.")
 
-        await self._chunking_rate_limit.acquire()
-
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
         payload.put("presences", include_presences)
@@ -585,7 +582,8 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put_snowflake_array("user_ids", users)
         payload.put("nonce", nonce)
 
-        await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
+        async with self._chunking_rate_limit:
+            await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
     async def start(self) -> None:
         if self._run_task is not None:
@@ -939,6 +937,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return True
 
     async def _send_heartbeat(self) -> None:
+        self._logger.debug("sending heartbeat")
         await self._send_json({_OP: _HEARTBEAT, _D: self._seq})
         self._last_heartbeat_sent = time.monotonic()
 
