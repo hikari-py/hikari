@@ -365,7 +365,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
+        CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were found from the cache.
         """  # noqa E501: - Line too long
@@ -445,7 +445,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake]]
+        CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake]]
             A view of guild IDs to views of user IDs to objects of the presences
             found in the cache.
         """
@@ -568,7 +568,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
+        CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were found in the cache,
         """  # noqa E501: - Line too long
@@ -1007,7 +1007,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
+        CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were removed from the cache.
         """  # noqa E501: - Line too long
@@ -1254,7 +1254,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, ICacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
+        CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were removed from the states.
         """  # noqa E501: - Line too long
