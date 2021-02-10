@@ -116,7 +116,6 @@ class _EnumMeta(type):
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
 
-    @staticmethod
     def __new__(
         mcs: typing.Type[_T],
         name: str,

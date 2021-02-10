@@ -24,7 +24,7 @@ from __future__ import annotations
 import timeit
 import typing
 
-from hikari.internal import protocol
+from hikari.internal import fast_protocol
 
 
 @typing.runtime_checkable
@@ -60,7 +60,7 @@ class BasicPyProtocol(typing.Protocol):
         raise NotImplementedError
 
 
-class BasicHikariProtocol(protocol.Protocol):
+class BasicHikariProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
     def test(self, arg1: str, arg2: bool) -> typing.List[int]:
         raise NotImplementedError
 

@@ -30,6 +30,8 @@
 # ship my own MyPy plugin for this, so just make MyPy think that the types
 # we are using are just aliases from the enum types in the standard library.
 
+__all__ = ["Enum", "Flag"]
+
 import enum as __enum
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
@@ -69,5 +71,3 @@ class Flag(__enum.IntFlag):
     __rsub__ = __sub__ = difference
     __rxor__ = __xor__ = symmetric_difference
     __invert__ = invert
-
-__all__ = ["Enum", "Flag"]
