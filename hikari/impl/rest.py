@@ -550,7 +550,13 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Due to this, we risk getting ratelimited. This lock makes
                 # sure that there is only 1 request happening at the same time
                 # which stops this from happening.
-                async with self._lock:
+                #
+                # This is unnecessary for requests that don't use authentication.
+                stack = contextlib.AsyncExitStack()
+                if not no_auth:
+                    await stack.enter_async_context(self._lock)
+
+                async with stack:
                     # Wait for any rate-limits to finish.
                     await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
 
