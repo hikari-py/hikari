@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Application and entities related to discord's Oauth2 flow."""
+"""Application and entities related to discord's OAuth2 flow."""
 
 from __future__ import annotations
 
@@ -30,14 +30,20 @@ __all__: typing.List[str] = [
     "AuthorizationApplication",
     "AuthorizationInformation",
     "ConnectionVisibility",
+    "OAuth2AuthorizationToken",
+    "OAuth2ImplicitToken",
     "OAuth2Scope",
     "OwnConnection",
     "OwnGuild",
+    "PartialOAuth2Token",
     "Team",
     "TeamMember",
     "TeamMembershipState",
+    "TokenType",
+    "get_token_id",
 ]
 
+import base64
 import typing
 
 import attr
@@ -57,6 +63,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import permissions as permissions_
     from hikari import traits
+    from hikari import webhooks
 
 
 @typing.final
@@ -610,8 +617,101 @@ class AuthorizationInformation:
     expires_at: datetime.datetime = attr.ib(eq=True, hash=False, repr=True)
     """When the access token this data was retrieved with expires."""
 
-    scopes: typing.Sequence[str] = attr.ib(eq=True, hash=False, repr=True)
+    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attr.ib(eq=True, hash=False, repr=True)
     """A sequence of the scopes the current user has authorized the application for."""
 
     user: typing.Optional[users.User] = attr.ib(eq=True, hash=False, repr=True)
     """The user who has authorized this token if they included the `identify` scope."""
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class PartialOAuth2Token:
+    """Model for partial OAuth2 token data returned by the API.
+
+    This will generally only be returned when by the client credentials OAuth2
+    flow.
+    """
+
+    access_token: str = attr.ib(eq=True, hash=True, repr=False)
+    """Access token issued by the authorization server."""
+
+    token_type: typing.Union[TokenType, str] = attr.ib(eq=False, hash=False, repr=True)
+    """Type of token issued by the authorization server."""
+
+    expires_in: datetime.timedelta = attr.ib(eq=False, hash=False, repr=True)
+    """Lifetime of this access token."""
+
+    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attr.ib(eq=False, hash=False, repr=True)
+    """Scopes the access token has access to."""
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class OAuth2AuthorizationToken(PartialOAuth2Token):
+    """Model for the OAuth2 token data returned by the authorization grant flow."""
+
+    refresh_token: int = attr.ib(eq=False, hash=False, repr=False)
+    """Refresh token used to obtain new access tokens with the same grant."""
+
+    webhook: typing.Optional[webhooks.Webhook] = attr.ib(eq=False, hash=False, repr=True)
+    """Object of the webhook that was created.
+
+    This will only be present if this token was authorized with the
+    `webhooks.incoming` scope, otherwise this will be `builtins.None`.
+    """
+
+    guild: typing.Optional[guilds.RESTGuild] = attr.ib(eq=False, hash=False, repr=True)
+    """Object of the guild the user was added to.
+
+    This will only be present if this token was authorized with the
+    `bot` scope, otherwise this will be `builtins.None`.
+    """
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class OAuth2ImplicitToken(PartialOAuth2Token):
+    """Model for the OAuth2 token data returned by the implicit grant flow."""
+
+    state: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """State parameter that was present in the authorization request if provided."""
+
+
+@typing.final
+class TokenType(str, enums.Enum):
+    """Token types used within Hikari clients."""
+
+    BOT = "Bot"
+    """Bot token type."""
+
+    BASIC = "Basic"
+    """OAuth2 basic token type."""
+
+    BEARER = "Bearer"
+    """OAuth2 bearer token type."""
+
+
+def get_token_id(token: str) -> snowflakes.Snowflake:
+    """Try to get the bot ID stored in a token.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The ID that was extracted from the token.
+
+    Raises
+    ------
+    builtins.ValueError
+        If the passed token has an unexpected format.
+    """
+    try:
+        segment = token.split(".", 1)[0]
+        # I don't trust Discord to always provide the right amount of padding here as they don't
+        # with the middle field so just to be safe we will add padding here if necessary to avoid
+        # base64.b64decode raising a length or padding error.
+        segment += "=" * (len(segment) % 4)
+        return snowflakes.Snowflake(base64.b64decode(segment))
+
+    except (TypeError, ValueError, IndexError) as exc:
+        raise ValueError("Unexpected token format") from exc

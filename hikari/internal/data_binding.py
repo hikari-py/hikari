@@ -91,6 +91,14 @@ else:
     """Convert a JSON string to a Python type."""
 
 
+_StringMapBuilderArg = typing.Union[
+    typing.Mapping[str, str],
+    typing.Dict[str, str],
+    multidict.MultiMapping[str],
+    typing.Iterable[typing.Tuple[str, str]],
+]
+
+
 @typing.final
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
@@ -108,8 +116,10 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, arg: _StringMapBuilderArg = (), **kwargs: str) -> None:
+        # We have to allow arguments to be passed to the init here otherwise the inherited copy behaviour from
+        # multidict.MultiDict fails.
+        super().__init__(arg, **kwargs)
 
     @typing.overload
     def put(

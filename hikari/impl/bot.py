@@ -39,6 +39,7 @@ import types
 import typing
 import warnings
 
+from hikari import applications
 from hikari import config
 from hikari import errors
 from hikari import intents as intents_
@@ -60,6 +61,8 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari import event_stream
+    from hikari import guilds
+    from hikari import snowflakes
     from hikari import users
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -96,6 +99,12 @@ class BotApp(traits.BotAware):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
+    application : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+        Object or ID of the application this bot instance should be associated
+        with. If left as `builtins.None` then the client will try to work this
+        value out based on `token`.
+    client_secret : typing.Optional[builtins.str]
+        Client secret used within Discord's OAuth2 flow.
     banner : typing.Optional[builtins.str]
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
@@ -231,7 +240,9 @@ class BotApp(traits.BotAware):
         token: str,
         *,
         allow_color: bool = True,
+        application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]] = None,
         banner: typing.Optional[str] = "hikari",
+        client_secret: typing.Optional[str] = None,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         cache_settings: typing.Optional[config.CacheSettings] = None,
@@ -274,6 +285,8 @@ class BotApp(traits.BotAware):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
+            application=application,
+            client_secret=client_secret,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
             connector_owner=True,
             entity_factory=self._entity_factory,
@@ -283,6 +296,7 @@ class BotApp(traits.BotAware):
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,
+            token_type=applications.TokenType.BOT,
         )
 
         # We populate these on startup instead, as we need to possibly make some

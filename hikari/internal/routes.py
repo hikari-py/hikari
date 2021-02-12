@@ -450,6 +450,10 @@ DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
+POST_AUTHORIZE: typing.Final[Route] = Route(POST, "/oauth2/authorize")
+POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token")
+POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke")
+
 # Gateway
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")

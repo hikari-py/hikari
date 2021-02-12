@@ -25,6 +25,7 @@ import contextlib
 import mock
 import pytest
 
+from hikari import applications
 from hikari import config
 from hikari import errors
 from hikari.impl import bot as bot_impl
@@ -130,7 +131,9 @@ class TestBotApp:
             bot = bot_impl.BotApp(
                 "token",
                 allow_color=False,
+                application=35123123,
                 banner="testing",
+                client_secret="gfofofofof",
                 executor=executor,
                 force_color=True,
                 cache_settings=cache_settings,
@@ -156,6 +159,8 @@ class TestBotApp:
         voice.assert_called_once_with(bot)
         assert bot._rest is rest.return_value
         rest.assert_called_once_with(
+            application=35123123,
+            client_secret="gfofofofof",
             connector_factory=connector_factory.return_value,
             connector_owner=True,
             entity_factory=bot._entity_factory,
@@ -165,6 +170,7 @@ class TestBotApp:
             proxy_settings=bot._proxy_settings,
             rest_url="somewhere.com",
             token="token",
+            token_type=applications.TokenType.BOT,
         )
         connector_factory.assert_called_once_with(bot._http_settings)
 

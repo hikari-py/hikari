@@ -173,6 +173,53 @@ class EntityFactory(abc.ABC):
             The deserialized authorization information object.
         """
 
+    @abc.abstractmethod
+    def deserialize_partial_token(self, payload: data_binding.JSONObject) -> application_models.PartialOAuth2Token:
+        """Parse a raw payload from Discord into a partial OAuth2 token object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.PartialOAuth2Token
+            The deserialized partial OAuth2 token object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_authorization_token(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OAuth2AuthorizationToken:
+        """Parse a raw payload from Discord into an authorization token object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.OAuth2AuthorizationToken
+            The deserialized OAuth2 authorization token object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_implicit_token(self, query: data_binding.Query) -> application_models.OAuth2ImplicitToken:
+        """Parse a query from Discord into an implicit token object.
+
+        Parameters
+        ----------
+        query : hikari.internal.data_binding.Query
+            The query parameters to deserialize.
+
+        Returns
+        -------
+        hikari.applications.OAuth2ImplicitToken
+            The deserialized OAuth2 implicit token object.
+        """
+
     #####################
     # AUDIT LOGS MODELS #
     #####################

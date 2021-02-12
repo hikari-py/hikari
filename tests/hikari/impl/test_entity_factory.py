@@ -337,7 +337,7 @@ class TestEntityFactoryImpl:
         assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
         assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
 
-    def test_test_deserialize_authorization_information_with_unset_fields(
+    def test_deserialize_authorization_information_with_unset_fields(
         self, entity_factory_impl, authorization_information_payload
     ):
         del authorization_information_payload["application"]["icon"]
@@ -356,6 +356,91 @@ class TestEntityFactoryImpl:
         assert authorization_information.application.is_bot_code_grant_required is None
         assert authorization_information.application.terms_of_service_url is None
         assert authorization_information.application.privacy_policy_url is None
+
+    @pytest.fixture()
+    def client_credentials_payload(self):
+        return {
+            "access_token": "6qrZcUqja7812RVdnEKjpzOL4CvHBFG",
+            "token_type": "Bearer",
+            "expires_in": 604800,
+            "scope": "identify connections",
+        }
+
+    def test_deserialize_partial_token(self, entity_factory_impl, client_credentials_payload):
+        partial_token = entity_factory_impl.deserialize_partial_token(client_credentials_payload)
+
+        assert partial_token.access_token == "6qrZcUqja7812RVdnEKjpzOL4CvHBFG"
+        assert partial_token.token_type is application_models.TokenType.BEARER
+        assert partial_token.expires_in == datetime.timedelta(weeks=1)
+        assert partial_token.scopes == [
+            application_models.OAuth2Scope.IDENTIFY,
+            application_models.OAuth2Scope.CONNECTIONS,
+        ]
+        assert isinstance(partial_token, application_models.PartialOAuth2Token)
+
+    @pytest.fixture()
+    def access_token_payload(self, deserialize_rest_guild_payload, webhook_payload):
+        return {
+            "token_type": "Bearer",
+            "guild": deserialize_rest_guild_payload,
+            "access_token": "zMndOe7jFLXGawdlxMOdNvXjjOce5X",
+            "scope": "bot webhook.incoming",
+            "expires_in": 2419200,
+            "refresh_token": "mgp8qnvBwJcmadwgCYKyYD5CAzGAX4",
+            "webhook": webhook_payload,
+        }
+
+    def test_deserialize_authorization_token(
+        self, entity_factory_impl, access_token_payload, deserialize_rest_guild_payload, webhook_payload
+    ):
+        access_token = entity_factory_impl.deserialize_authorization_token(access_token_payload)
+
+        assert access_token.token_type is application_models.TokenType.BEARER
+        assert access_token.guild == entity_factory_impl.deserialize_rest_guild(deserialize_rest_guild_payload)
+        assert access_token.access_token == "zMndOe7jFLXGawdlxMOdNvXjjOce5X"
+        assert access_token.scopes == [
+            application_models.OAuth2Scope.BOT,
+            application_models.OAuth2Scope.WEBHOOK_INCOMING,
+        ]
+        assert access_token.expires_in == datetime.timedelta(weeks=4)
+        assert access_token.refresh_token == "mgp8qnvBwJcmadwgCYKyYD5CAzGAX4"
+        assert access_token.webhook == entity_factory_impl.deserialize_webhook(webhook_payload)
+
+    def test_deserialize_authorization_token_without_optional_fields(self, entity_factory_impl, access_token_payload):
+        del access_token_payload["guild"]
+        del access_token_payload["webhook"]
+
+        access_token = entity_factory_impl.deserialize_authorization_token(access_token_payload)
+
+        assert access_token.guild is None
+        assert access_token.webhook is None
+
+    @pytest.fixture()
+    def implicit_token_payload(self):
+        return {
+            "access_token": "RTfP0OK99U3kbRtHOoKLmJbOn45PjL",
+            "token_type": "Basic",
+            "expires_in": 1209600,
+            "scope": "identify",
+            "state": "15773059ghq9183habn",
+        }
+
+    def test_deserialize_implicit_token(self, entity_factory_impl, implicit_token_payload):
+        implicit_token = entity_factory_impl.deserialize_implicit_token(implicit_token_payload)
+
+        assert implicit_token.access_token == "RTfP0OK99U3kbRtHOoKLmJbOn45PjL"
+        assert implicit_token.token_type is application_models.TokenType.BASIC
+        assert implicit_token.expires_in == datetime.timedelta(weeks=2)
+        assert implicit_token.scopes == [application_models.OAuth2Scope.IDENTIFY]
+        assert implicit_token.state == "15773059ghq9183habn"
+        assert isinstance(implicit_token, application_models.OAuth2ImplicitToken)
+
+    def test_deserialize_implicit_token_without_state(self, entity_factory_impl, implicit_token_payload):
+        del implicit_token_payload["state"]
+
+        implicit_token = entity_factory_impl.deserialize_implicit_token(implicit_token_payload)
+
+        assert implicit_token.state is None
 
     #####################
     # AUDIT LOGS MODELS #

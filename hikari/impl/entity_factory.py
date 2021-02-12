@@ -337,9 +337,39 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return application_models.AuthorizationInformation(
             application=application,
-            scopes=payload["scopes"],
+            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scopes"]],
             expires_at=time.iso8601_datetime_string_to_datetime(payload["expires"]),
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
+        )
+
+    def deserialize_partial_token(self, payload: data_binding.JSONObject) -> application_models.PartialOAuth2Token:
+        return application_models.PartialOAuth2Token(
+            access_token=payload["access_token"],
+            token_type=application_models.TokenType(payload["token_type"]),
+            expires_in=datetime.timedelta(seconds=int(payload["expires_in"])),
+            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")],
+        )
+
+    def deserialize_authorization_token(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OAuth2AuthorizationToken:
+        return application_models.OAuth2AuthorizationToken(
+            access_token=payload["access_token"],
+            token_type=application_models.TokenType(payload["token_type"]),
+            expires_in=datetime.timedelta(seconds=int(payload["expires_in"])),
+            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")],
+            refresh_token=payload["refresh_token"],
+            webhook=self.deserialize_webhook(payload["webhook"]) if "webhook" in payload else None,
+            guild=self.deserialize_rest_guild(payload["guild"]) if "guild" in payload else None,
+        )
+
+    def deserialize_implicit_token(self, query: data_binding.Query) -> application_models.OAuth2ImplicitToken:
+        return application_models.OAuth2ImplicitToken(
+            access_token=query["access_token"],
+            token_type=application_models.TokenType(query["token_type"]),
+            expires_in=datetime.timedelta(seconds=int(query["expires_in"])),
+            scopes=[application_models.OAuth2Scope(scope) for scope in query["scope"].split(" ")],
+            state=query.get("state"),
         )
 
     #####################

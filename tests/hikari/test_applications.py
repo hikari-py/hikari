@@ -163,3 +163,17 @@ class TestApplication:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )
+
+
+def test_get_token_id_extracts_id():
+    assert applications.get_token_id("MTE1NTkwMDk3MTAwODY1NTQx.x.y") == 115590097100865541
+
+
+def test_get_token_id_adds_padding():
+    assert applications.get_token_id("NDMxMjMxMjMxMjM.blam.bop") == 43123123123
+
+
+@pytest.mark.parametrize("token", ["______.222222.dessddssd", "", "b2tva29r.b2tva29r.b2tva29r"])
+def test_get_token_id_handles_invalid_token(token):
+    with pytest.raises(ValueError, match="Unexpected token format"):
+        applications.get_token_id(token)

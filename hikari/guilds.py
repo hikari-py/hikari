@@ -46,6 +46,7 @@ __all__: typing.List[str] = [
     "IntegrationType",
     "IntegrationApplication",
     "IntegrationExpireBehaviour",
+    "PartialApplication",
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
