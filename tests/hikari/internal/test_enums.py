@@ -263,6 +263,34 @@ class TestEnum:
         assert repr(Enum) == "<enum Enum>"
         assert repr(Enum.foo) == "<Enum.foo: 9>"
 
+    def test_can_overwrite_method(self):
+        class TestEnum1(str, enums.Enum):
+            FOO = "foo"
+
+            def __str__(self) -> str:
+                return "Ok"
+
+        assert str(TestEnum1.FOO) == "Ok"
+
+    @pytest.mark.parametrize(("type_", "value"), [(int, 42), (str, "ok"), (bytes, b"no"), (float, 4.56), (complex, 3j)])
+    def test_inherits_type_dunder_method_behaviour(self, type_, value):
+        class TestEnum(type_, enums.Enum):
+            BAR = value
+
+        result = type_(TestEnum.BAR)
+
+        assert type(result) is type_
+        assert result == value
+
+    def test_allows_overriding_methods(self):
+        class TestEnum(int, enums.Enum):
+            BAR = 2222
+
+            def __int__(self):
+                return 53
+
+        assert int(TestEnum.BAR) == 53
+
 
 class TestIntFlag:
     @mock.patch.object(enums, "_Flag", new=NotImplemented)
@@ -1224,3 +1252,16 @@ class TestIntFlag:
 
         assert repr(TestFlag) == "<enum TestFlag>"
         assert repr(TestFlag.FOO) == "<TestFlag.FOO: 1>"
+
+    def test_allows_overriding_methods(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            BAZ = 0x4
+            BORK = 0x8
+            QUX = 0x10
+
+            def __int__(self):
+                return 855555
+
+        assert int(TestFlag.FOO | TestFlag.BAR) == 855555

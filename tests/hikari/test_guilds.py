@@ -40,48 +40,6 @@ def mock_app():
     return mock.Mock(spec_set=bot.BotApp)
 
 
-class TestGuildExplicitContentFilterLevel:
-    def test_str_operator(self):
-        level = guilds.GuildExplicitContentFilterLevel(1)
-        assert str(level) == "MEMBERS_WITHOUT_ROLES"
-
-
-class TestGuildFeature:
-    def test_str_operator(self):
-        feature = guilds.GuildFeature("ANIMATED_ICON")
-        assert str(feature) == "ANIMATED_ICON"
-
-
-class TestGuildNotificationsLevel:
-    def test_str_operator(self):
-        level = guilds.GuildMessageNotificationsLevel(1)
-        assert str(level) == "ONLY_MENTIONS"
-
-
-class TestGuildMFALevel:
-    def test_str_operator(self):
-        level = guilds.GuildMFALevel(1)
-        assert str(level) == "ELEVATED"
-
-
-class TestGuildPremiumTier:
-    def test_str_operator(self):
-        level = guilds.GuildPremiumTier(1)
-        assert str(level) == "TIER_1"
-
-
-class TestGuildSystemChannelFlag:
-    def test_str_operator(self):
-        flag = guilds.GuildSystemChannelFlag(1 << 0)
-        assert str(flag) == "SUPPRESS_USER_JOIN"
-
-
-class TestGuildVerificationLevel:
-    def test_str_operator(self):
-        level = guilds.GuildVerificationLevel(0)
-        assert str(level) == "NONE"
-
-
 class TestPartialRole:
     @pytest.fixture()
     def model(self, mock_app):

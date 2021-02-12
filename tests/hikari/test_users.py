@@ -30,18 +30,6 @@ from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 
-class TestUserFlag:
-    def test_str_operator(self):
-        flag = users.UserFlag(1 << 17)
-        assert str(flag) == "EARLY_VERIFIED_DEVELOPER"
-
-
-class TestPremiumType:
-    def test_str_operator(self):
-        premium_type = users.PremiumType(1)
-        assert str(premium_type) == "NITRO_CLASSIC"
-
-
 class TestPartialUser:
     @pytest.fixture()
     def obj(self):

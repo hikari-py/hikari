@@ -29,24 +29,6 @@ from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 
-class TestOAuth2Scope:
-    def test_str_operator(self):
-        scope = applications.OAuth2Scope("activities.read")
-        assert str(scope) == "ACTIVITIES_READ"
-
-
-class TestConnectionVisibility:
-    def test_str_operator(self):
-        connection_visibility = applications.ConnectionVisibility(1)
-        assert str(connection_visibility) == "EVERYONE"
-
-
-class TestTeamMembershipState:
-    def test_str_operator(self):
-        state = applications.TeamMembershipState(2)
-        assert str(state) == "ACCEPTED"
-
-
 class TestTeamMember:
     @pytest.fixture()
     def model(self):

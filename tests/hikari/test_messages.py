@@ -33,24 +33,6 @@ from hikari import users
 from hikari.internal import routes
 
 
-class TestMessageType:
-    def test_str_operator(self):
-        message_type = messages.MessageType(10)
-        assert str(message_type) == "USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2"
-
-
-class TestMessageFlag:
-    def test_str_operator(self):
-        flag = messages.MessageFlag(0)
-        assert str(flag) == "NONE"
-
-
-class TestMessageActivityType:
-    def test_str_operator(self):
-        activity_type = messages.MessageActivityType(5)
-        assert str(activity_type) == "JOIN_REQUEST"
-
-
 class TestAttachment:
     def test_str_operator(self):
         attachment = messages.Attachment(

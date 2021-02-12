@@ -37,12 +37,6 @@ def mock_app():
     return mock.Mock()
 
 
-class TestChannelType:
-    def test_str_operator(self):
-        channel_type = channels.ChannelType(1)
-        assert str(channel_type) == "DM"
-
-
 class TestChannelFollow:
     @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_app):
@@ -91,11 +85,6 @@ class TestChannelFollow:
 
 
 class TestPermissionOverwrite:
-    @pytest.mark.parametrize(("type", "expect_name"), [(0, "ROLE"), (1, "MEMBER")])
-    def test_str_operator(self, type, expect_name):
-        overwrite_type = channels.PermissionOverwriteType(type)
-        assert str(overwrite_type) == expect_name
-
     def test_unset(self):
         overwrite = channels.PermissionOverwrite(
             type=channels.PermissionOverwriteType.MEMBER, id=snowflakes.Snowflake(1234321)
