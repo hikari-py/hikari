@@ -140,13 +140,19 @@ class _EnumMeta(type):
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
-            **namespace,
             **{
                 name: value
                 for name, value in Enum.__dict__.items()
                 if name not in ("__class__", "__module__", "__doc__")
             },
         }
+
+        # We don't want to override the __str__ behaviour inherited from builtins.str for string based enums.
+        if issubclass(base, str):
+            new_namespace.pop("__str__", None)
+
+        # We update the name space to ensure new fields override inherited attributes and methods.
+        new_namespace.update(namespace)
 
         cls = super().__new__(mcs, name, bases, new_namespace)
 
@@ -184,6 +190,7 @@ class _EnumMeta(type):
 
             return _EnumNamespace(base)
         except ValueError:
+            # TODO: allow enums to be extended?
             raise TypeError("Expected exactly two base classes for an enum") from None
 
     def __repr__(cls) -> str:
@@ -395,7 +402,6 @@ class _FlagMeta(type):
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
-            **namespace,
             # This copies over all methods, including operator overloads. This
             # has the effect of making pdoc aware of any methods or properties
             # we defined on Flag.
@@ -405,6 +411,8 @@ class _FlagMeta(type):
                 if name not in ("__class__", "__module__", "__doc__")
             },
         }
+        # We update the namespace to ensure new fields override inherited attributes and methods.
+        new_namespace.update(namespace)
 
         cls = super().__new__(mcs, name, (int, *bases), new_namespace)
 

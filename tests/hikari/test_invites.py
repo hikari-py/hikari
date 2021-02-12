@@ -24,11 +24,6 @@ import mock
 from hikari import invites
 
 
-def test_TargetUserType_str_operator():
-    invite_type = invites.TargetUserType(1)
-    assert str(invite_type) == "STREAM"
-
-
 def test_VanityURL_str_operator():
     mock_url = mock.Mock(invites.VanityURL, code="hikari")
     assert invites.VanityURL.__str__(mock_url) == "https://discord.gg/hikari"

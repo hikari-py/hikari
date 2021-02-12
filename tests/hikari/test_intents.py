@@ -23,16 +23,6 @@
 from hikari import intents
 
 
-def test_Intent_str_operator():
-    intent = intents.Intents.GUILD_MESSAGES
-    assert str(intent) == "GUILD_MESSAGES"
-
-
-def test_Intent_str_operator_when_value_is_zero():
-    intent = intents.Intents(0)
-    assert str(intent) == "NONE"
-
-
 def test_Intent_is_privileged():
     intent = intents.Intents.GUILD_MESSAGES
     intent2 = intents.Intents.GUILD_MEMBERS

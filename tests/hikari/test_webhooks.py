@@ -25,11 +25,6 @@ import pytest
 from hikari import webhooks
 
 
-def test_WebhookType_str_operator():
-    webhook_type = webhooks.WebhookType(1)
-    assert str(webhook_type) == "INCOMING"
-
-
 class TestWebhook:
     @pytest.fixture()
     def webhook(self):

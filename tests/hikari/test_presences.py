@@ -23,21 +23,6 @@
 from hikari import presences
 
 
-def test_ActivityType_str_operator():
-    activity_type = presences.ActivityType(4)
-    assert str(activity_type) == "CUSTOM"
-
-
-def test_ActivityFlag_str_operator():
-    flag = presences.ActivityFlag(1 << 4)
-    assert str(flag) == "SYNC"
-
-
 def test_Activity_str_operator():
     activity = presences.Activity(name="something", type=presences.ActivityType(1))
     assert str(activity) == "something"
-
-
-def test_Status_str_operator():
-    status = presences.Status("idle")
-    assert str(status) == "IDLE"
