@@ -19,10 +19,55 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import mock
 import pytest
 
 from hikari import audit_logs
+from hikari import channels
 from hikari import snowflakes
+
+
+@pytest.mark.asyncio
+class TestMessagePinEntryInfo:
+    async def test_fetch_channel(self):
+        app = mock.AsyncMock()
+        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
+        model = audit_logs.MessagePinEntryInfo(app=app, channel_id=123, message_id=456)
+
+        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+
+        model.app.rest.fetch_channel.assert_awaited_once_with(123)
+
+    async def test_fetch_message(self):
+        model = audit_logs.MessagePinEntryInfo(app=mock.AsyncMock(), channel_id=123, message_id=456)
+
+        assert await model.fetch_message() is model.app.rest.fetch_message.return_value
+
+        model.app.rest.fetch_message.assert_awaited_once_with(123, 456)
+
+
+@pytest.mark.asyncio
+class TestMessageDeleteEntryInfo:
+    async def test_fetch_channel(self):
+        app = mock.AsyncMock()
+        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
+        model = audit_logs.MessageDeleteEntryInfo(app=app, count=1, channel_id=123)
+
+        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+
+        model.app.rest.fetch_channel.assert_awaited_once_with(123)
+
+
+@pytest.mark.asyncio
+class TestMemberMoveEntryInfo:
+    async def test_fetch_channel(self):
+        app = mock.AsyncMock()
+        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildVoiceChannel)
+        model = audit_logs.MemberMoveEntryInfo(app=app, count=1, channel_id=123)
+
+        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+
+        model.app.rest.fetch_channel.assert_awaited_once_with(123)
 
 
 class TestUnrecognisedAuditLogEntryInfo:
@@ -55,6 +100,42 @@ class TestUnrecognisedAuditLogEntryInfo:
         audit_log = audit_logs.UnrecognisedAuditLogEntryInfo(app=None, payload={"test": "test2", "test3": 98})
 
         assert repr(audit_log) == "UnrecognisedAuditLogEntryInfo(test='test2', test3=98)"
+
+
+class TestAuditLogEntry:
+    @pytest.mark.asyncio
+    async def test_fetch_user_when_no_user(self):
+        model = audit_logs.AuditLogEntry(
+            app=mock.AsyncMock(),
+            id=123,
+            target_id=None,
+            changes=[],
+            user_id=None,
+            action_type=0,
+            options=None,
+            reason=None,
+        )
+
+        assert await model.fetch_user() is None
+
+        model.app.rest.fetch_user.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_fetch_user_when_user(self):
+        model = audit_logs.AuditLogEntry(
+            app=mock.AsyncMock(),
+            id=123,
+            target_id=None,
+            changes=[],
+            user_id=456,
+            action_type=0,
+            options=None,
+            reason=None,
+        )
+
+        assert await model.fetch_user() is model.app.rest.fetch_user.return_value
+
+        model.app.rest.fetch_user.assert_awaited_once_with(456)
 
 
 class TestAuditLog:
