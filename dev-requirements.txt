@@ -28,7 +28,7 @@ sphobjinv==2.0.1
 # TYPE CHECKING #
 #################
 
-mypy==0.800
+mypy==0.812
 
 #######################
 # DEPENDENCY CHECKING #
