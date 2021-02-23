@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "SearchableSnowflakeish",
     "SnowflakeishOr",
     "SearchableSnowflakeishOr",
+    "SnowflakeishIterable",
     "SnowflakeishSequence",
 ]
 
@@ -232,6 +233,10 @@ The valid types for this type hint are:
 - `Snowflake`
 - `datetime.datetime`
 """
+
+SnowflakeishIterable = typing.Iterable[SnowflakeishOr[T]]
+"""Type hint representing an iterable of unique object entities."""
+
 
 SnowflakeishSequence = typing.Sequence[SnowflakeishOr[T]]
 """Type hint representing a collection of unique object entities."""

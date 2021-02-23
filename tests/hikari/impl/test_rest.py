@@ -1468,6 +1468,27 @@ class TestRESTClientImplAsync:
         with pytest.raises(errors.BulkDeleteError):
             await rest_client.delete_messages(channel, *messages)
 
+    async def test_delete_messages_with_iterable(self, rest_client):
+        channel = StubModel(54123)
+        messages = (StubModel(i) for i in range(101))
+
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523))
+
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json={"messages": [str(i) for i in range(100)]},
+                ),
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json={"messages": ["100", "444", "6523"]},
+                ),
+            ]
+        )
+
     async def test_add_reaction(self, rest_client):
         expected_route = routes.PUT_MY_REACTION.compile(emoji="rooYay:123", channel=123, message=456)
         rest_client._request = mock.AsyncMock()

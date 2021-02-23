@@ -1137,13 +1137,26 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_messages(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        messages: typing.Union[
+            snowflakes.SnowflakeishOr[messages_.PartialMessage],
+            snowflakes.SnowflakeishIterable[messages_.PartialMessage],
+        ],
         /,
-        *messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque(messages)
+        pending: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque()
         deleted: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque()
+
+        if isinstance(messages, typing.Iterable):  # Syntactic sugar. Allows to use iterables
+            pending.extend(messages)
+
+        else:
+            pending.append(messages)
+
+        # This maintains the order in-order to keep a predictable deletion order.
+        pending.extend(other_messages)
 
         while pending:
             # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,

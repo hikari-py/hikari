@@ -1274,8 +1274,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_messages(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        messages: typing.Union[
+            snowflakes.SnowflakeishOr[messages_.PartialMessage],
+            snowflakes.SnowflakeishIterable[messages_.PartialMessage],
+        ],
         /,
-        *messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Bulk-delete messages from the channel.
 
@@ -1284,9 +1288,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to bulk delete the messages in. This may be
             the object or the ID of an existing channel.
-        *messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
-            The messages to delete. This may be one or more
-            objects or IDs of existing messages.
+        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages_.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages_.PartialMessage]]
+            Either the object/ID of an existing message to delete or an iterable
+            of the objects and/or IDs of existing messages to delete.
+
+        Other Parameters
+        ----------------
+        *other_messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+            The objects and/or IDs of other existing messages to delete.
 
         !!! note
             This API endpoint will only be able to delete 100 messages
@@ -1316,7 +1325,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             messages that were not removed. The
             `builtins.BaseException.__cause__` of the exception will be the
             original error that terminated this process.
-        """
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def add_reaction(
