@@ -107,8 +107,17 @@ class MessageType(int, enums.Enum):
     CHANNEL_FOLLOW_ADD = 12
     """Channel follow add."""
 
+    GUILD_DISCOVERY_DISQUALIFIED = 14
+    """A message to indicate that a guild has been disqualified from discovery."""
+
+    GUILD_DISCOVERY_REQUALIFIED = 15
+    """A message to indicate that a guild has re-qualified for discovery."""
+
     REPLY = 19
     """A message that replies to another message."""
+
+    APPLICATION_COMMAND = 20
+    """A message sent to indicate a application command has been executed."""
 
 
 @typing.final
