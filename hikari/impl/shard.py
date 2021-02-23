@@ -342,7 +342,7 @@ class GatewayShardImpl(shard.GatewayShard):
     ----------------
     compression : typing.Optional[buitlins.str]
         Compression format to use for the shard. Only supported values are
-        `"payload_zlib_stream"` or `builtins.None` to disable it.
+        `"transport_zlib_stream"` or `builtins.None` to disable it.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
         `builtins.None` if no activity should be set initially. This is the
@@ -418,7 +418,7 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: typing.Optional[str] = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+        compression: typing.Optional[str] = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
@@ -442,7 +442,7 @@ class GatewayShardImpl(shard.GatewayShard):
         query = {"v": _VERSION, "encoding": str(data_format)}
 
         if compression is not None:
-            if compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
+            if compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
                 query["compress"] = "zlib-stream"
             else:
                 raise NotImplementedError(f"Unsupported compression format {compression}")

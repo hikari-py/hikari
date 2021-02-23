@@ -577,7 +577,7 @@ class TestGatewayShardImpl:
         ("compression", "expect"),
         [
             (None, f"v={shard._VERSION}&encoding=json"),
-            ("payload_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
+            ("transport_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
         ],
     )
     def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
