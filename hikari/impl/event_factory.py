@@ -29,6 +29,7 @@ __all__: typing.List[str] = ["EventFactoryImpl"]
 import datetime
 import typing
 
+from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import emojis as emojis_models
 from hikari import guilds as guild_models
@@ -625,6 +626,8 @@ class EventFactoryImpl(event_factory.EventFactory):
             session_id=session_id,
             my_user=my_user,
             unavailable_guilds=unavailable_guilds,
+            application_id=snowflakes.Snowflake(payload["application"]["id"]),
+            application_flags=application_models.ApplicationFlags(payload["application"]["flags"]),
         )
 
     def deserialize_connected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardConnectedEvent:

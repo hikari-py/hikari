@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "Application",
+    "ApplicationFlags",
     "AuthorizationApplication",
     "AuthorizationInformation",
     "ConnectionVisibility",
@@ -56,6 +57,43 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import permissions as permissions_
     from hikari import traits
+
+
+@typing.final
+class ApplicationFlags(enums.Flag):
+    """The known application flag bits."""
+
+    MANAGED_EMOJI = 1 << 2
+    """Denotes that the application has managed emojis."""
+
+    GROUP_DM_CREATE = 1 << 4
+    """Denotes that the application can create group DM channels.
+
+    !!! note
+        This doesn't seem to apply to applications with bots despite the fact
+        that they can create group DMs.
+    """
+
+    RPC_HAS_CONNECTED = 1 << 11
+    """Donates that a application has connected to RPC."""
+
+    VERIFIED_FOR_GUILD_PRESENCES = 1 << 12
+    """Denotes that a verified application can use the GUILD_PRESENCES intent."""
+
+    GUILD_PRESENCES_INTENT = 1 << 13
+    """Denotes that the application has the GUILD_PRESENCES intent enabled in it's dashboard."""
+
+    VERIFIED_FOR_GUILD_MEMBERS_INTENT = 1 << 14
+    """Denotes that a verified application can use the GUILD_MEMBERS intent."""
+
+    GUILD_MEMBERS_INTENT = 1 << 15
+    """Denotes that the application has the GUILD_MEMBERS intent enabled in it's dashboard."""
+
+    VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
+    """Denotes that the application's verification is pending."""
+
+    EMBEDDED = 1 << 17
+    """Denotes that the application has functionality that's specially embedded in Discord's client."""
 
 
 @typing.final
