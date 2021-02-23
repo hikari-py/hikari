@@ -1051,13 +1051,6 @@ class TestGatewayShardImpl:
         client._send_json.assert_awaited_once_with({"op": 1, "d": 10})
         assert client._last_heartbeat_sent == 200
 
-    async def test__send_heartbeat_ack(self, client):
-        client._send_json = mock.AsyncMock()
-
-        await client._send_heartbeat_ack()
-
-        client._send_json.assert_awaited_once_with({"op": 11, "d": None})
-
     def test__serialize_activity_when_activity_is_None(self, client):
         assert client._serialize_activity(None) is None
 
