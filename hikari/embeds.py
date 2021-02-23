@@ -442,12 +442,32 @@ class Embed:
         """
         return self._color
 
+    # As a note, MYPY currently complains about setting embed.color to a Colourish value which isn't explicitly Color.
+    # see https://github.com/python/mypy/issues/3004
     @color.setter
     def color(self, value: typing.Optional[colors.Colorish]) -> None:
         self._color = colors.Color.of(value) if value is not None else None
 
     # Alias.
-    colour = color
+    @property
+    def colour(self) -> typing.Optional[colors.Color]:
+        """Return the colour of the embed. This is an alias of `Embed.color`.
+
+        This will be `builtins.None` if not set.
+
+        Returns
+        -------
+        typing.Optional[hikari.colors.Color]
+            The colour that is set.
+        """
+        return self._color
+
+    # Alias.
+    # As a note, MYPY currently complains about setting embed.color to a Colourish value which isn't explicitly Color.
+    # see https://github.com/python/mypy/issues/3004
+    @colour.setter
+    def colour(self, value: typing.Optional[colors.Colorish]) -> None:
+        self._color = colors.Color.of(value) if value is not None else None
 
     @property
     def timestamp(self) -> typing.Optional[datetime.datetime]:
