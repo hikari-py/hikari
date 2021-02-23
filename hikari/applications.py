@@ -98,6 +98,17 @@ class OAuth2Scope(str, enums.Enum):
         You must be whitelisted to use this scope.
     """
 
+    APPLICATIONS_COMMANDS = "applications.commands"
+    """Allows your application's (slash) commands to be used in a guild.
+
+    This is used in Discord's special Bot Authorization Flow like
+    `OAuth2Scope.BOT` in-order to join an application into a guild as an
+    application command providing integration.
+    """
+
+    APPLICATIONS_COMMANDS_UPDATE = "applications.commands.update"
+    """Allows your application to update it's (slash) commands via a bearer token."""
+
     APPLICATIONS_ENTITLEMENTS = "applications.entitlements"
     """Enables reading entitlements for a user's applications."""
 
