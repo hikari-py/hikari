@@ -729,6 +729,27 @@ class TestCacheImpl:
 
         assert result is None
 
+    def test_get_guilds_view(self, cache_impl):
+        mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild_3 = mock.MagicMock(guilds.GatewayGuild)
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(56132): cache_utilities.GuildRecord(guild=mock_guild_1, is_available=True),
+                snowflakes.Snowflake(56234): cache_utilities.GuildRecord(),
+                snowflakes.Snowflake(541123): cache_utilities.GuildRecord(guild=mock_guild_2, is_available=False),
+                snowflakes.Snowflake(65234): cache_utilities.GuildRecord(guild=mock_guild_3, is_available=False),
+            }
+        )
+
+        result = cache_impl.get_guilds_view()
+
+        assert result == {
+            snowflakes.Snowflake(56132): mock_guild_1,
+            snowflakes.Snowflake(541123): mock_guild_2,
+            snowflakes.Snowflake(65234): mock_guild_3,
+        }
+
     def test_get_available_guilds_view(self, cache_impl):
         mock_guild_1 = mock.MagicMock(guilds.GatewayGuild)
         mock_guild_2 = mock.MagicMock(guilds.GatewayGuild)

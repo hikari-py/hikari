@@ -188,6 +188,16 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        """Get a view of all the guild objects in the cache regardless if availability.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
+            A view of guild IDs to the guild objects found in the cache.
+        """
+
+    @abc.abstractmethod
     def get_available_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         """Get a view of the available guild objects in the cache.
 
