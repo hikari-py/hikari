@@ -384,6 +384,11 @@ class CacheImpl(cache.MutableCache):
         }
         return cache_utility.CacheMappingView(results) if results else cache_utility.EmptyCacheView()
 
+    def get_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
+        return cache_utility.CacheMappingView(
+            {guild_id: record.guild for guild_id, record in self._guild_entries.items() if record.guild}
+        )
+
     def get_available_guilds_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         if not self._is_cache_enabled_for(GUILDS):
             return cache_utility.EmptyCacheView()
