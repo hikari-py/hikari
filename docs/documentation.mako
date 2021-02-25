@@ -52,6 +52,17 @@
 
             raise
 
+    # Remove the `about` section from all the inventories
+    for inv in inventories.values():
+        to_delete = []
+        for n, obj in inv.items():
+            if isinstance(obj, dict) and obj["name"] == "about":
+                to_delete.append(n)
+
+        for n in to_delete:
+            del inv[n]
+
+
     located_external_refs = {}
     unlocatable_external_refs = set()
 
@@ -169,7 +180,6 @@
     def get_url_from_imports(fqn):
         if fqn_match := re.match(r"([a-z_]+)\.((?:[^\.]|^\s)+)", fqn):
             if import_match := re.search(f"from (.*) import (.*) as {fqn_match.group(1)}", module.source):
-                old_fqn = fqn
                 fqn = import_match.group(1) + "." + import_match.group(2) + "." + fqn_match.group(2)
                 try:
                     return pdoc._global_context[fqn].url(relative_to=module, link_prefix=link_prefix, top_ancestor=not show_inherited_members)
@@ -750,7 +760,7 @@
         docstring = d.docstring or d.obj.__doc__
     %>
     % if not short:
-        % if d.inherits:
+        % if inherits:
             <p class="inheritance">
                 <em><small>Inherited from:</small></em>
                 % if hasattr(d.inherits, 'cls'):
