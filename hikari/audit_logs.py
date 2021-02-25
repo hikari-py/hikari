@@ -416,7 +416,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
     !!! note
         This model has no slots and will have arbitrary undocumented attributes
         (in it's `__dict__` based on the received payload).
-        The only attribute that is garantied to be there is `app`.
+        The only attribute that is always garantied to be there is `app`.
     """
 
     def __init__(self, app: traits.RESTAware, payload: typing.Mapping[str, str]) -> None:

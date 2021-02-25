@@ -316,9 +316,8 @@ class TestPartialGuild:
         model.app.shard_count = 4
         assert model.shard_id == 0
 
-    @pytest.mark.parametrize("error", [TypeError, AttributeError, NameError])
-    def test_shard_id_property_when_error(self, error, model):
-        model.app.shard_count = mock.Mock(spec_set=int, side_effect=error)
+    def test_shard_id_when_not_shard_aware(self, model):
+        model.app = object()
 
         assert model.shard_id is None
 
