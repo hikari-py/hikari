@@ -186,3 +186,6 @@ class Permissions(enums.Flag):
 
     MANAGE_EMOJIS = 1 << 30
     """Allows management and editing of emojis."""
+
+    USE_APPLICATION_COMMANDS = 1 << 31
+    """Allows for using the application commands of guild integrations within a text channel."""
