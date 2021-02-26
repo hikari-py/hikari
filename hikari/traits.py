@@ -429,6 +429,9 @@ class BotAware(
         """
         raise NotImplementedError
 
+    async def close(self) -> None:
+        """Kill the application by shutting all components down."""
+
     async def join(self, until_close: bool = True) -> None:
         """Wait indefinitely until the application closes.
 
