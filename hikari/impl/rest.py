@@ -282,7 +282,7 @@ class RESTApp(traits.ExecutorAware):
         self,
         token: typing.Optional[str] = None,
         token_type: str = _BEARER_TOKEN_PREFIX,
-    ) -> rest_api.RESTClient:
+    ) -> RESTClientImpl:
         loop = asyncio.get_running_loop()
 
         if self._event_loop is None:
