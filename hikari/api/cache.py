@@ -380,7 +380,7 @@ class Cache(abc.ABC):
             that were found from the cache.
         """  # noqa E501: - Line too long
 
-    @abc.abstractmethod  # TODO: Return None if no entities are found for cache view stuff?
+    @abc.abstractmethod
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
