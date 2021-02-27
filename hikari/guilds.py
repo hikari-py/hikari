@@ -463,6 +463,26 @@ class Member(users.User):
         -------
         hikari.guilds.Member
             An up-to-date view of this member.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the member is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
@@ -870,13 +890,12 @@ class PartialGuild(snowflakes.Unique):
         This may return `None` if the application does not have a gateway
         connection.
         """
-        try:
-            # This is only sensible if there is a shard.
-            shard_count = getattr(self.app, "shard_count")
-            assert isinstance(shard_count, int)
-            return snowflakes.calculate_shard_id(shard_count, self.id)
-        except (TypeError, AttributeError, NameError):
+        if not isinstance(self.app, traits.ShardAware):
             return None
+
+        shard_count = self.app.shard_count
+        assert isinstance(shard_count, int)
+        return snowflakes.calculate_shard_id(shard_count, self.id)
 
     def format_icon(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's icon, if set.

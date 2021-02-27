@@ -1736,10 +1736,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -1777,10 +1777,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
