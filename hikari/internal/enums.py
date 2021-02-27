@@ -335,11 +335,10 @@ class _FlagMeta(type):
             except KeyError:
                 # If we cant find the value, just return what got casted in by generating a pseudomember
                 # and caching it. We cant use weakref because int is not weak referenceable, annoyingly.
-                # TODO: make the cache update thread-safe by using setdefault instead of assignment.
                 pseudomember = cls.__new__(cls, value)
-                temp_members[value] = pseudomember
                 pseudomember._name_ = None
                 pseudomember._value_ = value
+                temp_members[value] = pseudomember
                 if len(temp_members) > _MAX_CACHED_MEMBERS:
                     temp_members.popitem()
 

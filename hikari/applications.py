@@ -313,7 +313,7 @@ class TeamMember(users.User):
         return self.user.id
 
     @id.setter
-    def id(self, value: snowflakes.Snowflake) -> None:
+    def id(self, value: snowflakes.Snowflake) -> typing.NoReturn:
         raise TypeError("Cannot mutate the ID of a member")
 
     @property

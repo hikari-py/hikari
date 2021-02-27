@@ -145,7 +145,6 @@ class Webhook(snowflakes.Unique):
         builtins.str
             The mention string to use.
         """
-        # TODO: check if this ID the same as the optional author.id in terms of validity.
         return f"<@{self.id}>"
 
     async def execute(

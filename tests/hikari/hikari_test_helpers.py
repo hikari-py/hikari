@@ -56,22 +56,6 @@ def _stub_init(self, kwargs: typing.Mapping[str, typing.Any]):
         setattr(self, attr, value)
 
 
-# TODO: replace all of these with mock_class_namespace
-def mock_entire_class_namespace(klass, **kwargs: typing.Any):
-    """Get an instance of a class with only attributes provided in the passed kwargs set."""
-    if klass not in _stubbed_classes:
-        namespace = {"__init__": _stub_init}
-
-        if hasattr(klass, "__slots__"):
-            namespace["__slots__"] = ()
-
-        new_klass = type("Stub" + klass.__name__, (klass,), namespace)
-    else:
-        new_klass = _stubbed_classes[klass]
-
-    return new_klass(kwargs)
-
-
 def mock_class_namespace(
     klass,
     /,
