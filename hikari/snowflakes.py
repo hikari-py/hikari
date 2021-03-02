@@ -133,6 +133,10 @@ class Unique(abc.ABC):
         return self.id.created_at
 
     @typing.final
+    def __index__(self) -> int:
+        return int(self.id)
+
+    @typing.final
     def __int__(self) -> int:
         return int(self.id)
 

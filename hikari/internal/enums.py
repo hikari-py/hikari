@@ -733,6 +733,9 @@ class Flag(metaclass=_FlagMeta):
     def __bool__(self) -> bool:
         return bool(self._value_)
 
+    def __index__(self) -> int:
+        return self._value_
+
     def __int__(self) -> int:
         return self._value_
 

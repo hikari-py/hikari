@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import builtins
+import operator
 
 import mock
 import pytest
@@ -806,6 +807,16 @@ class TestIntFlag:
         assert isinstance(a.difference(b), TestFlag)
         assert isinstance(a.difference(c), int)
         assert isinstance(a.difference(c), TestFlag)
+
+    def test_index(self):
+        class TestFlag(enums.Flag):
+            OK = 0x5
+            FOO = 0x312
+            BAT = 0x3123
+
+        assert operator.index(TestFlag.OK) == 0x5
+        assert operator.index(TestFlag.FOO) == 0x312
+        assert operator.index(TestFlag.BAT) == 0x3123
 
     def test_int(self):
         class TestFlag(enums.Flag):

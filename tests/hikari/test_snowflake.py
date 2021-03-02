@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import datetime
+import operator
 
 import mock
 import pytest
@@ -55,6 +56,9 @@ class TestSnowflake:
 
     def test_hash(self, neko_snowflake, raw_id):
         assert hash(neko_snowflake) == hash(raw_id)
+
+    def test_index(self, neko_snowflake, raw_id):
+        assert operator.index(neko_snowflake) == raw_id
 
     def test_int_cast(self, neko_snowflake, raw_id):
         assert int(neko_snowflake) == raw_id
