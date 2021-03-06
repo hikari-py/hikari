@@ -459,17 +459,17 @@ class MessageApplication(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Cover image used on the store.
+        """Cover image URL used on the store.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
             The URL, or `builtins.None` if no cover image exists.
         """
-        return self.format_cover_image()
+        return self.make_cover_image_url()
 
-    def format_cover_image(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the cover image used in the store, if set.
+    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the cover image URL used in the store, if set.
 
         Parameters
         ----------

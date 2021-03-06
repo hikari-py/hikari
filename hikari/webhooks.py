@@ -637,7 +637,7 @@ class Webhook(snowflakes.Unique):
         If the webhook has a custom avatar, a URL to this is returned. Otherwise
         a URL to the default avatar is provided instead.
         """
-        return self.format_avatar() or self.default_avatar
+        return self.make_avatar_url() or self.default_avatar
 
     @property
     def default_avatar(self) -> files_.URL:
@@ -651,7 +651,7 @@ class Webhook(snowflakes.Unique):
             file_format="png",
         )
 
-    def format_avatar(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
+    def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
 
         If no avatar is specified, return `None`. In this case, you should

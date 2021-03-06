@@ -98,27 +98,27 @@ class TestTeam:
         assert str(team) == "Team 696969"
 
     def test_icon_url_property(self, model):
-        model.format_icon = mock.Mock(return_value="url")
+        model.make_icon_url = mock.Mock(return_value="url")
 
         assert model.icon_url == "url"
 
-        model.format_icon.assert_called_once_with()
+        model.make_icon_url.assert_called_once_with()
 
-    def test_format_icon_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None
 
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext="jpeg", size=1) is None
+            assert model.make_icon_url(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
-    def test_format_icon_when_hash_is_not_None(self, model):
+    def test_make_icon_url_when_hash_is_not_None(self, model):
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext="jpeg", size=1) == "file"
+            assert model.make_icon_url(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
@@ -138,27 +138,27 @@ class TestApplication:
         )()
 
     def test_cover_image_url_property(self, model):
-        model.format_cover_image = mock.Mock(return_value="url")
+        model.make_cover_image_url = mock.Mock(return_value="url")
 
         assert model.cover_image_url == "url"
 
-        model.format_cover_image.assert_called_once_with()
+        model.make_cover_image_url.assert_called_once_with()
 
-    def test_format_cover_image_when_hash_is_None(self, model):
+    def test_make_cover_image_url_when_hash_is_None(self, model):
         model.cover_image_hash = None
 
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_cover_image(ext="jpeg", size=1) is None
+            assert model.make_cover_image_url(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
-    def test_format_cover_image_when_hash_is_not_None(self, model):
+    def test_make_cover_image_url_when_hash_is_not_None(self, model):
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_cover_image(ext="jpeg", size=1) == "file"
+            assert model.make_cover_image_url(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
