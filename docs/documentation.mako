@@ -701,7 +701,7 @@
                         % for sc in subclasses:
                             % if not isinstance(sc, pdoc.External):
                                 <dt class="nested">${link(sc, with_prefixes=True, default_type="class")}</dt>
-                                <dd class="nested">${sc.docstring or sc.obj.__doc__ | glimpse, to_html}</dd>
+                                <dd class="nested">${sc.docstring or sc.obj.__doc__ or "" | glimpse, to_html}</dd>
                             % endif
                         % endfor
                     </dl>
@@ -757,7 +757,7 @@
 <%def name="show_desc(d, short=False)">
     <%
         inherits = ' inherited' if d.inherits else ''
-        docstring = d.docstring or d.obj.__doc__
+        docstring = d.docstring or d.obj.__doc__ or ""
     %>
     % if not short:
         % if inherits:

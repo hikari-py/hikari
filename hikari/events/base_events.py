@@ -46,7 +46,8 @@ from hikari.internal import attr_extensions
 if typing.TYPE_CHECKING:
     import types
 
-T = typing.TypeVar("T")
+    T = typing.TypeVar("T")
+
 REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
 
@@ -126,14 +127,14 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
     def decorator(cls: typing.Type[T]) -> typing.Type[T]:
         setattr(cls, NO_RECURSIVE_THROW_ATTR, True)
         doc = inspect.getdoc(cls) or ""
-        doc += inspect.cleandoc(
-            "\n\n\n"
+        doc += (
+            "\n"
             "!!! warning\n"
-            "   Any exceptions raised by handlers for this event will be dumped to the\n"
-            "   application logger and silently discarded, preventing recursive loops\n"
-            "   produced by faulty exception event handling. Thus, it is imperative\n"
-            "   that you ensure any exceptions are explicitly caught within handlers\n"
-            "   for this event if they may occur.\n"
+            "    Any exceptions raised by handlers for this event will be dumped to the\n"
+            "    application logger and silently discarded, preventing recursive loops\n"
+            "    produced by faulty exception event handling. Thus, it is imperative\n"
+            "    that you ensure any exceptions are explicitly caught within handlers\n"
+            "    for this event if they may occur.\n"
         )
         cls.__doc__ = doc
         return cls
