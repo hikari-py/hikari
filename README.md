@@ -9,7 +9,7 @@
 [![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
 [![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/hikari)
 
-[![discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
+[![Discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
 
 # hikari
 
@@ -88,6 +88,12 @@ alternatively as a type passed to the `@bot.listen()` decorator, if you do not
 want to use type hints.
 
 ```py
+@bot.listen()
+async def ping(event: hikari.MessageCreateEvent):
+    ...
+
+# or
+
 @bot.listen(hikari.MessageCreateEvent)
 async def ping(event):
     ...
