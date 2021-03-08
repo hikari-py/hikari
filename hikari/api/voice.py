@@ -131,7 +131,6 @@ class VoiceConnection(abc.ABC):
     async def initialize(
         cls: typing.Type[_T],
         channel_id: snowflakes.Snowflake,
-        debug: bool,
         endpoint: str,
         guild_id: snowflakes.Snowflake,
         on_close: typing.Callable[[_T], typing.Awaitable[None]],
@@ -148,9 +147,6 @@ class VoiceConnection(abc.ABC):
         ----------
         channel_id : hikari.snowflakes.Snowflake
             The channel ID that the voice connection is actively connected to.
-        debug : builtins.bool
-            `builtins.True` if debugging mode should be enabled. This is up to
-            each implementation to decide how to provide this, if at all.
         endpoint : str
             The voice websocket endpoint to connect to. Will contain the
             protocol at the start (i.e. `wss://`), and end with the **correct**
@@ -178,7 +174,7 @@ class VoiceConnection(abc.ABC):
 
         Returns
         -------
-        T
+        VoiceConnection
             The type of this connection object.
         """
 
