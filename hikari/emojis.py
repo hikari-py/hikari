@@ -29,9 +29,9 @@ __all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCusto
 import abc
 import re
 import typing
-import unicodedata
 
 import attr
+import discord_emojis
 
 from hikari import files
 from hikari import snowflakes
@@ -159,20 +159,7 @@ class UnicodeEmoji(Emoji):
     @property
     def filename(self) -> str:
         """Filename to use if re-uploading this emoji's PNG."""
-        codepoints = self.codepoints
-        # It looks like the rule is to delete character #2 if the value
-        # of this is 0xfe0f and the character is 4 characters long.
-        # Other than that, the mapping is 1-to-1. I'll set up a CI task to
-        # double check this each day so we know when Discord breaks it again.
-        # The gay-pride flag is an outlier, for god knows what reason. I don't
-        # care that much but if Discord start breaking this regularly I might
-        # need to ask for a more permanent solution.
-        # This is provisionally provided. If we find it breaks in other ways, I
-        # will just revoke this functionality in a future update.
-        if codepoints[1:2] == [0xFE0F] and len(codepoints) <= 4 and codepoints != [0x1F3F3, 0xFE0F, 0x200D, 0x1F308]:
-            codepoints = [codepoints[0], *codepoints[2:]]
-
-        return "-".join(hex(c)[2:] for c in codepoints) + ".png"
+        return "-".join(hex(c)[2:] for c in self.codepoints) + ".png"
 
     @property
     def url(self) -> str:
@@ -188,19 +175,9 @@ class UnicodeEmoji(Emoji):
 
         Example
         -------
-            https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
+            https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f004.png
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
-
-    @property
-    @typing.final
-    def unicode_names(self) -> typing.Sequence[str]:
-        """Get the unicode name of the emoji as a sequence.
-
-        This returns the name of each codepoint. If only one codepoint exists,
-        then this will only have one item in the resulting sequence.
-        """
-        return [unicodedata.name(c) for c in self.name]
 
     @property
     @typing.final
@@ -211,14 +188,56 @@ class UnicodeEmoji(Emoji):
     @classmethod
     @typing.final
     def parse_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
-        """Create a unicode emoji from one or more UTF-32 codepoints."""
-        return cls(name="".join(map(chr, (codepoint, *codepoints))))
+        """Create a unicode emoji from one or more UTF-32 codepoints.
+
+        Parameters
+        ----------
+        codepoint : builtins.int
+            The codepoint to parse.
+        *codepoints: builtins.int
+            Any extra codepoints to parse.
+
+        Returns
+        -------
+        UnicodeEmoji
+            The parsed `UnicodeEmoji` object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the emoji is not a valid Discord emoji.
+
+            If you believe it is a mistake, please update the
+            `discord_emojis` package. If you still get this error and
+            believe it is an error, please create an issue.
+        """
+        return cls.parse("".join(map(chr, (codepoint, *codepoints))))
 
     @classmethod
     @typing.final
     def parse_unicode_escape(cls, escape: str) -> UnicodeEmoji:
-        """Create a unicode emoji from a unicode escape string."""
-        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
+        """Create a unicode emoji from a unicode escape string.
+
+        Parameters
+        ----------
+        escape : builtins.str
+            The escaped unicode emoji to parse.
+
+        Returns
+        -------
+        UnicodeEmoji
+            The parsed `UnicodeEmoji` object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the emoji is not a valid Discord emoji.
+
+            If you believe it is a mistake, please update the
+            `discord_emojis` package. If you still get this error and
+            believe it is an error, please create an issue.
+        """
+        return cls.parse(str(escape.encode("utf-8"), "unicode_escape"))
 
     @classmethod
     @typing.final
@@ -233,11 +252,21 @@ class UnicodeEmoji(Emoji):
         Returns
         -------
         UnicodeEmoji
-            The parsed UnicodeEmoji object.
+            The parsed `UnicodeEmoji` object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the emoji is not a valid Discord emoji.
+
+            If you believe it is a mistake, please update the
+            `discord_emojis` package. If you still get this error,
+            please create an issue.
         """
-        # Ensure validity.
-        for i, codepoint in enumerate(string, start=1):
-            unicodedata.name(codepoint)
+        string = discord_emojis.normalize_emoji(string)
+
+        if string not in discord_emojis.EMOJIS:
+            raise ValueError("Invalid Discord emoji")
 
         return cls(name=string)
 

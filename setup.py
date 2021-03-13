@@ -104,6 +104,5 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
-    provides="hikari",
+    entry_points={"console_scripts": [f"{name} = {name}.cli:main"]},
 )

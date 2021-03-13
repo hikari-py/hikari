@@ -29,7 +29,7 @@ import sys
 import tempfile
 import time
 
-import requests
+import discord_emojis
 
 sys.path.append(".")
 
@@ -37,7 +37,6 @@ sys.path.append(".")
 from hikari import emojis
 
 TWEMOJI_REPO_BASE_URL = "https://github.com/twitter/twemoji.git"
-DISCORD_EMOJI_MAPPING_URL = "https://static.emzi0767.com/misc/discordEmojiMap.json"
 
 
 with tempfile.TemporaryDirectory() as tempdir:
@@ -45,32 +44,27 @@ with tempfile.TemporaryDirectory() as tempdir:
     valid_emojis = []
     invalid_emojis = []
 
-    resp = requests.get(DISCORD_EMOJI_MAPPING_URL)
-    resp.encoding = "utf-8-sig"
-    mapping = resp.json()["emojiDefinitions"]
-
     subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
     known_files = [f.name for f in (pathlib.Path(tempdir) / "assets" / "72x72").iterdir()]
 
-    n = len(mapping)
-    for i, emoji in enumerate(mapping, start=1):
-        emoji_surrogates = emoji["surrogates"]
-        name = emoji["primaryName"]
+    emoji_list = discord_emojis.EMOJIS
+    n = len(emoji_list)
+    for i, emoji_surrogates in enumerate(emoji_list, start=1):
         emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
 
         if emoji.filename in known_files:
-            valid_emojis.append((emoji_surrogates, name))
-            print("[  OK  ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+            valid_emojis.append(emoji_surrogates)
+            print("[  OK  ]", f"{i}/{n}", *map(hex, map(ord, emoji_surrogates)), emoji.url)
         else:
-            invalid_emojis.append((emoji_surrogates, name))
-            print("[ FAIL ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+            invalid_emojis.append(emoji_surrogates)
+            print("[ FAIL ]", f"{i}/{n}", *map(hex, map(ord, emoji_surrogates)), emoji.url)
 
     print("Results")
     print("Valid emojis:", len(valid_emojis))
     print("Invalid emojis:", len(invalid_emojis))
 
-    for surrogates, name in invalid_emojis:
-        print(*map(hex, map(ord, surrogates)), name)
+    for surrogates in invalid_emojis:
+        print(*map(hex, map(ord, surrogates)))
 
     print("Time taken", time.perf_counter() - start, "seconds")
 

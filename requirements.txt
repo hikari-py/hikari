@@ -1,4 +1,6 @@
 aiohttp==3.7.4
+multidict==5.1.0
 attrs==20.3.0
 colorlog==4.7.2
-multidict==5.1.0
+# TODO: REMOVE BEFORE MERGING
+discord_emojis @ https://test-files.pythonhosted.org/packages/94/11/3128d0f0b9130746e9b64b866e4df4fa7df7761fa81b6041aa90dac7c00b/discord_emojis-2021.3.18-py3-none-any.whl#sha256=bfae0e9399f7e186bd4a412d3ab805882cdd79356d871d4b15e4e3608adb6a45
