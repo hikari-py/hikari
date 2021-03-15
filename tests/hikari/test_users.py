@@ -36,7 +36,7 @@ class TestPartialUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):
         obj.id = 123
         obj.app = mock.AsyncMock()
@@ -44,7 +44,7 @@ class TestPartialUser:
         assert await obj.fetch_self() is obj.app.rest.fetch_user.return_value
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_send(self, obj):
         embed = object()
         attachment = object()
@@ -202,7 +202,7 @@ class TestPartialUserImpl:
     def test_mention_property(self, obj):
         assert obj.mention == "<@123>"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_dm_channel_when_not_cached(self, obj):
         mock_channel = mock.Mock(id=456)
 
@@ -216,7 +216,7 @@ class TestPartialUserImpl:
         assert obj._dm_channel == mock_channel
         obj.app.rest.create_dm_channel.assert_awaited_once_with(123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_dm_channel_when_cached(self, obj):
         mock_channel = mock.Mock(id=456)
         obj._dm_channel = mock_channel
@@ -226,7 +226,7 @@ class TestPartialUserImpl:
         assert obj._dm_channel == mock_channel
         obj.app.rest.create_dm_channel.assert_not_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):
         user = object()
         obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
@@ -234,7 +234,7 @@ class TestPartialUserImpl:
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestOwnUser:
     @pytest.fixture()
     def obj(self):
