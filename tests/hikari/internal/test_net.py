@@ -42,7 +42,7 @@ from hikari.internal import net
         (http.HTTPStatus.PERMANENT_REDIRECT, "HTTPResponseError"),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_generate_error_response(status_, expected_error):
     class StubResponse:
         real_url = "https://some.url"
@@ -80,7 +80,7 @@ async def test_generate_error_response(status_, expected_error):
         (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_generate_error_when_error_with_json(status_, expected_error):
     json_response = aiohttp.ContentTypeError(None, None)
 
