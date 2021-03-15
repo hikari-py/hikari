@@ -181,7 +181,7 @@ class TestGroupDMChannel:
         assert model.format_icon() is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestTextChannel:
     @pytest.fixture()
     def model(self, mock_app):
