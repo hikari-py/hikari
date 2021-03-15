@@ -196,7 +196,7 @@ class TestIsAsyncIterable:
         assert not aio.is_async_iterable(AsyncIterator)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestFirstCompleted:
     @hikari_test_helpers.timeout()
     async def test_first_future_completes(self, event_loop):
@@ -300,7 +300,7 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
