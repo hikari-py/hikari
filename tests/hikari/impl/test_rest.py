@@ -89,7 +89,7 @@ class TestBasicLazyCachedTCPConnectorFactory:
         assert connector_factory.acquire() is connector_mock
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestBasicLazyCachedTCPConnectorFactoryAsync:
     async def test_close_when_connector_is_None(self, connector_factory):
         connector_factory.connector = None
@@ -261,7 +261,7 @@ class TestRESTApp:
             pytest.fail(exc)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestRESTAppAsync:
     async def test_close_when_connector_owner(self, rest_app):
         rest_app._connector_owner = True
@@ -825,7 +825,7 @@ class TestRESTClientImpl:
         assert rest_client.unban_member == rest_client.unban_user
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestRESTClientImplAsync:
     @pytest.fixture()
     def exit_exception(self):
