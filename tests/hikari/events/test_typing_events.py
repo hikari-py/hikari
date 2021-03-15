@@ -29,7 +29,7 @@ from hikari.events import typing_events
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestTypingEvent:
     @pytest.fixture()
     def event(self):
@@ -50,7 +50,7 @@ class TestTypingEvent:
         assert result is event.app.rest.trigger_typing.return_value
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestGuildTypingEvent:
     @pytest.fixture()
     def event(self):
@@ -115,7 +115,7 @@ class TestGuildTypingEvent:
         event.app.rest.fetch_member.assert_awaited_once_with(789, 456)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestDMTypingEvent:
     @pytest.fixture()
     def event(self):
