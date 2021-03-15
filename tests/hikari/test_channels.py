@@ -38,7 +38,7 @@ def mock_app():
 
 
 class TestChannelFollow:
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_app):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
         mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
@@ -51,7 +51,7 @@ class TestChannelFollow:
         assert result is mock_channel
         mock_app.rest.fetch_channel.assert_awaited_once_with(9459234123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_webhook(self, mock_app):
         mock_webhook = object()
         mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock_webhook)
