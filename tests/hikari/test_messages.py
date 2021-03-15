@@ -147,7 +147,7 @@ class TestMessage:
         message.app.cache.get_guild_channel.assert_called_once_with(890)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
         message.app = mock.AsyncMock()
