@@ -409,7 +409,7 @@ class TestHikariVersion:
         cmp.assert_called_once_with(version2)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestCheckForUpdates:
     @pytest.fixture()
     def http_settings(self):
