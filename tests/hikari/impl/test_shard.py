@@ -60,7 +60,7 @@ def proxy_settings():
     return mock.Mock(spec_set=config.ProxySettings)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class Test_GatewayTransport:
     @pytest.fixture()
     def transport_impl(self):
@@ -549,7 +549,7 @@ class Test_GatewayTransport:
         mock_client_session.assert_used_once()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestGatewayShardImpl:
     @pytest.fixture()
     def client_session(self):
