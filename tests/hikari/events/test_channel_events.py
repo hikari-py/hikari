@@ -144,7 +144,7 @@ class TestGuildChannelDeleteEvent:
         assert event.guild_id == 123
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestInviteEvent:
     @pytest.fixture()
     def event(self):
@@ -160,7 +160,7 @@ class TestInviteEvent:
         event.app.rest.fetch_invite.assert_awaited_once_with("Jx4cNGG")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestInviteCreateEvent:
     @pytest.fixture()
     def event(self):
@@ -179,7 +179,7 @@ class TestInviteCreateEvent:
         assert event.code == "Jx4cNGG"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 class TestWebhookUpdateEvent:
     @pytest.fixture()
     def event(self):
