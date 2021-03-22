@@ -29,7 +29,8 @@ __all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCusto
 import abc
 import re
 import typing
-import unicodedata
+
+# import unicodedata
 
 import attr
 
@@ -192,15 +193,15 @@ class UnicodeEmoji(Emoji):
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
-    @property
-    @typing.final
-    def unicode_names(self) -> typing.Sequence[str]:
-        """Get the unicode name of the emoji as a sequence.
-
-        This returns the name of each codepoint. If only one codepoint exists,
-        then this will only have one item in the resulting sequence.
-        """
-        return [unicodedata.name(c) for c in self.name]
+    # @property
+    # @typing.final
+    # def unicode_names(self) -> typing.Sequence[str]:
+    #     """Get the unicode name of the emoji as a sequence.
+    #
+    #     This returns the name of each codepoint. If only one codepoint exists,
+    #     then this will only have one item in the resulting sequence.
+    #     """
+    #     return [unicodedata.name(c) for c in self.name]
 
     @property
     @typing.final
@@ -235,9 +236,10 @@ class UnicodeEmoji(Emoji):
         UnicodeEmoji
             The parsed UnicodeEmoji object.
         """
+        # TODO: Re-add validity
         # Ensure validity.
-        for i, codepoint in enumerate(string, start=1):
-            unicodedata.name(codepoint)
+        # for i, codepoint in enumerate(string, start=1):
+        #     unicodedata.name(codepoint)
 
         return cls(name=string)
 
