@@ -92,6 +92,7 @@ class AuditLogChangeKey(str, enums.Enum):
     NSFW = "nsfw"
     APPLICATION_ID = "application_id"
     PERMISSIONS = "permissions"
+    USER_LIMIT = "user_limit"
     COLOR = "color"
     HOIST = "hoist"
     MENTIONABLE = "mentionable"
