@@ -405,7 +405,7 @@ class RESTBucketManager:
             self.gc_task = None
 
     # Ignore docstring not starting in an imperative mood
-    async def gc(self, poll_period: float, expire_after: float) -> None:  # noqa: D401
+    async def gc(self, poll_period: float, expire_after: float) -> None:
         """The garbage collector loop.
 
         This is designed to run in the background and manage removing unused
@@ -429,7 +429,7 @@ class RESTBucketManager:
             You generally have no need to invoke this directly. Use
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
             this instead.
-        """
+        """  # noqa: D401 - Imperative mood
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
