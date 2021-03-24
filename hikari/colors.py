@@ -174,9 +174,8 @@ class Color(int):
     def __str__(self) -> str:
         return self.hex_code
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def rgb(self) -> typing.Tuple[int, int, int]:  # noqa: D401
+    def rgb(self) -> typing.Tuple[int, int, int]:
         """The RGB representation of this Color.
 
         Represented as a tuple of R, G, B. Each value is
@@ -185,7 +184,7 @@ class Color(int):
         Example
         -------
         `(123, 234, 47)`
-        """
+        """  # noqa: D401 - Imperative mood
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
     @property

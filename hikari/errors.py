@@ -523,8 +523,8 @@ class RateLimitTooLongError(HTTPError):
     # exists to be self-documenting to the user and for future compatibility
     # only.
     @property
-    def remaining(self) -> typing.Literal[0]:  # noqa: D401 - Imperative mood
-        """The number of requests that are remaining in this window.
+    def remaining(self) -> typing.Literal[0]:
+        """The number of requests remaining in this window.
 
         This will always be `0` symbolically.
 
@@ -532,7 +532,7 @@ class RateLimitTooLongError(HTTPError):
         -------
         builtins.int
             The number of requests remaining. Always `0`.
-        """
+        """  # noqa: D401 - Imperative mood
         return 0
 
     def __str__(self) -> str:
