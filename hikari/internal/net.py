@@ -100,7 +100,7 @@ def create_tcp_connector(
         enable_cleanup_closed=http_settings.enable_cleanup_closed,
         force_close=http_settings.force_close_transports,
         limit=limit,
-        ssl_context=http_settings.ssl,
+        ssl=http_settings.ssl,
         ttl_dns_cache=dns_cache if not isinstance(dns_cache, bool) else 10,
         use_dns_cache=dns_cache is not False,
     )

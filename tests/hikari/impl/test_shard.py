@@ -260,7 +260,7 @@ class Test_GatewayTransport:
             limit=1,
             ttl_dns_cache=10,
             use_dns_cache=False,
-            ssl_context=http_settings.ssl,
+            ssl=http_settings.ssl,
             enable_cleanup_closed=http_settings.enable_cleanup_closed,
             force_close=http_settings.force_close_transports,
         )

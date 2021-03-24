@@ -35,6 +35,7 @@ import string
 import sys
 import time
 import typing
+import warnings
 
 import colorlog  # type: ignore[import]
 
@@ -129,6 +130,8 @@ def init_logging(
             stream=sys.stderr,
         )
 
+    # DeprecationWarning is disabled by default, but it's useful to have enabled
+    warnings.simplefilter("always", DeprecationWarning)
     logging.captureWarnings(True)
 
 

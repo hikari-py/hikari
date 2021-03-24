@@ -78,7 +78,7 @@ class TestBasicLazyCachedTCPConnectorFactory:
             force_close=http_settings.force_close_transports,
             enable_cleanup_closed=http_settings.enable_cleanup_closed,
             limit=100,
-            ssl_context=http_settings.ssl,
+            ssl=http_settings.ssl,
             ttl_dns_cache=10,
             use_dns_cache=True,
         )
