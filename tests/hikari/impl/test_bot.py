@@ -131,9 +131,7 @@ class TestBotApp:
             bot = bot_impl.BotApp(
                 "token",
                 allow_color=False,
-                application=35123123,
                 banner="testing",
-                client_secret="gfofofofof",
                 executor=executor,
                 force_color=True,
                 cache_settings=cache_settings,
@@ -159,8 +157,6 @@ class TestBotApp:
         voice.assert_called_once_with(bot)
         assert bot._rest is rest.return_value
         rest.assert_called_once_with(
-            application=35123123,
-            client_secret="gfofofofof",
             connector_factory=connector_factory.return_value,
             connector_owner=True,
             entity_factory=bot._entity_factory,

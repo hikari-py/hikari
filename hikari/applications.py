@@ -645,6 +645,9 @@ class PartialOAuth2Token:
     scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attr.ib(eq=False, hash=False, repr=True)
     """Scopes the access token has access to."""
 
+    def __str__(self) -> str:
+        return self.access_token
+
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)

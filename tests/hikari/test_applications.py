@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import datetime
+
 import mock
 import pytest
 
@@ -163,6 +165,18 @@ class TestApplication:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )
+
+
+class TestPartialOAuth2Token:
+    def test__str__(self):
+        token = applications.PartialOAuth2Token(
+            access_token="54123123123",
+            token_type=applications.TokenType.BEARER,
+            expires_in=datetime.timedelta(300),
+            scopes=[applications.OAuth2Scope.APPLICATIONS_COMMANDS],
+        )
+
+        assert str(token) == "54123123123"
 
 
 def test_get_token_id_extracts_id():
