@@ -71,6 +71,12 @@ JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
+_StringMapBuilderArg = typing.Union[
+    typing.Mapping[str, str],
+    typing.Dict[str, str],
+    multidict.MultiMapping[str],
+    typing.Iterable[typing.Tuple[str, str]],
+]
 
 if typing.TYPE_CHECKING:
 
@@ -89,14 +95,6 @@ else:
 
     load_json = json.loads
     """Convert a JSON string to a Python type."""
-
-
-_StringMapBuilderArg = typing.Union[
-    typing.Mapping[str, str],
-    typing.Dict[str, str],
-    multidict.MultiMapping[str],
-    typing.Iterable[typing.Tuple[str, str]],
-]
 
 
 @typing.final

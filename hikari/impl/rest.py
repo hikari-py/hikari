@@ -152,8 +152,8 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
     """
 
     __slots__: typing.Sequence[str] = (
-        "client_id",
-        "client_secret",
+        "_client_id",
+        "_client_secret",
         "_exception",
         "_expire_at",
         "_lock",
@@ -166,19 +166,44 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         client_secret: str,
         *,
-        scopes: typing.Sequence[str] = ("applications.commands.update", "identify"),
+        scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]] = (
+            applications.OAuth2Scope.APPLICATIONS_COMMANDS_UPDATE,
+            applications.OAuth2Scope.IDENTIFY,
+        ),
     ) -> None:
-        self.client_id = snowflakes.Snowflake(client)
-        self.client_secret = client_secret
+        self._client_id = snowflakes.Snowflake(client)
+        self._client_secret = client_secret
         self._exception: typing.Optional[errors.ClientHTTPResponseError] = None
         self._expire_at = 0.0
         self._lock = asyncio.Lock()
-        self._scopes = scopes
+        self._scopes = tuple(scopes)
         self._token: typing.Optional[str] = None
+
+    @property
+    def client_id(self) -> snowflakes.Snowflake:
+        """ID of the application this token strategy authenticates with.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            ID of the application this token strategy authenticates with.
+        """
+        return self._client_id
 
     @property
     def _is_expired(self) -> bool:
         return time.monotonic() >= self._expire_at
+
+    @property
+    def scopes(self) -> typing.Sequence[typing.Union[applications.OAuth2Scope, str]]:
+        """Scopes this token strategy authenticates for.
+
+        Returns
+        -------
+        typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+            The scopes this token strategy authenticates for.
+        """
+        return self._scopes
 
     async def acquire(self, client: rest_api.RESTClient) -> str:
         if self._token and not self._is_expired:
@@ -194,7 +219,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
             try:
                 response = await client.authorize_client_credentials_token(
-                    client=self.client_id, client_secret=self.client_secret, scopes=self._scopes
+                    client=self._client_id, client_secret=self._client_secret, scopes=self._scopes
                 )
 
             except errors.ClientHTTPResponseError as exc:

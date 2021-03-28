@@ -166,6 +166,17 @@ class TestClientCredentialsStrategy:
             access_token="okokok.fofofo.ddd",
         )
 
+    def test_client_id_property(self):
+        mock_client = hikari_test_helpers.mock_class_namespace(applications.Application, id=43123, init_=False)()
+        token = rest.ClientCredentialsStrategy(client=mock_client, client_secret="123123123")
+
+        assert token.client_id == 43123
+
+    def test_scopes_property(self):
+        token = rest.ClientCredentialsStrategy(client=123, client_secret="123123123", scopes=[123, 5643])
+
+        assert token.scopes == (123, 5643)
+
     async def test_acquire_on_new_instance(self, mock_token):
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
 
@@ -243,6 +254,25 @@ class TestClientCredentialsStrategy:
         )
         assert new_token != token
         assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+
+    async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
+        token = "abc.abc.abc"  # noqa S105: Possible Hardcoded password
+        mock_rest = mock.AsyncMock()
+        strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
+
+        async def hold_strategy():
+            async with strategy._lock:
+                await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
+                strategy._token = token
+                strategy._expire_at = time.monotonic() + 600
+
+        asyncio.create_task(hold_strategy())
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME // 1000)
+        result = await strategy.acquire(mock_rest)
+
+        assert result == token
+
+        mock_rest.authorize_client_credentials_token.assert_not_called()
 
     async def test_acquire_caches_client_http_response_error(self):
         mock_rest = mock.AsyncMock()
@@ -500,6 +530,21 @@ class TestRESTClientImpl:
             )
 
         bucket.assert_called_once_with(float("inf"))
+
+    def test__init__when_token_strategy_passed_with_token_type(self):
+        with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
+            rest.RESTClientImpl(
+                connector_factory=mock.Mock(),
+                connector_owner=True,
+                http_settings=mock.Mock(),
+                max_rate_limit=float("inf"),
+                proxy_settings=mock.Mock(),
+                token=mock.Mock(rest_api.TokenStrategy),
+                token_type="ooga booga",
+                rest_url=None,
+                executor=None,
+                entity_factory=None,
+            )
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
@@ -1090,6 +1135,21 @@ class TestRESTClientImplAsync:
 
             _, kwargs = mock_session.request.call_args_list[0]
             assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
+
+    @hikari_test_helpers.timeout()
+    async def test__request_when_auth_passed(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        rest_client.buckets.is_started = True
+        rest_client._token = "token"
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+            with pytest.raises(exit_exception):
+                await rest_client._request(route, auth="ooga booga")
+
+            _, kwargs = mock_session.request.call_args_list[0]
+            assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "ooga booga"
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_NO_CONTENT(self, rest_client):

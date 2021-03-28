@@ -121,10 +121,6 @@ async def print_my_user(token):
 asyncio.run(print_my_user("user token here"))
 ```
 
-This client has been designed to be able to work in compliment with existing
-OAuth2 client implementations, such as
-[`aiohttp-oauth2`](https://pypi.org/project/aiohttp-oauth2/).
-
 ----
 
 ## Installation
