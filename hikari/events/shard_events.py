@@ -44,6 +44,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import guilds
     from hikari import presences as presences_
     from hikari import snowflakes
@@ -148,6 +149,24 @@ class ShardReadyEvent(ShardStateEvent):
     -------
     typing.Sequence[hikari.snowflakes.Snowflake]
         All guild IDs that the bot is in for this shard.
+    """
+
+    application_id: snowflakes.Snowflake = attr.ib(repr=True)
+    """ID of the application this ready event is for.
+
+    Returns
+    -------
+    hikari.snowflakes.Snowflake
+        The current application's ID.
+    """
+
+    application_flags: applications.ApplicationFlags = attr.ib(repr=True)
+    """Flags of the application this ready event is for.
+
+    Returns
+    -------
+    hikari.applications.ApplicationFlags
+        The current application's flags.
     """
 
 
