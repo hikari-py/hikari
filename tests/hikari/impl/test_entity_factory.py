@@ -208,6 +208,8 @@ class TestEntityFactoryImpl:
             "primary_sku_id": "2020202002",
             "slug": "192.168.1.254",
             "cover_image": "hashmebaby",
+            "privacy_policy_url": "hahaha://hahaha",
+            "terms_of_service_url": "haha2:2h2h2h2",
         }
 
     def test_deserialize_application(
@@ -227,6 +229,8 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
+        assert application.privacy_policy_url == "hahaha://hahaha"
+        assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.icon_hash == "iwiwiwiwiw"
         # Team
         assert application.team.id == 202020202
@@ -268,6 +272,8 @@ class TestEntityFactoryImpl:
         assert application.primary_sku_id is None
         assert application.slug is None
         assert application.cover_image_hash is None
+        assert application.privacy_policy_url is None
+        assert application.terms_of_service_url is None
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
@@ -297,6 +303,8 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "6f6b6f6b6f646f646f646f",
+                "terms_of_service_url": "htttpyptptp",
+                "privacy_policy_url": "hphphphphph",
             },
             "scopes": ["identify", "guilds", "applications.commands.update"],
             "expires": "2021-02-01T18:03:20.888000+00:00",
@@ -319,6 +327,8 @@ class TestEntityFactoryImpl:
         assert application.public_key == b"okokodododo"
         assert application.is_bot_public is True
         assert application.is_bot_code_grant_required is False
+        assert application.terms_of_service_url == "htttpyptptp"
+        assert application.privacy_policy_url == "hphphphphph"
         assert isinstance(application, application_models.AuthorizationApplication)
 
         assert authorization_information.expires_at == datetime.datetime(
@@ -327,15 +337,25 @@ class TestEntityFactoryImpl:
         assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
         assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
 
-    def test_test_deserialize_authorization_information_without_user(
+    def test_test_deserialize_authorization_information_with_unset_fields(
         self, entity_factory_impl, authorization_information_payload
     ):
+        del authorization_information_payload["application"]["icon"]
+        del authorization_information_payload["application"]["bot_public"]
+        del authorization_information_payload["application"]["bot_require_code_grant"]
+        del authorization_information_payload["application"]["terms_of_service_url"]
+        del authorization_information_payload["application"]["privacy_policy_url"]
         del authorization_information_payload["user"]
         authorization_information = entity_factory_impl.deserialize_authorization_information(
             authorization_information_payload
         )
 
         assert authorization_information.user is None
+        assert authorization_information.application.icon_hash is None
+        assert authorization_information.application.is_bot_public is None
+        assert authorization_information.application.is_bot_code_grant_required is None
+        assert authorization_information.application.terms_of_service_url is None
+        assert authorization_information.application.privacy_policy_url is None
 
     #####################
     # AUDIT LOGS MODELS #

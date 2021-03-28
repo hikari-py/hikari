@@ -314,6 +314,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             primary_sku_id=primary_sku_id,
             slug=payload.get("slug"),
             cover_image_hash=payload.get("cover_image"),
+            privacy_policy_url=payload.get("privacy_policy_url"),
+            terms_of_service_url=payload.get("terms_of_service_url"),
         )
 
     def deserialize_authorization_information(
@@ -330,6 +332,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
             public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+            terms_of_service_url=application_payload.get("terms_of_service_url"),
+            privacy_policy_url=application_payload.get("privacy_policy_url"),
         )
 
         return application_models.AuthorizationInformation(
