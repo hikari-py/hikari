@@ -486,7 +486,7 @@ class Application(guilds.PartialApplication):
     """The URL of this application's terms of service."""
 
     privacy_policy_url: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The URL of this application's terms of service."""
+    """The URL of this application's privacy policy."""
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
