@@ -520,6 +520,12 @@ class Application(guilds.PartialApplication):
     cover_image_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
 
+    terms_of_service_url: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The URL of this application's terms of service."""
+
+    privacy_policy_url: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The URL of this application's privacy policy."""
+
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
         """Cover image used on the store.
@@ -585,6 +591,12 @@ class AuthorizationApplication(guilds.PartialApplication):
 
     Will be `builtins.None` if this application doesn't have a bot.
     """
+
+    terms_of_service_url: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The URL of this application's terms of service."""
+
+    privacy_policy_url: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The URL of this application's privacy policy."""
 
 
 @attr_extensions.with_copy
