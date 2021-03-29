@@ -223,7 +223,6 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         default=undefined.UNDEFINED
     )
     icon: undefined.UndefinedOr[files.Resourceish] = attr.ib(default=undefined.UNDEFINED)
-    region: undefined.UndefinedOr[voices.VoiceRegionish] = attr.ib(default=undefined.UNDEFINED)
     verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.ib(
         default=undefined.UNDEFINED
     )
@@ -243,7 +242,6 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put("name", self.name)
         payload.put_array("roles", self._roles if self._roles else undefined.UNDEFINED)
         payload.put_array("channels", self._channels if self._channels else undefined.UNDEFINED)
-        payload.put("region", self.region)
         payload.put("verification_level", self.verification_level)
         payload.put("default_message_notifications", self.default_message_notifications)
         payload.put("explicit_content_filter", self.explicit_content_filter_level)
@@ -286,8 +284,8 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
-        payload.put("color", color)
-        payload.put("color", colour)
+        payload.put("color", color, conversion=colors.Color.of)
+        payload.put("color", colour, conversion=colors.Color.of)
         payload.put("hoist", hoist)
         payload.put("mentionable", mentionable)
         payload.put("permissions", permissions)
@@ -368,6 +366,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
@@ -379,6 +378,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put("position", position)
         payload.put("user_limit", user_limit)
         payload.put_snowflake("parent_id", parent_id)
+        payload.put("rtc_region", region, conversion=str)
 
         payload.put_array(
             "permission_overwrites",

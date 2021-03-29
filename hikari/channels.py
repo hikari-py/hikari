@@ -799,6 +799,14 @@ class GuildVoiceChannel(GuildChannel):
     bitrate: int = attr.ib(eq=False, hash=False, repr=True)
     """The bitrate for the voice channel (in bits per second)."""
 
+    region: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """ID of the voice region for this voice channel.
+
+    If set to `builtins.None` then this is set to "auto" mode where the used
+    region will be decided based on the first person who connects to it when
+    it's empty.
+    """
+
     user_limit: int = attr.ib(eq=False, hash=False, repr=True)
     """The user limit for the voice channel.
 

@@ -78,9 +78,6 @@ class TemplateGuild(guilds.PartialGuild):
     description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
-    region: str = attr.ib(eq=False, hash=False, repr=False)
-    """The voice region for the guild."""
-
     verification_level: typing.Union[guilds.GuildVerificationLevel, int] = attr.ib(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 

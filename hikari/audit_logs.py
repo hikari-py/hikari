@@ -74,7 +74,8 @@ class AuditLogChangeKey(str, enums.Enum):
     ICON_HASH = "icon_hash"
     SPLASH_HASH = "splash_hash"
     OWNER_ID = "owner_id"
-    REGION = "region"
+    REGION = "region"  # TODO: remove when this disappears for the most part
+    RTC_REGION = "rtc_region"
     AFK_CHANNEL_ID = "afk_channel_id"
     AFK_TIMEOUT = "afk_timeout"
     MFA_LEVEL = "mfa_level"

@@ -68,6 +68,10 @@ JSONArray = typing.List[typing.Any]
 JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 """Type hint for any valid JSON-decoded type."""
 
+Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
+"""Type hint for any valid that can be put in a StringMapBuilder"""
+
+
 if typing.TYPE_CHECKING:
 
     def dump_json(_: typing.Union[JSONArray, JSONObject]) -> str:
@@ -106,6 +110,26 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
     def __init__(self) -> None:
         super().__init__()
+
+    @typing.overload
+    def put(
+        self,
+        key: str,
+        value: Stringish,
+        /,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def put(
+        self,
+        key: str,
+        value: undefined.UndefinedOr[T],
+        /,
+        *,
+        conversion: typing.Callable[[T], Stringish],
+    ) -> None:
+        ...
 
     def put(
         self,
@@ -177,10 +201,25 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         # Only allow use of empty constructor here.
         super().__init__()
 
+    @typing.overload
+    def put(self, key: str, value: undefined.UndefinedNoneOr[JSONish], /) -> None:
+        ...
+
+    @typing.overload
     def put(
         self,
         key: str,
-        value: typing.Any,
+        value: undefined.UndefinedNoneOr[T],
+        /,
+        *,
+        conversion: typing.Callable[[T], JSONish],
+    ) -> None:
+        ...
+
+    def put(
+        self,
+        key: str,
+        value: undefined.UndefinedNoneOr[typing.Any],
         /,
         *,
         conversion: typing.Optional[typing.Callable[[typing.Any], JSONish]] = None,
@@ -211,13 +250,33 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         else:
             self[key] = value
 
+    @typing.overload
+    def put_array(
+        self,
+        key: str,
+        values: undefined.UndefinedOr[typing.Iterable[JSONish]],
+        /,
+    ) -> None:
+        ...
+
+    @typing.overload
     def put_array(
         self,
         key: str,
         values: undefined.UndefinedOr[typing.Iterable[T]],
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[T], JSONish]] = None,
+        conversion: typing.Callable[[T], JSONish],
+    ) -> None:
+        ...
+
+    def put_array(
+        self,
+        key: str,
+        values: undefined.UndefinedOr[typing.Iterable[typing.Any]],
+        /,
+        *,
+        conversion: typing.Optional[typing.Callable[[typing.Any], JSONish]] = None,
     ) -> None:
         """Put a JSON array.
 

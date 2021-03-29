@@ -154,6 +154,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -186,6 +187,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            If provided, the voice region to set for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
@@ -3249,7 +3255,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = undefined.UNDEFINED,
         default_message_notifications: undefined.UndefinedOr[
             guilds.GuildMessageNotificationsLevel
@@ -3289,8 +3294,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new name for the guild.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
-            If provided, the new voice region for the guild.
         verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
             If provided, the new verification level.
         default_message_notifications : hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
@@ -3599,6 +3602,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -3626,6 +3630,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            If provided, the voice region to for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
