@@ -2800,13 +2800,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     def fetch_audit_log(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch the guild's audit log.
 
@@ -2825,7 +2826,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             date the object was first created will be used.
         user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the user to filter for.
-        event_type : hikari.undefined.UndefinedOr[hikari.audit_logs.AuditLogEventType]
+        event_type : hikari.undefined.UndefinedOr[typing.Union[hikari.audit_logs.AuditLogEventType, builtins.int]]
             If provided, the event type to filter for.
 
         Returns

@@ -585,7 +585,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
-        action_type: undefined.UndefinedOr[int],
+        action_type: undefined.UndefinedOr[typing.Union["audit_logs.AuditLogEventType", int]],
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
@@ -598,7 +598,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         query = data_binding.StringMapBuilder()
         query.put("limit", 100)
         query.put("user_id", self._user)
-        query.put("event_type", self._action_type)
+        query.put("action_type", self._action_type, conversion=int)
         query.put("before", self._first_id)
 
         response = await self._request_call(compiled_route=self._route, query=query)

@@ -44,7 +44,8 @@ import multidict
 from hikari import snowflakes
 from hikari import undefined
 
-T = typing.TypeVar("T", covariant=True)
+if typing.TYPE_CHECKING:
+    T = typing.TypeVar("T", covariant=True)
 
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
