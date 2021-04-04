@@ -238,7 +238,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         return None
 
     def invalidate(self, token: typing.Optional[str]) -> None:
-        if token == self._token:
+        if not token or token == self._token:
             self._expire_at = 0.0
             self._token = None
 
@@ -486,10 +486,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
-    token : hikari.undefined.UndefinedOr[builtins.str]
+    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType]
+    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
     rest_url : builtins.str
