@@ -1045,7 +1045,7 @@ class Bytes(Resource[IteratorReader]):
 
         if mimetype is None:
             # TODO: should I just default to application/octet-stream here?
-            mimetype = "text/plain"
+            mimetype = "text/plain;charset=UTF-8"
 
         self._filename = filename
         self.mimetype = mimetype
