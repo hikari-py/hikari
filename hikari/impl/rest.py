@@ -1058,7 +1058,8 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
-                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
+                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
 
                 response = await self._request(route, form=form)
             finally:
@@ -1484,7 +1485,8 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 for i, attachment in enumerate(final_attachments):
                     stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
-                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=_APPLICATION_OCTET_STREAM)
+                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
 
                 response = await self._request(route, query=query, form=form, no_auth=True)
             finally:
