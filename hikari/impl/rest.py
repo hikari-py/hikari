@@ -52,6 +52,7 @@ import attr
 
 from hikari import _about as about
 from hikari import channels as channels_
+from hikari import colors
 from hikari import config
 from hikari import embeds as embeds_
 from hikari import emojis
@@ -82,7 +83,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import audit_logs
-    from hikari import colors
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
@@ -770,6 +770,7 @@ class RESTClientImpl(rest_api.RESTClient):
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -787,6 +788,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("bitrate", bitrate)
         body.put("user_limit", user_limit)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+        body.put("rtc_region", region, conversion=str)
         body.put_snowflake("parent_id", parent_category)
         body.put_array(
             "permission_overwrites",
@@ -1831,7 +1833,6 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel] = undefined.UNDEFINED,
         default_message_notifications: undefined.UndefinedOr[
             guilds.GuildMessageNotificationsLevel
@@ -1862,7 +1863,6 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_GUILD.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("region", region, conversion=str)
         body.put("verification", verification_level)
         body.put("notifications", default_message_notifications)
         body.put("explicit_content_filter", explicit_content_filter_level)
@@ -1994,6 +1994,7 @@ class RESTClientImpl(rest_api.RESTClient):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -2005,6 +2006,7 @@ class RESTClientImpl(rest_api.RESTClient):
             user_limit=user_limit,
             bitrate=bitrate,
             permission_overwrites=permission_overwrites,
+            region=region,
             category=category,
             reason=reason,
         )
@@ -2048,6 +2050,7 @@ class RESTClientImpl(rest_api.RESTClient):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildChannel:
@@ -2061,6 +2064,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("bitrate", bitrate)
         body.put("user_limit", user_limit)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+        body.put("rtc_region", region, conversion=str)
         body.put_snowflake("parent_id", category)
         body.put_array(
             "permission_overwrites",
@@ -2271,8 +2275,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color)
-        body.put("color", colour)
+        body.put("color", color, conversion=colors.Color.of)
+        body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 
@@ -2310,8 +2314,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color)
-        body.put("color", colour)
+        body.put("color", color, conversion=colors.Color.of)
+        body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("mentionable", mentionable)
 

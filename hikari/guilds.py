@@ -1138,9 +1138,6 @@ class Guild(PartialGuild, abc.ABC):
     this guild. For all other purposes, it should be considered to be `builtins.None`.
     """
 
-    region: str = attr.ib(eq=False, hash=False, repr=False)
-    """The voice region for the guild."""
-
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
     """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
     `features` display rules and guidelines.

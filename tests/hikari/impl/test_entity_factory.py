@@ -1047,6 +1047,7 @@ class TestEntityFactoryImpl:
             "permission_overwrites": [permission_overwrite_payload],
             "bitrate": 64000,
             "user_limit": 3,
+            "region": "europe",
             "parent_id": "456",
         }
 
@@ -1064,6 +1065,7 @@ class TestEntityFactoryImpl:
         }
         assert voice_channel.is_nsfw is True
         assert voice_channel.parent_id == 456
+        assert voice_channel.region == "europe"
         assert voice_channel.bitrate == 64000
         assert voice_channel.user_limit == 3
         assert isinstance(voice_channel, channel_models.GuildVoiceChannel)
@@ -1080,10 +1082,12 @@ class TestEntityFactoryImpl:
                 "guild_id": "1234",
                 "bitrate": 64000,
                 "user_limit": 3,
+                "region": None,
                 "type": 6,
             }
         )
         assert voice_channel.parent_id is None
+        assert voice_channel.region is None
 
     def test_deserialize_guild_voice_channel_with_unset_fields(self, entity_factory_impl):
         voice_channel = entity_factory_impl.deserialize_guild_voice_channel(
@@ -1094,6 +1098,7 @@ class TestEntityFactoryImpl:
                 "position": 2,
                 "bitrate": 64000,
                 "user_limit": 3,
+                "region": "europe",
                 "type": 6,
                 "guild_id": "123123",
             }
@@ -2036,7 +2041,6 @@ class TestEntityFactoryImpl:
             "premium_subscription_count": 1,
             "premium_tier": 2,
             "public_updates_channel_id": "33333333",
-            "region": "eu-central",
             "roles": [guild_role_payload],
             "rules_channel_id": "42042069",
             "splash": "0ff0ff0ff",
@@ -2070,7 +2074,6 @@ class TestEntityFactoryImpl:
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
-        assert guild.region == "eu-central"
         assert guild.afk_channel_id == 99998888777766
         assert guild.afk_timeout == datetime.timedelta(seconds=1200)
         assert guild.verification_level == guild_models.GuildVerificationLevel.VERY_HIGH
@@ -2127,7 +2130,6 @@ class TestEntityFactoryImpl:
                 "preferred_locale": "en-GB",
                 "premium_tier": 2,
                 "public_updates_channel_id": "33333333",
-                "region": "eu-central",
                 "roles": [],
                 "rules_channel_id": "42042069",
                 "splash": "0ff0ff0ff",
@@ -2175,7 +2177,6 @@ class TestEntityFactoryImpl:
                 "premium_subscription_count": None,
                 "premium_tier": 2,
                 "public_updates_channel_id": None,
-                "region": "eu-central",
                 "roles": [],
                 "rules_channel_id": None,
                 "splash": None,
@@ -2246,7 +2247,6 @@ class TestEntityFactoryImpl:
             "premium_tier": 2,
             "presences": [member_presence_payload],
             "public_updates_channel_id": "33333333",
-            "region": "eu-central",
             "roles": [guild_role_payload],
             "rules_channel_id": "42042069",
             "splash": "0ff0ff0ff",
@@ -2289,7 +2289,6 @@ class TestEntityFactoryImpl:
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
-        assert guild.region == "eu-central"
         assert guild.afk_channel_id == 99998888777766
         assert guild.afk_timeout == datetime.timedelta(seconds=1200)
         assert guild.verification_level == guild_models.GuildVerificationLevel.VERY_HIGH
@@ -2377,7 +2376,6 @@ class TestEntityFactoryImpl:
                 "preferred_locale": "en-GB",
                 "premium_tier": 2,
                 "public_updates_channel_id": "33333333",
-                "region": "eu-central",
                 "roles": [],
                 "rules_channel_id": "42042069",
                 "splash": "0ff0ff0ff",
@@ -2434,7 +2432,6 @@ class TestEntityFactoryImpl:
                 "premium_tier": 2,
                 "presences": [],
                 "public_updates_channel_id": None,
-                "region": "eu-central",
                 "roles": [],
                 "rules_channel_id": None,
                 "splash": None,
@@ -3327,7 +3324,6 @@ class TestEntityFactoryImpl:
             "serialized_source_guild": {
                 "name": "hikari",
                 "description": "a descript description",
-                "region": "europe",
                 "icon_hash": "27b75989b5b42aba51346a6b69d8fcfe",
                 "verification_level": 2,
                 "default_message_notifications": 1,
@@ -3370,7 +3366,6 @@ class TestEntityFactoryImpl:
         assert template.source_guild.icon_hash == "27b75989b5b42aba51346a6b69d8fcfe"
         assert template.source_guild.name == "hikari"
         assert template.source_guild.description == "a descript description"
-        assert template.source_guild.region == "europe"
         assert template.source_guild.verification_level is guild_models.GuildVerificationLevel.MEDIUM
         assert (
             template.source_guild.default_message_notifications
@@ -3415,7 +3410,6 @@ class TestEntityFactoryImpl:
                 "serialized_source_guild": {
                     "name": "hikari",
                     "description": "a descript description",
-                    "region": "europe",
                     "icon_hash": "27b75989b5b42aba51346a6b69d8fcfe",
                     "verification_level": 2,
                     "default_message_notifications": 1,

@@ -115,7 +115,6 @@ class _GuildFields:
     splash_hash: typing.Optional[str] = attr.ib()
     discovery_splash_hash: typing.Optional[str] = attr.ib()
     owner_id: snowflakes.Snowflake = attr.ib()
-    region: str = attr.ib()
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     afk_timeout: datetime.timedelta = attr.ib()
     verification_level: typing.Union[guild_models.GuildVerificationLevel, int] = attr.ib()
@@ -717,6 +716,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             permission_overwrites=channel_fields.permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
+            region=payload["region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
         )
@@ -1258,7 +1258,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # to contest whether this is right or not with Discord.
             discovery_splash_hash=payload.get("discovery_splash"),
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
-            region=payload["region"],
             afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
             afk_timeout=datetime.timedelta(seconds=payload["afk_timeout"]),
             verification_level=guild_models.GuildVerificationLevel(payload["verification_level"]),
@@ -1317,7 +1316,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             splash_hash=guild_fields.splash_hash,
             discovery_splash_hash=guild_fields.discovery_splash_hash,
             owner_id=guild_fields.owner_id,
-            region=guild_fields.region,
             afk_channel_id=guild_fields.afk_channel_id,
             afk_timeout=guild_fields.afk_timeout,
             verification_level=guild_fields.verification_level,
@@ -1362,7 +1360,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             splash_hash=guild_fields.splash_hash,
             discovery_splash_hash=guild_fields.discovery_splash_hash,
             owner_id=guild_fields.owner_id,
-            region=guild_fields.region,
             afk_channel_id=guild_fields.afk_channel_id,
             afk_timeout=guild_fields.afk_timeout,
             verification_level=guild_fields.verification_level,
@@ -1975,7 +1972,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             icon_hash=source_guild_payload["icon_hash"],
             name=source_guild_payload["name"],
             description=source_guild_payload["description"],
-            region=source_guild_payload["region"],
             verification_level=guild_models.GuildVerificationLevel(source_guild_payload["verification_level"]),
             default_message_notifications=default_message_notifications,
             explicit_content_filter=explicit_content_filter,

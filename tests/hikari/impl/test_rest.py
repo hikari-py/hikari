@@ -1172,6 +1172,7 @@ class TestRESTClientImplAsync:
         expected_json = {
             "name": "new name",
             "position": 1,
+            "rtc_region": "ostrich-city",
             "topic": "new topic",
             "nsfw": True,
             "bitrate": 10,
@@ -1199,6 +1200,7 @@ class TestRESTClientImplAsync:
                 )
             ],
             parent_category=StubModel(1234),
+            region="ostrich-city",
             reason="some reason :)",
         )
 
@@ -1992,7 +1994,6 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",
-            "region": "europe",
             "verification": 3,
             "notifications": 1,
             "explicit_content_filter": 1,
@@ -2013,7 +2014,6 @@ class TestRESTClientImplAsync:
             result = await rest_client.edit_guild(
                 StubModel(123),
                 name="hikari",
-                region="europe",
                 verification_level=guilds.GuildVerificationLevel.HIGH,
                 default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
                 explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.MEMBERS_WITHOUT_ROLES,
@@ -2038,7 +2038,6 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",
-            "region": "europe",
             "verification": 3,
             "notifications": 1,
             "explicit_content_filter": 1,
@@ -2058,7 +2057,6 @@ class TestRESTClientImplAsync:
         result = await rest_client.edit_guild(
             StubModel(123),
             name="hikari",
-            region="europe",
             verification_level=guilds.GuildVerificationLevel.HIGH,
             default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
             explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.MEMBERS_WITHOUT_ROLES,
@@ -2186,6 +2184,7 @@ class TestRESTClientImplAsync:
             bitrate=64,
             permission_overwrites=[overwrite1, overwrite2],
             category=category_channel,
+            region="ok boomer",
             reason="because we need one",
         )
         assert returned == channel
@@ -2197,6 +2196,7 @@ class TestRESTClientImplAsync:
             user_limit=60,
             bitrate=64,
             permission_overwrites=[overwrite1, overwrite2],
+            region="ok boomer",
             category=category_channel,
             reason="because we need one",
         )
@@ -2239,6 +2239,7 @@ class TestRESTClientImplAsync:
             "bitrate": 64,
             "user_limit": 99,
             "rate_limit_per_user": 60,
+            "rtc_region": "wicky wicky",
             "parent_id": "321",
             "permission_overwrites": [{"id": "987"}, {"id": "654"}],
         }
@@ -2259,6 +2260,7 @@ class TestRESTClientImplAsync:
             user_limit=99,
             rate_limit_per_user=60,
             permission_overwrites=[overwrite1, overwrite2],
+            region="wicky wicky",
             category=StubModel(321),
             reason="we have got the power",
         )

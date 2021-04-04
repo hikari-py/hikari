@@ -219,23 +219,6 @@ class GuildBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def region(self) -> undefined.UndefinedOr[voices.VoiceRegionish]:
-        """Guild voice channel region to use that can be overwritten.
-
-        If not overridden, the guild will use the default voice region for Discord.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
-            The guild voice channel region to use, if overwritten.
-        """
-
-    @region.setter
-    def region(self, region: undefined.UndefinedOr[voices.VoiceRegionish], /) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
     def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
         """Verification level required to join the guild that can be overwritten.
 
@@ -434,6 +417,7 @@ class GuildBuilder(abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         """Create a voice channel.
@@ -457,6 +441,11 @@ class GuildBuilder(abc.ABC):
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+             If provided, the voice region to for this channel. Passing
+             `builtins.None` here will set it to "auto" mode where the used
+             region will be decided based on the first person who connects to it
+             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
