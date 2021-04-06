@@ -142,6 +142,12 @@ class MessageFlag(enums.Flag):
     URGENT = 1 << 4
     """This message came from the urgent message system."""
 
+    EPHEMERAL = 1 << 6
+    """This message is only visible to the user that invoked the interaction."""
+
+    LOADING = 1 << 7
+    """This message symbolizes that the interaction is 'thinking'."""
+
 
 @typing.final
 class MessageActivityType(int, enums.Enum):
