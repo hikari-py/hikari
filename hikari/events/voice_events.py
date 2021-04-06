@@ -129,8 +129,12 @@ class VoiceServerUpdateEvent(VoiceEvent):
         The token to use to authenticate with the voice gateway.
     """
 
-    raw_endpoint: str = attr.ib(repr=True)
+    raw_endpoint: typing.Optional[str] = attr.ib(repr=True)
     """Raw endpoint URI that Discord sent.
+
+    If this is `builtins.None`, it means that the server has been deallocated
+    and you have to disconnect. You will later receive a new event specifying
+    what endpoint to connect to.
 
     !!! warning
         This will not contain the scheme to use. Use the `endpoint` property
@@ -144,12 +148,19 @@ class VoiceServerUpdateEvent(VoiceEvent):
     """
 
     @property
-    def endpoint(self) -> str:
+    def endpoint(self) -> typing.Optional[str]:
         """URI for this voice server host, with the correct scheme prepended.
+
+        If this is `builtins.None`, it means that the server has been deallocated
+        and you have to disconnect. You will later receive a new event specifying
+        what endpoint to connect to.
 
         Returns
         -------
-        builtins.str
-            The URI to use to connect to the voice gateway.
+        typing.Optional[builtins.str]
+            If not `builtins.None`, the URI to use to connect to the voice gateway.
         """
+        if self.raw_endpoint is None:
+            return None
+
         return f"wss://{self.raw_endpoint}"
