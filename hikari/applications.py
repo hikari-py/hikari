@@ -211,13 +211,6 @@ class OAuth2Scope(str, enums.Enum):
         You must be whitelisted to use this scope.
     """
 
-    RPC_API = "rpc.api"
-    """Enables the RPC application to access the RPC API as the local user.
-
-    !!! note
-        You must be whitelisted to use this scope.
-    """
-
     RPC_MESSAGES_READ = "messages.read"
     """Enables the RPC application to read messages from all channels the user is in."""
 
