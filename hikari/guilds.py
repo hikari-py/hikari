@@ -216,10 +216,13 @@ class GuildSystemChannelFlag(enums.Flag):
     """Nothing is suppressed."""
 
     SUPPRESS_USER_JOIN = 1 << 0
-    """Display a message about new users joining."""
+    """Suppress displaying a message about new users joining."""
 
     SUPPRESS_PREMIUM_SUBSCRIPTION = 1 << 1
-    """Display a message when the guild is Nitro boosted."""
+    """Suppress displaying a message when the guild is Nitro boosted."""
+
+    SUPPRESS_GUILD_REMINDER = 1 << 2
+    """Suppress displaying messages with guild setup tips."""
 
 
 @typing.final
