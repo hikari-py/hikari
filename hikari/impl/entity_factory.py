@@ -147,7 +147,8 @@ class _InviteFields:
     channel_id: snowflakes.Snowflake = attr.ib()
     inviter: typing.Optional[user_models.User] = attr.ib()
     target_user: typing.Optional[user_models.User] = attr.ib()
-    target_user_type: typing.Union[invite_models.TargetUserType, int, None] = attr.ib()
+    target_application: typing.Optional[application_models.Application] = attr.ib()
+    target_type: typing.Union[invite_models.TargetType, int, None] = attr.ib()
     approximate_active_member_count: typing.Optional[int] = attr.ib()
     approximate_member_count: typing.Optional[int] = attr.ib()
 
@@ -304,8 +305,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"] or None,
             is_bot_public=payload.get("bot_public"),
             is_bot_code_grant_required=payload.get("bot_require_code_grant"),
-            owner=self.deserialize_user(payload["owner"]),
-            rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
+            owner=self.deserialize_user(payload["owner"]) if "owner" in payload else None,
+            rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
             icon_hash=payload.get("icon"),
@@ -1525,8 +1526,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             channel_id = snowflakes.Snowflake(payload["channel_id"])
 
-        target_user_type = (
-            invite_models.TargetUserType(payload["target_user_type"]) if "target_user_type" in payload else None
+        target_type = invite_models.TargetType(payload["target_type"]) if "target_type" in payload else None
+        target_application = (
+            self.deserialize_application(payload["target_application"]) if "target_application" in payload else None
         )
         approximate_active_member_count = (
             int(payload["approximate_presence_count"]) if "approximate_presence_count" in payload else None
@@ -1541,8 +1543,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel=channel,
             channel_id=channel_id,
             inviter=self.deserialize_user(payload["inviter"]) if "inviter" in payload else None,
+            target_type=target_type,
             target_user=self.deserialize_user(payload["target_user"]) if "target_user" in payload else None,
-            target_user_type=target_user_type,
+            target_application=target_application,
             approximate_active_member_count=approximate_active_member_count,
             approximate_member_count=approximate_member_count,
         )
@@ -1557,8 +1560,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel=invite_fields.channel,
             channel_id=invite_fields.channel_id,
             inviter=invite_fields.inviter,
+            target_type=invite_fields.target_type,
             target_user=invite_fields.target_user,
-            target_user_type=invite_fields.target_user_type,
+            target_application=invite_fields.target_application,
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
         )
@@ -1574,8 +1578,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel=invite_fields.channel,
             channel_id=invite_fields.channel_id,
             inviter=invite_fields.inviter,
+            target_type=invite_fields.target_type,
             target_user=invite_fields.target_user,
-            target_user_type=invite_fields.target_user_type,
+            target_application=invite_fields.target_application,
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
             uses=int(payload["uses"]),

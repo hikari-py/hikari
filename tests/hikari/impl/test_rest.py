@@ -1640,7 +1640,7 @@ class TestRESTClientImplAsync:
             "temporary": True,
             "unique": True,
             "target_user_id": "456",
-            "target_user_type": invites.TargetUserType.STREAM,
+            "target_type": invites.TargetType.STREAM,
         }
 
         result = await rest_client.create_invite(
@@ -1650,7 +1650,7 @@ class TestRESTClientImplAsync:
             temporary=True,
             unique=True,
             target_user=StubModel(456),
-            target_user_type=invites.TargetUserType.STREAM,
+            target_type=invites.TargetType.STREAM,
             reason="cause why not :)",
         )
 

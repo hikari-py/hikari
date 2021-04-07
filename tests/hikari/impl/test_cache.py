@@ -875,13 +875,15 @@ class TestCacheImpl:
     def test__build_invite(self, cache_impl):
         mock_inviter = mock.MagicMock(users.User)
         mock_target_user = mock.MagicMock(users.User)
+        mock_application = mock.Mock()
         invite_data = cache_utilities.InviteData(
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=cache_utilities.RefCell(mock_inviter),
+            target_type=invites.TargetType.STREAM,
             target_user=cache_utilities.RefCell(mock_target_user),
-            target_user_type=invites.TargetUserType.STREAM,
+            target_application=mock_application,
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),
@@ -901,7 +903,8 @@ class TestCacheImpl:
         assert invite.target_user == mock_target_user
         assert invite.inviter is not mock_inviter
         assert invite.target_user is not mock_target_user
-        assert invite.target_user_type is invites.TargetUserType.STREAM
+        assert invite.target_type is invites.TargetType.STREAM
+        assert invite.target_application is mock_application
         assert invite.approximate_active_member_count is None
         assert invite.approximate_member_count is None
         assert invite.uses == 42
@@ -916,8 +919,9 @@ class TestCacheImpl:
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=None,
+            target_type=invites.TargetType.STREAM,
             target_user=None,
-            target_user_type=invites.TargetUserType.STREAM,
+            target_application=None,
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),

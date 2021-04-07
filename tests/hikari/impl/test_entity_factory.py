@@ -252,7 +252,7 @@ class TestEntityFactoryImpl:
         assert application.cover_image_hash == "hashmebaby"
         assert isinstance(application, application_models.Application)
 
-    def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
+    def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app):
         application = entity_factory_impl.deserialize_application(
             {
                 "id": "209333111222",
@@ -260,13 +260,13 @@ class TestEntityFactoryImpl:
                 "icon": "3123123",
                 "description": "I am an application",
                 "summary": "not a blank string",
-                "owner": owner_payload,
             }
         )
         assert application.is_bot_public is None
         assert application.is_bot_code_grant_required is None
         assert application.rpc_origins is None
         assert application.public_key is None
+        assert application.owner is None
         assert application.team is None
         assert application.guild_id is None
         assert application.primary_sku_id is None
@@ -2662,7 +2662,7 @@ class TestEntityFactoryImpl:
             "channel": partial_channel_payload,
             "inviter": user_payload,
             "target_user": alternative_user_payload,
-            "target_user_type": 1,
+            "target_type": 1,
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
         }
@@ -2699,7 +2699,7 @@ class TestEntityFactoryImpl:
         assert invite.channel_id == 561884984214814750
         assert invite.inviter == entity_factory_impl.deserialize_user(user_payload)
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
-        assert invite.target_user_type == invite_models.TargetUserType.STREAM
+        assert invite.target_type == invite_models.TargetType.STREAM
         assert invite.approximate_member_count == 84
         assert invite.approximate_active_member_count == 42
         assert isinstance(invite, invite_models.Invite)
@@ -2723,7 +2723,7 @@ class TestEntityFactoryImpl:
         assert invite.guild is None
         assert invite.inviter is None
         assert invite.target_user is None
-        assert invite.target_user_type is None
+        assert invite.target_type is None
 
     def test_deserialize_invite_with_guild_and_channel_ids_without_objects(self, entity_factory_impl):
         invite = entity_factory_impl.deserialize_invite({"code": "aCode", "guild_id": "42", "channel_id": "202020"})
@@ -2753,7 +2753,7 @@ class TestEntityFactoryImpl:
             "channel": partial_channel_payload,
             "inviter": user_payload,
             "target_user": alternative_user_payload,
-            "target_user_type": 1,
+            "target_type": 1,
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "uses": 3,
@@ -2793,7 +2793,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite_with_metadata.inviter == entity_factory_impl.deserialize_user(user_payload)
         assert invite_with_metadata.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
-        assert invite_with_metadata.target_user_type == invite_models.TargetUserType.STREAM
+        assert invite_with_metadata.target_type == invite_models.TargetType.STREAM
         assert invite_with_metadata.approximate_member_count == 84
         assert invite_with_metadata.approximate_active_member_count == 42
         assert invite_with_metadata.uses == 3
@@ -2824,7 +2824,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.guild is None
         assert invite_with_metadata.inviter is None
         assert invite_with_metadata.target_user is None
-        assert invite_with_metadata.target_user_type is None
+        assert invite_with_metadata.target_type is None
 
     def test_deserialize_invite_with_metadata_with_null_guild_fields(
         self, entity_factory_impl, invite_with_metadata_payload

@@ -67,6 +67,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import channels as channels_
     from hikari import traits
     from hikari import users as users_
@@ -335,8 +336,9 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
     channel_id: snowflakes.Snowflake = attr.ib()
     inviter: typing.Optional[RefCell[users_.User]] = attr.ib()
+    target_type: typing.Union[invites.TargetType, int, None] = attr.ib()
     target_user: typing.Optional[RefCell[users_.User]] = attr.ib()
-    target_user_type: typing.Union[invites.TargetUserType, int, None] = attr.ib()
+    target_application: typing.Optional[applications.Application] = attr.ib()
     uses: int = attr.ib()
     max_uses: typing.Optional[int] = attr.ib()
     max_age: typing.Optional[datetime.timedelta] = attr.ib()
@@ -348,7 +350,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             code=self.code,
             guild_id=self.guild_id,
             channel_id=self.channel_id,
-            target_user_type=self.target_user_type,
+            target_type=self.target_type,
             uses=self.uses,
             max_uses=self.max_uses,
             max_age=self.max_age,
@@ -361,6 +363,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             app=app,
             inviter=self.inviter.copy() if self.inviter else None,
             target_user=self.target_user.copy() if self.target_user else None,
+            target_application=self.target_application,
         )
 
     @classmethod
@@ -382,7 +385,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             code=invite.code,
             guild_id=invite.guild_id,
             channel_id=invite.channel_id,
-            target_user_type=invite.target_user_type,
+            target_type=invite.target_type,
             uses=invite.uses,
             max_uses=invite.max_uses,
             max_age=invite.max_age,
@@ -390,6 +393,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             created_at=invite.created_at,
             inviter=inviter,
             target_user=target_user,
+            target_application=invite.target_application,
         )
 
 
