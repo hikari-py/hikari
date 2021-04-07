@@ -36,7 +36,14 @@ from hikari.internal import routes
 class TestAttachment:
     def test_str_operator(self):
         attachment = messages.Attachment(
-            id=123, filename="super_cool_file.cool", height=222, width=555, proxy_url="htt", size=543, url="htttt"
+            id=123,
+            filename="super_cool_file.cool",
+            media_type="image/png",
+            height=222,
+            width=555,
+            proxy_url="htt",
+            size=543,
+            url="htttt",
         )
         assert str(attachment) == "super_cool_file.cool"
 

@@ -195,6 +195,9 @@ class Attachment(snowflakes.Unique, files.WebResource):
     filename: str = attr.ib(repr=True)
     """The name of the file."""
 
+    media_type: typing.Optional[str] = attr.ib(repr=True)
+    """The media type of the file."""
+
     size: int = attr.ib(repr=True)
     """The size of the file in bytes."""
 
