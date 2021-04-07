@@ -152,6 +152,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
@@ -183,6 +184,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, whether the channel should be marked as NSFW or not.
         bitrate : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new bitrate for the channel.
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+            If provided, the new video quality mode for the channel.
         user_limit : hikari.undefined.UndefinedOr[builtins.int]
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -3615,6 +3618,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -3644,6 +3648,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+            If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
