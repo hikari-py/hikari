@@ -113,11 +113,20 @@ class MessageType(int, enums.Enum):
     GUILD_DISCOVERY_REQUALIFIED = 15
     """A message to indicate that a guild has re-qualified for discovery."""
 
+    GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING = 16
+    """A message to indicate that the grace period before removal from discovery has started."""
+
+    GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING = 17
+    """A message to indicate the final warning before removal from discovery."""
+
     REPLY = 19
     """A message that replies to another message."""
 
     APPLICATION_COMMAND = 20
     """A message sent to indicate a application command has been executed."""
+
+    GUILD_INVITE_REMINDER = 22
+    """A message sent to remind to invite people to the guild."""
 
 
 @typing.final
