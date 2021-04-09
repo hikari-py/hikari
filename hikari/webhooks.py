@@ -339,12 +339,20 @@ class Webhook(snowflakes.Unique):
             to embed attachments.
 
         !!! warning
-            If you specify one of `mentions_everyone`, `user_mentions`, or
-            `role_mentions`, then all others will default to `builtins.False`,
-            even if they were enabled previously.
+            If you specify a non-embed `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `builtins.False` as the message will be re-parsed for mentions.
 
-            This is a limitation of Discord's design. If in doubt, specify all three of
-            them each time.
+            This is a limitation of Discord's design. If in doubt, specify all
+            three of them each time.
+
+        !!! warning
+            If you specify one of `mentions_everyone`, `mentions_reply`,
+            `user_mentions`, or `role_mentions`, then all others will default to
+            `builtins.False`, even if they were enabled previously.
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            three of them each time.
 
         Returns
         -------
