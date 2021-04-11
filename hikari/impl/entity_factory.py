@@ -728,10 +728,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
         channel_type = payload["type"]
-        if channel_model := self._guild_channel_type_mapping.get(channel_type):
-            return channel_model(payload, guild_id=guild_id)
+        if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
+            return guild_channel_model(payload, guild_id=guild_id)
 
-        return self._dm_channel_type_mapping[channel_type](payload)
+        if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
+            return dm_channel_model(payload)
+
+        _LOGGER.debug("Unknown channel type found %r", channel_type)
+        return channel_models.UnrecognisedChannel(
+            app=self._app, id=payload["id"], name=payload.get("name"), type=channel_type, payload=payload
+        )
 
     ################
     # EMBED MODELS #

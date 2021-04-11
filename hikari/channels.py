@@ -30,6 +30,7 @@ __all__: typing.List[str] = [
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
+    "UnrecognisedChannel",
     "TextChannel",
     "PrivateChannel",
     "DMChannel",
@@ -812,3 +813,36 @@ class GuildVoiceChannel(GuildChannel):
 
     If this is `0`, then assume no limit.
     """
+
+
+class UnrecognisedChannel(PartialChannel):
+    """Channels that haven't been implemented in the library.
+
+    The attributes on this object are undocumented and dynamic.
+
+    Example
+    -------
+        >>> entry_info.foobar.baz
+
+    !!! note
+        This model has no slots and will have arbitrary undocumented attributes
+        (in it's `__dict__` based on the received payload).
+        The only attributes that are always garantied to be there are `app`,
+        `id`, `name` and `type`.
+    """
+
+    def __init__(
+        self,
+        /,
+        *,
+        app: traits.RESTAware,
+        id: snowflakes.Snowflake,
+        name: typing.Optional[str],
+        type: typing.Union[ChannelType, int],
+        payload: typing.Mapping[str, str],
+    ) -> None:
+        self.__dict__.update(payload)
+        self.app = app
+        self.id = id
+        self.name = name
+        self.type = type

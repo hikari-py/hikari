@@ -435,7 +435,7 @@ class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
     def __str__(self) -> str:
         attributes = ", ".join((f"{name}={value!r}" for name, value in self.__dict__.items()))
 
-        return f"UnrecognisedAuditLogEntryInfo({attributes})"
+        return f"{self.__class__.__name__}({attributes})"
 
     __repr__ = __str__
 

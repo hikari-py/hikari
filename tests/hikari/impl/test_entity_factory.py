@@ -1117,6 +1117,7 @@ class TestEntityFactoryImpl:
         guild_store_channel_payload,
         guild_voice_channel_payload,
     ):
+        unknown_channel_payload = {"id": 1123456, "type": 1000, "name": "Testing"}
         for payload, expected_type in [
             (dm_channel_payload, channel_models.DMChannel),
             (group_dm_channel_payload, channel_models.GroupDMChannel),
@@ -1125,6 +1126,7 @@ class TestEntityFactoryImpl:
             (guild_news_channel_payload, channel_models.GuildNewsChannel),
             (guild_store_channel_payload, channel_models.GuildStoreChannel),
             (guild_voice_channel_payload, channel_models.GuildVoiceChannel),
+            (unknown_channel_payload, channel_models.UnrecognisedChannel),
         ]:
             assert isinstance(entity_factory_impl.deserialize_channel(payload), expected_type)
 
