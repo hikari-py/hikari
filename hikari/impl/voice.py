@@ -149,6 +149,9 @@ class VoiceComponentImpl(voice.VoiceComponent):
             timeout=10.0,
         )
 
+        # We will never receive the first endpoint as `None`
+        assert server_event.endpoint is not None
+
         _LOGGER.debug(
             "joined voice channel %s in guild %s via shard %s using endpoint %s. Session will be %s. "
             "Delegating to voice websocket",

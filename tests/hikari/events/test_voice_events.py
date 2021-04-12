@@ -52,3 +52,7 @@ class TestVoiceServerUpdateEvent:
 
     def test_endpoint_property(self, event):
         assert event.endpoint == "wss://voice.discord.com:123"
+
+    def test_endpoint_property_when_raw_endpoint_is_None(self, event):
+        event.raw_endpoint = None
+        assert event.endpoint is None
