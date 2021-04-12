@@ -2717,6 +2717,7 @@ class TestEntityFactoryImpl:
                 {
                     "id": "690922406474154014",
                     "filename": "IMG.jpg",
+                    "content_type": "image/png",
                     "size": 660521,
                     "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
                     "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
@@ -2793,6 +2794,7 @@ class TestEntityFactoryImpl:
         assert attachment.id == 690922406474154014
         assert attachment.filename == "IMG.jpg"
         assert attachment.size == 660521
+        assert attachment.media_type == "image/png"
         assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
