@@ -73,14 +73,7 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Listening to <name>`."""
 
     WATCHING = 3
-    """Shows up as `Watching <name>`.
-
-    !!! warning
-        This is not documented by Discord, and was supposedly going to be
-        removed a long time ago, but that never happened. This may be
-        removed at any time without warning by Discord, so use this at
-        your own risk.
-    """
+    """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
     """A custom status.

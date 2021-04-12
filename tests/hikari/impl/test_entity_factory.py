@@ -1047,7 +1047,7 @@ class TestEntityFactoryImpl:
             "permission_overwrites": [permission_overwrite_payload],
             "bitrate": 64000,
             "user_limit": 3,
-            "region": "europe",
+            "rtc_region": "europe",
             "parent_id": "456",
         }
 
@@ -1082,7 +1082,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "1234",
                 "bitrate": 64000,
                 "user_limit": 3,
-                "region": None,
+                "rtc_region": None,
                 "type": 6,
             }
         )
@@ -1098,7 +1098,7 @@ class TestEntityFactoryImpl:
                 "position": 2,
                 "bitrate": 64000,
                 "user_limit": 3,
-                "region": "europe",
+                "rtc_region": "europe",
                 "type": 6,
                 "guild_id": "123123",
             }

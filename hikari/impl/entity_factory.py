@@ -716,7 +716,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             permission_overwrites=channel_fields.permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
-            region=payload["region"],
+            region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
         )
