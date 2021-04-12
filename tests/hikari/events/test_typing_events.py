@@ -65,13 +65,23 @@ class TestGuildTypingEvent:
             user=mock.Mock(id=456),
         )
 
+    def test_channel_when_no_cache(self, event):
+        event.app = object()
+
+        assert event.channel is None
+
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildNewsChannel, channels.GuildTextChannel])
-    async def test_channel(self, event, guild_channel_impl):
+    def test_channel(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
         result = event.channel
 
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(123)
+
+    async def test_guild_when_no_cache(self, event):
+        event.app = object()
+
+        assert event.guild is None
 
     def test_guild_when_available(self, event):
         result = event.guild
@@ -128,6 +138,11 @@ class TestDMTypingEvent:
             app=mock.Mock(rest=mock.AsyncMock()),
             user_id=456,
         )
+
+    async def test_user_when_no_cache(self, event):
+        event.app = object()
+
+        assert event.user is None
 
     def test_user(self, event):
         event.app.cache.get_user = mock.Mock(return_value=mock.Mock(spec_set=users.User))

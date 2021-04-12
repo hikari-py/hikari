@@ -111,6 +111,9 @@ class TestUnique:
             2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
         )
 
+    def test_index(self, neko_unique, raw_id):
+        assert operator.index(neko_unique) == raw_id
+
     def test__hash__(self, neko_unique, raw_id):
         assert hash(neko_unique) == hash(raw_id)
 

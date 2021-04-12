@@ -320,7 +320,7 @@ class Embed:
         """
         # Create an empty instance without the overhead of invoking the regular
         # constructor.
-        embed = super().__new__(cls)  # type: Embed
+        embed: Embed = super().__new__(cls)
         embed._title = title
         embed._description = description
         embed._url = url
@@ -348,15 +348,10 @@ class Embed:
         if color is not None and colour is not None:
             raise TypeError("Please provide one of color or colour to Embed(). Do not pass both.")
 
-        # MyPy doesn't like me "phrasing" this in a different way... annoyingly.
-        # Probably a MyPy bug.
-        if color is None:
-            if colour is None:
-                self._color = None
-            else:
-                self._color = colors.Color.of(colour)
-        else:
-            self._color = colors.Color.of(color)
+        if colour is not None:
+            color = colour
+
+        self._color = colors.Color.of(color) if color is not None else None
 
         if timestamp is not None and timestamp.tzinfo is None:
             self.__warn_naive_datetime()
