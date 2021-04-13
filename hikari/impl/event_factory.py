@@ -307,8 +307,6 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
         )
 
-    # TODO: fix test case for this method. I managed to indent the return into the
-    # `if(user_payload) > 1` without any tests failing!
     def deserialize_presence_update_event(
         self,
         shard: gateway_shard.GatewayShard,
@@ -324,7 +322,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         # then we've only got an ID and there's no reason to form a user object.
         if len(user_payload) > 1:
             # PartialUser
-            discriminator = user_payload["discriminator"] if "discriminator" in user_payload else undefined.UNDEFINED
+            discriminator = user_payload.get("discriminator", undefined.UNDEFINED)
             flags: undefined.UndefinedOr[user_models.UserFlag] = undefined.UNDEFINED
             if "public_flags" in user_payload:
                 flags = user_models.UserFlag(user_payload["public_flags"])

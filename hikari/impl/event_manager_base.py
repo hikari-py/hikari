@@ -165,7 +165,6 @@ class EventManagerBase(event_manager.EventManager):
         event_type: typing.Type[event_manager.EventT_co],
         callback: event_manager.CallbackT[event_manager.EventT_co],
     ) -> None:
-        # TODO: should this error if it's not registered or should it not?
         if event_type in self._listeners:
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",

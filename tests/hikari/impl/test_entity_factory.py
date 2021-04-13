@@ -337,7 +337,7 @@ class TestEntityFactoryImpl:
         assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
         assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
 
-    def test_test_deserialize_authorization_information_with_unset_fields(
+    def test_deserialize_authorization_information_with_unset_fields(
         self, entity_factory_impl, authorization_information_payload
     ):
         del authorization_information_payload["application"]["icon"]

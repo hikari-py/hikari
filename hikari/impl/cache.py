@@ -30,16 +30,13 @@ import copy
 import logging
 import sys
 import typing
-import warnings
 
 import attr
 
 from hikari import channels
 from hikari import config
 from hikari import emojis
-from hikari import errors
 from hikari import guilds
-from hikari import intents as intents_
 from hikari import invites
 from hikari import messages
 from hikari import presences
@@ -146,15 +143,6 @@ class CacheImpl(cache.MutableCache):
             limit=self._settings.max_messages, on_expire=self._on_message_expire
         )
         self._referenced_messages = collections.FreezableDict()
-
-    # TODO: Setup this check or remove it
-    def _assert_has_intent(self, intents: intents_.Intents, /) -> None:
-        if self._intents ^ intents:
-            warnings.warn(
-                f"Cache call made made without required intents {intents}",
-                category=errors.MissingIntentWarning,
-                stacklevel=1,
-            )
 
     def _is_cache_enabled_for(self, setting: str) -> bool:
         return bool(self._settings_map[ENABLE] and self._settings_map[setting])

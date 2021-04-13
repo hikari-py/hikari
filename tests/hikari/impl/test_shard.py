@@ -858,20 +858,26 @@ class TestGatewayShardImpl:
         client._send_json.assert_awaited_once_with({"op": 3, "d": presence_payload})
         client._check_if_alive.assert_called_once_with()
 
-    @pytest.mark.parametrize("channel", [12345, None])
-    @pytest.mark.parametrize("self_deaf", [True, False])
-    @pytest.mark.parametrize("self_mute", [True, False])
-    async def test_update_voice_state(self, client, channel, self_deaf, self_mute):
+    async def test_update_voice_state(self, client):
         client._check_if_alive = mock.Mock()
         client._send_json = mock.AsyncMock()
         payload = {
-            "channel_id": str(channel) if channel is not None else None,
-            "guild_id": "6969420",
-            "self_deaf": self_deaf,
-            "self_mute": self_mute,
+            "guild_id": "123456",
+            "channel_id": "6969420",
+            "self_mute": False,
+            "self_deaf": True,
         }
 
-        await client.update_voice_state("6969420", channel, self_mute=self_mute, self_deaf=self_deaf)
+        await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
+
+        client._send_json.assert_awaited_once_with({"op": 4, "d": payload})
+
+    async def test_update_voice_state_without_optionals(self, client):
+        client._check_if_alive = mock.Mock()
+        client._send_json = mock.AsyncMock()
+        payload = {"guild_id": "123456", "channel_id": "6969420"}
+
+        await client.update_voice_state(123456, 6969420)
 
         client._send_json.assert_awaited_once_with({"op": 4, "d": payload})
 
