@@ -271,6 +271,9 @@ class RESTErrorCode(int, enums.Enum):
     UNKNOWN_BAN = 10_026
     """Unknown ban provided."""
 
+    UNKNOWN_GUILD_TEMPLATE = 10_057
+    """Unknown guild template."""
+
     ANNOUNCEMENT_LIMIT_HIT = 20_022
     """Message can not be edited due to announcement rate limits."""
 
