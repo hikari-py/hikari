@@ -780,6 +780,22 @@ class PartialMessage(snowflakes.Unique):
             do this, `delete` the message and re-send it.
 
         !!! warning
+            If you specify a non-embed `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `builtins.False` as the message will be re-parsed for mentions.
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
+        !!! warning
+            If you specify one of `mentions_everyone`, `mentions_reply`,
+            `user_mentions`, or `role_mentions`, then all others will default to
+            `builtins.False`, even if they were enabled previously.
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
+        !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
             else will result in a `hikari.errors.ForbiddenError` being raised.
