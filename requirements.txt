@@ -1,4 +1,4 @@
 aiohttp==3.7.4.post0
 attrs==20.3.0
-colorlog==4.8.0
+colorlog==5.0.1
 multidict==5.1.0
