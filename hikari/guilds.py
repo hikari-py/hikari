@@ -456,8 +456,8 @@ class Member(users.User):
     def username(self) -> str:
         return self.user.username
 
-    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        return self.user.format_avatar(ext=ext, size=size)
+    def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.make_avatar_url(ext=ext, size=size)
 
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.
@@ -691,17 +691,17 @@ class PartialApplication(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Team icon, if there is one.
+        """Team icon URL, if there is one.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
             The URL, or `builtins.None` if no icon exists.
         """
-        return self.format_icon()
+        return self.make_icon_url()
 
-    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the icon for this application.
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon URL for this application.
 
         Parameters
         ----------
@@ -883,8 +883,8 @@ class PartialGuild(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon for the guild, if set; otherwise `builtins.None`."""
-        return self.format_icon()
+        """Icon URL for the guild, if set; otherwise `builtins.None`."""
+        return self.make_icon_url()
 
     @property
     def shard_id(self) -> typing.Optional[int]:
@@ -900,8 +900,8 @@ class PartialGuild(snowflakes.Unique):
         assert isinstance(shard_count, int)
         return snowflakes.calculate_shard_id(shard_count, self.id)
 
-    def format_icon(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's icon, if set.
+    def make_icon_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's icon URL, if set.
 
         Parameters
         ----------
@@ -971,16 +971,16 @@ class GuildPreview(PartialGuild):
 
     @property
     def discovery_splash_url(self) -> typing.Optional[files.URL]:
-        """Discovery splash for the guild, if set."""
-        return self.format_discovery_splash()
+        """Discovery URL splash for the guild, if set."""
+        return self.make_discovery_splash_url()
 
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash for the guild, if set."""
-        return self.format_splash()
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
 
-    def format_discovery_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's discovery splash image, if set.
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image URL, if set.
 
         Parameters
         ----------
@@ -1012,8 +1012,8 @@ class GuildPreview(PartialGuild):
             file_format=ext,
         )
 
-    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's splash image, if set.
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image URL, if set.
 
         Parameters
         ----------
@@ -1187,13 +1187,13 @@ class Guild(PartialGuild, abc.ABC):
 
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
-        """Banner for the guild, if set."""
-        return self.format_banner()
+        """Banner URL for the guild, if set."""
+        return self.make_banner_url()
 
     @property
     def discovery_splash_url(self) -> typing.Optional[files.URL]:
-        """Discovery splash for the guild, if set."""
-        return self.format_discovery_splash()
+        """Discovery splash URL for the guild, if set."""
+        return self.make_discovery_splash_url()
 
     @property
     @abc.abstractmethod
@@ -1219,11 +1219,11 @@ class Guild(PartialGuild, abc.ABC):
 
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash for the guild, if set."""
-        return self.format_splash()
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
 
-    def format_banner(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's banner image, if set.
+    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image URL, if set.
 
         Parameters
         ----------
@@ -1255,8 +1255,8 @@ class Guild(PartialGuild, abc.ABC):
             file_format=ext,
         )
 
-    def format_discovery_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's discovery splash image, if set.
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image URL, if set.
 
         Parameters
         ----------
@@ -1288,8 +1288,8 @@ class Guild(PartialGuild, abc.ABC):
             file_format=ext,
         )
 
-    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's splash image, if set.
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image URL, if set.
 
         Parameters
         ----------

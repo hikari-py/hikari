@@ -626,10 +626,10 @@ class GroupDMChannel(PrivateChannel):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon for this groupd DM, if set."""
-        return self.format_icon()
+        """Icon for this group DM, if set."""
+        return self.make_icon_url()
 
-    def format_icon(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon for this group, if set.
 
         Parameters

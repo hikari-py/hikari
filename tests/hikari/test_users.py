@@ -103,24 +103,24 @@ class TestUser:
     def test_avatar_url_when_hash(self, obj):
         avatar = object()
 
-        with mock.patch.object(users.User, "format_avatar", return_value=avatar):
+        with mock.patch.object(users.User, "make_avatar_url", return_value=avatar):
             assert obj.avatar_url is avatar
 
     def test_avatar_url_when_no_hash(self, obj):
-        with mock.patch.object(users.User, "format_avatar", return_value=None):
+        with mock.patch.object(users.User, "make_avatar_url", return_value=None):
             assert obj.avatar_url is None
 
-    def test_format_avatar_when_no_hash(self, obj):
+    def test_make_avatar_url_when_no_hash(self, obj):
         obj.avatar_hash = None
-        assert obj.format_avatar(ext="png", size=1024) is None
+        assert obj.make_avatar_url(ext="png", size=1024) is None
 
-    def test_format_avatar_when_format_is_None_and_avatar_hash_is_for_gif(self, obj):
+    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, obj):
         obj.avatar_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext=None, size=4096) == "file"
+            assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -130,13 +130,13 @@ class TestUser:
             file_format="gif",
         )
 
-    def test_format_avatar_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
+    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext=None, size=4096) == "file"
+            assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -146,13 +146,13 @@ class TestUser:
             file_format="png",
         )
 
-    def test_format_avatar_with_all_args(self, obj):
+    def test_make_avatar_url_with_all_args(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.format_avatar(ext="url", size=4096) == "file"
+            assert obj.make_avatar_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,

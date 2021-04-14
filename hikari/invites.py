@@ -136,11 +136,11 @@ class InviteGuild(guilds.PartialGuild):
 
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash for the guild, if set."""
-        return self.format_splash()
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
 
-    def format_splash(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's splash image, if set.
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image URL, if set.
 
         Parameters
         ----------
@@ -174,11 +174,11 @@ class InviteGuild(guilds.PartialGuild):
 
     @property
     def banner(self) -> typing.Optional[files.URL]:
-        """Banner for the guild, if set."""
-        return self.format_banner()
+        """Banner URL for the guild, if set."""
+        return self.make_banner_url()
 
-    def format_banner(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's banner image, if set.
+    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image URL, if set.
 
         Parameters
         ----------

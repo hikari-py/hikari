@@ -163,22 +163,24 @@ class TestGroupDMChannel:
 
     def test_icon_url(self):
         channel = hikari_test_helpers.mock_class_namespace(
-            channels.GroupDMChannel, init_=False, format_icon=mock.Mock(return_value="icon-url-here.com")
+            channels.GroupDMChannel, init_=False, make_icon_url=mock.Mock(return_value="icon-url-here.com")
         )()
         assert channel.icon_url == "icon-url-here.com"
-        channel.format_icon.assert_called_once()
+        channel.make_icon_url.assert_called_once()
 
-    def test_format_icon(self, model):
-        assert model.format_icon(ext="jpeg", size=16) == files.URL(
+    def test_make_icon_url(self, model):
+        assert model.make_icon_url(ext="jpeg", size=16) == files.URL(
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.jpeg?size=16"
         )
 
-    def test_format_icon_without_optional_params(self, model):
-        assert model.format_icon() == files.URL("https://cdn.discordapp.com/channel-icons/136134/1a2b3c.png?size=4096")
+    def test_make_icon_url_without_optional_params(self, model):
+        assert model.make_icon_url() == files.URL(
+            "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.png?size=4096"
+        )
 
-    def test_format_icon_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None
-        assert model.format_icon() is None
+        assert model.make_icon_url() is None
 
 
 @pytest.mark.asyncio()

@@ -435,7 +435,7 @@ class User(PartialUser, abc.ABC):
         May be `builtins.None` if no custom avatar is set. In this case, you
         should use `default_avatar_url` instead.
         """
-        return self.format_avatar()
+        return self.make_avatar_url()
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -490,8 +490,8 @@ class User(PartialUser, abc.ABC):
     def username(self) -> str:
         """Username for the user."""
 
-    def format_avatar(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the avatar for this user, if set.
+    def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the avatar URL for this user, if set.
 
         If no custom avatar is set, this returns `builtins.None`. You can then
         use the `default_avatar_url` attribute instead to fetch the displayed

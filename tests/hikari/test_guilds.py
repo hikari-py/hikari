@@ -71,27 +71,27 @@ class TestPartialApplication:
         )()
 
     def test_icon_url_property(self, model):
-        model.format_icon = mock.Mock(return_value="url")
+        model.make_icon_url = mock.Mock(return_value="url")
 
         assert model.icon_url == "url"
 
-        model.format_icon.assert_called_once_with()
+        model.make_icon_url.assert_called_once_with()
 
-    def test_format_icon_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None
 
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext="jpeg", size=1) is None
+            assert model.make_icon_url(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
-    def test_format_icon_when_hash_is_not_None(self, model):
+    def test_make_icon_url_when_hash_is_not_None(self, model):
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext="jpeg", size=1) == "file"
+            assert model.make_icon_url(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashicon", size=1, file_format="jpeg"
@@ -200,10 +200,10 @@ class TestMember:
     def test_avatar_url_property(self, model, mock_user):
         assert model.avatar_url is mock_user.avatar_url
 
-    def test_format_avatar(self, model, mock_user):
-        result = model.format_avatar(ext="png", size=4096)
-        mock_user.format_avatar.assert_called_once_with(ext="png", size=4096)
-        assert result is mock_user.format_avatar.return_value
+    def test_make_avatar_url(self, model, mock_user):
+        result = model.make_avatar_url(ext="png", size=4096)
+        mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
+        assert result is mock_user.make_avatar_url.return_value
 
     @pytest.mark.asyncio
     async def test_fetch_dm_channel(self, model, mock_user):
@@ -324,21 +324,21 @@ class TestPartialGuild:
     def test_icon_url(self, model):
         icon = object()
 
-        with mock.patch.object(guilds.PartialGuild, "format_icon", return_value=icon):
+        with mock.patch.object(guilds.PartialGuild, "make_icon_url", return_value=icon):
             assert model.icon_url is icon
 
-    def test_format_icon_when_no_hash(self, model):
+    def test_make_icon_url_when_no_hash(self, model):
         model.icon_hash = None
 
-        assert model.format_icon(ext="png", size=2048) is None
+        assert model.make_icon_url(ext="png", size=2048) is None
 
-    def test_format_icon_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
+    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
         model.icon_hash = "a_yeet"
 
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext=None, size=1024) == "file"
+            assert model.make_icon_url(ext=None, size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -348,11 +348,11 @@ class TestPartialGuild:
             file_format="gif",
         )
 
-    def test_format_icon_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
+    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext=None, size=4096) == "file"
+            assert model.make_icon_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -362,11 +362,11 @@ class TestPartialGuild:
             file_format="png",
         )
 
-    def test_format_icon_with_all_args(self, model):
+    def test_make_icon_url_with_all_args(self, model):
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_icon(ext="url", size=2048) == "file"
+            assert model.make_icon_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -397,16 +397,16 @@ class TestGuildPreview:
     def test_splash_url(self, model):
         splash = object()
 
-        with mock.patch.object(guilds.GuildPreview, "format_splash", return_value=splash):
+        with mock.patch.object(guilds.GuildPreview, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
 
-    def test_format_splash_when_hash(self, model):
+    def test_make_splash_url_when_hash(self, model):
         model.splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_splash(ext="url", size=1024) == "file"
+            assert model.make_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -416,23 +416,23 @@ class TestGuildPreview:
             file_format="url",
         )
 
-    def test_format_splash_when_no_hash(self, model):
+    def test_make_splash_url_when_no_hash(self, model):
         model.splash_hash = None
-        assert model.format_splash(ext="png", size=512) is None
+        assert model.make_splash_url(ext="png", size=512) is None
 
     def test_discovery_splash_url(self, model):
         discovery_splash = object()
 
-        with mock.patch.object(guilds.GuildPreview, "format_discovery_splash", return_value=discovery_splash):
+        with mock.patch.object(guilds.GuildPreview, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
 
-    def test_format_discovery_splash_when_hash(self, model):
+    def test_make_discovery_splash_url_when_hash(self, model):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_discovery_splash(ext="url", size=2048) == "file"
+            assert model.make_discovery_splash_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -442,9 +442,9 @@ class TestGuildPreview:
             file_format="url",
         )
 
-    def test_format_discovery_splash_when_no_hash(self, model):
+    def test_make_discovery_splash_url_when_no_hash(self, model):
         model.discovery_splash_hash = None
-        assert model.format_discovery_splash(ext="png", size=4096) is None
+        assert model.make_discovery_splash_url(ext="png", size=4096) is None
 
 
 class TestGuild:
@@ -484,16 +484,16 @@ class TestGuild:
     def test_splash_url(self, model):
         splash = object()
 
-        with mock.patch.object(guilds.Guild, "format_splash", return_value=splash):
+        with mock.patch.object(guilds.Guild, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
 
-    def test_format_splash_when_hash(self, model):
+    def test_make_splash_url_when_hash(self, model):
         model.splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_splash(ext="url", size=2) == "file"
+            assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -503,23 +503,23 @@ class TestGuild:
             file_format="url",
         )
 
-    def test_format_splash_when_no_hash(self, model):
+    def test_make_splash_url_when_no_hash(self, model):
         model.splash_hash = None
-        assert model.format_splash(ext="png", size=1024) is None
+        assert model.make_splash_url(ext="png", size=1024) is None
 
     def test_discovery_splash_url(self, model):
         discovery_splash = object()
 
-        with mock.patch.object(guilds.Guild, "format_discovery_splash", return_value=discovery_splash):
+        with mock.patch.object(guilds.Guild, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
 
-    def test_format_discovery_splash_when_hash(self, model):
+    def test_make_discovery_splash_url_when_hash(self, model):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_discovery_splash(ext="url", size=1024) == "file"
+            assert model.make_discovery_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -529,21 +529,21 @@ class TestGuild:
             file_format="url",
         )
 
-    def test_format_discovery_splash_when_no_hash(self, model):
+    def test_make_discovery_splash_url_when_no_hash(self, model):
         model.discovery_splash_hash = None
-        assert model.format_discovery_splash(ext="png", size=2048) is None
+        assert model.make_discovery_splash_url(ext="png", size=2048) is None
 
     def test_banner_url(self, model):
         banner = object()
 
-        with mock.patch.object(guilds.Guild, "format_banner", return_value=banner):
+        with mock.patch.object(guilds.Guild, "make_banner_url", return_value=banner):
             assert model.banner_url is banner
 
-    def test_format_banner_when_hash(self, model):
+    def test_make_banner_url_when_hash(self, model):
         with mock.patch.object(
             routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.format_banner(ext="url", size=512) == "file"
+            assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -553,9 +553,9 @@ class TestGuild:
             file_format="url",
         )
 
-    def test_format_banner_when_no_hash(self, model):
+    def test_make_banner_url_when_no_hash(self, model):
         model.banner_hash = None
-        assert model.format_banner(ext="png", size=2048) is None
+        assert model.make_banner_url(ext="png", size=2048) is None
 
 
 class TestRestGuild:
