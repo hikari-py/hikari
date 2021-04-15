@@ -2746,7 +2746,6 @@ class TestEntityFactoryImpl:
                     "description": "very descript",
                     "pack_id": "749043879713701898",
                     "asset": "2be10a547ceb0116998f5bb878d5bc1c",
-                    "preview_asset": "078c91d6cb1a29820343149f2e2212cd",
                     "format_type": 3,
                     "tags": "curious, huh, what, confused, wut, 🤔, 😕, 🧐",
                 }
@@ -2848,7 +2847,6 @@ class TestEntityFactoryImpl:
         assert sticker.description == "very descript"
         assert sticker.pack_id == 749043879713701898
         assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.preview_asset_hash == "078c91d6cb1a29820343149f2e2212cd"
         assert sticker.format_type is message_models.StickerFormatType.LOTTIE
         assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
         assert isinstance(sticker, message_models.Sticker)
@@ -3005,7 +3003,6 @@ class TestEntityFactoryImpl:
         assert sticker.description == "very descript"
         assert sticker.pack_id == 749043879713701898
         assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.preview_asset_hash == "078c91d6cb1a29820343149f2e2212cd"
         assert sticker.format_type is message_models.StickerFormatType.LOTTIE
         assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
         assert isinstance(sticker, message_models.Sticker)
