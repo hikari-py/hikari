@@ -274,13 +274,6 @@ class Sticker(snowflakes.Unique):
         The CDN endpoint for this hash is currently undocumented.
     """
 
-    preview_asset_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """The hash of this sticker's preview asset.
-
-    !!! note
-        The CDN endpoint for this hash is currently undocumented.
-    """
-
     format_type: typing.Union[StickerFormatType, int] = attr.ib(eq=False, hash=False, repr=True)
     """The format of this sticker's asset."""
 

@@ -1594,7 +1594,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             tags=[tag.strip() for tag in payload["tags"].split(",")] if "tags" in payload else [],
             asset_hash=payload["asset"],
-            preview_asset_hash=payload["preview_asset"],
             format_type=message_models.StickerFormatType(payload["format_type"]),
         )
 
