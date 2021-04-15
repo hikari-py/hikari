@@ -109,8 +109,6 @@ class VoiceComponentImpl(voice.VoiceComponent):
             # Not sure if I can think of a situation this will happen in... really.
             # Unless the user sleeps for a bit then tries to connect, and in the mean time the
             # shard has disconnected.
-            # TODO: make shards declare if they are in the process of reconnecting, if they are, make them wait
-            # for a little bit.
             raise errors.VoiceError(f"Cannot connect to shard {shard_id}, the shard is not online.")
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)

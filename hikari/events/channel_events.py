@@ -454,7 +454,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
             ...
 
 
-# TODO: find out what private message intents are needed.
+@base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
@@ -575,7 +575,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
         return channel
 
 
-# TODO: This is not documented as having an intent, is this right? The guild version requires GUILDS intent.
+@base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):

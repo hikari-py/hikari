@@ -152,9 +152,7 @@ class TestTimedCacheMap:
         assert result is not mock_map
         assert isinstance(result, collections.TimedCacheMap)
 
-        # 158 mediation?
-        # TODO: fix this properly so the cast isn't needed, if we can find out what went wrong?
-        assert dict(result) == {"floom": "buebue", "bash": "bunny_time"}, "got: " + repr(dict(result))
+        assert result == {"floom": "buebue", "bash": "bunny_time"}
 
     def test_freeze(self):
         raw_map = {

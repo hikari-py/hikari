@@ -190,7 +190,6 @@ class _EnumMeta(type):
 
             return _EnumNamespace(base)
         except ValueError:
-            # TODO: allow enums to be extended?
             raise TypeError("Expected exactly two base classes for an enum") from None
 
     def __repr__(cls) -> str:

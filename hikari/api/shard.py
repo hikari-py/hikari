@@ -192,8 +192,8 @@ class GatewayShard(abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
         *,
-        self_mute: bool = False,
-        self_deaf: bool = False,
+        self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         """Update the voice state for this shard in a given guild.
 
@@ -206,11 +206,11 @@ class GatewayShard(abc.ABC):
             then the bot will leave the voice channel that it is in for the
             given guild.
         self_mute : builtins.bool
-            If `builtins.True`, the bot will mute itself in that voice channel. If
-            `builtins.False`, then it will unmute itself.
+            If specified and `builtins.True`, the bot will mute itself in that
+            voice channel. If `builtins.False`, then it will unmute itself.
         self_deaf : builtins.bool
-            If `builtins.True`, the bot will deafen itself in that voice channel. If
-            `builtins.False`, then it will undeafen itself.
+            If specified and `builtins.True`, the bot will deafen itself in that
+            voice channel. If `builtins.False`, then it will undeafen itself.
         """
 
     @abc.abstractmethod

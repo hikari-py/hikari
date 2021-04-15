@@ -300,12 +300,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
-            description=payload["description"],
+            description=payload["description"] or None,
             is_bot_public=payload.get("bot_public"),
             is_bot_code_grant_required=payload.get("bot_require_code_grant"),
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
-            summary=payload["summary"],
+            summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
             icon_hash=payload.get("icon"),
             team=team,
@@ -325,9 +325,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         application = application_models.AuthorizationApplication(
             id=snowflakes.Snowflake(application_payload["id"]),
             name=application_payload["name"],
-            description=application_payload["description"],
+            description=application_payload["description"] or None,
             icon_hash=application_payload.get("icon"),
-            summary=application_payload["summary"],
+            summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
             public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
@@ -576,9 +576,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         permission_overwrites = {
             snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
-        }  # TODO: while snowflakes are guaranteed to be unique within their own resource, there is no guarantee for
-        # across between resources (user and role in this case); while in practice we will not get overlap there is a
-        # chance that this may happen in the future, would it be more sensible to use a Sequence here?
+        }
 
         parent_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_parent_id := payload.get("parent_id")) is not None:
@@ -1184,8 +1182,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 id=snowflakes.Snowflake(raw_application["id"]),
                 name=raw_application["name"],
                 icon_hash=raw_application["icon"],
-                summary=raw_application["summary"],
-                description=raw_application["description"],
+                summary=raw_application["summary"] or None,
+                description=raw_application["description"] or None,
                 bot=bot,
             )
 
@@ -1546,9 +1544,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return message_models.MessageApplication(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
-            description=payload["description"],
+            description=payload["description"] or None,
             icon_hash=payload["icon"],
-            summary=payload["summary"],
+            summary=payload["summary"] or None,
             cover_image_hash=payload.get("cover_image"),
             primary_sku_id=primary_sku_id,
         )

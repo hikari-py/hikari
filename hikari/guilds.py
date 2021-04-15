@@ -672,19 +672,14 @@ class PartialApplication(snowflakes.Unique):
     name: str = attr.ib(eq=False, hash=False, repr=True)
     """The name of this application."""
 
-    # TODO: default to None for consistency?
-    description: str = attr.ib(eq=False, hash=False, repr=False)
-    """The description of this application, or an empty string if undefined."""
+    description: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """The description of this application, if any."""
 
     icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
-    # TODO: default to None for consistency?
-    summary: str = attr.ib(eq=False, hash=False, repr=False)
-    """This summary for this application's primary SKU if it's sold on Discord.
-
-    Will be an empty string if undefined.
-    """
+    summary: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """This summary for this application's primary SKU if it's sold on Discord, if any."""
 
     def __str__(self) -> str:
         return self.name

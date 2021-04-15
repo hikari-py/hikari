@@ -1044,7 +1044,6 @@ class Bytes(Resource[IteratorReader]):
             mimetype = guess_mimetype_from_filename(filename)
 
         if mimetype is None:
-            # TODO: should I just default to application/octet-stream here?
             mimetype = "text/plain;charset=UTF-8"
 
         self._filename = filename
@@ -1114,11 +1113,7 @@ class Bytes(Resource[IteratorReader]):
         # we guard against this with the check above.
         try:
             with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
-                # TODO: make this smarter by using regex or something to get the mimetype.
-                # We cannot always "just parse" the whole uri using regex, as extra
-                # params like encoding can be included, e.g.
-                # data:text/plain;charset=utf-8;base64,aGVsbG8gPDM=
-                mimetype = data_uri.split(";", 1)[0][5:]
+                mimetype, _ = mimetypes.guess_type(data_uri)
                 data = response.read()
         except Exception as ex:
             raise ValueError("Failed to decode data URI") from ex

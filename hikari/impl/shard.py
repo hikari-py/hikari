@@ -627,22 +627,19 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
-        *,  # TODO: make default to undefined
-        self_mute: bool = False,
-        self_deaf: bool = False,
+        *,
+        self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         self._check_if_alive()
-        await self._send_json(
-            {
-                _OP: _VOICE_STATE_UPDATE,
-                _D: {
-                    "guild_id": str(int(guild)),
-                    "channel_id": str(int(channel)) if channel is not None else None,
-                    "self_mute": self_mute,
-                    "self_deaf": self_deaf,
-                },
-            }
-        )
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put_snowflake("channel_id", channel)
+        payload.put("self_mute", self_mute)
+        payload.put("self_deaf", self_deaf)
+
+        await self._send_json({_OP: _VOICE_STATE_UPDATE, _D: payload})
 
     def _dispatch(self, name: str, seq: int, data: data_binding.JSONObject) -> None:
         # This is invoked a lot, and we don't need to explicitly await anything, so it should

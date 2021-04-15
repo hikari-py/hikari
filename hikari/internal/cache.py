@@ -643,7 +643,6 @@ class MentionsData(BaseData[messages.Mentions]):
         return cls(
             users=users,
             role_ids=tuple(mentions.role_ids) if mentions.role_ids is not undefined.UNDEFINED else undefined.UNDEFINED,
-            # TODO: do we want to de-duplicate mention_channels?
             channels=channels,
             everyone=mentions.everyone,
         )
