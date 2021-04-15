@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "ChannelType",
+    "VideoQualityMode",
     "ChannelFollow",
     "PermissionOverwrite",
     "PermissionOverwriteType",
@@ -93,6 +94,17 @@ class ChannelType(int, enums.Enum):
 
     GUILD_STORE = 6
     """A channel that show's a game's store page."""
+
+
+@typing.final
+class VideoQualityMode(int, enums.Enum):
+    """The camera quality of the voice chat."""
+
+    AUTO = 1
+    """Video quality will be set for optimal performance."""
+
+    FULL = 2
+    """Video quality will be set to 720p."""
 
 
 @attr_extensions.with_copy
@@ -812,3 +824,6 @@ class GuildVoiceChannel(GuildChannel):
 
     If this is `0`, then assume no limit.
     """
+
+    video_quality_mode: typing.Union[VideoQualityMode, int] = attr.ib(eq=False, hash=False, repr=False)
+    """The video quality mode for the voice channel."""

@@ -768,6 +768,7 @@ class RESTClientImpl(rest_api.RESTClient):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         region: undefined.UndefinedNoneOr[voices.VoiceRegionish] = undefined.UNDEFINED,
@@ -786,6 +787,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("topic", topic)
         body.put("nsfw", nsfw)
         body.put("bitrate", bitrate)
+        body.put("video_quality_mode", video_quality_mode)
         body.put("user_limit", user_limit)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
         body.put("rtc_region", region, conversion=str)
@@ -2004,6 +2006,7 @@ class RESTClientImpl(rest_api.RESTClient):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -2018,6 +2021,7 @@ class RESTClientImpl(rest_api.RESTClient):
             position=position,
             user_limit=user_limit,
             bitrate=bitrate,
+            video_quality_mode=video_quality_mode,
             permission_overwrites=permission_overwrites,
             region=region,
             category=category,
@@ -2058,6 +2062,7 @@ class RESTClientImpl(rest_api.RESTClient):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
@@ -2075,6 +2080,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("topic", topic)
         body.put("nsfw", nsfw)
         body.put("bitrate", bitrate)
+        body.put("video_quality_mode", video_quality_mode)
         body.put("user_limit", user_limit)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
         body.put("rtc_region", region, conversion=str)

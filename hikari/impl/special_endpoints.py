@@ -362,6 +362,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         *,
         parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels.VideoQualityMode, int]] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
@@ -374,6 +375,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         payload.put_snowflake("id", snowflake_id)
         payload.put("name", name)
         payload.put("type", channels.ChannelType.GUILD_VOICE)
+        payload.put("video_quality_mode", video_quality_mode)
         payload.put("bitrate", bitrate)
         payload.put("position", position)
         payload.put("user_limit", user_limit)

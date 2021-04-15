@@ -1049,6 +1049,7 @@ class TestEntityFactoryImpl:
             "user_limit": 3,
             "rtc_region": "europe",
             "parent_id": "456",
+            "video_quality_mode": 1,
         }
 
     def test_deserialize_guild_voice_channel(
@@ -1067,6 +1068,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.parent_id == 456
         assert voice_channel.region == "europe"
         assert voice_channel.bitrate == 64000
+        assert voice_channel.video_quality_mode == channel_models.VideoQualityMode.AUTO
         assert voice_channel.user_limit == 3
         assert isinstance(voice_channel, channel_models.GuildVoiceChannel)
 
@@ -1084,6 +1086,7 @@ class TestEntityFactoryImpl:
                 "user_limit": 3,
                 "rtc_region": None,
                 "type": 6,
+                "video_quality_mode": 1,
             }
         )
         assert voice_channel.parent_id is None
@@ -1101,6 +1104,7 @@ class TestEntityFactoryImpl:
                 "rtc_region": "europe",
                 "type": 6,
                 "guild_id": "123123",
+                "video_quality_mode": 1,
             }
         )
         assert voice_channel.parent_id is None

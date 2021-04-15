@@ -717,6 +717,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
+            video_quality_mode=channel_models.VideoQualityMode(int(payload["video_quality_mode"])),
         )
 
     def deserialize_channel(
