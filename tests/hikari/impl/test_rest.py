@@ -1685,6 +1685,20 @@ class TestRESTClientImplAsync:
         with pytest.raises(ValueError, match="You may only specify one of 'embed' or 'embeds', not both"):
             await rest_client.execute_webhook(StubModel(123), "token", embed=object(), embeds=object())
 
+    async def test_fetch_webhook_message(self, rest_client):
+        message_obj = mock.Mock()
+        expected_route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=123, token="hi, im a token", message=456)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
+
+        assert await rest_client.fetch_webhook_message(StubModel(123), "hi, im a token", StubModel(456)) == message_obj
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
+
+    @pytest.mark.skip("TODO")
+    async def test_edit_webhook_message(self, rest_client):
+        ...  # TODO: Implement
+
     async def test_delete_webhook_message(self, rest_client):
         expected_route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=123, token="token", message=456)
         rest_client._request = mock.AsyncMock()

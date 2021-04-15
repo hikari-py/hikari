@@ -38,6 +38,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
+MAJOR_PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"\{(.*?)\}")
 
 
 # This could be frozen, except attrs' docs advise against this for performance
@@ -131,14 +132,12 @@ class Route:
     major_param: typing.Optional[str] = attr.ib(hash=False, eq=False)
     """The optional major parameter name."""
 
-    _MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")
-
     def __init__(self, method: str, path_template: str) -> None:
         self.method = method
         self.path_template = path_template
 
         self.major_param: typing.Optional[str]
-        match = self._MAJOR_PARAM_REGEX.search(path_template)
+        match = MAJOR_PARAM_REGEX.search(path_template)
         self.major_param = match.group(1) if match else None
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
@@ -440,9 +439,12 @@ DELETE_WEBHOOK: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}")
 GET_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}")
 PATCH_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}")
 DELETE_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}")
+
 POST_WEBHOOK_WITH_TOKEN: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}")
 POST_WEBHOOK_WITH_TOKEN_GITHUB: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/github")
 POST_WEBHOOK_WITH_TOKEN_SLACK: typing.Final[Route] = Route(POST, "/webhooks/{webhook}/{token}/slack")
+
+GET_WEBHOOK_MESSAGE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/{message}")
 PATCH_WEBHOOK_MESSAGE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/{message}")
 DELETE_WEBHOOK_MESSAGE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/{message}")
 

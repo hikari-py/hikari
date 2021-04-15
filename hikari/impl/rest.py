@@ -1497,6 +1497,17 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
+    async def fetch_webhook_message(
+        self,
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        token: str,
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+    ) -> messages_.Message:
+        route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        response = await self._request(route, no_auth=True)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
     async def edit_webhook_message(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],

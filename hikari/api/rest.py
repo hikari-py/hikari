@@ -2085,6 +2085,52 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
+    async def fetch_webhook_message(
+        self,
+        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        token: str,
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+    ) -> messages_.Message:
+        """Fetch an old message sent by the webhook.
+
+        Parameters
+        ----------
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+            The webhook to execute. This may be the object
+            or the ID of an existing webhook.
+        token: builtins.str
+            The webhook token.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+            The message to fetch. This may be the object or the ID of an
+            existing channel.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The requested message.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found or the webhook's message wasn't found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_webhook_message(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
