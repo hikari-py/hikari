@@ -290,6 +290,8 @@ class EventManagerBase(event_manager.EventManager):
         except asyncio.CancelledError:
             # Skip cancelled errors, likely caused by the event loop being shut down.
             pass
+        except errors.UnrecognisedEntityError:
+            _LOGGER.debug("Event referenced an unrecognised entity, discarding")
         except BaseException as ex:
             asyncio.get_running_loop().call_exception_handler(
                 {

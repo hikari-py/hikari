@@ -109,7 +109,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> channel_events.PinsUpdateEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
 
-        # Turns out this _can_ be None or not present. Only set it if it is actually available.
+        # Turns out this can be None or not present. Only set it if it is actually available.
         if (raw := payload.get("last_pin_timestamp")) is not None:
             last_pin_timestamp: typing.Optional[datetime.datetime] = time.iso8601_datetime_string_to_datetime(raw)
         else:

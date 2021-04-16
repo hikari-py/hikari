@@ -38,6 +38,7 @@ from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
+from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
 from hikari import invites as invite_models
@@ -449,11 +450,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
-    def _deserialize_unrecognised_audit_log_entry_info(
-        self, payload: data_binding.JSONObject
-    ) -> audit_log_models.UnrecognisedAuditLogEntryInfo:
-        return audit_log_models.UnrecognisedAuditLogEntryInfo(app=self._app, payload=payload)
-
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
@@ -490,13 +486,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
             if (raw_option := entry_payload.get("options")) is not None:
-                option_converter = self._audit_log_event_mapping.get(action_type)
-
-                if not option_converter:
+                try:
+                    option_converter = self._audit_log_event_mapping[action_type]
+                    options = option_converter(raw_option)
+                except KeyError:
                     _LOGGER.debug("Unknown audit log action type found %r", action_type)
-                    option_converter = self._deserialize_unrecognised_audit_log_entry_info
-
-                options = option_converter(raw_option)
+                    continue
 
             entries[entry_id] = audit_log_models.AuditLogEntry(
                 app=self._app,
@@ -784,10 +779,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
         channel_type = payload["type"]
-        if channel_model := self._guild_channel_type_mapping.get(channel_type):
-            return channel_model(payload, guild_id=guild_id)
+        if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
+            return guild_channel_model(payload, guild_id=guild_id)
 
-        return self._dm_channel_type_mapping[channel_type](payload)
+        if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
+            return dm_channel_model(payload)
+
+        _LOGGER.debug(f"Unrecognised channel type {channel_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised channel type {channel_type}")
 
     ################
     # EMBED MODELS #
@@ -1454,7 +1453,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channels = {}
 
             for channel_payload in payload["channels"]:
-                channel = self.deserialize_channel(channel_payload, guild_id=guild.id)
+                try:
+                    channel = self.deserialize_channel(channel_payload, guild_id=guild.id)
+                except errors.UnrecognisedEntityError:
+                    # Ignore the channel, this has already been logged
+                    continue
+
                 assert isinstance(channel, channel_models.GuildChannel)
                 channels[channel.id] = channel
 

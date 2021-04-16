@@ -38,7 +38,6 @@ __all__: typing.List[str] = [
     "MessageBulkDeleteEntryInfo",
     "MessageDeleteEntryInfo",
     "MessagePinEntryInfo",
-    "UnrecognisedAuditLogEntryInfo",
 ]
 
 import abc
@@ -404,40 +403,6 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         channel = await self.app.rest.fetch_channel(self.channel_id)
         assert isinstance(channel, channels.GuildVoiceChannel)
         return channel
-
-
-class UnrecognisedAuditLogEntryInfo(BaseAuditLogEntryInfo):
-    """Audit log entry options that haven't been implemented in the library.
-
-    The attributes on this object are undocumented and dynamic.
-
-    Example
-    -------
-        >>> entry_info.foobar.baz
-
-    !!! note
-        This model has no slots and will have arbitrary undocumented attributes
-        (in it's `__dict__` based on the received payload).
-        The only attribute that is always garantied to be there is `app`.
-    """
-
-    def __init__(self, app: traits.RESTAware, payload: typing.Mapping[str, str]) -> None:
-        self.__dict__.update(payload)
-        self.app = app
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if type(self) is not type(other):
-            return NotImplemented
-
-        # Mypy bug seems to think that this is Any ¯\_(ツ)_/¯
-        return bool(self.__dict__ == other.__dict__)
-
-    def __str__(self) -> str:
-        attributes = ", ".join((f"{name}={value!r}" for name, value in self.__dict__.items()))
-
-        return f"UnrecognisedAuditLogEntryInfo({attributes})"
-
-    __repr__ = __str__
 
 
 @attr_extensions.with_copy

@@ -553,18 +553,6 @@ class TestEntityFactoryImpl:
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
 
     @pytest.fixture()
-    def unrecognised_audit_log_entry(self):
-        return {"count": "5412", "action": "nyaa'd"}
-
-    def test__deserialize_unrecognised_audit_log_entry_info(self, entity_factory_impl, unrecognised_audit_log_entry):
-        unrecognised_info = entity_factory_impl._deserialize_unrecognised_audit_log_entry_info(
-            unrecognised_audit_log_entry
-        )
-        assert unrecognised_info.count == "5412"
-        assert unrecognised_info.action == "nyaa'd"
-        assert isinstance(unrecognised_info, audit_log_models.UnrecognisedAuditLogEntryInfo)
-
-    @pytest.fixture()
     def audit_log_entry_payload(self):
         return {
             "action_type": 14,
@@ -709,18 +697,14 @@ class TestEntityFactoryImpl:
         assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
         assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
 
-    def test_deserialize_audit_log_with_action_type_unknown(self, entity_factory_impl, audit_log_payload):
+    def test_deserialize_audit_log_with_action_type_unknown_gets_ignored(self, entity_factory_impl, audit_log_payload):
         # Unset fields
         audit_log_payload["audit_log_entries"][0]["action_type"] = 1000
         audit_log_payload["audit_log_entries"][0]["options"] = {"field1": "value1", "field2": 96}
 
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
 
-        assert len(audit_log.entries) == 1
-        entry = audit_log.entries[694026906592477214]
-        assert entry.options.field1 == "value1"
-        assert entry.options.field2 == 96
-        assert isinstance(entry.options, audit_log_models.UnrecognisedAuditLogEntryInfo)
+        assert len(audit_log.entries) == 0
 
     ##################
     # CHANNEL MODELS #
@@ -2621,6 +2605,14 @@ class TestEntityFactoryImpl:
         assert guild.banner_hash is None
         assert guild.premium_subscription_count is None
         assert guild.public_updates_channel_id is None
+
+    def test_deserialize_gateway_guild_ignores_unrecognised_channels(
+        self, entity_factory_impl, deserialize_gateway_guild_payload
+    ):
+        deserialize_gateway_guild_payload["channels"] = [{"id": 123, "type": 1000}]
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(deserialize_gateway_guild_payload)
+
+        assert guild_definition.channels == {}
 
     #################
     # INVITE MODELS #
