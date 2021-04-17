@@ -2721,18 +2721,6 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
 
-    async def test_fetch_welcome_screen_handles_204_response(self, rest_client):
-        rest_client._request = mock.AsyncMock(return_value=None)
-        expected_route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=52341231)
-
-        result = await rest_client.fetch_welcome_screen(StubModel(52341231))
-
-        assert isinstance(result, guilds.WelcomeScreen)
-        assert result.description is None
-        assert result.channels == []
-        rest_client._request.assert_awaited_once_with(expected_route)
-        rest_client._entity_factory.deserialize_welcome_screen.assert_not_called()
-
     async def test_edit_welcome_screen_with_optional_kwargs(self, rest_client):
         mock_channel = object()
         rest_client._request = mock.AsyncMock(return_value={"go": "home", "you're": "drunk"})

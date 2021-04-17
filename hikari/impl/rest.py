@@ -2444,14 +2444,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_welcome_screen(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.WelcomeScreen:
         route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=guild)
-
         response = await self._request(route)
-
-        # If the welcome screen of a guild has never been set
-        # then Discord will respond with a 204 (no content).
-        if not response:
-            return guilds.WelcomeScreen(description=None, channels=[])
-
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
