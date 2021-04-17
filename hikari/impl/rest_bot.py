@@ -28,9 +28,7 @@ __all__: typing.Sequence[str] = ["RESTBot"]
 import asyncio
 import typing
 
-from hikari import applications
 from hikari import config
-from hikari import snowflakes
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
 from hikari.impl import entity_factory as entity_factory_impl
@@ -44,7 +42,7 @@ if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
-    from hikari import guilds
+    from hikari import applications
     from hikari import interactions
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
@@ -52,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
 
 
-# TODO: implement token strategy in rest client for Oauth2
 class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServer):
     """Basic implementation of an interaction based REST-only bot.
 
@@ -173,13 +170,12 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
 
     def __init__(
         self,
-        token: str,
+        token: typing.Union[str, rest_.TokenStrategy],
         # TODO: can we be more smart about this default for token_type?
-        token_type: typing.Union[applications.TokenType, str],
+        token_type: typing.Union[applications.TokenType, str, None] = None,
         public_key: typing.Union[bytes, str, None] = None,
         *,
         allow_color: bool = True,
-        application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]] = None,
         banner: typing.Optional[str] = "hikari",
         event_manager: typing.Optional[event_manager_.EventManager] = None,
         executor: typing.Optional[concurrent.futures.Executor] = None,
@@ -192,16 +188,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     ) -> None:
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
-
-        if application is not None:
-            application = snowflakes.Snowflake(application)
-
-        elif token_type == applications.TokenType.BOT:
-            try:
-                application = applications.get_token_id(token)
-
-            except ValueError:
-                pass
 
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
@@ -221,7 +207,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            application=application,
             connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
             connector_owner=True,
             entity_factory=self._entity_factory,
@@ -236,7 +221,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
 
         # IntegrationServer
         self._server = interaction_server_impl.InteractionServer(
-            application_id=application,
             entity_factory=self._entity_factory,
             event_manager=event_manager,
             event_factory=self._event_factory,

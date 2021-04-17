@@ -493,9 +493,9 @@ class TestEventFactoryImpl:
     def test_deserialize_interaction_create_event(self, event_factory, mock_app, mock_shard):
         payload = {"id": "1561232344"}
 
-        result = event_factory.deserialize_interaction_create_event(mock_shard, payload, application_id=34123)
+        result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
-        mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload, application_id=34123)
+        mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
         assert result.app is mock_app
         assert result.shard is mock_shard
         assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value

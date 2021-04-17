@@ -135,7 +135,6 @@ class TestBotApp:
         with stack:
             bot = bot_impl.BotApp(
                 "token",
-                application=123124,
                 allow_color=False,
                 banner="testing",
                 executor=executor,
@@ -163,7 +162,6 @@ class TestBotApp:
         voice.assert_called_once_with(bot)
         assert bot._rest is rest.return_value
         rest.assert_called_once_with(
-            application=123124,
             cache=bot._cache,
             entity_factory=bot._entity_factory,
             executor=executor,

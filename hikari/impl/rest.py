@@ -356,7 +356,6 @@ class RESTApp(traits.ExecutorAware):
     def acquire(
         self,
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
-        # TODO: can we be more smart about this default for token_type?
         token_type: typing.Union[str, applications.TokenType, None] = None,
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
@@ -411,7 +410,6 @@ class RESTApp(traits.ExecutorAware):
             token_type = applications.TokenType.BEARER
 
         rest_client = RESTClientImpl(
-            application=application,
             cache=None,
             entity_factory=entity_factory,
             executor=self._executor,
@@ -435,10 +433,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]] = None,
-        Object or ID of the application this REST client should be bound to.
-        If `builtins.None` is passed here then this client will try to work this
-        value out based on `token`.
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
@@ -473,8 +467,6 @@ class RESTClientImpl(rest_api.RESTClient):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_application_fetch_lock",
-        "_application_id",
         "buckets",
         "global_rate_limit",
         "_cache",
@@ -503,7 +495,6 @@ class RESTClientImpl(rest_api.RESTClient):
     def __init__(
         self,
         *,
-        application: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]],
         cache: typing.Optional[cache_api.MutableCache],
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
@@ -514,19 +505,6 @@ class RESTClientImpl(rest_api.RESTClient):
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
-        # TODO: test coverage
-        if application is not None:
-            application = snowflakes.Snowflake(application)
-
-        elif token_type == applications.TokenType.BOT and token is not None:
-            try:
-                application = applications.get_token_id(token)
-
-            except ValueError:
-                pass
-
-        self._application_fetch_lock = asyncio.Lock()
-        self._application_id = application
         self.buckets = buckets_.RESTBucketManager(max_rate_limit)
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
@@ -646,22 +624,6 @@ class RESTClientImpl(rest_api.RESTClient):
             raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
 
         return self._client_session
-
-    @typing.final
-    async def _fetch_application_id(self) -> snowflakes.Snowflake:
-        async with self._application_fetch_lock:
-            if self._application_id is not None:
-                return self._application_id
-
-            application: guilds.PartialApplication
-            try:
-                application = (await self.fetch_authorization()).application
-
-            except errors.UnauthorizedError:
-                application = await self.fetch_application()
-
-            self._application_id = application.id
-            return self._application_id
 
     @typing.final
     async def _request(
@@ -1759,7 +1721,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
@@ -2928,10 +2890,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_application_command(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         command: snowflakes.SnowflakeishOr[interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> interactions.Command:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -2946,9 +2908,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_application_commands(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[interactions.Command]:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMANDS.compile(application=application)
 
@@ -2962,13 +2924,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_application_command(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         name: str,
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
     ) -> interactions.Command:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
 
@@ -2988,10 +2950,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def set_application_commands(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[interactions.Command]:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.PUT_APPLICATION_COMMANDS.compile(application=application)
 
@@ -3005,6 +2967,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_application_command(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         command: snowflakes.SnowflakeishOr[interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
@@ -3012,7 +2975,6 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
     ) -> interactions.Command:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -3034,10 +2996,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_application_command(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         command: snowflakes.SnowflakeishOr[interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
-        application = self._application_id or await self._fetch_application_id()
         if guild is undefined.UNDEFINED:
             route = routes.DELETE_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -3050,8 +3012,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
     # See https://github.com/discord/discord-api-docs/issues/2490
-    async def fetch_command_response(self, token: str, /) -> messages_.Message:
-        application = self._application_id or await self._fetch_application_id()
+    async def fetch_command_response(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+    ) -> messages_.Message:
         route = routes.GET_INTERACTION_RESPONSE.compile(application=application, token=token)
         response = await self._request(route)
         assert isinstance(response, dict)
@@ -3115,6 +3078,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_command_response(
         self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         token: str,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -3128,7 +3092,6 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        application = self._application_id or await self._fetch_application_id()
         return await self._edit_webhook_message(
             routes.PATCH_INTERACTION_RESPONSE.compile(application=application, token=token),
             content=content,
@@ -3139,7 +3102,8 @@ class RESTClientImpl(rest_api.RESTClient):
             role_mentions=role_mentions,
         )
 
-    async def delete_command_response(self, token: str, /) -> None:
-        application = self._application_id or await self._fetch_application_id()
+    async def delete_command_response(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+    ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(application=application, token=token)
         await self._request(route, no_auth=True)

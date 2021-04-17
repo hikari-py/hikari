@@ -290,10 +290,9 @@ class TestRESTApp:
         stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
 
         with stack:
-            rest_app.acquire(token="token", token_type="Type", application=mock_application)
+            rest_app.acquire(token="token", token_type="Type")
 
         mock_client.assert_called_once_with(
-            application=mock_application,
             cache=None,
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
@@ -348,7 +347,6 @@ def mock_cache():
 @pytest.fixture()
 def rest_client(rest_client_class, mock_cache):
     obj = rest_client_class(
-        application=None,
         cache=mock_cache,
         http_settings=mock.Mock(spec=config.HTTPSettings),
         max_rate_limit=float("inf"),
@@ -415,7 +413,6 @@ class TestRESTClientImpl:
     def test__init__passes_max_rate_limit(self):
         with mock.patch.object(buckets, "RESTBucketManager") as bucket:
             rest.RESTClientImpl(
-                application=None,
                 cache=None,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
@@ -462,7 +459,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
-            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -478,7 +474,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
-            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -508,7 +503,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
-            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
@@ -523,7 +517,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
-            application=None,
             cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),

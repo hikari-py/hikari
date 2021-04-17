@@ -70,31 +70,22 @@ class OptionType(int, enums.Enum):
     STRING = 3
     """Denotes a command option where the value will be a string."""
 
-    STR = STRING
-    """Denotes a command option where the value will be a string."""
-
     INTEGER = 4
-    """Denotes a command option where the value will be a int."""
-
-    INT = INTEGER
     """Denotes a command option where the value will be a int."""
 
     BOOLEAN = 5
     """Denotes a command option where the value will be a bool."""
 
-    BOOL = BOOLEAN
-    """Denotes a command option where the value will be a bool."""
-
     # TODO: These may be changed to objects rather than IDs in the future.
     # See https://github.com/discord/discord-api-docs/issues/2490
-    USER_ID = 6
-    """Denotes a command option where the value will be a user ID."""
+    USER = 6
+    """Denotes a command option where the value will be resolved to a user."""
 
-    CHANNEL_ID = 7
-    """Denotes a command option where the value will be a channel ID."""
+    CHANNEL = 7
+    """Denotes a command option where the value will be resolved to a channel."""
 
-    ROLE_ID = 8
-    """Denotes a command option where the value will be a role ID."""
+    ROLE = 8
+    """Denotes a command option where the value will be resolved to a role."""
 
 
 @typing.final
@@ -180,7 +171,7 @@ class Command(snowflakes.Unique):
 
     async def fetch_self(self) -> Command:
         return await self.app.rest.fetch_application_command(
-            self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
+            self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
 
     async def edit(
@@ -191,6 +182,7 @@ class Command(snowflakes.Unique):
         options: undefined.UndefinedOr[typing.Sequence[CommandOption]] = undefined.UNDEFINED,
     ) -> Command:
         return await self.app.rest.edit_application_command(
+            self.application_id,
             self.id,
             undefined.UNDEFINED if self.guild_id is None else self.guild_id,
             name=name,
@@ -200,7 +192,7 @@ class Command(snowflakes.Unique):
 
     async def delete(self) -> None:
         await self.app.rest.delete_application_command(
-            self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
+            self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
 
 
@@ -210,8 +202,6 @@ class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
     name: str = attr.ib(eq=True, hash=False, repr=True)
-    # TODO: value may be changed to include json objects in the future
-    # See https://github.com/discord/discord-api-docs/issues/2490
     value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.ib(eq=True, hash=False, repr=True)
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
 
@@ -249,7 +239,6 @@ class PartialInteraction(snowflakes.Unique):
     """The interaction's token."""
 
     version: int = attr.ib(eq=False, hash=False, repr=True)
-    # TODO: remove?
 
 
 @attr_extensions.with_copy
@@ -260,16 +249,12 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
     channel_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
 
-    # Allowing interactions in DMs is a TODO on Discord's end
-    # See https://github.com/discord/discord-api-docs/issues/2490
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    # Allowing interactions in DMs is a TODO on Discord's end
-    # See https://github.com/discord/discord-api-docs/issues/2490
     member: typing.Optional[InteractionMember] = attr.ib(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
@@ -293,7 +278,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
     """Parameter values provided by the user invoking this command."""
 
     async def fetch_initial_response(self) -> messages.Message:
-        return await self.app.rest.fetch_command_response(self.token)
+        return await self.app.rest.fetch_command_response(self.application_id, self.token)
 
     async def create_initial_response(
         self,
@@ -341,6 +326,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
         ] = undefined.UNDEFINED,
     ) -> messages.Message:
         return await self.app.rest.edit_command_response(
+            self.application_id,
             self.token,
             content,
             embed=embed,
@@ -351,7 +337,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
         )
 
     async def delete_initial_response(self) -> None:
-        await self.app.rest.delete_command_response(self.token)
+        await self.app.rest.delete_command_response(self.application_id, self.token)
 
     async def fetch_channel(self) -> channels.GuildChannel:
         """Fetch the guild channel this was triggered in.

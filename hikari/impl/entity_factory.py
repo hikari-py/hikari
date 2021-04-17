@@ -59,19 +59,9 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
-if typing.TYPE_CHECKING:
-
-    class _InteractionDeserializeProto(typing.Protocol):
-        def __call__(
-            self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
-        ) -> interaction_models.PartialInteraction:
-            raise NotImplementedError
-
-    _ValueT = typing.TypeVar("_ValueT")
-
-
 _DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
+_ValueT = typing.TypeVar("_ValueT")
 
 
 def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
@@ -254,7 +244,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
-        self._interaction_type_mapping: typing.Mapping[int, _InteractionDeserializeProto] = {
+        self._interaction_type_mapping: typing.Mapping[
+            int, typing.Callable[[data_binding.JSONObject], interaction_models.PartialInteraction]
+        ] = {
             interaction_models.InteractionType.APPLICATION_COMMAND: self._deserialize_command_interaction,
         }
 
@@ -795,7 +787,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
-        channel_type = channel_models.ChannelType(payload["type"])
+        channel_type = payload["type"]
         if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
             return guild_channel_model(payload, guild_id=guild_id)
 
@@ -1684,7 +1676,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_command_interaction(
-        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+        self, payload: data_binding.JSONObject
     ) -> interaction_models.CommandInteraction:
         data_payload = payload["data"]
         options: typing.Optional[typing.List[interaction_models.CommandInteractionOption]] = None
@@ -1727,7 +1719,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return interaction_models.CommandInteraction(
             app=self._app,
-            application_id=application_id,
+            application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),
             type=interaction_models.InteractionType(payload["type"]),
             guild_id=guild_id,
@@ -1741,9 +1733,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
         )
 
-    def deserialize_interaction(
-        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
-    ) -> interaction_models.PartialInteraction:
+    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
         interaction_type = interaction_models.InteractionType(payload["type"])
 
         try:
@@ -1756,10 +1746,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 type=interaction_type,
                 token=payload["token"],
                 version=payload["version"],
-                application_id=application_id,
+                application_id=snowflakes.Snowflake(payload["application_id"]),
             )
 
-        return deserialize(payload, application_id=application_id)
+        return deserialize(payload)
 
     def serialize_command_option(self, option: interaction_models.CommandOption) -> data_binding.JSONObject:
         payload: data_binding.JSONObject = {

@@ -550,7 +550,6 @@ class InteractionResponseBuilder(abc.ABC):
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
         raise NotImplementedError
 
-    # The docs are wrong and "content" isn't required.
     @property
     @abc.abstractmethod
     def content(self) -> undefined.UndefinedOr[str]:

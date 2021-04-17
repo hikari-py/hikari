@@ -660,6 +660,7 @@ class Role(PartialRole):
         return self.color
 
 
+@typing.final
 class IntegrationType(str, enums.Enum):
     """The integration type."""
 
