@@ -25,6 +25,7 @@ import contextlib
 import mock
 import pytest
 
+from hikari import applications
 from hikari import config
 from hikari import errors
 from hikari.impl import bot as bot_impl
@@ -165,6 +166,7 @@ class TestBotApp:
             proxy_settings=bot._proxy_settings,
             rest_url="somewhere.com",
             token="token",
+            token_type=applications.TokenType.BOT,
         )
         connector_factory.assert_called_once_with(bot._http_settings)
 

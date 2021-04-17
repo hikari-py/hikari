@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import datetime
+
 import mock
 import pytest
 
@@ -163,3 +165,29 @@ class TestApplication:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )
+
+
+class TestPartialOAuth2Token:
+    def test__str__(self):
+        token = applications.PartialOAuth2Token(
+            access_token="54123123123",
+            token_type=applications.TokenType.BEARER,
+            expires_in=datetime.timedelta(300),
+            scopes=[applications.OAuth2Scope.APPLICATIONS_COMMANDS],
+        )
+
+        assert str(token) == "54123123123"
+
+
+def test_get_token_id_extracts_id():
+    assert applications.get_token_id("MTE1NTkwMDk3MTAwODY1NTQx.x.y") == 115590097100865541
+
+
+def test_get_token_id_adds_padding():
+    assert applications.get_token_id("NDMxMjMxMjMxMjM.blam.bop") == 43123123123
+
+
+@pytest.mark.parametrize("token", ["______.222222.dessddssd", "", "b2tva29r.b2tva29r.b2tva29r"])
+def test_get_token_id_handles_invalid_token(token):
+    with pytest.raises(ValueError, match="Unexpected token format"):
+        applications.get_token_id(token)

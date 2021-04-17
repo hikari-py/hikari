@@ -28,6 +28,7 @@ import aiohttp
 import mock
 import pytest
 
+from hikari import applications
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
@@ -42,12 +43,15 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
+from hikari.api import rest as rest_api
 from hikari.impl import buckets
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
+from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import routes
+from hikari.internal import time
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
 
@@ -144,6 +148,152 @@ class TestRestProvider:
 
     def test_executor_property(self, rest_provider, executor):
         assert rest_provider.executor == executor
+
+
+#############################
+# ClientCredentialsStrategy #
+#############################
+
+
+@pytest.mark.asyncio()
+class TestClientCredentialsStrategy:
+    @pytest.fixture()
+    def mock_token(self):
+        return mock.Mock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="okokok.fofofo.ddd",
+        )
+
+    def test_client_id_property(self):
+        mock_client = hikari_test_helpers.mock_class_namespace(applications.Application, id=43123, init_=False)()
+        token = rest.ClientCredentialsStrategy(client=mock_client, client_secret="123123123")
+
+        assert token.client_id == 43123
+
+    def test_scopes_property(self):
+        token = rest.ClientCredentialsStrategy(client=123, client_secret="123123123", scopes=[123, 5643])
+
+        assert token.scopes == (123, 5643)
+
+    async def test_acquire_on_new_instance(self, mock_token):
+        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
+
+        result = await rest.ClientCredentialsStrategy(client=54123123, client_secret="123123123").acquire(mock_rest)
+
+        assert result == "Bearer okokok.fofofo.ddd"
+
+        mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
+            client=54123123, client_secret="123123123", scopes=("applications.commands.update", "identify")
+        )
+
+    async def test_acquire_handles_out_of_date_token(self, mock_token):
+        mock_old_token = mock.Mock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="okokok.fofdsasdasdofo.ddd",
+        )
+        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
+        strategy = rest.ClientCredentialsStrategy(client=3412321, client_secret="54123123")
+        token = await strategy.acquire(
+            mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_old_token))
+        )
+
+        with mock.patch.object(time, "monotonic", return_value=99999999999):
+            new_token = await strategy.acquire(mock_rest)
+
+        mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
+            client=3412321, client_secret="54123123", scopes=("applications.commands.update", "identify")
+        )
+        assert new_token != token
+        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+
+    async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
+        lock = asyncio.Lock()
+        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(side_effect=[mock_token]))
+
+        with mock.patch.object(asyncio, "Lock", return_value=lock):
+            strategy = rest.ClientCredentialsStrategy(client=6512312, client_secret="453123123")
+
+        async with lock:
+            tokens_gather = asyncio.gather(
+                strategy.acquire(mock_rest), strategy.acquire(mock_rest), strategy.acquire(mock_rest)
+            )
+
+        results = await tokens_gather
+
+        mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
+            client=6512312, client_secret="453123123", scopes=("applications.commands.update", "identify")
+        )
+        assert results == [
+            "Bearer okokok.fofofo.ddd",
+            "Bearer okokok.fofofo.ddd",
+            "Bearer okokok.fofofo.ddd",
+        ]
+
+    async def test_acquire_after_invalidation(self, mock_token):
+        mock_old_token = mock.Mock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="okokok.fofdsasdasdofo.ddd",
+        )
+        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
+        strategy = rest.ClientCredentialsStrategy(client=123, client_secret="123456")
+        token = await strategy.acquire(
+            mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_old_token))
+        )
+
+        strategy.invalidate(token)
+        new_token = await strategy.acquire(mock_rest)
+
+        mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
+            client=123, client_secret="123456", scopes=("applications.commands.update", "identify")
+        )
+        assert new_token != token
+        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+
+    async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
+        token = "abc.abc.abc"  # noqa S105: Possible Hardcoded password
+        mock_rest = mock.AsyncMock()
+        strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
+
+        async def hold_strategy():
+            async with strategy._lock:
+                await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
+                strategy._token = token
+                strategy._expire_at = time.monotonic() + 600
+
+        asyncio.create_task(hold_strategy())
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME // 1000)
+        result = await strategy.acquire(mock_rest)
+
+        assert result == token
+
+        mock_rest.authorize_client_credentials_token.assert_not_called()
+
+    async def test_acquire_caches_client_http_response_error(self):
+        mock_rest = mock.AsyncMock()
+        error = errors.ClientHTTPResponseError(
+            url="okokok", status=42, headers={}, raw_body=b"ok", message="OK", code=34123
+        )
+        mock_rest.authorize_client_credentials_token.side_effect = error
+        strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
+            client=65123, client_secret="12354", scopes=("applications.commands.update", "identify")
+        )
+
+    async def test_close(self):
+        await rest.ClientCredentialsStrategy(client=32123, client_secret="54123").close()
 
 
 ###########
@@ -381,6 +531,21 @@ class TestRESTClientImpl:
 
         bucket.assert_called_once_with(float("inf"))
 
+    def test__init__when_token_strategy_passed_with_token_type(self):
+        with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
+            rest.RESTClientImpl(
+                connector_factory=mock.Mock(),
+                connector_owner=True,
+                http_settings=mock.Mock(),
+                max_rate_limit=float("inf"),
+                proxy_settings=mock.Mock(),
+                token=mock.Mock(rest_api.TokenStrategy),
+                token_type="ooga booga",
+                rest_url=None,
+                executor=None,
+                entity_factory=None,
+            )
+
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             connector_factory=mock.Mock(),
@@ -395,21 +560,6 @@ class TestRESTClientImpl:
             entity_factory=None,
         )
         assert obj._token is None
-
-    def test__init__when_token_is_not_None_and_token_type_is_None_generates_token_with_default_type(self):
-        obj = rest.RESTClientImpl(
-            connector_factory=mock.Mock(),
-            connector_owner=True,
-            http_settings=mock.Mock(),
-            max_rate_limit=float("inf"),
-            proxy_settings=mock.Mock(),
-            token="some_token",
-            token_type=None,
-            rest_url=None,
-            executor=None,
-            entity_factory=None,
-        )
-        assert obj._token == "Bot some_token"
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
@@ -843,6 +993,85 @@ class TestRESTClientImplAsync:
         close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test__request_with_strategy_token(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        rest_client.buckets.is_started = True
+        rest_client._token = mock.Mock(rest_api.TokenStrategy, acquire=mock.AsyncMock(return_value="Bearer ok.ok.ok"))
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+            with pytest.raises(exit_exception):
+                await rest_client._request(route)
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
+
+    @hikari_test_helpers.timeout()
+    async def test__request_retries_strategy_once(self, rest_client, exit_exception):
+        class StubResponse:
+            status = http.HTTPStatus.UNAUTHORIZED
+            content_type = rest._APPLICATION_JSON
+            reason = "cause why not"
+            headers = {"HEADER": "value", "HEADER": "value"}
+
+            async def read(self):
+                return '{"something": null}'
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(
+            request=hikari_test_helpers.CopyingAsyncMock(side_effect=[StubResponse(), exit_exception])
+        )
+        rest_client.buckets.is_started = True
+        rest_client._token = mock.Mock(
+            rest_api.TokenStrategy, acquire=mock.AsyncMock(side_effect=["Bearer ok.ok.ok", "Bearer ok2.ok2.ok2"])
+        )
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+            with pytest.raises(exit_exception):
+                await rest_client._request(route)
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
+        _, kwargs = mock_session.request.call_args_list[1]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
+
+    @hikari_test_helpers.timeout()
+    async def test__request_raises_after_retry(self, rest_client, exit_exception):
+        class StubResponse:
+            status = http.HTTPStatus.UNAUTHORIZED
+            content_type = rest._APPLICATION_JSON
+            reason = "cause why not"
+            headers = {"HEADER": "value", "HEADER": "value"}
+            real_url = "okokokok"
+
+            async def read(self):
+                return '{"something": null}'
+
+            async def json(self):
+                return {"something": None}
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(
+            request=hikari_test_helpers.CopyingAsyncMock(side_effect=[StubResponse(), StubResponse(), StubResponse()])
+        )
+        rest_client.buckets.is_started = True
+        rest_client._token = mock.Mock(
+            rest_api.TokenStrategy, acquire=mock.AsyncMock(side_effect=["Bearer ok.ok.ok", "Bearer ok2.ok2.ok2"])
+        )
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+            with pytest.raises(errors.UnauthorizedError):
+                await rest_client._request(route)
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
+        _, kwargs = mock_session.request.call_args_list[1]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
+
+    @hikari_test_helpers.timeout()
     async def test__request_when_buckets_not_started(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client.buckets.is_started = False
@@ -906,6 +1135,21 @@ class TestRESTClientImplAsync:
 
             _, kwargs = mock_session.request.call_args_list[0]
             assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
+
+    @hikari_test_helpers.timeout()
+    async def test__request_when_auth_passed(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        rest_client.buckets.is_started = True
+        rest_client._token = "token"
+        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        rest_client._stringify_http_message = mock.Mock()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
+            with pytest.raises(exit_exception):
+                await rest_client._request(route, auth="ooga booga")
+
+            _, kwargs = mock_session.request.call_args_list[0]
+            assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "ooga booga"
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_NO_CONTENT(self, rest_client):
@@ -1146,6 +1390,16 @@ class TestRESTClientImplAsync:
 
         rest_client._client_session.close.assert_called_once()
         rest_client.buckets.close.assert_called_once()
+
+    async def test_close_when__token_is_strategy(self, rest_client):
+        rest_client._token = mock.AsyncMock(rest_api.TokenStrategy)
+        rest_client._client_session = mock.AsyncMock()
+        rest_client._connector_factory = mock.AsyncMock()
+        rest_client.buckets = mock.Mock()
+
+        await rest_client.close()
+
+        rest_client._token.close.assert_awaited_once()
 
     #############
     # Endpoints #
@@ -1846,6 +2100,126 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_authorize_client_credentials_token(self, rest_client):
+        expected_route = routes.POST_TOKEN.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"access_token": "43212123123123"})
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            await rest_client.authorize_client_credentials_token(65234123, "4312312", scopes=["scope1", "scope2"])
+
+        mock_url_encoded_form.add_field.assert_has_calls(
+            [mock.call("grant_type", "client_credentials"), mock.call("scope", "scope1 scope2")]
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQxMjM6NDMxMjMxMg=="
+        )
+        rest_client._entity_factory.deserialize_partial_token.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_authorize_access_token_without_scopes(self, rest_client):
+        expected_route = routes.POST_TOKEN.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            result = await rest_client.authorize_access_token(65234, "43123", "a.code", "htt:redirect//me")
+
+        mock_url_encoded_form.add_field.assert_has_calls(
+            [
+                mock.call("grant_type", "authorization_code"),
+                mock.call("code", "a.code"),
+                mock.call("redirect_uri", "htt:redirect//me"),
+            ]
+        )
+        assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
+        rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQ6NDMxMjM="
+        )
+
+    async def test_authorize_access_token_with_scopes(self, rest_client):
+        expected_route = routes.POST_TOKEN.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            result = await rest_client.authorize_access_token(12343, "1235555", "a.codee", "htt:redirect//mee")
+
+        mock_url_encoded_form.add_field.assert_has_calls(
+            [
+                mock.call("grant_type", "authorization_code"),
+                mock.call("code", "a.codee"),
+                mock.call("redirect_uri", "htt:redirect//mee"),
+            ]
+        )
+        assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
+        rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic MTIzNDM6MTIzNTU1NQ=="
+        )
+
+    async def test_refresh_access_token_without_scopes(self, rest_client):
+        expected_route = routes.POST_TOKEN.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            result = await rest_client.refresh_access_token(454123, "123123", "a.codet")
+
+        mock_url_encoded_form.add_field.assert_has_calls(
+            [
+                mock.call("grant_type", "refresh_token"),
+                mock.call("refresh_token", "a.codet"),
+            ]
+        )
+        assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
+        rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
+        )
+
+    async def test_refresh_access_token_with_scopes(self, rest_client):
+        expected_route = routes.POST_TOKEN.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            result = await rest_client.refresh_access_token(54123, "312312", "a.codett", scopes=["1", "3", "scope43"])
+
+        mock_url_encoded_form.add_field.assert_has_calls(
+            [
+                mock.call("grant_type", "refresh_token"),
+                mock.call("refresh_token", "a.codett"),
+                mock.call("scope", "1 3 scope43"),
+            ]
+        )
+        assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
+        rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
+        )
+
+    async def test_revoke_access_token(self, rest_client):
+        expected_route = routes.POST_TOKEN_REVOKE.compile()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock()
+
+        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+            await rest_client.revoke_access_token(54123, "123542", "not.a.token")
+
+        mock_url_encoded_form.add_field.assert_called_once_with("token", "not.a.token")
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MTIzNTQy"
+        )
 
     async def test_add_user_to_guild(self, rest_client):
         member = StubModel(789)

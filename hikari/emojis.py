@@ -30,8 +30,6 @@ import abc
 import re
 import typing
 
-# import unicodedata
-
 import attr
 
 from hikari import files
@@ -39,6 +37,9 @@ from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import routes
+
+# import unicodedata
+
 
 if typing.TYPE_CHECKING:
     from hikari import traits

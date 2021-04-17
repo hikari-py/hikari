@@ -22,6 +22,7 @@
 
 import asyncio
 import contextlib
+import copy
 import functools
 import inspect
 import os
@@ -204,3 +205,12 @@ class AsyncContextManagerMock:
     def assert_used_once(self):
         assert self.aenter_count == 1
         assert self.aexit_count == 1
+
+
+class CopyingAsyncMock(mock.AsyncMock):
+    __slots__ = ()
+
+    def __call__(self, *args, **kwargs):
+        args = (copy.copy(arg) for arg in args)
+        kwargs = {copy.copy(key): copy.copy(value) for key, value in kwargs.items()}
+        return super().__call__(*args, **kwargs)

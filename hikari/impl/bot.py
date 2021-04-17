@@ -39,6 +39,7 @@ import types
 import typing
 import warnings
 
+from hikari import applications
 from hikari import config
 from hikari import errors
 from hikari import intents as intents_
@@ -283,6 +284,7 @@ class BotApp(traits.BotAware):
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,
+            token_type=applications.TokenType.BOT,
         )
 
         # We populate these on startup instead, as we need to possibly make some

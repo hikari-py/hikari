@@ -23,7 +23,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ConnectorFactory", "RESTClient"]
+__all__: typing.List[str] = ["ConnectorFactory", "RESTClient", "TokenStrategy"]
 
 import abc
 import typing
@@ -69,6 +69,43 @@ class ConnectorFactory(abc.ABC):
     @abc.abstractmethod
     def acquire(self) -> aiohttp.BaseConnector:
         """Acquire the connector."""
+
+
+class TokenStrategy(abc.ABC):
+    """Interface of an object used for managing OAuth2 access."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    async def acquire(self, client: RESTClient) -> str:
+        """Acquire an authorization token (with the prefix).
+
+        Returns
+        -------
+        builtins.str
+            The current authorization token to use for this client and it's
+            prefix.
+        """
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Close this access token handler."""
+
+    def invalidate(self, token: typing.Optional[str]) -> None:
+        """Invalidate the cached token in this handler.
+
+        !!! note
+            `token` may be provided in-order to avoid newly generated tokens
+            from being invalidated due to multiple calls being made by separate
+            subroutines which are handling the same token.
+
+        Parameters
+        ----------
+        token : typing.Optional[builtins.str]
+            The token to specifically invalidate. If provided then this will only
+            invalidate the cached token if it matches this, otherwise it'll be
+            invalidated regardless.
+        """
 
 
 class RESTClient(traits.NetworkSettingsAware, abc.ABC):
@@ -1305,7 +1342,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
             The channel to bulk delete the messages in. This may be
             the object or the ID of an existing channel.
-        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages_.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages_.PartialMessage]]
+        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
             Either the object/ID of an existing message to delete or an iterable
             of the objects and/or IDs of existing messages to delete.
 
@@ -2721,11 +2758,199 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
+    async def authorize_client_credentials_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        # While according to the spec scopes are optional here, Discord requires that "valid" scopes are passed.
+        scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]],
+    ) -> applications.PartialOAuth2Token:
+        """Authorize a client credentials token for an application.
+
+        Parameters
+        ----------
+        client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to authorize as.
+        client_secret : builtins.str
+            Secret of the application to authorize as.
+        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+            The scopes to authorize for.
+
+        Returns
+        -------
+        hikari.applications.PartialOAuth2Token
+            Object of the authorized partial OAuth2 token.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If invalid any invalid or malformed scopes are passed.
+        hikari.errors.UnauthorizedError
+            When an client or client secret is passed.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def authorize_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        code: str,
+        redirect_uri: str,
+    ) -> applications.OAuth2AuthorizationToken:
+        """Authorize an OAuth2 token using the authorize code grant type.
+
+        Parameters
+        ----------
+        client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to authorize with.
+        client_secret : builtins.str
+            Secret of the application to authorize with.
+        code : builtins.str
+            The authorization code to exchange for an OAuth2 access token.
+        redirect_uri : builtins.str
+            The redirect uri that was included in the authorization request.
+
+        Returns
+        -------
+        hikari.applications.OAuth2AuthorizationToken
+            Object of the authorized OAuth2 token.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid redirect uri or code is passed.
+        hikari.errors.UnauthorizedError
+            When an client or client secret is passed.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def refresh_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        refresh_token: str,
+        *,
+        scopes: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[applications.OAuth2Scope, str]]
+        ] = undefined.UNDEFINED,
+    ) -> applications.OAuth2AuthorizationToken:
+        """Refresh an access token.
+
+        !!! warning
+            As of writing this Discord currently ignores any passed scopes,
+            therefore you should use
+            `hikari.applications.OAuth2AuthorizationToken.scopes` to validate
+            that the expected scopes were actually authorized here.
+
+        Parameters
+        ----------
+        client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to authorize with.
+        client_secret : builtins.str
+            Secret of the application to authorize with.
+        refresh_token : builtins.str
+            The refresh token to use.
+
+        Other Parameters
+        ----------------
+        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+            The scope of the access request.
+
+        Returns
+        -------
+        hikari.applications.OAuth2AuthorizationToken
+            Object of the authorized OAuth2 token.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If an invalid redirect uri or refresh_token is passed.
+        hikari.errors.UnauthorizedError
+            When an client or client secret is passed.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def revoke_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        token: typing.Union[str, applications.PartialOAuth2Token],
+    ) -> None:
+        """Revoke an OAuth2 token.
+
+        Parameters
+        ----------
+        client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to authorize with.
+        client_secret : builtins.str
+            Secret of the application to authorize with.
+        token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
+            Object or string of the access token to revoke.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            When an client or client secret is passed.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def add_user_to_guild(
         self,
-        access_token: str,
+        access_token: typing.Union[str, applications.PartialOAuth2Token],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
@@ -2738,10 +2963,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         !!! note
             This requires the `access_token` to have the
-            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
+            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled along
+            with the authorization of a Bot which has `MANAGE_INVITES`
+            permission within the target guild.
 
         Parameters
         ----------
+        access_token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
+            Object or string of the access token to use for this request.
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to add the user to. This may be the object
             or the ID of an existing guild.

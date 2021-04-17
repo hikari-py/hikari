@@ -30,13 +30,16 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "BasicLazyCachedTCPConnectorFactory",
+    "ClientCredentialsStrategy",
     "RESTApp",
     "RESTClientImpl",
 ]
 
 import asyncio
+import base64
 import collections
 import contextlib
+import copy
 import datetime
 import http
 import logging
@@ -51,6 +54,7 @@ import aiohttp
 import attr
 
 from hikari import _about as about
+from hikari import applications
 from hikari import channels as channels_
 from hikari import colors
 from hikari import config
@@ -81,7 +85,6 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
-    from hikari import applications
     from hikari import audit_logs
     from hikari import invites
     from hikari import messages as messages_
@@ -96,8 +99,6 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 _APPLICATION_JSON: typing.Final[str] = "application/json"
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
-_BEARER_TOKEN_PREFIX: typing.Final[str] = "Bearer"
-_BOT_TOKEN_PREFIX: typing.Final[str] = "Bot"
 _HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
     f"AIOHTTP/{aiohttp.__version__} "
@@ -131,6 +132,115 @@ class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
             self.connector = net.create_tcp_connector(self.http_settings)
 
         return self.connector
+
+
+class ClientCredentialsStrategy(rest_api.TokenStrategy):
+    """Strategy class for handling client credential OAuth2 authorization.
+
+    Parameters
+    ----------
+    client: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]]
+        Object or ID of the application this client credentials strategy should
+        authorize as.
+    client_secret : typing.Optional[builtins.str]
+        Client secret to use when authorizing.
+
+    Other Parameters
+    ----------------
+    scopes : typing.Sequence[str]
+        The scopes to authorize for.
+    """
+
+    __slots__: typing.Sequence[str] = (
+        "_client_id",
+        "_client_secret",
+        "_exception",
+        "_expire_at",
+        "_lock",
+        "_scopes",
+        "_token",
+    )
+
+    def __init__(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        *,
+        scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]] = (
+            applications.OAuth2Scope.APPLICATIONS_COMMANDS_UPDATE,
+            applications.OAuth2Scope.IDENTIFY,
+        ),
+    ) -> None:
+        self._client_id = snowflakes.Snowflake(client)
+        self._client_secret = client_secret
+        self._exception: typing.Optional[errors.ClientHTTPResponseError] = None
+        self._expire_at = 0.0
+        self._lock = asyncio.Lock()
+        self._scopes = tuple(scopes)
+        self._token: typing.Optional[str] = None
+
+    @property
+    def client_id(self) -> snowflakes.Snowflake:
+        """ID of the application this token strategy authenticates with.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            ID of the application this token strategy authenticates with.
+        """
+        return self._client_id
+
+    @property
+    def _is_expired(self) -> bool:
+        return time.monotonic() >= self._expire_at
+
+    @property
+    def scopes(self) -> typing.Sequence[typing.Union[applications.OAuth2Scope, str]]:
+        """Scopes this token strategy authenticates for.
+
+        Returns
+        -------
+        typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+            The scopes this token strategy authenticates for.
+        """
+        return self._scopes
+
+    async def acquire(self, client: rest_api.RESTClient) -> str:
+        if self._token and not self._is_expired:
+            return self._token
+
+        async with self._lock:
+            if self._token and not self._is_expired:
+                return self._token
+
+            if self._exception:
+                # If we don't copy the exception then python keeps adding onto the stack each time it's raised.
+                raise copy.copy(self._exception) from None
+
+            try:
+                response = await client.authorize_client_credentials_token(
+                    client=self._client_id, client_secret=self._client_secret, scopes=self._scopes
+                )
+
+            except errors.ClientHTTPResponseError as exc:
+                if not isinstance(exc, errors.RateLimitedError):
+                    # If we don't copy the exception then python keeps adding onto the stack each time it's raised.
+                    self._exception = copy.copy(exc)
+
+                raise
+
+            # Expires in is lowered a bit in-order to lower the chance of a dead token being used.
+            self._expire_at = time.monotonic() + math.floor(response.expires_in.total_seconds() * 0.99)
+            self._token = f"{response.token_type} {response.access_token}"
+            return self._token
+
+    async def close(self) -> None:
+        return None
+
+    def invalidate(self, token: typing.Optional[str]) -> None:
+        if not token or token == self._token:
+            self._expire_at = 0.0
+            self._token = None
 
 
 class _RESTProvider(traits.RESTAware):
@@ -280,8 +390,8 @@ class RESTApp(traits.ExecutorAware):
 
     def acquire(
         self,
-        token: typing.Optional[str] = None,
-        token_type: str = _BEARER_TOKEN_PREFIX,
+        token: typing.Union[str, rest_api.TokenStrategy, None] = None,
+        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
     ) -> RESTClientImpl:
         loop = asyncio.get_running_loop()
 
@@ -376,10 +486,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
-    token : hikari.undefined.UndefinedOr[builtins.str]
+    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : hikari.undefined.UndefinedOr[builtins.str]
+    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
     rest_url : builtins.str
@@ -423,8 +533,8 @@ class RESTClientImpl(rest_api.RESTClient):
         http_settings: config.HTTPSettings,
         max_rate_limit: float,
         proxy_settings: config.ProxySettings,
-        token: typing.Optional[str],
-        token_type: typing.Optional[str] = None,
+        token: typing.Union[str, None, rest_api.TokenStrategy],
+        token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
         self.buckets = buckets_.RESTBucketManager(max_rate_limit)
@@ -441,15 +551,15 @@ class RESTClientImpl(rest_api.RESTClient):
         self._proxy_settings = proxy_settings
         self._lock = asyncio.Lock()
 
-        if token is None:
-            full_token = None
+        self._token: typing.Union[str, rest_api.TokenStrategy, None]
+        if isinstance(token, str):
+            self._token = f"{token_type.title()} {token}" if token_type else token
+
+        elif isinstance(token, rest_api.TokenStrategy) and token_type:
+            raise ValueError("Token type should be handled by the token strategy")
+
         else:
-            if token_type is None:
-                token_type = _BOT_TOKEN_PREFIX
-
-            full_token = f"{token_type.title()} {token}"
-
-        self._token: typing.Optional[str] = full_token
+            self._token = token
 
         self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
@@ -470,6 +580,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
+        if isinstance(self._token, rest_api.TokenStrategy):
+            await self._token.close()
         # We have to sleep to allow aiohttp time to close SSL transports...
         # https://github.com/aio-libs/aiohttp/issues/1925
         # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
@@ -524,18 +636,28 @@ class RESTClientImpl(rest_api.RESTClient):
         json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         no_auth: bool = False,
+        auth: typing.Optional[str] = None,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-
         if not self.buckets.is_started:
             self.buckets.start()
 
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
 
-        if self._token is not None and not no_auth:
-            headers[_AUTHORIZATION_HEADER] = self._token
+        retried = False
+        token: typing.Optional[str] = None
+        if auth:
+            headers[_AUTHORIZATION_HEADER] = auth
+
+        elif not no_auth:
+            if isinstance(self._token, str):
+                headers[_AUTHORIZATION_HEADER] = self._token
+
+            elif self._token is not None:
+                token = await self._token.acquire(self)
+                headers[_AUTHORIZATION_HEADER] = token
 
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
@@ -608,6 +730,15 @@ class RESTClientImpl(rest_api.RESTClient):
 
                     real_url = str(response.real_url)
                     raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
+
+                can_re_auth = response.status == 401 and not (auth or no_auth or retried)
+                if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
+                    assert token is not None
+                    self._token.invalidate(token)
+                    token = await self._token.acquire(self)
+                    headers[_AUTHORIZATION_HEADER] = token
+                    retried = True
+                    continue
 
                 await self._handle_error_response(response)
 
@@ -1692,9 +1823,79 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_information(response)
 
+    @staticmethod
+    def _gen_oauth2_token(client: snowflakes.SnowflakeishOr[guilds.PartialApplication], client_secret: str) -> str:
+        token = base64.b64encode(f"{int(client)}:{client_secret}".encode()).decode("utf-8")
+        return f"{applications.TokenType.BASIC} {token}"
+
+    async def authorize_client_credentials_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]],
+    ) -> applications.PartialOAuth2Token:
+        route = routes.POST_TOKEN.compile()
+        form = data_binding.URLEncodedForm()
+        form.add_field("grant_type", "client_credentials")
+        form.add_field("scope", " ".join(scopes))
+
+        response = await self._request(route, form=form, auth=self._gen_oauth2_token(client, client_secret))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_partial_token(response)
+
+    async def authorize_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        code: str,
+        redirect_uri: str,
+    ) -> applications.OAuth2AuthorizationToken:
+        route = routes.POST_TOKEN.compile()
+        form = data_binding.URLEncodedForm()
+        form.add_field("grant_type", "authorization_code")
+        form.add_field("code", code)
+        form.add_field("redirect_uri", redirect_uri)
+
+        response = await self._request(route, form=form, auth=self._gen_oauth2_token(client, client_secret))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_authorization_token(response)
+
+    async def refresh_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        refresh_token: str,
+        *,
+        scopes: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[applications.OAuth2Scope, str]]
+        ] = undefined.UNDEFINED,
+    ) -> applications.OAuth2AuthorizationToken:
+        route = routes.POST_TOKEN.compile()
+        form = data_binding.URLEncodedForm()
+        form.add_field("grant_type", "refresh_token")
+        form.add_field("refresh_token", refresh_token)
+
+        if scopes is not undefined.UNDEFINED:
+            form.add_field("scope", " ".join(scopes))
+
+        response = await self._request(route, form=form, auth=self._gen_oauth2_token(client, client_secret))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_authorization_token(response)
+
+    async def revoke_access_token(
+        self,
+        client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        client_secret: str,
+        token: typing.Union[str, applications.PartialOAuth2Token],
+    ) -> None:
+        route = routes.POST_TOKEN_REVOKE.compile()
+        form = data_binding.URLEncodedForm()
+        form.add_field("token", str(token))
+        await self._request(route, form=form, auth=self._gen_oauth2_token(client, client_secret))
+
     async def add_user_to_guild(
         self,
-        access_token: str,
+        access_token: typing.Union[str, applications.PartialOAuth2Token],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
@@ -1705,7 +1906,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Optional[guilds.Member]:
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
-        body.put("access_token", access_token)
+        body.put("access_token", str(access_token))
         body.put("nick", nick)
         body.put("mute", mute)
         body.put("deaf", deaf)
