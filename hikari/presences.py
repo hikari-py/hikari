@@ -233,6 +233,9 @@ class RichActivity(Activity):
     flags: typing.Optional[ActivityFlag] = attr.ib(repr=False)
     """Flags that describe what the activity includes, if present."""
 
+    buttons: typing.Sequence[str] = attr.ib(repr=False)
+    """An array of up to 2 of the button labels shown in this rich presence."""
+
 
 @typing.final
 class Status(str, enums.Enum):

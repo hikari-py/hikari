@@ -3094,6 +3094,7 @@ class TestEntityFactoryImpl:
             "secrets": {"join": "who's a good secret?", "spectate": "I'm a good secret", "match": "No."},
             "instance": True,
             "flags": 3,
+            "buttons": ["owo", "no"],
         }
 
     @pytest.fixture()
@@ -3163,6 +3164,7 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web == presence_models.Status.DO_NOT_DISTURB
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
+        assert activity.buttons == ["owo", "no"]
         assert isinstance(presence, presence_models.MemberPresence)
 
     def test_deserialize_member_presence_with_unset_fields(
@@ -3214,6 +3216,7 @@ class TestEntityFactoryImpl:
         assert activity.secrets is None
         assert activity.is_instance is None
         assert activity.flags is None
+        assert activity.buttons == []
 
     def test_deserialize_member_presence_with_null_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(

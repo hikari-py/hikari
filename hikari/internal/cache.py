@@ -514,6 +514,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     secrets: typing.Optional[presences.ActivitySecret] = attr.ib()
     is_instance: typing.Optional[bool] = attr.ib()
     flags: typing.Optional[presences.ActivityFlag] = attr.ib()
+    buttons: typing.Tuple[str, ...] = attr.ib()
 
     @classmethod
     def build_from_entity(
@@ -551,6 +552,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             party=party,
             assets=assets,
             secrets=secrets,
+            buttons=tuple(activity.buttons),
         )
 
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
@@ -576,6 +578,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             assets=copy.copy(self.assets) if self.assets is not None else None,
             secrets=copy.copy(self.secrets) if self.secrets is not None else None,
             emoji=emoji,
+            buttons=self.buttons,
         )
 
 
