@@ -234,7 +234,7 @@ class RichActivity(Activity):
     """Flags that describe what the activity includes, if present."""
 
     buttons: typing.Sequence[str] = attr.ib(repr=False)
-    """An array of up to 2 of the button labels shown in this rich presence."""
+    """A sequence of up to 2 of the button labels shown in this rich presence."""
 
 
 @typing.final
