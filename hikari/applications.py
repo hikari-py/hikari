@@ -63,20 +63,6 @@ if typing.TYPE_CHECKING:
 class ApplicationFlags(enums.Flag):
     """The known application flag bits."""
 
-    MANAGED_EMOJI = 1 << 2
-    """Denotes that the application has managed emojis."""
-
-    GROUP_DM_CREATE = 1 << 4
-    """Denotes that the application can create group DM channels.
-
-    !!! note
-        This doesn't seem to apply to applications with bots despite the fact
-        that they can create group DMs.
-    """
-
-    RPC_HAS_CONNECTED = 1 << 11
-    """Donates that a application has connected to RPC."""
-
     VERIFIED_FOR_GUILD_PRESENCES = 1 << 12
     """Denotes that a verified application can use the GUILD_PRESENCES intent."""
 
