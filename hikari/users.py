@@ -81,9 +81,6 @@ class UserFlag(enums.Flag):
     TEAM_USER = 1 << 10
     """Team user."""
 
-    SYSTEM = 1 << 12
-    """System user."""
-
     BUG_HUNTER_LEVEL_2 = 1 << 14
     """Bug Hunter Level 2."""
 
