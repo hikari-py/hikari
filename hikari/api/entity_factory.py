@@ -491,7 +491,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.channels.GuildVoiceChannel
+        hikari.channels.GuildStageChannel
             The deserialized guild stage channel object.
 
         Raises
