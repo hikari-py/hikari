@@ -1181,6 +1181,9 @@ class Guild(PartialGuild, abc.ABC):
     this will be `builtins.None`.
     """
 
+    is_nsfw: bool = attr.ib(eq=False, hash=False, repr=False)
+    """Whether the guild is designated as NSFW."""
+
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
         """Banner URL for the guild, if set."""
