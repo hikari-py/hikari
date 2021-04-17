@@ -2739,17 +2739,16 @@ class TestEntityFactoryImpl:
             "member": member_payload,
             "token": "moe cat girls",
             "version": 69420,
+            "application_id": "76234234",
         }
 
     def test__deserialize_command_interaction(
         self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
     ):
-        interaction = entity_factory_impl._deserialize_command_interaction(
-            command_interaction_payload, application_id=123123
-        )
+        interaction = entity_factory_impl._deserialize_command_interaction(command_interaction_payload)
 
         assert interaction.app is mock_app
-        assert interaction.application_id == 123123
+        assert interaction.application_id == 76234234
         assert interaction.id == 3490190239012093
         assert interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
         assert interaction.token == "moe cat girls"
@@ -2802,9 +2801,7 @@ class TestEntityFactoryImpl:
         command_interaction_payload["user"] = user_payload
         del command_interaction_payload["data"]["options"]
 
-        interaction = entity_factory_impl._deserialize_command_interaction(
-            command_interaction_payload, application_id=123123
-        )
+        interaction = entity_factory_impl._deserialize_command_interaction(command_interaction_payload)
 
         assert interaction.guild_id is None
         assert interaction.member is None
@@ -2813,19 +2810,25 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
         for payload, expected_type in [(command_interaction_payload, interaction_models.CommandInteraction)]:
-            assert type(entity_factory_impl.deserialize_interaction(payload, application_id=123)) is expected_type
+            assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
 
     def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl, mock_app):
-        payload = {"id": "795459528803745843", "token": "-- token redacted --", "type": 1, "version": 1}
+        payload = {
+            "id": "795459528803745843",
+            "token": "-- token redacted --",
+            "type": 1,
+            "version": 1,
+            "application_id": "1",
+        }
 
-        interaction = entity_factory_impl.deserialize_interaction(payload, application_id=2123123)
+        interaction = entity_factory_impl.deserialize_interaction(payload)
 
         assert interaction.app is mock_app
         assert interaction.id == 795459528803745843
         assert interaction.token == "-- token redacted --"
         assert interaction.type == 1
         assert interaction.version == 1
-        assert interaction.application_id == 2123123
+        assert interaction.application_id == 1
         assert type(interaction) is interaction_models.PartialInteraction
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):

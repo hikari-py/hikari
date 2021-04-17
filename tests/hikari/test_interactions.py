@@ -52,7 +52,7 @@ class TestCommand:
         result = await mock_command.fetch_self()
 
         assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(34123123, 31231235)
+        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
     async def test_fetch_self_when_guild_id_is_none(self, mock_command, mock_app):
@@ -61,7 +61,7 @@ class TestCommand:
         result = await mock_command.fetch_self()
 
         assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(34123123, undefined.UNDEFINED)
+        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_edit_without_optional_args(self, mock_command, mock_app):
@@ -69,7 +69,12 @@ class TestCommand:
 
         assert result is mock_app.rest.edit_application_command.return_value
         mock_app.rest.edit_application_command.assert_awaited_once_with(
-            34123123, 31231235, name=undefined.UNDEFINED, description=undefined.UNDEFINED, options=undefined.UNDEFINED
+            65234123,
+            34123123,
+            31231235,
+            name=undefined.UNDEFINED,
+            description=undefined.UNDEFINED,
+            options=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio
@@ -79,7 +84,7 @@ class TestCommand:
 
         assert result is mock_app.rest.edit_application_command.return_value
         mock_app.rest.edit_application_command.assert_awaited_once_with(
-            34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
+            65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
         )
 
     @pytest.mark.asyncio
@@ -90,6 +95,7 @@ class TestCommand:
 
         assert result is mock_app.rest.edit_application_command.return_value
         mock_app.rest.edit_application_command.assert_awaited_once_with(
+            65234123,
             34123123,
             undefined.UNDEFINED,
             name=undefined.UNDEFINED,
@@ -101,7 +107,7 @@ class TestCommand:
     async def test_delete(self, mock_command, mock_app):
         await mock_command.delete()
 
-        mock_app.rest.delete_application_command.assert_awaited_once_with(34123123, 31231235)
+        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
     async def test_delete_when_guild_id_is_none(self, mock_command, mock_app):
@@ -109,7 +115,7 @@ class TestCommand:
 
         await mock_command.delete()
 
-        mock_app.rest.delete_application_command.assert_awaited_once_with(34123123, undefined.UNDEFINED)
+        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
 
 class TestCommandInteraction:
@@ -136,7 +142,7 @@ class TestCommandInteraction:
         result = await mock_command_interaction.fetch_initial_response()
 
         assert result is mock_app.rest.fetch_command_response.return_value
-        mock_app.rest.fetch_command_response.assert_awaited_once_with("httptptptptptptptp")
+        mock_app.rest.fetch_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
     @pytest.mark.asyncio
     async def test_create_initial_response_with_optional_args(self, mock_command_interaction, mock_app):
@@ -200,6 +206,7 @@ class TestCommandInteraction:
 
         assert result is mock_app.rest.edit_command_response.return_value
         mock_app.rest.edit_command_response.assert_awaited_once_with(
+            43123,
             "httptptptptptptptp",
             "new content",
             embed=mock_embed_1,
@@ -215,6 +222,7 @@ class TestCommandInteraction:
 
         assert result is mock_app.rest.edit_command_response.return_value
         mock_app.rest.edit_command_response.assert_awaited_once_with(
+            43123,
             "httptptptptptptptp",
             undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
@@ -228,7 +236,7 @@ class TestCommandInteraction:
     async def test_delete_initial_response(self, mock_command_interaction, mock_app):
         await mock_command_interaction.delete_initial_response()
 
-        mock_app.rest.delete_command_response.assert_awaited_once_with("httptptptptptptptp")
+        mock_app.rest.delete_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
     @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_command_interaction, mock_app):

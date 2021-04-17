@@ -463,7 +463,7 @@ class ShardAware(
         """
 
 
-class InteractionServerAware(RESTAware, EventFactoryAware, protocol.Protocol):
+class InteractionServerAware(RESTAware, EventFactoryAware, fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a interaction REST server-aware object."""
 
     __slots__: typing.Sequence[str] = ()

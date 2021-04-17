@@ -360,10 +360,9 @@ class TestRESTApp:
         stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
 
         with stack:
-            rest_app.acquire(token="token", token_type="Type", application=mock_application)
+            rest_app.acquire(token="token", token_type="Type")
 
         mock_client.assert_called_once_with(
-            application=mock_application,
             connector_factory=rest_app._connector_factory,
             connector_owner=rest_app._connector_owner,
             entity_factory=_entity_factory(),
@@ -452,7 +451,6 @@ def rest_client_class():
 @pytest.fixture()
 def rest_client(rest_client_class):
     obj = rest_client_class(
-        application=None,
         connector_factory=mock.Mock(),
         connector_owner=False,
         http_settings=mock.Mock(spec=config.HTTPSettings),
@@ -520,7 +518,6 @@ class TestRESTClientImpl:
     def test__init__passes_max_rate_limit(self):
         with mock.patch.object(buckets, "RESTBucketManager") as bucket:
             rest.RESTClientImpl(
-                application=None,
                 connector_factory=mock.Mock(),
                 connector_owner=True,
                 http_settings=mock.Mock(),
@@ -552,7 +549,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
-            application=None,
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
@@ -568,7 +564,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
-            application=None,
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
@@ -584,7 +579,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
-            application=None,
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),
@@ -600,7 +594,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
-            application=None,
             connector_factory=mock.Mock(),
             connector_owner=True,
             http_settings=mock.Mock(),

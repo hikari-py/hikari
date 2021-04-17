@@ -152,7 +152,6 @@ class InteractionServer(interaction_server.InteractionServer):
 
     __slots__: typing.Sequence[str] = (
         "_application_fetch_lock",
-        "_application_id",
         "_dumps",
         "_entity_factory",
         "_event_factory",
@@ -170,7 +169,6 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        application_id: typing.Optional[snowflakes.Snowflake] = None,
         de_duplicate: bool = True,
         dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
         entity_factory: entity_factory_.EntityFactory,
@@ -181,7 +179,6 @@ class InteractionServer(interaction_server.InteractionServer):
         public_key: typing.Optional[bytes] = None,
     ) -> None:
         self._application_fetch_lock = asyncio.Lock()
-        self._application_id = application_id
         self._dumps = dumps
         self._entity_factory = entity_factory
         self._event_factory = event_factory
@@ -220,11 +217,11 @@ class InteractionServer(interaction_server.InteractionServer):
 
         return False
 
-    async def _fetch_application_information(self) -> typing.Tuple[snowflakes.Snowflake, ed25519.VerifierT]:
+    async def _fetch_public_key(self) -> ed25519.VerifierT:
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
         async with self._application_fetch_lock:
-            if self._application_id and self._verify:
-                return self._application_id, self._verify
+            if self._verify:
+                return self._verify
 
             try:
                 application = (await self._rest_client.fetch_authorization()).application
@@ -232,9 +229,8 @@ class InteractionServer(interaction_server.InteractionServer):
             except errors.UnauthorizedError:
                 application = await self._rest_client.fetch_application()
 
-            self._application_id = application.id
             self._verify = ed25519.build_ed25519_verifier(application.public_key)
-            return self._application_id, self._verify
+            return self._verify
 
     async def _on_cleanup(self, _: aiohttp.web.Application, /) -> None:
         if self._events:
@@ -320,10 +316,7 @@ class InteractionServer(interaction_server.InteractionServer):
         await self._future
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
-        application_id = self._application_id
-        verify = self._verify
-        if not application_id or not verify:
-            application_id, verify = await self._fetch_application_information()
+        verify = self._verify or await self._fetch_public_key()
 
         if not verify(body, signature, timestamp):
             _LOGGER.info("Received a request with an invalid signature")
@@ -350,9 +343,7 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_OK_STATUS, _PONG_PAYLOAD, content_type=_JSON_CONTENT_TYPE)
 
         try:
-            event = self._event_factory.deserialize_interaction_create_event(
-                None, payload, application_id=application_id
-            )
+            event = self._event_factory.deserialize_interaction_create_event(None, payload)
 
         except Exception as exc:
             asyncio.get_running_loop().call_exception_handler(

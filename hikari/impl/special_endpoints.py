@@ -27,6 +27,7 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
     "InteractionResponseBuilder",
@@ -674,7 +675,6 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         data: data_binding.JSONObject = {}
 
-        # The docs are wrong and "content" isn't required.
         if self.content is not undefined.UNDEFINED:
             data["content"] = self.content
 

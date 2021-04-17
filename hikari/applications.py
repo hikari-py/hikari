@@ -90,17 +90,6 @@ class ApplicationFlags(enums.Flag):
 
 
 @typing.final
-class ApplicationFlags(enums.Flag):  # TODO: feeling a lil direly incomplete here
-    """The known application flag bits."""
-
-    GUILD_PRESENCES_INTENT = 1 << 13
-    """Denotes that the application has the GUILD_PRESENCES intent enabled."""
-
-    GUILD_MEMBERS_INTENT = 1 << 15
-    """Denotes that the application has the GUILD_MEMBERS intent enabled."""
-
-
-@typing.final
 class OAuth2Scope(str, enums.Enum):
     """OAuth2 Scopes that Discord allows.
 

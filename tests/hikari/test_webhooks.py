@@ -90,22 +90,24 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_message(self, webhook):
+    async def test_fetch_message(self, executable_webhook):
         message = object()
         returned_message = object()
-        webhook.app.rest.fetch_webhook_message = mock.AsyncMock(return_value=returned_message)
+        executable_webhook.app.rest.fetch_webhook_message = mock.AsyncMock(return_value=returned_message)
 
-        returned = await webhook.fetch_message(message)
+        returned = await executable_webhook.fetch_message(message)
 
         assert returned == returned_message
 
-        webhook.app.rest.fetch_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
+        executable_webhook.app.rest.fetch_webhook_message.assert_called_once_with(
+            executable_webhook.id, token=executable_webhook.token, message=message
+        )
 
     @pytest.mark.asyncio
-    async def test_fetch_message_when_no_token(self, webhook):
-        webhook.token = None
+    async def test_fetch_message_when_no_token(self, executable_webhook):
+        executable_webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"):
-            await webhook.fetch_message(987)
+            await executable_webhook.fetch_message(987)
 
     @pytest.mark.asyncio
     async def test_edit_message(self, executable_webhook):

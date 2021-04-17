@@ -985,17 +985,13 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_interaction(
-        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
-    ) -> interaction_models.PartialInteraction:
+    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
         """Parse a raw payload from Discord into a interaction object.
 
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
-        application_id : hikari.snowflakes.Snowflake
-            ID of the application this interaction is tied to.
 
         Returns
         -------

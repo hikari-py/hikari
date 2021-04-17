@@ -320,7 +320,7 @@ class Embed:
         """
         # Create an empty instance without the overhead of invoking the regular
         # constructor.
-        embed = super().__new__(cls)  # type: Embed
+        embed: Embed = super().__new__(cls)
         embed._title = title
         embed._description = description
         embed._url = url

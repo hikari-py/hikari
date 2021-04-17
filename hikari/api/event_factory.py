@@ -528,8 +528,6 @@ class EventFactory(abc.ABC):
         self,
         shard: typing.Optional[gateway_shard.GatewayShard],
         payload: data_binding.JSONObject,
-        *,
-        application_id: snowflakes.Snowflake,
     ) -> interaction_events.InteractionCreateEvent:
         """Parse a raw payload from Discord into a interaction create event object.
 
@@ -539,8 +537,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event if applicable else `builtins.None .
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
-        application_id : hikari.snowflakes.Snowflake
-            ID of the application this event is tied to.
 
         Returns
         -------
