@@ -2050,6 +2050,7 @@ class TestCacheImpl:
             is_video_enabled=False,
             member=cache_utilities.RefCell(mock_member_data),
             session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
+            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.timezone.utc),
         )
 
         current_voice_state = cache_impl._build_voice_state(voice_state_data)
@@ -2067,6 +2068,9 @@ class TestCacheImpl:
         assert current_voice_state.user_id == snowflakes.Snowflake(7512312)
         assert current_voice_state.session_id == "lkmdfslkmfdskjlfsdkjlsfdkjldsf"
         assert current_voice_state.member is mock_member
+        assert current_voice_state.requested_to_speak_at == datetime.datetime(
+            2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.timezone.utc
+        )
 
     @pytest.mark.skip(reason="TODO")
     def test_clear_voice_states(self, cache_impl):
@@ -2291,6 +2295,7 @@ class TestCacheImpl:
             user_id=snowflakes.Snowflake(4531231),
             member=mock_member,
             session_id="kodfsoijkased9i8uos9i8uawe",
+            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.timezone.utc),
         )
         cache_impl._set_member = mock.Mock(return_value=mock_reffed_member)
         cache_impl._increment_ref_count = mock.Mock()
@@ -2308,6 +2313,9 @@ class TestCacheImpl:
         assert voice_state_data.is_self_deafened is True
         assert voice_state_data.member is mock_reffed_member
         assert voice_state_data.session_id == "kodfsoijkased9i8uos9i8uawe"
+        assert voice_state_data.requested_to_speak_at == datetime.datetime(
+            2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.timezone.utc
+        )
 
     def test_update_voice_state(self, cache_impl):
         mock_old_voice_state = mock.Mock(voices.VoiceState)

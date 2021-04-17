@@ -326,6 +326,114 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             'Public Server Updates' channel cannot be deleted.
         """
 
+    @abc.abstractmethod
+    async def edit_my_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        *,
+        suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        request_to_speak: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit the current user's voice state in a stage channel.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or Id of the guild to edit a voice state in.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            Object or Id of the channel to edit a voice state in.
+
+        Other Parameters
+        ----------------
+        suppress : hikari.undefined.UndefinedOr[builtins.bool]
+            If defined, whether the user should be allowed to become a speaker
+            in the target stage channel.
+
+        !!! note
+            The current user has to have already joined the target stage channel
+            before any calls can be made to this endpoint.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If you try to target a non-staging channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MUTE_MEMBERS` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit an existing voice state in a stage channel.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or Id of the guild to edit a voice state in.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+            Object or Id of the channel to edit a voice state in.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or Id of the user to to edit the voice state of.
+
+        Other Parameters
+        ----------------
+        suppress : hikari.undefined.UndefinedOr[builtins.bool]
+            If defined, whether the user should be allowed to become a speaker
+            in the target stage channel.
+
+        !!! note
+            The target user must already be present in the stage channel before
+            any calls are made to this endpoint.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If you try to target a non-staging channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MUTE_MEMBERS` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
     @typing.overload
     @abc.abstractmethod
     async def edit_permission_overwrites(

@@ -33,6 +33,8 @@ import attr
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
@@ -71,7 +73,11 @@ class VoiceState:
     """Whether this user is streaming using "Go Live"."""
 
     is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
-    """Whether this user is muted by the current user."""
+    """Whether this user is considered to be "suppressed" in a voice context.
+
+    In the context of a voice channel this may mean that the user is muted by
+    the current user and in the context of a stage channel this means that the
+    user is not a speaker."""
 
     is_video_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
     """Whether this user's camera is enabled."""
@@ -84,6 +90,12 @@ class VoiceState:
 
     session_id: str = attr.ib(eq=True, hash=True, repr=True)
     """The string ID of this voice state's session."""
+
+    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=True)
+    """When the user requested to speak in a stage channel.
+
+    Will be `builtins.None` if they have not requested to speak.
+    """
 
 
 @attr_extensions.with_copy

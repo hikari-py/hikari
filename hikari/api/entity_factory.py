@@ -466,6 +466,41 @@ class EntityFactory(abc.ABC):
             `"guild_id"` is not present in the passed payload.
         """
 
+    def deserialize_guild_stage_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildStageChannel:
+        """Parse a raw payload from Discord into a guild stage channel object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.snowflakes.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        !!! note
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` is npt included in the channel's payload.
+
+        Returns
+        -------
+        hikari.channels.GuildVoiceChannel
+            The deserialized guild stage channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
     @abc.abstractmethod
     def deserialize_channel(
         self,

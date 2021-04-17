@@ -826,6 +826,43 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
+    async def edit_my_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        *,
+        suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        request_to_speak: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("suppress", suppress)
+
+        if request_to_speak:
+            # As a note, under current behaviour (as of writing) Discord seems to mostly ignore the value of the
+            # timestamp provided here and generate their own if it's provided as a valid iso8601 timestamp and not null.
+            body.put("request_to_speak_timestamp", time.utc_datetime().isoformat())
+
+        elif request_to_speak is False:
+            body.put("request_to_speak_timestamp", None)
+
+        await self._request(route, json=body)
+
+    async def edit_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PATCH_GUILD_VOICE_STATE.compile(guild=guild, user=user)
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("suppress", suppress)
+        await self._request(route, json=body)
+
     async def edit_permission_overwrites(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],

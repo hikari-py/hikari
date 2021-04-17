@@ -1068,7 +1068,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.parent_id == 456
         assert voice_channel.region == "europe"
         assert voice_channel.bitrate == 64000
-        assert voice_channel.video_quality_mode == channel_models.VideoQualityMode.AUTO
+        assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.user_limit == 3
         assert isinstance(voice_channel, channel_models.GuildVoiceChannel)
 
@@ -1104,7 +1104,78 @@ class TestEntityFactoryImpl:
                 "rtc_region": "europe",
                 "type": 6,
                 "guild_id": "123123",
-                "video_quality_mode": 1,
+            }
+        )
+        assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
+        assert voice_channel.parent_id is None
+        assert voice_channel.is_nsfw is None
+
+    @pytest.fixture()
+    def guild_stage_channel_payload(self, permission_overwrite_payload):
+        return {
+            "id": "555",
+            "guild_id": "666",
+            "name": "Secret Developer Discussions",
+            "type": 13,
+            "nsfw": False,
+            "position": 6,
+            "permission_overwrites": [permission_overwrite_payload],
+            "bitrate": 64000,
+            "user_limit": 3,
+            "rtc_region": "euoo",
+            "parent_id": "543",
+        }
+
+    def test_deserialize_guild_stage_channel(
+        self, entity_factory_impl, mock_app, guild_stage_channel_payload, permission_overwrite_payload
+    ):
+        voice_channel = entity_factory_impl.deserialize_guild_stage_channel(guild_stage_channel_payload)
+        assert voice_channel.id == 555
+        assert voice_channel.name == "Secret Developer Discussions"
+        assert voice_channel.type == channel_models.ChannelType.GUILD_STAGE
+        assert voice_channel.guild_id == 666
+        assert voice_channel.position == 6
+        assert voice_channel.permission_overwrites == {
+            4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
+        }
+        assert voice_channel.is_nsfw is False
+        assert voice_channel.parent_id == 543
+        assert voice_channel.region == "euoo"
+        assert voice_channel.bitrate == 64000
+        assert voice_channel.user_limit == 3
+        assert isinstance(voice_channel, channel_models.GuildStageChannel)
+
+    def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
+        voice_channel = entity_factory_impl.deserialize_guild_voice_channel(
+            {
+                "id": "123",
+                "permission_overwrites": [],
+                "name": "Half Life 3",
+                "parent_id": None,
+                "nsfw": True,
+                "position": 2,
+                "guild_id": "1234",
+                "bitrate": 64000,
+                "user_limit": 3,
+                "rtc_region": None,
+                "type": 6,
+            }
+        )
+        assert voice_channel.parent_id is None
+        assert voice_channel.region is None
+
+    def test_deserialize_guild_stage_channel_with_unset_fields(self, entity_factory_impl):
+        voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
+            {
+                "id": "123",
+                "permission_overwrites": [],
+                "name": "Half Life 3",
+                "position": 2,
+                "bitrate": 64000,
+                "user_limit": 3,
+                "rtc_region": "europe",
+                "type": 6,
+                "guild_id": "123123",
             }
         )
         assert voice_channel.parent_id is None
@@ -1120,6 +1191,7 @@ class TestEntityFactoryImpl:
         guild_news_channel_payload,
         guild_store_channel_payload,
         guild_voice_channel_payload,
+        guild_stage_channel_payload,
     ):
         for payload, expected_type in [
             (dm_channel_payload, channel_models.DMChannel),
@@ -1129,6 +1201,7 @@ class TestEntityFactoryImpl:
             (guild_news_channel_payload, channel_models.GuildNewsChannel),
             (guild_store_channel_payload, channel_models.GuildStoreChannel),
             (guild_voice_channel_payload, channel_models.GuildVoiceChannel),
+            (guild_stage_channel_payload, channel_models.GuildStageChannel),
         ]:
             assert isinstance(entity_factory_impl.deserialize_channel(payload), expected_type)
 
@@ -3558,6 +3631,7 @@ class TestEntityFactoryImpl:
             "self_stream": True,
             "self_video": True,
             "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
         }
 
     def test_deserialize_voice_state_with_guild_id_in_payload(
@@ -3579,6 +3653,9 @@ class TestEntityFactoryImpl:
         assert voice_state.is_streaming is True
         assert voice_state.is_video_enabled is True
         assert voice_state.is_suppressed is False
+        assert voice_state.requested_to_speak_at == datetime.datetime(
+            2021, 4, 17, 10, 11, 19, 970105, tzinfo=datetime.timezone.utc
+        )
         assert isinstance(voice_state, voice_models.VoiceState)
 
     def test_deserialize_voice_state_with_injected_guild_id(
@@ -3598,6 +3675,7 @@ class TestEntityFactoryImpl:
                 "self_stream": True,
                 "self_video": True,
                 "suppress": False,
+                "request_to_speak_timestamp": None,
             },
             guild_id=snowflakes.Snowflake(43123),
         )
@@ -3620,10 +3698,12 @@ class TestEntityFactoryImpl:
                 "suppress": False,
                 "guild_id": "123123123",
                 "member": member_payload,
+                "request_to_speak_timestamp": None,
             }
         )
         assert voice_state.channel_id is None
         assert voice_state.is_streaming is False
+        assert voice_state.requested_to_speak_at is None
 
     @pytest.fixture()
     def voice_region_payload(self):

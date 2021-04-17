@@ -189,3 +189,12 @@ class Permissions(enums.Flag):
 
     USE_APPLICATION_COMMANDS = 1 << 31
     """Allows for using the application commands of guild integrations within a text channel."""
+
+    REQUEST_TO_SPEAK = 1 << 32
+    """Allows for requesting to speak in stage channels.
+
+    !!! warning
+        This permissions is currently defined as being "under active
+        development" by Discord meaning that "it may be changed or removed"
+        without warning.
+    """
