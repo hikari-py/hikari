@@ -486,3 +486,67 @@ class TestBotApp:
     @pytest.mark.skip("TODO")
     def test_start(self, bot):
         ...
+
+    @pytest.mark.asyncio
+    async def test_update_voice_state(self, bot):
+        bot._is_alive = True
+        shard0 = mock.Mock(shard_count=3)
+        shard1 = mock.Mock(shard_count=3)
+        shard2 = mock.Mock(shard_count=3)
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+        shard2.update_voice_state = mock.AsyncMock()
+
+        await bot.update_voice_state(115590097100865541, 123, self_mute=True, self_deaf=False)
+
+        shard2.update_voice_state.assert_awaited_once_with(
+            guild=115590097100865541, channel=123, self_mute=True, self_deaf=False
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_voice_state_when_shard_not_present(self, bot):
+        bot._is_alive = True
+        shard0 = mock.Mock(shard_count=96)
+        shard1 = mock.Mock(shard_count=96)
+        shard2 = mock.Mock(shard_count=96)
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+
+        with pytest.raises(RuntimeError):
+            await bot.update_voice_state(702763150025556029, 123)
+
+    @pytest.mark.asyncio
+    async def test_request_guild_members(self, bot):
+        bot._is_alive = True
+        shard0 = mock.Mock(shard_count=3)
+        shard1 = mock.Mock(shard_count=3)
+        shard2 = mock.Mock(shard_count=3)
+        shard2.request_guild_members = mock.AsyncMock()
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+
+        await bot.request_guild_members(
+            115590097100865541,
+            include_presences=True,
+            query="indeed",
+            limit=42,
+            users=[123],
+            nonce="NONCE",
+        )
+
+        shard2.request_guild_members.assert_awaited_once_with(
+            guild=115590097100865541,
+            include_presences=True,
+            query="indeed",
+            limit=42,
+            users=[123],
+            nonce="NONCE",
+        )
+
+    @pytest.mark.asyncio
+    async def test_request_guild_members_when_shard_not_present(self, bot):
+        bot._is_alive = True
+        shard0 = mock.Mock(shard_count=96)
+        shard1 = mock.Mock(shard_count=96)
+        shard2 = mock.Mock(shard_count=96)
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+
+        with pytest.raises(RuntimeError):
+            await bot.request_guild_members(702763150025556029)

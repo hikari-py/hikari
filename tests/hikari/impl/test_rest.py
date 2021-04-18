@@ -1484,6 +1484,64 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_edit_my_voice_state_when_requesting_to_speak(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
+        mock_datetime = mock.Mock(isoformat=mock.Mock(return_value="blamblamblam"))
+
+        with mock.patch.object(time, "utc_datetime", return_value=mock_datetime):
+            result = await rest_client.edit_my_voice_state(
+                StubModel(5421), StubModel(999), suppress=True, request_to_speak=True
+            )
+
+            time.utc_datetime.assert_called_once()
+            mock_datetime.isoformat.assert_called_once()
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": "blamblamblam"}
+        )
+
+    async def test_edit_my_voice_state_when_revoking_speak_request(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
+
+        result = await rest_client.edit_my_voice_state(
+            StubModel(5421), StubModel(999), suppress=True, request_to_speak=False
+        )
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": None}
+        )
+
+    async def test_edit_my_voice_state_without_optional_fields(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
+
+        result = await rest_client.edit_my_voice_state(StubModel(5421), StubModel(999))
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(expected_route, json={"channel_id": "999"})
+
+    async def test_edit_voice_state(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_GUILD_VOICE_STATE.compile(guild=543123, user=32123)
+
+        result = await rest_client.edit_voice_state(StubModel(543123), StubModel(321), StubModel(32123), suppress=True)
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(expected_route, json={"channel_id": "321", "suppress": True})
+
+    async def test_edit_voice_state_without_optional_arguments(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_GUILD_VOICE_STATE.compile(guild=543123, user=32123)
+
+        result = await rest_client.edit_voice_state(StubModel(543123), StubModel(321), StubModel(32123))
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(expected_route, json={"channel_id": "321"})
+
     async def test_edit_permission_overwrites(self, rest_client):
         target = StubModel(456)
         expected_route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)

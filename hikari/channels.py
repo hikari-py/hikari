@@ -41,6 +41,7 @@ __all__: typing.List[str] = [
     "GuildNewsChannel",
     "GuildStoreChannel",
     "GuildVoiceChannel",
+    "GuildStageChannel",
 ]
 
 import abc
@@ -94,6 +95,9 @@ class ChannelType(int, enums.Enum):
 
     GUILD_STORE = 6
     """A channel that show's a game's store page."""
+
+    GUILD_STAGE = 13
+    """A few to many voice channel for hosting events."""
 
 
 @typing.final
@@ -806,7 +810,7 @@ class GuildStoreChannel(GuildChannel):
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
 class GuildVoiceChannel(GuildChannel):
-    """Represents an voice channel."""
+    """Represents a voice channel."""
 
     bitrate: int = attr.ib(eq=False, hash=False, repr=True)
     """The bitrate for the voice channel (in bits per second)."""
@@ -827,3 +831,25 @@ class GuildVoiceChannel(GuildChannel):
 
     video_quality_mode: typing.Union[VideoQualityMode, int] = attr.ib(eq=False, hash=False, repr=False)
     """The video quality mode for the voice channel."""
+
+
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class GuildStageChannel(GuildChannel):
+    """Represents a stage channel."""
+
+    bitrate: int = attr.ib(eq=False, hash=False, repr=True)
+    """The bitrate for the stage channel (in bits per second)."""
+
+    region: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    """ID of the voice region for this stage channel.
+
+    If set to `builtins.None` then this is set to "auto" mode where the used
+    region will be decided based on the first person who connects to it when
+    it's empty.
+    """
+
+    user_limit: int = attr.ib(eq=False, hash=False, repr=True)
+    """The user limit for the stage channel.
+
+    If this is `0`, then assume no limit.
+    """

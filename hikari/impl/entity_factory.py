@@ -238,6 +238,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_NEWS: self.deserialize_guild_news_channel,
             channel_models.ChannelType.GUILD_STORE: self.deserialize_guild_store_channel,
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
+            channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
 
     ######################
@@ -734,6 +735,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
+        video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
         return channel_models.GuildVoiceChannel(
             app=self._app,
             id=channel_fields.id,
@@ -747,7 +750,29 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
-            video_quality_mode=channel_models.VideoQualityMode(int(payload["video_quality_mode"])),
+            video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
+        )
+
+    def deserialize_guild_stage_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildStageChannel:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        return channel_models.GuildStageChannel(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            position=channel_fields.position,
+            permission_overwrites=channel_fields.permission_overwrites,
+            is_nsfw=channel_fields.is_nsfw,
+            parent_id=channel_fields.parent_id,
+            region=payload["rtc_region"],
+            bitrate=int(payload["bitrate"]),
+            user_limit=int(payload["user_limit"]),
         )
 
     def deserialize_channel(
@@ -2096,6 +2121,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if member is undefined.UNDEFINED:
             member = self.deserialize_member(payload["member"], guild_id=guild_id)
 
+        requested_to_speak_at: typing.Optional[datetime.datetime] = None
+        if raw_requested_to_speak_at := payload.get("request_to_speak_timestamp"):
+            requested_to_speak_at = time.iso8601_datetime_string_to_datetime(raw_requested_to_speak_at)
+
         return voice_models.VoiceState(
             app=self._app,
             guild_id=guild_id,
@@ -2110,6 +2139,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_streaming=payload.get("self_stream", False),
             is_video_enabled=payload["self_video"],
             is_suppressed=payload["suppress"],
+            requested_to_speak_at=requested_to_speak_at,
         )
 
     def deserialize_voice_region(self, payload: data_binding.JSONObject) -> voice_models.VoiceRegion:

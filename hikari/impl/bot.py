@@ -44,6 +44,7 @@ from hikari import config
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
+from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.impl import cache as cache_impl
@@ -60,8 +61,10 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
+    from hikari import channels
     from hikari import event_stream
-    from hikari import users
+    from hikari import guilds
+    from hikari import users as users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
@@ -330,7 +333,7 @@ class BotApp(traits.BotAware):
         return self._intents
 
     @property
-    def me(self) -> typing.Optional[users.OwnUser]:
+    def me(self) -> typing.Optional[users_.OwnUser]:
         return self._cache.get_me()
 
     @property
@@ -870,6 +873,13 @@ class BotApp(traits.BotAware):
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
 
+    def _get_shard(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> gateway_shard.GatewayShard:
+        guild = snowflakes.Snowflake(guild)
+        if shard := self._shards.get(snowflakes.calculate_shard_id(self.shard_count, guild)):
+            return shard
+
+        raise RuntimeError(f"Guild {guild} isn't covered by any of the shards in this client")
+
     async def update_presence(
         self,
         *,
@@ -888,8 +898,33 @@ class BotApp(traits.BotAware):
 
         await aio.all_of(*coros)
 
-    # TODO: Update voice state
-    # TODO: Request guild chunk
+    async def update_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        *,
+        self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        self._check_if_alive()
+        shard = self._get_shard(guild)
+        await shard.update_voice_state(guild=guild, channel=channel, self_mute=self_mute, self_deaf=self_deaf)
+
+    async def request_guild_members(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        query: str = "",
+        limit: int = 0,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        self._check_if_alive()
+        shard = self._get_shard(guild)
+        return await shard.request_guild_members(
+            guild=guild, include_presences=include_presences, query=query, limit=limit, users=users, nonce=nonce
+        )
 
     async def _set_close_flag(self, signame: str, signum: int) -> None:
         # This needs to be a coroutine, as the closing event is not threadsafe, so we have no way to set this

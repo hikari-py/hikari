@@ -47,9 +47,12 @@ if typing.TYPE_CHECKING:
     import datetime
     from concurrent import futures
 
+    from hikari import channels
     from hikari import config
+    from hikari import guilds
     from hikari import intents as intents_
-    from hikari import users
+    from hikari import snowflakes
+    from hikari import users as users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
@@ -288,7 +291,7 @@ class ShardAware(
         raise NotImplementedError
 
     @property
-    def me(self) -> typing.Optional[users.OwnUser]:
+    def me(self) -> typing.Optional[users_.OwnUser]:
         """Return the bot user, if known.
 
         This should be available as soon as the bot has fired the
@@ -377,6 +380,85 @@ class ShardAware(
             simpler.
         """
         raise NotImplementedError
+
+    async def update_voice_state(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        *,
+        self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        """Update the voice state for this bot in a given guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild or guild ID to update the voice state for.
+        channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
+            The channel or channel ID to update the voice state for. If `builtins.None`
+            then the bot will leave the voice channel that it is in for the
+            given guild.
+        self_mute : builtins.bool
+            If specified and `builtins.True`, the bot will mute itself in that
+            voice channel. If `builtins.False`, then it will unmute itself.
+        self_deaf : builtins.bool
+            If specified and `builtins.True`, the bot will deafen itself in that
+            voice channel. If `builtins.False`, then it will undeafen itself.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If the guild passed isn't covered by any of the shards in this sharded
+            client.
+        """
+
+    async def request_guild_members(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        query: str = "",
+        limit: int = 0,
+        users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.User]] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Request for a guild chunk.
+
+        Parameters
+        ----------
+        guild: hikari.guilds.Guild
+            The guild to request chunk for.
+
+        Other Parameters
+        ----------------
+        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to request presences.
+        query: builtins.str
+            If not `""`, request the members which username starts with the string.
+        limit: builtins.int
+            Maximum number of members to send matching the query.
+        users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
+            If provided, the users to request for.
+        nonce: hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the nonce to be sent with guild chunks.
+
+        !!! note
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
+
+        Raises
+        ------
+        ValueError
+            When trying to specify `users` with `query`/`limit`, if `limit` is not between
+            0 and 100, both inclusive or if `users` length is over 100.
+        hikari.errors.MissingIntentError
+            When trying to request presences without the `GUILD_MEMBERS` or when trying to
+            request the full list of members without `GUILD_PRESENCES`.
+        builtins.RuntimeError
+            If the guild passed isn't covered by any of the shards in this sharded
+            client.
+        """
 
 
 @typing.runtime_checkable

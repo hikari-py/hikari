@@ -198,7 +198,7 @@ The valid types for this type hint are:
 - `datetime.datetime`
 """
 
-T = typing.TypeVar("T", covariant=True)
+T = typing.TypeVar("T", covariant=True, bound=Unique)
 
 SnowflakeishOr = typing.Union[T, Snowflakeish]
 """Type hint representing a unique object entity.

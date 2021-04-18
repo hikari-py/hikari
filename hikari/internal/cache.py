@@ -865,6 +865,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_video_enabled: bool = attr.ib()
     member: RefCell[MemberData] = attr.ib()
     session_id: str = attr.ib()
+    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.ib()
 
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
         member = self.member.object.build_entity(app)
@@ -882,6 +883,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             session_id=self.session_id,
             app=app,
             member=member,
+            requested_to_speak_at=self.requested_to_speak_at,
         )
 
     @classmethod
@@ -904,6 +906,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_video_enabled=voice_state.is_video_enabled,
             member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
             session_id=voice_state.session_id,
+            requested_to_speak_at=voice_state.requested_to_speak_at,
         )
 
 
