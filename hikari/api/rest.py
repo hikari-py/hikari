@@ -347,8 +347,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         suppress : hikari.undefined.UndefinedOr[builtins.bool]
-            If defined, whether the user should be allowed to become a speaker
-            in the target stage channel.
+            If specificed, whether the user should be allowed to become a speaker
+            in the target stage channel with `builtin.True` suppressing them from
+            becoming one.
 
         !!! note
             The current user has to have already joined the target stage channel
