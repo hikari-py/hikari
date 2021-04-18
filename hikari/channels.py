@@ -838,10 +838,10 @@ class GuildStageChannel(GuildChannel):
     """Represents a stage channel."""
 
     bitrate: int = attr.ib(eq=False, hash=False, repr=True)
-    """The bitrate for the voice channel (in bits per second)."""
+    """The bitrate for the stage channel (in bits per second)."""
 
     region: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
-    """ID of the voice region for this voice channel.
+    """ID of the voice region for this stage channel.
 
     If set to `builtins.None` then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
@@ -849,7 +849,7 @@ class GuildStageChannel(GuildChannel):
     """
 
     user_limit: int = attr.ib(eq=False, hash=False, repr=True)
-    """The user limit for the voice channel.
+    """The user limit for the stage channel.
 
     If this is `0`, then assume no limit.
     """
