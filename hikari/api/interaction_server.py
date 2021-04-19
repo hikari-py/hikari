@@ -23,7 +23,7 @@
 """Provides an interface for Interaction REST server API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ["MainListenerT", "Response", "InteractionServer"]
+__all__: typing.Sequence[str] = ["ListenerT", "Response", "InteractionServer"]
 
 import abc
 import typing
@@ -34,26 +34,27 @@ if typing.TYPE_CHECKING:
 
 
 InteractionT = typing.TypeVar("InteractionT", bound="interactions.PartialInteraction", covariant=True)
+ResponseT = typing.TypeVar("ResponseT", bound="special_endpoints.InteractionResponseBuilder", covariant=True)
 
-MainListenerT = typing.Callable[
+ListenerT = typing.Callable[
     [InteractionT],
-    typing.Awaitable[typing.Optional["special_endpoints.InteractionResponseBuilder"]],
+    typing.Awaitable[ResponseT],
 ]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument of type
 `hikari.events.interaction_events.InteractionCreateEvent` and may return an
-instance of `hikari.api.special_endpoints.InteractionResponseBuilder` which will
-instruct the server on how to respond or `builtins.None` to let the server
-default to a `hikari.interactions.InteractionResponseType.ACKNOWLEDGE` response.
+instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilder`
+subclass for the provided interaction type which will instruct the server on how
+to respond.
 
 !!! note
     For the standard implementation of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints.InteractionResponseBuilder`
-"""  # TODO: rewrite to account for inheritance
+"""  # TODO: rewrite to account for inheritance and new response type
 
-ListenerMapT = typing.Mapping[typing.Type[InteractionT], MainListenerT[InteractionT]]
+ListenerMapT = typing.Mapping[typing.Type[InteractionT], ListenerT[InteractionT, ResponseT]]
 
 
 class Response(typing.Protocol):
@@ -122,17 +123,6 @@ class InteractionServer(abc.ABC):
             Whether this interaction server is active
         """
 
-    @property
-    @abc.abstractmethod
-    def listeners(self) -> ListenerMapT[interactions.PartialInteraction]:
-        """Return a mapping of the registered listener functions.
-
-        Returns
-        -------
-        typing.Mapping[InteractionT, MainListenerT[InteractionT]]
-            A mapping of interaction event types to listener functions.
-        """
-
     @abc.abstractmethod
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
@@ -174,11 +164,36 @@ class InteractionServer(abc.ABC):
     async def start(self) -> None:
         """Start the REST server then return."""
 
+    # @typing.overload
+    # def get_listener(
+    #     self, interaction_type: typing.Type[interactions.CommandInteraction]
+    # ) -> typing.Optional[ListenerT[interactions.CommandInteraction, special_endpoints.CommandResponseBuilder]]:
+    #     raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[interactions.PartialInteraction]
+    ) -> typing.Optional[ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+        raise NotImplementedError
+
+    # @typing.overload
+    # def set_listener(
+    #     self,
+    #     interaction_type: typing.Type[interactions.CommandInteraction],
+    #     listener: typing.Optional[
+    #         MainListenerT[interactions.CommandInteraction, special_endpoints.InteractionResponseBuilder]
+    #     ],
+    #     /,
+    #     *,
+    #     replace: bool = False,
+    # ) -> None:
+    #     raise NotImplementedError
+
     @abc.abstractmethod
     def set_listener(
         self,
         interaction_type: typing.Type[InteractionT],
-        listener: typing.Optional[MainListenerT[InteractionT]],
+        listener: typing.Optional[ListenerT[InteractionT, ResponseT]],
         /,
         *,
         replace: bool = False,
@@ -197,11 +212,11 @@ class InteractionServer(abc.ABC):
         ----------------
         replace : builtins.bool
             Whether this call should replace the previously set listener or not,
-            this call will raise a `builtins.ValueError` if set to `False` when
-            a listener is already set.
+            this call will raise a `builtins.ValueError` if set to `builtins.False`
+            when a listener is already set.
 
         Raises
         ------
         builtins.TypeError
-            If `replace` is `False` when a listener is already set.
+            If `replace` is `builtins.False` when a listener is already set.
         """

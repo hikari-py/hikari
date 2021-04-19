@@ -23,7 +23,14 @@
 """Special additional endpoints used by the REST API."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "InteractionResponseBuilder"]
+__all__: typing.List[str] = [
+    "CommandBuilder",
+    "TypingIndicator",
+    "GuildBuilder",
+    "CommandResponseBuilder",
+    "CommandResponseTypes",
+    "InteractionResponseBuilder",
+]
 
 import abc
 import typing
@@ -470,7 +477,44 @@ class GuildBuilder(abc.ABC):
 
 
 class InteractionResponseBuilder(abc.ABC):
-    """Interface of a interaction response builder used within REST servers.
+    """Base class for all interaction response builders used in the interaction server."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> interactions.ResponseType:
+        """Return the type of this response.
+
+        Returns
+        -------
+        hikari.interactions.ResponseType
+            The type of response this is.
+        """
+
+    @abc.abstractmethod
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        """Build a JSON object from this builder.
+
+        Parameters
+        ----------
+        entity_factory : hikari.api.entity_factory.EntityFactory
+            The entity factory to use to serialize entities within this builder.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The built json object representation of this builder.
+        """
+
+
+CommandResponseTypes = typing.Union[
+    "typing.Literal[interactions.ResponseType.SOURCED_RESPONSE]",
+    "typing.Literal[interactions.ResponseType.DEFERRED_SOURCED_RESPONSE]",
+]
+"""Type hints of the valid response types for a command interaction."""
+
+
+class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of a interaction command response builder used within REST servers.
 
     This can be returned by the listener registered to
     `hikari.api.interaction_server.InteractionServer` as a response to the interaction
@@ -481,12 +525,12 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> interactions.InteractionResponseType:
+    def type(self) -> CommandResponseTypes:
         """Return the type of this response.
 
         Returns
         -------
-        hikari.interactions.InteractionResponseType
+        hikari.api.special_endpoints.CommandResponseTypes
             The type of response this is.
         """
 
@@ -553,8 +597,8 @@ class InteractionResponseBuilder(abc.ABC):
         -------
         hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             Either a sequence of object/IDs of the users mentions should be enabled for,
-            `False` or `hikari.undefined.UNDEFINED` to disallow any user mentions
-            or `True` to allow all user mentions.
+            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
+            mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
 
     @user_mentions.setter
@@ -578,8 +622,8 @@ class InteractionResponseBuilder(abc.ABC):
         -------
         hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
             Either a sequence of object/IDs of the roles mentions should be enabled for,
-            `False` or `hikari.undefined.UNDEFINED` to disallow any role mentions
-            or `True` to allow all role mentions.
+            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any role
+            mentions or `True` to allow all role mentions.
         """  # noqa: E501 - Line too long
 
     @role_mentions.setter

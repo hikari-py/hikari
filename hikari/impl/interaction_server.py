@@ -26,7 +26,6 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ["InteractionServer"]
 
 import asyncio
-import hashlib
 import logging
 import sys
 import typing
@@ -49,7 +48,6 @@ if typing.TYPE_CHECKING:
     import aiohttp.typedefs
 
     from hikari import applications
-    from hikari import snowflakes
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
@@ -57,7 +55,7 @@ if typing.TYPE_CHECKING:
 
     ListenerDictT = typing.Dict[
         typing.Type[interaction_server.InteractionT],
-        interaction_server.MainListenerT[interaction_server.InteractionT],
+        interaction_server.ListenerT[interaction_server.InteractionT, interaction_server.ResponseT],
     ]
 
 
@@ -73,6 +71,7 @@ _BAD_REQUEST_STATUS: typing.Final[int] = 400
 _PAYLOAD_TOO_LARGE_STATUS: typing.Final[int] = 413
 _UNSUPPORTED_MEDIA_TYPE_STATUS: typing.Final[int] = 415
 _INTERNAL_SERVER_ERROR_STATUS: typing.Final[int] = 500
+_NOT_IMPLEMENTED: typing.Final[int] = 501
 
 # Header keys and values
 _X_SIGNATURE_ED25519_HEADER: typing.Final[str] = "X-Signature-Ed25519"
@@ -83,7 +82,6 @@ _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
 
 # Constant response payloads
-_ACK_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": interactions.InteractionResponseType.ACKNOWLEDGE})
 _PONG_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE})
 
 
@@ -121,6 +119,8 @@ class _Response:
         return self._status_code
 
 
+# TODO: starting/started and stopping/stopped callbacks?
+# TODO: do we still want to check for event duplication?
 class InteractionServer(interaction_server.InteractionServer):
     """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
 
@@ -135,11 +135,6 @@ class InteractionServer(interaction_server.InteractionServer):
     ----------------
     dumps : aiohttp.typedefs.JSONEncoder
         The JSON encoder this server should use. Defaults to `json.dumps`.
-    events : typing.Optional[hikari.api.event_manager.EventManager]
-        The event manager this server should dispatch all valid received events
-        to along side the single dispatch listener. If left as `builtins.None`
-        then this will still call the relevant `InteractionServer.listeners`
-        callback.
     loads : aiohttp.typedefs.JSONDecoder
         The JSON decoder this server should use. Defaults to `json.loads`.
     public_key : builtins.bytes
@@ -155,7 +150,6 @@ class InteractionServer(interaction_server.InteractionServer):
         "_dumps",
         "_entity_factory",
         "_event_factory",
-        "_events",
         "_future",
         "_hashes",
         "_listeners",
@@ -169,7 +163,6 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        de_duplicate: bool = True,
         dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
         entity_factory: entity_factory_.EntityFactory,
         event_factory: event_factory_.EventFactory,
@@ -182,40 +175,20 @@ class InteractionServer(interaction_server.InteractionServer):
         self._dumps = dumps
         self._entity_factory = entity_factory
         self._event_factory = event_factory
-        self._events = event_manager
         self._future: asyncio.Future[None] = asyncio.Future()
-        self._hashes: typing.Optional[typing.List[bytes]] = [] if de_duplicate else None
-        self._listeners: ListenerDictT[interactions.PartialInteraction] = {}
+        self._listeners: ListenerDictT[
+            interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder
+        ] = {}
         self._loads = loads
         self._rest_client = rest_client
         self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._server = aiohttp.web.Application()
         self._server.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])
-        self._server.on_cleanup.append(self._on_cleanup)
-        self._server.on_shutdown.append(self._on_shutdown)
-        self._server.on_startup.append(self._on_startup)
         self._verify = ed25519.build_ed25519_verifier(public_key) if public_key is not None else None
 
     @property
     def is_alive(self) -> bool:
         return self._runner is not None
-
-    @property
-    def listeners(
-        self,
-    ) -> interaction_server.ListenerMapT[interactions.PartialInteraction]:
-        return self._listeners.copy()
-
-    def _check_duplication(self, body: bytes) -> bool:
-        if self._hashes is not None:
-            if (current_hash := hashlib.md5(body).digest()) in self._hashes:  # noqa: 303 Use of insecure hash function.
-                return True
-
-            self._hashes.append(current_hash)
-            if len(self._hashes) > 300:
-                self._hashes.pop(0)
-
-        return False
 
     async def _fetch_public_key(self) -> ed25519.VerifierT:
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
@@ -231,19 +204,6 @@ class InteractionServer(interaction_server.InteractionServer):
 
             self._verify = ed25519.build_ed25519_verifier(application.public_key)
             return self._verify
-
-    async def _on_cleanup(self, _: aiohttp.web.Application, /) -> None:
-        if self._events:
-            await self._events.dispatch(self._event_factory.deserialize_stopped_event())
-
-    async def _on_shutdown(self, _: aiohttp.web.Application, /) -> None:
-        if self._events:
-            await self._events.dispatch(self._event_factory.deserialize_stopping_event())
-
-    async def _on_startup(self, _: aiohttp.web.Application, /) -> None:
-        if self._events:
-            await self._events.dispatch(self._event_factory.deserialize_starting_event())
-            await self._events.dispatch(self._event_factory.deserialize_started_event())
 
     async def aiohttp_hook(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
         """Handle an AIOHTTP interaction request.
@@ -319,23 +279,19 @@ class InteractionServer(interaction_server.InteractionServer):
         verify = self._verify or await self._fetch_public_key()
 
         if not verify(body, signature, timestamp):
-            _LOGGER.info("Received a request with an invalid signature")
+            _LOGGER.error("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, "Invalid request signature")
-
-        if self._check_duplication(body):
-            _LOGGER.warning("Ignoring duplicated interaction request\n  %r", body)  # TODO: not a warning
-            return _Response(_OK_STATUS, _ACK_PAYLOAD, content_type=_JSON_CONTENT_TYPE)
 
         try:
             payload = self._loads(body.decode("utf-8"))
             interaction_type = int(payload["type"])
 
         except (data_binding.JSONDecodeError, ValueError) as exc:
-            _LOGGER.info("Received a request with an invalid JSON body", exc_info=exc)
+            _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
             return _Response(_BAD_REQUEST_STATUS, "Invalid JSON body")
 
         except (KeyError, TypeError) as exc:
-            _LOGGER.info("Invalid or missing 'type' field in received JSON payload", exc_info=exc)
+            _LOGGER.error("Invalid or missing 'type' field in received JSON payload", exc_info=exc)
             return _Response(_BAD_REQUEST_STATUS, "Invalid or missing 'type' field in payload")
 
         if interaction_type == _PING_INTERACTION_TYPE:
@@ -353,12 +309,6 @@ class InteractionServer(interaction_server.InteractionServer):
 
         _LOGGER.debug("Dispatching interaction %s", event.interaction.id)
 
-        if self._events:
-            asyncio.create_task(
-                self._events.dispatch(event), name=f"{event.interaction.id} interaction request dispatch"
-            )
-
-        result: typing.Optional[special_endpoints.InteractionResponseBuilder] = None
         if listener := self._listeners.get(type(event.interaction)):
             try:
                 result = await listener(event.interaction)
@@ -369,8 +319,11 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, "Exception occurred during interaction dispatch")
 
-        payload = self._dumps(result.build(self._entity_factory)) if result else _ACK_PAYLOAD
-        return _Response(_OK_STATUS, payload, content_type=_JSON_CONTENT_TYPE)
+            payload = self._dumps(result.build(self._entity_factory))
+            return _Response(_OK_STATUS, payload, content_type=_JSON_CONTENT_TYPE)
+
+        _LOGGER.debug("Ignoring interaction type without registered listener %s", event.interaction.type)
+        return _Response(_NOT_IMPLEMENTED, "Handler not set for this interaction type")
 
     def run(
         self,
@@ -587,10 +540,19 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
+    def get_listener(
+        self, interaction_type: typing.Type[interactions.PartialInteraction]
+    ) -> typing.Optional[
+        interaction_server.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+    ]:
+        return self._listeners.get(interaction_type)
+
     def set_listener(
         self,
         interaction_type: typing.Type[interaction_server.InteractionT],
-        listener: typing.Optional[interaction_server.MainListenerT[interaction_server.InteractionT]],
+        listener: typing.Optional[
+            interaction_server.ListenerT[interaction_server.InteractionT, interaction_server.ResponseT]
+        ],
         /,
         *,
         replace: bool = False,

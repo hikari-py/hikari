@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_
+    from hikari.api import special_endpoints
 
 
 class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServer):
@@ -231,12 +232,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     @property
     def is_alive(self) -> bool:
         return self._server.is_alive
-
-    @property
-    def listeners(
-        self,
-    ) -> interaction_server_.ListenerMapT[interactions.PartialInteraction]:
-        return self._server.listeners
 
     @property
     def interaction_server(self) -> interaction_server_.InteractionServer:
@@ -487,10 +482,19 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
             ssl_context=ssl_context,
         )
 
+    def get_listener(
+        self, interaction_type: typing.Type[interactions.PartialInteraction]
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+    ]:
+        return self._server.get_listener(interaction_type)
+
     def set_listener(
         self,
         interaction_type: typing.Type[interaction_server_.InteractionT],
-        listener: typing.Optional[interaction_server_.MainListenerT[interaction_server_.InteractionT]],
+        listener: typing.Optional[
+            interaction_server_.ListenerT[interaction_server_.InteractionT, interaction_server_.ResponseT]
+        ],
         /,
         *,
         replace: bool = False,

@@ -6036,7 +6036,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
         token: str,
-        response_type: interactions.InteractionResponseType,
+        response_type: interactions.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -6064,7 +6064,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the interaction this response is for.
         token : builtins.str
             The command interaction's token.
-        response_type : hikari.interactions.InteractionResponseType
+        response_type : hikari.interactions.ResponseType
             The type of interaction response this is.
 
         Other Parameters

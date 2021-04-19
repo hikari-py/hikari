@@ -2676,7 +2676,7 @@ class TestEntityFactoryImpl:
         assert len(option.options) == 1
 
         suboption = option.options[0]
-        assert suboption.type is interaction_models.OptionType.USER_ID
+        assert suboption.type is interaction_models.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False

@@ -35,7 +35,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds as guild_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
-    from hikari import snowflakes
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard

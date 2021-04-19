@@ -48,10 +48,10 @@ def generate_allowed_mentions(
     ----------
     mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
         Whether @everyone and @here mentions are enabled. If
-        `hikari.undefined.UNDEFINED` or `False` then this will be disabled.
+        `hikari.undefined.UNDEFINED` or `builtins.False` then this will be disabled.
     mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
         Whether the reply mention should be enabled. If `hikari.undefined.UNDEFINED`
-        or `False` then this will be disabled.
+        or `builtins.False` then this will be disabled.
     user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
         Either a sequence of objects/IDs of the users to enabled mentions for,
         `True` to allow all mentions or `builtins.False`/`hikari.undefined.UNDEFINED`
