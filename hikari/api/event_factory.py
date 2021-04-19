@@ -533,7 +533,7 @@ class EventFactory(abc.ABC):
         Parameters
         ----------
         shard : typing.Optional[hikari.api.shard.GatewayShard]
-            The shard that emitted this event if applicable else `builtins.None .
+            The shard that emitted this event if applicable else `builtins.None`.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
 

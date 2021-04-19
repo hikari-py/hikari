@@ -46,6 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import files
     from hikari import guilds
     from hikari import interactions
+    from hikari import messages
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
@@ -552,6 +553,26 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
 
     @content.setter
     def content(self, content: undefined.UndefinedOr[str], /) -> None:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+        """Return the message flags this response should have.
+
+        !!! note
+            As of writing the only message flag which can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL`.
+
+        Returns
+        -------
+        typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The message flags this response should have if set else
+            `hikari.undefined.UNDEFINED`.
+        """
+
+    @flags.setter
+    def flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> None:
         raise NotImplementedError
 
     @property

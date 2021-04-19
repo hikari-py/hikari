@@ -480,7 +480,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         )
 
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction]
+        self, interaction_type: typing.Type[interactions.PartialInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:

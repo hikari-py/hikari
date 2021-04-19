@@ -641,6 +641,9 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
+    flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.ib(
+        default=undefined.UNDEFINED, kw_only=True
+    )
     is_tts: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
     mentions_everyone: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
     user_mentions: undefined.UndefinedOr[
@@ -672,6 +675,9 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
 
         if self._embeds:
             data["embeds"] = [entity_factory.serialize_embed(embed) for embed in self._embeds]
+
+        if self.flags is not undefined.UNDEFINED:
+            data["flags"] = self.flags
 
         if self.is_tts is not undefined.UNDEFINED:
             data["tts"] = self.is_tts
