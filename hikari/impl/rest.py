@@ -3025,7 +3025,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
         token: str,
-        response_type: interactions.InteractionResponseType,
+        response_type: interactions.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

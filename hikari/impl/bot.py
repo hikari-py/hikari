@@ -43,6 +43,7 @@ from hikari import config
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
+from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.impl import cache as cache_impl
@@ -61,7 +62,8 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels
     from hikari import event_stream
-    from hikari import users_
+    from hikari import guilds
+    from hikari import users as users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_

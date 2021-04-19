@@ -244,7 +244,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
-        self._interaction_type_mapping: typing.Mapping[
+        self._interaction_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], interaction_models.PartialInteraction]
         ] = {
             interaction_models.InteractionType.APPLICATION_COMMAND: self._deserialize_command_interaction,

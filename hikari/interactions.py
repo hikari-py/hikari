@@ -31,7 +31,7 @@ __all__: typing.List[str] = [
     "CommandInteraction",
     "CommandOption",
     "InteractionMember",
-    "InteractionResponseType",
+    "ResponseType",
     "InteractionType",
     "OptionType",
     "PartialInteraction",
@@ -99,31 +99,21 @@ class InteractionType(int, enums.Enum):
 
 
 @typing.final
-class InteractionResponseType(int, enums.Enum):
+class ResponseType(int, enums.Enum):
     """The type of an interaction response."""
 
     # PONG isn't here as it should be handled as internal detail of the REST
     # server rather than as a part of the public interface.
-    ACKNOWLEDGE = 2
-    """A response that only acknowledges an interaction without sending a message."""
 
-    CHANNEL_MESSAGE = 3
-    """A response with a message to send in the origin channel."""
+    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
+    SOURCED_RESPONSE = 4
+    """An immediate response to an interaction."""
 
-    CHANNEL_MESSAGE_WITH_SOURCE = 4
-    """A response with a message to send in the origin channel.
+    DEFERRED_SOURCED_RESPONSE = 5
+    """Acknowledge an interaction with the intention to edit in a response later.
 
-    Unlike `InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE`, the response
-    message will be accompanied by an application message from the author
-    indicating that they triggered this command.
-    """
-
-    ACKNOWLEDGE_WITH_SOURCE = 5
-    """A response which acknowledges an interaction without sending a message.
-
-    Unlike `InteractionResponseType.ACKNOWLEDGE_WITH_SOURCE`, this response will
-    still trigger an application message from the author indicating that they
-    triggered this command.
+    The user will see a loading state when this type is used until this
+    interaction expires or a response is edited in over REST.
     """
 
 
@@ -282,8 +272,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
 
     async def create_initial_response(
         self,
-        response_type: InteractionResponseType,
-        # TODO: more concise type
+        response_type: ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -312,7 +301,6 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
 
     async def edit_initial_response(
         self,
-        # TODO: more concise type
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,

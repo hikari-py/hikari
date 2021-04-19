@@ -30,7 +30,7 @@ __all__: typing.List[str] = [
     "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
-    "InteractionResponseBuilder",
+    "CommandResponseBuilder",
 ]
 
 import asyncio
@@ -67,14 +67,6 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
-
-
-_MESSAGE_RESPONSE_TYPES: typing.Final[typing.FrozenSet[interactions.InteractionResponseType]] = frozenset(
-    (
-        interactions.InteractionResponseType.CHANNEL_MESSAGE,
-        interactions.InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    )
-)
 
 
 @typing.final
@@ -674,17 +666,17 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.s(kw_only=False, slots=True, weakref_slot=False)
-class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionResponseBuilder`.
+class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.CommandResponseBuilder`.
 
     Parameters
     ----------
-    type : hikari.interactions.InteractionResponseType
+    type : hikari.api.special_endpoints.CommandResponseTypes
         The type of interaction response this is.
     """
 
     # Required arguments.
-    _type: interactions.InteractionResponseType = attr.ib()
+    _type: special_endpoints.CommandResponseTypes = attr.ib()
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
@@ -707,7 +699,7 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
         return self._embeds.copy()
 
     @property
-    def type(self) -> interactions.InteractionResponseType:
+    def type(self) -> special_endpoints.CommandResponseTypes:
         return self._type
 
     def add_embed(self, embed: embeds_.Embed, /) -> None:
@@ -730,7 +722,7 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        is_message_response = self.type in _MESSAGE_RESPONSE_TYPES
+        is_message_response = self.type is interactions.ResponseType.SOURCED_RESPONSE
 
         if is_message_response and not data:
             raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")
