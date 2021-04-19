@@ -676,7 +676,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     """
 
     # Required arguments.
-    _type: special_endpoints.CommandResponseTypes = attr.ib()
+    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=interactions.ResponseType)
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)

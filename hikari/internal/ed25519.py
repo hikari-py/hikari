@@ -35,16 +35,16 @@ VerifierT = typing.Callable[[bytes, bytes, bytes], bool]
 
 Parameters
 ----------
-body : bytes
+body : builtins.bytes
     The interaction payload.
-signature : bytes
+signature : builtins.bytes
     Value of the `"X-Signature-Ed25519"` header.
-timestamp : bytes
+timestamp : builtins.bytes
     Value of the `"X-Signature-Timestamp"` header.
 
 Returns
 -------
-bool
+builtins.bool
     Whether the provided arguments match this public key.
 """
 
@@ -54,7 +54,7 @@ VerifyBuilderT = typing.Callable[[bytes], VerifierT]
 
 Parameters
 ----------
-public_key : bytes
+public_key : builtins.bytes
     The public key to use to verify received interaction requests against.
 
 Returns

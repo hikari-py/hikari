@@ -49,9 +49,9 @@ subclass for the provided interaction type which will instruct the server on how
 to respond.
 
 !!! note
-    For the standard implementation of
+    For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
-    `hikari.impl.special_endpoints.InteractionResponseBuilder`
+    `hikari.impl.special_endpoints`
 """  # TODO: rewrite to account for inheritance and new response type
 
 ListenerMapT = typing.Mapping[typing.Type[InteractionT], ListenerT[InteractionT, ResponseT]]

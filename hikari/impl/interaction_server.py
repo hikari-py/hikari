@@ -50,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
-    from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_client_
 
     ListenerDictT = typing.Dict[
@@ -168,7 +167,6 @@ class InteractionServer(interaction_server.InteractionServer):
         event_factory: event_factory_.EventFactory,
         loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         rest_client: rest_client_.RESTClient,
-        event_manager: typing.Optional[event_manager_.EventManager] = None,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
         self._application_fetch_lock = asyncio.Lock()
@@ -260,7 +258,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def close(self) -> None:
         if not self._runner:
-            raise TypeError("Cannot close an inactive interaction server")
+            raise errors.ComponentNotRunningError("Cannot close an inactive interaction server")
 
         runner = self._runner
         future = self._future
@@ -271,7 +269,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def join(self) -> None:
         if not self._runner:
-            raise TypeError("Cannot wait for an inactive interaction server to join")
+            raise errors.ComponentNotRunningError("Cannot wait for an inactive interaction server to join")
 
         await self._future
 
@@ -396,7 +394,7 @@ class InteractionServer(interaction_server.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self._runner:
-            raise TypeError("Cannot start an already active interaction server")
+            raise errors.ComponentAlreadyRunningError("Cannot start an already active interaction server")
 
         loop = asyncio.get_event_loop()
 
@@ -482,7 +480,7 @@ class InteractionServer(interaction_server.InteractionServer):
             AIOHTTP's documentation.
         """
         if self._runner:
-            raise TypeError("Cannot start an already active interaction server")
+            raise errors.ComponentAlreadyRunningError("Cannot start an already active interaction server")
 
         self._future = asyncio.futures.Future()
         self._runner = aiohttp.web_runner.AppRunner(

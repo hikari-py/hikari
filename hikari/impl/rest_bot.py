@@ -46,7 +46,6 @@ if typing.TYPE_CHECKING:
     from hikari import interactions
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
-    from hikari.api import event_manager as event_manager_
     from hikari.api import rest as rest_
     from hikari.api import special_endpoints
 
@@ -178,7 +177,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         *,
         allow_color: bool = True,
         banner: typing.Optional[str] = "hikari",
-        event_manager: typing.Optional[event_manager_.EventManager] = None,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
@@ -223,7 +221,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         # IntegrationServer
         self._server = interaction_server_impl.InteractionServer(
             entity_factory=self._entity_factory,
-            event_manager=event_manager,
             event_factory=self._event_factory,
             public_key=public_key,
             rest_client=self._rest,
