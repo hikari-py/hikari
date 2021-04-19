@@ -365,7 +365,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -401,7 +401,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -437,7 +437,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -473,7 +473,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -509,7 +509,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -544,7 +544,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -581,7 +581,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload of a guild
             channel.
@@ -801,7 +801,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -872,7 +872,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
@@ -978,7 +978,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
@@ -1133,7 +1133,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is not an attribute of the `payload` dict, and no
             guild ID was passed for the `guild_id` parameter.
 
@@ -1235,7 +1235,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.

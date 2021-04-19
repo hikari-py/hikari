@@ -646,21 +646,6 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
             Object of the embed to add to this response.
         """
 
-    @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        """Build a JSON object from this builder.
-
-        Parameters
-        ----------
-        entity_factory : hikari.api.entity_factory.EntityFactory
-            The entity factory to use to serialize entities within this builder.
-
-        Returns
-        -------
-        hikari.internal.data_binding.JSONObject
-            The built json object representation of this builder.
-        """
-
 
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
