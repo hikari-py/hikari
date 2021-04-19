@@ -166,13 +166,13 @@ class InteractionServer(abc.ABC):
 
     # @typing.overload
     # def get_listener(
-    #     self, interaction_type: typing.Type[interactions.CommandInteraction]
+    #     self, interaction_type: typing.Type[interactions.CommandInteraction], /
     # ) -> typing.Optional[ListenerT[interactions.CommandInteraction, special_endpoints.CommandResponseBuilder]]:
     #     raise NotImplementedError
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction]
+        self, interaction_type: typing.Type[interactions.PartialInteraction], /
     ) -> typing.Optional[ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
         raise NotImplementedError
 

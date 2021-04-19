@@ -539,7 +539,7 @@ class InteractionServer(interaction_server.InteractionServer):
             await site.start()
 
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction]
+        self, interaction_type: typing.Type[interactions.PartialInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:
