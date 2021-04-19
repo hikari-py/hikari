@@ -1186,7 +1186,6 @@ class TestEntityFactoryImpl:
                 "position": 2,
                 "bitrate": 64000,
                 "user_limit": 3,
-                "rtc_region": "europe",
                 "type": 6,
                 "guild_id": "123123",
             }
@@ -1194,6 +1193,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is None
+        assert voice_channel.region is None
 
     @pytest.fixture()
     def guild_stage_channel_payload(self, permission_overwrite_payload):

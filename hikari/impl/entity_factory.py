@@ -747,7 +747,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             permission_overwrites=channel_fields.permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
-            region=payload["rtc_region"],
+            # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
+            # for a voice channel that just hasn't been touched since this was introduced (e.g. has been archived).
+            region=payload.get("rtc_region"),
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
