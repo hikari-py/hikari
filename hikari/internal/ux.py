@@ -25,12 +25,10 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
-import distutils.version
 import importlib.resources
 import logging.config
 import os
 import platform
-import re
 import string
 import sys
 import time
@@ -38,6 +36,7 @@ import typing
 import warnings
 
 import colorlog  # type: ignore[import]
+import packaging.version
 
 from hikari import _about as about
 from hikari.internal import net
@@ -253,45 +252,7 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     return color_support
 
 
-class HikariVersion(distutils.version.StrictVersion):
-    """Hikari-compatible strict version."""
-
-    # Not typed correctly on distutils, so overriding it raises a false positive...
-    version_re: typing.ClassVar[typing.Final[re.Pattern[str]]] = re.compile(  # type: ignore[misc]
-        r"^(\d+)\.(\d+)(\.(\d+))?(\.[a-z]+)?(\d+)?$", re.I
-    )
-
-    # Parse doesnt set the prerelease correctly, so we overwrite it to fix it.
-    #
-    # Not typed correctly on distutils, so overriding it raises a false positive...
-    def parse(self, vstring: str) -> None:  # type: ignore[override]
-        match = self.version_re.match(vstring)
-        if not match:
-            raise ValueError(f"invalid version number '{vstring}'")
-
-        (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 4, 5, 6)
-
-        self.version = (int(major), int(minor), int(patch) if patch else 0)
-
-        if prerelease:
-            self.prerelease = (prerelease, int(prerelease_num))
-        else:
-            self.prerelease = None
-
-    def __str__(self) -> str:
-        vstring = ".".join(map(str, self.version))
-
-        if self.prerelease:
-            vstring = vstring + self.prerelease[0] + str(self.prerelease[1])
-
-        return vstring
-
-    # Again, not typed correctly on distutils
-    def _cmp(self, other: typing.Any) -> int:  # type: ignore[override]
-        if isinstance(other, str):
-            other = HikariVersion(other)
-
-        return super()._cmp(other)
+HikariVersion = packaging.version.Version
 
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
@@ -318,17 +279,17 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
                 data = await resp.json()
 
         this_version = HikariVersion(about.__version__)
-        is_dev = this_version.prerelease is not None
+        is_dev = this_version.pre is not None
         newer_releases: typing.List[HikariVersion] = []
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):
                 v = HikariVersion(release_string)
-                if v.prerelease is not None and not is_dev:
+                if v.pre is not None and not is_dev:
                     # Don't encourage the user to upgrade from a stable to a dev release...
                     continue
 
-                if v.version == this_version.version and v.prerelease == this_version.prerelease:
+                if v.release == this_version.release and v.pre == this_version.pre:
                     continue
 
                 if v > this_version:
