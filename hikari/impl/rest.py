@@ -1362,7 +1362,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     # Custom emoji mentions are in the format of <:name:id> for static emoji, or
     # <a:name:id> for animated emoji.
-    _CUSTOM_EMOJI_PATTERN: typing.Final[typing.ClassVar[re.Pattern[str]]] = re.compile(r"<a?:([^:]+:\d+)>")
+    _CUSTOM_EMOJI_PATTERN: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"<a?:([^:]+:\d+)>")
 
     def _transform_emoji_to_url_format(self, emoji: emojis.Emojiish) -> str:
         # Given an emojiish, check if it is a valid custom emoji mention. If it

@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/"
-_CUSTOM_EMOJI_REGEX: typing.Final[re.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
+_CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
