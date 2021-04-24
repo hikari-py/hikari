@@ -39,10 +39,11 @@ from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 # TODO: is the major parameter only the first parameter?
-MAJOR_PARAM_REGEX: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"\{(.*?)\}")
+MAJOR_PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"\{(.*?)\}")
 
 # TODO: is this set still complete?
 VALID_MAJOR_PARAMS = frozenset(("channel", "guild", "webhook"))
+
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.

@@ -240,70 +240,39 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_buckets", "compiled_route", "is_owned")
+    __slots__: typing.Sequence[str] = ("compiled_route", "replaced_by")
 
     compiled_route: typing.Final[routes.CompiledRoute]
     """The compiled route that this rate limit is covering."""
 
-    is_owned: bool
-    """Whether this bucket is owned by another bucket."""
+    replaced_by: typing.Optional[RESTBucket]
+    """The bucket this has been replaced by."""
 
     def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
         super().__init__(name, 1, 1)
-        self._buckets: typing.Optional[typing.List[RESTBucket]] = None
         self.compiled_route = compiled_route
-        self.is_owned = False
-
-    @property
-    def is_empty(self) -> bool:
-        return super().is_empty and not self._buckets or all(sub_bucket.is_empty for sub_bucket in self._buckets)
+        self.replaced_by = None
 
     @property
     def is_unknown(self) -> bool:
         """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def close(self) -> None:
-        super().close()
-        if self._buckets:
-            for sub_bucket in self._buckets:
-                sub_bucket.close()
+    async def acquire(self) -> None:
+        if self.replaced_by:
+            await self.replaced_by.acquire()
 
-            self._buckets = None
+        await super().acquire()
+
+    def release(self) -> None:
+        if self.replaced_by and not self._lock.locked():
+            self.replaced_by.release()
+
+        super().release()
 
     async def throttle(self) -> None:
-        if self.is_owned:
-            return
-
-        _LOGGER.debug(
-            "you are being rate limited on bucket %s, backing off for %ss",
-            self.name,
-            self.get_time_until_reset(time.monotonic()),
-        )
-
-        while self._buckets or self.queue:
-            sleep_for = self.get_time_until_reset(time.monotonic())
-            print(sleep_for)
-            await asyncio.sleep(sleep_for)
-            print("aye")
-            print(self.remaining)
-
-            while self.remaining > 0:
-                self.drip()
-
-                if self._buckets:  #  and self._buckets[0].queue
-                    self._buckets[0].queue.pop(0).set_result(None)
-                    if self._buckets[0].is_empty:
-                        del self._buckets[0]
-
-                elif self.queue:
-                    self.queue.pop(0).set_result(None)
-
-                else:
-                    break
-
-        print("bye")
-        self.throttle_task = None
+        if not self.replaced_by:
+            await super().throttle()
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Amend the rate limit.
@@ -326,22 +295,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.reset_at = reset_at
         self.period = max(0.0, self.reset_at - time.monotonic())
 
-        # if self._buckets:
-        #     for bucket in self._buckets:
-        #         bucket.update_rate_limit(remaining, limit, reset_at)
-
     def combine(self, bucket: RESTBucket) -> None:
-        bucket.is_owned = True
-        if bucket.name == UNKNOWN_HASH:
-            bucket.name = self.name
-
-        if bucket.throttle_task:
-            bucket.throttle_task.cancel()
-
-        if not self._buckets:
-            self._buckets = [bucket]
-        else:
-            self._buckets.append(bucket)
+        self.queue.extend(bucket.queue)
+        bucket.queue.clear()
+        bucket.replaced_by = self
 
     def drip(self) -> None:
         """Decrement the remaining count for this bucket.
@@ -356,7 +313,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             self.remaining -= 1
 
 
-def _hash_compiled_route(route: routes.CompiledRoute):
+def _hash_compiled_route(route: routes.CompiledRoute) -> str:
     return str(hash(route.route)) + routes.HASH_SEPARATOR + route.major_param_hash
 
 
@@ -532,7 +489,6 @@ class RESTBucketManager:
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
             this instead.
         """
-        return None
         buckets_to_purge = []
         unknown_buckets_to_purge = []
 
@@ -578,7 +534,7 @@ class RESTBucketManager:
 
         _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> RESTBucket:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
         Parameters
@@ -600,6 +556,7 @@ class RESTBucketManager:
         """
         # Returns a future to await on to wait to be allowed to send the request, and a
         # bucket hash to use to update rate limits later.
+        bucket: typing.Optional[RESTBucket]
         if bucket_hash := self.routes_to_hashes.get(compiled_route.route):
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
             try:
@@ -607,8 +564,7 @@ class RESTBucketManager:
                 _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
             except KeyError:
                 _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
-                bucket = RESTBucket(real_bucket_hash, compiled_route)
-                self.real_hashes_to_buckets[real_bucket_hash] = bucket
+                bucket = self.real_hashes_to_buckets[real_bucket_hash] = RESTBucket(real_bucket_hash, compiled_route)
 
         else:
             bucket_hash = _hash_compiled_route(compiled_route)

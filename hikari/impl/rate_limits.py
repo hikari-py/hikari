@@ -89,9 +89,8 @@ class BaseRateLimiter(abc.ABC):
     def close(self) -> None:
         """Close the rate limiter, cancelling any internal tasks that are executing."""
 
-    async def __aenter__(self) -> BaseRateLimiter:
+    async def __aenter__(self) -> None:
         await self.acquire()
-        return self
 
     async def __aexit__(
         self,
@@ -111,7 +110,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue", "_closed")
 
-    name: typing.Final[str]
+    name: str
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
@@ -310,9 +309,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.period = period
 
     async def acquire(self) -> None:
-        print("a")
         await self._lock.acquire()
-        print("b")
         loop = asyncio.get_running_loop()
 
         # If we are rate limited, delegate invoking this to the throttler and spin it up
