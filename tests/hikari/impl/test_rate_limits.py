@@ -35,6 +35,13 @@ from hikari.impl import rate_limits
 from tests.hikari import hikari_test_helpers
 
 
+class MockFuture(mock.Mock):
+    def __await__(self):
+        if False:
+            yield  # Turns this into a generator.
+        return None
+
+
 class TestBaseRateLimiter:
     def test_context_management(self):
         class MockedBaseRateLimiter(rate_limits.BaseRateLimiter):
@@ -51,7 +58,7 @@ class TestBurstRateLimiter:
     @pytest.fixture()
     def mock_burst_limiter(self):
         class Impl(rate_limits.BurstRateLimiter):
-            def acquire(self, *args, **kwargs) -> asyncio.Future:
+            async def acquire(self, *args, **kwargs) -> None:
                 raise NotImplementedError
 
         return Impl(__name__)
@@ -97,31 +104,42 @@ class TestBurstRateLimiter:
 
 class TestManualRateLimiter:
     @pytest.mark.asyncio
-    async def test_acquire_returns_completed_future_if_lock_task_is_None(self):
+    async def test_acquire_returns_completed_future_if_throttle_task_is_None(self, event_loop):
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = None
-            future = limiter.acquire()
-            assert future.done()
+            future = MockFuture()
+            event_loop.create_future = mock.Mock(return_value=future)
+
+            await limiter.acquire()
+            future.set_result.assert_called_once_with(None)
 
     @pytest.mark.asyncio
-    async def test_acquire_returns_incomplete_future_if_lock_task_is_not_None(self):
+    async def test_acquire_returns_incomplete_future_if_throttle_task_is_not_None(self, event_loop):
         with rate_limits.ManualRateLimiter() as limiter:
-            limiter.throttle_task = asyncio.get_running_loop().create_future()
-            future = limiter.acquire()
-            assert not future.done()
+            limiter.throttle_task = event_loop.create_future()
+            future = MockFuture()
+            event_loop.create_future = mock.Mock(return_value=future)
+
+            await limiter.acquire()
+            future.set_result.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_acquire_places_future_on_queue_if_lock_task_is_not_None(self):
+    async def test_acquire_places_future_on_queue_if_throttle_task_is_not_None(self, event_loop):
         with rate_limits.ManualRateLimiter() as limiter:
-            limiter.throttle_task = asyncio.get_running_loop().create_future()
+            limiter.throttle_task = event_loop.create_future()
+            future = MockFuture()
+            event_loop.create_future = mock.Mock(return_value=future)
+
             assert len(limiter.queue) == 0
-            future = limiter.acquire()
+
+            await limiter.acquire()
+
             assert len(limiter.queue) == 1
             assert future in limiter.queue
-            assert not future.done()
+            future.set_result.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_lock_cancels_existing_task(self):
+    async def test_throttle_cancels_existing_task(self):
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = asyncio.get_running_loop().create_future()
             old_task = limiter.throttle_task
@@ -130,7 +148,7 @@ class TestManualRateLimiter:
             assert old_task is not limiter.throttle_task
 
     @pytest.mark.asyncio
-    async def test_lock_schedules_throttle(self):
+    async def test_throttle_schedules_throttle(self):
         with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
             limiter.unlock_later = mock.AsyncMock()
             limiter.throttle(0)
@@ -191,52 +209,55 @@ class TestWindowedBurstRateLimiter:
             inst.close()
 
     @pytest.mark.asyncio
-    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
+    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        future = ratelimiter.acquire()
+        await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_called_once()
-        assert future.done()
+        ratelimiter.drip.assert_called_once_with()
+        future.set_result.assert_called_once_with(None)
 
     @pytest.mark.asyncio
-    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
+    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        ratelimiter.acquire()
+        await ratelimiter.acquire()
 
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_no_drip_if_rate_limited(self, ratelimiter):
+    async def test_no_drip_if_rate_limited(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = False
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        ratelimiter.acquire()
+        await ratelimiter.acquire()
 
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
+    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.throttle = mock.AsyncMock()
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        task = ratelimiter.acquire()
-        try:
-            assert ratelimiter.throttle_task is not None
+        await ratelimiter.acquire()
+        assert ratelimiter.throttle_task is not None
 
-            await hikari_test_helpers.idle()
-
-            ratelimiter.throttle.assert_called()
-        finally:
-            task.cancel()
+        ratelimiter.throttle.assert_called()
 
     @pytest.mark.asyncio
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter, event_loop):
@@ -244,29 +265,35 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.throttle_task = event_loop.create_future()
         old_task = ratelimiter.throttle_task
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        ratelimiter.acquire()
+        await ratelimiter.acquire()
         assert old_task is ratelimiter.throttle_task, "task was rescheduled, that shouldn't happen :("
 
     @pytest.mark.asyncio
-    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
+    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
-        future = ratelimiter.acquire()
+        await ratelimiter.acquire()
 
         # use slice to prevent aborting test with index error rather than assertion error if this fails.
         assert ratelimiter.queue[-1:] == [future]
 
     @pytest.mark.asyncio
-    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
+    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter, event_loop):
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
+        future = MockFuture()
+        event_loop.create_future = mock.Mock(return_value=future)
 
         try:
-            future = ratelimiter.acquire()
+            await ratelimiter.acquire()
             # use slice to prevent aborting test with index error rather than assertion error if this fails.
             assert ratelimiter.queue[-1:] == [future]
         finally:

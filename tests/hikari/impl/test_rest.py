@@ -461,8 +461,8 @@ def rest_client(rest_client_class):
         executor=mock.Mock(),
         entity_factory=mock.Mock(),
     )
-    obj.buckets = mock.Mock()
-    obj.global_rate_limit = mock.Mock()
+    obj.buckets = mock.Mock(acquire=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock()))
+    obj.global_rate_limit = mock.Mock(acquire=mock.AsyncMock())
     return obj
 
 
@@ -1000,9 +1000,8 @@ class TestRESTClientImplAsync:
         rest_client._token = mock.Mock(rest_api.TokenStrategy, acquire=mock.AsyncMock(return_value="Bearer ok.ok.ok"))
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
@@ -1028,9 +1027,8 @@ class TestRESTClientImplAsync:
         )
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
@@ -1062,9 +1060,8 @@ class TestRESTClientImplAsync:
         )
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(errors.UnauthorizedError):
-                await rest_client._request(route)
+        with pytest.raises(errors.UnauthorizedError):
+            await rest_client._request(route)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
@@ -1075,21 +1072,23 @@ class TestRESTClientImplAsync:
     async def test__request_when_buckets_not_started(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client.buckets.is_started = False
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock(side_effect=exit_exception)):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        rest_client.buckets.acquire.side_effect = exit_exception
 
-            rest_client.buckets.start.assert_called_once()
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        rest_client.buckets.start.assert_called_once()
 
     @hikari_test_helpers.timeout()
     async def test__request_when_buckets_started(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client.buckets.acquire.side_effect = exit_exception
         rest_client.buckets.is_started = True
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock(side_effect=exit_exception)):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
 
-            rest_client.buckets.start.assert_not_called()
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        rest_client.buckets.start.assert_not_called()
 
     @hikari_test_helpers.timeout()
     async def test__request_when__token_is_None(self, rest_client, exit_exception):
@@ -1099,12 +1098,11 @@ class TestRESTClientImplAsync:
         rest_client._token = None
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
-            _, kwargs = mock_session.request.call_args_list[0]
-            assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
 
     @hikari_test_helpers.timeout()
     async def test__request_when__token_is_not_None(self, rest_client, exit_exception):
@@ -1114,9 +1112,8 @@ class TestRESTClientImplAsync:
         rest_client._token = "token"
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
@@ -1129,12 +1126,14 @@ class TestRESTClientImplAsync:
         rest_client._token = "token"
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route, no_auth=True)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route, no_auth=True)
 
-            _, kwargs = mock_session.request.call_args_list[0]
-            assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
+        rest_client.buckets.acquire.assert_called_once_with(route)
+        rest_client.buckets.acquire.return_value.assert_used_once()
+        rest_client.global_rate_limit.acquire.assert_not_called()
 
     @hikari_test_helpers.timeout()
     async def test__request_when_auth_passed(self, rest_client, exit_exception):
@@ -1144,12 +1143,14 @@ class TestRESTClientImplAsync:
         rest_client._token = "token"
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route, auth="ooga booga")
+        with pytest.raises(exit_exception):
+            await rest_client._request(route, auth="ooga booga")
 
-            _, kwargs = mock_session.request.call_args_list[0]
-            assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "ooga booga"
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "ooga booga"
+        rest_client.buckets.acquire.assert_called_once_with(route)
+        rest_client.buckets.acquire.return_value.assert_used_once()
+        rest_client.global_rate_limit.acquire.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_NO_CONTENT(self, rest_client):
@@ -1163,8 +1164,7 @@ class TestRESTClientImplAsync:
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            assert (await rest_client._request(route)) is None
+        assert (await rest_client._request(route)) is None
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_APPLICATION_JSON(self, rest_client):
@@ -1183,8 +1183,7 @@ class TestRESTClientImplAsync:
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            assert (await rest_client._request(route)) == {"something": None}
+        assert (await rest_client._request(route)) == {"something": None}
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_not_JSON(self, rest_client):
@@ -1200,9 +1199,8 @@ class TestRESTClientImplAsync:
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(errors.HTTPError):
-                await rest_client._request(route)
+        with pytest.raises(errors.HTTPError):
+            await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_not_between_200_and_300(self, rest_client, exit_exception):
@@ -1218,9 +1216,8 @@ class TestRESTClientImplAsync:
         rest_client._handle_error_response = mock.AsyncMock(side_effect=exit_exception)
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
         rest_client._stringify_http_message = mock.Mock()
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response__RetryRequest_gets_handled(self, rest_client, exit_exception):
@@ -1233,9 +1230,8 @@ class TestRESTClientImplAsync:
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=[rest_client._RetryRequest, exit_exception]))
         rest_client.buckets.is_started = True
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
-        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-            with pytest.raises(exit_exception):
-                await rest_client._request(route)
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
 
     @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()
@@ -1255,8 +1251,7 @@ class TestRESTClientImplAsync:
         rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
 
         with mock.patch.object(rest, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=enabled))) as logger:
-            with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()):
-                await rest_client._request(route)
+            await rest_client._request(route)
 
         if enabled:
             assert logger.log.call_count == 2
@@ -1324,7 +1319,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest_client._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse())
 
-        rest_client.global_rate_limit.throttle.assert_called_once_with(0.002)
+        rest_client.global_rate_limit.throttle.assert_called_once_with(2.0)
 
     async def test__parse_ratelimits_when_remaining_header_under_or_equal_to_0(self, rest_client):
         class StubResponse:
@@ -1352,7 +1347,7 @@ class TestRESTClientImplAsync:
             real_url = "https://some.url"
 
             async def json(self):
-                return {"retry_after": "2"}
+                return {"retry_after": "0.002"}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(rest_client._RetryRequest):

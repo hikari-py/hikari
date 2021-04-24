@@ -38,14 +38,12 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
-
+PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
 MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
     frozenset(("channel",)): lambda d: d["channel"],
     frozenset(("guild",)): lambda d: d["guild"],
     frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
 }
-
-PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
 
 
 # This could be frozen, except attrs' docs advise against this for performance

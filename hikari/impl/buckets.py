@@ -128,7 +128,7 @@ These headers are:
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
     a `builtins.str` containing the initial bucket hash.
-* `x-ratelimit-reset-after`:
+* `X-RateLimit-Reset-After`:
     a `builtins.float` containing the number of seconds when the current rate
     limit bucket will reset with decimal millisecond precision.
 
@@ -166,7 +166,7 @@ on what attributes you send in a JSON or form data payload.
 No information is sent in headers about these specific limits. You will only
 be made aware that they exist once you get ratelimited. In the 429 ratelimited
 response, you will have the `"global"` attribute set to `builtins.False`, and a
-`"reset_after"` attribute that differs entirely to the `x-ratelimit-reset-after`
+`"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset-After`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. Hikari's
 `hikari.api.rest.RESTClient` implementation specifically uses the value furthest
@@ -180,19 +180,6 @@ At the time of writing, the only example of this appears to be on the
 `PATCH /channels/{channel_id}` endpoint. This has a limit of two changes per
 10 minutes. More details about how this is implemented have yet to be
 released or documented...
-
-
-Caveats
--------
-
-These implementations rely on Discord sending consistent buckets back to us.
-
-This also begins to crumble if more than one HTTP client is in use, since
-there is no performent way to communicate shared rate limits between
-distributed applications. The general concept to follow is that if you are
-making repeated API calls, or calls that are not event-based (e.g.
-fetching messages on a timer), then this can be considered a form of API abuse
-and should be used sparingly.
 """
 
 from __future__ import annotations
@@ -205,7 +192,6 @@ import typing
 
 from hikari import errors
 from hikari.impl import rate_limits
-from hikari.internal import aio
 from hikari.internal import routes
 from hikari.internal import time
 from hikari.internal import ux
@@ -241,37 +227,64 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("compiled_route",)
+    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_lock")
 
-    compiled_route: typing.Final[routes.CompiledRoute]
-    """The compiled route that this rate limit is covering."""
-
-    def __init__(self, name: str, compiled_route: routes.CompiledRoute) -> None:
+    def __init__(self, name: str, compiled_route: routes.CompiledRoute, max_rate_limit: float) -> None:
         super().__init__(name, 1, 1)
-        self.compiled_route = compiled_route
+        self._compiled_route = compiled_route
+        self._max_rate_limit = max_rate_limit
+        self._lock = asyncio.Lock()
+
+    async def __aenter__(self) -> None:
+        await self.acquire()
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        self._lock.release()
 
     @property
     def is_unknown(self) -> bool:
         """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def acquire(self) -> asyncio.Future[None]:
+    async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
         !!! note
             You should afterwards invoke `RESTBucket.update_rate_limit` to
             update any rate limit information you are made aware of.
 
-        Returns
-        -------
-        asyncio.Future[builtins.None]
-            A future that should be awaited immediately. Once the future completes,
-            you are allowed to proceed with your operation.
+        Raises
+        ------
+        hikari.errors.RateLimitTooLongError
+            If the rate limit is longer than `max_rate_limit`.
         """
-        return aio.completed_future(None) if self.is_unknown else super().acquire()
+        await self._lock.acquire()
+
+        if self.is_unknown:
+            return
+
+        now = time.monotonic()
+        retry_after = self.reset_at - now
+
+        if self.is_rate_limited(now) and retry_after > self._max_rate_limit:
+            raise errors.RateLimitTooLongError(
+                route=self._compiled_route,
+                retry_after=retry_after,
+                max_retry_after=self._max_rate_limit,
+                reset_at=self.reset_at,
+                limit=self.limit,
+                period=self.period,
+            )
+
+        await super().acquire()
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
-        """Amend the rate limit.
+        """Update the rate limit information.
 
         Parameters
         ----------
@@ -302,6 +315,28 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         # the current rate limit values Discord put on them...
         if not self.is_unknown:
             self.remaining -= 1
+
+    def resolve(self, real_bucket_hash: str) -> None:
+        """Resolve an unknown bucket.
+
+        Parameters
+        ----------
+        real_bucket_hash: builtins.str
+            The real bucket hash for this bucket.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If the hash of the bucket is already known.
+        """
+        if not self.is_unknown:
+            raise RuntimeError("Cannot resolve known bucket")
+
+        self.name = real_bucket_hash
+
+
+def _create_unknown_hash(route: routes.CompiledRoute) -> str:
+    return UNKNOWN_HASH + routes.HASH_SEPARATOR + str(hash(route))
 
 
 class RESTBucketManager:
@@ -360,7 +395,12 @@ class RESTBucketManager:
     def __enter__(self) -> RESTBucketManager:
         return self
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         self.close()
 
     def __del__(self) -> None:
@@ -496,7 +536,7 @@ class RESTBucketManager:
 
         _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> asyncio.Future[None]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
         Parameters
@@ -506,50 +546,30 @@ class RESTBucketManager:
 
         Returns
         -------
-        asyncio.Future[builtins.None]
-            A future to await that completes when you are allowed to run
-            your request logic.
+        typing.AsyncContextManager[builtins.None]
+            A context manager to enter while doing the request.
 
         !!! note
-            The returned future MUST be awaited, and will complete when your
-            turn to make a call comes along. You are expected to await this and
-            then immediately make your HTTP call. The returned future may
-            already be completed if you can make the call immediately.
+            You MUST keep the context manager acquired during the whole of the
+            request. From making the request until calling `update_rate_limits`.
         """
-        # Returns a future to await on to wait to be allowed to send the request, and a
-        # bucket hash to use to update rate limits later.
         template = compiled_route.route
 
-        if template in self.routes_to_hashes:
+        try:
             bucket_hash = self.routes_to_hashes[template]
-        else:
-            bucket_hash = UNKNOWN_HASH
-            self.routes_to_hashes[template] = bucket_hash
-
-        real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
+            real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
+        except KeyError:
+            real_bucket_hash = _create_unknown_hash(compiled_route)
 
         try:
             bucket = self.real_hashes_to_buckets[real_bucket_hash]
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         except KeyError:
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
-            bucket = RESTBucket(real_bucket_hash, compiled_route)
+            bucket = RESTBucket(real_bucket_hash, compiled_route, self.max_rate_limit)
             self.real_hashes_to_buckets[real_bucket_hash] = bucket
 
-        now = time.monotonic()
-        retry_after = bucket.reset_at - now
-
-        if bucket.is_rate_limited(now) and retry_after > self.max_rate_limit:
-            raise errors.RateLimitTooLongError(
-                route=compiled_route,
-                retry_after=retry_after,
-                max_retry_after=self.max_rate_limit,
-                reset_at=bucket.reset_at,
-                limit=bucket.limit,
-                period=bucket.period,
-            )
-
-        return bucket.acquire()
+        return bucket
 
     def update_rate_limits(
         self,
@@ -570,18 +590,14 @@ class RESTBucketManager:
         remaining_header : builtins.int
             The `X-RateLimit-Remaining` header cast to an `builtins.int`.
         limit_header : builtins.int
-            The `X-RateLimit-Limit`header cast to an `builtins.int`.
+            The `X-RateLimit-Limit` header cast to an `builtins.int`.
         reset_after : builtins.float
-            The `x-ratelimit-reset-after` cast to a `builtins.float`.
+            The `X-RateLimit-Reset-After` header cast to a `builtins.float`.
         """
         self.routes_to_hashes[compiled_route.route] = bucket_header
-
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
 
-        reset_at_monotonic = time.monotonic() + reset_after
-
-        if real_bucket_hash in self.real_hashes_to_buckets:
-            bucket = self.real_hashes_to_buckets[real_bucket_hash]
+        if bucket := self.real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug(
                 "updating %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
                 compiled_route,
@@ -591,17 +607,32 @@ class RESTBucketManager:
                 remaining_header,
             )
         else:
-            bucket = RESTBucket(real_bucket_hash, compiled_route)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
-            _LOGGER.debug(
-                "remapping %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
-                compiled_route,
-                real_bucket_hash,
-                reset_after,
-                limit_header,
-                remaining_header,
-            )
+            unknown_bucket_hash = _create_unknown_hash(compiled_route)
 
+            if bucket := self.real_hashes_to_buckets.pop(unknown_bucket_hash, None):
+                bucket.resolve(real_bucket_hash)
+                _LOGGER.debug(
+                    "remapping %s with existing bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                    compiled_route,
+                    unknown_bucket_hash,
+                    reset_after,
+                    limit_header,
+                    remaining_header,
+                )
+            else:
+                _LOGGER.debug(
+                    "remapping %s with new bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                    compiled_route,
+                    real_bucket_hash,
+                    reset_after,
+                    limit_header,
+                    remaining_header,
+                )
+                bucket = RESTBucket(real_bucket_hash, compiled_route, self.max_rate_limit)
+
+            self.real_hashes_to_buckets[real_bucket_hash] = bucket
+
+        reset_at_monotonic = time.monotonic() + reset_after
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
 
     @property
