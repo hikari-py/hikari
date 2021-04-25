@@ -25,7 +25,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
-import distutils.version
 import importlib.resources
 import logging.config
 import os
@@ -44,6 +43,8 @@ from hikari.internal import net
 
 if typing.TYPE_CHECKING:
     from hikari import config
+
+    CmpTuple = typing.Tuple[int, int, int, typing.Union[int, float]]
 
 # While this is discouraged for most purposes in libraries, this enables us to
 # filter out the vast majority of clutter that most network logger calls
@@ -253,45 +254,62 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     return color_support
 
 
-class HikariVersion(distutils.version.StrictVersion):
-    """Hikari-compatible strict version."""
+_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.I)
 
-    # Not typed correctly on distutils, so overriding it raises a false positive...
-    version_re: typing.ClassVar[typing.Final[re.Pattern[str]]] = re.compile(  # type: ignore[misc]
-        r"^(\d+)\.(\d+)(\.(\d+))?(\.[a-z]+)?(\d+)?$", re.I
-    )
 
-    # Parse doesnt set the prerelease correctly, so we overwrite it to fix it.
-    #
-    # Not typed correctly on distutils, so overriding it raises a false positive...
-    def parse(self, vstring: str) -> None:  # type: ignore[override]
-        match = self.version_re.match(vstring)
+# This is a modified version of packaging.version.Version to better suit our needs
+class HikariVersion:
+    """Hikari strict version."""
+
+    __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+
+    def __init__(self, vstring: str) -> None:
+        match = _VERSION_REGEX.match(vstring)
         if not match:
-            raise ValueError(f"invalid version number '{vstring}'")
+            raise ValueError(f"Invalid version: '{vstring}'")
 
-        (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 4, 5, 6)
+        (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 3, 4, 5)
 
-        self.version = (int(major), int(minor), int(patch) if patch else 0)
+        self.version = (int(major), int(minor), int(patch))
+        self.prerelease = (prerelease, int(prerelease_num) if prerelease_num else 0) if prerelease else None
 
-        if prerelease:
-            self.prerelease = (prerelease, int(prerelease_num))
-        else:
-            self.prerelease = None
+        prerelease_num = int(prerelease_num) if prerelease else float("inf")
+        self._cmp = self.version + (prerelease_num,)
 
     def __str__(self) -> str:
         vstring = ".".join(map(str, self.version))
 
         if self.prerelease:
-            vstring = vstring + self.prerelease[0] + str(self.prerelease[1])
+            vstring += "".join(map(str, self.prerelease))
 
         return vstring
 
-    # Again, not typed correctly on distutils
-    def _cmp(self, other: typing.Any) -> int:  # type: ignore[override]
-        if isinstance(other, str):
-            other = HikariVersion(other)
+    def __repr__(self) -> str:
+        return f"HikariVersion('{str(self)}')"
 
-        return super()._cmp(other)
+    def __eq__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s == o)
+
+    def __ne__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s != o)
+
+    def __lt__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s < o)
+
+    def __le__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s <= o)
+
+    def __gt__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s > o)
+
+    def __ge__(self, other: typing.Any) -> bool:
+        return self._compare(other, lambda s, o: s >= o)
+
+    def _compare(self, other: typing.Any, method: typing.Callable[[CmpTuple, CmpTuple], bool]) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return method(self._cmp, other._cmp)
 
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
@@ -328,7 +346,7 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
                     # Don't encourage the user to upgrade from a stable to a dev release...
                     continue
 
-                if v.version == this_version.version and v.prerelease == this_version.prerelease:
+                if v == this_version:
                     continue
 
                 if v > this_version:

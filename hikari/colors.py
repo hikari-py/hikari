@@ -48,7 +48,7 @@ def _to_rgb_int(value: str, name: str) -> int:
     return int_value
 
 
-_FLOAT_PATTERN: typing.Final[re.Pattern[str]] = re.compile(r"0\.\d*|\.\d+|1\.0*")
+_FLOAT_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"0\.\d*|\.\d+|1\.0*")
 
 
 def _to_rgb_float(value: str, name: str) -> float:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #

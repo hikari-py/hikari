@@ -19,8 +19,6 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 <%!
-    from distutils import version as _version
-
     import hikari as _hikari
 
     show_inherited_members = True
