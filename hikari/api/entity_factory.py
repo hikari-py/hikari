@@ -580,10 +580,12 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload of a guild
             channel.
+        hikari.errors.UnrecognisedEntityError
+            If the channel type is unknown.
         """
 
     ################
