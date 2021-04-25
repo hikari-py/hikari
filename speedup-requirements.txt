@@ -1,5 +1,4 @@
-# aiodns is unmaintained at the time of writing this, meaning that it won't be updated to work with CPython 3.10
-aiodns==2.0.0; python_version < "3.10"
+aiodns==2.0.0
 cchardet==2.1.7
 Brotli==1.0.9
 ciso8601==2.1.3

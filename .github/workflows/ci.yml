@@ -37,6 +37,8 @@ jobs:
 
       - name: Test Installation
         run: |
+          pip install wheel
+
           pip install -e .
           pip uninstall -y hikari
 
