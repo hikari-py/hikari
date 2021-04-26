@@ -40,5 +40,5 @@ safety~=1.10.3
 #############
 # FORMATING #
 #############
-black==20.8b1
+black==21.4b0
 isort==5.8.0
