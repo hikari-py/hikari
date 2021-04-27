@@ -38,7 +38,14 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
-MAJOR_PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"\{(.*?)\}")
+
+MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
+    frozenset(("channel",)): lambda d: d["channel"],
+    frozenset(("guild",)): lambda d: d["guild"],
+    frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
+}
+
+PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
 
 
 # This could be frozen, except attrs' docs advise against this for performance
@@ -129,16 +136,19 @@ class Route:
     path_template: str = attr.ib(hash=True, eq=True)
     """The template string used for the path."""
 
-    major_param: typing.Optional[str] = attr.ib(hash=False, eq=False)
-    """The optional major parameter name."""
+    major_params: typing.Optional[typing.FrozenSet[str]] = attr.ib(hash=False, eq=False)
+    """The optional major parameter name combination for this endpoint."""
 
     def __init__(self, method: str, path_template: str) -> None:
         self.method = method
         self.path_template = path_template
 
-        self.major_param: typing.Optional[str]
-        match = MAJOR_PARAM_REGEX.search(path_template)
-        self.major_param = match.group(1) if match else None
+        self.major_params = None
+        match = PARAM_REGEX.findall(path_template)
+        for major_param_combo in MAJOR_PARAM_COMBOS.keys():
+            if major_param_combo.issubset(match):
+                self.major_params = major_param_combo
+                break
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
         """Generate a formatted `CompiledRoute` for this route.
@@ -162,7 +172,7 @@ class Route:
         return CompiledRoute(
             route=self,
             compiled_path=self.path_template.format_map(data),
-            major_param_hash=data[self.major_param] if self.major_param is not None else "-",
+            major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
 
     def __str__(self) -> str:

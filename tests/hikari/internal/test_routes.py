@@ -48,16 +48,46 @@ class TestCompiledRoute:
 
 
 class TestRoute:
-    @pytest.fixture()
-    def route(self):
-        return routes.Route(method="GET", path_template="/some/endpoint/{channel}")
+    @pytest.mark.parametrize(
+        ("route", "params"),
+        [
+            (routes.DELETE_CHANNEL, frozenset(("channel",))),
+            (routes.PATCH_GUILD, frozenset(("guild",))),
+            (routes.POST_WEBHOOK_WITH_TOKEN, frozenset(("webhook", "token"))),
+            (routes.GET_INVITE, None),
+        ],
+    )
+    def test_major_params(self, route, params):
+        assert route.major_params == params
 
-    def test_compile(self, route):
-        expected = routes.CompiledRoute(route=route, compiled_path="/some/endpoint/1234", major_param_hash="1234")
-        assert route.compile(channel=1234) == expected
+    def test_compile_with_no_major_params(self):
+        route = routes.Route(method="GET", path_template="/some/endpoint/{baguette}")
+        expected = routes.CompiledRoute(route=route, compiled_path="/some/endpoint/1234", major_param_hash="-")
 
-    def test__str__(self, route):
-        assert str(route) == "/some/endpoint/{channel}"
+        assert route.compile(baguette=1234) == expected
+
+    def test_compile_with_channel_major_params(self):
+        route = routes.Route(method="GET", path_template="/channels/{channel}")
+        expected = routes.CompiledRoute(route=route, compiled_path="/channels/4325", major_param_hash="4325")
+
+        assert route.compile(channel=4325) == expected
+
+    def test_compile_with_guild_major_params(self):
+        route = routes.Route(method="GET", path_template="/guilds/{guild}")
+        expected = routes.CompiledRoute(route=route, compiled_path="/guilds/5555", major_param_hash="5555")
+
+        assert route.compile(guild=5555) == expected
+
+    def test_compile_with_webhook_major_params(self):
+        route = routes.Route(method="GET", path_template="/webhooks/{webhook}/{token}")
+        expected = routes.CompiledRoute(
+            route=route, compiled_path="/webhooks/123/okfdkdfkdf", major_param_hash="123:okfdkdfkdf"
+        )
+
+        assert route.compile(webhook=123, token="okfdkdfkdf") == expected
+
+    def test__str__(self):
+        assert str(routes.Route(method="GET", path_template="/some/endpoint/{channel}")) == "/some/endpoint/{channel}"
 
 
 class TestCDNRoute:
