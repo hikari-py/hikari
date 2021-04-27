@@ -571,13 +571,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 message_id=message_id,
             )
 
-        # TODO: check if this can even occur.
-        return reaction_events.DMReactionDeleteAllEvent(
-            app=self._app,
-            shard=shard,
-            channel_id=channel_id,
-            message_id=message_id,
-        )
+        raise NotImplementedError("DM reaction all removes are not documented behavior")
 
     def deserialize_message_reaction_remove_emoji_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -596,14 +590,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 message_id=message_id,
             )
 
-        # TODO: check if this can even occur.
-        return reaction_events.DMReactionDeleteEmojiEvent(
-            app=self._app,
-            shard=shard,
-            emoji=emoji,
-            channel_id=channel_id,
-            message_id=message_id,
-        )
+        raise NotImplementedError("DM reaction emojis deletes are not documented behavior")
 
     ################
     # SHARD EVENTS #

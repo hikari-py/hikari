@@ -782,6 +782,11 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.reaction_events.ReactionDeleteAllEvent
             The parsed message reaction remove all event object.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            If an all reactions remove event occurs in a DM channel.
         """
 
     @abc.abstractmethod
@@ -801,6 +806,11 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.reaction_events.ReactionDeleteEmojiEvent
             The parsed message reaction remove emoji event object.
+
+        Raises
+        ------
+        builtins.NotImplementedError
+            If a emoji reaction remove event occurs in a DM channel.
         """
 
     ################

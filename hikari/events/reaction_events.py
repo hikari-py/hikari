@@ -38,8 +38,6 @@ __all__: typing.List[str] = [
     "GuildReactionDeleteAllEvent",
     "DMReactionAddEvent",
     "DMReactionDeleteEvent",
-    "DMReactionDeleteEmojiEvent",
-    "DMReactionDeleteAllEvent",
 ]
 
 import abc
@@ -360,44 +358,3 @@ class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
 
     emoji: emojis.Emoji = attr.ib()
     # <<inherited docstring from ReactionDeleteEvent>>.
-
-
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
-class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
-    """Event fired when an emoji is removed from a private message's reactions."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
-
-    channel_id: snowflakes.Snowflake = attr.ib()
-    # <<inherited docstring from ReactionEvent>>.
-
-    message_id: snowflakes.Snowflake = attr.ib()
-    # <<inherited docstring from ReactionEvent>>.
-
-    emoji: emojis.Emoji = attr.ib()
-    # <<inherited docstring from ReactionDeleteEmojiEvent>>.
-
-
-@attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
-class DMReactionDeleteAllEvent(DMReactionEvent, ReactionDeleteAllEvent):
-    """Event fired when all of a private message's reactions are removed."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
-
-    channel_id: snowflakes.Snowflake = attr.ib()
-    # <<inherited docstring from ReactionEvent>>.
-
-    message_id: snowflakes.Snowflake = attr.ib()
-    # <<inherited docstring from ReactionEvent>>.
