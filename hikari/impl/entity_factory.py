@@ -528,10 +528,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_permission_overwrite(self, payload: data_binding.JSONObject) -> channel_models.PermissionOverwrite:
         return channel_models.PermissionOverwrite(
-            id=snowflakes.Snowflake(payload["id"]),
-            type=channel_models.PermissionOverwriteType(payload["type"]),
-            allow=permission_models.Permissions(int(payload["allow"])),
-            deny=permission_models.Permissions(int(payload["deny"])),
+            # PermissionOverwrite's init has converters set for these fields which will handle casting
+            id=payload["id"],
+            type=payload["type"],
+            # Permissions still have to be cast to int before they can be cast to Permission typing wise.
+            allow=int(payload["allow"]),
+            deny=int(payload["deny"]),
         )
 
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
@@ -1964,7 +1966,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             activity = presence_models.RichActivity(
                 name=activity_payload["name"],
-                type=presence_models.ActivityType(activity_payload["type"]),
+                # RichActivity's generated init already declares a converter for the "type" field
+                type=activity_payload["type"],
                 url=activity_payload.get("url"),
                 created_at=time.unix_epoch_to_datetime(activity_payload["created_at"]),
                 timestamps=timestamps,
