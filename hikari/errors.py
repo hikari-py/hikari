@@ -313,6 +313,12 @@ class RESTErrorCode(int, enums.Enum):
     MAXIMUM_INVITES = 30_016
     """Maximum number of invites reached (1000)."""
 
+    GUILD_ALREADY_HAS_TEMPLATE = 30_031
+    """Guild already has a template."""
+
+    MAXIMUM_BANS_FOR_NON_GUILD_MEMBERS = 30_035
+    """Maximum number of bans for non-guild members reached."""
+
     REQUEST_TOO_LARGE = 40_005
     """Request too large. Try sending something smaller in size."""
 
