@@ -167,10 +167,14 @@ class TestAsyncMessage:
         message.id = 123
         message.channel_id = 456
         embed = object()
+        attachment = object()
         roles = [object()]
         await message.edit(
             content="test content",
             embed=embed,
+            attachment=attachment,
+            attachments=[attachment, attachment],
+            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,
@@ -182,6 +186,9 @@ class TestAsyncMessage:
             channel=456,
             content="test content",
             embed=embed,
+            attachment=attachment,
+            attachments=[attachment, attachment],
+            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,

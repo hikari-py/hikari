@@ -72,6 +72,7 @@ class TestWebhook:
     async def test_edit_message(self, webhook):
         message = object()
         embed = object()
+        attachment = object()
         returned_message = object()
         webhook.app.rest.edit_webhook_message = mock.AsyncMock(return_value=returned_message)
 
@@ -80,6 +81,9 @@ class TestWebhook:
             content="test",
             embed=embed,
             embeds=[embed, embed],
+            attachment=attachment,
+            attachments=[attachment, attachment],
+            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=True,
             role_mentions=[567, 890],
@@ -94,6 +98,9 @@ class TestWebhook:
             content="test",
             embed=embed,
             embeds=[embed, embed],
+            attachment=attachment,
+            attachments=[attachment, attachment],
+            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=True,
             role_mentions=[567, 890],

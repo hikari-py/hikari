@@ -688,6 +688,9 @@ class PartialMessage(snowflakes.Unique):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -709,18 +712,38 @@ class PartialMessage(snowflakes.Unique):
 
             Any other value will be cast to a `builtins.str` before sending.
 
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
+            If this is a `hikari.embeds.Embed` and neither the
+            `embed` or `embeds` kwargs are provided or if this is a
+            `hikari.files.Resourceish` and neither the `attachment` or
+            `attachments` kwargs are provided, the values will be overwritten.
+            This allows for simpler syntax when sending an embed or an
+            attachment alone.
 
         Other Parameters
         ----------------
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
-            The embed to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed if
-            present is not changed. If this is `builtins.None`, then the embed
-            is removed if present. Otherwise, the new embed value that was
-            provided will be used as the replacement.
+            If provided, the embed to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous embed, if
+            present, is not changed. If this is `builtins.None`, then the embed
+            is removed, if present. Otherwise, the new embed that was provided
+            will be used as the replacement.
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the attachment to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            present, is not changed. If this is `builtins.None`, then the
+            attachment is removed, if present. Otherwise, the new attachment
+            that was provided will be attached.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+            If provided, the attachments to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            present, are not changed. If this is `builtins.None`, then the
+            attachments is removed, if present. Otherwise, the new attachments
+            that were provided will be attached.
+        replace_attachments: bool
+            Whether to replace the attachments with the provided ones. Defaults
+            to `builtins.False`.
+
+            Note this will also overwrite the embed attachments.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             Sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
@@ -766,11 +789,6 @@ class PartialMessage(snowflakes.Unique):
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
-
-        !!! note
-            There is currently no documented way to clear attachments or edit
-            attachments from a previously sent message on Discord's API. To
-            do this, `delete` the message and re-send it.
 
         !!! warning
             If you specify a non-embed `content`, `mentions_everyone`,
@@ -824,6 +842,9 @@ class PartialMessage(snowflakes.Unique):
             channel=self.channel_id,
             content=content,
             embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,
