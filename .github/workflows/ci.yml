@@ -45,15 +45,19 @@ jobs:
           pip install -e .[speedups]
           pip uninstall -y hikari
 
-      - name: Run tests
+      - name: Run tests without coverage
+        run: |
+          pip install nox
+          nox -s pytest -- --skip-coverage
+          nox -s pytest-speedups -- --skip-coverage
+
+      - name: Run tests with coverage
+        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.8' }}
         run: |
           pip install nox
           nox -s pytest
           nox -s pytest-speedups -- --cov-append
 
-      - name: Upload report
-        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.8' }}
-        run: |
           curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
           chmod +x ./cc-test-reporter
           ./cc-test-reporter after-build \
