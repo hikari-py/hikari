@@ -134,6 +134,12 @@ class InviteGuild(guilds.PartialGuild):
     welcome_screen: typing.Optional[guilds.WelcomeScreen] = attr.ib(eq=False, hash=False, repr=False)
     """The welcome screen of a community guild shown to new members, if set."""
 
+    is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    """Whether the guild is designated as NSFW.
+
+    This field is currently only returned by the GET Invite REST endpoint.
+    """
+
     @property
     def splash_url(self) -> typing.Optional[files.URL]:
         """Splash URL for the guild, if set."""

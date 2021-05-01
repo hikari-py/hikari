@@ -136,6 +136,7 @@ class _GuildFields:
     premium_subscription_count: typing.Optional[int] = attr.ib()
     preferred_locale: str = attr.ib()
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib()
+    is_nsfw: bool = attr.ib()
 
 
 @attr_extensions.with_copy
@@ -1333,6 +1334,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=payload.get("premium_subscription_count"),
             preferred_locale=payload["preferred_locale"],
             public_updates_channel_id=public_updates_channel_id,
+            is_nsfw=payload["nsfw"],
         )
 
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
@@ -1390,6 +1392,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=guild_fields.description,
             banner_hash=guild_fields.banner_hash,
             premium_tier=guild_fields.premium_tier,
+            is_nsfw=guild_fields.is_nsfw,
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
@@ -1435,6 +1438,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
+            is_nsfw=guild_fields.is_nsfw,
             is_large=is_large,
             joined_at=joined_at,
             member_count=member_count,
@@ -1517,6 +1521,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 verification_level=guild_models.GuildVerificationLevel(guild_payload["verification_level"]),
                 vanity_url_code=guild_payload["vanity_url_code"],
                 welcome_screen=self.deserialize_welcome_screen(raw_welcome_screen) if raw_welcome_screen else None,
+                is_nsfw=guild_payload.get("nsfw"),
             )
             guild_id = guild.id
         elif "guild_id" in payload:
