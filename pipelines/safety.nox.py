@@ -27,5 +27,7 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def safety(session: nox.Session) -> None:
     """Perform dependency scanning."""
+    # Temporary addition to avoid safety erroring due to https://github.com/pypa/pip/pull/9827
+    session.install("--upgrade", "pip")
     session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
     session.run("safety", "check", "--full-report")
