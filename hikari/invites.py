@@ -78,6 +78,9 @@ class InviteCode(abc.ABC):
             The invite code that can be appended to a URL.
         """
 
+    def __str__(self) -> str:
+        return f"https://discord.gg/{self.code}"
+
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -92,9 +95,6 @@ class VanityURL(InviteCode):
 
     uses: int = attr.ib(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
-
-    def __str__(self) -> str:
-        return f"https://discord.gg/{self.code}"
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -263,19 +263,22 @@ class Invite(InviteCode):
     approximate_active_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.
 
-    This is only present when `with_counts` is passed as `builtins.True` to the GET
-    Invites endpoint.
+    This is only returned by the GET REST Invites endpoint.
     """
 
     approximate_member_count: typing.Optional[int] = attr.ib(eq=False, hash=False, repr=False)
     """The approximate amount of members in this invite's guild.
 
-    This is only present when `with_counts` is passed as `builtins.True` to the GET
-    Invites endpoint.
+    This is only returned by the GET Invites REST endpoint.
     """
 
-    def __str__(self) -> str:
-        return f"https://discord.gg/{self.code}"
+    expires_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    """When this invite will expire.
+
+    This field is only returned by the GET Invite REST endpoint and will be
+    returned as `builtins.None` by said endpoint if the invite doesn't have a set
+    expiry date. Other places will always return this as `builtins.None`.
+    """
 
 
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
@@ -309,14 +312,25 @@ class InviteWithMetadata(Invite):
     created_at: datetime.datetime = attr.ib(eq=False, hash=False, repr=False)
     """When this invite was created."""
 
-    @property
-    def expires_at(self) -> typing.Optional[datetime.datetime]:
-        """When this invite should expire, if `InviteWithMetadata.max_age` is set.
+    expires_at: typing.Optional[datetime.datetime]
+    """When this invite will expire.
 
-        If this invite doesn't have a set expiry then this will be `builtins.None`.
+    If this invite doesn't have a set expiry then this will be `builtins.None`.
+    """
+
+    @property
+    def uses_left(self) -> typing.Optional[int]:
+        """Return the number of uses left for this invite.
+
+        Returns
+        -------
+        typing.Optional[builtins.int]
+            The number of uses left for this invite. This will be `builtins.None`
+            if the invite has unlimited uses.
         """
-        if self.max_age is not None:
-            return self.created_at + self.max_age
+        if self.max_uses:
+            return self.max_uses - self.uses
+
         return None
 
 

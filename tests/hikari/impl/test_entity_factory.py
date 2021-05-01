@@ -2666,6 +2666,7 @@ class TestEntityFactoryImpl:
             "target_user_type": 1,
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
+            "expires_at": "2021-05-08T00:15:24.534000+00:00",
         }
 
     def test_deserialize_invite(
@@ -2704,6 +2705,7 @@ class TestEntityFactoryImpl:
         assert invite.target_user_type == invite_models.TargetUserType.STREAM
         assert invite.approximate_member_count == 84
         assert invite.approximate_active_member_count == 42
+        assert invite.expires_at == datetime.datetime(2021, 5, 8, 0, 15, 24, 534000, tzinfo=datetime.timezone.utc)
         assert isinstance(invite, invite_models.Invite)
 
     def test_deserialize_invite_with_unset_guild_fields(self, entity_factory_impl, invite_payload):
@@ -2715,7 +2717,19 @@ class TestEntityFactoryImpl:
         assert invite.guild.welcome_screen is None
         assert invite.guild.is_nsfw is None
 
-    def test_deserialize_invite_with_null_and_unset_fields(self, entity_factory_impl, partial_channel_payload):
+    def test_deserialize_invite_with_null_fields(self, entity_factory_impl, partial_channel_payload):
+        invite = entity_factory_impl.deserialize_invite(
+            {
+                "code": "aCode",
+                "channel_id": "43123123",
+                "approximate_member_count": 231,
+                "approximate_presence_count": 9,
+                "expires_at": None,
+            }
+        )
+        assert invite.expires_at is None
+
+    def test_deserialize_invite_with_unset_fields(self, entity_factory_impl, partial_channel_payload):
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
@@ -2730,6 +2744,7 @@ class TestEntityFactoryImpl:
         assert invite.inviter is None
         assert invite.target_user is None
         assert invite.target_user_type is None
+        assert invite.expires_at is None
 
     def test_deserialize_invite_with_guild_and_channel_ids_without_objects(self, entity_factory_impl):
         invite = entity_factory_impl.deserialize_invite({"code": "aCode", "guild_id": "42", "channel_id": "202020"})
@@ -2811,12 +2826,15 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.created_at == datetime.datetime(
             2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
         )
+        assert invite_with_metadata.expires_at == datetime.datetime(
+            2022, 11, 25, 12, 23, 29, 936000, tzinfo=datetime.timezone.utc
+        )
         assert isinstance(invite_with_metadata, invite_models.InviteWithMetadata)
 
-    def test_deserialize_invite_with_metadata_with_null_and_unset_fields(
+    def test_deserialize_invite_with_metadata_with_unset_and_0_fields(
         self, entity_factory_impl, partial_channel_payload
     ):
-        invite_with_metadata = entity_factory_impl.deserialize_invite(
+        invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(
             {
                 "code": "aCode",
                 "channel": partial_channel_payload,
@@ -2833,6 +2851,9 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.inviter is None
         assert invite_with_metadata.target_user is None
         assert invite_with_metadata.target_user_type is None
+        assert invite_with_metadata.max_age is None
+        assert invite_with_metadata.max_uses is None
+        assert invite_with_metadata.expires_at is None
 
     def test_deserialize_invite_with_metadata_with_null_guild_fields(
         self, entity_factory_impl, invite_with_metadata_payload
