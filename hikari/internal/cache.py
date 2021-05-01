@@ -361,6 +361,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             app=app,
             inviter=self.inviter.copy() if self.inviter else None,
             target_user=self.target_user.copy() if self.target_user else None,
+            expires_at=self.created_at + self.max_age if self.max_age else None,
         )
 
     @classmethod

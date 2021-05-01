@@ -22,13 +22,26 @@
 import mock
 
 from hikari import invites
+from tests.hikari import hikari_test_helpers
 
 
-def test_VanityURL_str_operator():
-    mock_url = mock.Mock(invites.VanityURL, code="hikari")
-    assert invites.VanityURL.__str__(mock_url) == "https://discord.gg/hikari"
+class TestInviteCode:
+    def test_str_operator(self):
+        mock_invite = hikari_test_helpers.mock_class_namespace(
+            invites.InviteCode, code=mock.PropertyMock(return_value="hikari")
+        )()
+        assert str(mock_invite) == "https://discord.gg/hikari"
 
 
-def test_Invite_str_operator():
-    mock_invite = mock.Mock(invites.Invite, code="abcdef")
-    assert invites.Invite.__str__(mock_invite) == "https://discord.gg/abcdef"
+class TestInviteWithMetadata:
+    def test_uses_left(self):
+        mock_invite = hikari_test_helpers.mock_class_namespace(
+            invites.InviteWithMetadata, init_=False, max_uses=123, uses=55
+        )()
+
+        assert mock_invite.uses_left == 68
+
+    def test_uses_left_when_none(self):
+        mock_invite = hikari_test_helpers.mock_class_namespace(invites.InviteWithMetadata, init_=False, max_uses=None)()
+
+        assert mock_invite.uses_left is None

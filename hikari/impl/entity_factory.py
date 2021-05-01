@@ -1553,6 +1553,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_invite(self, payload: data_binding.JSONObject) -> invite_models.Invite:
         invite_fields = self._set_invite_attributes(payload)
+
+        expires_at: typing.Optional[datetime.datetime] = None
+        if raw_expires_at := payload.get("expires_at"):
+            expires_at = time.iso8601_datetime_string_to_datetime(raw_expires_at)
+
         return invite_models.Invite(
             app=self._app,
             code=invite_fields.code,
@@ -1565,11 +1570,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_user_type=invite_fields.target_user_type,
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
+            expires_at=expires_at,
         )
 
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_models.InviteWithMetadata:
         invite_fields = self._set_invite_attributes(payload)
-        max_age = payload["max_age"]
+        created_at = time.iso8601_datetime_string_to_datetime(payload["created_at"])
+        max_uses = int(payload["max_uses"])
+
+        expires_at: typing.Optional[datetime.datetime] = None
+        max_age: typing.Optional[datetime.timedelta] = None
+        if (raw_max_age := payload["max_age"]) > 0:
+            max_age = datetime.timedelta(seconds=raw_max_age)
+            expires_at = created_at + max_age
+
         return invite_models.InviteWithMetadata(
             app=self._app,
             code=invite_fields.code,
@@ -1583,10 +1597,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
             uses=int(payload["uses"]),
-            max_uses=int(payload["max_uses"]),
-            max_age=datetime.timedelta(seconds=max_age) if max_age > 0 else None,
+            max_uses=max_uses if max_uses > 0 else None,
+            max_age=max_age,
             is_temporary=payload["temporary"],
-            created_at=time.iso8601_datetime_string_to_datetime(payload["created_at"]),
+            created_at=created_at,
+            expires_at=expires_at,
         )
 
     ##################

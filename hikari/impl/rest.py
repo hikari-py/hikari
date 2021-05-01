@@ -1773,6 +1773,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
+        query.put("with_expiration", True)
         response = await self._request(route, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
