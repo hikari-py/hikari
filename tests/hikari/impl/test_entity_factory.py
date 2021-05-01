@@ -30,6 +30,7 @@ from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
+from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
 from hikari import interactions as interaction_models
@@ -1279,6 +1280,10 @@ class TestEntityFactoryImpl:
             (guild_stage_channel_payload, channel_models.GuildStageChannel),
         ]:
             assert isinstance(entity_factory_impl.deserialize_channel(payload), expected_type)
+
+    def test_deserialize_channel_handles_unknown_channel_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_channel({"type": -9999999999})
 
     ################
     # EMBED MODELS #
@@ -2726,6 +2731,27 @@ class TestEntityFactoryImpl:
         assert isinstance(command, interaction_models.Command)
 
     @pytest.fixture()
+    def partial_interaction_payload(self):
+        return {
+            "id": "795459528803745843",
+            "token": "-- token redacted --",
+            "type": 1,
+            "version": 1,
+            "application_id": "1",
+        }
+
+    def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
+        interaction = entity_factory_impl.deserialize_partial_interaction(partial_interaction_payload)
+
+        assert interaction.app is mock_app
+        assert interaction.id == 795459528803745843
+        assert interaction.token == "-- token redacted --"
+        assert interaction.type == 1
+        assert interaction.version == 1
+        assert interaction.application_id == 1
+        assert type(interaction) is interaction_models.PartialInteraction
+
+    @pytest.fixture()
     def command_interaction_payload(self, member_payload):
         member_payload["permissions"] = "47"
         return {
@@ -2746,10 +2772,10 @@ class TestEntityFactoryImpl:
             "application_id": "76234234",
         }
 
-    def test__deserialize_command_interaction(
+    def test_deserialize_command_interaction(
         self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
     ):
-        interaction = entity_factory_impl._deserialize_command_interaction(command_interaction_payload)
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
         assert interaction.app is mock_app
         assert interaction.application_id == 76234234
@@ -2797,7 +2823,7 @@ class TestEntityFactoryImpl:
 
         assert isinstance(interaction, interaction_models.CommandInteraction)
 
-    def test__deserialize_command_interaction_with_null_attributes(
+    def test_deserialize_command_interaction_with_null_attributes(
         self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
     ):
         del command_interaction_payload["guild_id"]
@@ -2805,7 +2831,7 @@ class TestEntityFactoryImpl:
         command_interaction_payload["user"] = user_payload
         del command_interaction_payload["data"]["options"]
 
-        interaction = entity_factory_impl._deserialize_command_interaction(command_interaction_payload)
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
         assert interaction.guild_id is None
         assert interaction.member is None
@@ -2816,24 +2842,9 @@ class TestEntityFactoryImpl:
         for payload, expected_type in [(command_interaction_payload, interaction_models.CommandInteraction)]:
             assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
 
-    def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl, mock_app):
-        payload = {
-            "id": "795459528803745843",
-            "token": "-- token redacted --",
-            "type": 1,
-            "version": 1,
-            "application_id": "1",
-        }
-
-        interaction = entity_factory_impl.deserialize_interaction(payload)
-
-        assert interaction.app is mock_app
-        assert interaction.id == 795459528803745843
-        assert interaction.token == "-- token redacted --"
-        assert interaction.type == 1
-        assert interaction.version == 1
-        assert interaction.application_id == 1
-        assert type(interaction) is interaction_models.PartialInteraction
+    def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_interaction({"type": -999})
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
         option = interaction_models.CommandOption(

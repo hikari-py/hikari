@@ -281,7 +281,6 @@ class TestRESTApp:
 
     def test_acquire(self, rest_app):
         mock_event_loop = object()
-        mock_application = object()
         rest_app._event_loop = mock_event_loop
 
         stack = contextlib.ExitStack()

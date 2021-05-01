@@ -76,8 +76,6 @@ class OptionType(int, enums.Enum):
     BOOLEAN = 5
     """Denotes a command option where the value will be a bool."""
 
-    # TODO: These may be changed to objects rather than IDs in the future.
-    # See https://github.com/discord/discord-api-docs/issues/2490
     USER = 6
     """Denotes a command option where the value will be resolved to a user."""
 
@@ -229,6 +227,7 @@ class PartialInteraction(snowflakes.Unique):
     """The interaction's token."""
 
     version: int = attr.ib(eq=False, hash=False, repr=True)
+    """The interaction system version this interaction is under."""
 
 
 @attr_extensions.with_copy

@@ -247,7 +247,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self._interaction_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], interaction_models.PartialInteraction]
         ] = {
-            interaction_models.InteractionType.APPLICATION_COMMAND: self._deserialize_command_interaction,
+            interaction_models.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
         }
 
     ######################
@@ -475,7 +475,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                         new_value = value_converter(new_value) if new_value is not None else None
                         old_value = value_converter(old_value) if old_value is not None else None
 
-                    elif not isinstance(key, audit_log_models.AuditLogChangeKey):
+                    elif _LOGGER.isEnabledFor(logging.DEBUG) and not isinstance(
+                        key, audit_log_models.AuditLogChangeKey
+                    ):
                         _LOGGER.debug("Unknown audit log change key found %r", key)
 
                     changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
@@ -493,10 +495,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
             if (raw_option := entry_payload.get("options")) is not None:
-                try:
-                    option_converter = self._audit_log_event_mapping[action_type]
+                if option_converter := self._audit_log_event_mapping.get(action_type):
                     options = option_converter(raw_option)
-                except KeyError:
+
+                else:
                     _LOGGER.debug("Unknown audit log action type found %r", action_type)
                     continue
 
@@ -1664,6 +1666,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
         )
 
+    def deserialize_partial_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_models.PartialInteraction:
+        return interaction_models.PartialInteraction(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            type=interaction_models.InteractionType(payload["type"]),
+            token=payload["token"],
+            version=payload["version"],
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+        )
+
     def _deserialize_interaction_command_option(
         self, payload: data_binding.JSONObject
     ) -> interaction_models.CommandInteractionOption:
@@ -1675,7 +1689,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"], value=payload.get("value"), options=suboptions
         )
 
-    def _deserialize_command_interaction(
+    def deserialize_command_interaction(
         self, payload: data_binding.JSONObject
     ) -> interaction_models.CommandInteraction:
         data_payload = payload["data"]
@@ -1736,20 +1750,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
         interaction_type = interaction_models.InteractionType(payload["type"])
 
-        try:
-            deserialize = self._interaction_type_mapping[interaction_type]
+        if deserialize := self._interaction_type_mapping.get(interaction_type):
+            return deserialize(payload)
 
-        except KeyError:
-            return interaction_models.PartialInteraction(
-                app=self._app,
-                id=snowflakes.Snowflake(payload["id"]),
-                type=interaction_type,
-                token=payload["token"],
-                version=payload["version"],
-                application_id=snowflakes.Snowflake(payload["application_id"]),
-            )
-
-        return deserialize(payload)
+        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}") from None
 
     def serialize_command_option(self, option: interaction_models.CommandOption) -> data_binding.JSONObject:
         payload: data_binding.JSONObject = {

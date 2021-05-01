@@ -177,7 +177,9 @@ class TestEventStream:
     async def test___anext__(self):
         mock_event = object()
         streamer = event_stream.EventStream(
-            app=mock.Mock(), event_type=events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME
+            event_manager=mock.Mock(),
+            event_type=events.Event,
+            timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
         )
         streamer._queue.put_nowait(mock_event)
 
