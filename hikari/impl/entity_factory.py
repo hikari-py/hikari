@@ -1689,47 +1689,106 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"], value=payload.get("value"), options=suboptions
         )
 
+    def _deserialize_command_interaction_member(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: snowflakes.Snowflake,
+        user: typing.Optional[user_models.User] = None,
+    ) -> interaction_models.InteractionMember:
+        if not user:
+            user = self.deserialize_user(payload["user"])
+
+        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]]
+        # If Discord ever does start including this here without warning we don't want to duplicate the entry.
+        if guild_id not in role_ids:
+            role_ids.append(guild_id)
+
+        premium_since: typing.Optional[datetime.datetime] = None
+        if (raw_premium_since := payload.get("premium_since")) is not None:
+            premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
+
+        # TODO: deduplicate member unmarshalling logic
+        return interaction_models.InteractionMember(
+            user=user,
+            guild_id=guild_id,
+            role_ids=role_ids,
+            joined_at=time.iso8601_datetime_string_to_datetime(payload["joined_at"]),
+            premium_since=premium_since,
+            nickname=payload.get("nick"),
+            is_deaf=payload.get("deaf", undefined.UNDEFINED),
+            is_mute=payload.get("mute", undefined.UNDEFINED),
+            is_pending=payload.get("pending", undefined.UNDEFINED),
+            permissions=permission_models.Permissions(int(payload["permissions"])),
+        )
+
     def deserialize_command_interaction(
         self, payload: data_binding.JSONObject
     ) -> interaction_models.CommandInteraction:
         data_payload = payload["data"]
+
+        guild_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_guild_id := payload.get("guild_id"):
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
         options: typing.Optional[typing.List[interaction_models.CommandInteractionOption]] = None
         if raw_options := data_payload.get("options"):
             options = [self._deserialize_interaction_command_option(option) for option in raw_options]
 
-        guild_id: typing.Optional[snowflakes.Snowflake] = None
         member: typing.Optional[interaction_models.InteractionMember]
         if member_payload := payload.get("member"):
-            guild_id = snowflakes.Snowflake(payload["guild_id"])
-
-            role_ids = [snowflakes.Snowflake(role_id) for role_id in member_payload["roles"]]
-            # If Discord ever does start including this here without warning we don't want to duplicate the entry.
-            if guild_id not in role_ids:
-                role_ids.append(guild_id)
-
-            premium_since: typing.Optional[datetime.datetime] = None
-            if (raw_premium_since := member_payload.get("premium_since")) is not None:
-                premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
-
-            # TODO: deduplicate member unmarshalling logic
-            member = interaction_models.InteractionMember(
-                user=self.deserialize_user(member_payload["user"]),
-                guild_id=guild_id,
-                role_ids=role_ids,
-                joined_at=time.iso8601_datetime_string_to_datetime(member_payload["joined_at"]),
-                premium_since=premium_since,
-                nickname=member_payload.get("nick"),
-                is_deaf=member_payload.get("deaf", undefined.UNDEFINED),
-                is_mute=member_payload.get("mute", undefined.UNDEFINED),
-                is_pending=member_payload.get("pending", undefined.UNDEFINED),
-                permissions=permission_models.Permissions(int(member_payload["permissions"])),
-            )
+            assert guild_id is not None
+            member = self._deserialize_command_interaction_member(member_payload, guild_id=guild_id)
             # See https://github.com/discord/discord-api-docs/pull/2568
             user = member.user
 
         else:
             member = None
             user = self.deserialize_user(payload["user"])
+
+        resolved: typing.Optional[interaction_models.ResolvedOptionData] = None
+        if resolved_payload := data_payload.get("resolved"):
+            channels: typing.Dict[snowflakes.Snowflake, interaction_models.InteractionChannel] = {}
+            if raw_channels := resolved_payload.get("channels"):
+                for channel_payload in raw_channels.values():
+                    channel_id = snowflakes.Snowflake(channel_payload["id"])
+                    channels[channel_id] = interaction_models.InteractionChannel(
+                        app=self._app,
+                        id=channel_id,
+                        type=channel_models.ChannelType(channel_payload["type"]),
+                        name=channel_payload["name"],
+                        permissions=permission_models.Permissions(int(channel_payload["permissions"])),
+                    )
+
+            if raw_users := resolved_payload.get("users"):
+                users = {u.id: u for u in map(self.deserialize_user, raw_users.values())}
+
+            else:
+                users = {}
+
+            members: typing.Dict[snowflakes.Snowflake, interaction_models.InteractionMember] = {}
+            if raw_members := resolved_payload.get("members"):
+                for user_id, member_payload in raw_members.items():
+                    assert guild_id is not None
+                    user_id = snowflakes.Snowflake(user_id)
+                    members[user_id] = self._deserialize_command_interaction_member(
+                        member_payload, user=users[user_id], guild_id=guild_id
+                    )
+
+            if raw_roles := resolved_payload.get("roles"):
+                assert guild_id is not None
+                roles_iter = (self.deserialize_role(role, guild_id=guild_id) for role in raw_roles.values())
+                roles = {r.id: r for r in roles_iter}
+
+            else:
+                roles = {}
+
+            resolved = interaction_models.ResolvedOptionData(
+                channels=channels,
+                members=members,
+                users=users,
+                roles=roles,
+            )
 
         return interaction_models.CommandInteraction(
             app=self._app,
@@ -1745,6 +1804,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
             options=options,
+            resolved=resolved,
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:

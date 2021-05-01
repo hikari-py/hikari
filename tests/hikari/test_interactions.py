@@ -135,6 +135,7 @@ class TestCommandInteraction:
             command_id=snowflakes.Snowflake(3123123),
             command_name="OKOKOK",
             options=[],
+            resolved=None,
         )
 
     @pytest.mark.asyncio

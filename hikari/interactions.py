@@ -30,7 +30,9 @@ __all__: typing.List[str] = [
     "CommandInteractionOption",
     "CommandInteraction",
     "CommandOption",
+    "InteractionChannel",
     "InteractionMember",
+    "ResolvedOptionData",
     "ResponseType",
     "InteractionType",
     "OptionType",
@@ -84,6 +86,9 @@ class OptionType(int, enums.Enum):
 
     ROLE = 8
     """Denotes a command option where the value will be resolved to a role."""
+
+    MENTIONABLE = 9
+    """Denotes a command option where the value will be a snowflake ID."""
 
 
 @typing.final
@@ -185,6 +190,26 @@ class Command(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
+@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+class InteractionChannel(channels.PartialChannel):
+    """Represents partial channels returned as resolved entities on interactions."""
+
+    permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=True)
+    """Permissions the command's executor has in this channel."""
+
+
+@attr_extensions.with_copy
+@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+class ResolvedOptionData:
+    """Represents the entities set in a command's options."""
+
+    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.ib(eq=True, hash=False, repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.ib(eq=True, hash=False, repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.ib(eq=True, hash=False, repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.ib(eq=True, hash=False, repr=False)
+
+
+@attr_extensions.with_copy
 @attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
@@ -227,7 +252,7 @@ class PartialInteraction(snowflakes.Unique):
     """The interaction's token."""
 
     version: int = attr.ib(eq=False, hash=False, repr=True)
-    """The interaction system version this interaction is under."""
+    """Version of the interaction system this interaction is under."""
 
 
 @attr_extensions.with_copy
@@ -265,6 +290,8 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
 
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
+
+    resolved: typing.Optional[ResolvedOptionData] = attr.ib(eq=True, hash=False, repr=False)
 
     async def fetch_initial_response(self) -> messages.Message:
         return await self.app.rest.fetch_command_response(self.application_id, self.token)

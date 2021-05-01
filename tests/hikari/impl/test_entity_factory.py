@@ -2752,7 +2752,7 @@ class TestEntityFactoryImpl:
         assert type(interaction) is interaction_models.PartialInteraction
 
     @pytest.fixture()
-    def command_interaction_payload(self, member_payload):
+    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload):
         member_payload["permissions"] = "47"
         return {
             "id": "3490190239012093",
@@ -2764,6 +2764,34 @@ class TestEntityFactoryImpl:
                 "options": [
                     {"name": "an option", "options": [{"name": "go ice", "value": "42"}]},
                 ],
+                "resolved": {
+                    "channels": {
+                        "695382395666300958": {
+                            "id": "695382395666300958",
+                            "name": "discord-announcements",
+                            "permissions": "17179869183",
+                            "type": 0,
+                        }
+                    },
+                    "members": {
+                        "115590097100865541": {
+                            "is_pending": False,
+                            "joined_at": "2020-09-27T22:58:10.282000+00:00",
+                            "nick": "Snab",
+                            "pending": False,
+                            "permissions": "17179869183",
+                            "premium_since": "2020-10-01T23:06:10.431000+00:00",
+                            "roles": [
+                                "582345963851743243",
+                                "582689893965365248",
+                                "734164204679856290",
+                                "757331666388910181",
+                            ],
+                        }
+                    },
+                    "roles": {"41771983423143936": guild_role_payload},
+                    "users": {"115590097100865541": user_payload},
+                },
             },
             "channel_id": "49949494",
             "member": member_payload,
@@ -2773,7 +2801,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_command_interaction(
-        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload, guild_role_payload
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
@@ -2821,6 +2849,42 @@ class TestEntityFactoryImpl:
         assert isinstance(sub_option, interaction_models.CommandInteractionOption)
         assert isinstance(option, interaction_models.CommandInteractionOption)
 
+        # ResolvedOptionData
+        assert len(interaction.resolved.channels) == 1
+        channel = interaction.resolved.channels[695382395666300958]
+        assert channel.type is channel_models.ChannelType.GUILD_TEXT
+        assert channel.id == 695382395666300958
+        assert channel.name == "discord-announcements"
+        assert channel.permissions == permission_models.Permissions(17179869183)
+        assert isinstance(channel, interaction_models.InteractionChannel)
+        # InteractionMember
+        assert len(interaction.resolved.members) == 1
+        member = interaction.resolved.members[115590097100865541]
+        assert member.id == 115590097100865541
+        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
+        assert member.nickname == "Snab"
+        assert member.guild_id == 43123123
+        assert member.is_deaf is undefined.UNDEFINED
+        assert member.is_mute is undefined.UNDEFINED
+        assert member.is_pending is False
+        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.role_ids == [
+            582345963851743243,
+            582689893965365248,
+            734164204679856290,
+            757331666388910181,
+            43123123,
+        ]
+        assert member.user == entity_factory_impl.deserialize_user(user_payload)
+        assert member.permissions == permission_models.Permissions(17179869183)
+        assert isinstance(member, interaction_models.InteractionMember)
+
+        assert interaction.resolved.roles == {
+            41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
+        }
+        assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert isinstance(interaction.resolved, interaction_models.ResolvedOptionData)
+
         assert isinstance(interaction, interaction_models.CommandInteraction)
 
     def test_deserialize_command_interaction_with_null_attributes(
@@ -2830,6 +2894,7 @@ class TestEntityFactoryImpl:
         del command_interaction_payload["member"]
         command_interaction_payload["user"] = user_payload
         del command_interaction_payload["data"]["options"]
+        del command_interaction_payload["data"]["resolved"]
 
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
@@ -2837,6 +2902,25 @@ class TestEntityFactoryImpl:
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.options is None
+        assert interaction.resolved is None
+
+    def test_deserialize_command_interaction_with_empty_resolved_resources(
+        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+    ):
+        del command_interaction_payload["data"]["resolved"]["channels"]
+        del command_interaction_payload["data"]["resolved"]["members"]
+        del command_interaction_payload["data"]["resolved"]["roles"]
+        del command_interaction_payload["data"]["resolved"]["users"]
+        # This makes sure the bool check to see if there's anything in resolve will still pass
+        # to separate this case from it just not being provided
+        command_interaction_payload["data"]["resolved"]["not a real field"] = 42
+
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
+
+        assert interaction.resolved.channels == {}
+        assert interaction.resolved.members == {}
+        assert interaction.resolved.roles == {}
+        assert interaction.resolved.users == {}
 
     def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
         for payload, expected_type in [(command_interaction_payload, interaction_models.CommandInteraction)]:
