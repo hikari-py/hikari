@@ -26,12 +26,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "CommandBuilder",
-    "TypingIndicator",
-    "GuildBuilder",
-    "CommandResponseBuilder",
-]
+__all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "CommandResponseBuilder"]
 
 import asyncio
 import datetime

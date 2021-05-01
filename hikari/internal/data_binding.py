@@ -81,7 +81,7 @@ _StringMapBuilderArg = typing.Union[
 
 if typing.TYPE_CHECKING:
     JSONDecodeError: typing.Type[Exception] = Exception
-    """Exception raised when loading an invalid json"""
+    """Exception raised when loading an invalid JSON string"""
 
     def dump_json(_: typing.Union[JSONArray, JSONObject], /) -> str:
         """Convert a Python type to a JSON string."""
@@ -100,7 +100,7 @@ else:
     """Convert a JSON string to a Python type."""
 
     JSONDecodeError = json.JSONDecodeError
-    """Exception raised when loading an invalid json"""
+    """Exception raised when loading an invalid JSON string"""
 
 
 @typing.final
