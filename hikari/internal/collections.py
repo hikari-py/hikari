@@ -53,6 +53,8 @@ KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
 ValueT = typing.TypeVar("ValueT")
 """Type-hint A type hint used for the type of a mapping's value."""
 
+_LONG_LONG_UNSIGNED: typing.Final[str] = sys.intern("Q")
+
 
 class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
     """The abstract class of mutable mappings used within Hikari.
@@ -352,10 +354,8 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
 
     __slots__: typing.Sequence[str] = ("_ids",)
 
-    _LONG_LONG_UNSIGNED: typing.Final[typing.ClassVar[str]] = "Q"
-
     def __init__(self, *ids: int) -> None:
-        self._ids = array.array(self._LONG_LONG_UNSIGNED)
+        self._ids = array.array(_LONG_LONG_UNSIGNED)
 
         if ids:
             self.add_all(ids)
@@ -388,7 +388,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     def clear(self) -> None:
         """Clear all items from this collection."""
         # Arrays lack a "clear" method.
-        self._ids = array.array(self._LONG_LONG_UNSIGNED)
+        self._ids = array.array(_LONG_LONG_UNSIGNED)
 
     def discard(self, sf: int) -> None:
         """Remove a snowflake from this set if it's present."""

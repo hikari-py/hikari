@@ -61,7 +61,7 @@ def proxy_settings():
 
 
 @pytest.mark.asyncio()
-class Test_GatewayTransport:
+class TestGatewayTransport:
     @pytest.fixture()
     def transport_impl(self):
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "__init__"):
@@ -77,21 +77,27 @@ class Test_GatewayTransport:
         init.assert_called_once_with("arg1", "arg2", some_kwarg="kwarg1")
 
     async def test_send_close_when_not_closed_nor_closing_logs(self, transport_impl):
-        transport_impl._closed = False
-        transport_impl._closing = False
-        transport_impl.logger = mock.Mock()
+        transport_impl.sent_close = False
 
-        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close") as close:
-            await transport_impl.send_close(code=1234, message=b"some message")
+        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", new=mock.Mock()) as close:
+            with mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for:
+                assert await transport_impl.send_close(code=1234, message=b"some message") is wait_for.return_value
 
-        transport_impl.logger.debug.assert_called_once_with(
-            "sending close frame with code %s and message %s", 1234, b"some message"
-        )
+        wait_for.assert_awaited_once_with(close.return_value, timeout=5)
         close.assert_called_once_with(code=1234, message=b"some message")
 
-    async def test_receive_json(self, transport_impl):
+    async def test_send_close_when_TimeoutError(self, transport_impl):
+        transport_impl.sent_close = False
+
+        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", side_effect=asyncio.TimeoutError) as close:
+            assert await transport_impl.send_close(code=1234, message=b"some message") is False
+
+        close.assert_called_once_with(code=1234, message=b"some message")
+
+    @pytest.mark.parametrize("trace", [True, False])
+    async def test_receive_json(self, transport_impl, trace):
         transport_impl._receive_and_check = mock.AsyncMock(return_value="{'json_response': null}")
-        transport_impl.log_payload = mock.Mock()
+        transport_impl.logger.isEnabledFor.return_value = trace
         mock_loads = mock.Mock(return_value={"json_response": None})
 
         assert await transport_impl.receive_json(loads=mock_loads, timeout=69) == {"json_response": None}
@@ -99,9 +105,10 @@ class Test_GatewayTransport:
         transport_impl._receive_and_check.assert_awaited_once_with(69)
         mock_loads.assert_called_once_with("{'json_response': null}")
 
-    async def test_send_json(self, transport_impl):
+    @pytest.mark.parametrize("trace", [True, False])
+    async def test_send_json(self, transport_impl, trace):
         transport_impl.send_str = mock.AsyncMock()
-        transport_impl.log_payload = mock.Mock()
+        transport_impl.logger.isEnabledFor.return_value = trace
         mock_dumps = mock.Mock(return_value="{'json_send': null}")
 
         await transport_impl.send_json({"json_send": None}, 420, dumps=mock_dumps)
@@ -135,7 +142,6 @@ class Test_GatewayTransport:
     async def test__receive_and_check_when_message_type_is_CLOSE_and_should_reconnect(self, code, transport_impl):
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
-        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             await transport_impl._receive_and_check(10)
@@ -153,7 +159,6 @@ class Test_GatewayTransport:
     async def test__receive_and_check_when_message_type_is_CLOSE_and_should_not_reconnect(self, code, transport_impl):
         stub_response = self.StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="dont reconnect", data=code)
         transport_impl.receive = mock.AsyncMock(return_value=stub_response)
-        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             await transport_impl._receive_and_check(10)
@@ -216,7 +221,6 @@ class Test_GatewayTransport:
     async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
         transport_impl.receive = mock.AsyncMock(return_value=self.StubResponse(type=aiohttp.WSMsgType.ERROR))
         transport_impl.exception = mock.Mock(return_value=Exception)
-        transport_impl.logger = mock.Mock()
 
         with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway"):
             await transport_impl._receive_and_check(10)

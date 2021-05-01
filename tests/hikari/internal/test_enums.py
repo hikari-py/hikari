@@ -264,6 +264,15 @@ class TestEnum:
         assert repr(Enum) == "<enum Enum>"
         assert repr(Enum.foo) == "<Enum.foo: 9>"
 
+    def test_str(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+            bar = 18
+            baz = 27
+
+        assert str(Enum) == "<enum Enum>"
+        assert str(Enum.foo) == "foo"
+
     def test_can_overwrite_method(self):
         class TestEnum1(str, enums.Enum):
             FOO = "foo"

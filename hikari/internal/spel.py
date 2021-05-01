@@ -48,8 +48,7 @@ you could run `author.!is_bot` on a `Message` object. Likewise, to check if
 the input was not a number, you could run `content.!isdigit()`.
 
 This expression language is highly experimental and may change without
-prior notice for the time being while I play with getting something usable
-and nice to work with.
+prior notice for the time being.
 """
 from __future__ import annotations
 

@@ -294,7 +294,7 @@ class Enum(metaclass=_EnumMeta):
         return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
 
     def __str__(self) -> str:
-        return self._name_ or "NO_NAME"
+        return self._name_
 
 
 _Flag = NotImplemented
@@ -730,9 +730,6 @@ class Flag(metaclass=_FlagMeta):
 
     def __bool__(self) -> bool:
         return bool(self._value_)
-
-    def __index__(self) -> int:
-        return self._value_
 
     def __int__(self) -> int:
         return self._value_
