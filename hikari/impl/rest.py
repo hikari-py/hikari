@@ -3013,10 +3013,10 @@ class RESTClientImpl(rest_api.RESTClient):
     # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
     # See https://github.com/discord/discord-api-docs/issues/2490
     async def fetch_command_response(
-        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         route = routes.GET_INTERACTION_RESPONSE.compile(application=application, token=token)
-        response = await self._request(route)
+        response = await self._request(route, no_auth=True)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -3105,7 +3105,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
     async def delete_command_response(
-        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(application=application, token=token)
         await self._request(route, no_auth=True)

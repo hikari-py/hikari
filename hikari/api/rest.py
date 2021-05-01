@@ -6169,7 +6169,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     # See https://github.com/discord/discord-api-docs/issues/2490
     @abc.abstractmethod
     async def fetch_command_response(
-        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         raise NotImplementedError
 
@@ -6424,7 +6424,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_command_response(
-        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str, /
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         """Delete the initial response of an interaction.
 

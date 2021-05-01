@@ -3325,3 +3325,207 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_template.return_value
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "oeoekfgkdkf"})
+
+    async def test_fetch_application_command_with_guild(self, rest_client):
+        expected_route = routes.GET_APPLICATION_GUILD_COMMAND.compile(application=32154, guild=5312312, command=42123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "424242"})
+
+        result = await rest_client.fetch_application_command(StubModel(32154), StubModel(42123), StubModel(5312312))
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=5312312
+        )
+
+    async def test_fetch_application_command_without_guild(self, rest_client):
+        expected_route = routes.GET_APPLICATION_COMMAND.compile(application=32154, command=42123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "424242"})
+
+        result = await rest_client.fetch_application_command(StubModel(32154), StubModel(42123))
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+
+    async def test_fetch_application_commands_with_guild(self, rest_client):
+        expected_route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=54123, guild=7623423)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "34512312"}])
+
+        result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(7623423))
+
+        assert result == [rest_client._entity_factory.deserialize_command.return_value]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=7623423)
+
+    async def test_fetch_application_commands_without_guild(self, rest_client):
+        expected_route = routes.GET_APPLICATION_COMMANDS.compile(application=54123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "34512312"}])
+
+        result = await rest_client.fetch_application_commands(StubModel(54123))
+
+        assert result == [rest_client._entity_factory.deserialize_command.return_value]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
+
+    async def test_create_application_command_with_optionals(self, rest_client):
+        expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
+        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+        mock_option = object()
+
+        result = await rest_client.create_application_command(
+            StubModel(4332123), "okokok", "not ok anymore", StubModel(653452134), options=[mock_option]
+        )
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=653452134
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "okokok",
+                "description": "not ok anymore",
+                "options": [rest_client._entity_factory.serialize_command_option.return_value],
+            },
+        )
+
+    async def test_create_application_command_without_optionals(self, rest_client):
+        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+
+        result = await rest_client.create_application_command(StubModel(4332123), "okokok", "not ok anymore")
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"name": "okokok", "description": "not ok anymore"}
+        )
+
+    async def test_set_application_commands_with_guild(self, rest_client):
+        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=4321231, guild=6543234)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "9459329932"}])
+        mock_command_builder = mock.Mock()
+
+        result = await rest_client.set_application_commands(
+            StubModel(4321231), [mock_command_builder], StubModel(6543234)
+        )
+
+        assert result == [rest_client._entity_factory.deserialize_command.return_value]
+        rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "9459329932"}, guild_id=6543234)
+        rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
+        mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
+
+    async def test_set_application_commands_without_guild(self, rest_client):
+        expected_route = routes.PUT_APPLICATION_COMMANDS.compile(application=4321231)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "9459329932"}])
+        mock_command_builder = mock.Mock()
+
+        result = await rest_client.set_application_commands(StubModel(4321231), [mock_command_builder])
+
+        assert result == [rest_client._entity_factory.deserialize_command.return_value]
+        rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "9459329932"}, guild_id=None)
+        rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
+        mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
+
+    async def test_edit_application_command_with_optionals(self, rest_client):
+        expected_route = routes.PATCH_APPLICATION_GUILD_COMMAND.compile(
+            application=1235432, guild=54123, command=3451231
+        )
+        rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
+        mock_option = object()
+
+        result = await rest_client.edit_application_command(
+            StubModel(1235432),
+            StubModel(3451231),
+            StubModel(54123),
+            name="ok sis",
+            description="cancelled",
+            options=[mock_option],
+        )
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=54123
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "ok sis",
+                "description": "cancelled",
+                "options": [rest_client._entity_factory.serialize_command_option.return_value],
+            },
+        )
+        rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
+
+    async def test_edit_application_command_without_optionals(self, rest_client):
+        expected_route = routes.PATCH_APPLICATION_COMMAND.compile(application=1235432, command=3451231)
+        rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
+
+        result = await rest_client.edit_application_command(
+            StubModel(1235432),
+            StubModel(3451231),
+        )
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+
+    async def test_delete_application_command_with_guild(self, rest_client):
+        expected_route = routes.DELETE_APPLICATION_GUILD_COMMAND.compile(
+            application=312312, command=65234323, guild=5421312
+        )
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_application_command(StubModel(312312), StubModel(65234323), StubModel(5421312))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_delete_application_command_without_guild(self, rest_client):
+        expected_route = routes.DELETE_APPLICATION_COMMAND.compile(application=312312, command=65234323)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_application_command(StubModel(312312), StubModel(65234323))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_command_response(self, rest_client):
+        expected_route = routes.GET_INTERACTION_RESPONSE.compile(application=1235432, token="go homo or go gnomo")
+        rest_client._request = mock.AsyncMock(return_value={"id": "94949494949"})
+
+        result = await rest_client.fetch_command_response(StubModel(1235432), "go homo or go gnomo")
+
+        assert result is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._entity_factory.deserialize_message.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+
+    @pytest.mark.skip("TODO")
+    async def test_create_command_response_with_optionals(self, rest_client):
+        ...
+
+    @pytest.mark.skip("TODO")
+    async def test_create_command_response_without_optionals(self, rest_client):
+        ...
+
+    @pytest.mark.skip("TODO: this basically dupes test_edit_webhook_message")
+    async def test_edit_command_response_with_optionals(self, rest_client):
+        ...
+
+    @pytest.mark.skip("TODO: this basically dupes test_edit_webhook_message")
+    async def test_edit_command_response_without_optionals(self, rest_client):
+        ...
+
+    async def test_delete_command_response(self, rest_client):
+        expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(application=1235431, token="go homo now")
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_command_response(StubModel(1235431), "go homo now")
+
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)

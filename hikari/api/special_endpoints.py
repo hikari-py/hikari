@@ -569,6 +569,9 @@ CommandResponseTypes = typing.Union[
 """Type hints of the valid response types for a command interaction."""
 
 
+CommandResponseBuilderT = typing.TypeVar("CommandResponseBuilderT", bound="CommandResponseBuilder")
+
+
 class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of a interaction command response builder used within REST servers.
 
@@ -713,14 +716,22 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_embed(self, embed: embeds_.Embed, /) -> None:
+    def add_embed(self: CommandResponseBuilderT, embed: embeds_.Embed, /) -> CommandResponseBuilderT:
         """Add an embed to this response.
 
         Parameters
         ----------
         embed : hikari.embeds.Embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        CommandResponseBuilderT
+            Object of this builder.
         """
+
+
+CommandBuilderT = typing.TypeVar("CommandBuilderT", bound="CommandBuilder")
 
 
 class CommandBuilder(abc.ABC):
@@ -753,7 +764,7 @@ class CommandBuilder(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_option(self, option: interactions.CommandOption) -> None:
+    def add_option(self: CommandBuilderT, option: interactions.CommandOption) -> CommandBuilderT:
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -700,8 +700,9 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     def type(self) -> special_endpoints.CommandResponseTypes:
         return self._type
 
-    def add_embed(self, embed: embeds_.Embed, /) -> None:
+    def add_embed(self, embed: embeds_.Embed, /) -> CommandResponseBuilder:
         self._embeds.append(embed)  # TODO: validation
+        return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         data: data_binding.JSONObject = {}
@@ -744,6 +745,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.ib()
     _description: str = attr.ib()
 
+    # TODO: does ID actually matter here?
     # Key-word only not-required arguments.
     id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
 
@@ -762,14 +764,15 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def name(self) -> str:
         return self._name
 
-    def add_option(self, option: interactions.CommandOption) -> None:
+    def add_option(self, option: interactions.CommandOption) -> CommandBuilder:
         self._options.append(option)  # TODO: validation
+        return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         options = [entity_factory.serialize_command_option(option) for option in self._options]
         data: data_binding.JSONObject = {"name": self._name, "description": self._description, "options": options}
 
         if self.id is not undefined.UNDEFINED:
-            data["id"] = self.id
+            data["id"] = str(self.id)
 
         return data
