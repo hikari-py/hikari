@@ -81,6 +81,8 @@ class Streamer(iterators.LazyIterator[EventT], abc.ABC):
     LazyIterator: `hikari.iterators.LazyIterator`
     """
 
+    __slots__: typing.Sequence[str] = ()
+
     @abc.abstractmethod
     async def close(self) -> None:
         """Mark this streamer as closed to stop it from queueing and receiving events.
@@ -120,7 +122,12 @@ class Streamer(iterators.LazyIterator[EventT], abc.ABC):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
 
@@ -150,6 +157,7 @@ class EventStream(Streamer[EventT]):
     """
 
     __slots__ = (
+        "__weakref__",
         "_active",
         "_event_manager",
         "_event_type",
