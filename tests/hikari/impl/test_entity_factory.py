@@ -2762,7 +2762,7 @@ class TestEntityFactoryImpl:
                 "id": "43123123",
                 "name": "okokokok",
                 "options": [
-                    {"name": "an option", "options": [{"name": "go ice", "value": "42"}]},
+                    {"name": "an option", "type": 1, "options": [{"name": "go ice", "type": 4, "value": "42"}]},
                 ],
                 "resolved": {
                     "channels": {
@@ -2841,10 +2841,12 @@ class TestEntityFactoryImpl:
         option = interaction.options[0]
         assert option.name == "an option"
         assert option.value is None
+        assert option.type is interaction_models.OptionType.SUB_COMMAND
         assert len(option.options) == 1
         sub_option = option.options[0]
         assert sub_option.name == "go ice"
         assert sub_option.value == "42"
+        assert sub_option.type is interaction_models.OptionType.INTEGER
         assert sub_option.options is None
         assert isinstance(sub_option, interaction_models.CommandInteractionOption)
         assert isinstance(option, interaction_models.CommandInteractionOption)

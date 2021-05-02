@@ -1686,7 +1686,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
         return interaction_models.CommandInteractionOption(
-            name=payload["name"], value=payload.get("value"), options=suboptions
+            name=payload["name"],
+            type=interaction_models.OptionType(payload["type"]),
+            value=payload.get("value"),
+            options=suboptions,
         )
 
     def _deserialize_command_interaction_member(

@@ -305,9 +305,8 @@ class InteractionServer(interaction_server.InteractionServer):
             )
             return _Response(_INTERNAL_SERVER_ERROR_STATUS, "Exception occurred during interaction deserialization")
 
-        _LOGGER.debug("Dispatching interaction %s", event.interaction.id)
-
         if listener := self._listeners.get(type(event.interaction)):
+            _LOGGER.debug("Dispatching interaction %s", event.interaction.id)
             try:
                 result = await listener(event.interaction)
 
@@ -320,7 +319,9 @@ class InteractionServer(interaction_server.InteractionServer):
             payload = self._dumps(result.build(self._entity_factory))
             return _Response(_OK_STATUS, payload, content_type=_JSON_CONTENT_TYPE)
 
-        _LOGGER.debug("Ignoring interaction type without registered listener %s", event.interaction.type)
+        _LOGGER.debug(
+            "Ignoring interaction %s without registered listener %s", event.interaction.id, event.interaction.type
+        )
         return _Response(_NOT_IMPLEMENTED, "Handler not set for this interaction type")
 
     def run(

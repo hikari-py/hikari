@@ -215,6 +215,7 @@ class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
     name: str = attr.ib(eq=True, hash=False, repr=True)
+    type: OptionType = attr.ib(eq=True, hash=False, repr=True)
     value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.ib(eq=True, hash=False, repr=True)
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
 
