@@ -171,7 +171,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     def __init__(
         self,
         token: typing.Union[str, rest_.TokenStrategy],
-        # TODO: can we be more smart about this default for token_type?
         token_type: typing.Union[applications.TokenType, str, None] = None,
         public_key: typing.Union[bytes, str, None] = None,
         *,

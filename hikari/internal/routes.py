@@ -481,11 +481,9 @@ DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
 )
 
 # Interactions
-# GET_INTERACTION_RESPONSE is a planned TODO on discord's end
-# See https://github.com/discord/discord-api-docs/issues/2490
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
-PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/message/@original")
+PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/@original")
 POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(POST, "/interactions/{interaction}/{token}/callback")
 DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/@original")
 

@@ -6165,15 +6165,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             delete a global command.
         """
 
-    # This endpoint is a TODO on Discord's end and hasn't actually been implemented yet.
-    # See https://github.com/discord/discord-api-docs/issues/2490
     @abc.abstractmethod
     async def fetch_command_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         raise NotImplementedError
 
-    @abc.abstractmethod  # TODO: will this endpoint ever return a message?
+    @abc.abstractmethod
     async def create_command_response(
         self,
         interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
