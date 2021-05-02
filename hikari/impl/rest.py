@@ -1259,6 +1259,9 @@ class RESTClientImpl(rest_api.RESTClient):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1283,19 +1286,55 @@ class RESTClientImpl(rest_api.RESTClient):
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
+        elif undefined.count(attachment, attachments) == 2 and isinstance(
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+        ):
+            # Syntatic sugar, common mistake to accidentally send an attachment
+            # as the content, so lets detect this and fix it for the user. This
+            # will still then work with normal implicit embed attachments as
+            # we work this out later.
+            attachment = content
+            content = undefined.UNDEFINED
 
         if content is not None:
             body.put("content", content, conversion=str)
         else:
             body.put("content", None)
 
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
+
         if isinstance(embed, embeds_.Embed):
-            embed_payload, _ = self._entity_factory.serialize_embed(embed)
+            embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
             body.put("embed", embed_payload)
+            final_attachments.extend(embed_attachments)
+
         elif embed is None:
             body.put("embed", None)
 
-        response = await self._request(route, json=body)
+        if replace_attachments:
+            body.put("attachments", None)
+
+        if final_attachments:
+            form = data_binding.URLEncodedForm()
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+
+            stack = contextlib.AsyncExitStack()
+            try:
+                for i, attachment in enumerate(final_attachments):
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
+                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
+
+                response = await self._request(route, form=form)
+            finally:
+                await stack.aclose()
+        else:
+            response = await self._request(route, json=body)
+
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1687,6 +1726,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -1709,6 +1751,15 @@ class RESTClientImpl(rest_api.RESTClient):
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
+        elif undefined.count(attachment, attachments) == 2 and isinstance(
+            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
+        ):
+            # Syntatic sugar, common mistake to accidentally send an attachment
+            # as the content, so lets detect this and fix it for the user. This
+            # will still then work with normal implicit embed attachments as
+            # we work this out later.
+            attachment = content
+            content = undefined.UNDEFINED
 
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
         body = data_binding.JSONObjectBuilder()
@@ -1723,25 +1774,52 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             body.put("content", None)
 
+        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
+        if attachment is not undefined.UNDEFINED:
+            final_attachments.append(files.ensure_resource(attachment))
+        if attachments:
+            final_attachments.extend([files.ensure_resource(a) for a in attachments])
+
         serialized_embeds: data_binding.JSONArray = []
         update_embeds: bool = False
-
         if embed is not undefined.UNDEFINED:
             update_embeds = True
             if embed is not None:
-                embed_payload, _ = self._entity_factory.serialize_embed(embed)
+                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                 serialized_embeds.append(embed_payload)
+                final_attachments.extend(embed_attachments)
         elif embeds is not undefined.UNDEFINED:
             update_embeds = True
             if embeds is not None:
                 for embed in embeds:
-                    embed_payload, _ = self._entity_factory.serialize_embed(embed)
+                    embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                     serialized_embeds.append(embed_payload)
+                    final_attachments.extend(embed_attachments)
 
         if update_embeds:
             body.put("embeds", serialized_embeds)
 
-        response = await self._request(route, json=body, no_auth=True)
+        if replace_attachments:
+            body.put("attachments", None)
+
+        if final_attachments:
+            form = data_binding.URLEncodedForm()
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+
+            stack = contextlib.AsyncExitStack()
+
+            try:
+                for i, attachment in enumerate(final_attachments):
+                    stream = await stack.enter_async_context(attachment.stream(executor=self._executor))
+                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+                    form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
+
+                response = await self._request(route, form=form, no_auth=True)
+            finally:
+                await stack.aclose()
+        else:
+            response = await self._request(route, json=body, no_auth=True)
+
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
