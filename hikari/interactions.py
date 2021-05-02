@@ -354,13 +354,13 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
     async def delete_initial_response(self) -> None:
         await self.app.rest.delete_command_response(self.application_id, self.token)
 
-    async def fetch_channel(self) -> channels.GuildChannel:
+    async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the guild channel this was triggered in.
 
         Returns
         -------
-        hikari.channels.GuildChannel
-            The requested guild channel derived object of the channel this was
+        hikari.channels.PartialChannel
+            The requested partial channel derived object of the channel this was
             triggered in.
 
         Raises
@@ -389,11 +389,15 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.GuildChannel)
+        assert isinstance(channel, channels.PartialChannel)
         return channel
 
     def get_channel(self) -> typing.Optional[channels.GuildChannel]:
         """Get the guild channel this was triggered in from the cache.
+
+        !!! note
+            This will always return `builtins.None` for interactions triggered
+            in a DM channel.
 
         Returns
         -------
@@ -401,7 +405,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
             The object of the guild channel that was found in the cache or
             `builtins.None`.
         """
-        if isinstance(self.app, traits.CacheAware):
+        if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild_channel(self.channel_id)
 
         return None
