@@ -3497,7 +3497,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_command_response(self, rest_client):
-        expected_route = routes.GET_INTERACTION_RESPONSE.compile(application=1235432, token="go homo or go gnomo")
+        expected_route = routes.GET_INTERACTION_RESPONSE.compile(webhook=1235432, token="go homo or go gnomo")
         rest_client._request = mock.AsyncMock(return_value={"id": "94949494949"})
 
         result = await rest_client.fetch_command_response(StubModel(1235432), "go homo or go gnomo")
@@ -3523,7 +3523,7 @@ class TestRESTClientImplAsync:
         ...
 
     async def test_delete_command_response(self, rest_client):
-        expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(application=1235431, token="go homo now")
+        expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=1235431, token="go homo now")
         rest_client._request = mock.AsyncMock()
 
         await rest_client.delete_command_response(StubModel(1235431), "go homo now")
