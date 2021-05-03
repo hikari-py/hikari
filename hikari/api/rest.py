@@ -6034,7 +6034,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         command: snowflakes.SnowflakeishOr[interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> interactions.Command:
-        raise NotImplementedError
+        """Fetch a command set for an application.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to fetch a command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the command for. If left as
+            `hikari.undefined.UNDEFINED` then this will return a global command,
+            otherwise this will return a command made for the specified guild.
+
+        Returns
+        -------
+        hikari.interactions.Command
+            Object of the fetched command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the target command.
+        hikari.errors.NotFoundError
+            If the command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def fetch_application_commands(
@@ -6043,6 +6083,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[interactions.Command]:
         """Fetch the commands set for an application.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to fetch the commands for.
+
 
         Other Parameters
         ----------------
@@ -6058,6 +6104,28 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the target guild.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
 
     @abc.abstractmethod
@@ -6070,14 +6138,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
     ) -> interactions.Command:
-        """Create an application command.
+        r"""Create an application command.
 
         Parameters
         ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to create a command for.
         name : builtins.str
-            The case-insensitive of the command.
+            The command's name. This should be inclusively between 1-32
+            characters in length and should match the regex `^[\w-]{1,32}$`.
         description : builtins.str
             The description to set for the command.
+            This should be inclusively between 1-100 characters in length.
 
         Other Parameters
         ----------------
@@ -6092,6 +6164,30 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.interactions.Command
             Object of the created command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
 
     @abc.abstractmethod
@@ -6101,7 +6197,56 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[interactions.Command]:
-        raise NotImplementedError
+        """Set the commands for an application.
+
+        !!! note
+            Any existing commands not included in the provided commands array
+            will be deleted.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to create a command for.
+        commands: typing.Sequence[hikari.api.special_endpoints.CommandBuilder]
+            A sequence of up to 100 initialised command builder objects of the
+            commands to set for this the application.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the specific guild to set the commands for.
+            If left as `hikari.undefined.UNDEFINED` then this set the global
+            commands rather than guild specific commands.
+
+        Returns
+        -------
+        typing.Sequence[hikari.interactions.Command]
+            A sequence of the set command objects.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def edit_application_command(
@@ -6118,6 +6263,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to edit a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
             Object or ID of the command to modify.
 
@@ -6140,7 +6287,31 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.interactions.Command
-            The created command object.
+            The edited command object.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
 
     @abc.abstractmethod
@@ -6154,6 +6325,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to delete a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
             Object or ID of the command to delete.
 
@@ -6163,13 +6336,70 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the guild to delete a command for if this is a guild
             specific command. Leave this as `hikari.undefined.UNDEFINED` to
             delete a global command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
 
     @abc.abstractmethod
     async def fetch_command_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
-        raise NotImplementedError
+        """Fetch the initial response for an interaction.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to fetch a command for.
+        token: builtins.str
+            Token of the interaction to get the initial response for.
+
+        Returns
+        -------
+        hikari.messages.Message
+            Message object of the initial response.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the target interaction.
+        hikari.errors.NotFoundError
+            If the initial response isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def create_command_response(
@@ -6318,6 +6548,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to edit a command response for.
         token : builtins.str
             The interaction's token.
 
@@ -6428,6 +6660,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to delete a command response for.
         token : builtins.str
             The interaction's token.
 

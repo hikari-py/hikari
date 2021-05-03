@@ -585,7 +585,7 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> CommandResponseTypes:
-        """Return the type of this response.
+        """Type of this response.
 
         Returns
         -------
@@ -601,7 +601,7 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def content(self) -> undefined.UndefinedOr[str]:
-        """Return the response's message content.
+        """Response's message content.
 
         Returns
         -------
@@ -616,7 +616,7 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
-        """Return the message flags this response should have.
+        """Message flags this response should have.
 
         !!! note
             As of writing the only message flag which can be set here is
@@ -742,22 +742,53 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        raise NotImplementedError
+        r"""Name to set for this command.
+
+        !!! warning
+            This should be inclusively between 1-32 characters in length and
+            should match the regex `^[\w-]{1,32}$`.
+
+        Returns
+        -------
+        builtins.str
+            The name to set for this command.
+        """
 
     @property
     @abc.abstractmethod
     def description(self) -> str:
-        raise NotImplementedError
+        """Return the description to set for this command.
+
+        !!! warning
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        builtins.str
+            The description to set for this command.
+        """
 
     @property
     @abc.abstractmethod
     def options(self) -> typing.Sequence[interactions.CommandOption]:
-        raise NotImplementedError
+        """Sequence of up to 25 of the options set for this command.
+
+        Returns
+        -------
+        typing.Sequence[hikari.interactions.CommandOption]
+            A sequence of up to 25 of the options set for this command.
+        """
 
     @property
     @abc.abstractmethod
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
-        raise NotImplementedError
+        """ID of this command.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of this command if set.
+        """
 
     @id.setter
     def id(self, id_: undefined.UndefinedOr[snowflakes.Snowflake], /) -> None:
@@ -765,7 +796,21 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def add_option(self: CommandBuilderT, option: interactions.CommandOption) -> CommandBuilderT:
-        raise NotImplementedError
+        """Add an option to this command.
+
+        !!! note
+            A command can have up to 25 options.
+
+        Parameters
+        ----------
+        option : hikari.interactions.CommandOption
+            The option to add to this command.
+
+        Returns
+        -------
+        CommandBuilderT
+            Object of this command builder.
+        """
 
     @abc.abstractmethod
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

@@ -382,12 +382,12 @@ class KnownCustomEmoji(CustomEmoji):
 
 
 Emojiish = typing.Union[str, Emoji]
-"""Type hint representing a string emoji or an `Emoji`-derived object.
+r"""Type hint representing a string emoji or an `Emoji`-derived object.
 
 Examples include:
 
-- Unicode emoji strings, such as `"\N{OK HAND SIGN}"`, `"\\N{OK HAND SIGN}"`,
-    `"\\U0001f44c"`.
+- Unicode emoji strings, such as `"\N{OK HAND SIGN}"`, `"\N{OK HAND SIGN}"`,
+    `"\U0001f44c"`.
 - Custom emoji names in the format `name:id`, such as
     `"rosaThonk:733073048646713364"`.
 - Derivative instances of `Emoji`, i.e. `UnicodeEmoji`, `CustomEmoji` and
