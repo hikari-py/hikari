@@ -155,9 +155,8 @@ performing nicely.
 
 ### Python optimisation flags
 
-CPython and Stackless Python provide two optimisation flags that remove internal
-safety checks that are useful for development, and change other internal
-settings in the interpreter.
+CPython provides two optimisation flags that remove internal safety checks that
+are useful for development, and change other internal settings in the interpreter.
 
 - `python bot.py` - no optimisation - this is the default.
 - `python -O bot.py` - first level optimisation - features such as internal

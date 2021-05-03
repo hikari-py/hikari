@@ -96,7 +96,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Programming Language :: Python :: Implementation :: Stackless",
         "Topic :: Communications :: Chat",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries",
