@@ -23,11 +23,12 @@ ignore =
 # S106: posible hardcoded password (we dont care about this in the tests)
 # D106, D104, D103, D101, D100: Missing docstring in public function/class/module (ignore in tests)
 per-file-ignores =
-    hikari/__init__.py:              F401,F403
-    hikari/events/__init__.py:       F401,F403
-    hikari/internal/routes.py:       FS003
-    hikari/internal/time.py:         FS003
-    tests/hikari/*:                  FS003,S106,D106,D104,D103,D101,D100
+    hikari/__init__.py:                 F401,F403
+    hikari/events/__init__.py:          F401,F403
+    hikari/interactions/__init__.py:    F401,F403
+    hikari/internal/routes.py:          FS003
+    hikari/internal/time.py:            FS003
+    tests/hikari/*:                     FS003,S106,D106,D104,D103,D101,D100
 
 max-complexity = 20
 max-function-length = 130

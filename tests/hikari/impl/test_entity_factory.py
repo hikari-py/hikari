@@ -33,7 +33,6 @@ from hikari import emojis as emoji_models
 from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
-from hikari import interactions as interaction_models
 from hikari import invites as invite_models
 from hikari import messages as message_models
 from hikari import permissions as permission_models
@@ -46,6 +45,8 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
+from hikari.interactions import bases as interaction_models
+from hikari.interactions import commands as command_models
 
 
 def test__with_int_cast():
@@ -2676,7 +2677,7 @@ class TestEntityFactoryImpl:
         # CommandOption
         assert len(command.options) == 1
         option = command.options[0]
-        assert option.type is interaction_models.OptionType.SUB_COMMAND
+        assert option.type is command_models.OptionType.SUB_COMMAND
         assert option.name == "a dumb name"
         assert option.description == "42"
         assert option.is_required is True
@@ -2685,7 +2686,7 @@ class TestEntityFactoryImpl:
         assert len(option.options) == 1
 
         suboption = option.options[0]
-        assert suboption.type is interaction_models.OptionType.USER
+        assert suboption.type is command_models.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False
@@ -2696,11 +2697,11 @@ class TestEntityFactoryImpl:
         choice = suboption.choices[0]
         assert choice.name == "a choice"
         assert choice.value == "4 u"
-        assert isinstance(choice, interaction_models.CommandChoice)
+        assert isinstance(choice, command_models.CommandChoice)
 
-        assert isinstance(suboption, interaction_models.CommandOption)
-        assert isinstance(option, interaction_models.CommandOption)
-        assert isinstance(command, interaction_models.Command)
+        assert isinstance(suboption, command_models.CommandOption)
+        assert isinstance(option, command_models.CommandOption)
+        assert isinstance(command, command_models.Command)
 
     def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
@@ -2728,7 +2729,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
-        assert isinstance(command, interaction_models.Command)
+        assert isinstance(command, command_models.Command)
 
     @pytest.fixture()
     def partial_interaction_payload(self):
@@ -2830,7 +2831,7 @@ class TestEntityFactoryImpl:
         assert interaction.member.is_mute is True
         assert interaction.member.is_pending is False
         assert interaction.member.permissions == 47
-        assert isinstance(interaction.member, interaction_models.InteractionMember)
+        assert isinstance(interaction.member, command_models.InteractionMember)
 
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
@@ -2841,15 +2842,15 @@ class TestEntityFactoryImpl:
         option = interaction.options[0]
         assert option.name == "an option"
         assert option.value is None
-        assert option.type is interaction_models.OptionType.SUB_COMMAND
+        assert option.type is command_models.OptionType.SUB_COMMAND
         assert len(option.options) == 1
         sub_option = option.options[0]
         assert sub_option.name == "go ice"
         assert sub_option.value == "42"
-        assert sub_option.type is interaction_models.OptionType.INTEGER
+        assert sub_option.type is command_models.OptionType.INTEGER
         assert sub_option.options is None
-        assert isinstance(sub_option, interaction_models.CommandInteractionOption)
-        assert isinstance(option, interaction_models.CommandInteractionOption)
+        assert isinstance(sub_option, command_models.CommandInteractionOption)
+        assert isinstance(option, command_models.CommandInteractionOption)
 
         # ResolvedOptionData
         assert len(interaction.resolved.channels) == 1
@@ -2858,7 +2859,7 @@ class TestEntityFactoryImpl:
         assert channel.id == 695382395666300958
         assert channel.name == "discord-announcements"
         assert channel.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(channel, interaction_models.InteractionChannel)
+        assert isinstance(channel, command_models.InteractionChannel)
         # InteractionMember
         assert len(interaction.resolved.members) == 1
         member = interaction.resolved.members[115590097100865541]
@@ -2879,15 +2880,15 @@ class TestEntityFactoryImpl:
         ]
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(member, interaction_models.InteractionMember)
+        assert isinstance(member, command_models.InteractionMember)
 
         assert interaction.resolved.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
         }
         assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-        assert isinstance(interaction.resolved, interaction_models.ResolvedOptionData)
+        assert isinstance(interaction.resolved, command_models.ResolvedOptionData)
 
-        assert isinstance(interaction, interaction_models.CommandInteraction)
+        assert isinstance(interaction, command_models.CommandInteraction)
 
     def test_deserialize_command_interaction_with_null_attributes(
         self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
@@ -2925,7 +2926,7 @@ class TestEntityFactoryImpl:
         assert interaction.resolved.users == {}
 
     def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
-        for payload, expected_type in [(command_interaction_payload, interaction_models.CommandInteraction)]:
+        for payload, expected_type in [(command_interaction_payload, command_models.CommandInteraction)]:
             assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
 
     def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
@@ -2933,12 +2934,12 @@ class TestEntityFactoryImpl:
             entity_factory_impl.deserialize_interaction({"type": -999})
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
-        option = interaction_models.CommandOption(
-            type=interaction_models.OptionType.INTEGER,
+        option = command_models.CommandOption(
+            type=command_models.OptionType.INTEGER,
             name="a name",
             description="go away",
             is_required=True,
-            choices=[interaction_models.CommandChoice(name="a", value="choice")],
+            choices=[command_models.CommandChoice(name="a", value="choice")],
             options=None,
         )
 
@@ -2953,19 +2954,19 @@ class TestEntityFactoryImpl:
         }
 
     def test_serialize_command_option_with_options(self, entity_factory_impl):
-        option = interaction_models.CommandOption(
-            type=interaction_models.OptionType.SUB_COMMAND,
+        option = command_models.CommandOption(
+            type=command_models.OptionType.SUB_COMMAND,
             name="a name",
             description="go away",
             is_required=True,
             choices=None,
             options=[
-                interaction_models.CommandOption(
-                    type=interaction_models.OptionType.STRING,
+                command_models.CommandOption(
+                    type=command_models.OptionType.STRING,
                     name="go home",
                     description="you're drunk",
                     is_required=False,
-                    choices=[interaction_models.CommandChoice(name="boo", value="hoo")],
+                    choices=[command_models.CommandChoice(name="boo", value="hoo")],
                     options=None,
                 )
             ],

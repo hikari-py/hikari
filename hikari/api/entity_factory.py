@@ -41,7 +41,6 @@ if typing.TYPE_CHECKING:
     from hikari import emojis as emoji_models
     from hikari import files
     from hikari import guilds as guild_models
-    from hikari import interactions as interaction_models
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import presences as presence_models
@@ -51,6 +50,8 @@ if typing.TYPE_CHECKING:
     from hikari import users as user_models
     from hikari import voices as voice_models
     from hikari import webhooks as webhook_models
+    from hikari.interactions import bases as interaction_models
+    from hikari.interactions import commands as command_models
     from hikari.internal import data_binding
 
 
@@ -959,7 +960,7 @@ class EntityFactory(abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> interaction_models.Command:
+    ) -> command_models.Command:
         """Parse a raw payload from Discord into a command object.
 
         Parameters
@@ -975,7 +976,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             The deserialized command object.
 
         Raises
@@ -999,14 +1000,12 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.PartialInteraction
+        hikari.interactions.bases.PartialInteraction
             The deserialized partial interaction object.
         """
 
     @abc.abstractmethod
-    def deserialize_command_interaction(
-        self, payload: data_binding.JSONObject
-    ) -> interaction_models.CommandInteraction:
+    def deserialize_command_interaction(self, payload: data_binding.JSONObject) -> command_models.CommandInteraction:
         """Parse a raw payload from Discord into a command interaction object.
 
         Parameters
@@ -1016,7 +1015,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.CommandInteraction
+        hikari.interactions.commands.CommandInteraction
             The deserialized command interaction object.
         """
 
@@ -1036,19 +1035,19 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.PartialInteraction
+        hikari.interactions.bases.PartialInteraction
             The deserialized interaction object.
         hikari.errors.UnrecognisedEntityError
             If the integration type is unknown.
         """
 
     @abc.abstractmethod
-    def serialize_command_option(self, option: interaction_models.CommandOption) -> data_binding.JSONObject:
+    def serialize_command_option(self, option: command_models.CommandOption) -> data_binding.JSONObject:
         """Serialize a command option object to a json serializable dict.
 
         Parameters
         ----------
-        option: interaction_models.CommandOption
+        option: hikari.interactions.commands.CommandOption
             The command option object to serialize.
 
         Returns

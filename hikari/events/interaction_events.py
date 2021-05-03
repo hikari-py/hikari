@@ -40,9 +40,10 @@ from hikari.events import base_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import interactions
     from hikari import traits
     from hikari.api import shard as gateway_shard
+    from hikari.interactions import bases
+    from hikari.interactions import commands
 
 
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
@@ -51,12 +52,12 @@ class CommandEvent(base_events.Event, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def command(self) -> interactions.Command:
+    def command(self) -> commands.Command:
         """Object of the command this event is for.
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             The command this event is for.
         """
 
@@ -72,7 +73,7 @@ class CommandCreateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: interactions.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.ib(eq=True, repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -87,7 +88,7 @@ class CommandUpdateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: interactions.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.ib(eq=True, repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -102,7 +103,7 @@ class CommandDeleteEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: interactions.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.ib(eq=True, repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -124,11 +125,11 @@ class InteractionCreateEvent(base_events.Event):
         triggered by a REST server.
     """
 
-    interaction: interactions.PartialInteraction = attr.ib(eq=True, hash=True, repr=True)
+    interaction: bases.PartialInteraction = attr.ib(eq=True, hash=True, repr=True)
     """Interaction that this event is related to.
 
     Returns
     -------
-    hikari.interactions.PartialInteraction
+    hikari.interactions.bases.PartialInteraction
         Object of the interaction that this event is related to.
     """

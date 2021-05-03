@@ -29,11 +29,11 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from hikari import interactions
     from hikari.api import special_endpoints
+    from hikari.interactions import bases
 
 
-InteractionT = typing.TypeVar("InteractionT", bound="interactions.PartialInteraction", covariant=True)
+InteractionT = typing.TypeVar("InteractionT", bound="bases.PartialInteraction", covariant=True)
 ResponseT = typing.TypeVar("ResponseT", bound="special_endpoints.InteractionResponseBuilder", covariant=True)
 
 ListenerT = typing.Callable[
@@ -166,22 +166,22 @@ class InteractionServer(abc.ABC):
 
     # @typing.overload
     # def get_listener(
-    #     self, interaction_type: typing.Type[interactions.CommandInteraction], /
-    # ) -> typing.Optional[ListenerT[interactions.CommandInteraction, special_endpoints.CommandResponseBuilder]]:
+    #     self, interaction_type: typing.Type[commands.CommandInteraction], /
+    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, special_endpoints.CommandResponseBuilder]]:
     #     raise NotImplementedError
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction], /
-    ) -> typing.Optional[ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+        self, interaction_type: typing.Type[bases.PartialInteraction], /
+    ) -> typing.Optional[ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
         raise NotImplementedError
 
     # @typing.overload
     # def set_listener(
     #     self,
-    #     interaction_type: typing.Type[interactions.CommandInteraction],
+    #     interaction_type: typing.Type[commands.CommandInteraction],
     #     listener: typing.Optional[
-    #         MainListenerT[interactions.CommandInteraction, special_endpoints.InteractionResponseBuilder]
+    #         MainListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
     #     ],
     #     /,
     #     *,

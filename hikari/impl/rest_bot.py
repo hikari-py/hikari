@@ -43,11 +43,11 @@ if typing.TYPE_CHECKING:
     import ssl
 
     from hikari import applications
-    from hikari import interactions
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
     from hikari.api import special_endpoints
+    from hikari.interactions import bases
 
 
 class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServer):
@@ -479,9 +479,9 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         )
 
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction], /
+        self, interaction_type: typing.Type[bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        interaction_server_.ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:
         return self._server.get_listener(interaction_type)
 

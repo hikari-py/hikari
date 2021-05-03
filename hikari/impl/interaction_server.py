@@ -34,9 +34,9 @@ import aiohttp.web
 import aiohttp.web_runner
 
 from hikari import errors
-from hikari import interactions
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
+from hikari.interactions import bases
 from hikari.internal import data_binding
 from hikari.internal import ed25519
 from hikari.internal import ux
@@ -174,9 +174,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._entity_factory = entity_factory
         self._event_factory = event_factory
         self._future: asyncio.Future[None] = asyncio.Future()
-        self._listeners: ListenerDictT[
-            interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder
-        ] = {}
+        self._listeners: ListenerDictT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder] = {}
         self._loads = loads
         self._rest_client = rest_client
         self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
@@ -540,9 +538,9 @@ class InteractionServer(interaction_server.InteractionServer):
             await site.start()
 
     def get_listener(
-        self, interaction_type: typing.Type[interactions.PartialInteraction], /
+        self, interaction_type: typing.Type[bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[interactions.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        interaction_server.ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:
         return self._listeners.get(interaction_type)
 

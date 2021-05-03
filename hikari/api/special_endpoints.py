@@ -45,13 +45,14 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
-    from hikari import interactions
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.interactions import bases
+    from hikari.interactions import commands
     from hikari.internal import data_binding
     from hikari.internal import time
 
@@ -537,12 +538,12 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> interactions.ResponseType:
+    def type(self) -> bases.ResponseType:
         """Return the type of this response.
 
         Returns
         -------
-        hikari.interactions.ResponseType
+        hikari.interactions.bases.ResponseType
             The type of response this is.
         """
 
@@ -563,8 +564,8 @@ class InteractionResponseBuilder(abc.ABC):
 
 
 CommandResponseTypes = typing.Union[
-    "typing.Literal[interactions.ResponseType.SOURCED_RESPONSE]",
-    "typing.Literal[interactions.ResponseType.DEFERRED_SOURCED_RESPONSE]",
+    "typing.Literal[bases.ResponseType.SOURCED_RESPONSE]",
+    "typing.Literal[bases.ResponseType.DEFERRED_SOURCED_RESPONSE]",
 ]
 """Type hints of the valid response types for a command interaction."""
 
@@ -770,12 +771,12 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def options(self) -> typing.Sequence[interactions.CommandOption]:
+    def options(self) -> typing.Sequence[commands.CommandOption]:
         """Sequence of up to 25 of the options set for this command.
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.CommandOption]
+        typing.Sequence[hikari.interactions.commands.CommandOption]
             A sequence of up to 25 of the options set for this command.
         """
 
@@ -795,7 +796,7 @@ class CommandBuilder(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_option(self: CommandBuilderT, option: interactions.CommandOption) -> CommandBuilderT:
+    def add_option(self: CommandBuilderT, option: commands.CommandOption) -> CommandBuilderT:
         """Add an option to this command.
 
         !!! note
@@ -803,7 +804,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        option : hikari.interactions.CommandOption
+        option : hikari.interactions.commands.CommandOption
             The option to add to this command.
 
         Returns

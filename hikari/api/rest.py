@@ -42,7 +42,6 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import files
     from hikari import guilds
-    from hikari import interactions
     from hikari import invites
     from hikari import iterators
     from hikari import messages as messages_
@@ -54,6 +53,8 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
+    from hikari.interactions import bases
+    from hikari.interactions import commands
     from hikari.internal import time
 
 
@@ -6031,15 +6032,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+    ) -> commands.Command:
         """Fetch a command set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
+        command: hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
+            Object or ID of the command to fetch.
 
         Other Parameters
         ----------------
@@ -6050,7 +6053,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             Object of the fetched command.
 
         Raises
@@ -6081,14 +6084,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         """Fetch the commands set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the commands for.
-
 
         Other Parameters
         ----------------
@@ -6100,7 +6102,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.Command]
+        typing.Sequence[hikari.interactions.commands.Command]
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
@@ -6136,8 +6138,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         r"""Create an application command.
 
         Parameters
@@ -6157,12 +6159,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
             A sequence of up to 10 options for this command.
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             Object of the created command.
 
         Raises
@@ -6196,7 +6198,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         """Set the commands for an application.
 
         !!! note
@@ -6220,7 +6222,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.Command]
+        typing.Sequence[hikari.interactions.commands.Command]
             A sequence of the set command objects.
 
         Raises
@@ -6252,20 +6254,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         """Edit a registered application command.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
             Object or ID of the command to modify.
 
         Other Parameters
@@ -6280,13 +6282,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             The edited command object.
 
         Raises
@@ -6318,7 +6320,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
@@ -6327,7 +6329,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
             Object or ID of the command to delete.
 
         Other Parameters
@@ -6404,9 +6406,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_command_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[bases.PartialInteraction],
         token: str,
-        response_type: interactions.ResponseType,
+        response_type: bases.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -6431,11 +6433,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.PartialInteraction]
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.bases.PartialInteraction]
             Object or ID of the interaction this response is for.
         token : builtins.str
             The command interaction's token.
-        response_type : hikari.interactions.ResponseType
+        response_type : hikari.interactions.bases.ResponseType
             The type of interaction response this is.
 
         Other Parameters
@@ -6536,6 +6538,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -6561,10 +6566,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             in the content. Any other value here will be cast to a
             `builtins.str`.
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor
-            no `embeds` kwarg is provided, then this will instead
-            update the embed. This allows for simpler syntax when
-            sending an embed alone.
+            If this is a `hikari.embeds.Embed` and neither the
+            `embed` or `embeds` kwargs are provided or if this is a
+            `hikari.files.Resourceish` and neither the `attachment` or
+            `attachments` kwargs are provided, the values will be overwritten.
+            This allows for simpler syntax when sending an embed or an
+            attachment alone.
 
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
@@ -6573,6 +6580,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the message embeds.
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the attachment to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            present, is not changed. If this is `builtins.None`, then the
+            attachment is removed, if present. Otherwise, the new attachment
+            that was provided will be attached.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+            If provided, the attachments to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            present, are not changed. If this is `builtins.None`, then the
+            attachments is removed, if present. Otherwise, the new attachments
+            that were provided will be attached.
+        replace_attachments: bool
+            Whether to replace the attachments with the provided ones. Defaults
+            to `builtins.False`.
+
+            Note this will also overwrite the embed attachments.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -6598,12 +6622,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
-
-        !!! note
-            There is currently no documented way to clear attachments or edit
-            attachments from a previously sent message on Discord's API. To
-            do this, delete the message and re-send it. This also applies
-            to embed attachments.
 
         !!! warning
             If you specify one of `mentions_everyone`, `user_mentions`, or

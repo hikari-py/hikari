@@ -37,11 +37,11 @@ import attr
 from hikari import channels
 from hikari import errors
 from hikari import files
-from hikari import interactions
 from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
+from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -62,6 +62,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.interactions import commands
 
 
 @typing.final
@@ -671,7 +672,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     """
 
     # Required arguments.
-    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=interactions.ResponseType)
+    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=bases.ResponseType)
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
@@ -724,7 +725,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        is_message_response = self.type is interactions.ResponseType.SOURCED_RESPONSE
+        is_message_response = self.type is bases.ResponseType.SOURCED_RESPONSE
 
         if is_message_response and not data:
             raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")
@@ -750,21 +751,21 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
-    _options: typing.List[interactions.CommandOption] = attr.ib(factory=list, init=False)
+    _options: typing.List[commands.CommandOption] = attr.ib(factory=list, init=False)
 
     @property
     def description(self) -> str:
         return self._description
 
     @property
-    def options(self) -> typing.Sequence[interactions.CommandOption]:
+    def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
     @property
     def name(self) -> str:
         return self._name
 
-    def add_option(self, option: interactions.CommandOption) -> CommandBuilder:
+    def add_option(self, option: commands.CommandOption) -> CommandBuilder:
         self._options.append(option)  # TODO: validation
         return self
 

@@ -86,7 +86,6 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari import audit_logs
-    from hikari import interactions
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
@@ -96,6 +95,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
+    from hikari.interactions import bases
+    from hikari.interactions import commands
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -1317,7 +1318,7 @@ class RESTClientImpl(rest_api.RESTClient):
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
-        elif undefined.count(attachment, attachments) == 2 and isinstance(
+        elif undefined.all_undefined(attachment, attachments) and isinstance(
             content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
             # Syntatic sugar, common mistake to accidentally send an attachment
@@ -1774,6 +1775,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -1787,6 +1791,9 @@ class RESTClientImpl(rest_api.RESTClient):
             content=content,
             embed=embed,
             embeds=embeds,
+            attachment=attachment,
+            attachments=attachments,
+            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -2891,9 +2898,9 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+    ) -> commands.Command:
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -2910,7 +2917,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMANDS.compile(application=application)
 
@@ -2929,8 +2936,8 @@ class RESTClientImpl(rest_api.RESTClient):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
 
@@ -2953,7 +2960,7 @@ class RESTClientImpl(rest_api.RESTClient):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         if guild is undefined.UNDEFINED:
             route = routes.PUT_APPLICATION_COMMANDS.compile(application=application)
 
@@ -2968,13 +2975,13 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -2997,7 +3004,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         if guild is undefined.UNDEFINED:
@@ -3020,9 +3027,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_command_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[interactions.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[bases.PartialInteraction],
         token: str,
-        response_type: interactions.ResponseType,
+        response_type: bases.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -3083,6 +3090,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -3096,6 +3106,9 @@ class RESTClientImpl(rest_api.RESTClient):
             content=content,
             embed=embed,
             embeds=embeds,
+            attachment=attachment,
+            attachments=attachments,
+            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,

@@ -23,8 +23,8 @@
 import mock
 import pytest
 
-from hikari import interactions
 from hikari.impl import special_endpoints
+from hikari.interactions import bases
 from tests.hikari import hikari_test_helpers
 
 
@@ -62,19 +62,19 @@ class TestCommandResponseBuilder:
         assert builder.embeds == [mock_embed]
 
     def test_build_without_data(self):
-        builder = special_endpoints.CommandResponseBuilder(interactions.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        builder = special_endpoints.CommandResponseBuilder(bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
 
-        assert builder.build(object()) == {"type": interactions.ResponseType.DEFERRED_SOURCED_RESPONSE, "data": {}}
+        assert builder.build(object()) == {"type": bases.ResponseType.DEFERRED_SOURCED_RESPONSE, "data": {}}
 
     def test_build_without_data_for_message_response_type(self):
-        builder = special_endpoints.CommandResponseBuilder(interactions.ResponseType.SOURCED_RESPONSE)
+        builder = special_endpoints.CommandResponseBuilder(bases.ResponseType.SOURCED_RESPONSE)
 
         with pytest.raises(ValueError, match="Cannot build an empty response for SOURCED_RESPONSE responses."):
             builder.build(object())
 
     def test_build_with_data(self):
         mock_entity_factory = mock.Mock()
-        builder = special_endpoints.CommandResponseBuilder(interactions.ResponseType.SOURCED_RESPONSE)
+        builder = special_endpoints.CommandResponseBuilder(bases.ResponseType.SOURCED_RESPONSE)
         mock_embed = object()
         builder.add_embed(mock_embed)
         builder.content = "a content"
@@ -88,7 +88,7 @@ class TestCommandResponseBuilder:
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
         assert result == {
-            "type": interactions.ResponseType.SOURCED_RESPONSE,
+            "type": bases.ResponseType.SOURCED_RESPONSE,
             "data": {
                 "content": "a content",
                 "embeds": [mock_entity_factory.serialize_embed.return_value],
@@ -99,7 +99,7 @@ class TestCommandResponseBuilder:
         }
 
     def test_build_with_data_for_deferred_response_type(self):
-        builder = special_endpoints.CommandResponseBuilder(interactions.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        builder = special_endpoints.CommandResponseBuilder(bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
         builder.add_embed(object())
 
         with pytest.raises(ValueError, match="Cannot include data for DEFERRED_SOURCED_RESPONSE responses."):

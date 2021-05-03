@@ -23,10 +23,11 @@ import mock
 import pytest
 
 from hikari import channels
-from hikari import interactions
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from hikari.interactions import bases
+from hikari.interactions import commands
 
 
 @pytest.fixture()
@@ -37,7 +38,7 @@ def mock_app():
 class TestCommand:
     @pytest.fixture()
     def mock_command(self, mock_app):
-        return interactions.Command(
+        return commands.Command(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
             application_id=snowflakes.Snowflake(65234123),
@@ -121,10 +122,10 @@ class TestCommand:
 class TestCommandInteraction:
     @pytest.fixture()
     def mock_command_interaction(self, mock_app):
-        return interactions.CommandInteraction(
+        return commands.CommandInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
-            type=interactions.InteractionType.APPLICATION_COMMAND,
+            type=bases.InteractionType.APPLICATION_COMMAND,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
@@ -150,7 +151,7 @@ class TestCommandInteraction:
         mock_embed_1 = object()
         mock_embed_2 = object()
         await mock_command_interaction.create_initial_response(
-            interactions.ResponseType.SOURCED_RESPONSE,
+            bases.ResponseType.SOURCED_RESPONSE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -163,7 +164,7 @@ class TestCommandInteraction:
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            interactions.ResponseType.SOURCED_RESPONSE,
+            bases.ResponseType.SOURCED_RESPONSE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -175,12 +176,12 @@ class TestCommandInteraction:
 
     @pytest.mark.asyncio
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
-        await mock_command_interaction.create_initial_response(interactions.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
 
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            interactions.ResponseType.DEFERRED_SOURCED_RESPONSE,
+            bases.ResponseType.DEFERRED_SOURCED_RESPONSE,
             undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,

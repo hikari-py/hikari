@@ -20,8 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Application and entities that are used to describe interactions on Discord."""
-
+"""Models and enums used for Discord's Slash Commands interaction flow."""
 from __future__ import annotations
 
 __all__: typing.List[str] = [
@@ -33,10 +32,7 @@ __all__: typing.List[str] = [
     "InteractionChannel",
     "InteractionMember",
     "ResolvedOptionData",
-    "ResponseType",
-    "InteractionType",
     "OptionType",
-    "PartialInteraction",
 ]
 
 import typing
@@ -49,6 +45,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import webhooks
+from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
@@ -89,35 +86,6 @@ class OptionType(int, enums.Enum):
 
     MENTIONABLE = 9
     """Denotes a command option where the value will be a snowflake ID."""
-
-
-@typing.final
-class InteractionType(int, enums.Enum):
-    """The type of an interaction."""
-
-    # PING isn't here as it should be handled as internal detail of the REST
-    # server rather than as a part of the public interface.
-    APPLICATION_COMMAND = 2
-    """An interaction triggered by a user calling an application command."""
-
-
-@typing.final
-class ResponseType(int, enums.Enum):
-    """The type of an interaction response."""
-
-    # PONG isn't here as it should be handled as internal detail of the REST
-    # server rather than as a part of the public interface.
-
-    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
-    SOURCED_RESPONSE = 4
-    """An immediate response to an interaction."""
-
-    DEFERRED_SOURCED_RESPONSE = 5
-    """Acknowledge an interaction with the intention to edit in a response later.
-
-    The user will see a loading state when this type is used until this
-    interaction expires or a response is edited in over REST.
-    """
 
 
 @attr_extensions.with_copy
@@ -213,7 +181,7 @@ class Command(snowflakes.Unique):
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             Object of the fetched command.
 
         Raises
@@ -263,13 +231,13 @@ class Command(snowflakes.Unique):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.interactions.Command
+        hikari.interactions.commands.Command
             The edited command object.
 
         Raises
@@ -406,31 +374,7 @@ class InteractionMember(guilds.Member):
 
 @attr_extensions.with_copy
 @attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class PartialInteraction(snowflakes.Unique):
-    """The base model for all interaction models."""
-
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
-
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
-    # <<inherited docstring from Unique>>.
-
-    application_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=False)
-    """ID of the application this interaction belongs to."""
-
-    type: typing.Union[InteractionType, int] = attr.ib(eq=False, hash=False, repr=True)
-    """The type of interaction this is."""
-
-    token: str = attr.ib(eq=False, hash=False, repr=False)
-    """The interaction's token."""
-
-    version: int = attr.ib(eq=False, hash=False, repr=True)
-    """Version of the interaction system this interaction is under."""
-
-
-@attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
-class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
+class CommandInteraction(bases.PartialInteraction, webhooks.ExecutableWebhook):
     """Represents a command interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
@@ -501,7 +445,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
 
     async def create_initial_response(
         self,
-        response_type: ResponseType,
+        response_type: bases.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -525,7 +469,7 @@ class CommandInteraction(PartialInteraction, webhooks.ExecutableWebhook):
 
         Parameters
         ----------
-        response_type : hikari.interactions.ResponseType
+        response_type : hikari.interactions.bases.ResponseType
             The type of interaction response this is.
 
         Other Parameters
