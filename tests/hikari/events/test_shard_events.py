@@ -26,6 +26,23 @@ from hikari import snowflakes
 from hikari.events import shard_events
 
 
+class TestShardReadyEvent:
+    @pytest.fixture()
+    def event(self):
+        return shard_events.ShardReadyEvent(
+            my_user=mock.Mock(),
+            shard=None,
+            actual_gateway_version=1,
+            session_id="ok",
+            application_id=1,
+            application_flags=1,
+            unavailable_guilds=[],
+        )
+
+    def test_app_property(self, event):
+        assert event.app is event.my_user.app
+
+
 class TestMemberChunkEvent:
     @pytest.fixture()
     def event(self):

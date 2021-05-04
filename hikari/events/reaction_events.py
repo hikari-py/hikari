@@ -208,9 +208,6 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -230,8 +227,12 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     # <<inherited docstring from ReactionEvent>>.
 
     emoji: emojis.Emoji = attr.field()
-
     # <<inherited docstring from ReactionAddEvent>>.
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.member.app
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:

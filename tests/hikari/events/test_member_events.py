@@ -40,16 +40,22 @@ class TestMemberEvent:
         )
         return cls()
 
+    def test_app_property(self, event):
+        assert event.app is event.user.app
+
     def test_user_id_property(self, event):
         event.user_id == 456
 
-    def test_guild_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_guild_when_no_cache_trait(self):
+        event = hikari_test_helpers.mock_class_namespace(
+            member_events.MemberEvent,
+            app=None,
+        )()
 
-        assert event.guild is None
+        assert event.get_guild() is None
 
-    def test_guild_when_available(self, event):
-        result = event.guild
+    def test_get_guild_when_available(self, event):
+        result = event.get_guild()
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(123)
@@ -57,7 +63,7 @@ class TestMemberEvent:
 
     def test_guild_when_unavailable(self, event):
         event.app.cache.get_available_guild.return_value = None
-        result = event.guild
+        result = event.get_guild()
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(123)
@@ -67,7 +73,7 @@ class TestMemberEvent:
 class TestMemberCreateEvent:
     @pytest.fixture()
     def event(self):
-        return member_events.MemberCreateEvent(app=None, shard=None, member=mock.Mock())
+        return member_events.MemberCreateEvent(shard=None, member=mock.Mock())
 
     def test_guild_property(self, event):
         event.member.guild_id = 123
@@ -82,9 +88,7 @@ class TestMemberCreateEvent:
 class TestMemberUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return member_events.MemberUpdateEvent(
-            app=None, shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member)
-        )
+        return member_events.MemberUpdateEvent(shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member))
 
     def test_guild_property(self, event):
         event.member.guild_id = 123

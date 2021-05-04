@@ -141,8 +141,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
             The ID of the guild that relates to this event.
         """
 
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -190,8 +189,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    @property
-    def channel(self) -> typing.Optional[channels.GuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.GuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -301,6 +299,11 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.channel.app
+
+    @property
     @abc.abstractmethod
     def channel(self) -> channels.PartialChannel:
         """Channel this event represents.
@@ -322,9 +325,6 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -351,6 +351,11 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.channel.app
+
+    @property
     @abc.abstractmethod
     def channel(self) -> channels.PartialChannel:
         """Channel this event represents.
@@ -372,9 +377,6 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -407,6 +409,11 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.channel.app
+
+    @property
     @abc.abstractmethod
     def channel(self) -> channels.PartialChannel:
         """Channel this event represents.
@@ -433,9 +440,6 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -523,11 +527,9 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     # <<inherited docstring from GuildChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
-
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
-    @property
-    def channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -538,10 +540,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             The cached channel this event relates to. If not known, this
             will return `builtins.None` instead.
         """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.channel_id)
+        channel = super().get_channel()
         assert channel is None or isinstance(channel, channels.TextableGuildChannel)
         return channel
 
@@ -687,9 +686,6 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -703,6 +699,11 @@ class InviteCreateEvent(InviteEvent):
     """
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.invite.app
+
+    @property
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.invite.channel_id
@@ -710,7 +711,7 @@ class InviteCreateEvent(InviteEvent):
     @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
-        # This will always be non-None for guild channel invites.
+        # This will always not be None for guild channel invites.
         assert self.invite.guild_id is not None
         return self.invite.guild_id
 

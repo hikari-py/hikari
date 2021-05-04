@@ -224,8 +224,7 @@ class ChannelFollow:
         assert isinstance(webhook, webhooks.ChannelFollowerWebhook)
         return webhook
 
-    @property
-    def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
+    def get_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
         """Get the channel being followed from the cache.
 
         !!! warning

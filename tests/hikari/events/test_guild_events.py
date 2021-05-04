@@ -74,7 +74,6 @@ class TestGuildAvailableEvent:
     @pytest.fixture()
     def event(self):
         return guild_events.GuildAvailableEvent(
-            app=None,
             shard=object(),
             guild=mock.Mock(guilds.Guild),
             emojis={},
@@ -85,6 +84,9 @@ class TestGuildAvailableEvent:
             voice_states={},
         )
 
+    def test_app_property(self, event):
+        assert event.app is event.guild.app
+
     def test_guild_id_property(self, event):
         event.guild.id = 123
         assert event.guild_id == 123
@@ -94,13 +96,15 @@ class TestGuildUpdateEvent:
     @pytest.fixture()
     def event(self):
         return guild_events.GuildUpdateEvent(
-            app=None,
             shard=object(),
             guild=mock.Mock(guilds.Guild),
             old_guild=mock.Mock(guilds.Guild),
             emojis={},
             roles={},
         )
+
+    def test_app_property(self, event):
+        assert event.app is event.guild.app
 
     def test_guild_id_property(self, event):
         event.guild.id = 123
@@ -111,16 +115,27 @@ class TestGuildUpdateEvent:
         assert event.old_guild.id == 123
 
 
+class TestBanEvent:
+    @pytest.fixture()
+    def event(self):
+        return hikari_test_helpers.mock_class_namespace(guild_events.BanEvent)()
+
+    def test_app_property(self, event):
+        assert event.app is event.user.app
+
+
 class TestPresenceUpdateEvent:
     @pytest.fixture()
     def event(self):
         return guild_events.PresenceUpdateEvent(
-            app=None,
             shard=object(),
             presence=mock.Mock(presences.MemberPresence),
             old_presence=mock.Mock(presences.MemberPresence),
             user=mock.Mock(),
         )
+
+    def test_app_property(self, event):
+        assert event.app is event.presence.app
 
     def test_user_id_property(self, event):
         event.presence.user_id = 123

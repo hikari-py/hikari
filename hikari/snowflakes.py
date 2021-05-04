@@ -89,16 +89,22 @@ class Snowflake(int):
     @classmethod
     def min(cls) -> Snowflake:
         """Minimum value for a snowflakes."""
-        if not hasattr(cls, "___MIN___"):
+        try:
+            return cls.___MIN___
+
+        except AttributeError:
             cls.___MIN___ = Snowflake(0)
-        return cls.___MIN___
+            return cls.___MIN___
 
     @classmethod
     def max(cls) -> Snowflake:
         """Maximum value for a snowflakes."""
-        if not hasattr(cls, "___MAX___"):
+        try:
+            return cls.___MAX___
+
+        except AttributeError:
             cls.___MAX___ = Snowflake((1 << 63) - 1)
-        return cls.___MAX___
+            return cls.___MAX___
 
     @classmethod
     def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:
