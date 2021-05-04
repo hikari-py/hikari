@@ -51,6 +51,11 @@ class CommandEvent(base_events.Event, abc.ABC):
     """Base class of events fired for application command changes."""
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.command.app
+
+    @property
     @abc.abstractmethod
     def command(self) -> commands.Command:
         """Object of the command this event is for.
@@ -67,9 +72,6 @@ class CommandEvent(base_events.Event, abc.ABC):
 class CommandCreateEvent(CommandEvent):
     """Event fired when a command is created for the current application."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
@@ -81,9 +83,6 @@ class CommandCreateEvent(CommandEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class CommandUpdateEvent(CommandEvent):
     """Event fired when a command is updated for the current application."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
@@ -97,9 +96,6 @@ class CommandUpdateEvent(CommandEvent):
 class CommandDeleteEvent(CommandEvent):
     """Event fired when a command is deleted for the current application."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
@@ -111,9 +107,6 @@ class CommandDeleteEvent(CommandEvent):
 @attr.s(kw_only=True, slots=True, weakref_slot=False)
 class InteractionCreateEvent(base_events.Event):
     """Event fired when an interaction is created."""
-
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received this event.
@@ -133,3 +126,8 @@ class InteractionCreateEvent(base_events.Event):
     hikari.interactions.bases.PartialInteraction
         Object of the interaction that this event is related to.
     """
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.interaction.app

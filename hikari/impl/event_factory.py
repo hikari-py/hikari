@@ -359,7 +359,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         payload: data_binding.JSONObject,
     ) -> interaction_events.CommandCreateEvent:
         return interaction_events.CommandCreateEvent(
-            app=self._app, shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
         )
 
     def deserialize_command_update_event(
@@ -368,7 +368,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         payload: data_binding.JSONObject,
     ) -> interaction_events.CommandUpdateEvent:
         return interaction_events.CommandUpdateEvent(
-            app=self._app, shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
         )
 
     def deserialize_command_delete_event(
@@ -377,7 +377,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         payload: data_binding.JSONObject,
     ) -> interaction_events.CommandDeleteEvent:
         return interaction_events.CommandDeleteEvent(
-            app=self._app, shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
         )
 
     def deserialize_interaction_create_event(
@@ -386,7 +386,6 @@ class EventFactoryImpl(event_factory.EventFactory):
         payload: data_binding.JSONObject,
     ) -> interaction_events.InteractionCreateEvent:
         return interaction_events.InteractionCreateEvent(
-            app=self._app,
             shard=shard,
             interaction=self._app.entity_factory.deserialize_interaction(payload),
         )

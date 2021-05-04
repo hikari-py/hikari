@@ -463,7 +463,6 @@ class TestEventFactoryImpl:
         result = event_factory.deserialize_command_create_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
-        assert result.app is mock_app
         assert result.shard is mock_shard
         assert result.command is mock_app.entity_factory.deserialize_command.return_value
         assert isinstance(result, interaction_events.CommandCreateEvent)
@@ -474,7 +473,6 @@ class TestEventFactoryImpl:
         result = event_factory.deserialize_command_update_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
-        assert result.app is mock_app
         assert result.shard is mock_shard
         assert result.command is mock_app.entity_factory.deserialize_command.return_value
         assert isinstance(result, interaction_events.CommandUpdateEvent)
@@ -485,7 +483,6 @@ class TestEventFactoryImpl:
         result = event_factory.deserialize_command_delete_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
-        assert result.app is mock_app
         assert result.shard is mock_shard
         assert result.command is mock_app.entity_factory.deserialize_command.return_value
         assert isinstance(result, interaction_events.CommandDeleteEvent)
@@ -496,7 +493,6 @@ class TestEventFactoryImpl:
         result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
-        assert result.app is mock_app
         assert result.shard is mock_shard
         assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
         assert isinstance(result, interaction_events.InteractionCreateEvent)
