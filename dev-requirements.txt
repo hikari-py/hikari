@@ -6,10 +6,7 @@
 mock==4.0.3
 
 # Py.test stuff.
-#
-# pytest version frozen to commit to fix error on CPython 3.10. Change back to numbered version when version 6.2.3+
-# gets released
-git+https://github.com/pytest-dev/pytest@0341893512fea338c728f1231166a12021e1afb6
+pytest==6.2.4
 pytest-asyncio==0.15.1
 pytest-cov==2.11.1
 pytest-randomly==3.5.0
