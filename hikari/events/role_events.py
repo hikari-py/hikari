@@ -162,3 +162,9 @@ class RoleDeleteEvent(RoleEvent):
 
     role_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from RoleEvent>>.
+
+    old_role: typing.Optional[guilds.Role] = attr.ib()
+    """The old role object.
+
+    This will be `builtins.None` if the role was missing from the cache.
+    """
