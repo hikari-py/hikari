@@ -223,9 +223,13 @@ class EventManagerBase(event_manager.EventManager):
                 for callback in self._listeners[cls]:
                     tasks.append(self._invoke_callback(callback, event))
 
-            if cls in self._waiters:
-                waiter_set = self._waiters[cls]
-                for predicate, future in tuple(waiter_set):
+            if cls not in self._waiters:
+                continue
+
+            waiter_set = self._waiters[cls]
+            for waiter in tuple(waiter_set):
+                predicate, future = waiter
+                if not future.done():
                     try:
                         result = predicate(event)
                         if not result:
@@ -235,7 +239,7 @@ class EventManagerBase(event_manager.EventManager):
                     else:
                         future.set_result(event)
 
-                    waiter_set.remove((predicate, future))
+                waiter_set.remove(waiter)
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
