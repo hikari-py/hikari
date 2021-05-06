@@ -734,6 +734,12 @@ class InviteDeleteEvent(InviteEvent):
     code: str = attr.ib()
     # <<inherited docstring from InviteEvent>>.
 
+    old_invite: typing.Optional[invites.InviteWithMetadata] = attr.ib()
+    """Object of the old cached invite.
+
+    This will be `builtins.None` if the invite is missing from the cache.
+    """
+
     if typing.TYPE_CHECKING:
         # Invite will never be found.
         async def fetch_invite(self) -> typing.NoReturn:

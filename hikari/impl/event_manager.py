@@ -35,12 +35,13 @@ from hikari import channels
 from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
-from hikari import traits
 from hikari.impl import event_manager_base
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import invites
+    from hikari import traits
     from hikari import voices
     from hikari.api import cache as cache_
     from hikari.api import shard as gateway_shard
@@ -259,11 +260,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_member_remove(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-member-remove for more info."""
-        event = self._app.event_factory.deserialize_guild_member_remove_event(shard, payload)
-
+        old: typing.Optional[guilds.Member] = None
         if self._cache:
-            self._cache.delete_member(event.guild_id, event.user.id)
+            old = self._cache.delete_member(
+                snowflakes.Snowflake(payload["guild_id"]), snowflakes.Snowflake(payload["user"]["id"])
+            )
 
+        event = self._app.event_factory.deserialize_guild_member_remove_event(shard, payload, old_member=old)
         await self.dispatch(event)
 
     async def on_guild_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -315,10 +318,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_role_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-role-delete for more info."""
-        event = self._app.event_factory.deserialize_guild_role_delete_event(shard, payload)
-
+        old: typing.Optional[guilds.Role] = None
         if self._cache:
-            self._cache.delete_role(event.role_id)
+            old = self._cache.delete_role(snowflakes.Snowflake(payload["role_id"]))
+
+        event = self._app.event_factory.deserialize_guild_role_delete_event(shard, payload, old_role=old)
 
         await self.dispatch(event)
 
@@ -333,10 +337,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_invite_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#invite-delete for more info."""
-        event = self._app.event_factory.deserialize_invite_delete_event(shard, payload)
-
+        old: typing.Optional[invites.InviteWithMetadata] = None
         if self._cache:
-            self._cache.delete_invite(event.code)
+            old = self._cache.delete_invite(payload["code"])
+
+        event = self._app.event_factory.deserialize_invite_delete_event(shard, payload, old_invite=old)
 
         await self.dispatch(event)
 

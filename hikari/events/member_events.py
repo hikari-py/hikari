@@ -194,3 +194,9 @@ class MemberDeleteEvent(MemberEvent):
 
     user: users.User = attr.ib()
     # <<inherited docstring from MemberEvent>>.
+
+    old_member: typing.Optional[guilds.Member] = attr.ib()
+    """The old member object.
+
+    This will be `builtins.None` if the member was missing from the cache.
+    """

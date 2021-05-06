@@ -33,6 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels as channel_models
     from hikari import emojis as emojis_models
     from hikari import guilds as guild_models
+    from hikari import invites as invite_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
     from hikari import users as user_models
@@ -183,7 +184,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_invite_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_invite: typing.Optional[invite_models.InviteWithMetadata],
     ) -> channel_events.InviteDeleteEvent:
         """Parse a raw payload from Discord into an invite delete event object.
 
@@ -193,6 +198,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_invite: typing.Optional[hikari.invites.InviteWithMetadata]
+            The invite object or `builtins.None`.
 
         Returns
         -------
@@ -504,7 +511,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_member_remove_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_member: typing.Optional[guild_models.Member],
     ) -> member_events.MemberDeleteEvent:
         """Parse a raw payload from Discord into a guild member remove event object.
 
@@ -514,6 +525,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_member: typing.Optional[hikari.guilds.Member]
+            The member object or `builtins.None`.
 
         Returns
         -------
@@ -571,7 +584,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_role_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_role: typing.Optional[guild_models.Role],
     ) -> role_events.RoleDeleteEvent:
         """Parse a raw payload from Discord into a guild role delete event object.
 
@@ -581,6 +598,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_role: typing.Optional[hikari.guilds.Role]
+            The role object or `builtins.None`.
 
         Returns
         -------
