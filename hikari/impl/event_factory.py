@@ -156,10 +156,6 @@ class EventFactoryImpl(event_factory.EventFactory):
         *,
         old_invite: typing.Optional[invite_models.InviteWithMetadata],
     ) -> channel_events.InviteDeleteEvent:
-
-        if "guild_id" not in payload:
-            raise TypeError("Expected guild invite delete, but received unexpected payload")
-
         return channel_events.InviteDeleteEvent(
             app=self._app,
             shard=shard,

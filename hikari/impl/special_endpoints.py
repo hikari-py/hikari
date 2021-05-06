@@ -29,7 +29,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
 
 import asyncio
-import contextlib
 import datetime
 import typing
 
@@ -126,14 +125,19 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     async def _keep_typing(self) -> None:
         # Cancelled error will occur when the context manager is requested to
         # stop.
-        with contextlib.suppress(asyncio.CancelledError, errors.HTTPClientClosedError):
+        try:
             # If the REST API closes while typing, just stop.
             while not self._rest_close_event.is_set():
                 # Use slightly less than 10s to ensure latency does not
                 # cause the typing indicator to stop showing for a split
                 # second if the request is slow to execute.
-                with contextlib.suppress(asyncio.TimeoutError):
+                try:
                     await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
+                except asyncio.TimeoutError:
+                    pass
+
+        except (asyncio.CancelledError, errors.HTTPClientClosedError):
+            pass
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
