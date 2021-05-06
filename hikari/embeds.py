@@ -36,7 +36,6 @@ __all__: typing.List[str] = [
     "EmbedField",
 ]
 
-import datetime
 import textwrap
 import typing
 import warnings
@@ -51,6 +50,7 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import datetime
 
 AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 

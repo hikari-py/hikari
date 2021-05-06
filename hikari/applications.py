@@ -48,7 +48,6 @@ import typing
 
 import attr
 
-from hikari import files
 from hikari import guilds
 from hikari import snowflakes
 from hikari import urls
@@ -61,6 +60,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels
+    from hikari import files
     from hikari import permissions as permissions_
     from hikari import traits
     from hikari import webhooks

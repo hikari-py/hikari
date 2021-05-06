@@ -59,7 +59,6 @@ import typing
 
 import attr
 
-from hikari import files
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -76,6 +75,7 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import colours
     from hikari import emojis as emojis_
+    from hikari import files
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_

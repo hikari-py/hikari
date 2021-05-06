@@ -37,8 +37,6 @@ import typing
 
 import attr
 
-from hikari.internal import ux
-
 ModelT = typing.TypeVar("ModelT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
@@ -105,6 +103,9 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     typing.Callable[[ModelT], ModelT]
         The generated shallow copying function.
     """
+    # This import is delayed to avoid a circular import error on startup
+    from hikari.internal import ux
+
     kwargs, setters = get_fields_definition(cls)
     kwargs = ",".join(f"{kwarg}=m.{attribute.name}" for attribute, kwarg in kwargs)
     setters = ";".join(f"r.{attribute.name}=m.{attribute.name}" for attribute in setters) + ";" if setters else ""
