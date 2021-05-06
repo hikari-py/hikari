@@ -229,7 +229,7 @@ class EventManagerBase(event_manager.EventManager):
             waiter_set = self._waiters[cls]
             for waiter in tuple(waiter_set):
                 predicate, future = waiter
-                if not future.cancelled():
+                if not future.done():
                     try:
                         result = predicate(event)
                         if not result:
