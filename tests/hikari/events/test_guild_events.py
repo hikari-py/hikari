@@ -53,6 +53,11 @@ class TestGuildEvent:
         event.app.cache.get_unavailable_guild.assert_called_once_with(534123123)
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
 
+    def test_get_guild_cacheless(self, event):
+        event = hikari_test_helpers.mock_class_namespace(guild_events.GuildEvent, app=object())()
+
+        assert event.get_guild() is None
+
     @pytest.mark.asyncio()
     async def test_fetch_guild(self, event):
         event.app.rest.fetch_guild = mock.AsyncMock()
@@ -127,6 +132,17 @@ class TestGuildUpdateEvent:
     def test_old_guild_id_property(self, event):
         event.old_guild.id = 123
         assert event.old_guild.id == 123
+
+    def test_get_guild_when_super_returns(self, event):
+        with mock.patch.object(guild_events.GuildEvent, "get_guild") as patched_super:
+            assert event.get_guild() is patched_super.return_value
+
+    def test_get_guild_when_super_returns_none(self, event):
+        with mock.patch.object(guild_events.GuildEvent, "get_guild", return_value=None) as patched_super:
+            result = event.get_guild()
+
+            assert result is event.guild
+            patched_super.assert_called_once_with()
 
 
 class TestBanEvent:

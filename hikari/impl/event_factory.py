@@ -410,9 +410,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> member_events.MemberDeleteEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         user = self._app.entity_factory.deserialize_user(payload["user"])
-        return member_events.MemberDeleteEvent(
-            shard=shard, guild_id=guild_id, user=user, old_member=old_member
-        )
+        return member_events.MemberDeleteEvent(shard=shard, guild_id=guild_id, user=user, old_member=old_member)
 
     ###############
     # ROLE EVENTS #
