@@ -94,7 +94,7 @@ class TestChannelCreateEvent:
         return cls()
 
     def test_app_property(self, event):
-        assert event.channel.app is event.channel.app
+        assert event.app is event.channel.app
 
     def test_channel_id_property(self, event):
         event.channel.id = 123
@@ -159,6 +159,23 @@ class TestGuildChannelDeleteEvent:
     def test_guild_id_property(self, event):
         event.channel.guild_id = 123
         assert event.guild_id == 123
+
+
+class TestGuildPinsUpdateEvent:
+    @pytest.fixture()
+    def event(self):
+        return channel_events.GuildPinsUpdateEvent(
+            app=mock.Mock(), shard=None, channel_id=12343, guild_id=None, last_pin_timestamp=None
+        )
+
+    @pytest.mark.parametrize("result", [mock.Mock(spec=channels.GuildTextChannel), None])
+    def test_get_channel(self, event, result):
+        event.app.cache.get_guild_channel.return_value = result
+
+        result = event.get_channel()
+
+        assert result is event.app.cache.get_guild_channel.return_value
+        event.app.cache.get_guild_channel.assert_called_once_with(event.channel_id)
 
 
 @pytest.mark.asyncio()

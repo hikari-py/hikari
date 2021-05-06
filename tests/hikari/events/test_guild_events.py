@@ -30,7 +30,7 @@ from hikari.events import guild_events
 from tests.hikari import hikari_test_helpers
 
 
-class GuildEvent:
+class TestGuildEvent:
     @pytest.fixture()
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
@@ -38,16 +38,16 @@ class GuildEvent:
         )
         return cls()
 
-    def test_guild_when_available(self, event):
-        result = event.guild
+    def test_get_guild_when_available(self, event):
+        result = event.get_guild()
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
         event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_guild_when_unavailable(self, event):
+    def test_get_guild_when_unavailable(self, event):
         event.app.cache.get_available_guild.return_value = None
-        result = event.guild
+        result = event.get_guild()
 
         assert result is event.app.cache.get_unavailable_guild.return_value
         event.app.cache.get_unavailable_guild.assert_called_once_with(534123123)
@@ -90,6 +90,20 @@ class TestGuildAvailableEvent:
     def test_guild_id_property(self, event):
         event.guild.id = 123
         assert event.guild_id == 123
+
+    def test_get_guild_when_super_returns_a_guild(self, event):
+        with mock.patch.object(guild_events.GuildEvent, "get_guild") as patched_super:
+            result = event.get_guild()
+
+            assert result is patched_super.return_value
+            patched_super.assert_called_once()
+
+    def test_get_guild_when_super_returns_none(self, event):
+        with mock.patch.object(guild_events.GuildEvent, "get_guild", return_value=None) as patched_super:
+            result = event.get_guild()
+
+            assert result is event.guild
+            patched_super.assert_called_once()
 
 
 class TestGuildUpdateEvent:

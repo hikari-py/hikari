@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import channels
-from hikari import users
 from hikari.events import typing_events
 from tests.hikari import hikari_test_helpers
 
@@ -42,6 +41,14 @@ class TestTypingEvent:
         )
 
         return cls()
+
+    async def test_get_user_when_no_cache(self, event):
+        event = hikari_test_helpers.mock_class_namespace(typing_events.TypingEvent, app=None)()
+
+        assert event.get_user() is None
+
+    def test_get_user(self, event):
+        assert event.get_user() is event.app.cache.get_user.return_value
 
     async def test_trigger_typing(self, event):
         event.app.rest.trigger_typing = mock.Mock()
@@ -100,6 +107,20 @@ class TestGuildTypingEvent:
         event.app.cache.get_unavailable_guild.assert_called_once_with(789)
         event.app.cache.get_available_guild.assert_called_once_with(789)
 
+    def test_get_user_when_super_returns_user(self, event):
+        with mock.patch.object(typing_events.TypingEvent, "get_user") as patched_super:
+            result = event.get_user()
+
+            assert result is patched_super.return_value
+            patched_super.assert_called_once()
+
+    def test_get_user_when_super_returns_none(self, event):
+        with mock.patch.object(typing_events.TypingEvent, "get_user", return_value=None) as patched_super:
+            result = event.get_user()
+
+            assert result is event.member.user
+            patched_super.assert_called_once()
+
     def test_user_id(self, event):
         assert event.user_id == event.member.id
         assert event.user_id == 456
@@ -140,16 +161,6 @@ class TestDMTypingEvent:
             app=mock.Mock(rest=mock.AsyncMock()),
             user_id=456,
         )
-
-    async def test_get_user_when_no_cache(self):
-        event = hikari_test_helpers.mock_class_namespace(typing_events.DMTypingEvent, app=None, init_=False)()
-
-        assert event.get_user() is None
-
-    def test_get_user(self, event):
-        event.app.cache.get_user = mock.Mock(return_value=mock.Mock(spec_set=users.User))
-
-        assert event.get_user() is event.app.cache.get_user.return_value
 
     async def test_fetch_channel(self, event):
         event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock.Mock(spec_set=channels.DMChannel))
