@@ -37,7 +37,6 @@ import attr
 from hikari import channels
 from hikari import intents
 from hikari import traits
-from hikari import users
 from hikari.api import special_endpoints
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -48,6 +47,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import guilds
     from hikari import snowflakes
+    from hikari import users
     from hikari.api import shard as gateway_shard
 
 

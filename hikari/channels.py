@@ -49,13 +49,11 @@ import typing
 
 import attr
 
-from hikari import files
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
-from hikari import users
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
@@ -64,9 +62,11 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import embeds
+    from hikari import files
     from hikari import guilds
     from hikari import iterators
     from hikari import messages
+    from hikari import users
     from hikari import webhooks
     from hikari.api import special_endpoints
 

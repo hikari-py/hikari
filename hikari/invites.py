@@ -38,9 +38,7 @@ import typing
 
 import attr
 
-from hikari import files
 from hikari import guilds
-from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
@@ -50,6 +48,8 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels
+    from hikari import files
+    from hikari import snowflakes
     from hikari import traits
     from hikari import users
 

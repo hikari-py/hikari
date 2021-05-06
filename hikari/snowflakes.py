@@ -37,12 +37,13 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import datetime
 import typing
 
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds
     from hikari import traits
 
@@ -184,7 +185,7 @@ The valid types for this type hint are:
 - `Snowflake`
 """
 
-SearchableSnowflakeish = typing.Union[Snowflakeish, datetime.datetime]
+SearchableSnowflakeish = typing.Union[Snowflakeish, "datetime.datetime"]
 """Type hint for a snowflakeish that can be searched for in history.
 
 This is just a `Snowflakeish` that can alternatively be some form of

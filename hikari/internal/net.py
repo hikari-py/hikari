@@ -31,8 +31,10 @@ import typing
 
 import aiohttp
 
-from hikari import config
 from hikari import errors
+
+if typing.TYPE_CHECKING:
+    from hikari import config
 
 
 async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:

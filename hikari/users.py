@@ -31,7 +31,6 @@ import typing
 
 import attr
 
-from hikari import files
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
@@ -42,6 +41,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import embeds
+    from hikari import files
     from hikari import guilds
     from hikari import messages
     from hikari import traits

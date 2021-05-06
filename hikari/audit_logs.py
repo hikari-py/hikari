@@ -41,7 +41,6 @@ __all__: typing.List[str] = [
 ]
 
 import abc
-import datetime
 import typing
 
 import attr
@@ -53,6 +52,8 @@ from hikari.internal import collections
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds
     from hikari import messages
     from hikari import traits

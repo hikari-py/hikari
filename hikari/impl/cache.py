@@ -34,22 +34,22 @@ import typing
 import attr
 
 from hikari import channels
-from hikari import config
 from hikari import emojis
-from hikari import guilds
-from hikari import invites
 from hikari import messages
-from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
-from hikari import users
-from hikari import voices
 from hikari.api import cache
 from hikari.internal import cache as cache_utility
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    from hikari import config
+    from hikari import guilds
+    from hikari import invites
+    from hikari import presences
     from hikari import traits
+    from hikari import users
+    from hikari import voices
 
     _T = typing.TypeVar("_T")
 
