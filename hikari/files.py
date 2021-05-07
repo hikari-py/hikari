@@ -333,7 +333,7 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
     return f"data:{mimetype};base64,{b64}"
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """Protocol for reading a resource asynchronously using bit inception.
 
@@ -341,10 +341,10 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     detail is left to each implementation of this class to define.
     """
 
-    filename: str = attr.ib(repr=True)
+    filename: str = attr.field(repr=True)
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str] = attr.ib(repr=True)
+    mimetype: typing.Optional[str] = attr.field(repr=True)
     """The mimetype of the resource. May be `builtins.None` if not known."""
 
     async def data_uri(self) -> str:
@@ -389,10 +389,10 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         return None
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 @typing.final
 class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
-    impl: ReaderImplT = attr.ib()
+    impl: ReaderImplT = attr.field()
 
     async def __aenter__(self) -> ReaderImplT:
         return self.impl
@@ -517,29 +517,29 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 ###################
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class WebReader(AsyncReader):
     """Asynchronous reader to use to read data from a web resource."""
 
-    stream: aiohttp.StreamReader = attr.ib(repr=False)
+    stream: aiohttp.StreamReader = attr.field(repr=False)
     """The `aiohttp.StreamReader` to read the content from."""
 
-    url: str = attr.ib(repr=False)
+    url: str = attr.field(repr=False)
     """The URL being read from."""
 
-    status: int = attr.ib()
+    status: int = attr.field()
     """The initial HTTP response status."""
 
-    reason: str = attr.ib()
+    reason: str = attr.field()
     """The HTTP response status reason."""
 
-    charset: typing.Optional[str] = attr.ib()
+    charset: typing.Optional[str] = attr.field()
     """Optional character set information, if known."""
 
-    size: typing.Optional[int] = attr.ib()
+    size: typing.Optional[int] = attr.field()
     """The size of the resource, if known."""
 
-    head_only: bool = attr.ib()
+    head_only: bool = attr.field()
     """If `builtins.True`, then only the HEAD was requested.
 
     In this case, neither `__aiter__` nor `read` would return anything other
@@ -749,7 +749,7 @@ class URL(WebResource):
 ########################################
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class FileReader(AsyncReader, abc.ABC):
     """Abstract base for a file reader object.
 
@@ -758,14 +758,14 @@ class FileReader(AsyncReader, abc.ABC):
     they pickle things).
     """
 
-    executor: typing.Optional[concurrent.futures.Executor] = attr.ib()
+    executor: typing.Optional[concurrent.futures.Executor] = attr.field()
     """The associated `concurrent.futures.Executor` to use for blocking IO."""
 
-    path: pathlib.Path = attr.ib(converter=ensure_path)
+    path: pathlib.Path = attr.field(converter=ensure_path)
     """The path to the resource to read."""
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class ThreadedFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -813,7 +813,7 @@ class ThreadedFileReader(FileReader):
         fp.close()
 
 
-@attr.s(slots=False, weakref_slot=False)  # Do not slot (pickle)
+@attr.define(slots=False, weakref_slot=False)  # Do not slot (pickle)
 class MultiprocessingFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
 
@@ -926,11 +926,11 @@ class File(Resource[FileReader]):
 ########################################################################
 
 
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 
-    data: typing.Union[bytes, LazyByteIteratorish] = attr.ib()
+    data: typing.Union[bytes, LazyByteIteratorish] = attr.field()
     """The data that will be yielded in chunks."""
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:

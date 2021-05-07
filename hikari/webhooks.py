@@ -60,7 +60,7 @@ class WebhookType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Webhook(snowflakes.Unique):
     """Represents a webhook object on Discord.
 
@@ -69,22 +69,24 @@ class Webhook(snowflakes.Unique):
     send informational messages to specific channels.
     """
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[WebhookType, int] = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[WebhookType, int] = attr.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    channel_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    author: typing.Optional[users_.User] = attr.ib(eq=False, hash=False, repr=True)
+    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
     """The user that created the webhook
 
     !!! info
@@ -92,13 +94,13 @@ class Webhook(snowflakes.Unique):
         than the webhook's token.
     """
 
-    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     !!! info
@@ -106,16 +108,16 @@ class Webhook(snowflakes.Unique):
         channel settings.
     """
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
-    source_channel: typing.Optional[channels_.PartialChannel] = attr.ib(eq=False, hash=False, repr=True)
+    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
     """The partial object of the channel a `CHANNEL_FOLLOWER` webhook is following.
 
     Will be `builtins.None` for other webhook types.
     """
 
-    source_guild: typing.Optional[guilds_.PartialGuild] = attr.ib(eq=False, hash=False, repr=True)
+    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
     """The partial object of the guild a `CHANNEL_FOLLOWER` webhook is following.
 
     Will be `builtins.None` for other webhook types.

@@ -31,9 +31,9 @@ from hikari import undefined
 from hikari.internal import data_binding
 
 
-@attr.s(slots=True)
+@attr.define()
 class MyUnique(snowflakes.Unique):
-    id: snowflakes.Snowflake = attr.ib(converter=snowflakes.Snowflake)
+    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
 
 
 class TestStringMapBuilder:

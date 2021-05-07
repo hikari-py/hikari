@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any events that concern guild members."""
@@ -105,18 +105,18 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    member: guilds.Member = attr.ib()
+    member: guilds.Member = attr.field()
     """Member object for the member that joined the guild.
 
     Returns
@@ -137,7 +137,7 @@ class MemberCreateEvent(MemberEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberUpdateEvent(MemberEvent):
     """Event that is fired when a member is updated in a guild.
@@ -145,19 +145,19 @@ class MemberUpdateEvent(MemberEvent):
     This may occur if roles are amended, or if the nickname is changed.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attr.ib()
+    old_member: typing.Optional[guilds.Member] = attr.field()
     """The old member object.
 
     This will be `builtins.None` if the member missing from the cache.
     """
 
-    member: guilds.Member = attr.ib()
+    member: guilds.Member = attr.field()
     """Member object for the member that was updated.
 
     Returns
@@ -178,24 +178,24 @@ class MemberUpdateEvent(MemberEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from MemberEvent>>.
 
-    user: users.User = attr.ib()
+    user: users.User = attr.field()
     # <<inherited docstring from MemberEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attr.ib()
+    old_member: typing.Optional[guilds.Member] = attr.field()
     """The old member object.
 
     This will be `builtins.None` if the member was missing from the cache.

@@ -41,13 +41,13 @@ def test_invalidate_deep_copy_cache():
 
 
 def test_get_fields_definition():
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
-        foo: int = attr.ib(init=True)
-        bar: bool = attr.ib(init=False)
-        bam: bool = attr.ib(init=False)
-        _voodoo: str = attr.ib(init=True)
-        Bat: bool = attr.ib(init=True)
+        foo: int = attr.field()
+        bar: bool = attr.field(init=False)
+        bam: bool = attr.field(init=False)
+        _voodoo: str = attr.field()
+        Bat: bool = attr.field()
 
     fields = {field.name: field for field in attr.fields(StubModel)}
     new_model = attr_extensions.get_fields_definition(StubModel)
@@ -58,13 +58,13 @@ def test_get_fields_definition():
 
 
 def test_generate_shallow_copier():
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
-        _foo: int = attr.ib(init=True)
-        baaaa: str = attr.ib(init=True)
-        _blam: bool = attr.ib(init=True)
-        not_init: int = attr.ib(init=False)
-        no: bytes = attr.ib(init=True)
+        _foo: int = attr.field()
+        baaaa: str = attr.field()
+        _blam: bool = attr.field()
+        not_init: int = attr.field(init=False)
+        no: bytes = attr.field()
 
     old_model = StubModel(foo=42, baaaa="sheep", blam=True, no=b"okokokok")
     old_model.not_init = 54234
@@ -81,12 +81,12 @@ def test_generate_shallow_copier():
 
 
 def test_generate_shallow_copier_with_init_only_arguments():
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
-        _gfd: int = attr.ib(init=True)
-        baaaa: str = attr.ib(init=True)
-        _blambat: bool = attr.ib(init=True)
-        no: bytes = attr.ib(init=True)
+        _gfd: int = attr.field()
+        baaaa: str = attr.field()
+        _blambat: bool = attr.field()
+        no: bytes = attr.field()
 
     old_model = StubModel(gfd=42, baaaa="sheep", blambat=True, no=b"okokokok")
 
@@ -101,12 +101,12 @@ def test_generate_shallow_copier_with_init_only_arguments():
 
 
 def test_generate_shallow_copier_with_only_non_init_attrs():
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
-        _gfd: int = attr.ib(init=False)
-        baaaa: str = attr.ib(init=False)
-        _blambat: bool = attr.ib(init=False)
-        no: bytes = attr.ib(init=False)
+        _gfd: int = attr.field(init=False)
+        baaaa: str = attr.field(init=False)
+        _blambat: bool = attr.field(init=False)
+        no: bytes = attr.field(init=False)
 
     old_model = StubModel()
     old_model._gfd = 42
@@ -125,7 +125,7 @@ def test_generate_shallow_copier_with_only_non_init_attrs():
 
 
 def test_generate_shallow_copier_with_no_attributes():
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
         ...
 
@@ -141,7 +141,7 @@ def test_generate_shallow_copier_with_no_attributes():
 def test_get_or_generate_shallow_copier_for_cached_copier():
     mock_copier = object()
 
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
         ...
 
@@ -157,7 +157,7 @@ def test_get_or_generate_shallow_copier_for_cached_copier():
 def test_get_or_generate_shallow_copier_for_uncached_copier():
     mock_copier = object()
 
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
         ...
 
@@ -173,7 +173,7 @@ def test_copy_attrs():
     mock_result = object()
     mock_copier = mock.Mock(return_value=mock_result)
 
-    @attr.s(init=True)
+    @attr.define()
     class StubModel:
         ...
 
@@ -188,13 +188,13 @@ def test_copy_attrs():
 
 
 def test_generate_deep_copier():
-    @attr.s
+    @attr.define
     class StubBaseClass:
-        recursor: int = attr.ib(init=True)
-        _field: bool = attr.ib(init=True)
-        foo: str = attr.ib(init=True)
-        end: str = attr.ib(init=False)
-        _blam: bool = attr.ib(init=False)
+        recursor: int = attr.field()
+        _field: bool = attr.field()
+        foo: str = attr.field()
+        end: str = attr.field(init=False)
+        _blam: bool = attr.field(init=False)
 
     model = StubBaseClass(recursor=431, field=True, foo="blam")
     model.end = "the way"
@@ -232,11 +232,11 @@ def test_generate_deep_copier():
 
 
 def test_generate_deep_copier_with_only_init_attributes():
-    @attr.s
+    @attr.define
     class StubBaseClass:
-        recursor: int = attr.ib(init=True)
-        _field: bool = attr.ib(init=True)
-        foo: str = attr.ib(init=True)
+        recursor: int = attr.field()
+        _field: bool = attr.field()
+        foo: str = attr.field()
 
     model = StubBaseClass(recursor=431, field=True, foo="blam")
     old_model_fields = stdlib_copy.copy(model)
@@ -266,10 +266,10 @@ def test_generate_deep_copier_with_only_init_attributes():
 
 
 def test_generate_deep_copier_with_only_non_init_attributes():
-    @attr.s
+    @attr.define
     class StubBaseClass:
-        end: str = attr.ib(init=False)
-        _blam: bool = attr.ib(init=False)
+        end: str = attr.field(init=False)
+        _blam: bool = attr.field(init=False)
 
     model = StubBaseClass()
     model.end = "the way"
@@ -298,7 +298,7 @@ def test_generate_deep_copier_with_only_non_init_attributes():
 
 
 def test_generate_deep_copier_with_no_attributes():
-    @attr.s
+    @attr.define
     class StubBaseClass:
         ...
 
@@ -391,7 +391,7 @@ class TestCopyDecorator:
         mock_result = object()
         mock_copier = mock.Mock(return_value=mock_result)
 
-        @attr.s()
+        @attr.define()
         @attr_extensions.with_copy
         class StubClass:
             ...
@@ -415,7 +415,7 @@ class TestCopyDecorator:
         mock_result = object()
         mock_copier = CopyingMock(return_value=mock_result)
 
-        @attr.s()
+        @attr.define()
         @attr_extensions.with_copy
         class StubClass:
             ...
@@ -435,7 +435,7 @@ class TestCopyDecorator:
 
     def test_copy_decorator_inheritance(self):
         @attr_extensions.with_copy
-        @attr.s()
+        @attr.define()
         class ParentClass:
             ...
 

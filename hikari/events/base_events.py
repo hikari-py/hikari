@@ -52,7 +52,7 @@ REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class Event(abc.ABC):
     """Base event type that all Hikari events should subclass."""
 
@@ -155,7 +155,7 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 @no_recursive_throw()
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
@@ -167,7 +167,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    exception: Exception = attr.ib()
+    exception: Exception = attr.field()
     """Exception that was raised.
 
     Returns
@@ -176,7 +176,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Exception that was raised in the event handler.
     """
 
-    failed_event: FailedEventT = attr.ib()
+    failed_event: FailedEventT = attr.field()
     """Event instance that caused the exception.
 
     Returns
@@ -185,11 +185,14 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Event that was being processed when the exception occurred.
     """
 
-    # MyPy thinks the attr.ib type hint on the `failed_callback` implies it is a function
-    # defined in class scope, and thus thinks referring to it will make it a bound method.
-    # To get around this, we make this attribute hidden and make a property that casts it
-    # for us to remove this effect. This functionally changes nothing but it helps MyPy.
-    _failed_callback: FailedCallbackT[FailedEventT] = attr.ib()
+    failed_callback: FailedCallbackT[FailedEventT] = attr.field()
+    """Event callback that threw an exception.
+
+    Returns
+    -------
+    callback
+        Event callback that failed execution.
+    """
 
     @property
     def app(self) -> traits.RESTAware:
@@ -214,17 +217,6 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         return None
 
     @property
-    def failed_callback(self) -> FailedCallbackT[FailedEventT]:
-        """Event callback that threw an exception.
-
-        Returns
-        -------
-        callback
-            Event callback that failed execution.
-        """
-        return self._failed_callback
-
-    @property
     def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
         """Exception triplet that follows the same format as `sys.exc_info`.
 
@@ -242,4 +234,4 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         If an exception is thrown this time, it will need to be manually
         caught in-code, or will be discarded.
         """
-        await self._failed_callback(self.failed_event)
+        await self.failed_callback(self.failed_event)

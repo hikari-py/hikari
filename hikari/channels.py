@@ -112,7 +112,7 @@ class VideoQualityMode(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollow:
     """Relationship between a news channel and a subscriber channel.
 
@@ -120,7 +120,9 @@ class ChannelFollow:
     to any "broadcast" announcements that the news channel creates.
     """
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """Return the client application that models may use for procedures.
 
     Returns
@@ -129,7 +131,7 @@ class ChannelFollow:
         The REST-aware application object.
     """
 
-    channel_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """Return the channel ID of the channel being followed.
 
     Returns
@@ -138,7 +140,7 @@ class ChannelFollow:
         The channel ID for the channel being followed.
     """
 
-    webhook_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    webhook_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """Return the ID of the webhook for this follow.
 
     Returns
@@ -251,7 +253,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PermissionOverwrite(snowflakes.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
@@ -278,20 +280,19 @@ class PermissionOverwrite(snowflakes.Unique):
     ```
     """
 
-    id: snowflakes.Snowflake = attr.ib(
+    id: snowflakes.Snowflake = attr.field(
         converter=snowflakes.Snowflake,
-        eq=True,
         hash=True,
         repr=True,
     )
     """The ID of this entity."""
 
-    type: typing.Union[PermissionOverwriteType, str] = attr.ib(
-        converter=PermissionOverwriteType, eq=True, hash=True, repr=True
+    type: typing.Union[PermissionOverwriteType, str] = attr.field(
+        converter=PermissionOverwriteType, hash=True, repr=True
     )
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permissions = attr.ib(
+    allow: permissions.Permissions = attr.field(
         converter=permissions.Permissions,
         default=permissions.Permissions.NONE,
         eq=False,
@@ -300,7 +301,7 @@ class PermissionOverwrite(snowflakes.Unique):
     )
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permissions = attr.ib(
+    deny: permissions.Permissions = attr.field(
         converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
     )
     """The permissions this overwrite denies."""
@@ -312,7 +313,7 @@ class PermissionOverwrite(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialChannel(snowflakes.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -320,16 +321,18 @@ class PartialChannel(snowflakes.Unique):
     not available from Discord.
     """
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: typing.Union[ChannelType, int] = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[ChannelType, int] = attr.field(eq=False, hash=False, repr=True)
     """The channel's type."""
 
     def __str__(self) -> str:
@@ -577,11 +580,11 @@ class TextChannel(PartialChannel, abc.ABC):
         return self.app.rest.trigger_typing(self.id)
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -590,11 +593,11 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class DMChannel(PrivateChannel, TextChannel):
     """Represents a direct message text channel that is between you and another user."""
 
-    recipient: users.User = attr.ib(eq=False, hash=False, repr=False)
+    recipient: users.User = attr.field(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
 
     @property
@@ -606,7 +609,7 @@ class DMChannel(PrivateChannel, TextChannel):
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
@@ -616,19 +619,19 @@ class GroupDMChannel(PrivateChannel):
         it.
     """
 
-    owner_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
-    icon_hash: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of the icon of the group, if an icon is set."""
 
-    nicknames: typing.MutableMapping[snowflakes.Snowflake, str] = attr.ib(eq=False, hash=False, repr=False)
+    nicknames: typing.MutableMapping[snowflakes.Snowflake, str] = attr.field(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
-    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = attr.ib(eq=False, hash=False, repr=False)
+    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(eq=False, hash=False, repr=False)
     """The recipients of the group DM."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
     If the group DM was not created by a bot, this will be `builtins.None`.
@@ -679,20 +682,20 @@ class GroupDMChannel(PrivateChannel):
         )
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
-    position: int = attr.ib(eq=False, hash=False, repr=False)
+    position: int = attr.field(eq=False, hash=False, repr=False)
     """The sorting position of the channel.
 
     Higher numbers appear further down the channel list.
     """
 
-    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.ib(
+    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
         eq=False, hash=False, repr=False
     )
     """The permission overwrites for the channel.
@@ -700,7 +703,7 @@ class GuildChannel(PartialChannel):
     This maps the ID of the entity in the overwrite to the overwrite data.
     """
 
-    is_nsfw: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_nsfw: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the channel is marked as NSFW.
 
     !!! warning
@@ -708,7 +711,7 @@ class GuildChannel(PartialChannel):
         (e.g Guild Create).
     """
 
-    parent_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    parent_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the parent category the channel belongs to.
 
     If no parent category is set for the channel, this will be `builtins.None`.
@@ -730,7 +733,7 @@ class GuildChannel(PartialChannel):
         return None
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
     """Represents a guild category channel.
 
@@ -739,14 +742,14 @@ class GuildCategory(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
-    topic: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -754,7 +757,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
         this will always be valid.
     """
 
-    rate_limit_per_user: datetime.timedelta = attr.ib(eq=False, hash=False, repr=False)
+    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     If there is no rate limit, this will be 0 seconds.
@@ -765,7 +768,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
         will not be affected by this rate limit.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     !!! note
@@ -774,14 +777,14 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=True, slots=True, kw_only=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
-    topic: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     !!! warning
@@ -789,7 +792,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
         this will always be valid.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     !!! note
@@ -798,7 +801,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel.
 
@@ -808,14 +811,14 @@ class GuildStoreChannel(GuildChannel):
     """
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildVoiceChannel(GuildChannel):
     """Represents a voice channel."""
 
-    bitrate: int = attr.ib(eq=False, hash=False, repr=True)
+    bitrate: int = attr.field(eq=False, hash=False, repr=True)
     """The bitrate for the voice channel (in bits per second)."""
 
-    region: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this voice channel.
 
     If set to `builtins.None` then this is set to "auto" mode where the used
@@ -823,24 +826,24 @@ class GuildVoiceChannel(GuildChannel):
     it's empty.
     """
 
-    user_limit: int = attr.ib(eq=False, hash=False, repr=True)
+    user_limit: int = attr.field(eq=False, hash=False, repr=True)
     """The user limit for the voice channel.
 
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: typing.Union[VideoQualityMode, int] = attr.ib(eq=False, hash=False, repr=False)
+    video_quality_mode: typing.Union[VideoQualityMode, int] = attr.field(eq=False, hash=False, repr=False)
     """The video quality mode for the voice channel."""
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildStageChannel(GuildChannel):
     """Represents a stage channel."""
 
-    bitrate: int = attr.ib(eq=False, hash=False, repr=True)
+    bitrate: int = attr.field(eq=False, hash=False, repr=True)
     """The bitrate for the stage channel (in bits per second)."""
 
-    region: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
     If set to `builtins.None` then this is set to "auto" mode where the used
@@ -848,7 +851,7 @@ class GuildStageChannel(GuildChannel):
     it's empty.
     """
 
-    user_limit: int = attr.ib(eq=False, hash=False, repr=True)
+    user_limit: int = attr.field(eq=False, hash=False, repr=True)
     """The user limit for the stage channel.
 
     If this is `0`, then assume no limit.

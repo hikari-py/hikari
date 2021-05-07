@@ -519,7 +519,7 @@ class RESTClientImpl(rest_api.RESTClient):
     global_rate_limit: rate_limits.ManualRateLimiter
     """Global ratelimiter."""
 
-    @attr.s(auto_exc=True, slots=True, repr=False, weakref_slot=False)
+    @attr.define(auto_exc=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
         ...
 

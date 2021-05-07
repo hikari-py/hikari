@@ -108,7 +108,7 @@ class PremiumType(int, enums.Enum):
     """Premium including all perks (e.g. 2 server boosts)."""
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialUser(snowflakes.Unique, abc.ABC):
     """A partial interface for a user.
 
@@ -408,7 +408,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         )
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class User(PartialUser, abc.ABC):
     """Interface for any user-like object.
 
@@ -538,7 +538,7 @@ class User(PartialUser, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
@@ -546,31 +546,33 @@ class PartialUserImpl(PartialUser):
     present.
     """
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this user."""
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """Reference to the client application that models may use for procedures."""
 
-    discriminator: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
+    discriminator: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user."""
 
-    username: undefined.UndefinedOr[str] = attr.ib(eq=False, hash=False, repr=True)
+    username: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
     """Username of the user."""
 
-    avatar_hash: undefined.UndefinedNoneOr[str] = attr.ib(eq=False, hash=False, repr=False)
+    avatar_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    is_bot: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=True)
+    is_bot: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is a system account."""
 
-    flags: undefined.UndefinedOr[UserFlag] = attr.ib(eq=False, hash=False)
+    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False)
     """Public flags for this user."""
 
-    _dm_channel: typing.Optional[channels.DMChannel] = attr.ib(
+    _dm_channel: typing.Optional[channels.DMChannel] = attr.field(
         eq=False, hash=False, init=False, repr=False, default=None
     )
 
@@ -605,7 +607,7 @@ class PartialUserImpl(PartialUser):
         return f"{self.username}#{self.discriminator}"
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
@@ -632,31 +634,31 @@ class UserImpl(PartialUserImpl, User):
     """The public flags for this user."""
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 
-    is_mfa_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_mfa_enabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The user's set language. This is not provided by the `READY` event."""
 
-    is_verified: typing.Optional[bool] = attr.ib(eq=False, hash=False, repr=False)
+    is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
     Will be `builtins.None` if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
-    email: typing.Optional[str] = attr.ib(eq=False, hash=False, repr=False)
+    email: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The user's set email.
 
     Will be `builtins.None` if retrieved through OAuth2 flow without the `email`
     scope. Will always be `builtins.None` for bot users.
     """
 
-    premium_type: typing.Union[PremiumType, int, None] = attr.ib(eq=False, hash=False, repr=False)
+    premium_type: typing.Union[PremiumType, int, None] = attr.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be `builtins.None` for bots.

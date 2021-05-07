@@ -69,7 +69,7 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
 
@@ -124,7 +124,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in guilds."""
 
@@ -246,7 +246,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         return channel
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class DMChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
 
@@ -292,7 +292,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ChannelCreateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being created."""
 
@@ -315,17 +315,17 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.ib(repr=True)
+    channel: channels.GuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
@@ -341,7 +341,7 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being updated."""
 
@@ -364,23 +364,23 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_channel: typing.Optional[channels.GuildChannel] = attr.ib(repr=True)
+    old_channel: typing.Optional[channels.GuildChannel] = attr.field(repr=True)
     """The old guild channel object.
 
     This will be `builtins.None` if the channel missing from the cache.
     """
 
-    channel: channels.GuildChannel = attr.ib(repr=True)
+    channel: channels.GuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
@@ -396,7 +396,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being deleted."""
 
@@ -424,17 +424,17 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.ib(repr=True)
+    channel: channels.GuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
@@ -455,7 +455,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
 
@@ -499,23 +499,23 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from GuildChannelEvent>>.
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
 
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
@@ -577,20 +577,20 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from ChannelEvent>>.
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.ib(repr=True)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
 
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
@@ -628,7 +628,7 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class InviteEvent(GuildChannelEvent, abc.ABC):
     """Base event type for guild invite updates."""
 
@@ -676,17 +676,17 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    invite: invites.InviteWithMetadata = attr.ib()
+    invite: invites.InviteWithMetadata = attr.field()
     """Invite that was created.
 
     Returns
@@ -715,26 +715,26 @@ class InviteCreateEvent(InviteEvent):
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from GuildChannelEvent>>.
 
-    code: str = attr.ib()
+    code: str = attr.field()
     # <<inherited docstring from InviteEvent>>.
 
-    old_invite: typing.Optional[invites.InviteWithMetadata] = attr.ib()
+    old_invite: typing.Optional[invites.InviteWithMetadata] = attr.field()
     """Object of the old cached invite.
 
     This will be `builtins.None` if the invite is missing from the cache.
@@ -748,7 +748,7 @@ class InviteDeleteEvent(InviteEvent):
 
 @base_events.requires_intents(intents.Intents.GUILD_WEBHOOKS)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):
     """Event fired when a webhook is created/updated/deleted in a channel.
 
@@ -758,16 +758,16 @@ class WebhookUpdateEvent(GuildChannelEvent):
     the channel manually beforehand.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from ChannelEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
 
     # <<inherited docstring from GuildChannelEvent>>.
 

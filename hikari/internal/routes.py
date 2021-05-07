@@ -51,7 +51,7 @@ PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
 @attr_extensions.with_copy
-@attr.s(init=True, slots=True, hash=True, weakref_slot=False)
+@attr.define(hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -60,13 +60,13 @@ class CompiledRoute:
     `Route` is treated as a template, this is treated as an instance.
     """
 
-    major_param_hash: str = attr.ib()
+    major_param_hash: str = attr.field()
     """The major parameters in a bucket hash-compatible representation."""
 
-    route: Route = attr.ib()
+    route: Route = attr.field()
     """The route this compiled route was created from."""
 
-    compiled_path: str = attr.ib()
+    compiled_path: str = attr.field()
     """The compiled route path to use."""
 
     @property
@@ -114,7 +114,7 @@ class CompiledRoute:
 
 
 @attr_extensions.with_copy
-@attr.s(hash=True, init=False, slots=True, weakref_slot=False)
+@attr.define(hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -130,13 +130,17 @@ class Route:
         The template string for the path to use.
     """
 
-    method: str = attr.ib(hash=True, eq=True)
+    method: str = attr.field(
+        hash=True,
+    )
     """The HTTP method."""
 
-    path_template: str = attr.ib(hash=True, eq=True)
+    path_template: str = attr.field(
+        hash=True,
+    )
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attr.ib(hash=False, eq=False)
+    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False)
     """The optional major parameter name combination for this endpoint."""
 
     def __init__(self, method: str, path_template: str) -> None:
@@ -184,15 +188,15 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
 
 
 @attr_extensions.with_copy
-@attr.s(hash=True, init=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
 
-    path_template: str = attr.ib()
+    path_template: str = attr.field()
     """Template string for this endpoint."""
 
-    valid_formats: typing.AbstractSet[str] = attr.ib(
+    valid_formats: typing.AbstractSet[str] = attr.field(
         converter=_cdn_valid_formats_converter,
         eq=False,
         hash=False,
@@ -205,7 +209,7 @@ class CDNRoute:
         if not values:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 
-    sizable: bool = attr.ib(default=True, kw_only=True, repr=False, hash=False, eq=False)
+    sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """`builtins.True` if a `size` param can be specified, or `builtins.False` otherwise."""
 
     def compile(

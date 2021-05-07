@@ -133,7 +133,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
@@ -208,29 +208,31 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _entity_factory: entity_factory_.EntityFactory = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    _executor: typing.Optional[concurrent.futures.Executor] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    _name: str = attr.ib()
+    _entity_factory: entity_factory_.EntityFactory = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    _executor: typing.Optional[concurrent.futures.Executor] = attr.field(
+        metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    _name: str = attr.field()
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    ] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
 
     # Optional arguments.
-    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.ib(
+    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.field(
         default=undefined.UNDEFINED
     )
-    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.ib(
+    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.field(
         default=undefined.UNDEFINED
     )
-    icon: undefined.UndefinedOr[files.Resourceish] = attr.ib(default=undefined.UNDEFINED)
-    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.ib(
+    icon: undefined.UndefinedOr[files.Resourceish] = attr.field(default=undefined.UNDEFINED)
+    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.field(
         default=undefined.UNDEFINED
     )
 
     # Non-arguments
-    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
-    _counter: int = attr.ib(default=0, init=False)
-    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.ib(factory=list, init=False)
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.field(factory=list, init=False)
+    _counter: int = attr.field(default=0, init=False)
+    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.field(factory=list, init=False)
 
     @property
     def name(self) -> str:
