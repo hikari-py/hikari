@@ -47,7 +47,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that involves guild roles."""
@@ -76,18 +75,18 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    role: guilds.Role = attr.ib()
+    role: guilds.Role = attr.field()
     """Role that was created.
 
     Returns
@@ -108,24 +107,24 @@ class RoleCreateEvent(RoleEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attr.ib()
+    old_role: typing.Optional[guilds.Role] = attr.field()
     """The old role object.
 
     This will be `builtins.None` if the role missing from the cache.
     """
 
-    role: guilds.Role = attr.ib()
+    role: guilds.Role = attr.field()
     """Role that was updated.
 
     Returns
@@ -146,24 +145,24 @@ class RoleUpdateEvent(RoleEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from RoleEvent>>.
 
-    role_id: snowflakes.Snowflake = attr.ib()
+    role_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from RoleEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attr.ib()
+    old_role: typing.Optional[guilds.Role] = attr.field()
     """The old role object.
 
     This will be `builtins.None` if the role was missing from the cache.

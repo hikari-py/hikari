@@ -38,17 +38,17 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
-    total: int = attr.ib(repr=True)
+    total: int = attr.field(repr=True)
     """The total number of session starts the current bot is allowed."""
 
-    remaining: int = attr.ib(repr=True)
+    remaining: int = attr.field(repr=True)
     """The remaining number of session starts this bot has."""
 
-    reset_after: datetime.timedelta = attr.ib(repr=True)
+    reset_after: datetime.timedelta = attr.field(repr=True)
     """When `SessionStartLimit.remaining` will reset for the current bot.
 
     After it resets it will be set to `SessionStartLimit.total`.
@@ -56,7 +56,7 @@ class SessionStartLimit:
 
     # This is not documented at the time of writing, but is a confirmed API
     # feature, so I have included it for completeness.
-    max_concurrency: int = attr.ib(repr=True)
+    max_concurrency: int = attr.field(repr=True)
     """Maximum connection concurrency.
 
     This defines how many shards can be started at once within a 5 second
@@ -65,7 +65,7 @@ class SessionStartLimit:
     more information.
     """
 
-    _created_at: datetime.datetime = attr.ib(factory=time.local_datetime, init=False)
+    _created_at: datetime.datetime = attr.field(factory=time.local_datetime, init=False)
 
     @property
     def used(self) -> int:
@@ -79,15 +79,15 @@ class SessionStartLimit:
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 
-    url: str = attr.ib(repr=True)
+    url: str = attr.field(repr=True)
     """The WSS URL that can be used for connecting to the gateway."""
 
-    shard_count: int = attr.ib(repr=True)
+    shard_count: int = attr.field(repr=True)
     """The recommended number of shards to use when connecting to the gateway."""
 
-    session_start_limit: SessionStartLimit = attr.ib(repr=True)
+    session_start_limit: SessionStartLimit = attr.field(repr=True)
     """Information about the bot's current session start limit."""

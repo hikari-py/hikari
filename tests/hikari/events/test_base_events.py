@@ -29,30 +29,55 @@ from hikari.events import base_events
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.define(
+    eq=False,
+    hash=False,
+    init=False,
+    kw_only=True,
+)
 class DummyGuildEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
 @base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.define(
+    eq=False,
+    hash=False,
+    init=False,
+    kw_only=True,
+)
 class DummyPresenceEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.define(
+    eq=False,
+    hash=False,
+    init=False,
+    kw_only=True,
+)
 class ErrorEvent(base_events.Event):
     pass
 
 
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.define(
+    eq=False,
+    hash=False,
+    init=False,
+    kw_only=True,
+)
 class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
 
-@attr.s(eq=False, hash=False, init=False, kw_only=True, slots=True)
+@attr.define(
+    eq=False,
+    hash=False,
+    init=False,
+    kw_only=True,
+)
 class DummyPresenceDerivedEvent(DummyPresenceEvent):
     pass
 
@@ -111,15 +136,10 @@ class TestExceptionEvent:
         else:
             assert event.shard is None
 
-    def test_failed_callback_property(self, event):
-        stub_callback = object()
-        event._failed_callback = stub_callback
-        assert event.failed_callback is stub_callback
-
     def test_exc_info_property(self, event, error):
         assert event.exc_info == (type(error), error, error.__traceback__)
 
     @pytest.mark.asyncio
     async def test_retry(self, event):
         await event.retry()
-        event._failed_callback.assert_awaited_once_with(event.failed_event)
+        event.failed_callback.assert_awaited_once_with(event.failed_event)

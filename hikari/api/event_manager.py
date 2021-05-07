@@ -97,20 +97,20 @@ class EventManager(abc.ABC):
         from hikari.users import User
         from hikari.snowflakes import Snowflake
 
-        @attr.s()
+        @attr.define()
         class EveryoneMentionedEvent(Event):
-            app: RESTAware = attr.ib()
+            app: RESTAware = attr.field()
 
-            author: User = attr.ib()
+            author: User = attr.field()
             '''The user who mentioned everyone.'''
 
-            content: str = attr.ib()
+            content: str = attr.field()
             '''The message that was sent.'''
 
-            message_id: Snowflake = attr.ib()
+            message_id: Snowflake = attr.field()
             '''The message ID.'''
 
-            channel_id: Snowflake = attr.ib()
+            channel_id: Snowflake = attr.field()
             '''The channel ID.'''
         ```
 

@@ -53,7 +53,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardEvent(base_events.Event, abc.ABC):
     """Base class for any event that was shard-specific."""
 
@@ -69,7 +68,6 @@ class ShardEvent(base_events.Event, abc.ABC):
         """
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class ShardStateEvent(ShardEvent, abc.ABC):
     """Base class for any event concerning the state/connectivity of a shard.
 
@@ -78,41 +76,41 @@ class ShardStateEvent(ShardEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    actual_gateway_version: int = attr.ib(repr=True)
+    actual_gateway_version: int = attr.field(repr=True)
     """Actual gateway version being used.
 
     Returns
@@ -121,7 +119,7 @@ class ShardReadyEvent(ShardStateEvent):
         The actual gateway version we are actively using for this protocol.
     """
 
-    session_id: str = attr.ib(repr=True)
+    session_id: str = attr.field(repr=True)
     """ID for this session.
 
     Returns
@@ -130,7 +128,7 @@ class ShardReadyEvent(ShardStateEvent):
         The session ID for this gateway session.
     """
 
-    my_user: users.OwnUser = attr.ib(repr=True)
+    my_user: users.OwnUser = attr.field(repr=True)
     """User for the current bot account this connection is authenticated with.
 
     Returns
@@ -139,7 +137,7 @@ class ShardReadyEvent(ShardStateEvent):
         This bot's user.
     """
 
-    unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=False)
+    unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
     """Sequence of the IDs for all guilds this bot is currently in.
 
     All guilds will start off "unavailable" and should become available after
@@ -151,7 +149,7 @@ class ShardReadyEvent(ShardStateEvent):
         All guild IDs that the bot is in for this shard.
     """
 
-    application_id: snowflakes.Snowflake = attr.ib(repr=True)
+    application_id: snowflakes.Snowflake = attr.field(repr=True)
     """ID of the application this ready event is for.
 
     Returns
@@ -160,7 +158,7 @@ class ShardReadyEvent(ShardStateEvent):
         The current application's ID.
     """
 
-    application_flags: applications.ApplicationFlags = attr.ib(repr=True)
+    application_flags: applications.ApplicationFlags = attr.field(repr=True)
     """Flags of the application this ready event is for.
 
     Returns
@@ -171,32 +169,32 @@ class ShardReadyEvent(ShardStateEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib(repr=True)
+    guild_id: snowflakes.Snowflake = attr.field(repr=True)
     # <<docstring inherited from ShardEvent>>.
 
-    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.ib(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
     """Mapping of user IDs to the objects of the members in this chunk.
 
     Returns
@@ -205,7 +203,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Mapping of user IDs to corresponding member objects.
     """
 
-    chunk_index: int = attr.ib(repr=True)
+    chunk_index: int = attr.field(repr=True)
     """Zero-indexed position of this within the queued up chunks for this request.
 
     Returns
@@ -214,7 +212,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         The sequence index for this chunk.
     """
 
-    chunk_count: int = attr.ib(repr=True)
+    chunk_count: int = attr.field(repr=True)
     """Total number of expected chunks for the request this is associated with.
 
     Returns
@@ -223,7 +221,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Total number of chunks to be expected.
     """
 
-    not_found: typing.Sequence[snowflakes.Snowflake] = attr.ib(repr=True)
+    not_found: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=True)
     """Sequence of the snowflakes that were not found while making this request.
 
     This is only applicable when user IDs are specified while making the
@@ -235,7 +233,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Sequence of user IDs that were not found.
     """
 
-    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.ib(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `include_presences` is not passed as
@@ -247,7 +245,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Mapping of user IDs to corresponding presences.
     """
 
-    nonce: typing.Optional[str] = attr.ib(repr=True)
+    nonce: typing.Optional[str] = attr.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
     This is the nonce value passed while requesting member chunks.

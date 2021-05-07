@@ -133,23 +133,23 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from TypingEvent>>.
 
-    timestamp: datetime.datetime = attr.ib(repr=False)
+    timestamp: datetime.datetime = attr.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib()
+    guild_id: snowflakes.Snowflake = attr.field()
     """ID of the guild that this event relates to.
 
     Returns
@@ -158,7 +158,7 @@ class GuildTypingEvent(TypingEvent):
         The ID of the guild that relates to this event.
     """
 
-    user: guilds.Member = attr.ib(repr=False)
+    user: guilds.Member = attr.field(repr=False)
     """Member object of the user who triggered this typing event.
 
     Unlike on `PrivateTypingEvent` instances, Discord will always send
@@ -256,23 +256,23 @@ class GuildTypingEvent(TypingEvent):
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class DMTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.ib()
+    channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from TypingEvent>>.
 
-    user_id: snowflakes.Snowflake = attr.ib(repr=True)
+    user_id: snowflakes.Snowflake = attr.field(repr=True)
     # <<inherited docstring from TypingEvent>>.
 
-    timestamp: datetime.datetime = attr.ib(repr=False)
+    timestamp: datetime.datetime = attr.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
     @property

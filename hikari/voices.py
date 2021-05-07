@@ -41,57 +41,59 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
     """The client application that models may use for procedures."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
     This will be `builtins.None` if they are leaving voice.
     """
 
-    guild_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild this voice state is in."""
 
-    is_guild_deafened: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_guild_deafened: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is deafened by the guild."""
 
-    is_guild_muted: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_guild_muted: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is muted by the guild."""
 
-    is_self_deafened: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_self_deafened: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is deafened by their client."""
 
-    is_self_muted: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_self_muted: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is muted by their client."""
 
-    is_streaming: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_streaming: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is streaming using "Go Live"."""
 
-    is_suppressed: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_suppressed: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user is considered to be "suppressed" in a voice context.
 
     In the context of a voice channel this may mean that the user is muted by
     the current user and in the context of a stage channel this means that the
     user is not a speaker."""
 
-    is_video_enabled: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_video_enabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this user's camera is enabled."""
 
-    user_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    user_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: guilds.Member = attr.ib(eq=False, hash=False, repr=False)
+    member: guilds.Member = attr.field(eq=False, hash=False, repr=False)
     """The guild member this voice state is for."""
 
-    session_id: str = attr.ib(eq=True, hash=True, repr=True)
+    session_id: str = attr.field(hash=True, repr=True)
     """The string ID of this voice state's session."""
 
-    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.ib(eq=False, hash=False, repr=True)
+    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=True)
     """When the user requested to speak in a stage channel.
 
     Will be `builtins.None` if they have not requested to speak.
@@ -99,11 +101,11 @@ class VoiceState:
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""
 
-    id: str = attr.ib(eq=True, hash=True, repr=True)
+    id: str = attr.field(hash=True, repr=True)
     """The string ID of this region.
 
     !!! note
@@ -111,19 +113,19 @@ class VoiceRegion:
         This is intentional.
     """
 
-    name: str = attr.ib(eq=False, hash=False, repr=True)
+    name: str = attr.field(eq=False, hash=False, repr=True)
     """The name of this region."""
 
-    is_vip: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_vip: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this region is vip-only."""
 
-    is_optimal_location: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_optimal_location: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this region's server is closest to the current user's client."""
 
-    is_deprecated: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_deprecated: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this region is deprecated."""
 
-    is_custom: bool = attr.ib(eq=False, hash=False, repr=False)
+    is_custom: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this region is custom (e.g. used for events)."""
 
     def __str__(self) -> str:

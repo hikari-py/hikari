@@ -59,11 +59,11 @@ def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, kw_only=True, repr=True, weakref_slot=False)
+@attr.define(kw_only=True, repr=True, weakref_slot=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
 
-    username: str = attr.ib(validator=attr.validators.instance_of(str))
+    username: str = attr.field(validator=attr.validators.instance_of(str))
     """Username for the header.
 
     Returns
@@ -72,7 +72,7 @@ class BasicAuthHeader:
         The username to use. This must not contain `":"`.
     """
 
-    password: str = attr.ib(repr=False, validator=attr.validators.instance_of(str))
+    password: str = attr.field(repr=False, validator=attr.validators.instance_of(str))
     """Password to use.
 
     Returns
@@ -81,7 +81,7 @@ class BasicAuthHeader:
         The password to use.
     """
 
-    charset: str = attr.ib(default="utf-8", validator=attr.validators.instance_of(str))
+    charset: str = attr.field(default="utf-8", validator=attr.validators.instance_of(str))
     """Encoding to use for the username and password.
 
     Default is `"utf-8"`, but you may choose to use something else,
@@ -112,11 +112,11 @@ class BasicAuthHeader:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class ProxySettings:
     """Settings for configuring an HTTP-based proxy."""
 
-    auth: typing.Any = attr.ib(default=None)
+    auth: typing.Any = attr.field(default=None)
     """Authentication header value to use.
 
     When cast to a `builtins.str`, this should provide the full value
@@ -136,10 +136,10 @@ class ProxySettings:
         to disable.
     """
 
-    headers: typing.Optional[data_binding.Headers] = attr.ib(default=None)
+    headers: typing.Optional[data_binding.Headers] = attr.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str, yarl.URL] = attr.ib(default=None)
+    url: typing.Union[None, str, yarl.URL] = attr.field(default=None)
     """Proxy URL to use.
 
     Defaults to `builtins.None` which disables the use of an explicit proxy.
@@ -155,7 +155,7 @@ class ProxySettings:
         if value is not None and not isinstance(value, (str, yarl.URL)):
             raise ValueError("ProxySettings.url must be None, a str, or a yarl.URL instance")
 
-    trust_env: bool = attr.ib(default=False, validator=attr.validators.instance_of(bool))
+    trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
 
     If `builtins.True`, and no `url` is given on this object, then
@@ -199,11 +199,11 @@ class ProxySettings:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = attr.ib(default=None)
+    acquire_and_connect: typing.Optional[float] = attr.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
     By default, this has no timeout allocated.
@@ -214,7 +214,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    request_socket_connect: typing.Optional[float] = attr.ib(default=None)
+    request_socket_connect: typing.Optional[float] = attr.field(default=None)
     """Timeout for connecting a socket.
 
     By default, this has no timeout allocated.
@@ -225,7 +225,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    request_socket_read: typing.Optional[float] = attr.ib(default=None)
+    request_socket_read: typing.Optional[float] = attr.field(default=None)
     """Timeout for reading a socket.
 
     By default, this has no timeout allocated.
@@ -236,7 +236,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    total: typing.Optional[float] = attr.ib(default=30.0)
+    total: typing.Optional[float] = attr.field(default=30.0)
     """Total timeout for entire request.
 
     By default, this has a 30 second timeout allocated.
@@ -259,11 +259,11 @@ class HTTPTimeoutSettings:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class HTTPSettings:
     """Settings to control HTTP clients."""
 
-    enable_cleanup_closed: bool = attr.ib(default=True, validator=attr.validators.instance_of(bool))
+    enable_cleanup_closed: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
     This defaults to `builtins.True` to combat various protocol and asyncio
@@ -278,7 +278,7 @@ class HTTPSettings:
         it.
     """
 
-    force_close_transports: bool = attr.ib(default=True, validator=attr.validators.instance_of(bool))
+    force_close_transports: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
     """Toggle whether to force close transports on shutdown.
 
     This defaults to `builtins.True` to combat various protocol and asyncio
@@ -293,7 +293,7 @@ class HTTPSettings:
         it.
     """
 
-    max_redirects: typing.Optional[int] = attr.ib(default=10)
+    max_redirects: typing.Optional[int] = attr.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
     If a `builtins.int`, allow following redirects from `3xx` HTTP responses
@@ -328,7 +328,7 @@ class HTTPSettings:
         if value is not None and (not isinstance(value, int) or value <= 0):
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
-    _ssl: typing.Union[bool, ssl_.SSLContext] = attr.ib(
+    _ssl: typing.Union[bool, ssl_.SSLContext] = attr.field(
         default=True,
         converter=_ssl_factory,
         validator=attr.validators.instance_of(ssl_.SSLContext),  # type: ignore[assignment,arg-type]
@@ -378,7 +378,7 @@ class HTTPSettings:
         ), f"expected ssl.SSLContext, found {type(ssl)!r}. Did you overwrite the value?"
         return ssl
 
-    timeouts: HTTPTimeoutSettings = attr.ib(
+    timeouts: HTTPTimeoutSettings = attr.field(
         factory=HTTPTimeoutSettings, validator=attr.validators.instance_of(HTTPTimeoutSettings)
     )
     """Settings to control HTTP request timeouts.
@@ -394,11 +394,11 @@ class HTTPSettings:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class CacheSettings:
     """Settings to control the cache."""
 
-    enable: bool = attr.ib(default=True)
+    enable: bool = attr.field(default=True)
     """Whether to enable the cache.
 
     If set to `False`, all the cache functionality will be disabled.
@@ -406,61 +406,61 @@ class CacheSettings:
     Defaults to `builtins.True`.
     """
 
-    guilds: bool = attr.ib(default=True)
+    guilds: bool = attr.field(default=True)
     """Whether to enable the guilds cache.
 
     Defaults to `builtins.True`.
     """
 
-    members: bool = attr.ib(default=True)
+    members: bool = attr.field(default=True)
     """Whether to enable the members cache.
 
     Defaults to `builtins.True`.
     """
 
-    guild_channels: bool = attr.ib(default=True)
+    guild_channels: bool = attr.field(default=True)
     """Whether to enable the guild channels cache.
 
     Defaults to `builtins.True`.
     """
 
-    roles: bool = attr.ib(default=True)
+    roles: bool = attr.field(default=True)
     """Whether to enable the roles cache.
 
     Defaults to `builtins.True`.
     """
 
-    invites: bool = attr.ib(default=True)
+    invites: bool = attr.field(default=True)
     """Whether to enable the invites cache.
 
     Defaults to `builtins.True`.
     """
 
-    emojis: bool = attr.ib(default=True)
+    emojis: bool = attr.field(default=True)
     """Whether to enable the emojis cache.
 
     Defaults to `builtins.True`.
     """
 
-    presences: bool = attr.ib(default=True)
+    presences: bool = attr.field(default=True)
     """Whether to enable the presences cache.
 
     Defaults to `builtins.True`.
     """
 
-    voice_states: bool = attr.ib(default=True)
+    voice_states: bool = attr.field(default=True)
     """Whether to enable the voice states cache.
 
     Defaults to `builtins.True`.
     """
 
-    messages: bool = attr.ib(default=True)
+    messages: bool = attr.field(default=True)
     """Whether to enable the message cache.
 
     Defaults to `builtins.True`.
     """
 
-    max_messages: int = attr.ib(default=300)
+    max_messages: int = attr.field(default=300)
     """The max number of messages to store in the cache at once.
 
     This will have no effect if `messages` is `builtins.False`.

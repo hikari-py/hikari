@@ -39,23 +39,23 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class OwnUserUpdateEvent(shard_events.ShardEvent):
     """Event fired when the account user is updated."""
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_user: typing.Optional[users.OwnUser] = attr.ib()
+    old_user: typing.Optional[users.OwnUser] = attr.field()
     """The old application user.
 
     This will be `builtins.None` if the user missing from the cache.
     """
 
-    user: users.OwnUser = attr.ib()
+    user: users.OwnUser = attr.field()
     """This application user.
 
     Returns

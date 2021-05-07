@@ -56,14 +56,14 @@ AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, init=True, slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource[AsyncReaderT]):
     """A base type for any resource provided in an embed.
 
     Resources can be downloaded and uploaded.
     """
 
-    resource: files.Resource[AsyncReaderT] = attr.ib(repr=True)
+    resource: files.Resource[AsyncReaderT] = attr.field(repr=True)
     """The resource this object wraps around."""
 
     @property
@@ -111,11 +111,11 @@ class EmbedResource(files.Resource[AsyncReaderT]):
         return self.resource.stream(executor=executor, head_only=head_only)
 
 
-@attr.s(eq=True, init=True, slots=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     """Resource with a corresponding proxied element."""
 
-    proxy_resource: typing.Optional[files.Resource[AsyncReaderT]] = attr.ib(default=None, repr=False)
+    proxy_resource: typing.Optional[files.Resource[AsyncReaderT]] = attr.field(default=None, repr=False)
     """The proxied version of the resource, or `builtins.None` if not present.
 
     !!! note
@@ -152,24 +152,24 @@ class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedFooter:
     """Represents an embed footer."""
 
     # Discord says this is never None. We know that is invalid because Discord.py
     # sets it to None. Seems like undocumented behaviour again.
-    text: typing.Optional[str] = attr.ib(default=None, repr=True)
+    text: typing.Optional[str] = attr.field(default=None, repr=True)
     """The footer text, or `builtins.None` if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=False)
     """The URL of the footer icon, or `builtins.None` if not present."""
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
     """Represents an embed image."""
 
-    height: typing.Optional[int] = attr.ib(default=None, repr=False)
+    height: typing.Optional[int] = attr.field(default=None, repr=False)
     """The height of the image, if present and known, otherwise `builtins.None`.
 
     !!! note
@@ -178,7 +178,7 @@ class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attr.ib(default=None, repr=False)
+    width: typing.Optional[int] = attr.field(default=None, repr=False)
     """The width of the image, if present and known, otherwise `builtins.None`.
 
     !!! note
@@ -188,7 +188,7 @@ class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
     """
 
 
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
     """Represents an embed video.
 
@@ -201,15 +201,15 @@ class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
         class yourself.**
     """
 
-    height: typing.Optional[int] = attr.ib(default=None, repr=False)
+    height: typing.Optional[int] = attr.field(default=None, repr=False)
     """The height of the video."""
 
-    width: typing.Optional[int] = attr.ib(default=None, repr=False)
+    width: typing.Optional[int] = attr.field(default=None, repr=False)
     """The width of the video."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 
@@ -223,43 +223,43 @@ class EmbedProvider:
         class yourself.**
     """
 
-    name: typing.Optional[str] = attr.ib(default=None, repr=True)
+    name: typing.Optional[str] = attr.field(default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    url: typing.Optional[str] = attr.field(default=None, repr=True)
     """The URL of the provider."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedAuthor:
     """Represents an author of an embed."""
 
-    name: typing.Optional[str] = attr.ib(default=None, repr=True)
+    name: typing.Optional[str] = attr.field(default=None, repr=True)
     """The name of the author, or `builtins.None` if not specified."""
 
-    url: typing.Optional[str] = attr.ib(default=None, repr=True)
+    url: typing.Optional[str] = attr.field(default=None, repr=True)
     """The URL that the author's name should act as a hyperlink to.
 
     This may be `builtins.None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.ib(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=False)
     """The author's icon, or `builtins.None` if not present."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedField:
     """Represents a field in a embed."""
 
-    name: str = attr.ib(repr=True)
+    name: str = attr.field(repr=True)
     """The name of the field."""
 
-    value: str = attr.ib(repr=True)
+    value: str = attr.field(repr=True)
     """The value of the field."""
 
-    _inline: bool = attr.ib(default=False, repr=True)
+    _inline: bool = attr.field(default=False, repr=True)
 
     # Use a property since we then keep the consistency of not using `is_`
     # in the constructor for `_inline`.

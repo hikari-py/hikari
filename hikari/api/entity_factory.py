@@ -54,21 +54,21 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.s(slots=True, weakref_slot=False)
+@attr.define(weakref_slot=False)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 
-    guild: guild_models.GatewayGuild = attr.ib()
+    guild: guild_models.GatewayGuild = attr.field()
     """Object of the guild the definition is for."""
 
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.ib()
+    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field()
     """Mapping of channel IDs to the channels that belong to the guild.
 
     Will be `builtins.None` when returned by guild update gateway events rather
     than create.
     """
 
-    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.ib()
+    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field()
     """Mapping of user IDs to the members that belong to the guild.
 
     Will be `builtins.None` when returned by guild update gateway events rather
@@ -78,7 +78,7 @@ class GatewayGuildDefinition:
         This may be a partial mapping of members in the guild.
     """
 
-    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.ib()
+    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field()
     """Mapping of user IDs to the presences that are active in the guild.
 
     Will be `builtins.None` when returned by guild update gateway events rather
@@ -88,13 +88,13 @@ class GatewayGuildDefinition:
         This may be a partial mapping of presences active in the guild.
     """
 
-    roles: typing.Mapping[snowflakes.Snowflake, guild_models.Role] = attr.ib()
+    roles: typing.Mapping[snowflakes.Snowflake, guild_models.Role] = attr.field()
     """Mapping of role IDs to the roles that belong to the guild."""
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji] = attr.ib()
+    emojis: typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji] = attr.field()
     """Mapping of emoji IDs to the emojis that belong to the guild."""
 
-    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.ib()
+    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
     """Mapping of user IDs to the voice states that are active in the guild.
 
     !!! note

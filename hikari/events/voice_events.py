@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     """Base for any voice-related event."""
 
@@ -65,7 +65,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):
     """Event fired when a user changes their voice state.
 
@@ -75,19 +75,19 @@ class VoiceStateUpdateEvent(VoiceEvent):
     to connect to the voice gateway to stream audio or video content.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
-    old_state: typing.Optional[voices.VoiceState] = attr.ib(repr=True)
+    old_state: typing.Optional[voices.VoiceState] = attr.field(repr=True)
     """The old voice state.
 
     This will be `builtins.None` if the voice state missing from the cache.
     """
 
-    state: voices.VoiceState = attr.ib(repr=True)
+    state: voices.VoiceState = attr.field(repr=True)
     """Voice state that this update contained.
 
     Returns
@@ -103,7 +103,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class VoiceServerUpdateEvent(VoiceEvent):
     """Event fired when a voice server is changed.
 
@@ -111,16 +111,16 @@ class VoiceServerUpdateEvent(VoiceEvent):
     falls over to a new server.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.ib(repr=True)
+    guild_id: snowflakes.Snowflake = attr.field(repr=True)
     # <<inherited docstring from VoiceEvent>>
 
-    token: str = attr.ib(repr=False)
+    token: str = attr.field(repr=False)
     """Token that should be used to authenticate with the voice gateway.
 
     Returns
@@ -129,7 +129,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
         The token to use to authenticate with the voice gateway.
     """
 
-    raw_endpoint: typing.Optional[str] = attr.ib(repr=True)
+    raw_endpoint: typing.Optional[str] = attr.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
     If this is `builtins.None`, it means that the server has been deallocated

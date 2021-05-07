@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
@@ -60,12 +60,12 @@ class StartingEvent(base_events.Event):
     should consider using `StartedEvent` instead.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
@@ -77,12 +77,12 @@ class StartedEvent(base_events.Event):
     consider using `StartingEvent` instead.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
 
@@ -102,12 +102,12 @@ class StoppingEvent(base_events.Event):
     should consider using `StoppedEvent` instead.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 
@@ -126,5 +126,5 @@ class StoppedEvent(base_events.Event):
     `StoppingEvent` instead.
     """
 
-    app: traits.RESTAware = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
