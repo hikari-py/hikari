@@ -193,7 +193,7 @@ class StickerFormatType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -204,25 +204,25 @@ class Attachment(snowflakes.Unique, files.WebResource):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    url: str = attr.field(repr=True)
+    url: str = attr.field(hash=False, eq=False, repr=True)
     """The source URL of file."""
 
-    filename: str = attr.field(repr=True)
+    filename: str = attr.field(hash=False, eq=False, repr=True)
     """The name of the file."""
 
-    media_type: typing.Optional[str] = attr.field(repr=True)
+    media_type: typing.Optional[str] = attr.field(hash=False, eq=False, repr=True)
     """The media type of the file."""
 
-    size: int = attr.field(repr=True)
+    size: int = attr.field(hash=False, eq=False, repr=True)
     """The size of the file in bytes."""
 
-    proxy_url: str = attr.field(repr=False)
+    proxy_url: str = attr.field(hash=False, eq=False, repr=False)
     """The proxied URL of file."""
 
-    height: typing.Optional[int] = attr.field(repr=False)
+    height: typing.Optional[int] = attr.field(hash=False, eq=False, repr=False)
     """The height of the image (if the file is an image)."""
 
-    width: typing.Optional[int] = attr.field(repr=False)
+    width: typing.Optional[int] = attr.field(hash=False, eq=False, repr=False)
     """The width of the image (if the file is an image)."""
 
     def __str__(self) -> str:
@@ -522,21 +522,21 @@ class PartialMessage(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    channel_id: snowflakes.Snowflake = attr.field(repr=True)
+    channel_id: snowflakes.Snowflake = attr.field(hash=False, eq=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
-    _guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
+    _guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=True)
     #: Try to determine this best-effort in the property defined further
     #: down.
 
-    author: typing.Optional[users_.User] = attr.field(repr=True)
+    author: typing.Optional[users_.User] = attr.field(hash=False, eq=False, repr=True)
     """The author of this message.
 
     This will be `builtins.None` in some cases such as when Discord
     updates a message with an embed URL preview.
     """
 
-    member: typing.Optional[guilds.Member] = attr.field(repr=False)
+    member: typing.Optional[guilds.Member] = attr.field(hash=False, eq=False, repr=False)
     """The member for the author who created the message.
 
     If the message is not in a guild, this will be `builtins.None`.
@@ -546,23 +546,23 @@ class PartialMessage(snowflakes.Unique):
     REST API.
     """
 
-    content: undefined.UndefinedNoneOr[str] = attr.field(repr=False)
+    content: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
     """The content of the message."""
 
-    timestamp: undefined.UndefinedOr[datetime.datetime] = attr.field(repr=False)
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attr.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.field(repr=False)
+    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
     Will be `builtins.None` if the message wasn't ever edited, or `undefined`
     if the info is not available.
     """
 
-    is_tts: undefined.UndefinedOr[bool] = attr.field(repr=False)
+    is_tts: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message is a TTS message."""
 
-    mentions: Mentions = attr.field(repr=True)
+    mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
     """Description of who is mentioned in a message.
 
     !!! warning
@@ -572,46 +572,46 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation.
     """
 
-    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.field(repr=False)
+    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.field(hash=False, eq=False, repr=False)
     """The message attachments."""
 
-    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attr.field(repr=False)
+    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attr.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
-    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attr.field(repr=False)
+    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attr.field(hash=False, eq=False, repr=False)
     """The message reactions."""
 
-    is_pinned: undefined.UndefinedOr[bool] = attr.field(repr=False)
+    is_pinned: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(repr=False)
+    webhook_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=False)
     """If the message was generated by a webhook, the webhook's ID."""
 
-    type: undefined.UndefinedOr[typing.Union[MessageType, int]] = attr.field(repr=False)
+    type: undefined.UndefinedOr[typing.Union[MessageType, int]] = attr.field(hash=False, eq=False, repr=False)
     """The message type."""
 
-    activity: undefined.UndefinedNoneOr[MessageActivity] = attr.field(repr=False)
+    activity: undefined.UndefinedNoneOr[MessageActivity] = attr.field(hash=False, eq=False, repr=False)
     """The message activity."""
 
-    application: undefined.UndefinedNoneOr[MessageApplication] = attr.field(repr=False)
+    application: undefined.UndefinedNoneOr[MessageApplication] = attr.field(hash=False, eq=False, repr=False)
     """The message application."""
 
-    message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(repr=False)
+    message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(hash=False, eq=False, repr=False)
     """The message reference data."""
 
-    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.field(repr=False)
+    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
-    stickers: undefined.UndefinedOr[typing.Sequence[Sticker]] = attr.field(repr=False)
+    stickers: undefined.UndefinedOr[typing.Sequence[Sticker]] = attr.field(hash=False, eq=False, repr=False)
     """The stickers sent with this message."""
 
-    nonce: undefined.UndefinedNoneOr[str] = attr.field(repr=False)
+    nonce: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
     """The message nonce.
 
     This is a string used for validating a message was sent.
     """
 
-    referenced_message: undefined.UndefinedNoneOr[Message] = attr.field(repr=False)
+    referenced_message: undefined.UndefinedNoneOr[Message] = attr.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
