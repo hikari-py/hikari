@@ -446,7 +446,12 @@ class RESTApp(traits.ExecutorAware):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
 
@@ -510,7 +515,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_proxy_settings",
         "_rest_url",
         "_token",
-        "_lock",
     )
 
     buckets: buckets_.RESTBucketManager
@@ -549,7 +553,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._executor = executor
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
-        self._lock = asyncio.Lock()
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None]
         if isinstance(token, str):
@@ -603,7 +606,12 @@ class RESTClientImpl(rest_api.RESTClient):
         cls = type(self)
         raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         return None
 
     @typing.final
@@ -665,16 +673,11 @@ class RESTClientImpl(rest_api.RESTClient):
         while True:
             try:
                 uuid = time.uuid()
-
-                # If we try to do more than 1 request to the same endpoint at
-                # the same time, there is a chance that we don't receive the
-                # ratelimits information before the next request comes along.
-                # Due to this, we risk getting ratelimited. This lock makes
-                # sure that there is only 1 request happening at the same time
-                # which stops this from happening.
-                async with self._lock:
-                    # Wait for any rate-limits to finish.
-                    await asyncio.gather(self.buckets.acquire(compiled_route), self.global_rate_limit.acquire())
+                async with self.buckets.acquire(compiled_route):
+                    # Buckets not using authentication still have a global
+                    # rate limit, but it is different from the token one.
+                    if not no_auth:
+                        await self.global_rate_limit.acquire()
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
@@ -685,10 +688,10 @@ class RESTClientImpl(rest_api.RESTClient):
                             url,
                             self._stringify_http_message(headers, json),
                         )
+                        start = time.monotonic()
 
                     # Make the request.
                     session = self._acquire_client_session()
-                    start = time.monotonic()
                     response = await session.request(
                         compiled_route.method,
                         url,
@@ -701,9 +704,9 @@ class RESTClientImpl(rest_api.RESTClient):
                         proxy=self._proxy_settings.url,
                         proxy_headers=self._proxy_settings.all_headers,
                     )
-                    time_taken = (time.monotonic() - start) * 1_000
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
+                        time_taken = (time.monotonic() - start) * 1_000
                         _LOGGER.log(
                             ux.TRACE,
                             "%s %s %s in %sms\n%s",
@@ -770,16 +773,17 @@ class RESTClientImpl(rest_api.RESTClient):
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
         remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
-        bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER, "None")
+        bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER)
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
-        self.buckets.update_rate_limits(
-            compiled_route=compiled_route,
-            bucket_header=bucket,
-            remaining_header=remaining,
-            limit_header=limit,
-            reset_after=reset_after,
-        )
+        if bucket:
+            self.buckets.update_rate_limits(
+                compiled_route=compiled_route,
+                bucket_header=bucket,
+                remaining_header=remaining,
+                limit_header=limit,
+                reset_after=reset_after,
+            )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
             return
@@ -794,24 +798,22 @@ class RESTClientImpl(rest_api.RESTClient):
         # We have no mechanism for handing field-based ratelimits, so if we get
         # to here, but notice remaining is greater than zero, we should just error.
         #
-        # Worth noting we still ignore the retry_after in the body. I have no clue
-        # if there is some weird edge case where a bucket rate limit can occur on
-        # top of a non-global one, but in this case this check will misbehave and
-        # instead of erroring, will trigger a backoff that might be 10 minutes or
-        # more...
-        #
         # Seems Discord may raise this on some other undocumented cases, which
         # is nice of them. Apparently some dude spamming slurs in the Python
         # guild via a leaked webhook URL made people's clients exhibit this
         # behaviour.
-
+        #
         # If we get ratelimited when running more than one bot under the same token,
         # or if the ratelimiting logic goes wrong, we will get a 429 and expect the
         # "remaining" header to be zeroed, or even negative as I don't trust that there
         # isn't some weird edge case here somewhere in Discord's implementation.
-        # We can safely retry if this happens.
+        # We can safely retry if this happens as acquiring the bucket will handle
+        # this.
         if remaining <= 0:
-            _LOGGER.warning("rate limited on bucket %s, maybe you are running more than one bot on this token?", bucket)
+            _LOGGER.warning(
+                "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
+                bucket,
+            )
             raise self._RetryRequest
 
         if response.content_type != _APPLICATION_JSON:
@@ -827,17 +829,21 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         body = await response.json()
-        body_retry_after = float(body["retry_after"]) / 1_000
+        body_retry_after = float(body["retry_after"])
 
         if body.get("global", False) is True:
+            _LOGGER.error(
+                "rate limited on the global bucket. You should consider lowering the number of requests you make or "
+                "contacting Discord to raise this limit. Backing off and retrying request..."
+            )
             self.global_rate_limit.throttle(body_retry_after)
-
             raise self._RetryRequest
 
-        # If the values are within 20% of eachother by relativistic tolerance, it is probably
+        # If the values are within 20% of each other by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
+            _LOGGER.error("rate limited on a sub bucket on bucket %s, but it is safe to retry", bucket)
             raise self._RetryRequest
 
         raise errors.RateLimitedError(

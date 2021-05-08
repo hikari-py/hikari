@@ -51,25 +51,16 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
 class BaseRateLimiter(abc.ABC):
-    """Base for any asyncio-based rate limiter being used.
-
-    Supports being used as a synchronous context manager.
-
-    !!! warning
-        Async context manager support is not supported and will not be supported.
-    """
+    """Base for any asyncio-based rate limiter being used."""
 
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def acquire(self) -> asyncio.Future[None]:
+    async def acquire(self) -> None:
         """Acquire permission to perform a task that needs to have rate limit management enforced.
 
-        Returns
-        -------
-        asyncio.Future[builtins.None]
-            A future that should be awaited. Once the future is complete, you
-            can proceed to execute your rate-limited task.
+        Calling this function will cause it to block until you are not longer
+        being rate limited.
         """
 
     @abc.abstractmethod
@@ -79,7 +70,12 @@ class BaseRateLimiter(abc.ABC):
     def __enter__(self) -> BaseRateLimiter:
         return self
 
-    def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_val: typing.Optional[Exception],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
         self.close()
 
 
@@ -92,13 +88,13 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue", "_closed")
 
-    name: typing.Final[str]
+    name: str
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     """The throttling task, or `builtins.None` if it is not running."""
 
-    queue: typing.Final[typing.List[asyncio.Future[typing.Any]]]
+    queue: typing.List[asyncio.Future[typing.Any]]
     """The queue of any futures under a rate limit."""
 
     def __init__(self, name: str) -> None:
@@ -108,17 +104,11 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self._closed = False
 
     @abc.abstractmethod
-    def acquire(self) -> asyncio.Future[typing.Any]:
+    async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
-        The implementation should define this.
-
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
+        Calling this function will cause it to block until you are not longer
+        being rate limited.
         """
 
     def close(self) -> None:
@@ -178,15 +168,11 @@ class ManualRateLimiter(BurstRateLimiter):
     def __init__(self) -> None:
         super().__init__("global")
 
-    def acquire(self) -> asyncio.Future[typing.Any]:
+    async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
+        Calling this function will cause it to block until you are not longer
+        being rate limited.
         """
         loop = asyncio.get_running_loop()
         future = loop.create_future()
@@ -195,7 +181,12 @@ class ManualRateLimiter(BurstRateLimiter):
             self.queue.append(future)
         else:
             future.set_result(None)
-        return future
+
+        try:
+            await future
+        except asyncio.CancelledError:
+            # We are closing, so we can ignore these
+            pass
 
     def throttle(self, retry_after: float) -> None:
         """Perform the throttling rate limiter logic.
@@ -308,15 +299,11 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    def acquire(self) -> asyncio.Future[typing.Any]:
+    async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that should be immediately awaited. Once the await
-            completes, you are able to proceed with the operation that is
-            under this rate limit.
+        Calling this function will cause it to block until you are not longer
+        being rate limited.
         """
         loop = asyncio.get_running_loop()
         future = loop.create_future()
@@ -333,7 +320,11 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             self.drip()
             future.set_result(None)
 
-        return future
+        try:
+            await future
+        except asyncio.CancelledError:
+            # We are closing, so we can ignore these
+            pass
 
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.
