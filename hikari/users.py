@@ -108,7 +108,6 @@ class PremiumType(int, enums.Enum):
     """Premium including all perks (e.g. 2 server boosts)."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialUser(snowflakes.Unique, abc.ABC):
     """A partial interface for a user.
 
@@ -121,6 +120,8 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     For full user info, consider calling the `fetch_self` method to perform an
     API call.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -408,12 +409,13 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class User(PartialUser, abc.ABC):
     """Interface for any user-like object.
 
     This does not include partial users, as they may not be fully formed.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

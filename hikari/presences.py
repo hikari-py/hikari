@@ -279,7 +279,7 @@ class MemberPresence:
     )
     """The client application that models may use for procedures."""
 
-    user_id: snowflakes.Snowflake = attr.field(repr=True, eq=False, hash=True)
+    user_id: snowflakes.Snowflake = attr.field(repr=True, hash=True)
     """The ID of the user this presence belongs to."""
 
     guild_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

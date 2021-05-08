@@ -110,7 +110,7 @@ class Emoji(files.WebResource, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(weakref_slot=False)
+@attr.define(hash=True, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
