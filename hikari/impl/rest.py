@@ -2353,6 +2353,36 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(channel, channels_.GuildVoiceChannel)
         return channel
 
+    async def create_guild_stage_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildStageChannel:
+        channel = await self._create_guild_channel(
+            guild,
+            name,
+            channels_.ChannelType.GUILD_STAGE,
+            position=position,
+            user_limit=user_limit,
+            bitrate=bitrate,
+            permission_overwrites=permission_overwrites,
+            region=region,
+            category=category,
+            reason=reason,
+        )
+        assert isinstance(channel, channels_.GuildStageChannel)
+        return channel
+
     async def create_guild_category(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
