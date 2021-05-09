@@ -28,6 +28,7 @@ from hikari import colors
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.impl import bot
@@ -762,3 +763,66 @@ class TestGatewayGuild:
             assert model.get_my_member() is get_member.return_value
 
         get_member.assert_called_once_with(123)
+
+    @pytest.mark.asyncio
+    async def test_ban(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+        await model.ban(4321, delete_message_days=10, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(123, 4321, delete_message_days=10, reason="Go away!")
+
+    @pytest.mark.asyncio
+    async def test_unban(self, model):
+        model.app.rest.unban_user = mock.AsyncMock()
+        await model.unban(4321, reason="Comeback!!")
+
+        model.app.rest.unban_user.assert_awaited_once_with(123, 4321, reason="Comeback!!")
+
+    @pytest.mark.asyncio
+    async def test_edit(self, model):
+        model.app.rest.edit_guild = mock.AsyncMock()
+        await model.edit(
+            name="chad server",
+            verification_level=guilds.GuildVerificationLevel.LOW,
+            default_message_notifications=guilds.GuildMessageNotificationsLevel.ALL_MESSAGES,
+            explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.DISABLED,
+            owner=6996,
+            afk_timeout=400,
+            preferred_locale="us-en",
+            reason="beep boop",
+        )
+
+        model.app.rest.edit_guild.assert_awaited_once_with(
+            123,
+            name="chad server",
+            verification_level=guilds.GuildVerificationLevel.LOW,
+            default_message_notifications=guilds.GuildMessageNotificationsLevel.ALL_MESSAGES,
+            explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.DISABLED,
+            afk_channel=undefined.UNDEFINED,
+            afk_timeout=400,
+            icon=undefined.UNDEFINED,
+            owner=6996,
+            splash=undefined.UNDEFINED,
+            banner=undefined.UNDEFINED,
+            system_channel=undefined.UNDEFINED,
+            rules_channel=undefined.UNDEFINED,
+            public_updates_channel=undefined.UNDEFINED,
+            preferred_locale="us-en",
+            reason="beep boop",
+        )
+
+    @pytest.mark.asyncio
+    async def test_fetch_emojis(self, model):
+        model.app.rest.fetch_guild_emojis = mock.AsyncMock()
+
+        await model.fetch_emojis()
+
+        model.app.rest.fetch_guild_emojis.assert_awaited_once_with(model.id)
+
+    @pytest.mark.asyncio
+    async def test_fetch_emoji(self, model):
+        model.app.rest.fetch_emoji = mock.AsyncMock()
+
+        await model.fetch_emoji(349)
+
+        model.app.rest.fetch_emoji.assert_awaited_once_with(model.id, 349)

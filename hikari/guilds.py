@@ -1869,7 +1869,7 @@ class GatewayGuild(Guild):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
         return await self.app.rest.edit_guild(
             self.id,
             name=name,
@@ -1886,11 +1886,11 @@ class GatewayGuild(Guild):
             rules_channel=rules_channel,
             public_updates_channel=public_updates_channel,
             preferred_locale=preferred_locale,
-            reason=reason
+            reason=reason,
         )
 
     async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
-        """Fetch the emojis of the guild
+        """Fetch the emojis of the guild.
 
         Returns
         -------
@@ -1916,20 +1916,23 @@ class GatewayGuild(Guild):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """        
+        """
         return await self.app.rest.fetch_guild_emojis(self.id)
 
     async def fetch_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> emojis_.KnownCustomEmoji:
         """Fetch an emoji from the guild.
+
         Parameters
         ----------
         emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
             The emoji to fetch. This can be a `hikari.emojis.CustomEmoji`
             or the ID of an existing emoji.
+
         Returns
         -------
         hikari.emojis.KnownCustomEmoji
             The requested emoji.
+
         Raises
         ------
         hikari.errors.NotFoundError
