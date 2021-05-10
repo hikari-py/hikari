@@ -2410,3 +2410,43 @@ class GatewayGuild(Guild):
             'Public Server Updates' channel cannot be deleted.
         """
         return await self.app.rest.delete_channel(channel)
+
+    async def delete_category(
+        self, category: snowflakes.SnowflakeishOr[channels_.GuildCategory]
+    ) -> channels_.PartialChannel:
+        """Delete a category in the guild
+
+        Parameters
+        ----------
+        category : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            The category to delete. This may be the object or the ID of an
+            existing channel.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            Object of the category that was deleted.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError, or close a DM.
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.delete_channel(category)

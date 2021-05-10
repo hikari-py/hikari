@@ -918,9 +918,17 @@ class TestGatewayGuild:
         )
 
     @pytest.mark.asyncio
-    async def test_channel_delete(self, model):
+    async def test_delete_channel(self, model):
         model.app.rest.delete_channel = mock.AsyncMock()
 
         await model.delete_channel(1288820)
 
         model.app.rest.delete_channel.assert_awaited_once_with(1288820)
+    
+    @pytest.mark.asyncio
+    async def test_delete_category(self, model):
+        model.app.rest.delete_channel = mock.AsyncMock()
+
+        await model.delete_category(2828001)
+
+        model.app.rest.delete_channel.assert_awaited_once_with(2828001)
