@@ -764,6 +764,13 @@ class TestGatewayGuild:
 
         get_member.assert_called_once_with(123)
 
+    @pytest.mark.asyncio 
+    async def test_kick(self, model):
+        model.app.rest.kick_user = mock.AsyncMock()
+        await model.kick(4321, reason="Go away!")
+
+        model.app.rest.kick_user.assert_awaited_once_with(123, 4321, reason="Go away!")
+
     @pytest.mark.asyncio
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
@@ -826,3 +833,94 @@ class TestGatewayGuild:
         await model.fetch_emoji(349)
 
         model.app.rest.fetch_emoji.assert_awaited_once_with(model.id, 349)
+
+    @pytest.mark.asyncio
+    async def test_create_category(self, model):
+        model.app.rest.create_guild_category = mock.AsyncMock()
+
+        await model.create_category("very cool category", position=2)
+
+        model.app.rest.create_guild_category.assert_awaited_once_with(
+            123, "very cool category", position=2, permission_overwrites=undefined.UNDEFINED, reason=undefined.UNDEFINED
+        )
+
+    @pytest.mark.asyncio
+    async def test_create_text_channel(self, model):
+        model.app.rest.create_guild_text_channel = mock.AsyncMock()
+
+        await model.create_text_channel("cool text channel", position=3, nsfw=False, rate_limit_per_user=30)
+
+        model.app.rest.create_guild_text_channel.assert_awaited_once_with(
+            123,
+            "cool text channel",
+            position=3,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=30,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+    @pytest.mark.asyncio
+    async def test_create_news_channel(self, model):
+        model.app.rest.create_guild_news_channel = mock.AsyncMock()
+
+        await model.create_news_channel("cool news channel", position=1, nsfw=False, rate_limit_per_user=420)
+
+        model.app.rest.create_guild_news_channel.assert_awaited_once_with(
+            123,
+            "cool news channel",
+            position=1,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=420,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+    @pytest.mark.asyncio
+    async def test_create_voice_channel(self, model):
+        model.app.rest.create_guild_voice_channel = mock.AsyncMock()
+
+        await model.create_voice_channel("cool voice channel", position=1, bitrate=3200, video_quality_mode=2)
+
+        model.app.rest.create_guild_voice_channel.assert_awaited_once_with(
+            123,
+            "cool voice channel",
+            position=1,
+            user_limit=undefined.UNDEFINED,
+            bitrate=3200,
+            video_quality_mode=2,
+            permission_overwrites=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+    @pytest.mark.asyncio
+    async def test_create_stage_channel(self, model):
+        model.app.rest.create_guild_stage_channel = mock.AsyncMock()
+
+        await model.create_stage_channel("cool stage channel", position=1, bitrate=3200, user_limit=100)
+
+        model.app.rest.create_guild_stage_channel.assert_awaited_once_with(
+            123,
+            "cool stage channel",
+            position=1,
+            user_limit=100,
+            bitrate=3200,
+            permission_overwrites=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+    @pytest.mark.asyncio
+    async def test_channel_delete(self, model):
+        model.app.rest.delete_channel = mock.AsyncMock()
+
+        await model.delete_channel(1288820)
+
+        model.app.rest.delete_channel.assert_awaited_once_with(1288820)
