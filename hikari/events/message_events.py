@@ -486,7 +486,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
-    @property  # TODO: why this is so implicit? remove?
+    @property  # TODO: this doesn't match up with the new standard for get_x cache getter method naming
     def author(self) -> typing.Optional[users.User]:
         """User that sent the message.
 

@@ -276,10 +276,6 @@ class GuildTypingEvent(TypingEvent):
 
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
-    def get_user(self) -> typing.Optional[users.User]:
-        # <<inherited docstring from TypingEvent>>.
-        return super().get_user() or self.member.user
-
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy

@@ -489,10 +489,11 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        if not isinstance(self.user.app, traits.CacheAware):
-            return []
+        roles: typing.List[Role] = []
 
-        roles = []
+        if not isinstance(self.user.app, traits.CacheAware):
+            return roles
+
         for role_id in self.role_ids:
             if role := self.user.app.cache.get_role(role_id):
                 roles.append(role)

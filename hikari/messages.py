@@ -317,7 +317,6 @@ class Mentions:
     everyone: undefined.UndefinedOr[bool] = attr.field()
     """Whether the message notifies using `@everyone` or `@here`."""
 
-    # TODO: can we just type this as returning AbstractSet instead of casting to list?
     @property
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         if self.channels is undefined.UNDEFINED:
@@ -325,7 +324,6 @@ class Mentions:
 
         return list(self.channels.keys())
 
-    # TODO: can we just type this as returning AbstractSet instead of casting to list?
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         if self.users is undefined.UNDEFINED:
@@ -662,7 +660,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    @property
+    @property  # TODO: this breaks from the new convention for cache methods
     def guild_id(self) -> typing.Optional[snowflakes.Snowflake]:
         """ID of the guild that the message was sent in.
 
@@ -702,6 +700,7 @@ class PartialMessage(snowflakes.Unique):
         builtins.str
             The jump link to the message.
         """
+        # TODO: this doesn't seem like a safe assumption for rest only applications
         guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 

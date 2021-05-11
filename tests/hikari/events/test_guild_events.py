@@ -96,20 +96,6 @@ class TestGuildAvailableEvent:
         event.guild.id = 123
         assert event.guild_id == 123
 
-    def test_get_guild_when_super_returns_a_guild(self, event):
-        with mock.patch.object(guild_events.GuildEvent, "get_guild") as patched_super:
-            result = event.get_guild()
-
-            assert result is patched_super.return_value
-            patched_super.assert_called_once()
-
-    def test_get_guild_when_super_returns_none(self, event):
-        with mock.patch.object(guild_events.GuildEvent, "get_guild", return_value=None) as patched_super:
-            result = event.get_guild()
-
-            assert result is event.guild
-            patched_super.assert_called_once()
-
 
 class TestGuildUpdateEvent:
     @pytest.fixture()
@@ -132,17 +118,6 @@ class TestGuildUpdateEvent:
     def test_old_guild_id_property(self, event):
         event.old_guild.id = 123
         assert event.old_guild.id == 123
-
-    def test_get_guild_when_super_returns(self, event):
-        with mock.patch.object(guild_events.GuildEvent, "get_guild") as patched_super:
-            assert event.get_guild() is patched_super.return_value
-
-    def test_get_guild_when_super_returns_none(self, event):
-        with mock.patch.object(guild_events.GuildEvent, "get_guild", return_value=None) as patched_super:
-            result = event.get_guild()
-
-            assert result is event.guild
-            patched_super.assert_called_once_with()
 
 
 class TestBanEvent:

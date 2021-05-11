@@ -711,7 +711,7 @@ class InviteCreateEvent(InviteEvent):
     @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
-        # This will always not be None for guild channel invites.
+        # This will never be None for guild channel invites.
         assert self.invite.guild_id is not None
         return self.invite.guild_id
 

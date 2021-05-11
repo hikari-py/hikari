@@ -236,10 +236,6 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        # <<Inherited docstring from GuildEvent>>
-        return super().get_guild() or self.guild
-
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
@@ -332,10 +328,6 @@ class GuildUpdateEvent(GuildEvent):
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
-
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        # <<Inherited docstring from GuildEvent>>
-        return super().get_guild() or self.guild
 
 
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
