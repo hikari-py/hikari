@@ -75,7 +75,7 @@ class TestPartialUser:
             mentions_reply=mentions_reply,
         )
 
-        assert returned == mock_message
+        assert returned is mock_message
 
         obj.fetch_dm_channel.assert_awaited_once_with()
         obj.app.rest.create_message.assert_awaited_once_with(
