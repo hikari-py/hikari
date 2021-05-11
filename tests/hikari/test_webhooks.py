@@ -58,7 +58,7 @@ class TestWebhook:
 
         returned = await webhook.fetch_message(message)
 
-        assert returned == returned_message
+        assert returned is returned_message
 
         webhook.app.rest.fetch_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
 
@@ -89,7 +89,7 @@ class TestWebhook:
             role_mentions=[567, 890],
         )
 
-        assert returned == returned_message
+        assert returned is returned_message
 
         webhook.app.rest.edit_webhook_message.assert_called_once_with(
             987654321,
