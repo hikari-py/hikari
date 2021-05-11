@@ -89,26 +89,26 @@ class OptionType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class CommandChoice:
     """Represents the choices set for an application command's argument."""
 
-    name: str = attr.ib(eq=True, hash=False, repr=True)
+    name: str = attr.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    value: typing.Union[str, int] = attr.ib(eq=True, hash=False, repr=True)
+    value: typing.Union[str, int] = attr.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class CommandOption:
     """Represents an application command's argument."""
 
-    type: typing.Union[OptionType, int] = attr.ib(eq=True, hash=False, repr=True)
+    type: typing.Union[OptionType, int] = attr.field(repr=True)
     """The type of command option this is."""
 
-    name: str = attr.ib(eq=True, hash=False, repr=True)
+    name: str = attr.field(repr=True)
     r"""The command option's name.
 
     !!! note
@@ -116,17 +116,17 @@ class CommandOption:
         match the regex `^[\w-]{1,32}$`.
     """
 
-    description: str = attr.ib(eq=True, hash=False, repr=False)
+    description: str = attr.field(repr=False)
     """The command option's description.
 
     !!! note
         This will be inclusively between 1-100 characters in length.
     """
 
-    is_required: bool = attr.ib(eq=True, hash=False, repr=False)
+    is_required: bool = attr.field(repr=False)
     """Whether this command """
 
-    choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.ib(eq=True, hash=False, repr=False)
+    choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.field(repr=False)
     """A sequence of up to (and including) 25 choices for this command.
 
     This will be `builtins.None` if the input values for this option aren't
@@ -134,25 +134,25 @@ class CommandOption:
     option.
     """
 
-    options: typing.Optional[typing.Sequence[CommandOption]] = attr.ib(eq=True, hash=False, repr=False)
+    options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(repr=False)
     """Sequence of up to (and including) 25 of the options for this command option."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Command(snowflakes.Unique):
     """Represents an application command on Discord."""
 
-    app: traits.RESTAware = attr.ib(eq=False, hash=False, repr=False)
+    app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
-    application_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the application this command belongs to."""
 
-    name: str = attr.ib(eq=False, hash=False, repr=True)
+    name: str = attr.field(eq=False, hash=False, repr=True)
     r"""The command's name.
 
     !!! note
@@ -160,17 +160,17 @@ class Command(snowflakes.Unique):
         match the regex `^[\w-]{1,32}$`.
     """
 
-    description: str = attr.ib(eq=False, hash=False, repr=False)
+    description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
 
     !!! note
         This will be inclusively between 1-100 characters in length.
     """
 
-    options: typing.Optional[typing.Sequence[CommandOption]] = attr.ib(eq=False, hash=False, repr=False)
+    options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=False)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
     This will be `builtins.None` if this is a global command.
@@ -304,44 +304,44 @@ class Command(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class InteractionChannel(channels.PartialChannel):
     """Represents partial channels returned as resolved entities on interactions."""
 
-    permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=True)
+    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.ib(eq=True, hash=False, repr=False)
+    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
-    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.ib(eq=True, hash=False, repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.ib(eq=True, hash=False, repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option role objects."""
 
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.ib(eq=True, hash=False, repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
     """Mapping of snowflake iDs to the resolved option partial channel objects."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=False, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
-    name: str = attr.ib(eq=True, hash=False, repr=True)
+    name: str = attr.field(repr=True)
     """Name of this option."""
 
-    type: OptionType = attr.ib(eq=True, hash=False, repr=True)
+    type: OptionType = attr.field(repr=True)
     """Type of this option."""
 
-    value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.ib(eq=True, hash=False, repr=True)
+    value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.field(repr=True)
     """Value provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -350,7 +350,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(repr=True)
     """Options provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -360,7 +360,7 @@ class CommandInteractionOption:
     """
 
 
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class InteractionMember(guilds.Member):
     """Model of the member who triggered an interaction.
 
@@ -368,25 +368,25 @@ class InteractionMember(guilds.Member):
     `InteractionMember.permissions` field.
     """
 
-    permissions: permissions_.Permissions = attr.ib(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
     """Permissions the member has in the current channel."""
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(bases.PartialInteraction, webhooks.ExecutableWebhook):
     """Represents a command interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.ib(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    member: typing.Optional[InteractionMember] = attr.ib(eq=False, hash=False, repr=True)
+    member: typing.Optional[InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -396,19 +396,19 @@ class CommandInteraction(bases.PartialInteraction, webhooks.ExecutableWebhook):
         contains the member's permissions in the current channel.
     """
 
-    user: users.User = attr.ib(eq=False, hash=False, repr=True)
+    user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    command_id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the command being invoked."""
 
-    command_name: str = attr.ib(eq=False, hash=False, repr=True)
+    command_name: str = attr.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.ib(eq=True, hash=False, repr=True)
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[ResolvedOptionData] = attr.ib(eq=True, hash=False, repr=False)
+    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
     async def fetch_initial_response(self) -> messages.Message:

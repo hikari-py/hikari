@@ -46,7 +46,6 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import commands
 
 
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
 class CommandEvent(base_events.Event, abc.ABC):
     """Base class of events fired for application command changes."""
 
@@ -68,47 +67,47 @@ class CommandEvent(base_events.Event, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class CommandCreateEvent(CommandEvent):
     """Event fired when a command is created for the current application."""
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class CommandUpdateEvent(CommandEvent):
     """Event fired when a command is updated for the current application."""
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class CommandDeleteEvent(CommandEvent):
     """Event fired when a command is deleted for the current application."""
 
-    shard: gateway_shard.GatewayShard = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.ib(eq=True, repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=True, slots=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class InteractionCreateEvent(base_events.Event):
     """Event fired when an interaction is created."""
 
-    shard: typing.Optional[gateway_shard.GatewayShard] = attr.ib(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: typing.Optional[gateway_shard.GatewayShard] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received this event.
 
     Returns
@@ -118,7 +117,7 @@ class InteractionCreateEvent(base_events.Event):
         triggered by a REST server.
     """
 
-    interaction: bases.PartialInteraction = attr.ib(eq=True, hash=True, repr=True)
+    interaction: bases.PartialInteraction = attr.field(repr=True)
     """Interaction that this event is related to.
 
     Returns

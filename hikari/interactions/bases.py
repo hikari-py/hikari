@@ -72,24 +72,24 @@ class ResponseType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.s(eq=True, hash=True, init=True, kw_only=True, slots=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialInteraction(snowflakes.Unique):
     """The base model for all interaction models."""
 
-    app: traits.RESTAware = attr.ib(repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.ib(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
-    application_id: snowflakes.Snowflake = attr.ib(eq=False, hash=False, repr=False)
+    application_id: snowflakes.Snowflake = attr.field(eq=False, repr=False)
     """ID of the application this interaction belongs to."""
 
-    type: typing.Union[InteractionType, int] = attr.ib(eq=False, hash=False, repr=True)
+    type: typing.Union[InteractionType, int] = attr.field(eq=False, repr=True)
     """The type of interaction this is."""
 
-    token: str = attr.ib(eq=False, hash=False, repr=False)
+    token: str = attr.field(eq=False, repr=False)
     """The interaction's token."""
 
-    version: int = attr.ib(eq=False, hash=False, repr=True)
+    version: int = attr.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
