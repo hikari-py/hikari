@@ -118,8 +118,6 @@ class _Response:
         return self._status_code
 
 
-# TODO: starting/started and stopping/stopped callbacks?
-# TODO: do we still want to check for event duplication?
 class InteractionServer(interaction_server.InteractionServer):
     """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
 

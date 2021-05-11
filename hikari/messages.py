@@ -443,7 +443,7 @@ class MessageReference:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class MessageApplication(guilds.PartialApplication):  # TODO: update this
+class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
     cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)

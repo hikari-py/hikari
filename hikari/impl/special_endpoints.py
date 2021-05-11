@@ -29,7 +29,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "CommandResponseBuilder"]
 
 import asyncio
-import datetime
 import typing
 
 import attr
@@ -443,7 +442,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflakes.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value)
+        return snowflakes.Snowflake.from_data(time.utc_datetime(), 0, 0, value)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -702,7 +701,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
         return self._type
 
     def add_embed(self, embed: embeds_.Embed, /) -> CommandResponseBuilder:
-        self._embeds.append(embed)  # TODO: validation
+        self._embeds.append(embed)
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
@@ -766,7 +765,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._name
 
     def add_option(self, option: commands.CommandOption) -> CommandBuilder:
-        self._options.append(option)  # TODO: validation
+        self._options.append(option)
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

@@ -156,14 +156,6 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
-    @abc.abstractmethod
-    def run(self) -> None:
-        """Open this REST server and block until it closes."""
-
-    @abc.abstractmethod
-    async def start(self) -> None:
-        """Start the REST server then return."""
-
     # @typing.overload
     # def get_listener(
     #     self, interaction_type: typing.Type[commands.CommandInteraction], /
