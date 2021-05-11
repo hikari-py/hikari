@@ -182,11 +182,7 @@ class ManualRateLimiter(BurstRateLimiter):
         else:
             future.set_result(None)
 
-        try:
-            await future
-        except asyncio.CancelledError:
-            # We are closing, so we can ignore these
-            pass
+        await future
 
     def throttle(self, retry_after: float) -> None:
         """Perform the throttling rate limiter logic.
@@ -320,11 +316,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             self.drip()
             future.set_result(None)
 
-        try:
-            await future
-        except asyncio.CancelledError:
-            # We are closing, so we can ignore these
-            pass
+        await future
 
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.
