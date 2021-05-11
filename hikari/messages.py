@@ -640,16 +640,26 @@ class PartialMessage(snowflakes.Unique):
 
         return channel.guild_id
 
-    @property
-    def link(self) -> str:
-        """Jump link to the message.
+    def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = None) -> str:
+        """Generate a jump link to this message.
+
+        Other Parameters
+        ----------------
+        guild : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild this message is in. If not provided or then
+            this will return a DM message link.
+
+            !!! note
+                This parameter is necessary since `PartialMessage.guild_id`
+                isn't returned by the REST API regardless of whether the message
+                is in a DM or not.
 
         Returns
         -------
         builtins.str
             The jump link to the message.
         """
-        guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
+        guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
     async def fetch_channel(self) -> channels.PartialChannel:
