@@ -27,7 +27,6 @@ from __future__ import annotations
 __all__: typing.List[str] = ["BotApp"]
 
 import asyncio
-import contextlib
 import datetime
 import logging
 import math
@@ -733,7 +732,17 @@ class BotApp(traits.BotAware):
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
             Defaults to `hikari.presences.Status.ONLINE`.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If bot is already running.
+        builtins.TypeError
+            If `shard_ids` is passed without `shard_count`.
         """
+        if self._is_alive:
+            raise RuntimeError("bot is already running")
+
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
@@ -922,7 +931,7 @@ class BotApp(traits.BotAware):
     ) -> None:
         self._check_if_alive()
         shard = self._get_shard(guild)
-        return await shard.request_guild_members(
+        await shard.request_guild_members(
             guild=guild, include_presences=include_presences, query=query, limit=limit, users=users, nonce=nonce
         )
 
@@ -949,21 +958,21 @@ class BotApp(traits.BotAware):
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
             http_settings=self._http_settings,
+            proxy_settings=self._proxy_settings,
+            event_manager=self._event_manager,
+            event_factory=self._event_factory,
+            intents=self._intents,
             initial_activity=activity,
             initial_is_afk=afk,
             initial_idle_since=idle_since,
             initial_status=status,
             large_threshold=large_threshold,
-            intents=self._intents,
-            proxy_settings=self._proxy_settings,
             shard_id=shard_id,
             shard_count=shard_count,
-            event_manager=self._event_manager,
-            event_factory=self._event_factory,
             token=self._token,
             url=url,
         )
-        self._shards[new_shard.id] = new_shard
+        self._shards[shard_id] = new_shard
 
         start = time.monotonic()
         await aio.first_completed(new_shard.start(), self._closing_event.wait())
@@ -996,7 +1005,7 @@ class BotApp(traits.BotAware):
                     }
                 )
 
-        remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.cancelled() and not t.done()]
+        remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.done()]
 
         if remaining_tasks:
             _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
@@ -1006,9 +1015,11 @@ class BotApp(traits.BotAware):
 
         if sys.version_info >= (3, 9):
             _LOGGER.debug("shutting down default executor")
-            with contextlib.suppress(NotImplementedError):
+            try:
                 # This seems to raise a NotImplementedError when running with uvloop.
                 loop.run_until_complete(loop.shutdown_default_executor())
+            except NotImplementedError:
+                pass
 
         _LOGGER.debug("shutting down asyncgens")
         loop.run_until_complete(loop.shutdown_asyncgens())

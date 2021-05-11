@@ -43,6 +43,15 @@ class TestComponentNotRunningError:
         assert str(error) == "some reason"
 
 
+class TestUnrecognisedEntityError:
+    @pytest.fixture()
+    def error(self):
+        return errors.UnrecognisedEntityError("some reason")
+
+    def test_str(self, error):
+        assert str(error) == "some reason"
+
+
 class TestGatewayError:
     @pytest.fixture()
     def error(self):

@@ -21,6 +21,9 @@
 # SOFTWARE.
 import asyncio
 import contextlib
+import signal
+import sys
+import warnings
 
 import mock
 import pytest
@@ -28,12 +31,16 @@ import pytest
 from hikari import applications
 from hikari import config
 from hikari import errors
+from hikari import presences
+from hikari import snowflakes
+from hikari import undefined
 from hikari.impl import bot as bot_impl
 from hikari.impl import cache as cache_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl
 from hikari.impl import rest as rest_impl
+from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
 from hikari.internal import ux
@@ -474,64 +481,295 @@ class TestBotApp:
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             bot.run(shard_ids={1})
 
-    @pytest.mark.skip("TODO")
+    def test_run_with_asyncio_debug(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+
+        with stack:
+            bot.run(close_loop=False, asyncio_debug=True)
+
+        loop.set_debug.assert_called_once_with(True)
+
+    def test_run_with_coroutine_tracking_depth(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        coroutine_tracking_depth = stack.enter_context(
+            mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError)
+        )
+
+        with stack:
+            bot.run(close_loop=False, coroutine_tracking_depth=100)
+
+        coroutine_tracking_depth.assert_called_once_with(100)
+
+    def test_run_with_enable_signal_handlers(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        signal_function = stack.enter_context(
+            mock.patch.object(signal, "signal", side_effect=[None, AttributeError, None, AttributeError])
+        )
+
+        with stack:
+            bot.run(close_loop=False, enable_signal_handlers=True)
+
+        # We have these twice because they will also be called on cleanup too
+        expected_signals = [
+            signal.Signals.SIGINT,
+            signal.Signals.SIGTERM,
+            signal.Signals.SIGINT,
+            signal.Signals.SIGTERM,
+        ]
+        assert [signal_function.call_args_list[i][0][0] for i in range(signal_function.call_count)] == expected_signals
+
+    @pytest.mark.parametrize("logging", [True, False])
+    def test_run_with_propagate_interrupts(self, bot, logging):
+        def raise_signal(*args, **kwargs):
+            signal.raise_signal(signal.Signals.SIGTERM)
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=raise_signal))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl, "_LOGGER", isEnabledFor=mock.Mock(return_value=logging)))
+        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+        set_close_flag = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_set_close_flag", new=mock.Mock()))
+        run_coroutine_threadsafe = stack.enter_context(mock.patch.object(asyncio, "run_coroutine_threadsafe"))
+
+        with stack:
+            with pytest.raises(errors.HikariInterrupt, match=rf"(15, '{signal.strsignal(signal.Signals.SIGTERM)}')"):
+                bot.run(close_loop=False, propagate_interrupts=True)
+
+        run_coroutine_threadsafe.assert_called_once_with(set_close_flag.return_value, loop)
+        set_close_flag.assert_called_once_with(signal.strsignal(signal.Signals.SIGTERM), 15)
+
+    def test_run_with_close_passed_executor(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        executor = mock.Mock()
+        bot._executor = executor
+
+        with stack:
+            bot.run(close_loop=False, close_passed_executor=True)
+
+        executor.shutdown.assert_called_once_with(wait=True)
+        assert bot._executor is None
+
+    def test_run_with_close_loop(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        destroy_loop = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_destroy_loop"))
+        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+
+        with stack:
+            bot.run(close_loop=True)
+
+        destroy_loop.assert_called_once_with(loop)
+
     def test_run(self, bot):
-        ...
+        activity = object()
+        afk = object()
+        check_for_updates = object()
+        idle_since = object()
+        ignore_session_start_limit = object()
+        large_threshold = object()
+        shard_ids = object()
+        shard_count = object()
+        status = object()
+
+        stack = contextlib.ExitStack()
+        start_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        join_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        close_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+
+        with stack:
+            bot.run(
+                activity=activity,
+                afk=afk,
+                asyncio_debug=False,
+                check_for_updates=check_for_updates,
+                close_passed_executor=False,
+                close_loop=False,
+                coroutine_tracking_depth=None,
+                enable_signal_handlers=False,
+                idle_since=idle_since,
+                ignore_session_start_limit=ignore_session_start_limit,
+                large_threshold=large_threshold,
+                propagate_interrupts=False,
+                shard_ids=shard_ids,
+                shard_count=shard_count,
+                status=status,
+            )
+
+        loop.run_until_complete.assert_has_calls(
+            [
+                mock.call(start_function.return_value),
+                mock.call(join_function.return_value),
+                mock.call(close_function.return_value),
+            ]
+        )
+        start_function.assert_called_once_with(
+            activity=activity,
+            afk=afk,
+            check_for_updates=check_for_updates,
+            idle_since=idle_since,
+            ignore_session_start_limit=ignore_session_start_limit,
+            large_threshold=large_threshold,
+            shard_ids=shard_ids,
+            shard_count=shard_count,
+            status=status,
+        )
 
     @pytest.mark.asyncio
     async def test_start_when_shard_ids_specified_without_shard_count(self, bot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             await bot.start(shard_ids={1})
 
+    @pytest.mark.asyncio
+    async def test_start_when_already_running(self, bot):
+        bot._is_alive = True
+
+        with pytest.raises(RuntimeError, match=r"bot is already running"):
+            await bot.start()
+
     @pytest.mark.skip("TODO")
     def test_start(self, bot):
         ...
 
+    def test_stream(self, bot):
+        event_type = object()
+
+        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+            bot.stream(event_type, timeout=100, limit=400)
+
+        check_if_alive.assert_called_once_with()
+        bot._event_manager.stream.assert_called_once_with(event_type, timeout=100, limit=400)
+
+    def test_subscribe(self, bot):
+        event_type = object()
+        callback = object()
+
+        bot.subscribe(event_type, callback)
+
+        bot._event_manager.subscribe.assert_called_once_with(event_type, callback)
+
+    def test_unsubscribe(self, bot):
+        event_type = object()
+        callback = object()
+
+        bot.unsubscribe(event_type, callback)
+
+        bot._event_manager.unsubscribe.assert_called_once_with(event_type, callback)
+
+    @pytest.mark.asyncio
+    async def test_wait_for(self, bot):
+        event_type = object()
+        predicate = object()
+        bot._event_manager.wait_for = mock.AsyncMock()
+
+        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+            await bot.wait_for(event_type, timeout=100, predicate=predicate)
+
+        check_if_alive.assert_called_once_with()
+        bot._event_manager.wait_for.assert_awaited_once_with(event_type, timeout=100, predicate=predicate)
+
+    def test_get_shard_when_not_present(self, bot):
+        shard = mock.Mock(shard_count=96)
+        bot._shards = {96: shard}
+
+        with mock.patch.object(snowflakes, "calculate_shard_id", return_value=0) as calculate_shard_id:
+            with pytest.raises(
+                RuntimeError, match=r"Guild 702763150025556029 isn't covered by any of the shards in this client"
+            ):
+                bot._get_shard(702763150025556029)
+
+        calculate_shard_id.assert_called_once_with(96, 702763150025556029)
+
+    def test_get_shard(self, bot):
+        shard = mock.Mock(shard_count=96)
+        bot._shards = {96: shard}
+
+        with mock.patch.object(snowflakes, "calculate_shard_id", return_value=96) as calculate_shard_id:
+            assert bot._get_shard(702763150025556029) is shard
+
+        calculate_shard_id.assert_called_once_with(96, 702763150025556029)
+
+    @pytest.mark.asyncio
+    async def test_update_presence(self, bot):
+        status = object()
+        activity = object()
+        idle_since = object()
+        afk = object()
+
+        shard0 = mock.Mock()
+        shard1 = mock.Mock()
+        shard2 = mock.Mock()
+        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+
+        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+            with mock.patch.object(aio, "all_of") as all_of:
+                with mock.patch.object(bot_impl.BotApp, "_validate_activity") as validate_activity:
+                    await bot.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
+
+        check_if_alive.assert_called_once_with()
+        validate_activity.assert_called_once_with(activity)
+        all_of.assert_awaited_once_with(
+            shard0.update_presence.return_value,
+            shard1.update_presence.return_value,
+            shard2.update_presence.return_value,
+        )
+        shard0.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
+        shard1.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
+        shard2.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
+
     @pytest.mark.asyncio
     async def test_update_voice_state(self, bot):
-        bot._is_alive = True
-        shard0 = mock.Mock(shard_count=3)
-        shard1 = mock.Mock(shard_count=3)
-        shard2 = mock.Mock(shard_count=3)
-        bot._shards = {0: shard0, 1: shard1, 2: shard2}
-        shard2.update_voice_state = mock.AsyncMock()
+        shard = mock.Mock()
+        shard.update_voice_state = mock.AsyncMock()
 
-        await bot.update_voice_state(115590097100865541, 123, self_mute=True, self_deaf=False)
+        with mock.patch.object(bot_impl.BotApp, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+                await bot.update_voice_state(115590097100865541, 123, self_mute=True, self_deaf=False)
 
-        shard2.update_voice_state.assert_awaited_once_with(
+        check_if_alive.assert_called_once_with()
+        get_shard.assert_called_once_with(115590097100865541)
+        shard.update_voice_state.assert_awaited_once_with(
             guild=115590097100865541, channel=123, self_mute=True, self_deaf=False
         )
 
     @pytest.mark.asyncio
-    async def test_update_voice_state_when_shard_not_present(self, bot):
-        bot._is_alive = True
-        shard0 = mock.Mock(shard_count=96)
-        shard1 = mock.Mock(shard_count=96)
-        shard2 = mock.Mock(shard_count=96)
-        bot._shards = {0: shard0, 1: shard1, 2: shard2}
-
-        with pytest.raises(RuntimeError):
-            await bot.update_voice_state(702763150025556029, 123)
-
-    @pytest.mark.asyncio
     async def test_request_guild_members(self, bot):
-        bot._is_alive = True
-        shard0 = mock.Mock(shard_count=3)
-        shard1 = mock.Mock(shard_count=3)
-        shard2 = mock.Mock(shard_count=3)
-        shard2.request_guild_members = mock.AsyncMock()
-        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+        shard = mock.Mock(shard_count=3)
+        shard.request_guild_members = mock.AsyncMock()
 
-        await bot.request_guild_members(
-            115590097100865541,
-            include_presences=True,
-            query="indeed",
-            limit=42,
-            users=[123],
-            nonce="NONCE",
-        )
+        with mock.patch.object(bot_impl.BotApp, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+                await bot.request_guild_members(
+                    115590097100865541,
+                    include_presences=True,
+                    query="indeed",
+                    limit=42,
+                    users=[123],
+                    nonce="NONCE",
+                )
 
-        shard2.request_guild_members.assert_awaited_once_with(
+        check_if_alive.assert_called_once_with()
+        get_shard.assert_called_once_with(115590097100865541)
+        shard.request_guild_members.assert_awaited_once_with(
             guild=115590097100865541,
             include_presences=True,
             query="indeed",
@@ -541,12 +779,116 @@ class TestBotApp:
         )
 
     @pytest.mark.asyncio
-    async def test_request_guild_members_when_shard_not_present(self, bot):
-        bot._is_alive = True
-        shard0 = mock.Mock(shard_count=96)
-        shard1 = mock.Mock(shard_count=96)
-        shard2 = mock.Mock(shard_count=96)
-        bot._shards = {0: shard0, 1: shard1, 2: shard2}
+    async def test_set_close_flag(self, bot):
+        with mock.patch.object(bot_impl.BotApp, "close") as close:
+            await bot._set_close_flag("Terminated", 15)
 
-        with pytest.raises(RuntimeError):
-            await bot.request_guild_members(702763150025556029)
+        close.assert_awaited_once_with(force=False)
+
+    @pytest.mark.asyncio
+    async def test_start_one_shard(self, bot):
+        activity = object()
+        status = object()
+        bot._shards = {}
+        bot._closing_event = mock.Mock()
+        shard = mock.Mock()
+        shard_obj = shard.return_value
+        shard_obj.is_alive = True
+
+        with mock.patch.object(aio, "first_completed", new=mock.AsyncMock()) as first_completed:
+            with mock.patch.object(shard_impl, "GatewayShardImpl", new=shard):
+                returned = await bot._start_one_shard(
+                    activity=activity,
+                    afk=True,
+                    idle_since=None,
+                    status=status,
+                    large_threshold=1000,
+                    shard_id=1,
+                    shard_count=3,
+                    url="https://some.website",
+                )
+
+                assert returned is shard_obj
+
+        shard.assert_called_once_with(
+            http_settings=bot._http_settings,
+            proxy_settings=bot._proxy_settings,
+            event_manager=bot._event_manager,
+            event_factory=bot._event_factory,
+            intents=bot._intents,
+            initial_activity=activity,
+            initial_is_afk=True,
+            initial_idle_since=None,
+            initial_status=status,
+            large_threshold=1000,
+            shard_id=1,
+            shard_count=3,
+            token=bot._token,
+            url="https://some.website",
+        )
+        assert bot._shards == {1: shard_obj}
+        first_completed.assert_awaited_once_with(shard_obj.start.return_value, bot._closing_event.wait.return_value)
+
+    @pytest.mark.asyncio
+    async def test_start_one_shard_when_not_alive(self, bot):
+        activity = object()
+        status = object()
+        bot._closing_event = mock.Mock()
+        shard = mock.Mock()
+        shard_obj = shard.return_value
+        shard_obj.is_alive = False
+
+        with mock.patch.object(aio, "first_completed", new=mock.AsyncMock()):
+            with mock.patch.object(shard_impl, "GatewayShardImpl", new=shard):
+                with pytest.raises(errors.GatewayError, match=r"shard 1 shut down immediately when starting"):
+                    await bot._start_one_shard(
+                        activity=activity,
+                        afk=True,
+                        idle_since=None,
+                        status=status,
+                        large_threshold=1000,
+                        shard_id=1,
+                        shard_count=3,
+                        url="https://some.website",
+                    )
+
+    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
+    def test_validate_activity_when_no_activity(self, bot, activity):
+        with mock.patch.object(warnings, "warn") as warn:
+            bot._validate_activity(activity)
+
+        warn.assert_not_called()
+
+    def test_validate_activity_when_type_is_custom(self, bot):
+        activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
+
+        with mock.patch.object(warnings, "warn") as warn:
+            bot._validate_activity(activity)
+
+        warn.assert_called_once_with(
+            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
+            "any effect if used.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+
+    def test_validate_activity_when_type_is_streaming_but_no_url(self, bot):
+        activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
+
+        with mock.patch.object(warnings, "warn") as warn:
+            bot._validate_activity(activity)
+
+        warn.assert_called_once_with(
+            "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
+            "URL to be specified on the activity for the presence update to have any effect.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+
+    def test_validate_activity_when_no_warning(self, bot):
+        activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
+
+        with mock.patch.object(warnings, "warn") as warn:
+            bot._validate_activity(activity)
+
+        warn.assert_not_called()
