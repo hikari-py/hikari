@@ -462,3 +462,58 @@ class GuildBuilder(abc.ABC):
             When the guild is created, this will be replaced with a different
             ID.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_stage_channel(
+        self,
+        name: str,
+        /,
+        *,
+        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Collection[channels.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> snowflakes.Snowflake:
+        """Create a stage channel.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the channel (relative to the
+            category, if any).
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the maximum users in the channel at once.
+            Must be between 0 and 99 with 0 meaning no limit.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the bitrate for the channel. Must be
+            between 8000 and 96000 or 8000 and 128000 for VIP
+            servers.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+             If provided, the voice region to for this channel. Passing
+             `builtins.None` here will set it to "auto" mode where the used
+             region will be decided based on the first person who connects to it
+             when it's empty.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            The dummy ID for this channel that can be used temporarily to refer
+            to this object while designing the guild layout.
+
+            When the guild is created, this will be replaced with a different
+            ID.
+        """

@@ -2648,6 +2648,39 @@ class TestRESTClientImplAsync:
             reason="because we need one",
         )
 
+    async def test_create_guild_stage_channel(self, rest_client):
+        guild = StubModel(123)
+        channel = mock.Mock(channels.GuildStageChannel)
+        category_channel = StubModel(789)
+        overwrite1 = StubModel(987)
+        overwrite2 = StubModel(654)
+        rest_client._create_guild_channel = mock.AsyncMock(return_value=channel)
+
+        returned = await rest_client.create_guild_stage_channel(
+            guild,
+            "general",
+            position=1,
+            user_limit=60,
+            bitrate=64,
+            permission_overwrites=[overwrite1, overwrite2],
+            category=category_channel,
+            region="Doge Moon",
+            reason="When doge == 1$",
+        )
+        assert returned == channel
+        rest_client._create_guild_channel.assert_awaited_once_with(
+            guild,
+            "general",
+            channels.ChannelType.GUILD_STAGE,
+            position=1,
+            user_limit=60,
+            bitrate=64,
+            permission_overwrites=[overwrite1, overwrite2],
+            region="Doge Moon",
+            category=category_channel,
+            reason="When doge == 1$",
+        )
+
     async def test_create_guild_category(self, rest_client):
         guild = StubModel(123)
         category = mock.Mock(spec_set=channels.GuildCategory)

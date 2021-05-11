@@ -398,6 +398,40 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._channels.append(payload)
         return snowflake_id
 
+    def add_stage_channel(
+        self,
+        name: str,
+        /,
+        *,
+        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Collection[channels.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> snowflakes.Snowflake:
+        snowflake_id = self._new_snowflake()
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("id", snowflake_id)
+        payload.put("name", name)
+        payload.put("type", channels.ChannelType.GUILD_STAGE)
+        payload.put("bitrate", bitrate)
+        payload.put("position", position)
+        payload.put("user_limit", user_limit)
+        payload.put_snowflake("parent_id", parent_id)
+        payload.put("rtc_region", region, conversion=str)
+
+        payload.put_array(
+            "permission_overwrites",
+            permission_overwrites,
+            conversion=self._entity_factory.serialize_permission_overwrite,
+        )
+
+        self._channels.append(payload)
+        return snowflake_id
+
     def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
