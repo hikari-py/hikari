@@ -80,7 +80,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
-    from hikari.internal import time as time
+    from hikari.internal import time
 
 
 @typing.final
@@ -947,690 +947,6 @@ class PartialGuild(snowflakes.Unique):
             file_format=ext,
         )
 
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildPreview(PartialGuild):
-    """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
-
-    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
-    """A list of the features in this guild."""
-
-    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The hash of the splash for the guild, if there is one."""
-
-    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The hash of the discovery splash for the guild, if there is one."""
-
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
-        eq=False, hash=False, repr=False
-    )
-    """The mapping of IDs to the emojis this guild provides."""
-
-    approximate_active_member_count: int = attr.field(eq=False, hash=False, repr=True)
-    """The approximate amount of presences in this guild."""
-
-    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
-    """The approximate amount of members in this guild."""
-
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The guild's description, if set."""
-
-    @property
-    def discovery_splash_url(self) -> typing.Optional[files.URL]:
-        """Discovery URL splash for the guild, if set."""
-        return self.make_discovery_splash_url()
-
-    @property
-    def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash URL for the guild, if set."""
-        return self.make_splash_url()
-
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's discovery splash image URL, if set.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The string URL.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.discovery_splash_hash is None:
-            return None
-
-        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.discovery_splash_hash,
-            size=size,
-            file_format=ext,
-        )
-
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's splash image URL, if set.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL to the splash, or `builtins.None` if not set.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.splash_hash is None:
-            return None
-
-        return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=ext,
-        )
-
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Guild(PartialGuild, abc.ABC):
-    """A representation of a guild on Discord."""
-
-    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
-    """A list of the features in this guild."""
-
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the application that created this guild.
-
-    This will always be `builtins.None` for guilds that weren't created by a bot.
-    """
-
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID for the channel that AFK voice users get sent to.
-
-    If `builtins.None`, then no AFK channel is set up for this guild.
-    """
-
-    afk_timeout: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
-    """Timeout for activity before a member is classed as AFK.
-
-    How long a voice user has to be AFK for before they are classed as being
-    AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
-    """
-
-    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The hash for the guild's banner.
-
-    This is only present if the guild has `GuildFeature.BANNER` in
-    `Guild.features` for this guild. For all other purposes, it is `builtins.None`.
-    """
-
-    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attr.field(
-        eq=False, hash=False, repr=False
-    )
-    """The default setting for message notifications in this guild."""
-
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The guild's description.
-
-    This is only present if certain `GuildFeature`'s are set in
-    `Guild.features` for this guild. Otherwise, this will always be `builtins.None`.
-    """
-
-    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The hash of the discovery splash for the guild, if there is one."""
-
-    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attr.field(
-        eq=False, hash=False, repr=False
-    )
-    """The setting for the explicit content filter in this guild."""
-
-    is_widget_enabled: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """Describes whether the guild widget is enabled or not.
-
-    If this information is not present, this will be `builtins.None`.
-    """
-
-    max_video_channel_users: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
-    """The maximum number of users allowed in a video channel together.
-
-    This information may not be present, in which case, it will be `builtins.None`.
-    """
-
-    mfa_level: typing.Union[GuildMFALevel, int] = attr.field(eq=False, hash=False, repr=False)
-    """The required MFA level for users wishing to participate in this guild."""
-
-    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The ID of the owner of this guild."""
-
-    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
-    """The preferred locale to use for this guild.
-
-    This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
-    for this guild and will otherwise default to `en-US`.
-    """
-
-    premium_subscription_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
-    """The number of nitro boosts that the server currently has.
-
-    This information may not be present, in which case, it will be `builtins.None`.
-    """
-
-    premium_tier: typing.Union[GuildPremiumTier, int] = attr.field(eq=False, hash=False, repr=False)
-    """The premium tier for this guild."""
-
-    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The channel ID of the channel where admins and moderators receive notices
-    from Discord.
-
-    This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
-    this guild. For all other purposes, it should be considered to be `builtins.None`.
-    """
-
-    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
-    `features` display rules and guidelines.
-
-    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
-    """
-
-    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The hash of the splash for the guild, if there is one."""
-
-    system_channel_flags: GuildSystemChannelFlag = attr.field(eq=False, hash=False, repr=False)
-    """Return flags for the guild system channel.
-
-    These are used to describe which notifications are suppressed.
-
-    Returns
-    -------
-    GuildSystemChannelFlag
-        The system channel flags for this channel.
-    """
-
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `builtins.None` if it is not enabled.
-
-    Welcome messages and Nitro boost messages may be sent to this channel.
-    """
-
-    vanity_url_code: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The vanity URL code for the guild's vanity URL.
-
-    This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
-    this guild. If not, this will always be `builtins.None`.
-    """
-
-    verification_level: typing.Union[GuildVerificationLevel, int] = attr.field(eq=False, hash=False, repr=False)
-    """The verification level needed for a user to participate in this guild."""
-
-    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The channel ID that the widget's generated invite will send the user to.
-
-    If this information is unavailable or this is not enabled for the guild then
-    this will be `builtins.None`.
-    """
-
-    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
-    """Whether the guild is designated as NSFW."""
-
-    @property
-    def banner_url(self) -> typing.Optional[files.URL]:
-        """Banner URL for the guild, if set."""
-        return self.make_banner_url()
-
-    @property
-    def discovery_splash_url(self) -> typing.Optional[files.URL]:
-        """Discovery splash URL for the guild, if set."""
-        return self.make_discovery_splash_url()
-
-    @property
-    @abc.abstractmethod
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
-        """Return the emojis in this guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-            A mapping of emoji IDs to the objects of emojis in this guild.
-        """
-
-    @property
-    @abc.abstractmethod
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
-        """Return the roles in this guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, Role]
-            A mapping of role IDs to the objects of roles in this guild.
-        """
-
-    @property
-    def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash URL for the guild, if set."""
-        return self.make_splash_url()
-
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's banner image URL, if set.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL of the banner, or `builtins.None` if no banner is set.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.banner_hash is None:
-            return None
-
-        return routes.CDN_GUILD_BANNER.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=ext,
-        )
-
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's discovery splash image URL, if set.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The string URL.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.discovery_splash_hash is None:
-            return None
-
-        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.discovery_splash_hash,
-            size=size,
-            file_format=ext,
-        )
-
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the guild's splash image URL, if set.
-
-        Parameters
-        ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL to the splash, or `builtins.None` if not set.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.splash_hash is None:
-            return None
-
-        return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=ext,
-        )
-
-    @abc.abstractmethod
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get an emoji from the cache by it's ID."""
-
-    @abc.abstractmethod
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        """Get a role from the cache by it's ID."""
-
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class RESTGuild(Guild):
-    """Guild specialization that is sent via the REST API only."""
-
-    # In a REST-provided guild, we provide these attributes directly, as the API will give them in the response.
-    # This is different to Gateway guilds which will perform a cache-hit to handle this usually.
-    _emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
-        eq=False, hash=False, repr=False
-    )
-    """A mapping of emoji IDs to the objects of the emojis this guild provides."""
-
-    _roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
-    """The roles in this guild, represented as a mapping of role ID to role object."""
-
-    approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild that are not offline.
-
-    This will be `builtins.None` when creating a guild.
-    """
-
-    approximate_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
-    """The approximate number of members in the guild.
-
-    This will be `builtins.None` when creating a guild.
-    """
-
-    max_presences: int = attr.field(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild."""
-
-    max_members: int = attr.field(eq=False, hash=False, repr=False)
-    """The maximum number of members allowed in this guild."""
-
-    @property
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        return self._emojis
-
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
-        # <<inherited docstring from Guild>>.
-        return self._roles
-
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        return self._emojis.get(snowflakes.Snowflake(emoji))
-
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        # <<inherited docstring from Guild>>.
-        return self._roles.get(snowflakes.Snowflake(role))
-
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GatewayGuild(Guild):
-    """Guild specialization that is sent via the gateway only."""
-
-    is_large: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """Whether the guild is considered to be large or not.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-
-    The implications of a large guild are that presence information will not be
-    sent about members who are offline or invisible.
-    """
-
-    joined_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
-    """The date and time that the bot user joined this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-    """
-
-    member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
-    """The number of members in this guild.
-
-    This information is only available if the guild was sent via a `GUILD_CREATE`
-    event. If the guild is received from any other place, this will always be
-    `builtins.None`.
-    """
-
-    @property
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
-        """Get the channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
-            A mapping of channel IDs to objects of the channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_guild_channels_view_for_guild(self.id)
-
-    @property
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_emojis_view_for_guild(self.id)
-
-    @property
-    def members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
-        """Get the members cached for the guild.
-
-        typing.Mapping[hikari.snowflakes.Snowflake, Member]
-            A mapping of user IDs to objects of the members cached for the guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_members_view_for_guild(self.id)
-
-    @property
-    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
-        """Get the presences cached for the guild.
-
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-            A mapping of user IDs to objects of the presences cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_presences_view_for_guild(self.id)
-
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
-        # <<inherited docstring from Guild>>.
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_roles_view_for_guild(self.id)
-
-    @property
-    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
-        """Get the voice states cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-            A mapping of user IDs to objects of the voice states cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_voice_states_view_for_guild(self.id)
-
-    def get_channel(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
-    ) -> typing.Optional[channels_.GuildChannel]:
-        """Get a cached channel that belongs to the guild by it's ID or object.
-
-        Parameters
-        ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
-            The object or ID of the guild channel to get from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.GuildChannel]
-            The object of the guild channel found in cache or `builtins.None.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_guild_channel(channel)
-
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get a cached role that belongs to the guild by it's ID or object.
-
-        Parameters
-        ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
-            The object or ID of the emoji to get from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.emojis.KnownCustomEmoji]
-            The object of the custom emoji if found in cache, else
-            `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_emoji(emoji)
-
-    def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> typing.Optional[Member]:
-        """Get a cached member that belongs to the guild by it's user ID or object.
-
-        Parameters
-        ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            The object or ID of the user to get the cached member for.
-
-        Returns
-        -------
-        typing.Optional[Member]
-            The cached member object if found, else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_member(self.id, user)
-
-    def get_my_member(self) -> typing.Optional[Member]:
-        """Return the cached member for the bot user in this guild, if known.
-
-        Returns
-        -------
-        typing.Optional[Member]
-            The cached member for this guild, or `builtins.None` if not known.
-        """
-        if not isinstance(self.app, traits.ShardAware):
-            return None
-
-        me = self.app.me
-        if me is None:
-            return None
-
-        return self.get_member(me.id)
-
-    def get_presence(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
-    ) -> typing.Optional[presences_.MemberPresence]:
-        """Get a cached presence that belongs to the guild by it's user ID or object.
-
-        Parameters
-        ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            The object or ID of the user to get the cached presence for.
-
-        Returns
-        -------
-        typing.Optional[hikari.presences.MemberPresence]
-            The cached presence object if found, else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_presence(self.id, user)
-
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        """Get a cached role that belongs to the guild by it's ID or object.
-
-        Parameters
-        ----------
-        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
-            The object or ID of the role to get for this guild from the cache.
-
-        Returns
-        -------
-        typing.Optional[Role]
-            The object of the role found in cache, else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_role(role)
-
-    def get_voice_state(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
-    ) -> typing.Optional[voices_.VoiceState]:
-        """Get a cached voice state that belongs to the guild by it's user.
-
-        Parameters
-        ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            The object or ID of the user to get the cached voice state for.
-
-        Returns
-        -------
-        typing.Optional[hikari.voices.VoiceState]
-            The cached voice state object if found, else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_voice_state(self.id, user)
-
     async def ban(
         self,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
@@ -2370,7 +1686,7 @@ class GatewayGuild(Guild):
     async def delete_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
     ) -> channels_.PartialChannel:
-        """Delete a channel in the guild
+        """Delete a channel in the guild.
 
         Parameters
         ----------
@@ -2414,7 +1730,7 @@ class GatewayGuild(Guild):
     async def delete_category(
         self, category: snowflakes.SnowflakeishOr[channels_.GuildCategory]
     ) -> channels_.PartialChannel:
-        """Delete a category in the guild
+        """Delete a category in the guild.
 
         Parameters
         ----------
@@ -2450,3 +1766,689 @@ class GatewayGuild(Guild):
             If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.delete_channel(category)
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildPreview(PartialGuild):
+    """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
+
+    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
+
+    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The hash of the splash for the guild, if there is one."""
+
+    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The hash of the discovery splash for the guild, if there is one."""
+
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """The mapping of IDs to the emojis this guild provides."""
+
+    approximate_active_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    """The approximate amount of presences in this guild."""
+
+    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    """The approximate amount of members in this guild."""
+
+    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The guild's description, if set."""
+
+    @property
+    def discovery_splash_url(self) -> typing.Optional[files.URL]:
+        """Discovery URL splash for the guild, if set."""
+        return self.make_discovery_splash_url()
+
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
+
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image URL, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The string URL.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.discovery_splash_hash is None:
+            return None
+
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image URL, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the splash, or `builtins.None` if not set.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.splash_hash is None:
+            return None
+
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.splash_hash,
+            size=size,
+            file_format=ext,
+        )
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class Guild(PartialGuild, abc.ABC):
+    """A representation of a guild on Discord."""
+
+    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
+    """A list of the features in this guild."""
+
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the application that created this guild.
+
+    This will always be `builtins.None` for guilds that weren't created by a bot.
+    """
+
+    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID for the channel that AFK voice users get sent to.
+
+    If `builtins.None`, then no AFK channel is set up for this guild.
+    """
+
+    afk_timeout: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """Timeout for activity before a member is classed as AFK.
+
+    How long a voice user has to be AFK for before they are classed as being
+    AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
+    """
+
+    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The hash for the guild's banner.
+
+    This is only present if the guild has `GuildFeature.BANNER` in
+    `Guild.features` for this guild. For all other purposes, it is `builtins.None`.
+    """
+
+    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """The default setting for message notifications in this guild."""
+
+    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The guild's description.
+
+    This is only present if certain `GuildFeature`'s are set in
+    `Guild.features` for this guild. Otherwise, this will always be `builtins.None`.
+    """
+
+    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The hash of the discovery splash for the guild, if there is one."""
+
+    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """The setting for the explicit content filter in this guild."""
+
+    is_widget_enabled: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    """Describes whether the guild widget is enabled or not.
+
+    If this information is not present, this will be `builtins.None`.
+    """
+
+    max_video_channel_users: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The maximum number of users allowed in a video channel together.
+
+    This information may not be present, in which case, it will be `builtins.None`.
+    """
+
+    mfa_level: typing.Union[GuildMFALevel, int] = attr.field(eq=False, hash=False, repr=False)
+    """The required MFA level for users wishing to participate in this guild."""
+
+    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The ID of the owner of this guild."""
+
+    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
+    """The preferred locale to use for this guild.
+
+    This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
+    for this guild and will otherwise default to `en-US`.
+    """
+
+    premium_subscription_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The number of nitro boosts that the server currently has.
+
+    This information may not be present, in which case, it will be `builtins.None`.
+    """
+
+    premium_tier: typing.Union[GuildPremiumTier, int] = attr.field(eq=False, hash=False, repr=False)
+    """The premium tier for this guild."""
+
+    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The channel ID of the channel where admins and moderators receive notices
+    from Discord.
+
+    This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
+    this guild. For all other purposes, it should be considered to be `builtins.None`.
+    """
+
+    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
+    `features` display rules and guidelines.
+
+    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
+    """
+
+    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The hash of the splash for the guild, if there is one."""
+
+    system_channel_flags: GuildSystemChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    """Return flags for the guild system channel.
+
+    These are used to describe which notifications are suppressed.
+
+    Returns
+    -------
+    GuildSystemChannelFlag
+        The system channel flags for this channel.
+    """
+
+    system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the system channel or `builtins.None` if it is not enabled.
+
+    Welcome messages and Nitro boost messages may be sent to this channel.
+    """
+
+    vanity_url_code: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The vanity URL code for the guild's vanity URL.
+
+    This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
+    this guild. If not, this will always be `builtins.None`.
+    """
+
+    verification_level: typing.Union[GuildVerificationLevel, int] = attr.field(eq=False, hash=False, repr=False)
+    """The verification level needed for a user to participate in this guild."""
+
+    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The channel ID that the widget's generated invite will send the user to.
+
+    If this information is unavailable or this is not enabled for the guild then
+    this will be `builtins.None`.
+    """
+
+    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
+    """Whether the guild is designated as NSFW."""
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        """Banner URL for the guild, if set."""
+        return self.make_banner_url()
+
+    @property
+    def discovery_splash_url(self) -> typing.Optional[files.URL]:
+        """Discovery splash URL for the guild, if set."""
+        return self.make_discovery_splash_url()
+
+    @property
+    @abc.abstractmethod
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+        """Return the emojis in this guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
+            A mapping of emoji IDs to the objects of emojis in this guild.
+        """
+
+    @property
+    @abc.abstractmethod
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+        """Return the roles in this guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, Role]
+            A mapping of role IDs to the objects of roles in this guild.
+        """
+
+    @property
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
+
+    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's banner image URL, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL of the banner, or `builtins.None` if no banner is set.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.banner_hash is None:
+            return None
+
+        return routes.CDN_GUILD_BANNER.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.banner_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's discovery splash image URL, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The string URL.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.discovery_splash_hash is None:
+            return None
+
+        return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the guild's splash image URL, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the splash, or `builtins.None` if not set.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.splash_hash is None:
+            return None
+
+        return routes.CDN_GUILD_SPLASH.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.splash_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    @abc.abstractmethod
+    def get_emoji(
+        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        """Get an emoji from the cache by it's ID."""
+
+    @abc.abstractmethod
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
+        """Get a role from the cache by it's ID."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class RESTGuild(Guild):
+    """Guild specialization that is sent via the REST API only."""
+
+    # In a REST-provided guild, we provide these attributes directly, as the API will give them in the response.
+    # This is different to Gateway guilds which will perform a cache-hit to handle this usually.
+    _emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """A mapping of emoji IDs to the objects of the emojis this guild provides."""
+
+    _roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
+    """The roles in this guild, represented as a mapping of role ID to role object."""
+
+    approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild that are not offline.
+
+    This will be `builtins.None` when creating a guild.
+    """
+
+    approximate_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The approximate number of members in the guild.
+
+    This will be `builtins.None` when creating a guild.
+    """
+
+    max_presences: int = attr.field(eq=False, hash=False, repr=False)
+    """The maximum number of presences for the guild."""
+
+    max_members: int = attr.field(eq=False, hash=False, repr=False)
+    """The maximum number of members allowed in this guild."""
+
+    @property
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+        # <<inherited docstring from Guild>>.
+        return self._emojis
+
+    @property
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+        # <<inherited docstring from Guild>>.
+        return self._roles
+
+    def get_emoji(
+        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        # <<inherited docstring from Guild>>.
+        return self._emojis.get(snowflakes.Snowflake(emoji))
+
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
+        # <<inherited docstring from Guild>>.
+        return self._roles.get(snowflakes.Snowflake(role))
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class GatewayGuild(Guild):
+    """Guild specialization that is sent via the gateway only."""
+
+    is_large: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    """Whether the guild is considered to be large or not.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+
+    The implications of a large guild are that presence information will not be
+    sent about members who are offline or invisible.
+    """
+
+    joined_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    """The date and time that the bot user joined this guild.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+    """
+
+    member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The number of members in this guild.
+
+    This information is only available if the guild was sent via a `GUILD_CREATE`
+    event. If the guild is received from any other place, this will always be
+    `builtins.None`.
+    """
+
+    @property
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+        """Get the channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+            A mapping of channel IDs to objects of the channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_guild_channels_view_for_guild(self.id)
+
+    # @property(self)
+
+    @property
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+        # <<inherited docstring from Guild>>.
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_emojis_view_for_guild(self.id)
+
+    @property
+    def members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
+        """Get the members cached for the guild.
+
+        typing.Mapping[hikari.snowflakes.Snowflake, Member]
+            A mapping of user IDs to objects of the members cached for the guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_members_view_for_guild(self.id)
+
+    @property
+    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
+        """Get the presences cached for the guild.
+
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
+            A mapping of user IDs to objects of the presences cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_presences_view_for_guild(self.id)
+
+    @property
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+        # <<inherited docstring from Guild>>.
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_roles_view_for_guild(self.id)
+
+    @property
+    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
+        """Get the voice states cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
+            A mapping of user IDs to objects of the voice states cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_voice_states_view_for_guild(self.id)
+
+    def get_channel(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+    ) -> typing.Optional[channels_.GuildChannel]:
+        """Get a cached channel that belongs to the guild by it's ID or object.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            The object or ID of the guild channel to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildChannel]
+            The object of the guild channel found in cache or `builtins.None.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_guild_channel(channel)
+
+    def get_emoji(
+        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
+    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+        """Get a cached role that belongs to the guild by it's ID or object.
+
+        Parameters
+        ----------
+        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+            The object or ID of the emoji to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.emojis.KnownCustomEmoji]
+            The object of the custom emoji if found in cache, else
+            `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_emoji(emoji)
+
+    def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> typing.Optional[Member]:
+        """Get a cached member that belongs to the guild by it's user ID or object.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The object or ID of the user to get the cached member for.
+
+        Returns
+        -------
+        typing.Optional[Member]
+            The cached member object if found, else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_member(self.id, user)
+
+    def get_my_member(self) -> typing.Optional[Member]:
+        """Return the cached member for the bot user in this guild, if known.
+
+        Returns
+        -------
+        typing.Optional[Member]
+            The cached member for this guild, or `builtins.None` if not known.
+        """
+        if not isinstance(self.app, traits.ShardAware):
+            return None
+
+        me = self.app.me
+        if me is None:
+            return None
+
+        return self.get_member(me.id)
+
+    def get_presence(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> typing.Optional[presences_.MemberPresence]:
+        """Get a cached presence that belongs to the guild by it's user ID or object.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The object or ID of the user to get the cached presence for.
+
+        Returns
+        -------
+        typing.Optional[hikari.presences.MemberPresence]
+            The cached presence object if found, else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_presence(self.id, user)
+
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
+        """Get a cached role that belongs to the guild by it's ID or object.
+
+        Parameters
+        ----------
+        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
+            The object or ID of the role to get for this guild from the cache.
+
+        Returns
+        -------
+        typing.Optional[Role]
+            The object of the role found in cache, else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_role(role)
+
+    def get_voice_state(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> typing.Optional[voices_.VoiceState]:
+        """Get a cached voice state that belongs to the guild by it's user.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The object or ID of the user to get the cached voice state for.
+
+        Returns
+        -------
+        typing.Optional[hikari.voices.VoiceState]
+            The cached voice state object if found, else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_voice_state(self.id, user)
