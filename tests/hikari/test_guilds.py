@@ -326,58 +326,56 @@ class TestMember:
         model.nickname = None
         assert model.mention == mock_user.mention
 
-    def test_roles(self, model):
+    def test_get_roles(self, model):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
-        mock_cache_view = {321: role1, 654: role2}
-        model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+        model.user.app.cache.get_role.side_effect = [role1, role2]
         model.role_ids = [321, 654]
 
-        assert model.roles == [role1, role2]
+        assert model.get_roles() == [role1, role2]
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(654)])
 
-    def test_roles_when_role_ids_not_in_cache(self, model):
-        role1 = mock.Mock(id=123, position=2)
-        role2 = mock.Mock(id=456, position=1)
-        mock_cache_view = {123: role1, 456: role2}
-        model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+    def test_get_roles_when_role_ids_not_in_cache(self, model):
+        role = mock.Mock(id=456, position=1)
+        model.user.app.cache.get_role.side_effect = [None, role]
         model.role_ids = [321, 456]
 
-        assert model.roles == [role2]
+        assert model.get_roles() == [role]
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(456)])
 
-    def test_roles_when_empty_cache(self, model):
-        model.user.app.cache.get_roles_view_for_guild.return_value = {}
+    def test_get_roles_when_empty_cache(self, model):
+        model.role_ids = [132, 432]
+        model.user.app.cache.get_role.side_effect = [None, None]
 
-        assert model.roles == []
+        assert model.get_roles() == []
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(132), mock.call(432)])
 
-    def test_roles_when_no_cache_trait(self, model):
+    def test_get_roles_when_no_cache_trait(self, model):
         model.user.app = object()
 
-        assert model.roles == []
+        assert model.get_roles() == []
 
-    def test_top_role(self, model):
+    def test_get_top_role(self, model):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
 
-        with mock.patch.object(guilds.Member, "roles", new=[role1, role2]):
-            assert model.top_role is role1
+        with mock.patch.object(guilds.Member, "get_roles", return_value=[role1, role2]):
+            assert model.get_top_role() is role1
 
-    def test_top_role_when_roles_is_empty(self, model):
-        with mock.patch.object(guilds.Member, "roles", new=[]):
-            assert model.top_role is None
+    def test_get_top_role_when_roles_is_empty(self, model):
+        with mock.patch.object(guilds.Member, "get_roles", return_value=[]):
+            assert model.get_top_role() is None
 
-    def test_presence(self, model):
-        assert model.presence is model.user.app.cache.get_presence.return_value
+    def test_get_presence(self, model):
+        assert model.get_presence() is model.user.app.cache.get_presence.return_value
         model.user.app.cache.get_presence.assert_called_once_with(456, 123)
 
-    def test_presence_when_no_cache_trait(self, model):
+    def test_get_presence_when_no_cache_trait(self, model):
         model.user.app = object()
-        assert model.presence is None
+        assert model.get_presence() is None
 
 
 class TestPartialGuild:
