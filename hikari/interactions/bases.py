@@ -34,6 +34,7 @@ import typing
 import attr
 
 from hikari import snowflakes
+from hikari import webhooks
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
@@ -73,7 +74,7 @@ class ResponseType(int, enums.Enum):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class PartialInteraction(snowflakes.Unique):
+class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """The base model for all interaction models."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -93,3 +94,8 @@ class PartialInteraction(snowflakes.Unique):
 
     version: int = attr.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
+
+    @property
+    def webhook_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ExecutableWebhook>>.
+        return self.application_id

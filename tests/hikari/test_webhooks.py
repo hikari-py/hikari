@@ -55,7 +55,7 @@ class TestExecutableWebhook:
 
         assert result is executable_webhook.app.rest.execute_webhook.return_value
         executable_webhook.app.rest.execute_webhook.assert_awaited_once_with(
-            webhook=executable_webhook.id,
+            webhook=executable_webhook.webhook_id,
             token=executable_webhook.token,
             content="coooo",
             username="oopp",
@@ -75,7 +75,7 @@ class TestExecutableWebhook:
 
         assert result is executable_webhook.app.rest.execute_webhook.return_value
         executable_webhook.app.rest.execute_webhook.assert_awaited_once_with(
-            webhook=executable_webhook.id,
+            webhook=executable_webhook.webhook_id,
             token=executable_webhook.token,
             content=undefined.UNDEFINED,
             username=undefined.UNDEFINED,
@@ -100,7 +100,7 @@ class TestExecutableWebhook:
         assert returned is returned_message
 
         executable_webhook.app.rest.fetch_webhook_message.assert_called_once_with(
-            executable_webhook.id, token=executable_webhook.token, message=message
+            executable_webhook.webhook_id, token=executable_webhook.token, message=message
         )
 
     @pytest.mark.asyncio()
@@ -131,7 +131,7 @@ class TestExecutableWebhook:
         assert returned is executable_webhook.app.rest.edit_webhook_message.return_value
 
         executable_webhook.app.rest.edit_webhook_message.assert_awaited_once_with(
-            executable_webhook.id,
+            executable_webhook.webhook_id,
             token=executable_webhook.token,
             message=message,
             content="test",
@@ -158,7 +158,7 @@ class TestExecutableWebhook:
         await executable_webhook.delete_message(message)
 
         executable_webhook.app.rest.delete_webhook_message.assert_awaited_once_with(
-            executable_webhook.id, token=executable_webhook.token, message=message
+            executable_webhook.webhook_id, token=executable_webhook.token, message=message
         )
 
     @pytest.mark.asyncio()
@@ -192,3 +192,6 @@ class TestWebhook:
     def test_str_when_name_is_None(self, webhook):
         webhook.name = None
         assert str(webhook) == "Unnamed webhook ID 987654321"
+
+    def test_webhook_id_property(self, webhook):
+        assert webhook.webhook_id is webhook.id

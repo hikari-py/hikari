@@ -60,7 +60,7 @@ class WebhookType(int, enums.Enum):
     """Channel Follower webhook."""
 
 
-class ExecutableWebhook(snowflakes.Unique, abc.ABC):
+class ExecutableWebhook(abc.ABC):
     """An abstract class with logic for executing entities as webhooks."""
 
     # This is a mixin, do not add slotted fields.
@@ -75,6 +75,17 @@ class ExecutableWebhook(snowflakes.Unique, abc.ABC):
         -------
         hikari.traits.RESTAware
             The client application that models may use for procedures.
+        """
+
+    @property
+    @abc.abstractmethod
+    def webhook_id(self) -> snowflakes.Snowflake:
+        """ID used to execute this entity as a webhook.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            The ID used to execute this entity as a webhook.
         """
 
     @property
@@ -194,7 +205,7 @@ class ExecutableWebhook(snowflakes.Unique, abc.ABC):
             raise ValueError("Cannot send a message using a webhook where we don't know the token")
 
         return await self.app.rest.execute_webhook(
-            webhook=self.id,
+            webhook=self.webhook_id,
             token=self.token,
             content=content,
             username=username,
@@ -247,7 +258,7 @@ class ExecutableWebhook(snowflakes.Unique, abc.ABC):
         if self.token is None:
             raise ValueError("Cannot fetch a message using a webhook where we don't know the token")
 
-        return await self.app.rest.fetch_webhook_message(self.id, token=self.token, message=message)
+        return await self.app.rest.fetch_webhook_message(self.webhook_id, token=self.token, message=message)
 
     async def edit_message(
         self,
@@ -405,7 +416,7 @@ class ExecutableWebhook(snowflakes.Unique, abc.ABC):
             raise ValueError("Cannot edit a message using a webhook where we don't know the token")
 
         return await self.app.rest.edit_webhook_message(
-            self.id,
+            self.webhook_id,
             token=self.token,
             message=message,
             content=content,
@@ -453,12 +464,12 @@ class ExecutableWebhook(snowflakes.Unique, abc.ABC):
         if self.token is None:
             raise ValueError("Cannot delete a message using a webhook where we don't know the token")
 
-        await self.app.rest.delete_webhook_message(self.id, token=self.token, message=message)
+        await self.app.rest.delete_webhook_message(self.webhook_id, token=self.token, message=message)
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Webhook(ExecutableWebhook):
+class Webhook(snowflakes.Unique, ExecutableWebhook):
     """Represents a webhook object on Discord.
 
     This is an endpoint that can have messages sent to it using standard
@@ -522,6 +533,11 @@ class Webhook(ExecutableWebhook):
 
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+
+    @property
+    def webhook_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ExecutableWebhook>>.
+        return self.id
 
     @property
     def mention(self) -> str:

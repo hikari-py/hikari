@@ -44,7 +44,6 @@ from hikari import guilds
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
-from hikari import webhooks
 from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import enums
@@ -374,7 +373,7 @@ class InteractionMember(guilds.Member):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(bases.PartialInteraction, webhooks.ExecutableWebhook):
+class CommandInteraction(bases.PartialInteraction):
     """Represents a command interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
