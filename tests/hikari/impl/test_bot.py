@@ -151,7 +151,7 @@ class TestBotApp:
         assert bot._http_settings is http_settings
         assert bot._proxy_settings is proxy_settings
         assert bot._cache is cache.return_value
-        cache.assert_called_once_with(bot, cache_settings)
+        cache.assert_called_once_with(bot, bot._intents, cache_settings)
         assert bot._event_manager is event_manager.return_value
         event_manager.assert_called_once_with(event_factory.return_value, intents, cache=cache.return_value)
         assert bot._entity_factory is entity_factory.return_value
@@ -197,7 +197,7 @@ class TestBotApp:
         http_settings.assert_called_once_with()
         assert bot._proxy_settings is proxy_settings.return_value
         proxy_settings.assert_called_once_with()
-        cache.assert_called_once_with(bot, cache_settings.return_value)
+        cache.assert_called_once_with(bot, bot.intents, cache_settings.return_value)
         cache_settings.assert_called_once_with()
 
     def test_cache(self, bot, cache):

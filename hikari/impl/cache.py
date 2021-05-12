@@ -42,6 +42,7 @@ from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import intents as intents_
     from hikari import invites
     from hikari import presences
     from hikari import traits
@@ -59,8 +60,10 @@ class CacheImpl(cache.MutableCache):
 
     Parameters
     ----------
-    app : hikari.traits.BotAware
-        The object of the bot aware app this is bound to.
+    app : hikari.traits.RESTAware
+        The object of the REST aware app this is bound to.
+    intents : hikari.intents.Intents
+        The intents set for this instance.
     settings : hikari.config.CacheSettings
         The cache settings to use.
     """
@@ -102,10 +105,10 @@ class CacheImpl(cache.MutableCache):
         snowflakes.Snowflake, cache_utility.RefCell[cache_utility.MessageData]
     ]
 
-    def __init__(self, app: traits.BotAware, settings: config.CacheSettings) -> None:
+    def __init__(self, app: traits.RESTAware, intents: intents_.Intents, settings: config.CacheSettings) -> None:
         self._app = app
         self._me = None
-        self._intents = app.intents
+        self._intents = intents
         self._settings = settings
         self._create_cache()
 

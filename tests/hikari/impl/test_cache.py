@@ -28,6 +28,7 @@ from hikari import config
 from hikari import embeds
 from hikari import emojis
 from hikari import guilds
+from hikari import intents
 from hikari import invites
 from hikari import messages
 from hikari import snowflakes
@@ -55,12 +56,12 @@ class TestCacheImpl:
     @pytest.fixture()
     def cache_impl(self, app_impl):
         return hikari_test_helpers.mock_class_namespace(cache_impl_.CacheImpl, slots_=False)(
-            app=app_impl, settings=config.CacheSettings()
+            app=app_impl, intents=intents.Intents.ALL, settings=config.CacheSettings()
         )
 
     def test__init___(self, app_impl):
         with mock.patch.object(cache_impl_.CacheImpl, "_create_cache") as create_cache:
-            cache_impl_.CacheImpl(app_impl, config.CacheSettings())
+            cache_impl_.CacheImpl(app_impl, intents.Intents.ALL, config.CacheSettings())
 
         create_cache.assert_called_once_with()
 
