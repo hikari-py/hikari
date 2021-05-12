@@ -196,7 +196,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_correct(self, event_manager):
-        event_manager._app.intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
+        event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
@@ -208,7 +208,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_incorrect(self, event_manager):
-        event_manager._app.intents = intents.Intents.GUILD_EMOJIS
+        event_manager._intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS

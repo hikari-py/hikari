@@ -34,15 +34,15 @@ import warnings
 
 from hikari import errors
 from hikari import event_stream
-from hikari import traits
 from hikari.api import event_manager
 from hikari.events import base_events
 from hikari.internal import aio
-from hikari.internal import data_binding
 from hikari.internal import reflect
 
 if typing.TYPE_CHECKING:
+    from hikari import intents as intents_
     from hikari.api import shard as gateway_shard
+    from hikari.internal import data_binding
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
@@ -71,11 +71,11 @@ class EventManagerBase(event_manager.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("intents", "_listeners", "_consumers", "_waiters")
 
-    def __init__(self, app: traits.BotAware) -> None:
-        self._app = app
+    def __init__(self, intents: intents_.Intents) -> None:
         self._consumers: typing.Dict[str, ConsumerT] = {}
+        self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
@@ -128,7 +128,7 @@ class EventManagerBase(event_manager.EventManager):
 
         if expected_intent_groups:
             for expected_intent_group in expected_intent_groups:
-                if (self._app.intents & expected_intent_group) == expected_intent_group:
+                if (self._intents & expected_intent_group) == expected_intent_group:
                     break
             else:
                 expected_intents_str = ", ".join(map(str, expected_intent_groups))

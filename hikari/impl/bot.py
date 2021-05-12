@@ -263,14 +263,14 @@ class BotApp(traits.BotAware):
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
-        # Event handling
-        self._event_manager = event_manager_impl.EventManagerImpl(self, cache=self._cache)
-
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
 
         # Event creation
         self._event_factory = event_factory_impl.EventFactoryImpl(self)
+
+        # Event handling
+        self._event_manager = event_manager_impl.EventManagerImpl(self._event_factory, self._intents, cache=self._cache)
 
         # Voice subsystem
         self._voice = voice_impl.VoiceComponentImpl(self)
