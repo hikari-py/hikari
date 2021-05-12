@@ -59,6 +59,7 @@ import typing
 
 import attr
 
+from hikari import channels as channels_
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -71,7 +72,6 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels as channels_
     from hikari import colors
     from hikari import colours
     from hikari import emojis as emojis_
@@ -2159,6 +2159,239 @@ class Guild(PartialGuild, abc.ABC):
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
 
+    async def fetch_owner(self) -> Member:
+        """Fetch the owner of the guild.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            The guild owner.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_member(self.id, self.owner_id)
+
+    async def fetch_widget_channel(self) -> typing.Optional[channels_.PartialChannel]:
+        """Fetch channel that the widget's generated invite will send the user to.
+
+        If this information is unavailable or this is not enabled for the guild then
+        this will be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The channel that the widget is linked to.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.widget_channel_id:
+            return None
+
+        return await self.app.rest.fetch_channel(self.widget_channel_id)
+
+    async def fetch_afk_channel(self) -> typing.Optional[channels_.PartialChannel]:
+        """Fetch the channel that AFK voice users get sent to.
+
+        If this information is unavailable or this is not enabled for the guild then
+        this will be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The channel that the widget is linked to.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.afk_channel_id:
+            return None
+
+        return await self.app.rest.fetch_channel(self.afk_channel_id)
+
+    async def fetch_system_channel(self) -> typing.Optional[channels_.PartialChannel]:
+        """Fetch the system channel or `builtins.None` if it is not enabled.
+
+        Welcome messages and Nitro boost messages may be sent to this channel.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The channel that the widget is linked to.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.system_channel_id:
+            return None
+
+        return await self.app.rest.fetch_channel(self.system_channel_id)
+
+    async def fetch_rules_channel(self) -> typing.Optional[channels_.PartialChannel]:
+        """Fetch the channel where guilds display rules and guidelines.
+
+        If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The channel that the widget is linked to.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.rules_channel_id:
+            return None
+
+        return await self.app.rest.fetch_channel(self.rules_channel_id)
+
+    async def fetch_public_updates_channel(self) -> typing.Optional[channels_.PartialChannel]:
+        """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
+
+        This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
+        this guild. For all other purposes, it should be considered to be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.PartialChannel]
+            The channel that the widget is linked to.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.public_updates_channel_id:
+            return None
+
+        return await self.app.rest.fetch_channel(self.public_updates_channel_id)
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class RESTGuild(Guild):
@@ -2259,7 +2492,120 @@ class GatewayGuild(Guild):
 
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
-    # @property(self)
+    @property
+    def text_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildTextChannel]:
+        """Get the text channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildTextChannel]
+            A mapping of channel IDs to objects of the text channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        filtered_channels = {}
+
+        for cid, tchannel in self.channels.items():
+            if not isinstance(tchannel, channels_.GuildTextChannel):
+                continue
+
+            filtered_channels[cid] = tchannel
+
+        return filtered_channels
+
+    @property
+    def news_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildNewsChannel]:
+        """Get the news channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildNewsChannel]
+            A mapping of channel IDs to objects of the news channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        filtered_channels = {}
+
+        for cid, nchannel in self.channels.items():
+            if not isinstance(nchannel, channels_.GuildNewsChannel):
+                continue
+
+            filtered_channels[cid] = nchannel
+
+        return filtered_channels
+
+    @property
+    def store_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildStoreChannel]:
+        """Get the store channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildStoreChannel]
+            A mapping of channel IDs to objects of the store channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        filtered_channels = {}
+
+        for cid, stchannel in self.channels.items():
+            if not isinstance(stchannel, channels_.GuildStoreChannel):
+                continue
+
+            filtered_channels[cid] = stchannel
+
+        return filtered_channels
+
+    @property
+    def voice_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildVoiceChannel]:
+        """Get the voice channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildVoiceChannel]
+            A mapping of channel IDs to objects of the voice channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        filtered_channels = {}
+
+        for cid, vchannel in self.channels.items():
+            if not isinstance(vchannel, channels_.GuildVoiceChannel):
+                continue
+
+            filtered_channels[cid] = vchannel
+
+        return filtered_channels
+
+    @property
+    def stage_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildStageChannel]:
+        """Get the stage channels cached for the guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildStageChannel]
+            A mapping of channel IDs to objects of the stage channels cached for the
+            guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        filtered_channels = {}
+
+        for cid, schannel in self.channels.items():
+            if not isinstance(schannel, channels_.GuildStageChannel):
+                continue
+
+            filtered_channels[cid] = schannel
+
+        return filtered_channels
 
     @property
     def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
