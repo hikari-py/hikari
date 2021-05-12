@@ -640,14 +640,14 @@ class PartialMessage(snowflakes.Unique):
 
         return channel.guild_id
 
-    def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = None) -> str:
+    def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
         """Generate a jump link to this message.
 
         Other Parameters
         ----------------
         guild : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild this message is in. If not provided or then
-            this will return a DM message link.
+            Object or ID of the guild this message is in or `builtins.None`
+            to generate a DM message link.
 
             !!! note
                 This parameter is necessary since `PartialMessage.guild_id`
