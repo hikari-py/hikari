@@ -401,7 +401,7 @@ class TestPartialGuild:
     @pytest.mark.asyncio
     async def test_edit(self, model):
         model.app.rest.edit_guild = mock.AsyncMock()
-        await model.edit(
+        edited_guild = await model.edit(
             name="chad server",
             verification_level=guilds.GuildVerificationLevel.LOW,
             default_message_notifications=guilds.GuildMessageNotificationsLevel.ALL_MESSAGES,
@@ -431,27 +431,32 @@ class TestPartialGuild:
             reason="beep boop",
         )
 
+        assert edited_guild is model.app.rest.edit_guild.return_value
+
     @pytest.mark.asyncio
     async def test_fetch_emojis(self, model):
         model.app.rest.fetch_guild_emojis = mock.AsyncMock()
 
-        await model.fetch_emojis()
+        emojis = await model.fetch_emojis()
 
         model.app.rest.fetch_guild_emojis.assert_awaited_once_with(model.id)
+        assert emojis is model.app.rest.fetch_guild_emojis.return_value
 
     @pytest.mark.asyncio
     async def test_fetch_emoji(self, model):
         model.app.rest.fetch_emoji = mock.AsyncMock()
 
-        await model.fetch_emoji(349)
+        emoji = await model.fetch_emoji(349)
 
         model.app.rest.fetch_emoji.assert_awaited_once_with(model.id, 349)
+        assert emoji is model.app.rest.fetch_emoji.return_value
+
 
     @pytest.mark.asyncio
     async def test_create_category(self, model):
         model.app.rest.create_guild_category = mock.AsyncMock()
 
-        await model.create_category("very cool category", position=2)
+        category = await model.create_category("very cool category", position=2)
 
         model.app.rest.create_guild_category.assert_awaited_once_with(
             90210,
@@ -461,11 +466,14 @@ class TestPartialGuild:
             reason=undefined.UNDEFINED,
         )
 
+        assert category is model.app.rest.create_guild_category.return_value
+
+
     @pytest.mark.asyncio
     async def test_create_text_channel(self, model):
         model.app.rest.create_guild_text_channel = mock.AsyncMock()
 
-        await model.create_text_channel("cool text channel", position=3, nsfw=False, rate_limit_per_user=30)
+        text_channel = await model.create_text_channel("cool text channel", position=3, nsfw=False, rate_limit_per_user=30)
 
         model.app.rest.create_guild_text_channel.assert_awaited_once_with(
             90210,
@@ -479,11 +487,13 @@ class TestPartialGuild:
             reason=undefined.UNDEFINED,
         )
 
+        assert text_channel is model.app.rest.create_guild_text_channel.return_value
+
     @pytest.mark.asyncio
     async def test_create_news_channel(self, model):
         model.app.rest.create_guild_news_channel = mock.AsyncMock()
 
-        await model.create_news_channel("cool news channel", position=1, nsfw=False, rate_limit_per_user=420)
+        news_channel = await model.create_news_channel("cool news channel", position=1, nsfw=False, rate_limit_per_user=420)
 
         model.app.rest.create_guild_news_channel.assert_awaited_once_with(
             90210,
@@ -497,11 +507,13 @@ class TestPartialGuild:
             reason=undefined.UNDEFINED,
         )
 
+        assert news_channel is model.app.rest.create_guild_news_channel.return_value
+
     @pytest.mark.asyncio
     async def test_create_voice_channel(self, model):
         model.app.rest.create_guild_voice_channel = mock.AsyncMock()
 
-        await model.create_voice_channel("cool voice channel", position=1, bitrate=3200, video_quality_mode=2)
+        voice_channel = await model.create_voice_channel("cool voice channel", position=1, bitrate=3200, video_quality_mode=2)
 
         model.app.rest.create_guild_voice_channel.assert_awaited_once_with(
             90210,
@@ -516,11 +528,13 @@ class TestPartialGuild:
             reason=undefined.UNDEFINED,
         )
 
+        assert voice_channel is model.app.rest.create_guild_voice_channel.return_value
+
     @pytest.mark.asyncio
     async def test_create_stage_channel(self, model):
         model.app.rest.create_guild_stage_channel = mock.AsyncMock()
 
-        await model.create_stage_channel("cool stage channel", position=1, bitrate=3200, user_limit=100)
+        stage_channel = await model.create_stage_channel("cool stage channel", position=1, bitrate=3200, user_limit=100)
 
         model.app.rest.create_guild_stage_channel.assert_awaited_once_with(
             90210,
@@ -534,21 +548,27 @@ class TestPartialGuild:
             reason=undefined.UNDEFINED,
         )
 
+        assert stage_channel is model.app.rest.create_guild_stage_channel.return_value
+
+
     @pytest.mark.asyncio
     async def test_delete_channel(self, model):
         model.app.rest.delete_channel = mock.AsyncMock()
 
-        await model.delete_channel(1288820)
+        deleted_channel = await model.delete_channel(1288820)
 
         model.app.rest.delete_channel.assert_awaited_once_with(1288820)
+        assert deleted_channel is model.app.rest.delete_channel.return_value
+
 
     @pytest.mark.asyncio
     async def test_delete_category(self, model):
         model.app.rest.delete_channel = mock.AsyncMock()
 
-        await model.delete_category(2828001)
+        deleted_category = await model.delete_category(2828001)
 
         model.app.rest.delete_channel.assert_awaited_once_with(2828001)
+        assert deleted_category is model.app.rest.delete_channel.return_value
 
 
 class TestGuildPreview:

@@ -59,7 +59,6 @@ import typing
 
 import attr
 
-from hikari import errors
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
