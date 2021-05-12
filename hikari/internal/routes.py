@@ -128,14 +128,10 @@ class Route:
         The template string for the path to use.
     """
 
-    method: str = attr.field(
-        hash=True,
-    )
+    method: str = attr.field()
     """The HTTP method."""
 
-    path_template: str = attr.field(
-        hash=True,
-    )
+    path_template: str = attr.field()
     """The template string used for the path."""
 
     major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False)
