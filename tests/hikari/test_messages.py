@@ -133,7 +133,7 @@ class TestMessage:
         message.app = mock.Mock()
         message.id = 789
         message.channel_id = 456
-        assert message.make_link() == "https://discord.com/channels/@me/456/789"
+        assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
     def test_guild_id_when_guild_is_not_none(self, message):
         message._guild_id = 123
