@@ -550,7 +550,8 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("before" if self._newest_first else "after", self._first_id)
-        query.put("limit", 100)
+        # We rely on Discord's default for the limit here since for this endpoint this has always scaled
+        # along side the maximum page size limit to match the maximum amount of guilds a user can be in. 
 
         chunk = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(chunk, list)
