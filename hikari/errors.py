@@ -286,6 +286,9 @@ class RESTErrorCode(int, enums.Enum):
     UNKNOWN_GUILD_TEMPLATE = 10_057
     """Unknown guild template."""
 
+    EXPLICIT_CONTENT_BLOCKED = 20_009
+    """Explicit content cannot be sent to the desired recipient(s)."""
+
     ANNOUNCEMENT_LIMIT_HIT = 20_022
     """Message can not be edited due to announcement rate limits."""
 
@@ -298,11 +301,17 @@ class RESTErrorCode(int, enums.Enum):
     MAXIMUM_PINS = 30_003
     """Maximum number of pins reached for the channel (50)."""
 
+    MAXIMUM_RECIPIENTS = 30_004
+    """Maximum number of recipients reached (10)."""
+
     MAXIMUM_ROLES = 30_005
     """Maximum number of guild roles reached (250)."""
 
     MAXIMUM_WEBHOOKS = 30_007
     """Maximum number of webhooks in a channel reached (10)."""
+
+    MAXIMUM_EMOJIS = 30_008
+    """Maximum number of emojis reached."""
 
     MAXIMUM_REACTIONS = 30_010
     """Maximum number of reactions on a message reached (20)."""
@@ -325,17 +334,26 @@ class RESTErrorCode(int, enums.Enum):
     TEMPORARILY_DISABLED = 40_006
     """This feature has been temporarily disabled server-side."""
 
+    USER_BANNED = 40_003
+    """The user is banned from this guild."""
+
     ALREADY_CROSSPOSTED = 40_033
     """This message has already been crossposted."""
 
-    MISSING_ACCESS = 50_001
-    """Missing access."""
+    APPLICATION_COMMAND_ALREADY_EXISTS = 40_041
+    """An application command with that name already exists."""
+
+    INVALID_ACCOUNT_TYPE = 50_002
+    """Invalid account type."""
 
     PROHIBITED_ON_DM = 50_003
     """Cannot execute action on a DM channel."""
 
+    GUILD_WIDGET_DISABLED = 50_004
+    """Guild widget disabled."""
+
     NOT_MESSAGE_AUTHOR = 50_005
-    """Cannot edit a message authored by another user."""
+    """Cannot edit a message created by another user."""
 
     EMPTY_MESSAGE = 50_006
     """Cannot send an empty message."""
@@ -346,9 +364,6 @@ class RESTErrorCode(int, enums.Enum):
     MESSAGE_IN_VC = 50_008
     """Cannot send messages in a voice channel."""
 
-    CHANNEL_VERIFICATION_TOO_HIGH = 50_009
-    """Channel verification level is too high for you to gain access."""
-
     PINS_ONLY_ON_ORIGIN_CHANNEL = 50_019
     """A message can only be pinned to the channel it was sent in."""
 
@@ -358,6 +373,18 @@ class RESTErrorCode(int, enums.Enum):
     PROHIBITED_ON_SYSTEM_MESSAGE = 50_021
     """Cannot execute action on a system message."""
 
+    PROHIBITED_ON_CHANNEL_TYPE = 50_024
+    """Cannot execute action on this channel type."""
+
+    INVALID_OAUTH2_TOKEN = 50_025
+    """Invalid OAuth2 access token provided."""
+
+    MISSING_REQUIRED_OAUTH2_SCOPE = 50_026
+    """Missing required OAuth2 scope."""
+
+    INVALID_ROLE = 50_028
+    """Invalid role."""
+
     INVALID_RECIPIENTS = 50_033
     """Invalid recipients."""
 
@@ -366,6 +393,9 @@ class RESTErrorCode(int, enums.Enum):
 
     REQUIRED_CHANNEL = 50_074
     """Cannot delete a channel required for community guilds."""
+
+    NO_USERS_WITH_TAG = 80_004
+    """No users with this tag exist."""
 
     REACTION_BLOCKED = 90_001
     """The reaction was blocked."""

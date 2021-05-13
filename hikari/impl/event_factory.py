@@ -78,7 +78,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelCreateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            raise NotImplementedError("DM channel create events are undoumcneted behaviour")
+            raise NotImplementedError("DM channel create events are undocumented behaviour")
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_update_event(

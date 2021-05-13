@@ -41,6 +41,7 @@ from hikari._about import __license__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.applications import Application
+from hikari.applications import ApplicationFlags
 from hikari.applications import AuthorizationApplication
 from hikari.applications import AuthorizationInformation
 from hikari.applications import ConnectionVisibility
