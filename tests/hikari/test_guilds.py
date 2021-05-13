@@ -781,6 +781,8 @@ class TestGuild:
         assert widget_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(192729)
 
+    @pytest.mark.asyncio
+    async def test_fetch_widget_channel_none(self, model):
         model.widget_channel_id = None
 
         widget_none_case = await model.fetch_widget_channel()
@@ -795,6 +797,8 @@ class TestGuild:
         assert rules_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(123445)
 
+    @pytest.mark.asyncio
+    async def test_fetch_rules_channel_none(self, model):
         model.rules_channel_id = None
 
         rules_none_case = await model.fetch_rules_channel()
@@ -809,6 +813,8 @@ class TestGuild:
         assert system_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(123888)
 
+    @pytest.mark.asyncio
+    async def test_fetch_system_channel_none(self, model):
         model.system_channel_id = None
 
         system_none_case = await model.fetch_system_channel()
@@ -823,6 +829,8 @@ class TestGuild:
         assert public_updates_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(99699)
 
+    @pytest.mark.asyncio
+    async def test_fetch_public_updates_channel_none(self, model):
         model.public_updates_channel_id = None
 
         public_updates_none_case = await model.fetch_public_updates_channel()
@@ -837,6 +845,8 @@ class TestGuild:
         assert afk_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(1234)
 
+    @pytest.mark.asyncio
+    async def test_fetch_afk_channel_none(self, model):
         model.afk_channel_id = None
 
         afk_none_case = await model.fetch_afk_channel()
