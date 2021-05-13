@@ -75,7 +75,7 @@ class ShardPayload(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
     !!! note
-        This will only be dispatched for dispatch real events received from
+        This will only be dispatched for real dispatch events received from
         Discord and not artificial events like the `ShardStateEvent` events.
     """
 
