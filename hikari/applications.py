@@ -393,6 +393,9 @@ class Team(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
+    name: str = attr.field(hash=False, eq=False, repr=True)
+    """The name of this team."""
+
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
@@ -410,7 +413,7 @@ class Team(snowflakes.Unique):
     """The ID of this team's owner."""
 
     def __str__(self) -> str:
-        return f"Team {self.id}"
+        return f"Team {self.name} ({self.id})"
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:

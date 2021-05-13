@@ -439,12 +439,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflakes.Snowflake.from_data(
-            datetime.datetime.now(tz=datetime.timezone.utc),
-            0,
-            0,
-            value,
-        )
+        return snowflakes.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value)
 
 
 # We use an explicit forward reference for this, since this breaks potential

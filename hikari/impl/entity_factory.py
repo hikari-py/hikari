@@ -292,6 +292,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             team = application_models.Team(
                 app=self._app,
                 id=snowflakes.Snowflake(team_payload["id"]),
+                name=team_payload["name"],
                 icon_hash=team_payload["icon"],
                 members=members,
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),

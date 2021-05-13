@@ -199,6 +199,7 @@ class TestEntityFactoryImpl:
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
+                "name": "Hikari Development",
                 "members": [
                     {"membership_state": 1, "permissions": ["*"], "team_id": "209333111222", "user": user_payload}
                 ],
@@ -234,6 +235,7 @@ class TestEntityFactoryImpl:
         assert application.icon_hash == "iwiwiwiwiw"
         # Team
         assert application.team.id == 202020202
+        assert application.team.name == "Hikari Development"
         assert application.team.icon_hash == "hashtag"
         assert application.team.owner_id == 393030292
         assert isinstance(application.team, application_models.Team)
