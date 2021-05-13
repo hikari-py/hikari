@@ -2422,12 +2422,13 @@ class TestCacheImpl:
         mock_sticker = mock.MagicMock(messages.Sticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
-        mock_applcation = mock.MagicMock(messages.MessageApplication)
+        mock_application = mock.MagicMock(messages.MessageApplication)
         mock_reference = mock.MagicMock(messages.MessageReference)
         mock_referenced_message = object()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
+        mock_interaction = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -2447,12 +2448,14 @@ class TestCacheImpl:
             webhook_id=snowflakes.Snowflake(3123123),
             type=messages.MessageType.REPLY,
             activity=mock_activity,
-            application=mock_applcation,
+            application=mock_application,
             message_reference=mock_reference,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
             stickers=(mock_sticker,),
+            interaction=mock_interaction,
+            application_id=snowflakes.Snowflake(123123123123),
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2500,14 +2503,16 @@ class TestCacheImpl:
         assert result.type is messages.MessageType.REPLY
         assert result.activity == mock_activity
         assert result.activity is not mock_activity
-        assert result.application == mock_applcation
-        assert result.application is not mock_applcation
+        assert result.application == mock_application
+        assert result.application is not mock_application
         assert result.message_reference == mock_reference
         assert result.message_reference is not mock_reference
         assert result.flags == messages.MessageFlag.CROSSPOSTED
         assert result.stickers == (mock_sticker,)
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
+        assert result.application_id == 123123123123
+        assert result.interaction is mock_interaction.build_entity.return_value
 
     def test__build_message_with_null_fields(self, cache_impl):
         mentions = cache_utilities.MentionsData(
@@ -2540,6 +2545,8 @@ class TestCacheImpl:
             nonce=None,
             referenced_message=None,
             stickers=(),
+            interaction=None,
+            application_id=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2562,6 +2569,8 @@ class TestCacheImpl:
         assert result.message_reference is None
         assert result.nonce is None
         assert result.referenced_message is None
+        assert result.application_id is None
+        assert result.interaction is None
 
     @pytest.mark.skip(reason="TODO")
     def test_clear_messages(self, cache_impl):

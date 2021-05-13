@@ -1901,6 +1901,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             format_type=message_models.StickerFormatType(payload["format_type"]),
         )
 
+    def _deserialize_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
+        return message_models.MessageInteraction(
+            id=snowflakes.Snowflake(payload["id"]),
+            type=interaction_models.InteractionType(payload["type"]),
+            name=payload["name"],
+            user=self.deserialize_user(payload["user"]),
+        )
+
     def deserialize_partial_message(  # noqa CFQ001 - Function too long
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
@@ -1966,6 +1974,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if content is not undefined.UNDEFINED:
             content = content or None  # Default to None if content is an empty string
 
+        application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED
+        if raw_application_id := payload.get("application_id"):
+            application_id = snowflakes.Snowflake(raw_application_id)
+
+        interaction: undefined.UndefinedNoneOr[message_models.MessageInteraction] = undefined.UNDEFINED
+        if interaction_payload := payload.get("interaction"):
+            interaction = self._deserialize_interaction(interaction_payload)
+
         message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1990,6 +2006,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             stickers=stickers,
             nonce=payload.get("nonce", undefined.UNDEFINED),
+            application_id=application_id,
+            interaction=interaction,
             # We initialize these next.
             mentions=NotImplemented,
         )
@@ -2070,6 +2088,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             stickers = []
 
+        interaction: typing.Optional[message_models.MessageInteraction] = None
+        if interaction_payload := payload.get("interaction"):
+            interaction = self._deserialize_interaction(interaction_payload)
+
         message = message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2094,6 +2116,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
             stickers=stickers,
             nonce=payload.get("nonce"),
+            application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
+            interaction=interaction,
             # We initialize these next.
             mentions=NotImplemented,
         )

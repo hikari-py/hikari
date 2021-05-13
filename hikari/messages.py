@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "Reaction",
     "MessageActivity",
     "Mentions",
+    "MessageInteraction",
     "MessageReference",
     "PartialMessage",
     "Message",
@@ -60,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import users as users_
+    from hikari.interactions import bases
 
 _T = typing.TypeVar("_T")
 
@@ -499,6 +501,24 @@ class MessageApplication(guilds.PartialApplication):
 
 
 @attr_extensions.with_copy
+@attr.define(kw_only=True, repr=True, hash=True, weakref_slot=False)
+class MessageInteraction:
+    """Representation of information provided for a message from an interaction."""
+
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    """ID of the interaction this message was sent by."""
+
+    type: typing.Union[bases.InteractionType, int] = attr.field(eq=False, repr=True)
+    """The type of interaction this message was created by."""
+
+    name: str = attr.field(eq=False, repr=True)
+    """Name of the application command the interaction is tied to."""
+
+    user: users_.User = attr.field(eq=False, repr=True)
+    """Object of the user who invoked this interaction."""
+
+
+@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
@@ -591,10 +611,20 @@ class PartialMessage(snowflakes.Unique):
     """The message type."""
 
     activity: undefined.UndefinedNoneOr[MessageActivity] = attr.field(hash=False, eq=False, repr=False)
-    """The message activity."""
+    """The message activity.
+
+    !!! note
+        This will only be provided for messages with rich-presence related chat
+        embeds.
+    """
 
     application: undefined.UndefinedNoneOr[MessageApplication] = attr.field(hash=False, eq=False, repr=False)
-    """The message application."""
+    """The message application.
+
+    !!! note
+        This will only be provided for messages with rich-presence related chat
+        embeds.
+    """
 
     message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(hash=False, eq=False, repr=False)
     """The message reference data."""
@@ -617,6 +647,16 @@ class PartialMessage(snowflakes.Unique):
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
     `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
+    """
+
+    interaction: undefined.UndefinedNoneOr[MessageInteraction] = attr.field(hash=False, repr=False)
+    """Information about the interaction this message was created by."""
+
+    application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(hash=False, repr=False)
+    """ID of the application this message was sent by.
+
+    !!! note
+        This will only be provided for interaction messages.
     """
 
     @property
@@ -1242,10 +1282,20 @@ class Message(PartialMessage):
     """The message type."""
 
     activity: typing.Optional[MessageActivity]
-    """The message activity."""
+    """The message activity.
+
+    !!! note
+        This will only be provided for messages with rich-presence related chat
+        embeds.
+    """
 
     application: typing.Optional[MessageApplication]
-    """The message application."""
+    """The message application.
+
+    !!! note
+        This will only be provided for messages with rich-presence related chat
+        embeds.
+    """
 
     message_reference: typing.Optional[MessageReference]
     """The message reference data."""
@@ -1258,3 +1308,16 @@ class Message(PartialMessage):
 
     nonce: typing.Optional[str]
     """The message nonce. This is a string used for validating a message was sent."""
+
+    referenced_message: typing.Optional[Message]
+    """The message that was replied to."""
+
+    interaction: typing.Optional[MessageInteraction]
+    """Information about the interaction this message was created by."""
+
+    application_id: typing.Optional[snowflakes.Snowflake]
+    """ID of the application this message was sent by.
+
+    !!! note
+        This will only be provided for interaction messages.
+    """

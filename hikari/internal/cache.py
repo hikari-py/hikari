@@ -34,6 +34,7 @@ __all__: typing.List[str] = [
     "RichActivityData",
     "MemberPresenceData",
     "MentionsData",
+    "MessageInteractionData",
     "MessageData",
     "VoiceStateData",
     "RefCell",
@@ -63,6 +64,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import voices
 from hikari.api import cache
+from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import collections
 
@@ -694,6 +696,33 @@ class MentionsData(BaseData[messages.Mentions]):
             self.everyone = mention.everyone
 
 
+@attr_extensions.with_copy
+@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+class MessageInteractionData(BaseData[messages.MessageInteraction]):
+    """A model for storing message interaction data."""
+
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    type: typing.Union[bases.InteractionType, int] = attr.field(eq=False, repr=True)
+    name: str = attr.field(eq=False, repr=True)
+    user: RefCell[users_.User] = attr.field(eq=False, repr=True)
+
+    @classmethod
+    def build_from_entity(
+        cls,
+        interaction: messages.MessageInteraction,
+        /,
+        *,
+        user: typing.Optional[RefCell[users_.User]] = None,
+    ) -> MessageInteractionData:
+        if user is None:
+            user = RefCell(interaction.user)
+
+        return MessageInteractionData(id=interaction.id, type=interaction.type, name=interaction.name, user=user)
+
+    def build_entity(self, _: traits.RESTAware, /) -> messages.MessageInteraction:
+        return messages.MessageInteraction(id=self.id, type=self.type, name=self.name, user=self.user.copy())
+
+
 def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     return embeds_.Embed.from_received_embed(
         title=embed.title,
@@ -738,7 +767,9 @@ class MessageData(BaseData[messages.Message]):
     flags: typing.Optional[messages.MessageFlag] = attr.field()
     stickers: typing.Tuple[messages.Sticker, ...] = attr.field()
     nonce: typing.Optional[str] = attr.field()
-    referenced_message: undefined.UndefinedNoneOr[RefCell[MessageData]] = attr.field()
+    referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
+    interaction: typing.Optional[MessageInteractionData] = attr.field()
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
     @classmethod
     def build_from_entity(
@@ -752,12 +783,17 @@ class MessageData(BaseData[messages.Message]):
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
         referenced_message: typing.Optional[RefCell[MessageData]] = None,
+        interaction_user: typing.Optional[RefCell[users_.User]] = None,
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
 
         if not referenced_message and message.referenced_message:
             referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
+
+        interaction: typing.Optional[MessageInteractionData] = None
+        if message.interaction:
+            interaction = MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
 
         return cls(
             id=message.id,
@@ -783,15 +819,14 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, message.stickers)),
             nonce=message.nonce,
             referenced_message=referenced_message,
+            interaction=interaction,
+            application_id=message.application_id,
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
-        referenced_message: undefined.UndefinedNoneOr[messages.Message]
-        if isinstance(self.referenced_message, RefCell):
+        referenced_message: typing.Optional[messages.Message] = None
+        if self.referenced_message:
             referenced_message = self.referenced_message.object.build_entity(app)
-
-        else:
-            referenced_message = self.referenced_message
 
         message = messages.Message(
             id=self.id,
@@ -818,6 +853,8 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, self.stickers)),
             nonce=self.nonce,
             referenced_message=referenced_message,
+            interaction=self.interaction.build_entity(app) if self.interaction else None,
+            application_id=self.application_id,
         )
         message.mentions = self.mentions.build_entity(app, message=message)
         return message
