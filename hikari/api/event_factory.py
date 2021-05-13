@@ -827,6 +827,27 @@ class EventFactory(abc.ABC):
     ################
 
     @abc.abstractmethod
+    def deserialize_shard_payload_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, *, name: str
+    ) -> shard_events.ShardPayload:
+        """Parse a raw payload from Discord into a shard payload event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+        name : builtins.str
+            Name of the event.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardPayload
+            The parsed shard payload event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_ready_event(
         self,
         shard: gateway_shard.GatewayShard,
