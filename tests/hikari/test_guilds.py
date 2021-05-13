@@ -753,7 +753,16 @@ class TestGuild:
     def test_make_banner_url_when_no_hash(self, model):
         model.banner_hash = None
         assert model.make_banner_url(ext="png", size=2048) is None
-    
+
+    @pytest.mark.asyncio
+    async def test_fetch_roles(self, model):
+        model.app.rest.fetch_roles = mock.AsyncMock()
+
+        roles = await model.fetch_roles()
+
+        model.app.rest.fetch_roles.assert_awaited_once_with(123)
+        assert roles is model.app.rest.fetch_roles.return_value
+
     @pytest.mark.asyncio
     async def test_fetch_owner(self, model):
         model.app.rest.fetch_member = mock.AsyncMock()
@@ -762,7 +771,7 @@ class TestGuild:
 
         model.app.rest.fetch_member.assert_awaited_once_with(123, 1111)
         assert owner is model.app.rest.fetch_member.return_value
-    
+
     @pytest.mark.asyncio
     async def test_fetch_widget_channel(self, model):
         model.app.rest.fetch_channel = mock.AsyncMock()
@@ -771,12 +780,12 @@ class TestGuild:
 
         assert widget_channel is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(192729)
-    
+
         model.widget_channel_id = None
 
         widget_none_case = await model.fetch_widget_channel()
         assert None is widget_none_case
-    
+
     @pytest.mark.asyncio
     async def test_fetch_rules_channel(self, model):
         model.app.rest.fetch_channel = mock.AsyncMock()
@@ -832,6 +841,7 @@ class TestGuild:
 
         afk_none_case = await model.fetch_afk_channel()
         assert None is afk_none_case
+
 
 class TestRestGuild:
     @pytest.fixture()

@@ -2159,6 +2159,36 @@ class Guild(PartialGuild, abc.ABC):
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
 
+    async def fetch_roles(self) -> typing.Sequence[Role]:
+        """Fetch the roles of the guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Role]
+            The requested roles.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+            hikari.errors.NotFoundError
+                If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_roles(self.id)
+
     async def fetch_owner(self) -> Member:
         """Fetch the owner of the guild.
 
