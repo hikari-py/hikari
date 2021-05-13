@@ -669,12 +669,12 @@ class TestGuild:
             preferred_locale="en-GB",
             premium_subscription_count=12,
             premium_tier=guilds.GuildPremiumTier.TIER_3,
-            public_updates_channel_id=None,
-            rules_channel_id=None,
-            system_channel_id=None,
+            public_updates_channel_id=snowflakes.Snowflake(99699),
+            rules_channel_id=snowflakes.Snowflake(123445),
+            system_channel_id=snowflakes.Snowflake(123888),
             vanity_url_code="yeet",
             verification_level=guilds.GuildVerificationLevel.VERY_HIGH,
-            widget_channel_id=None,
+            widget_channel_id=snowflakes.Snowflake(192729),
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
         )
 
@@ -753,7 +753,85 @@ class TestGuild:
     def test_make_banner_url_when_no_hash(self, model):
         model.banner_hash = None
         assert model.make_banner_url(ext="png", size=2048) is None
+    
+    @pytest.mark.asyncio
+    async def test_fetch_owner(self, model):
+        model.app.rest.fetch_member = mock.AsyncMock()
 
+        owner = await model.fetch_owner()
+
+        model.app.rest.fetch_member.assert_awaited_once_with(123, 1111)
+        assert owner is model.app.rest.fetch_member.return_value
+    
+    @pytest.mark.asyncio
+    async def test_fetch_widget_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        widget_channel = await model.fetch_widget_channel()
+
+        assert widget_channel is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(192729)
+    
+        model.widget_channel_id = None
+
+        widget_none_case = await model.fetch_widget_channel()
+        assert None is widget_none_case
+    
+    @pytest.mark.asyncio
+    async def test_fetch_rules_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        rules_channel = await model.fetch_rules_channel()
+
+        assert rules_channel is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(123445)
+
+        model.rules_channel_id = None
+
+        rules_none_case = await model.fetch_rules_channel()
+        assert None is rules_none_case
+
+    @pytest.mark.asyncio
+    async def test_fetch_system_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        system_channel = await model.fetch_system_channel()
+
+        assert system_channel is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(123888)
+
+        model.system_channel_id = None
+
+        system_none_case = await model.fetch_system_channel()
+        assert None is system_none_case
+
+    @pytest.mark.asyncio
+    async def test_fetch_public_updates_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        public_updates_channel = await model.fetch_public_updates_channel()
+
+        assert public_updates_channel is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(99699)
+
+        model.public_updates_channel_id = None
+
+        public_updates_none_case = await model.fetch_public_updates_channel()
+        assert None is public_updates_none_case
+
+    @pytest.mark.asyncio
+    async def test_fetch_afk_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        afk_channel = await model.fetch_afk_channel()
+
+        assert afk_channel is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(1234)
+
+        model.afk_channel_id = None
+
+        afk_none_case = await model.fetch_afk_channel()
+        assert None is afk_none_case
 
 class TestRestGuild:
     @pytest.fixture()
