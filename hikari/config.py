@@ -29,6 +29,7 @@ __all__: typing.List[str] = [
     "ProxySettings",
     "HTTPTimeoutSettings",
     "HTTPSettings",
+    "CacheComponents",
     "CacheSettings",
 ]
 
@@ -41,6 +42,7 @@ import yarl
 
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import enums
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
@@ -393,77 +395,58 @@ class HTTPSettings:
     """
 
 
+class CacheComponents(enums.Flag):
+    """Flags to control the cache components."""
+
+    NONE = 0
+    """Disables the cache."""
+
+    GUILDS = 1 << 0
+    """Enables the guild cache."""
+
+    GUILD_CHANNELS = 1 << 1
+    """Enables the guild channels cache."""
+
+    MEMBERS = 1 << 2
+    """Enables the members cache."""
+
+    ROLES = 1 << 3
+    """Enables the roles cache."""
+
+    INVITES = 1 << 4
+    """Enables the invites cache."""
+
+    EMOJIS = 1 << 5
+    """Enables the invites cache."""
+
+    PRESENCES = 1 << 6
+    """Enables the presences cache."""
+
+    VOICE_STATES = 1 << 7
+    """Enables the voice states cache."""
+
+    MESSAGES = 1 << 8
+    """Enables the messages cache."""
+
+    ALL = GUILDS | GUILD_CHANNELS | MEMBERS | ROLES | INVITES | EMOJIS | PRESENCES | VOICE_STATES | MESSAGES
+    """Fully enables the cache."""
+
+
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class CacheSettings:
     """Settings to control the cache."""
 
-    enable: bool = attr.field(default=True)
-    """Whether to enable the cache.
+    components: CacheComponents = attr.field(default=CacheComponents.ALL)
+    """The cache components to use.
 
-    If set to `False`, all the cache functionality will be disabled.
-
-    Defaults to `builtins.True`.
-    """
-
-    guilds: bool = attr.field(default=True)
-    """Whether to enable the guilds cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    members: bool = attr.field(default=True)
-    """Whether to enable the members cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    guild_channels: bool = attr.field(default=True)
-    """Whether to enable the guild channels cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    roles: bool = attr.field(default=True)
-    """Whether to enable the roles cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    invites: bool = attr.field(default=True)
-    """Whether to enable the invites cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    emojis: bool = attr.field(default=True)
-    """Whether to enable the emojis cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    presences: bool = attr.field(default=True)
-    """Whether to enable the presences cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    voice_states: bool = attr.field(default=True)
-    """Whether to enable the voice states cache.
-
-    Defaults to `builtins.True`.
-    """
-
-    messages: bool = attr.field(default=True)
-    """Whether to enable the message cache.
-
-    Defaults to `builtins.True`.
+    Defaults to `CacheComponents.ALL`.
     """
 
     max_messages: int = attr.field(default=300)
     """The max number of messages to store in the cache at once.
 
-    This will have no effect if `messages` is `builtins.False`.
+    This will have no effect if the messages cache is not enabled.
 
     Defaults to `300`.
     """
