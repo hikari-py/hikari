@@ -254,7 +254,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def close(self) -> None:
         if not self._runner:
-            raise errors.ComponentNotRunningError("Cannot close an inactive interaction server")
+            raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
         runner = self._runner
         future = self._future
@@ -265,7 +265,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def join(self) -> None:
         if not self._runner:
-            raise errors.ComponentNotRunningError("Cannot wait for an inactive interaction server to join")
+            raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
 
         await self._future
 
@@ -391,7 +391,7 @@ class InteractionServer(interaction_server.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self._runner:
-            raise errors.ComponentAlreadyRunningError("Cannot start an already active interaction server")
+            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
         loop = asyncio.get_event_loop()
 
@@ -477,7 +477,7 @@ class InteractionServer(interaction_server.InteractionServer):
             AIOHTTP's documentation.
         """
         if self._runner:
-            raise errors.ComponentAlreadyRunningError("Cannot start an already active interaction server")
+            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
         self._future = asyncio.futures.Future()
         self._runner = aiohttp.web_runner.AppRunner(

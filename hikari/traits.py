@@ -473,7 +473,7 @@ class InteractionServerAware(RESTAware, EventFactoryAware, fast_protocol.FastPro
         """Check whether the REST server is alive.
 
         This is useful as some functions might raise
-        `hikari.errors.ComponentNotRunningError` if this is
+        `hikari.errors.ComponentStateConflictError` if this is
         `builtins.False`.
 
         Returns
