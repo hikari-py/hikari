@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "ShardEvent",
+    "ShardPayload",
     "ShardStateEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
@@ -66,6 +67,29 @@ class ShardEvent(base_events.Event, abc.ABC):
         hikari.api.shard.GatewayShard
             The shard that triggered the event.
         """
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ShardPayload(ShardEvent):
+    """Event fired for most shard events with their raw payload.
+
+    !!! note
+        This will only be dispatched for real dispatch events received from
+        Discord and not artificial events like the `ShardStateEvent` events.
+    """
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    name: str = attr.field()
+    """Name of the received event."""
+
+    payload: typing.Mapping[str, typing.Any] = attr.field()
+    """The raw payload for this event."""
 
 
 class ShardStateEvent(ShardEvent, abc.ABC):

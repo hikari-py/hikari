@@ -86,6 +86,8 @@ class EventManagerBase(event_manager.EventManager):
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
+        payload_event = self._app.event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+        self.dispatch(payload_event)
         callback = self._consumers[event_name.casefold()]
         asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
 
