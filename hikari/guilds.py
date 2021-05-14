@@ -609,9 +609,7 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.user.app.rest.unban_user(
-            self.guild_id, self.user.id, reason=reason
-        )
+        await self.user.app.rest.unban_user(self.guild_id, self.user.id, reason=reason)
 
     async def kick(
         self,
@@ -691,11 +689,10 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-
         await self.user.app.rest.add_role_to_member(self.guild_id, self.user.id, role, reason=reason)
 
     async def remove_role(
-        self, role: snowflakes.SnowflakeisOr[PartialRole], *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+        self, role: snowflakes.SnowflakeishOr[PartialRole], *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
     ) -> None:
         """Remove a role from the member.
 

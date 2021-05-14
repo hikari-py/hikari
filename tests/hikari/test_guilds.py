@@ -250,7 +250,7 @@ class TestMember:
     async def test_kick(self, model):
         model.app.rest.kick_user = mock.AsyncMock()
 
-        await model.kick( reason="bored")
+        await model.kick(reason="bored")
 
         model.app.rest.kick_user.assert_awaited_once_with(456, 123, reason="bored")
 
@@ -273,9 +273,20 @@ class TestMember:
     @pytest.mark.asyncio
     async def test_edit(self, model):
         model.app.rest.edit_member = mock.AsyncMock()
-        edit = await model.edit(nick="Kitten", roles=[123,432,345], mute=False, deaf=True, voice_channel = 4321245, reason="I'm God")
+        edit = await model.edit(
+            nick="Kitten", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
+        )
 
-        model.app.rest.edit_member.assert_awaited_once_with(456, 123, nick="Kitten", roles=[123,432,345], mute=False, deaf=True, voice_channel = 4321245, reason="I'm God")
+        model.app.rest.edit_member.assert_awaited_once_with(
+            456,
+            123,
+            nick="Kitten",
+            roles=[123, 432, 345],
+            mute=False,
+            deaf=True,
+            voice_channel=4321245,
+            reason="I'm God",
+        )
 
         assert edit == model.app.rest.edit_member.return_value
 
