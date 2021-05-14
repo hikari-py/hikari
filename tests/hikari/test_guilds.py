@@ -223,12 +223,61 @@ class TestMember:
         model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
 
     @pytest.mark.asyncio
+    async def test_fetch_roles(self, model):
+        model.user.app.rest.fetch_member = mock.AsyncMock()
+
+        assert await model.fetch_roles() is model.user.app.rest.fetch_member.return_value.roles
+
+        model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
+
+    @pytest.mark.asyncio
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
 
         await model.ban(delete_message_days=10, reason="bored")
 
         model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_days=10, reason="bored")
+
+    @pytest.mark.asyncio
+    async def test_unban(self, model):
+        model.app.rest.unban_user = mock.AsyncMock()
+
+        await model.unban(reason="Unbored")
+
+        model.app.rest.unban_user.assert_awaited_once_with(456, 123, reason="Unbored")
+
+    @pytest.mark.asyncio
+    async def test_kick(self, model):
+        model.app.rest.kick_user = mock.AsyncMock()
+
+        await model.kick( reason="bored")
+
+        model.app.rest.kick_user.assert_awaited_once_with(456, 123, reason="bored")
+
+    @pytest.mark.asyncio
+    async def test_add_role(self, model):
+        model.app.rest.add_role_to_member = mock.AsyncMock()
+
+        await model.add_role(563412, reason="Promoted")
+
+        model.app.rest.add_role_to_member.assert_awaited_once_with(456, 123, 563412, reason="Promoted")
+
+    @pytest.mark.asyncio
+    async def test_remove_role(self, model):
+        model.app.rest.remove_role_from_member = mock.AsyncMock()
+
+        await model.remove_role(563412, reason="Demoted")
+
+        model.app.rest.remove_role_from_member.assert_awaited_once_with(456, 123, 563412, reason="Demoted")
+
+    @pytest.mark.asyncio
+    async def test_edit(self, model):
+        model.app.rest.edit_member = mock.AsyncMock()
+        edit = await model.edit(nick="Kitten", roles=[123,432,345], mute=False, deaf=True, voice_channel = 4321245, reason="I'm God")
+
+        model.app.rest.edit_member.assert_awaited_once_with(456, 123, nick="Kitten", roles=[123,432,345], mute=False, deaf=True, voice_channel = 4321245, reason="I'm God")
+
+        assert edit == model.app.rest.edit_member.return_value
 
     def test_default_avatar_url_property(self, model, mock_user):
         assert model.default_avatar_url is mock_user.default_avatar_url
