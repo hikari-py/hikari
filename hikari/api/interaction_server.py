@@ -42,8 +42,8 @@ ListenerT = typing.Callable[
 ]
 """Type hint of a Interaction server's listener callback.
 
-This should be an async callback which takes in one positional argument of type
-`hikari.events.interaction_events.InteractionCreateEvent` and may return an
+This should be an async callback which takes in one positional argument which
+subclases `hikari.interactions.bases.PartialInteraction` and may return an
 instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilder`
 subclass for the provided interaction type which will instruct the server on how
 to respond.
@@ -52,7 +52,7 @@ to respond.
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`
-"""  # TODO: rewrite to account for inheritance and new response type
+"""
 
 ListenerMapT = typing.Mapping[typing.Type[InteractionT], ListenerT[InteractionT, ResponseT]]
 
