@@ -57,6 +57,8 @@ if typing.TYPE_CHECKING:
 class ShardEvent(base_events.Event, abc.ABC):
     """Base class for any event that was shard-specific."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def shard(self) -> gateway_shard.GatewayShard:
@@ -98,9 +100,11 @@ class ShardStateEvent(ShardEvent, abc.ABC):
     This currently wraps connection/disconnection/ready/resumed events only.
     """
 
+    __slots__: typing.Sequence[str] = ()
+
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
@@ -112,7 +116,7 @@ class ShardConnectedEvent(ShardStateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
@@ -124,7 +128,7 @@ class ShardDisconnectedEvent(ShardStateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
@@ -193,7 +197,7 @@ class ShardReadyEvent(ShardStateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
@@ -205,7 +209,7 @@ class ShardResumedEvent(ShardStateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 

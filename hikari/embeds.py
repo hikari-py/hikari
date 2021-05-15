@@ -56,7 +56,7 @@ AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource[AsyncReaderT]):
     """A base type for any resource provided in an embed.
 
@@ -111,7 +111,7 @@ class EmbedResource(files.Resource[AsyncReaderT]):
         return self.resource.stream(executor=executor, head_only=head_only)
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     """Resource with a corresponding proxied element."""
 
@@ -188,7 +188,7 @@ class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
     """
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
     """Represents an embed video.
 
@@ -209,7 +209,7 @@ class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 
@@ -276,6 +276,7 @@ class EmbedField:
         self._inline = value
 
 
+# TODO: separated into frozen received embed and embed builder
 class Embed:
     """Represents an embed."""
 
@@ -733,13 +734,9 @@ class Embed:
         if name is None and url is None and icon is None:
             self._author = None
         else:
-            self._author = EmbedAuthor()
-            self._author.name = name
-            self._author.url = url
-            if icon is not None:
-                self._author.icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon))
-            else:
-                self._author.icon = None
+            self._author = EmbedAuthor(
+                name=name, url=url, icon=EmbedResourceWithProxy(resource=files.ensure_resource(icon))
+            )
         return self
 
     def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[files.Resourceish] = None) -> Embed:
@@ -787,12 +784,8 @@ class Embed:
 
             self._footer = None
         else:
-            self._footer = EmbedFooter()
-            self._footer.text = text
-            if icon is not None:
-                self._footer.icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon))
-            else:
-                self._footer.icon = None
+            icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon)) if icon else None
+            self._footer = EmbedFooter(icon=icon, text=text)
         return self
 
     def set_image(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:

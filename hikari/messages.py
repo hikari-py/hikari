@@ -193,7 +193,7 @@ class StickerFormatType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -230,7 +230,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -248,7 +248,7 @@ class Reaction:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Sticker(snowflakes.Unique):
     """Represents the stickers found attached to messages on Discord."""
 
@@ -279,7 +279,7 @@ class Sticker(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -291,7 +291,7 @@ class MessageActivity:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class Mentions:
     """Description of mentions that exist in the message."""
 
@@ -410,7 +410,7 @@ class Mentions:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -499,7 +499,7 @@ class MessageApplication(guilds.PartialApplication):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
 
@@ -1187,7 +1187,7 @@ class PartialMessage(snowflakes.Unique):
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 

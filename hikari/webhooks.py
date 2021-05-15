@@ -60,7 +60,7 @@ class WebhookType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Webhook(snowflakes.Unique):
     """Represents a webhook object on Discord.
 

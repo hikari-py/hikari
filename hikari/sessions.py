@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
@@ -79,7 +79,7 @@ class SessionStartLimit:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 

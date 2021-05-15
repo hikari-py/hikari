@@ -44,7 +44,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class TemplateRole(guilds.PartialRole):
     """The partial role object attached to `Template`."""
 
@@ -71,7 +71,7 @@ class TemplateRole(guilds.PartialRole):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class TemplateGuild(guilds.PartialGuild):
     """The partial guild object attached to `Template`."""
 
@@ -143,7 +143,7 @@ class TemplateGuild(guilds.PartialGuild):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Template:
     """Represents a template used for creating guilds."""
 

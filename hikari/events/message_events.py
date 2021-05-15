@@ -59,10 +59,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as shard_
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILD_MESSAGES)
 class MessageEvent(shard_events.ShardEvent, abc.ABC):
     """Any event that concerns manipulation of messages."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -87,10 +88,11 @@ class MessageEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILD_MESSAGES)
 class MessageCreateEvent(MessageEvent, abc.ABC):
     """Event that is fired when a message is created."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     def author(self) -> users.User:
@@ -202,7 +204,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a guild.
@@ -286,7 +288,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a DM.
@@ -304,7 +306,6 @@ class DMMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILD_MESSAGES)
 class MessageUpdateEvent(MessageEvent, abc.ABC):
     """Event that is fired when a message is updated.
@@ -313,6 +314,8 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     def author(self) -> typing.Optional[users.User]:
@@ -449,7 +452,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a guild.
@@ -557,7 +560,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a DM.
@@ -583,7 +586,6 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.DM_MESSAGES)
 class MessageDeleteEvent(MessageEvent, abc.ABC):
     """Special event that is triggered when one or more messages get deleted.
@@ -595,6 +597,8 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
     You can check if the message was in a singular deletion by checking the
     `is_bulk` attribute.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     def message_id(self) -> snowflakes.Snowflake:
@@ -639,7 +643,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if messages are deleted in a guild.
@@ -721,7 +725,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if messages are deleted in a DM.

@@ -112,7 +112,7 @@ class VideoQualityMode(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollow:
     """Relationship between a news channel and a subscriber channel.
 
@@ -253,7 +253,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PermissionOverwrite(snowflakes.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
@@ -313,7 +313,7 @@ class PermissionOverwrite(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialChannel(snowflakes.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -580,7 +580,7 @@ class TextChannel(PartialChannel, abc.ABC):
         return self.app.rest.trigger_typing(self.id)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
@@ -593,7 +593,7 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class DMChannel(PrivateChannel, TextChannel):
     """Represents a direct message text channel that is between you and another user."""
 
@@ -609,7 +609,7 @@ class DMChannel(PrivateChannel, TextChannel):
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
@@ -682,7 +682,7 @@ class GroupDMChannel(PrivateChannel):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
@@ -733,7 +733,7 @@ class GuildChannel(PartialChannel):
         return None
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
     """Represents a guild category channel.
 
@@ -742,7 +742,7 @@ class GuildCategory(GuildChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildTextChannel(GuildChannel, TextChannel):
     """Represents a guild text channel."""
 
@@ -777,7 +777,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(GuildChannel, TextChannel):
     """Represents an news channel."""
 
@@ -801,7 +801,7 @@ class GuildNewsChannel(GuildChannel, TextChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildStoreChannel(GuildChannel):
     """Represents a store channel.
 
@@ -811,7 +811,7 @@ class GuildStoreChannel(GuildChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildVoiceChannel(GuildChannel):
     """Represents a voice channel."""
 
@@ -836,7 +836,7 @@ class GuildVoiceChannel(GuildChannel):
     """The video quality mode for the voice channel."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class GuildStageChannel(GuildChannel):
     """Represents a stage channel."""
 

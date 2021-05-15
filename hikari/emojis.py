@@ -49,7 +49,6 @@ _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/tw
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
@@ -58,6 +57,8 @@ class Emoji(files.WebResource, abc.ABC):
     This is achieved in the same way as using a
     `hikari.files.WebResource` would achieve this.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -110,7 +111,7 @@ class Emoji(files.WebResource, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -246,7 +247,7 @@ class UnicodeEmoji(Emoji):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -330,7 +331,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         raise ValueError("Expected an emoji ID or emoji mention")
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 

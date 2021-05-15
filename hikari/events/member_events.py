@@ -48,10 +48,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any events that concern guild members."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -105,7 +106,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
@@ -137,7 +138,7 @@ class MemberCreateEvent(MemberEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberUpdateEvent(MemberEvent):
     """Event that is fired when a member is updated in a guild.
@@ -178,7 +179,7 @@ class MemberUpdateEvent(MemberEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""

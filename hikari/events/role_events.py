@@ -51,6 +51,8 @@ if typing.TYPE_CHECKING:
 class RoleEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that involves guild roles."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
@@ -75,7 +77,7 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
@@ -107,7 +109,7 @@ class RoleCreateEvent(RoleEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
@@ -145,7 +147,7 @@ class RoleUpdateEvent(RoleEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""

@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class OwnUserUpdateEvent(shard_events.ShardEvent):
     """Event fired when the account user is updated."""
 

@@ -40,7 +40,6 @@ __all__: typing.List[str] = [
     "MessagePinEntryInfo",
 ]
 
-import abc
 import typing
 
 import attr
@@ -127,7 +126,7 @@ class AuditLogChangeKey(str, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
@@ -182,8 +181,8 @@ class AuditLogEventType(int, enums.Enum):
     INTEGRATION_DELETE = 82
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
-class BaseAuditLogEntryInfo(abc.ABC):
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+class BaseAuditLogEntryInfo:
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -191,7 +190,7 @@ class BaseAuditLogEntryInfo(abc.ABC):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -210,7 +209,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -291,7 +290,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Extra information attached to guild prune log entries."""
 
@@ -303,7 +302,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the message bulk delete audit entry."""
 
@@ -312,7 +311,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Extra information attached to the message delete audit entry."""
 
@@ -355,7 +354,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the voice chat member disconnect entry."""
 
@@ -364,7 +363,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
@@ -407,7 +406,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class AuditLogEntry(snowflakes.Unique):
     """Represents an entry in a guild's audit log."""
 
@@ -471,7 +470,7 @@ class AuditLogEntry(snowflakes.Unique):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, repr=False, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, repr=False, weakref_slot=False)
 class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log."""
 

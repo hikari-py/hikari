@@ -69,9 +69,10 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.define(kw_only=True, weakref_slot=False)
 class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any channel-bound event in guilds or private messages."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -124,9 +125,10 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(kw_only=True, weakref_slot=False)
 class GuildChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in guilds."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -246,9 +248,10 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         return channel
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 class DMChannelEvent(ChannelEvent, abc.ABC):
     """Event base for any channel-bound event in private messages."""
+
+    __slots__: typing.Sequence[str] = ()
 
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
@@ -292,9 +295,10 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.define(kw_only=True, weakref_slot=False)
 class ChannelCreateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being created."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -315,7 +319,7 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
@@ -341,9 +345,10 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.define(kw_only=True, weakref_slot=False)
 class ChannelUpdateEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being updated."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -364,7 +369,7 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
@@ -396,9 +401,10 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-@attr.define(kw_only=True, weakref_slot=False)
 class ChannelDeleteEvent(ChannelEvent, abc.ABC):
     """Base event for any channel being deleted."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -424,7 +430,7 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
@@ -455,9 +461,10 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)
-@attr.define(kw_only=True, weakref_slot=False)
 class PinsUpdateEvent(ChannelEvent, abc.ABC):
     """Base event fired when a message is pinned/unpinned in a channel."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -499,7 +506,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
@@ -577,7 +584,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
@@ -628,9 +635,10 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
-@attr.define(kw_only=True, weakref_slot=False)
 class InviteEvent(GuildChannelEvent, abc.ABC):
     """Base event type for guild invite updates."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -676,7 +684,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
@@ -715,7 +723,7 @@ class InviteCreateEvent(InviteEvent):
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
@@ -748,7 +756,7 @@ class InviteDeleteEvent(InviteEvent):
 
 @base_events.requires_intents(intents.Intents.GUILD_WEBHOOKS)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):
     """Event fired when a webhook is created/updated/deleted in a channel.
 

@@ -41,7 +41,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
@@ -101,7 +101,7 @@ class VoiceState:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""
 

@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
@@ -65,7 +65,7 @@ class StartingEvent(base_events.Event):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
@@ -82,7 +82,7 @@ class StartedEvent(base_events.Event):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
 
@@ -107,7 +107,7 @@ class StoppingEvent(base_events.Event):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 

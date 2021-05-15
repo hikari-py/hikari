@@ -47,9 +47,10 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     """Base for any voice-related event."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -65,7 +66,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):
     """Event fired when a user changes their voice state.
 
@@ -103,7 +104,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class VoiceServerUpdateEvent(VoiceEvent):
     """Event fired when a voice server is changed.
 

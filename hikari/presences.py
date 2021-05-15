@@ -90,7 +90,7 @@ class ActivityType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
@@ -102,7 +102,7 @@ class ActivityTimestamps:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
@@ -117,7 +117,7 @@ class ActivityParty:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
@@ -135,7 +135,7 @@ class ActivityAssets:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
@@ -177,7 +177,7 @@ class ActivityFlag(enums.Flag):
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
@@ -194,7 +194,7 @@ class Activity:
         return self.name
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
@@ -255,7 +255,7 @@ class Status(str, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
@@ -270,7 +270,7 @@ class ClientStatus:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
