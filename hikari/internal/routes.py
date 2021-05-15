@@ -45,7 +45,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 }
 
 
-@attr.define(frozen=True, hash=True, weakref_slot=False)
+@attr.frozen(hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -107,7 +107,7 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-@attr.define(frozen=True, hash=True, init=False, weakref_slot=False)
+@attr.frozen(hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -133,7 +133,7 @@ class Route:
     """The optional major parameter name combination for this endpoint."""
 
     def __init__(self, method: str, path_template: str) -> None:
-        # Since this class is "frozen" we can't use it's defined setattr
+        # Since this class is "frozen" we can't use it's defined setattr (this is how attrs handles this fwiw).
         object.__setattr__(self, "method", method)
         object.__setattr__(self, "path_template", path_template)
 
@@ -177,7 +177,7 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
     return frozenset(v.lower() for v in values)
 
 
-@attr.define(frozen=True, hash=True, weakref_slot=False)
+@attr.frozen(hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
