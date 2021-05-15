@@ -31,7 +31,6 @@ import typing
 import attr
 
 from hikari import undefined
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
@@ -53,7 +52,6 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
 
 
-@attr_extensions.with_copy
 @attr.define(weakref_slot=False)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""

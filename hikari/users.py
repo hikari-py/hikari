@@ -34,7 +34,6 @@ import attr
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -539,7 +538,6 @@ class User(PartialUser, abc.ABC):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
@@ -551,9 +549,7 @@ class PartialUserImpl(PartialUser):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this user."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """Reference to the client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)

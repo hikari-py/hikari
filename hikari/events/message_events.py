@@ -48,7 +48,6 @@ from hikari import snowflakes
 from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
@@ -203,7 +202,6 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageCreateEvent(MessageCreateEvent):
@@ -212,13 +210,13 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     This contains the full message in the internal `message` attribute.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     message: messages.Message = attr.field()
     # <<inherited docstring from MessageCreateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>
 
     @property
@@ -287,7 +285,6 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         return guild_id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageCreateEvent(MessageCreateEvent):
@@ -296,13 +293,13 @@ class DMMessageCreateEvent(MessageCreateEvent):
     This contains the full message in the internal `message` attribute.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     message: messages.Message = attr.field()
     # <<inherited docstring from MessageCreateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>
 
 
@@ -451,7 +448,6 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageUpdateEvent(MessageUpdateEvent):
@@ -462,7 +458,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     old_message: typing.Optional[messages.PartialMessage] = attr.field()
@@ -474,7 +470,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     message: messages.PartialMessage = attr.field()
     # <<inherited docstring from MessageUpdateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>
 
     @property
@@ -559,7 +555,6 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         return guild_id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageUpdateEvent(MessageUpdateEvent):
@@ -570,7 +565,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     old_message: typing.Optional[messages.PartialMessage] = attr.field()
@@ -582,7 +577,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     message: messages.PartialMessage = attr.field()
     # <<inherited docstring from MessageUpdateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>
 
 
@@ -642,7 +637,6 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         """
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
@@ -657,7 +651,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     checking the `is_bulk` attribute.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     channel_id: snowflakes.Snowflake = attr.field()
@@ -678,7 +672,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>
 
     @property
@@ -724,7 +718,6 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         return self.app.cache.get_guild(self.guild_id)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
@@ -741,7 +734,7 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
     `is_bulk` attribute.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>
 
     channel_id: snowflakes.Snowflake = attr.field()
@@ -753,5 +746,5 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
     message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>

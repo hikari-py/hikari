@@ -30,14 +30,12 @@ import typing
 
 import attr
 
-from hikari.internal import attr_extensions
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
@@ -78,7 +76,6 @@ class SessionStartLimit:
         return self._created_at + self.reset_after
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""

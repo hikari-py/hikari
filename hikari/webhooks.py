@@ -33,7 +33,6 @@ import attr
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -59,7 +58,6 @@ class WebhookType(int, enums.Enum):
     """Channel Follower webhook."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Webhook(snowflakes.Unique):
     """Represents a webhook object on Discord.
@@ -69,9 +67,7 @@ class Webhook(snowflakes.Unique):
     send informational messages to specific channels.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

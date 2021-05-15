@@ -40,7 +40,6 @@ from hikari import traits
 from hikari.api import special_endpoints
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -134,15 +133,14 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflakes.Snowflake = attr.field()
@@ -257,15 +255,14 @@ class GuildTypingEvent(TypingEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class DMTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     channel_id: snowflakes.Snowflake = attr.field()

@@ -41,7 +41,6 @@ import attr
 from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -155,7 +154,6 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 
 @no_recursive_throw()
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.

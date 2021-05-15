@@ -41,7 +41,6 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
-from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import routes
 from hikari.internal import time
@@ -141,7 +140,6 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
-@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.RESTClient.guild_builder`.
@@ -217,14 +215,12 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _entity_factory: entity_factory_.EntityFactory = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    _executor: typing.Optional[concurrent.futures.Executor] = attr.field(
-        metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    _entity_factory: entity_factory_.EntityFactory = attr.field()
+    _executor: typing.Optional[concurrent.futures.Executor] = attr.field()
     _name: str = attr.field()
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    ] = attr.field()
 
     # Optional arguments.
     default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.field(

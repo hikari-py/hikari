@@ -61,7 +61,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import voices
 from hikari.api import cache
-from hikari.internal import attr_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
@@ -174,7 +173,6 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
         return iterators.FlatLazyIterator(())
 
 
-@attr_extensions.with_copy
 @attr.define(repr=False, hash=False, weakref_slot=False)
 class GuildRecord:
     """An object used for storing guild specific cached information in-memory.
@@ -316,7 +314,6 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
         """
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class InviteData(BaseData[invites.InviteWithMetadata]):
     """A data model for storing invite data in an in-memory cache."""
@@ -384,7 +381,6 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MemberData(BaseData[guilds.Member]):
     """A data model for storing member data in an in-memory cache."""
@@ -432,7 +428,6 @@ class MemberData(BaseData[guilds.Member]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     """A data model for storing known custom emoji data in an in-memory cache."""
@@ -486,7 +481,6 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
@@ -569,7 +563,6 @@ class RichActivityData(BaseData[presences.RichActivity]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MemberPresenceData(BaseData[presences.MemberPresence]):
     """A data model for storing presence data in an in-memory cache."""
@@ -603,7 +596,6 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MentionsData(BaseData[messages.Mentions]):
     """A model for storing message mentions data in an in-memory cache."""
@@ -699,7 +691,6 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     )
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MessageData(BaseData[messages.Message]):
     """A model for storing message data in an in-memory cache."""
@@ -837,7 +828,6 @@ class MessageData(BaseData[messages.Message]):
         self.mentions.update(message.mentions, users=mention_users)
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class VoiceStateData(BaseData[voices.VoiceState]):
     """A data model for storing voice state data in an in-memory cache."""
@@ -898,7 +888,6 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(repr=True, hash=False, weakref_slot=True)
 class Cell(typing.Generic[ValueT]):
     """Object used to store mutable references to a value in multiple places."""
@@ -906,7 +895,6 @@ class Cell(typing.Generic[ValueT]):
     object: ValueT = attr.field(repr=True)
 
 
-@attr_extensions.with_copy
 @attr.define(repr=False, hash=False, weakref_slot=False)
 class RefCell(typing.Generic[ValueT]):
     """Object used to track mutable references to a value in multiple places.

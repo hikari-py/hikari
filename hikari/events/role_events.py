@@ -38,7 +38,6 @@ import attr
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -76,16 +75,15 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.field()
@@ -108,16 +106,15 @@ class RoleCreateEvent(RoleEvent):
         return self.role.id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     old_role: typing.Optional[guilds.Role] = attr.field()
@@ -146,16 +143,15 @@ class RoleUpdateEvent(RoleEvent):
         return self.role.id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.field()

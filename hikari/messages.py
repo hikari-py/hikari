@@ -49,7 +49,6 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -192,7 +191,6 @@ class StickerFormatType(int, enums.Enum):
     """A lottie sticker."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
@@ -229,7 +227,6 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
@@ -247,7 +244,6 @@ class Reaction:
         return str(self.emoji)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class Sticker(snowflakes.Unique):
     """Represents the stickers found attached to messages on Discord."""
@@ -278,7 +274,6 @@ class Sticker(snowflakes.Unique):
     """The format of this sticker's asset."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
@@ -290,7 +285,6 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class Mentions:
     """Description of mentions that exist in the message."""
@@ -409,7 +403,6 @@ class Mentions:
         return results
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
@@ -418,9 +411,7 @@ class MessageReference:
     message, pin add messages and replies.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
@@ -441,7 +432,6 @@ class MessageReference:
     """
 
 
-@attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
@@ -498,7 +488,6 @@ class MessageApplication(guilds.PartialApplication):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
@@ -514,9 +503,7 @@ class PartialMessage(snowflakes.Unique):
         nullability.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

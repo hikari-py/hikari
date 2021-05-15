@@ -38,7 +38,6 @@ import attr
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import snowflakes
@@ -65,7 +64,6 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):
     """Event fired when a user changes their voice state.
@@ -76,10 +74,10 @@ class VoiceStateUpdateEvent(VoiceEvent):
     to connect to the voice gateway to stream audio or video content.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring>>.
 
     old_state: typing.Optional[voices.VoiceState] = attr.field(repr=True)
@@ -103,7 +101,6 @@ class VoiceStateUpdateEvent(VoiceEvent):
         return self.state.guild_id
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class VoiceServerUpdateEvent(VoiceEvent):
     """Event fired when a voice server is changed.
@@ -112,10 +109,10 @@ class VoiceServerUpdateEvent(VoiceEvent):
     falls over to a new server.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.field(repr=True)

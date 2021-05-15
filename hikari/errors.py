@@ -57,7 +57,6 @@ import typing
 
 import attr
 
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
@@ -68,7 +67,6 @@ if typing.TYPE_CHECKING:
     from hikari.internal import routes
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, auto_exc=True, repr=False, init=False, weakref_slot=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
@@ -80,7 +78,6 @@ class HikariError(RuntimeError):
     """
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, auto_exc=True, repr=False, init=False, weakref_slot=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.

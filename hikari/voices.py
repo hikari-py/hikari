@@ -30,8 +30,6 @@ import typing
 
 import attr
 
-from hikari.internal import attr_extensions
-
 if typing.TYPE_CHECKING:
     import datetime
 
@@ -40,14 +38,11 @@ if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
@@ -100,7 +95,6 @@ class VoiceState:
     """
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""

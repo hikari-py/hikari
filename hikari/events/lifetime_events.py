@@ -35,13 +35,11 @@ import typing
 import attr
 
 from hikari.events import base_events
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
@@ -60,11 +58,10 @@ class StartingEvent(base_events.Event):
     should consider using `StartedEvent` instead.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
@@ -77,11 +74,10 @@ class StartedEvent(base_events.Event):
     consider using `StartingEvent` instead.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
@@ -102,11 +98,10 @@ class StoppingEvent(base_events.Event):
     should consider using `StoppedEvent` instead.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, kw_only=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
@@ -126,5 +121,5 @@ class StoppedEvent(base_events.Event):
     `StoppingEvent` instead.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.

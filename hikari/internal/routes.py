@@ -34,7 +34,6 @@ import urllib.parse
 import attr
 
 from hikari import files
-from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
@@ -46,7 +45,6 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 }
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
@@ -109,7 +107,6 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
@@ -180,7 +177,6 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
     return frozenset(v.lower() for v in values)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:

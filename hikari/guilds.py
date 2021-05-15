@@ -64,7 +64,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -246,14 +245,11 @@ class GuildVerificationLevel(int, enums.Enum):
     """Must have a verified phone number."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild widget."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
@@ -263,7 +259,6 @@ class GuildWidget:
     """Whether this embed is enabled."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, eq=False, hash=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
@@ -550,14 +545,11 @@ class Member(users.User):
         return self.user == other
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialRole(snowflakes.Unique):
     """Represents a partial guild bound Role object."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
@@ -650,7 +642,6 @@ class IntegrationExpireBehaviour(int, enums.Enum):
     """Kick the subscriber."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
@@ -666,7 +657,6 @@ class IntegrationAccount:
 
 
 # This is here rather than in applications.py to avoid circular imports
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialApplication(snowflakes.Unique):
     """A partial representation of a Discord application."""
@@ -735,7 +725,6 @@ class PartialApplication(snowflakes.Unique):
         )
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class IntegrationApplication(PartialApplication):
     """An application that's linked to an integration."""
@@ -744,7 +733,6 @@ class IntegrationApplication(PartialApplication):
     """The bot associated with this application."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialIntegration(snowflakes.Unique):
     """A partial representation of an integration, found in audit logs."""
@@ -822,7 +810,6 @@ class Integration(PartialIntegration):
     """
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, weakref_slot=False)
 class WelcomeChannel:
     """Used to represent channels on guild welcome screens."""
@@ -837,7 +824,6 @@ class WelcomeChannel:
     """The emoji shown in the welcome screen channel if set else `builtins.None`."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class WelcomeScreen:
     """Used to represent guild welcome screens on Discord."""
@@ -849,7 +835,6 @@ class WelcomeScreen:
     """An array of up to 5 of the channels shown in the welcome screen."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
 class GuildMemberBan:
     """Used to represent guild bans."""
@@ -861,14 +846,11 @@ class GuildMemberBan:
     """The object of the user this ban targets."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialGuild(snowflakes.Unique):
     """Base object for any partial guild objects."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

@@ -40,7 +40,6 @@ import typing
 import attr
 import yarl
 
-from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
 
@@ -60,7 +59,6 @@ def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
     return ssl
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=True, weakref_slot=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
@@ -113,7 +111,6 @@ class BasicAuthHeader:
         return self.header
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class ProxySettings:
     """Settings for configuring an HTTP-based proxy."""
@@ -200,7 +197,6 @@ class ProxySettings:
         return {**self.headers, _PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
@@ -260,7 +256,6 @@ class HTTPTimeoutSettings:
             raise ValueError(f"HTTPTimeoutSettings.{attrib.name} must be None, or a POSITIVE float/int")
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class HTTPSettings:
     """Settings to control HTTP clients."""
@@ -432,7 +427,6 @@ class CacheComponents(enums.Flag):
     """Fully enables the cache."""
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class CacheSettings:
     """Settings to control the cache."""

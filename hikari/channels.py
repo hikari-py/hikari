@@ -54,7 +54,6 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -111,7 +110,6 @@ class VideoQualityMode(int, enums.Enum):
     """Video quality will be set to 720p."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollow:
     """Relationship between a news channel and a subscriber channel.
@@ -120,9 +118,7 @@ class ChannelFollow:
     to any "broadcast" announcements that the news channel creates.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """Return the client application that models may use for procedures.
 
     Returns
@@ -252,7 +248,6 @@ class PermissionOverwriteType(int, enums.Enum):
     """A permission overwrite that targets a specific guild member."""
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PermissionOverwrite(snowflakes.Unique):
     """Represents permission overwrites for a channel or role in a channel.
@@ -312,7 +307,6 @@ class PermissionOverwrite(snowflakes.Unique):
         return ~(self.allow | self.deny)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class PartialChannel(snowflakes.Unique):
     """Channel representation for cases where further detail is not provided.
@@ -321,9 +315,7 @@ class PartialChannel(snowflakes.Unique):
     not available from Discord.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

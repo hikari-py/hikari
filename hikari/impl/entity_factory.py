@@ -54,7 +54,6 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
-from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
@@ -84,7 +83,6 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
     return datetime.timedelta(seconds=seconds) if seconds > 0 else None
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attr.field()
@@ -97,7 +95,6 @@ class _GuildChannelFields:
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
 class _IntegrationFields:
     id: snowflakes.Snowflake = attr.field()
@@ -106,7 +103,6 @@ class _IntegrationFields:
     account: guild_models.IntegrationAccount = attr.field()
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
 class _GuildFields:
     id: snowflakes.Snowflake = attr.field()
@@ -139,7 +135,6 @@ class _GuildFields:
     is_nsfw: bool = attr.field()
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
     code: str = attr.field()
@@ -154,7 +149,6 @@ class _InviteFields:
     approximate_member_count: typing.Optional[int] = attr.field()
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
 class _UserFields:
     id: snowflakes.Snowflake = attr.field()

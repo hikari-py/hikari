@@ -35,7 +35,6 @@ import attr
 from hikari import files
 from hikari import snowflakes
 from hikari import urls
-from hikari.internal import attr_extensions
 from hikari.internal import routes
 
 # import unicodedata
@@ -110,7 +109,6 @@ class Emoji(files.WebResource, abc.ABC):
         return UnicodeEmoji.parse(string)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
@@ -246,7 +244,6 @@ class UnicodeEmoji(Emoji):
         return cls(name=string)
 
 
-@attr_extensions.with_copy
 @attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
@@ -339,9 +336,7 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. As a result, it contains a lot more information with it.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
+    app: traits.RESTAware = attr.field(repr=False, eq=False, hash=False)
     """The client application that models may use for procedures."""
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=False)
