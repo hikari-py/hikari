@@ -880,7 +880,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.Ban:
+    def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.GuildBan:
         """Parse a raw payload from Discord into a guild member ban object.
 
         Parameters
@@ -890,7 +890,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.guilds.Ban
+        hikari.guilds.GuildBan
             The deserialized guild member ban object.
         """
 

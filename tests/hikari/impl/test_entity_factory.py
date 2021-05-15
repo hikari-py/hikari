@@ -2093,7 +2093,7 @@ class TestEntityFactoryImpl:
         member_ban = entity_factory_impl.deserialize_guild_member_ban(guild_member_ban_payload)
         assert member_ban.reason == "Get nyaa'ed"
         assert member_ban.user == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(member_ban, guild_models.Ban)
+        assert isinstance(member_ban, guild_models.GuildBan)
 
     def test_deserialize_guild_member_ban_with_null_fields(self, entity_factory_impl, user_payload):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None

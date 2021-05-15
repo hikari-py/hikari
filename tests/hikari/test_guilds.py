@@ -100,6 +100,19 @@ class TestPartialApplication:
         )
 
 
+class TestGuildBan:
+    @pytest.fixture()
+    def model(self):
+        return guilds.GuildBan(user=mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(123)), reason="Very sussy")
+
+    @pytest.mark.asyncio
+    async def test_fetch_user(self, model):
+        model.user.app.rest.fetch_user = mock.AsyncMock()
+
+        assert await model.fetch_user() is model.user.app.rest.fetch_user.return_value
+        model.user.app.rest.fetch_user.assert_awaited_once_with(123)
+
+
 class TestIntegrationAccount:
     @pytest.fixture()
     def model(self, mock_app):
