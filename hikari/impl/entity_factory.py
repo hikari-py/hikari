@@ -1266,8 +1266,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
         )
 
-    def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.GuildMemberBan:
-        return guild_models.GuildMemberBan(reason=payload["reason"], user=self.deserialize_user(payload["user"]))
+    def deserialize_guild_member_ban(self, payload: data_binding.JSONObject) -> guild_models.Ban:
+        return guild_models.Ban(reason=payload["reason"], user=self.deserialize_user(payload["user"]))
 
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         guild_id = snowflakes.Snowflake(payload["id"])

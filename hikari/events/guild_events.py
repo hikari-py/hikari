@@ -369,7 +369,7 @@ class BanCreateEvent(BanEvent):
     user: users.User = attr.field()
     # <<inherited docstring from BanEvent>>.
 
-    async def fetch_ban(self) -> guilds.GuildMemberBan:
+    async def fetch_ban(self) -> guilds.Ban:
         """Perform an API call to fetch the details about this ban.
 
         This will include the optionally defined audit log reason for the
@@ -377,7 +377,7 @@ class BanCreateEvent(BanEvent):
 
         Returns
         -------
-        hikari.guilds.GuildMemberBan
+        hikari.guilds.Ban
             The ban details.
         """
         return await self.app.rest.fetch_ban(self.guild_id, self.user)

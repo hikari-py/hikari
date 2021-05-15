@@ -39,7 +39,7 @@ __all__: typing.List[str] = [
     "GuildVerificationLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildMemberBan",
+    "Ban",
     "Member",
     "Integration",
     "IntegrationAccount",
@@ -1132,7 +1132,7 @@ class WelcomeScreen:
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class GuildMemberBan:
+class Ban:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attr.field(repr=True)
