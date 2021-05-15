@@ -108,7 +108,7 @@ class _GuildFields:
     id: snowflakes.Snowflake = attr.field()
     name: str = attr.field()
     icon_hash: str = attr.field()
-    features: typing.Sequence[guild_models.GuildFeatureish] = attr.field()
+    features: typing.Tuple[guild_models.GuildFeatureish, ...] = attr.field()
     splash_hash: typing.Optional[str] = attr.field()
     discovery_splash_hash: typing.Optional[str] = attr.field()
     owner_id: snowflakes.Snowflake = attr.field()
@@ -243,9 +243,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_own_connection(self, payload: data_binding.JSONObject) -> application_models.OwnConnection:
         if (integration_payloads := payload.get("integrations")) is not None:
-            integrations = [self.deserialize_partial_integration(integration) for integration in integration_payloads]
+            integrations = tuple(self.deserialize_partial_integration(i) for i in integration_payloads)
         else:
-            integrations = []
+            integrations = ()
 
         return application_models.OwnConnection(
             id=payload["id"],
@@ -265,7 +265,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             icon_hash=payload["icon"],
-            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
+            features=tuple(guild_models.GuildFeature(feature) for feature in payload["features"]),
             is_owner=bool(payload["owner"]),
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
@@ -302,7 +302,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot_public=payload.get("bot_public"),
             is_bot_code_grant_required=payload.get("bot_require_code_grant"),
             owner=self.deserialize_user(payload["owner"]),
-            rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
+            rpc_origins=tuple(payload["rpc_origins"]) if "rpc_origins" in payload else None,
             summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
             icon_hash=payload.get("icon"),
@@ -335,7 +335,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return application_models.AuthorizationInformation(
             application=application,
-            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scopes"]],
+            scopes=tuple(application_models.OAuth2Scope(scope) for scope in payload["scopes"]),
             expires_at=time.iso8601_datetime_string_to_datetime(payload["expires"]),
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
@@ -345,7 +345,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             access_token=payload["access_token"],
             token_type=application_models.TokenType(payload["token_type"]),
             expires_in=datetime.timedelta(seconds=int(payload["expires_in"])),
-            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")],
+            scopes=tuple(application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")),
         )
 
     def deserialize_authorization_token(
@@ -355,7 +355,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             access_token=payload["access_token"],
             token_type=application_models.TokenType(payload["token_type"]),
             expires_in=datetime.timedelta(seconds=int(payload["expires_in"])),
-            scopes=[application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")],
+            scopes=tuple(application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")),
             refresh_token=payload["refresh_token"],
             webhook=self.deserialize_webhook(payload["webhook"]) if "webhook" in payload else None,
             guild=self.deserialize_rest_guild(payload["guild"]) if "guild" in payload else None,
@@ -366,7 +366,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             access_token=query["access_token"],
             token_type=application_models.TokenType(query["token_type"]),
             expires_in=datetime.timedelta(seconds=int(query["expires_in"])),
-            scopes=[application_models.OAuth2Scope(scope) for scope in query["scope"].split(" ")],
+            scopes=tuple(application_models.OAuth2Scope(scope) for scope in query["scope"].split(" ")),
             state=query.get("state"),
         )
 
@@ -446,28 +446,30 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
+    def _deserialize_change(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLogChange:
+        key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(payload["key"])
+
+        new_value = payload.get("new_value")
+        old_value = payload.get("old_value")
+        if value_converter := self._audit_log_entry_converters.get(key):
+            new_value = value_converter(new_value) if new_value is not None else None
+            old_value = value_converter(old_value) if old_value is not None else None
+
+        elif not isinstance(key, audit_log_models.AuditLogChangeKey):
+            _LOGGER.debug("Unknown audit log change key found %r", key)
+
+        return audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value)
+
     def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
             entry_id = snowflakes.Snowflake(entry_payload["id"])
 
-            changes = []
-            if (change_payloads := entry_payload.get("changes")) is not None:
-                for change_payload in change_payloads:
-                    key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
-                        change_payload["key"]
-                    )
+            if change_payloads := entry_payload.get("changes"):
+                changes = tuple(self._deserialize_change(change_payload) for change_payload in change_payloads)
 
-                    new_value = change_payload.get("new_value")
-                    old_value = change_payload.get("old_value")
-                    if value_converter := self._audit_log_entry_converters.get(key):
-                        new_value = value_converter(new_value) if new_value is not None else None
-                        old_value = value_converter(old_value) if old_value is not None else None
-
-                    elif not isinstance(key, audit_log_models.AuditLogChangeKey):
-                        _LOGGER.debug("Unknown audit log change key found %r", key)
-
-                    changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
+            else:
+                changes = ()
 
             target_id: typing.Optional[snowflakes.Snowflake] = None
             if (raw_target_id := entry_payload["target_id"]) is not None:
@@ -797,7 +799,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         url = payload.get("url")
         color = color_models.Color(payload["color"]) if "color" in payload else None
         timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
-        fields: typing.Optional[typing.MutableSequence[embed_models.EmbedField]] = None
+        fields: typing.Optional[typing.Tuple[embed_models.EmbedField, ...]] = None
 
         image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
         if (image_payload := payload.get("image")) and "url" in image_payload:
@@ -863,14 +865,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             footer = embed_models.EmbedFooter(text=footer_payload.get("text"), icon=icon)
 
         if fields_array := payload.get("fields"):
-            fields = []
-            for field_payload in fields_array:
-                field = embed_models.EmbedField(
+            fields = tuple(
+                embed_models.EmbedField(
                     name=field_payload["name"],
                     value=field_payload["value"],
                     inline=field_payload.get("inline", False),
                 )
-                fields.append(field)
+                for field_payload in fields_array
+            )
 
         return embed_models.Embed.from_received_embed(
             title=title,
@@ -1008,7 +1010,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_known_custom_emoji(
         self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
     ) -> emoji_models.KnownCustomEmoji:
-        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
+        role_ids = tuple(snowflakes.Snowflake(role_id) for role_id in payload["roles"]) if "roles" in payload else ()
 
         user: typing.Optional[user_models.User] = None
         if (raw_user := payload.get("user")) is not None:
@@ -1066,30 +1068,27 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return guild_models.GuildWidget(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
 
+    def _deserialize_welcome_channel(self, payload: data_binding.JSONObject) -> guild_models.WelcomeChannel:
+        emoji_id = payload["emoji_id"]
+        emoji_name = payload["emoji_name"]
+
+        emoji: typing.Optional[emoji_models.Emoji] = None
+        if emoji_name is not None:
+            if emoji_id is not None:
+                emoji = emoji_models.CustomEmoji(id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None)
+            else:
+                emoji = emoji_models.UnicodeEmoji(emoji_name)
+
+        return guild_models.WelcomeChannel(
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            description=payload["description"],
+            emoji=emoji,
+        )
+
     def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
-        channels: typing.List[guild_models.WelcomeChannel] = []
-
-        for channel_payload in payload["welcome_channels"]:
-            emoji_id = channel_payload["emoji_id"]
-            emoji_name = channel_payload["emoji_name"]
-
-            emoji: typing.Optional[emoji_models.Emoji] = None
-            if emoji_name is not None:
-                if emoji_id is not None:
-                    emoji = emoji_models.CustomEmoji(
-                        id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None
-                    )
-                else:
-                    emoji = emoji_models.UnicodeEmoji(emoji_name)
-
-            channels.append(
-                guild_models.WelcomeChannel(
-                    channel_id=snowflakes.Snowflake(channel_payload["channel_id"]),
-                    description=channel_payload["description"],
-                    emoji=emoji,
-                )
-            )
-
+        channels = tuple(
+            self._deserialize_welcome_channel(channel_payload) for channel_payload in payload["welcome_channels"]
+        )
         return guild_models.WelcomeScreen(description=payload["description"], channels=channels)
 
     def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
@@ -1136,7 +1135,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return guild_models.Member(
             user=user,
             guild_id=guild_id,
-            role_ids=role_ids,
+            role_ids=tuple(role_ids),
             joined_at=joined_at,
             nickname=payload.get("nick"),
             premium_since=premium_since,
@@ -1304,7 +1303,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             icon_hash=payload["icon"],
-            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
+            features=tuple(guild_models.GuildFeature(feature) for feature in payload["features"]),
             splash_hash=payload["splash"],
             # This is documented as always being present, but we have found old guilds where this is
             # not present. Quicker to just assume the documentation is wrong at this point than try
@@ -1669,7 +1668,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             pack_id=snowflakes.Snowflake(payload["pack_id"]),
             name=payload["name"],
             description=payload["description"],
-            tags=[tag.strip() for tag in payload["tags"].split(",")] if "tags" in payload else [],
+            tags=tuple(tag.strip() for tag in payload["tags"].split(",")) if "tags" in payload else (),
             asset_hash=payload["asset"],
             format_type=message_models.StickerFormatType(payload["format_type"]),
         )
@@ -1700,17 +1699,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 edited_timestamp = None
 
-        attachments: undefined.UndefinedOr[typing.MutableSequence[message_models.Attachment]] = undefined.UNDEFINED
-        if "attachments" in payload:
-            attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
+        attachments: undefined.UndefinedOr[typing.Tuple[message_models.Attachment, ...]] = undefined.UNDEFINED
+        if raw_attachments := payload.get("attachments"):
+            attachments = tuple(self._deserialize_message_attachment(attachment) for attachment in raw_attachments)
 
-        embeds: undefined.UndefinedOr[typing.Sequence[embed_models.Embed]] = undefined.UNDEFINED
-        if "embeds" in payload:
-            embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
+        embeds: undefined.UndefinedOr[typing.Tuple[embed_models.Embed, ...]] = undefined.UNDEFINED
+        if raw_embeds := payload.get("embeds"):
+            embeds = tuple(self.deserialize_embed(embed) for embed in raw_embeds)
 
-        reactions: undefined.UndefinedOr[typing.MutableSequence[message_models.Reaction]] = undefined.UNDEFINED
-        if "reactions" in payload:
-            reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
+        reactions: undefined.UndefinedOr[typing.Tuple[message_models.Reaction, ...]] = undefined.UNDEFINED
+        if raw_reactions := payload.get("reactions"):
+            reactions = tuple(self._deserialize_message_reaction(reaction) for reaction in raw_reactions)
 
         activity: undefined.UndefinedOr[message_models.MessageActivity] = undefined.UNDEFINED
         if "activity" in payload:
@@ -1731,9 +1730,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 referenced_message = None
 
-        stickers: undefined.UndefinedOr[typing.Sequence[message_models.Sticker]] = undefined.UNDEFINED
-        if "stickers" in payload:
-            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
+        stickers: undefined.UndefinedOr[typing.Tuple[message_models.Sticker, ...]] = undefined.UNDEFINED
+        if raw_stickers := payload.get("stickers"):
+            stickers = tuple(self._deserialize_sticker(sticker) for sticker in raw_stickers)
 
         message = message_models.PartialMessage(
             app=self._app,
@@ -1773,9 +1772,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_users := payload.get("mentions"):
             users = {u.id: u for u in map(self.deserialize_user, raw_users)}
 
-        role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED
+        role_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = undefined.UNDEFINED
         if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
+            role_ids = tuple(snowflakes.Snowflake(i) for i in raw_role_ids)
 
         everyone = payload.get("mention_everyone", undefined.UNDEFINED)
 
@@ -1804,15 +1803,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
             edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
 
-        attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
+        attachments = tuple(self._deserialize_message_attachment(attachment) for attachment in payload["attachments"])
 
-        embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
+        embeds = tuple(self.deserialize_embed(embed) for embed in payload["embeds"])
 
         if "reactions" in payload:
-            reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
+            reactions = tuple(self._deserialize_message_reaction(reaction) for reaction in payload["reactions"])
 
         else:
-            reactions = []
+            reactions = ()
 
         activity: typing.Optional[message_models.MessageActivity] = None
         if "activity" in payload:
@@ -1834,10 +1833,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application = self._deserialize_message_application(payload["application"])
 
         if "stickers" in payload:
-            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
+            stickers = tuple(self._deserialize_sticker(sticker) for sticker in payload["stickers"])
 
         else:
-            stickers = []
+            stickers = ()
 
         message = message_models.Message(
             app=self._app,
@@ -1875,9 +1874,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_users := payload.get("mentions"):
             users = {u.id: u for u in map(self.deserialize_user, raw_users)}
 
-        role_ids: typing.Sequence[snowflakes.Snowflake] = []
         if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
+            role_ids = tuple(snowflakes.Snowflake(i) for i in raw_role_ids)
+
+        else:
+            role_ids = ()
 
         everyone = payload.get("mention_everyone", False)
 
@@ -1895,106 +1896,95 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001 - Max function length
+    def _deserialize_rich_activity(self, payload: data_binding.JSONObject) -> presence_models.RichActivity:
+        timestamps: typing.Optional[presence_models.ActivityTimestamps] = None
+        if timestamps_payload := payload.get("timestamps"):
+
+            start = time.unix_epoch_to_datetime(timestamps_payload["start"]) if "start" in timestamps_payload else None
+            end = time.unix_epoch_to_datetime(timestamps_payload["end"]) if "end" in timestamps_payload else None
+            timestamps = presence_models.ActivityTimestamps(start=start, end=end)
+
+        application_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_application_id := payload.get("application_id"):
+            application_id = snowflakes.Snowflake(raw_application_id)
+
+        party: typing.Optional[presence_models.ActivityParty] = None
+        if party_payload := payload.get("party"):
+            current_size: typing.Optional[int]
+            max_size: typing.Optional[int]
+            if "size" in party_payload:
+                raw_current_size, raw_max_size = party_payload["size"]
+                current_size = int(raw_current_size)
+                max_size = int(raw_max_size)
+            else:
+                current_size = max_size = None
+
+            party = presence_models.ActivityParty(
+                id=party_payload.get("id"), current_size=current_size, max_size=max_size
+            )
+
+        assets: typing.Optional[presence_models.ActivityAssets] = None
+        if assets_payload := payload.get("assets"):
+            assets = presence_models.ActivityAssets(
+                large_image=assets_payload.get("large_image"),
+                large_text=assets_payload.get("large_text"),
+                small_image=assets_payload.get("small_image"),
+                small_text=assets_payload.get("small_text"),
+            )
+
+        secrets: typing.Optional[presence_models.ActivitySecret] = None
+        if secrets_payload := payload.get("secrets"):
+            secrets = presence_models.ActivitySecret(
+                join=secrets_payload.get("join"),
+                spectate=secrets_payload.get("spectate"),
+                match=secrets_payload.get("match"),
+            )
+
+        emoji: typing.Optional[emoji_models.Emoji] = None
+        if raw_emoji := payload.get("emoji"):
+            emoji = self.deserialize_emoji(raw_emoji)
+
+        return presence_models.RichActivity(
+            name=payload["name"],
+            # RichActivity's generated init already declares a converter for the "type" field
+            type=payload["type"],
+            url=payload.get("url"),
+            created_at=time.unix_epoch_to_datetime(payload["created_at"]),
+            timestamps=timestamps,
+            application_id=application_id,
+            details=payload.get("details"),
+            state=payload.get("state"),
+            emoji=emoji,
+            party=party,
+            assets=assets,
+            secrets=secrets,
+            is_instance=payload.get("instance"),  # TODO: can we safely default this to False?
+            flags=presence_models.ActivityFlag(payload["flags"]) if "flags" in payload else None,
+            buttons=tuple(payload.get("buttons")) or (),
+        )
+
+    def deserialize_member_presence(
         self,
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        activities = []
-        for activity_payload in payload["activities"]:
-            timestamps: typing.Optional[presence_models.ActivityTimestamps] = None
-            if "timestamps" in activity_payload:
-                timestamps_payload = activity_payload["timestamps"]
-                start = (
-                    time.unix_epoch_to_datetime(timestamps_payload["start"]) if "start" in timestamps_payload else None
-                )
-                end = time.unix_epoch_to_datetime(timestamps_payload["end"]) if "end" in timestamps_payload else None
-                timestamps = presence_models.ActivityTimestamps(start=start, end=end)
-
-            application_id = (
-                snowflakes.Snowflake(activity_payload["application_id"])
-                if "application_id" in activity_payload
-                else None
-            )
-
-            party: typing.Optional[presence_models.ActivityParty] = None
-            if "party" in activity_payload:
-                party_payload = activity_payload["party"]
-
-                current_size: typing.Optional[int]
-                max_size: typing.Optional[int]
-                if "size" in party_payload:
-                    raw_current_size, raw_max_size = party_payload["size"]
-                    current_size = int(raw_current_size)
-                    max_size = int(raw_max_size)
-                else:
-                    current_size = max_size = None
-
-                party = presence_models.ActivityParty(
-                    id=party_payload.get("id"), current_size=current_size, max_size=max_size
-                )
-
-            assets: typing.Optional[presence_models.ActivityAssets] = None
-            if "assets" in activity_payload:
-                assets_payload = activity_payload["assets"]
-                assets = presence_models.ActivityAssets(
-                    large_image=assets_payload.get("large_image"),
-                    large_text=assets_payload.get("large_text"),
-                    small_image=assets_payload.get("small_image"),
-                    small_text=assets_payload.get("small_text"),
-                )
-
-            secrets: typing.Optional[presence_models.ActivitySecret] = None
-            if "secrets" in activity_payload:
-                secrets_payload = activity_payload["secrets"]
-                secrets = presence_models.ActivitySecret(
-                    join=secrets_payload.get("join"),
-                    spectate=secrets_payload.get("spectate"),
-                    match=secrets_payload.get("match"),
-                )
-
-            emoji: typing.Optional[emoji_models.Emoji] = None
-            raw_emoji = activity_payload.get("emoji")
-            if raw_emoji is not None:
-                emoji = self.deserialize_emoji(raw_emoji)
-
-            activity = presence_models.RichActivity(
-                name=activity_payload["name"],
-                # RichActivity's generated init already declares a converter for the "type" field
-                type=activity_payload["type"],
-                url=activity_payload.get("url"),
-                created_at=time.unix_epoch_to_datetime(activity_payload["created_at"]),
-                timestamps=timestamps,
-                application_id=application_id,
-                details=activity_payload.get("details"),
-                state=activity_payload.get("state"),
-                emoji=emoji,
-                party=party,
-                assets=assets,
-                secrets=secrets,
-                is_instance=activity_payload.get("instance"),  # TODO: can we safely default this to False?
-                flags=presence_models.ActivityFlag(activity_payload["flags"]) if "flags" in activity_payload else None,
-                buttons=activity_payload.get("buttons") or [],
-            )
-            activities.append(activity)
-
+        activities = tuple(
+            self._deserialize_rich_activity(activity_payload) for activity_payload in payload["activities"]
+        )
         client_status_payload = payload["client_status"]
-        desktop = (
-            presence_models.Status(client_status_payload["desktop"])
-            if "desktop" in client_status_payload
-            else presence_models.Status.OFFLINE
-        )
-        mobile = (
-            presence_models.Status(client_status_payload["mobile"])
-            if "mobile" in client_status_payload
-            else presence_models.Status.OFFLINE
-        )
-        web = (
-            presence_models.Status(client_status_payload["web"])
-            if "web" in client_status_payload
-            else presence_models.Status.OFFLINE
-        )
+        desktop = presence_models.Status.OFFLINE
+        if raw_desktop := client_status_payload.get("desktop"):
+            desktop = presence_models.Status(raw_desktop)
+
+        mobile = presence_models.Status.OFFLINE
+        if raw_mobile := client_status_payload.get("mobile"):
+            mobile = presence_models.Status(raw_mobile)
+
+        web = presence_models.Status.OFFLINE
+        if raw_web := client_status_payload.get("web"):
+            web = presence_models.Status(raw_web)
+
         client_status = presence_models.ClientStatus(desktop=desktop, mobile=mobile, web=web)
 
         return presence_models.MemberPresence(
@@ -2186,16 +2176,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id = snowflakes.Snowflake(raw_application_id)
 
         source_channel: typing.Optional[channel_models.PartialChannel] = None
-        if "source_channel" in payload:
-            raw_source_channel = payload["source_channel"]
+        if raw_source_channel := payload.get("source_channel"):
             # In this case the channel type isn't provided as we can safely
             # assume it's a news channel.
             raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
             source_channel = self.deserialize_partial_channel(raw_source_channel)
 
         source_guild: typing.Optional[guild_models.PartialGuild] = None
-        if "source_guild" in payload:
-            source_guild_payload = payload["source_guild"]
+        if source_guild_payload := payload.get("source_guild"):
             source_guild = guild_models.PartialGuild(
                 app=self._app,
                 id=snowflakes.Snowflake(source_guild_payload["id"]),

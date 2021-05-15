@@ -270,7 +270,7 @@ class EmbedField:
         self._inline = value
 
 
-# TODO: separated into frozen received embed and embed builder
+# TODO: separate into frozen received embed and embed builder
 class Embed:
     """Represents an embed."""
 
@@ -307,7 +307,7 @@ class Embed:
         author: typing.Optional[EmbedAuthor],
         provider: typing.Optional[EmbedProvider],
         footer: typing.Optional[EmbedFooter],
-        fields: typing.Optional[typing.MutableSequence[EmbedField]],
+        fields: typing.Optional[typing.Sequence[EmbedField]],
     ) -> Embed:
         """Generate an embed from the given attributes.
 
@@ -327,7 +327,7 @@ class Embed:
         embed._author = author
         embed._provider = provider
         embed._footer = footer
-        embed._fields = fields
+        embed._fields = list(fields) if fields else None
         return embed
 
     def __init__(
