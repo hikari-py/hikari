@@ -23,40 +23,21 @@
 """Provides the `python -m hikari` and `hikari` commands to the shell."""
 from __future__ import annotations
 
-import inspect
 import os
 import platform
 import sys
-
-try:
-    import git  # type: ignore[import]
-except ImportError:
-    # No git module = git not installed
-    git = None
 
 from hikari import _about
 
 
 def main() -> None:
     """Print package info and exit."""
-    sourcefile = inspect.getsourcefile(_about)
-    assert isinstance(sourcefile, str)
-
-    path = os.path.abspath(os.path.dirname(sourcefile))
+    path = os.path.abspath(os.path.dirname(_about.__file__))
     sha1 = _about.__git_sha1__[:8]
     version = _about.__version__
     py_impl = platform.python_implementation()
     py_ver = platform.python_version()
     py_compiler = platform.python_compiler()
-
-    # Provide a more helpful commit information if available
-    if sha1.casefold() == "head" and git:
-        try:
-            repo = git.Repo()
-            sha1 = str(repo.head.commit)[:8]
-        except (git.InvalidGitRepositoryError, git.NoSuchPathError):
-            # Repo not available
-            pass
 
     sys.stderr.write(f"hikari ({version}) [{sha1}]\n")
     sys.stderr.write(f"located at {path}\n")

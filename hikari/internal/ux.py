@@ -166,11 +166,7 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
 
     raw_banner = importlib.resources.read_text(package, "banner.txt")
 
-    system_bits = (
-        platform.machine(),
-        platform.system(),
-        platform.release(),
-    )
+    system_bits = (platform.machine(), platform.system(), platform.release())
     filtered_system_bits = (s.strip() for s in system_bits if s.strip())
 
     args = {
