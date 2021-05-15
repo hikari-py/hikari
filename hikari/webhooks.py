@@ -58,7 +58,7 @@ class WebhookType(int, enums.Enum):
     """Channel Follower webhook."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Webhook(snowflakes.Unique):
     """Represents a webhook object on Discord.
 

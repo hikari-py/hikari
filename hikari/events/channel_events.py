@@ -317,7 +317,7 @@ class ChannelCreateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """Event fired when a guild channel is created."""
 
@@ -366,7 +366,7 @@ class ChannelUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """Event fired when a guild channel is edited."""
 
@@ -426,7 +426,7 @@ class ChannelDeleteEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     """Event fired when a guild channel is deleted."""
 
@@ -501,7 +501,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     """Event fired when a message is pinned/unpinned in a guild channel."""
 
@@ -578,7 +578,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     """Event fired when a message is pinned/unpinned in a private channel."""
 
@@ -677,7 +677,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class InviteCreateEvent(InviteEvent):
     """Event fired when an invite is created in a channel."""
 
@@ -715,7 +715,7 @@ class InviteCreateEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INVITES)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class InviteDeleteEvent(InviteEvent):
     """Event fired when an invite is deleted from a channel."""
 
@@ -747,7 +747,7 @@ class InviteDeleteEvent(InviteEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_WEBHOOKS)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class WebhookUpdateEvent(GuildChannelEvent):
     """Event fired when a webhook is created/updated/deleted in a channel.
 

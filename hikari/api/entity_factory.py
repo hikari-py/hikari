@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
 
 
-@attr.define(frozen=True, weakref_slot=False)
+@attr.frozen(weakref_slot=False)
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 

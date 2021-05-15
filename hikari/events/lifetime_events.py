@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to discord.
 
@@ -62,7 +62,7 @@ class StartingEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
@@ -78,7 +78,7 @@ class StartedEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class StoppingEvent(base_events.Event):
     """Event that is triggered as soon as the application is requested to close.
 
@@ -102,7 +102,7 @@ class StoppingEvent(base_events.Event):
     # <<inherited docstring from Event>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 

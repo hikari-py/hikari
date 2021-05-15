@@ -83,7 +83,7 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
     return datetime.timedelta(seconds=seconds) if seconds > 0 else None
 
 
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=False, weakref_slot=False)
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attr.field()
     name: typing.Optional[str] = attr.field()
@@ -95,7 +95,7 @@ class _GuildChannelFields:
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
 
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=False, weakref_slot=False)
 class _IntegrationFields:
     id: snowflakes.Snowflake = attr.field()
     name: str = attr.field()
@@ -103,7 +103,7 @@ class _IntegrationFields:
     account: guild_models.IntegrationAccount = attr.field()
 
 
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=False, weakref_slot=False)
 class _GuildFields:
     id: snowflakes.Snowflake = attr.field()
     name: str = attr.field()
@@ -135,7 +135,7 @@ class _GuildFields:
     is_nsfw: bool = attr.field()
 
 
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
     code: str = attr.field()
     guild: typing.Optional[invite_models.InviteGuild] = attr.field()
@@ -149,7 +149,7 @@ class _InviteFields:
     approximate_member_count: typing.Optional[int] = attr.field()
 
 
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=False, weakref_slot=False)
 class _UserFields:
     id: snowflakes.Snowflake = attr.field()
     discriminator: str = attr.field()
@@ -1960,7 +1960,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             secrets=secrets,
             is_instance=payload.get("instance"),  # TODO: can we safely default this to False?
             flags=presence_models.ActivityFlag(payload["flags"]) if "flags" in payload else None,
-            buttons=tuple(payload.get("buttons")) or (),
+            buttons=tuple(payload["buttons"]) if "buttons" in payload else (),
         )
 
     def deserialize_member_presence(

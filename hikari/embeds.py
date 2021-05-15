@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
 AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource[AsyncReaderT]):
     """A base type for any resource provided in an embed.
 
@@ -109,7 +109,7 @@ class EmbedResource(files.Resource[AsyncReaderT]):
         return self.resource.stream(executor=executor, head_only=head_only)
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     """Resource with a corresponding proxied element."""
 
@@ -185,7 +185,7 @@ class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
     """
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
     """Represents an embed video.
 
@@ -205,7 +205,7 @@ class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
     """The width of the video."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 

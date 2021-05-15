@@ -133,7 +133,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
@@ -255,7 +255,7 @@ class GuildTypingEvent(TypingEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class DMTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 

@@ -202,7 +202,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a guild.
@@ -285,7 +285,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         return guild_id
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a DM.
@@ -448,7 +448,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a guild.
@@ -555,7 +555,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         return guild_id
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a DM.
@@ -637,7 +637,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         """
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if messages are deleted in a guild.
@@ -718,7 +718,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         return self.app.cache.get_guild(self.guild_id)
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if messages are deleted in a DM.

@@ -191,7 +191,7 @@ class StickerFormatType(int, enums.Enum):
     """A lottie sticker."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -227,7 +227,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -244,7 +244,7 @@ class Reaction:
         return str(self.emoji)
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Sticker(snowflakes.Unique):
     """Represents the stickers found attached to messages on Discord."""
 
@@ -274,7 +274,7 @@ class Sticker(snowflakes.Unique):
     """The format of this sticker's asset."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -285,7 +285,7 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class Mentions:
     """Description of mentions that exist in the message."""
 
@@ -403,7 +403,7 @@ class Mentions:
         return results
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -432,7 +432,7 @@ class MessageReference:
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
@@ -488,7 +488,7 @@ class MessageApplication(guilds.PartialApplication):
         )
 
 
-@attr.define(frozen=True, kw_only=True, repr=True, eq=False, weakref_slot=False)
+@attr.frozen(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
 
@@ -1174,7 +1174,7 @@ class PartialMessage(snowflakes.Unique):
             await self.app.rest.delete_all_reactions_for_emoji(channel=self.channel_id, message=self.id, emoji=emoji)
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 

@@ -154,7 +154,7 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 
 @no_recursive_throw()
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 

@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
@@ -95,7 +95,7 @@ class VoiceState:
     """
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""
 

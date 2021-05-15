@@ -109,7 +109,7 @@ class Emoji(files.WebResource, abc.ABC):
         return UnicodeEmoji.parse(string)
 
 
-@attr.define(frozen=True, hash=True, weakref_slot=False)
+@attr.frozen(hash=True, weakref_slot=False)
 class UnicodeEmoji(Emoji):
     """Represents a unicode emoji.
 
@@ -244,7 +244,7 @@ class UnicodeEmoji(Emoji):
         return cls(name=string)
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -328,7 +328,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         raise ValueError("Expected an emoji ID or emoji mention")
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 

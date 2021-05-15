@@ -81,7 +81,7 @@ class InviteCode(abc.ABC):
         return f"https://discord.gg/{self.code}"
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
@@ -95,7 +95,7 @@ class VanityURL(InviteCode):
     """The amount of times this invite has been used."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
@@ -215,7 +215,7 @@ class InviteGuild(guilds.PartialGuild):
         )
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
@@ -278,7 +278,7 @@ class Invite(InviteCode):
     """
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class InviteWithMetadata(Invite):
     """Extends the base `Invite` object with metadata.
 

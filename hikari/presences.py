@@ -88,7 +88,7 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Competing in <name>`."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
@@ -99,7 +99,7 @@ class ActivityTimestamps:
     """When this activity's session will end, if applicable."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
@@ -113,7 +113,7 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
@@ -130,7 +130,7 @@ class ActivityAssets:
     """The text that'll appear when hovering over the small image, if set."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
@@ -171,7 +171,7 @@ class ActivityFlag(enums.Flag):
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
@@ -188,7 +188,7 @@ class Activity:
         return self.name
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
@@ -248,7 +248,7 @@ class Status(str, enums.Enum):
     """Offline or invisible/grey."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
@@ -262,7 +262,7 @@ class ClientStatus:
     """The status of the target user's web session."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 

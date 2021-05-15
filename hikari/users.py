@@ -538,7 +538,7 @@ class User(PartialUser, abc.ABC):
         )
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
@@ -605,7 +605,7 @@ class PartialUserImpl(PartialUser):
         return f"{self.username}#{self.discriminator}"
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
@@ -632,7 +632,7 @@ class UserImpl(PartialUserImpl, User):
     """The public flags for this user."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 

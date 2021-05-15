@@ -231,7 +231,7 @@ class ConnectionVisibility(int, enums.Enum):
     """Everyone can see the connection."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
@@ -270,7 +270,7 @@ class OwnConnection:
     """The visibility of the connection."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -295,7 +295,7 @@ class TeamMembershipState(int, enums.Enum):
     """Denotes the user has accepted the invite and is now a member."""
 
 
-@attr.define(frozen=True, eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(eq=False, hash=False, kw_only=True, weakref_slot=False)
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
@@ -377,7 +377,7 @@ class TeamMember(users.User):
         return self.user == other
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Team(snowflakes.Unique):
     """Represents a development team, along with all its members."""
 
@@ -455,7 +455,7 @@ class Team(snowflakes.Unique):
         )
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
@@ -556,7 +556,7 @@ class Application(guilds.PartialApplication):
         )
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to `AuthorizationInformation`."""
 
@@ -582,7 +582,7 @@ class AuthorizationApplication(guilds.PartialApplication):
     """The URL of this application's privacy policy."""
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class AuthorizationInformation:
     """Model for the data returned by Get Current Authorization Information."""
 
@@ -599,7 +599,7 @@ class AuthorizationInformation:
     """The user who has authorized this token if they included the `identify` scope."""
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class PartialOAuth2Token:
     """Model for partial OAuth2 token data returned by the API.
 
@@ -623,7 +623,7 @@ class PartialOAuth2Token:
         return self.access_token
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
@@ -645,7 +645,7 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     """
 
 
-@attr.define(frozen=True, hash=True, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=True, kw_only=True, weakref_slot=False)
 class OAuth2ImplicitToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the implicit grant flow."""
 

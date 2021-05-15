@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
@@ -76,7 +76,7 @@ class SessionStartLimit:
         return self._created_at + self.reset_after
 
 
-@attr.define(frozen=True, hash=False, kw_only=True, weakref_slot=False)
+@attr.frozen(hash=False, kw_only=True, weakref_slot=False)
 class GatewayBot:
     """Used to represent gateway information for the connected bot."""
 

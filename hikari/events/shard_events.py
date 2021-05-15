@@ -102,7 +102,7 @@ class ShardStateEvent(ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
@@ -113,7 +113,7 @@ class ShardConnectedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
@@ -124,7 +124,7 @@ class ShardDisconnectedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
@@ -192,7 +192,7 @@ class ShardReadyEvent(ShardStateEvent):
     """
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
@@ -203,7 +203,7 @@ class ShardResumedEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 

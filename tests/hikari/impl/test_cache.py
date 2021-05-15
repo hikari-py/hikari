@@ -84,7 +84,7 @@ class TestCacheImpl:
         cache_impl._create_cache.assert_called_once_with()
 
     def test__build_emoji(self, cache_impl):
-        mock_user = mock.MagicMock(users.User)
+        mock_user = object()
         emoji_data = cache_utilities.KnownCustomEmojiData(
             id=snowflakes.Snowflake(1233534234),
             name="OKOKOKOKOK",
@@ -103,8 +103,7 @@ class TestCacheImpl:
         assert emoji.id == snowflakes.Snowflake(1233534234)
         assert emoji.name == "OKOKOKOKOK"
         assert emoji.guild_id == snowflakes.Snowflake(65234123)
-        assert emoji.user == mock_user
-        assert emoji.user is not mock_user
+        assert emoji.user is mock_user
         assert emoji.is_animated is True
         assert emoji.is_colons_required is False
         assert emoji.is_managed is False
@@ -865,8 +864,8 @@ class TestCacheImpl:
         ...
 
     def test__build_invite(self, cache_impl):
-        mock_inviter = mock.MagicMock(users.User)
-        mock_target_user = mock.MagicMock(users.User)
+        mock_inviter = object()
+        mock_target_user = object()
         invite_data = cache_utilities.InviteData(
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
@@ -889,10 +888,8 @@ class TestCacheImpl:
         assert invite.guild_id == snowflakes.Snowflake(965234)
         assert invite.channel is None
         assert invite.channel_id == snowflakes.Snowflake(87345234)
-        assert invite.inviter == mock_inviter
-        assert invite.target_user == mock_target_user
-        assert invite.inviter is not mock_inviter
-        assert invite.target_user is not mock_target_user
+        assert invite.inviter is mock_inviter
+        assert invite.target_user is mock_target_user
         assert invite.target_user_type is invites.TargetUserType.STREAM
         assert invite.approximate_active_member_count is None
         assert invite.approximate_member_count is None
@@ -1401,24 +1398,22 @@ class TestCacheImpl:
         assert cache_impl._me is None
 
     def test_get_me_for_known_me(self, cache_impl):
-        mock_own_user = mock.MagicMock(users.OwnUser)
+        mock_own_user =  object()
         cache_impl._me = mock_own_user
 
         cached_me = cache_impl.get_me()
 
-        assert cached_me == mock_own_user
-        assert cached_me is not mock_own_user
+        assert cached_me is mock_own_user
 
     def test_get_me_for_unknown_me(self, cache_impl):
         assert cache_impl.get_me() is None
 
     def test_set_me(self, cache_impl):
-        mock_own_user = mock.MagicMock(users.OwnUser)
+        mock_own_user =  object()
 
         cache_impl.set_me(mock_own_user)
 
-        assert cache_impl._me == mock_own_user
-        assert cache_impl._me is not mock_own_user
+        assert cache_impl._me is mock_own_user
 
     def test_update_me_for_cached_me(self, cache_impl):
         mock_cached_own_user = mock.MagicMock(users.OwnUser)
@@ -1439,7 +1434,7 @@ class TestCacheImpl:
         assert cache_impl._me == mock_own_user
 
     def test__build_member(self, cache_impl):
-        mock_user = mock.MagicMock(users.User)
+        mock_user = object()
         member_data = cache_utilities.MemberData(
             user=cache_utilities.RefCell(mock_user),
             guild_id=snowflakes.Snowflake(6434435234),
@@ -1454,8 +1449,7 @@ class TestCacheImpl:
 
         member = cache_impl._build_member(cache_utilities.RefCell(member_data))
 
-        assert member.user == mock_user
-        assert member.user is not mock_user
+        assert member.user is mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
         assert member.role_ids == (snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123))
@@ -1812,9 +1806,7 @@ class TestCacheImpl:
         assert member_entry.object.user is mock_user_ref
         assert member_entry.object.guild_id == 67345234
         assert member_entry.object.nickname == "A NICK LOL"
-        assert member_entry.object.role_ids == (65345234, 123123)
-        assert member_entry.object.role_ids is not member_model.role_ids
-        assert isinstance(member_entry.object.role_ids, tuple)
+        assert member_entry.object.role_ids is member_model.role_ids
         assert member_entry.object.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
         )
@@ -1998,7 +1990,7 @@ class TestCacheImpl:
         assert cache_impl.get_users_view() == {}
 
     def test__set_user(self, cache_impl):
-        mock_user = mock.MagicMock(users.User, id=snowflakes.Snowflake(6451234123))
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(6451234123))
         cache_impl._user_entries = collections.FreezableDict(
             {snowflakes.Snowflake(542143): mock.Mock(cache_utilities.RefCell)}
         )
@@ -2007,11 +1999,10 @@ class TestCacheImpl:
 
         assert result is cache_impl._user_entries[snowflakes.Snowflake(6451234123)]
         assert 6451234123 in cache_impl._user_entries
-        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object == mock_user
-        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object is not mock_user
+        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object is mock_user
 
     def test__set_user_carries_over_ref_count(self, cache_impl):
-        mock_user = mock.MagicMock(users.User, id=snowflakes.Snowflake(6451234123))
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(6451234123))
         cache_impl._user_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(542143): mock.Mock(cache_utilities.RefCell),
@@ -2023,8 +2014,7 @@ class TestCacheImpl:
 
         assert result is cache_impl._user_entries[snowflakes.Snowflake(6451234123)]
         assert 6451234123 in cache_impl._user_entries
-        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object == mock_user
-        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object is not mock_user
+        assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].object is mock_user
         assert cache_impl._user_entries[snowflakes.Snowflake(6451234123)].ref_count == 42
 
     def test__build_voice_state(self, cache_impl):

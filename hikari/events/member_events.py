@@ -104,7 +104,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberCreateEvent(MemberEvent):
     """Event that is fired when a member joins a guild."""
@@ -135,7 +135,7 @@ class MemberCreateEvent(MemberEvent):
         return self.member.user
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberUpdateEvent(MemberEvent):
     """Event that is fired when a member is updated in a guild.
@@ -175,7 +175,7 @@ class MemberUpdateEvent(MemberEvent):
         return self.member.user
 
 
-@attr.define(frozen=True, kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberDeleteEvent(MemberEvent):
     """Event fired when a member is kicked from or leaves a guild."""
