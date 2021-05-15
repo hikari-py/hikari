@@ -46,10 +46,8 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 }
 
 
-# This could be frozen, except attrs' docs advise against this for performance
-# reasons when using slotted classes.
 @attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -112,7 +110,7 @@ class CompiledRoute:
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, init=False, weakref_slot=False)
+@attr.define(frozen=True, hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -138,14 +136,15 @@ class Route:
     """The optional major parameter name combination for this endpoint."""
 
     def __init__(self, method: str, path_template: str) -> None:
-        self.method = method
-        self.path_template = path_template
+        # Since this class is "frozen" we can't use it's defined setattr
+        object.__setattr__(self, "method", method)
+        object.__setattr__(self, "path_template", path_template)
 
-        self.major_params = None
+        object.__setattr__(self, "major_params", None)
         match = PARAM_REGEX.findall(path_template)
         for major_param_combo in MAJOR_PARAM_COMBOS.keys():
             if major_param_combo.issubset(match):
-                self.major_params = major_param_combo
+                object.__setattr__(self, "major_params", major_param_combo)
                 break
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
@@ -182,7 +181,7 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
+@attr.define(frozen=True, hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""

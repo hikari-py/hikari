@@ -38,8 +38,6 @@ __all__: typing.List[str] = [
     "VoiceStateData",
     "RefCell",
     "unwrap_ref_cell",
-    "copy_guild_channel",
-    "Cache3DMappingView",
     "DataT",
     "KeyT",
     "ValueT",
@@ -110,10 +108,6 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
         self._data = items
         self._predicate = predicate
 
-    @classmethod
-    def _copy(cls, value: ValueT) -> ValueT:
-        return copy.copy(value)
-
     def __contains__(self, key: typing.Any) -> bool:
         return key in self._data and (self._predicate is None or self._predicate(self._data[key]))
 
@@ -126,10 +120,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
         if self._builder is not None:
             entry = self._builder(entry)  # type: ignore[arg-type]
 
-        else:
-            entry = self._copy(entry)  # type: ignore[arg-type]
-
-        return entry
+        return entry  # type: ignore[return-value]
 
     def __iter__(self) -> typing.Iterator[KeyT]:
         if self._predicate is None:
@@ -358,8 +349,8 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             channel=None,
             guild=None,
             app=app,
-            inviter=self.inviter.copy() if self.inviter else None,
-            target_user=self.target_user.copy() if self.target_user else None,
+            inviter=self.inviter.object if self.inviter else None,
+            target_user=self.target_user.object if self.target_user else None,
             expires_at=self.created_at + self.max_age if self.max_age else None,
         )
 
@@ -373,10 +364,10 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         target_user: typing.Optional[RefCell[users_.User]] = None,
     ) -> InviteData:
         if not inviter and invite.inviter:
-            inviter = RefCell(copy.copy(invite.inviter))
+            inviter = RefCell(invite.inviter)
 
         if not target_user and invite.target_user:
-            target_user = RefCell(copy.copy(invite.target_user))
+            target_user = RefCell(invite.target_user)
 
         return cls(
             code=invite.code,
@@ -422,7 +413,7 @@ class MemberData(BaseData[guilds.Member]):
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
-            user=user or RefCell(copy.copy(member.user)),
+            user=user or RefCell(member.user),
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -437,7 +428,7 @@ class MemberData(BaseData[guilds.Member]):
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
             is_pending=self.is_pending,
-            user=self.user.copy(),
+            user=self.user.object,
         )
 
 
@@ -465,7 +456,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
         user: typing.Optional[RefCell[users_.User]] = None,
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
-            user = RefCell(copy.copy(emoji.user))
+            user = RefCell(emoji.user)
 
         return cls(
             id=emoji.id,
@@ -491,7 +482,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_managed=self.is_managed,
             is_available=self.is_available,
             app=app,
-            user=self.user.copy() if self.user else None,
+            user=self.user.object if self.user else None,
         )
 
 
@@ -528,15 +519,11 @@ class RichActivityData(BaseData[presences.RichActivity]):
             pass
 
         elif isinstance(activity.emoji, emojis.CustomEmoji):
-            emoji = RefCell(copy.copy(activity.emoji))
+            emoji = RefCell(activity.emoji)
 
         elif activity.emoji:
             emoji = activity.emoji.name
 
-        timestamps = copy.copy(activity.timestamps) if activity.timestamps is not None else None
-        party = copy.copy(activity.party) if activity.party is not None else None
-        assets = copy.copy(activity.assets) if activity.assets is not None else None
-        secrets = copy.copy(activity.secrets) if activity.secrets is not None else None
         return cls(
             name=activity.name,
             url=activity.url,
@@ -548,17 +535,17 @@ class RichActivityData(BaseData[presences.RichActivity]):
             is_instance=activity.is_instance,
             flags=activity.flags,
             emoji=emoji,
-            timestamps=timestamps,
-            party=party,
-            assets=assets,
-            secrets=secrets,
+            timestamps=activity.timestamps,
+            party=activity.party,
+            assets=activity.assets,
+            secrets=activity.secrets,
             buttons=tuple(activity.buttons),
         )
 
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
         emoji: typing.Optional[emojis.Emoji] = None
         if isinstance(self.emoji, RefCell):
-            emoji = self.emoji.copy()
+            emoji = self.emoji.object
 
         elif self.emoji is not None:
             emoji = emojis.UnicodeEmoji(self.emoji)
@@ -573,10 +560,10 @@ class RichActivityData(BaseData[presences.RichActivity]):
             is_instance=self.is_instance,
             flags=self.flags,
             state=self.state,
-            timestamps=copy.copy(self.timestamps) if self.timestamps is not None else None,
-            party=copy.copy(self.party) if self.party is not None else None,
-            assets=copy.copy(self.assets) if self.assets is not None else None,
-            secrets=copy.copy(self.secrets) if self.secrets is not None else None,
+            timestamps=self.timestamps,
+            party=self.party,
+            assets=self.assets,
+            secrets=self.secrets,
             emoji=emoji,
             buttons=self.buttons,
         )
@@ -602,7 +589,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             guild_id=presence.guild_id,
             visible_status=presence.visible_status,
             activities=tuple(RichActivityData.build_from_entity(activity) for activity in presence.activities),
-            client_status=copy.copy(presence.client_status),
+            client_status=presence.client_status,
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
@@ -612,7 +599,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             visible_status=self.visible_status,
             app=app,
             activities=[activity.build_entity(app) for activity in self.activities],
-            client_status=copy.copy(self.client_status),
+            client_status=self.client_status,
         )
 
 
@@ -635,13 +622,13 @@ class MentionsData(BaseData[messages.Mentions]):
         users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
     ) -> MentionsData:
         if not users and mentions.users is not undefined.UNDEFINED:
-            users = {user_id: RefCell(copy.copy(user)) for user_id, user in mentions.users.items()}
+            users = {user_id: RefCell(user) for user_id, user in mentions.users.items()}
 
         channels: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, "channels_.PartialChannel"]
         ] = undefined.UNDEFINED
         if mentions.channels is not undefined.UNDEFINED:
-            channels = {channel_id: copy.copy(channel) for channel_id, channel in mentions.channels.items()}
+            channels = {channel_id: channel for channel_id, channel in mentions.channels.items()}
 
         return cls(
             users=users,
@@ -655,13 +642,13 @@ class MentionsData(BaseData[messages.Mentions]):
     ) -> messages.Mentions:
         users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = undefined.UNDEFINED
         if self.users is not undefined.UNDEFINED:
-            users = {user_id: user.copy() for user_id, user in self.users.items()}
+            users = {user_id: user.object for user_id, user in self.users.items()}
 
         channels: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
         ] = undefined.UNDEFINED
         if self.channels is not undefined.UNDEFINED:
-            channels = {channel_id: copy.copy(channel) for channel_id, channel in self.channels.items()}
+            channels = dict(self.channels)
 
         return messages.Mentions(
             message=message or NotImplemented,
@@ -682,18 +669,19 @@ class MentionsData(BaseData[messages.Mentions]):
             self.users = users
 
         elif mention.users is not undefined.UNDEFINED:
-            self.users = {user_id: RefCell(copy.copy(user)) for user_id, user in mention.users.items()}
+            self.users = {user_id: RefCell(user) for user_id, user in mention.users.items()}
 
         if mention.role_ids is not undefined.UNDEFINED:
             self.role_ids = tuple(mention.role_ids)
 
         if mention.channels is not undefined.UNDEFINED:
-            self.channels = {channel_id: copy.copy(channel) for channel_id, channel in mention.channels.items()}
+            self.channels = dict(mention.channels)
 
         if mention.everyone is not undefined.UNDEFINED:
             self.everyone = mention.everyone
 
 
+# TODO: this should be removed when embed switched to received vs builder
 def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     return embeds_.Embed.from_received_embed(
         title=embed.title,
@@ -703,9 +691,9 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
         timestamp=embed.timestamp,
         image=copy.copy(embed.image) if embed.image else None,
         thumbnail=copy.copy(embed.thumbnail) if embed.thumbnail else None,
-        video=copy.copy(embed.video) if embed.video else None,
+        video=embed.video,
         author=copy.copy(embed.author) if embed.author else None,
-        provider=copy.copy(embed.provider) if embed.provider else None,
+        provider=embed.provider,
         footer=copy.copy(embed.footer) if embed.footer else None,
         fields=list(map(copy.copy, embed.fields)),  # type: ignore[arg-type]
     )
@@ -763,24 +751,24 @@ class MessageData(BaseData[messages.Message]):
             id=message.id,
             channel_id=message.channel_id,
             guild_id=message.guild_id,
-            author=author or RefCell(copy.copy(message.author)),
+            author=author or RefCell(message.author),
             member=member,
             content=message.content,
             timestamp=message.timestamp,
             edited_timestamp=message.edited_timestamp,
             is_tts=message.is_tts,
             mentions=MentionsData.build_from_entity(message.mentions, users=mention_users),
-            attachments=tuple(map(copy.copy, message.attachments)),
+            attachments=tuple(message.attachments),
             embeds=tuple(map(_copy_embed, message.embeds)),
-            reactions=tuple(map(copy.copy, message.reactions)),
+            reactions=tuple(message.reactions),
             is_pinned=message.is_pinned,
             webhook_id=message.webhook_id,
             type=message.type,
-            activity=copy.copy(message.activity) if message.activity else None,
-            application=copy.copy(message.application) if message.application else None,
-            message_reference=copy.copy(message.message_reference) if message.message_reference else None,
-            flags=copy.copy(message.flags),
-            stickers=tuple(map(copy.copy, message.stickers)),
+            activity=message.activity,
+            application=message.application,
+            message_reference=message.message_reference,
+            flags=message.flags,
+            stickers=tuple(message.stickers),
             nonce=message.nonce,
             referenced_message=referenced_message,
         )
@@ -798,24 +786,24 @@ class MessageData(BaseData[messages.Message]):
             app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
-            author=self.author.copy(),
+            author=self.author.object,
             member=self.member.object.build_entity(app) if self.member else None,
             content=self.content,
             timestamp=self.timestamp,
             edited_timestamp=self.edited_timestamp,
             is_tts=self.is_tts,
             mentions=NotImplemented,
-            attachments=tuple(map(copy.copy, self.attachments)),
-            embeds=tuple(map(_copy_embed, self.embeds)),
-            reactions=tuple(map(copy.copy, self.reactions)),
+            attachments=tuple(self.attachments),
+            embeds=tuple(self.embeds),
+            reactions=tuple(self.reactions),
             is_pinned=self.is_pinned,
             webhook_id=self.webhook_id,
             type=self.type,
-            activity=copy.copy(self.activity) if self.activity else None,
-            application=copy.copy(self.application) if self.application else None,
-            message_reference=copy.copy(self.message_reference) if self.message_reference else None,
+            activity=self.activity,
+            application=self.application,
+            message_reference=self.message_reference,
             flags=self.flags,
-            stickers=tuple(map(copy.copy, self.stickers)),
+            stickers=tuple(self.stickers),
             nonce=self.nonce,
             referenced_message=referenced_message,
         )
@@ -841,10 +829,10 @@ class MessageData(BaseData[messages.Message]):
             self.is_pinned = message.is_pinned
 
         if message.attachments is not undefined.UNDEFINED:
-            self.attachments = tuple(map(copy.copy, message.attachments))
+            self.attachments = tuple(message.attachments)
 
         if message.embeds is not undefined.UNDEFINED:
-            self.embeds = tuple(map(_copy_embed, message.embeds))
+            self.embeds = tuple(message.embeds)
 
         self.mentions.update(message.mentions, users=mention_users)
 
@@ -917,16 +905,6 @@ class Cell(typing.Generic[ValueT]):
 
     object: ValueT = attr.field(repr=True)
 
-    def copy(self) -> ValueT:
-        """Get a copy of the contents of this cell.
-
-        Returns
-        -------
-        ValueT
-            The copied contents of this cell.
-        """
-        return copy.copy(self.object)
-
 
 @attr_extensions.with_copy
 @attr.define(repr=False, hash=False, weakref_slot=False)
@@ -942,16 +920,6 @@ class RefCell(typing.Generic[ValueT]):
     object: ValueT = attr.field(repr=True)
     ref_count: int = attr.field(default=0, kw_only=True)
 
-    def copy(self) -> ValueT:
-        """Get a copy of the contents of this cell.
-
-        Returns
-        -------
-        ValueT
-            The copied contents of this cell.
-        """
-        return copy.copy(self.object)
-
 
 def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
     """Unwrap a `RefCell` instance to it's contents.
@@ -966,27 +934,4 @@ def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
     ValueT
         The reference cell's content.
     """
-    return cell.copy()
-
-
-def copy_guild_channel(channel: ChannelT) -> ChannelT:
-    """Logic for handling the copying of guild channel objects.
-
-    This exists account for the permission overwrite objects attached to guild
-    channel objects which need to be copied themselves.
-    """
-    channel = copy.copy(channel)
-    channel.permission_overwrites = {
-        sf: copy.copy(overwrite) for sf, overwrite in channel.permission_overwrites.items()
-    }
-    return channel
-
-
-class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[KeyT, ValueT]]):
-    """A special case of the Mapping View which avoids copying the already immutable views contained within it."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @classmethod
-    def _copy(cls, value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
-        return value
+    return cell.object

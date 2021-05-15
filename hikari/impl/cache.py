@@ -26,7 +26,6 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["CacheImpl"]
 
-import copy
 import logging
 import typing
 
@@ -317,7 +316,7 @@ class CacheImpl(cache.MutableCache):
         if not guild_record or not guild_record.guild or guild_record.is_available is not availability:
             return None
 
-        return copy.copy(guild_record.guild)
+        return guild_record.guild
 
     def get_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
@@ -326,7 +325,7 @@ class CacheImpl(cache.MutableCache):
             return None
 
         guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
-        return copy.copy(guild_record.guild) if guild_record and guild_record.guild else None
+        return guild_record.guild if guild_record and guild_record.guild else None
 
     def get_available_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
@@ -376,7 +375,7 @@ class CacheImpl(cache.MutableCache):
             return None
 
         guild_record = self._get_or_create_guild_record(guild.id)
-        guild_record.guild = copy.copy(guild)
+        guild_record.guild = guild
         guild_record.is_available = True
 
     def set_guild_availability(
@@ -395,14 +394,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config.CacheComponents.GUILDS):
             return None, None
 
-        guild = copy.copy(guild)
         cached_guild = self.get_guild(guild.id)
-
-        # We have to manually update these because Inconsistency is Discord's middle name.
-        if cached_guild:
-            guild.member_count = cached_guild.member_count
-            guild.joined_at = cached_guild.joined_at
-            guild.is_large = cached_guild.is_large
 
         self.set_guild(guild)
         return cached_guild, self.get_guild(guild.id)
@@ -464,13 +456,10 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config.CacheComponents.GUILD_CHANNELS):
             return None
 
-        channel = self._guild_channel_entries.get(snowflakes.Snowflake(channel))
-        return cache_utility.copy_guild_channel(channel) if channel else None
+        return self._guild_channel_entries.get(snowflakes.Snowflake(channel))
 
     def get_guild_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
-        return cache_utility.CacheMappingView(
-            self._guild_channel_entries.freeze(), builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
-        )
+        return cache_utility.CacheMappingView(self._guild_channel_entries.freeze())
 
     def get_guild_channels_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
@@ -497,15 +486,13 @@ class CacheImpl(cache.MutableCache):
             return parent_position, 1, channel.position
 
         cached_channels = dict(sorted(cached_channels.items(), key=sorter))
-        return cache_utility.CacheMappingView(
-            cached_channels, builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
-        )
+        return cache_utility.CacheMappingView(cached_channels)
 
     def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
         if not self._is_cache_enabled_for(config.CacheComponents.GUILD_CHANNELS):
             return None
 
-        self._guild_channel_entries[channel.id] = cache_utility.copy_guild_channel(channel)
+        self._guild_channel_entries[channel.id] = channel
         guild_record = self._get_or_create_guild_record(channel.guild_id)
 
         if guild_record.channels is None:
@@ -722,10 +709,10 @@ class CacheImpl(cache.MutableCache):
         return cached_user
 
     def get_me(self) -> typing.Optional[users.OwnUser]:
-        return copy.copy(self._me)
+        return self._me
 
     def set_me(self, user: users.OwnUser, /) -> None:
-        self._me = copy.copy(user)
+        self._me = user
 
     def update_me(
         self, user: users.OwnUser, /
@@ -860,7 +847,7 @@ class CacheImpl(cache.MutableCache):
             for guild_id, view in self._guild_entries.items()
             if view.members
         }
-        return cache_utility.Cache3DMappingView(views)
+        return cache_utility.CacheMappingView(views)
 
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
@@ -1031,7 +1018,7 @@ class CacheImpl(cache.MutableCache):
             for guild_id, guild_record in self._guild_entries.items()
             if guild_record.presences
         }
-        return cache_utility.Cache3DMappingView(views)
+        return cache_utility.CacheMappingView(views)
 
     def get_presences_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
@@ -1056,11 +1043,11 @@ class CacheImpl(cache.MutableCache):
                 continue
 
             if emoji.id in self._unknown_custom_emoji_entries:
-                self._unknown_custom_emoji_entries[emoji.id].object = copy.copy(emoji)
+                self._unknown_custom_emoji_entries[emoji.id].object = emoji
                 emoji_data = self._unknown_custom_emoji_entries[emoji.id]
 
             else:
-                emoji_data = cache_utility.RefCell(copy.copy(emoji))
+                emoji_data = cache_utility.RefCell(emoji)
                 self._unknown_custom_emoji_entries[emoji.id] = emoji_data
 
             self._increment_ref_count(emoji_data)
@@ -1137,8 +1124,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config.CacheComponents.ROLES):
             return None
 
-        role = self._role_entries.get(snowflakes.Snowflake(role))
-        return copy.copy(role) if role else None
+        return self._role_entries.get(snowflakes.Snowflake(role))
 
     def get_roles_view(self) -> cache.CacheView[snowflakes.Snowflake, guilds.Role]:
         if not self._is_cache_enabled_for(config.CacheComponents.ROLES):
@@ -1195,7 +1181,7 @@ class CacheImpl(cache.MutableCache):
 
     def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> typing.Optional[users.User]:
         user = self._user_entries.get(snowflakes.Snowflake(user))
-        return user.copy() if user else None
+        return user.object if user else None
 
     def get_users_view(self) -> cache.CacheView[snowflakes.Snowflake, users.User]:
         if not self._user_entries:
@@ -1209,10 +1195,10 @@ class CacheImpl(cache.MutableCache):
 
     def _set_user(self, user: users.User, /) -> cache_utility.RefCell[users.User]:
         try:
-            self._user_entries[user.id].object = copy.copy(user)
+            self._user_entries[user.id].object = user
             cell = self._user_entries[user.id]
         except KeyError:
-            cell = cache_utility.RefCell(copy.copy(user))
+            cell = cache_utility.RefCell(user)
             self._user_entries[user.id] = cell
 
         return cell
@@ -1337,7 +1323,7 @@ class CacheImpl(cache.MutableCache):
             for guild_id, guild_record in self._guild_entries.items()
             if guild_record.voice_states
         }
-        return cache_utility.Cache3DMappingView(views)
+        return cache_utility.CacheMappingView(views)
 
     def get_voice_states_view_for_channel(
         self,
