@@ -314,14 +314,14 @@ class Mentions:
         if self.channels is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return list(self.channels.keys())
+        return tuple(self.channels.keys())
 
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         if self.users is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return list(self.users.keys())
+        return tuple(self.users.keys())
 
     @property
     def members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:

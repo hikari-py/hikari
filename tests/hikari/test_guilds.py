@@ -70,15 +70,17 @@ class TestPartialApplication:
             icon_hash="ahashicon",
         )()
 
-    def test_icon_url_property(self, model):
-        model.make_icon_url = mock.Mock(return_value="url")
+    def test_icon_url_property(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            guilds.PartialApplication, init_=False, make_icon_url=mock.Mock(return_value="url")
+        )()
 
         assert model.icon_url == "url"
 
         model.make_icon_url.assert_called_once_with()
 
     def test_make_icon_url_when_hash_is_None(self, model):
-        model.icon_hash = None
+        model = hikari_test_helpers.mock_class_namespace(guilds.PartialApplication, init_=False, icon_hash=None)()
 
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
@@ -175,10 +177,6 @@ class TestMember:
     def test_id_property(self, model, mock_user):
         assert model.id is mock_user.id
 
-    def test_id_setter_property(self, model):
-        with pytest.raises(TypeError):
-            model.id = 456
-
     def test_username_property(self, model, mock_user):
         assert model.username is mock_user.username
 
@@ -234,23 +232,22 @@ class TestMember:
     def test_display_name_property_when_nickname(self, model):
         assert model.display_name == "davb"
 
-    def test_display_name_property_when_no_nickname(self, model, mock_user):
-        model.nickname = None
+    def test_display_name_property_when_no_nickname(self, mock_user):
+        model = hikari_test_helpers.mock_class_namespace(guilds.Member, nickname=None, user=mock_user, init_=False)()
         assert model.display_name is mock_user.username
 
     def test_mention_property_when_nickname(self, model):
         assert model.mention == "<@!123>"
 
-    def test_mention_property_when_no_nickname(self, model, mock_user):
-        model.nickname = None
+    def test_mention_property_when_no_nickname(self, mock_user):
+        model = hikari_test_helpers.mock_class_namespace(guilds.Member, nickname=None, user=mock_user, init_=False)()
         assert model.mention == mock_user.mention
 
     def test_roles(self, model):
-        role1 = mock.Mock(id=321, position=2)
-        role2 = mock.Mock(id=654, position=1)
-        mock_cache_view = {321: role1, 654: role2}
+        role1 = mock.Mock(id=456, position=2)
+        role2 = mock.Mock(id=1234, position=1)
+        mock_cache_view = {456: role1, 1234: role2}
         model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
-        model.role_ids = [321, 654]
 
         assert model.roles == [role1, role2]
 
@@ -258,10 +255,9 @@ class TestMember:
 
     def test_roles_when_role_ids_not_in_cache(self, model):
         role1 = mock.Mock(id=123, position=2)
-        role2 = mock.Mock(id=456, position=1)
-        mock_cache_view = {123: role1, 456: role2}
+        role2 = mock.Mock(id=1234, position=1)
+        mock_cache_view = {123: role1, 1234: role2}
         model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
-        model.role_ids = [321, 456]
 
         assert model.roles == [role2]
 
@@ -317,7 +313,7 @@ class TestPartialGuild:
         assert model.shard_id == 0
 
     def test_shard_id_when_not_shard_aware(self, model):
-        model.app = object()
+        model = hikari_test_helpers.mock_class_namespace(guilds.PartialGuild, init_=False, app=None)()
 
         assert model.shard_id is None
 
@@ -327,14 +323,15 @@ class TestPartialGuild:
         with mock.patch.object(guilds.PartialGuild, "make_icon_url", return_value=icon):
             assert model.icon_url is icon
 
-    def test_make_icon_url_when_no_hash(self, model):
-        model.icon_hash = None
+    def test_make_icon_url_when_no_hash(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.PartialGuild, init_=False, icon_hash=None)()
 
         assert model.make_icon_url(ext="png", size=2048) is None
 
-    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
-        model.icon_hash = "a_yeet"
-
+    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_for_gif(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            guilds.PartialGuild, init_=False, icon_hash="a_yeet", id=90210
+        )()
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -387,7 +384,7 @@ class TestGuildPreview:
             icon_hash="dis is mah icon hash",
             name="DAPI",
             splash_hash="dis is also mah splash hash",
-            discovery_splash_hash=None,
+            discovery_splash_hash="okokokok",
             emojis={},
             approximate_active_member_count=12,
             approximate_member_count=999_283_252_124_633,
@@ -401,8 +398,6 @@ class TestGuildPreview:
             assert model.splash_url is splash
 
     def test_make_splash_url_when_hash(self, model):
-        model.splash_hash = "18dnf8dfbakfdh"
-
         with mock.patch.object(
             routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -411,13 +406,13 @@ class TestGuildPreview:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             guild_id=123,
-            hash="18dnf8dfbakfdh",
+            hash="dis is also mah splash hash",
             size=1024,
             file_format="url",
         )
 
     def test_make_splash_url_when_no_hash(self, model):
-        model.splash_hash = None
+        model = hikari_test_helpers.mock_class_namespace(guilds.GuildPreview, splash_hash=None, init_=False)()
         assert model.make_splash_url(ext="png", size=512) is None
 
     def test_discovery_splash_url(self, model):
@@ -427,8 +422,6 @@ class TestGuildPreview:
             assert model.discovery_splash_url is discovery_splash
 
     def test_make_discovery_splash_url_when_hash(self, model):
-        model.discovery_splash_hash = "18dnf8dfbakfdh"
-
         with mock.patch.object(
             routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -437,13 +430,13 @@ class TestGuildPreview:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             guild_id=123,
-            hash="18dnf8dfbakfdh",
+            hash="okokokok",
             size=2048,
             file_format="url",
         )
 
-    def test_make_discovery_splash_url_when_no_hash(self, model):
-        model.discovery_splash_hash = None
+    def test_make_discovery_splash_url_when_no_hash(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GuildPreview, init_=False, discovery_splash_hash=None)()
         assert model.make_discovery_splash_url(ext="png", size=4096) is None
 
 
@@ -489,8 +482,6 @@ class TestGuild:
             assert model.splash_url is splash
 
     def test_make_splash_url_when_hash(self, model):
-        model.splash_hash = "18dnf8dfbakfdh"
-
         with mock.patch.object(
             routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -499,13 +490,13 @@ class TestGuild:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             guild_id=123,
-            hash="18dnf8dfbakfdh",
+            hash="splash_hash",
             size=2,
             file_format="url",
         )
 
-    def test_make_splash_url_when_no_hash(self, model):
-        model.splash_hash = None
+    def test_make_splash_url_when_no_hash(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.Guild, splash_hash=None, init_=False)()
         assert model.make_splash_url(ext="png", size=1024) is None
 
     def test_discovery_splash_url(self, model):
@@ -515,8 +506,6 @@ class TestGuild:
             assert model.discovery_splash_url is discovery_splash
 
     def test_make_discovery_splash_url_when_hash(self, model):
-        model.discovery_splash_hash = "18dnf8dfbakfdh"
-
         with mock.patch.object(
             routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -525,13 +514,13 @@ class TestGuild:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             guild_id=123,
-            hash="18dnf8dfbakfdh",
+            hash="discovery_splash_hash",
             size=1024,
             file_format="url",
         )
 
-    def test_make_discovery_splash_url_when_no_hash(self, model):
-        model.discovery_splash_hash = None
+    def test_make_discovery_splash_url_when_no_hash(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.Guild, init_=False, discovery_splash_hash=None)()
         assert model.make_discovery_splash_url(ext="png", size=2048) is None
 
     def test_banner_url(self, model):
@@ -555,7 +544,7 @@ class TestGuild:
         )
 
     def test_make_banner_url_when_no_hash(self, model):
-        model.banner_hash = None
+        model = hikari_test_helpers.mock_class_namespace(guilds.Guild, init_=False, banner_hash=None)()
         assert model.make_banner_url(ext="png", size=2048) is None
 
 
@@ -600,15 +589,19 @@ class TestRestGuild:
             max_members=100,
         )
 
-    def test_get_emoji(self, model):
+    def test_get_emoji(self):
         emoji = object()
-        model._emojis = {snowflakes.Snowflake(123): emoji}
+        model = hikari_test_helpers.mock_class_namespace(
+            guilds.RESTGuild, _emojis={snowflakes.Snowflake(123): emoji}, init_=False
+        )()
 
         assert model.get_emoji(123) is emoji
 
-    def test_get_role(self, model):
+    def test_get_role(self):
         role = object()
-        model._roles = {snowflakes.Snowflake(123): role}
+        model = hikari_test_helpers.mock_class_namespace(
+            guilds.RESTGuild, _roles={snowflakes.Snowflake(123): role}, init_=False
+        )()
 
         assert model.get_role(123) is role
 
@@ -655,104 +648,104 @@ class TestGatewayGuild:
         assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
         model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
 
-    def test_channels_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_channels_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.channels == {}
 
     def test_emojis(self, model):
         assert model.emojis is model.app.cache.get_emojis_view_for_guild.return_value
         model.app.cache.get_emojis_view_for_guild.assert_called_once_with(123)
 
-    def test_emojis_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_emojis_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.emojis == {}
 
     def test_members(self, model):
         assert model.members is model.app.cache.get_members_view_for_guild.return_value
         model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
 
-    def test_members_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_members_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.members == {}
 
     def test_presences(self, model):
         assert model.presences is model.app.cache.get_presences_view_for_guild.return_value
         model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
 
-    def test_presences_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_presences_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.presences == {}
 
     def test_roles(self, model):
         assert model.roles is model.app.cache.get_roles_view_for_guild.return_value
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
 
-    def test_roles_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_roles_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.roles == {}
 
     def test_voice_states(self, model):
         assert model.voice_states is model.app.cache.get_voice_states_view_for_guild.return_value
         model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
 
-    def test_voice_states_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_voice_states_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.voice_states == {}
 
     def test_get_channel(self, model):
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
-    def test_get_channel_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_channel_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_channel(456) is None
 
     def test_get_emoji(self, model):
         assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
         model.app.cache.get_emoji.assert_called_once_with(456)
 
-    def test_get_emoji_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_emoji_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_emoji(456) is None
 
     def test_get_member(self, model):
         assert model.get_member(456) is model.app.cache.get_member.return_value
         model.app.cache.get_member.assert_called_once_with(123, 456)
 
-    def test_get_member_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_member_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_member(456) is None
 
     def test_get_presence(self, model):
         assert model.get_presence(456) is model.app.cache.get_presence.return_value
         model.app.cache.get_presence.assert_called_once_with(123, 456)
 
-    def test_get_presence_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_presence_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_presence(456) is None
 
     def test_get_role(self, model):
         assert model.get_role(456) is model.app.cache.get_role.return_value
         model.app.cache.get_role.assert_called_once_with(456)
 
-    def test_get_role_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_role_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_role(456) is None
 
     def test_get_voice_state(self, model):
         assert model.get_voice_state(456) is model.app.cache.get_voice_state.return_value
         model.app.cache.get_voice_state.assert_called_once_with(123, 456)
 
-    def test_get_voice_state_when_no_cache_trait(self, model):
-        model.app = object()
+    def test_get_voice_state_when_no_cache_trait(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_voice_state(456) is None
 
-    def test_get_my_member_when_not_shardaware(self, model):
-        model.app = object()
+    def test_get_my_member_when_not_shardaware(self):
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=None)()
         assert model.get_my_member() is None
 
     def test_get_my_member_when_no_me(self, model):
-        model.app.me = None
+        model = hikari_test_helpers.mock_class_namespace(guilds.GatewayGuild, init_=False, app=mock.Mock(me=None))()
         assert model.get_my_member() is None
 
     def test_get_my_member(self, model):

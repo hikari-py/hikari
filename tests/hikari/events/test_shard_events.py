@@ -38,6 +38,7 @@ class TestMemberChunkEvent:
                 snowflakes.Snowflake(55): mock.Mock(),
                 snowflakes.Snowflake(99): mock.Mock(),
                 snowflakes.Snowflake(455): mock.Mock(),
+                snowflakes.Snowflake(55555): mock.Mock(),
             },
             chunk_count=1,
             chunk_index=1,
@@ -47,11 +48,7 @@ class TestMemberChunkEvent:
         )
 
     def test___getitem___with_slice(self, event):
-        mock_member_0 = object()
-        mock_member_1 = object()
-        event.members = {1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1}
-
-        assert event[2:5:2] == (mock_member_0, mock_member_1)
+        assert event[2:5:2] == (event.members[99], event.members[55555])
 
     def test___getitem___with_valid_index(self, event):
         mock_member = object()
@@ -66,17 +63,13 @@ class TestMemberChunkEvent:
             assert event[123]
 
     def test___iter___(self, event):
-        member_0 = mock.Mock()
-        member_1 = mock.Mock()
-        member_2 = mock.Mock()
-
-        event.members = {
-            snowflakes.Snowflake(1): member_0,
-            snowflakes.Snowflake(2): member_1,
-            snowflakes.Snowflake(3): member_2,
-        }
-
-        assert list(event) == [member_0, member_1, member_2]
+        assert list(event) == [
+            event.members[1],
+            event.members[55],
+            event.members[99],
+            event.members[455],
+            event.members[55555],
+        ]
 
     def test___len___(self, event):
-        assert len(event) == 4
+        assert len(event) == 5

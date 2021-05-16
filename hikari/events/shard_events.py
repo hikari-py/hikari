@@ -70,8 +70,7 @@ class ShardEvent(base_events.Event, abc.ABC):
         """
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attr.frozen(kw_only=True, weakref_slot=False)
 class ShardPayload(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
@@ -80,10 +79,10 @@ class ShardPayload(ShardEvent):
         Discord and not artificial events like the `ShardStateEvent` events.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attr.field()
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attr.field()
     # <<docstring inherited from ShardEvent>>.
 
     name: str = attr.field()

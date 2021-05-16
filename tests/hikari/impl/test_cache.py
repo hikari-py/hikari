@@ -597,7 +597,7 @@ class TestCacheImpl:
         assert cache_impl._guild_entries == {snowflakes.Snowflake(354123): cache_utilities.GuildRecord()}
 
     def test_get_guild_first_tries_get_available_guilds(self, cache_impl):
-        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild = object()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(54234123): cache_utilities.GuildRecord(),
@@ -607,11 +607,10 @@ class TestCacheImpl:
 
         cached_guild = cache_impl.get_guild(StubModel(543123))
 
-        assert cached_guild == mock_guild
-        assert cache_impl is not mock_guild
+        assert cached_guild is mock_guild
 
     def test_get_guild_then_tries_get_unavailable_guilds(self, cache_impl):
-        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild = object()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(543123): cache_utilities.GuildRecord(is_available=True),
@@ -621,11 +620,10 @@ class TestCacheImpl:
 
         cached_guild = cache_impl.get_guild(StubModel(54234123))
 
-        assert cached_guild == mock_guild
-        assert cache_impl is not mock_guild
+        assert cached_guild is mock_guild
 
     def test_get_available_guild_for_known_guild_when_available(self, cache_impl):
-        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild = object()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(54234123): cache_utilities.GuildRecord(),
@@ -635,8 +633,7 @@ class TestCacheImpl:
 
         cached_guild = cache_impl.get_available_guild(StubModel(543123))
 
-        assert cached_guild == mock_guild
-        assert cache_impl is not mock_guild
+        assert cached_guild is mock_guild
 
     def test_get_available_guild_for_known_guild_when_unavailable(self, cache_impl):
         mock_guild = mock.Mock(guilds.GatewayGuild)
@@ -673,7 +670,7 @@ class TestCacheImpl:
         assert result is None
 
     def test_get_unavailable_guild_for_known_guild_when_unavailable(self, cache_impl):
-        mock_guild = mock.MagicMock(guilds.GatewayGuild)
+        mock_guild = object()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(54234123): cache_utilities.GuildRecord(),
@@ -683,8 +680,7 @@ class TestCacheImpl:
 
         cached_guild = cache_impl.get_unavailable_guild(StubModel(452131))
 
-        assert cached_guild == mock_guild
-        assert cache_impl is not mock_guild
+        assert cached_guild is mock_guild
 
     def test_get_unavailable_guild_for_known_guild_when_available(self, cache_impl):
         mock_guild = mock.Mock(guilds.GatewayGuild)
@@ -806,13 +802,12 @@ class TestCacheImpl:
         assert result == {}
 
     def test_set_guild(self, cache_impl):
-        mock_guild = mock.MagicMock(guilds.GatewayGuild, id=snowflakes.Snowflake(5123123))
+        mock_guild = mock.Mock(guilds.GatewayGuild, id=snowflakes.Snowflake(5123123))
 
         cache_impl.set_guild(mock_guild)
 
         assert 5123123 in cache_impl._guild_entries
-        assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].guild == mock_guild
-        assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].guild is not mock_guild
+        assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].guild is mock_guild
         assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].is_available is True
 
     def test_set_guild_availability_for_cached_guild(self, cache_impl):
@@ -1398,7 +1393,7 @@ class TestCacheImpl:
         assert cache_impl._me is None
 
     def test_get_me_for_known_me(self, cache_impl):
-        mock_own_user =  object()
+        mock_own_user = object()
         cache_impl._me = mock_own_user
 
         cached_me = cache_impl.get_me()
@@ -1409,7 +1404,7 @@ class TestCacheImpl:
         assert cache_impl.get_me() is None
 
     def test_set_me(self, cache_impl):
-        mock_own_user =  object()
+        mock_own_user = object()
 
         cache_impl.set_me(mock_own_user)
 
@@ -1806,7 +1801,7 @@ class TestCacheImpl:
         assert member_entry.object.user is mock_user_ref
         assert member_entry.object.guild_id == 67345234
         assert member_entry.object.nickname == "A NICK LOL"
-        assert member_entry.object.role_ids is member_model.role_ids
+        assert member_entry.object.role_ids == (65345234, 123123)
         assert member_entry.object.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
         )
@@ -2320,7 +2315,7 @@ class TestCacheImpl:
         )
 
     def test__build_message(self, cache_impl):
-        mock_author = mock.MagicMock(users.User)
+        mock_author = object()
         mock_member = object()
         member_data = mock.Mock(build_entity=mock.Mock(return_value=mock_member))
         mock_channel = mock.MagicMock()
@@ -2331,14 +2326,14 @@ class TestCacheImpl:
             channels={snowflakes.Snowflake(4444): mock_channel},
             everyone=True,
         )
-        mock_attachment = mock.MagicMock(messages.Attachment)
-        mock_embed_field = mock.MagicMock(embeds.EmbedField)
-        mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
-        mock_sticker = mock.MagicMock(messages.Sticker)
-        mock_reaction = mock.MagicMock(messages.Reaction)
-        mock_activity = mock.MagicMock(messages.MessageActivity)
-        mock_applcation = mock.MagicMock(messages.MessageApplication)
-        mock_reference = mock.MagicMock(messages.MessageReference)
+        mock_attachment = object()
+        mock_embed_field = object()
+        mock_embed = mock.Mock(embeds.Embed, fields=(mock_embed_field,))
+        mock_sticker = object()
+        mock_reaction = object()
+        mock_activity = object()
+        mock_applcation = object()
+        mock_reference = object()
         mock_referenced_message = object()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
@@ -2375,8 +2370,7 @@ class TestCacheImpl:
         assert result.id == 32123123
         assert result.channel_id == 3123123123
         assert result.guild_id == 5555555
-        assert result.author == mock_author
-        assert result.author is not mock_author
+        assert result.author is mock_author
         assert result.member is mock_member
         assert result.content == "OKOKOK"
         assert result.timestamp == datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc)
@@ -2413,12 +2407,9 @@ class TestCacheImpl:
         assert result.is_pinned is False
         assert result.webhook_id == 3123123
         assert result.type is messages.MessageType.REPLY
-        assert result.activity == mock_activity
-        assert result.activity is not mock_activity
-        assert result.application == mock_applcation
-        assert result.application is not mock_applcation
-        assert result.message_reference == mock_reference
-        assert result.message_reference is not mock_reference
+        assert result.activity is mock_activity
+        assert result.application is mock_applcation
+        assert result.message_reference is mock_reference
         assert result.flags == messages.MessageFlag.CROSSPOSTED
         assert result.stickers == (mock_sticker,)
         assert result.nonce == "aNonce"

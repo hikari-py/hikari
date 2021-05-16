@@ -331,7 +331,7 @@ class TestEventFactoryImpl:
         assert isinstance(event, guild_events.EmojisUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.emojis == [mock_app.entity_factory.deserialize_known_custom_emoji.return_value]
+        assert event.emojis == (mock_app.entity_factory.deserialize_known_custom_emoji.return_value,)
         assert event.guild_id == 123431
         assert event.old_emojis is mock_old_emojis
 
@@ -897,7 +897,7 @@ class TestEventFactoryImpl:
         assert event.members == {4222222: mock_app.entity_factory.deserialize_member.return_value}
         assert event.chunk_count == 54
         assert event.chunk_index == 3
-        assert event.not_found == [34212312312, 323123123]
+        assert event.not_found == (34212312312, 323123123)
         assert event.presences == {43123123: mock_app.entity_factory.deserialize_member_presence.return_value}
         assert event.nonce == "OKOKOKOK"
 
@@ -912,7 +912,7 @@ class TestEventFactoryImpl:
 
         event = event_factory.deserialize_guild_member_chunk_event(mock_shard, mock_payload)
 
-        assert event.not_found == []
+        assert event.not_found == ()
         assert event.presences == {}
         assert event.nonce is None
 

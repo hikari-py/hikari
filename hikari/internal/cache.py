@@ -620,7 +620,7 @@ class MentionsData(BaseData[messages.Mentions]):
             typing.Mapping[snowflakes.Snowflake, "channels_.PartialChannel"]
         ] = undefined.UNDEFINED
         if mentions.channels is not undefined.UNDEFINED:
-            channels = {channel_id: channel for channel_id, channel in mentions.channels.items()}
+            channels = dict(mentions.channels.items())
 
         return cls(
             users=users,

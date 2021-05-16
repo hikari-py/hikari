@@ -195,8 +195,10 @@ class TestPartialUserImpl:
     def test_str_operator(self, obj):
         assert str(obj) == "thomm.o#8637"
 
-    def test_str_operator_when_partial(self, obj):
-        obj.username = undefined.UNDEFINED
+    def test_str_operator_when_partial(self):
+        obj = hikari_test_helpers.mock_class_namespace(
+            users.PartialUserImpl, username=undefined.UNDEFINED, id=123, rename_impl_=False, init_=False
+        )()
         assert str(obj) == "Partial user ID 123"
 
     def test_mention_property(self, obj):

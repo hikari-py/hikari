@@ -125,7 +125,9 @@ class TestEntityFactoryImpl:
         assert own_connection.name == "FS"
         assert own_connection.type == "twitter"
         assert own_connection.is_revoked is False
-        assert own_connection.integrations == [entity_factory_impl.deserialize_partial_integration(partial_integration)]
+        assert own_connection.integrations == (
+            entity_factory_impl.deserialize_partial_integration(partial_integration),
+        )
         assert own_connection.is_verified is True
         assert own_connection.is_friend_sync_enabled is False
         assert own_connection.is_activity_visible is True
@@ -139,7 +141,7 @@ class TestEntityFactoryImpl:
         assert own_connection.name == "FS"
         assert own_connection.type == "twitter"
         assert own_connection.is_revoked is False
-        assert own_connection.integrations == []
+        assert own_connection.integrations == ()
         assert own_connection.is_verified is True
         assert own_connection.is_friend_sync_enabled is False
         assert own_connection.is_activity_visible is True
@@ -162,7 +164,7 @@ class TestEntityFactoryImpl:
         assert own_guild.id == 152559372126519269
         assert own_guild.name == "Isopropyl"
         assert own_guild.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
-        assert own_guild.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
+        assert own_guild.features == (guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY")
         assert own_guild.is_owner is False
         assert own_guild.my_permissions == permission_models.Permissions(2147483647)
 
@@ -224,7 +226,7 @@ class TestEntityFactoryImpl:
         assert application.is_bot_public is True
         assert application.is_bot_code_grant_required is False
         assert application.owner == entity_factory_impl.deserialize_user(owner_payload)
-        assert application.rpc_origins == ["127.0.0.0"]
+        assert application.rpc_origins == ("127.0.0.0",)
         assert application.summary == "not a blank string"
         assert (
             application.public_key
@@ -243,7 +245,7 @@ class TestEntityFactoryImpl:
         assert len(application.team.members) == 1
         member = application.team.members[115590097100865541]
         assert member.membership_state == application_models.TeamMembershipState.INVITED
-        assert member.permissions == ["*"]
+        assert member.permissions == ("*",)
         assert member.team_id == 209333111222
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(member, application_models.TeamMember)
@@ -336,7 +338,7 @@ class TestEntityFactoryImpl:
         assert authorization_information.expires_at == datetime.datetime(
             2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc
         )
-        assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
+        assert authorization_information.scopes == ("identify", "guilds", "applications.commands.update")
         assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
 
     def test_deserialize_authorization_information_with_unset_fields(
@@ -374,10 +376,10 @@ class TestEntityFactoryImpl:
         assert partial_token.access_token == "6qrZcUqja7812RVdnEKjpzOL4CvHBFG"
         assert partial_token.token_type is application_models.TokenType.BEARER
         assert partial_token.expires_in == datetime.timedelta(weeks=1)
-        assert partial_token.scopes == [
+        assert partial_token.scopes == (
             application_models.OAuth2Scope.IDENTIFY,
             application_models.OAuth2Scope.CONNECTIONS,
-        ]
+        )
         assert isinstance(partial_token, application_models.PartialOAuth2Token)
 
     @pytest.fixture()
@@ -400,10 +402,10 @@ class TestEntityFactoryImpl:
         assert access_token.token_type is application_models.TokenType.BEARER
         assert access_token.guild == entity_factory_impl.deserialize_rest_guild(deserialize_rest_guild_payload)
         assert access_token.access_token == "zMndOe7jFLXGawdlxMOdNvXjjOce5X"
-        assert access_token.scopes == [
+        assert access_token.scopes == (
             application_models.OAuth2Scope.BOT,
             application_models.OAuth2Scope.WEBHOOK_INCOMING,
-        ]
+        )
         assert access_token.expires_in == datetime.timedelta(weeks=4)
         assert access_token.refresh_token == "mgp8qnvBwJcmadwgCYKyYD5CAzGAX4"
         assert access_token.webhook == entity_factory_impl.deserialize_webhook(webhook_payload)
@@ -433,7 +435,7 @@ class TestEntityFactoryImpl:
         assert implicit_token.access_token == "RTfP0OK99U3kbRtHOoKLmJbOn45PjL"
         assert implicit_token.token_type is application_models.TokenType.BASIC
         assert implicit_token.expires_in == datetime.timedelta(weeks=2)
-        assert implicit_token.scopes == [application_models.OAuth2Scope.IDENTIFY]
+        assert implicit_token.scopes == (application_models.OAuth2Scope.IDENTIFY,)
         assert implicit_token.state == "15773059ghq9183habn"
         assert isinstance(implicit_token, application_models.OAuth2ImplicitToken)
 
@@ -664,7 +666,7 @@ class TestEntityFactoryImpl:
 
         assert len(audit_log.entries) == 1
         entry = audit_log.entries[694026906592477214]
-        assert entry.changes == []
+        assert entry.changes == ()
         assert entry.target_id is None
         assert entry.user_id is None
         assert entry.action_type == 69
@@ -682,8 +684,12 @@ class TestEntityFactoryImpl:
         assert len(entry.changes) == 1
         change = entry.changes[0]
         assert change.key == audit_log_models.AuditLogChangeKey.NAME
-        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
-        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
+        assert change.new_value == [
+            {"id": "568651298858074123", "name": "Casual"},
+        ]
+        assert change.old_value == [
+            {"id": "123123123312312", "name": "aRole"},
+        ]
 
     def test_deserialize_audit_log_with_change_key_unknown(self, entity_factory_impl, audit_log_payload):
         # Unset fields
@@ -1671,7 +1677,7 @@ class TestEntityFactoryImpl:
         assert emoji.guild_id == 1235123
         assert emoji.name == "testing"
         assert emoji.is_animated is False
-        assert emoji.role_ids == [123, 456]
+        assert emoji.role_ids == (123, 456)
         assert emoji.user == entity_factory_impl.deserialize_user(user_payload)
         assert emoji.is_colons_required is True
         assert emoji.is_managed is False
@@ -1826,7 +1832,7 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
+        assert member.role_ids == (11111, 22222, 33333, 44444, 76543325)
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
@@ -1846,7 +1852,7 @@ class TestEntityFactoryImpl:
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
-        assert member.role_ids == [11111, 22222, 76543325, 33333, 44444]
+        assert member.role_ids == (11111, 22222, 76543325, 33333, 44444)
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
@@ -2123,7 +2129,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.id == 152559372126519269
         assert guild_preview.name == "Isopropyl"
         assert guild_preview.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
-        assert guild_preview.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
+        assert guild_preview.features == (guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY")
         assert guild_preview.splash_hash == "dsa345tfcdg54b"
         assert guild_preview.discovery_splash_hash == "lkodwaidi09239uid"
         assert guild_preview.emojis == {
@@ -2214,12 +2220,12 @@ class TestEntityFactoryImpl:
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
-        assert guild.features == [
+        assert guild.features == (
             guild_models.GuildFeature.ANIMATED_ICON,
             guild_models.GuildFeature.MORE_EMOJI,
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
-        ]
+        )
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -2433,12 +2439,12 @@ class TestEntityFactoryImpl:
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
-        assert guild.features == [
+        assert guild.features == (
             guild_models.GuildFeature.ANIMATED_ICON,
             guild_models.GuildFeature.MORE_EMOJI,
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
-        ]
+        )
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -2688,7 +2694,7 @@ class TestEntityFactoryImpl:
         assert invite.guild.id == 56188492224814744
         assert invite.guild.name == "Testin' Your Scene"
         assert invite.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
-        assert invite.guild.features == ["FORCE_RELAY"]
+        assert invite.guild.features == ("FORCE_RELAY",)
         assert invite.guild.splash_hash == "aSplashForSure"
         assert invite.guild.banner_hash == "aBannerForSure"
         assert invite.guild.description == "Describe me cute kitty."
@@ -2804,7 +2810,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.guild.id == 56188492224814744
         assert invite_with_metadata.guild.name == "Testin' Your Scene"
         assert invite_with_metadata.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
-        assert invite_with_metadata.guild.features == ["FORCE_RELAY"]
+        assert invite_with_metadata.guild.features == ("FORCE_RELAY",)
         assert invite_with_metadata.guild.splash_hash == "aSplashForSure"
         assert invite_with_metadata.guild.banner_hash == "aBannerForSure"
         assert invite_with_metadata.guild.description == "Describe me cute kitty."
@@ -2979,9 +2985,9 @@ class TestEntityFactoryImpl:
         )
         assert partial_message.is_tts is True
         assert partial_message.mentions.everyone is True
-        assert partial_message.mentions.user_ids == [5678]
-        assert partial_message.mentions.role_ids == [987]
-        assert partial_message.mentions.channels_ids == [456]
+        assert partial_message.mentions.user_ids == (5678,)
+        assert partial_message.mentions.role_ids == (987,)
+        assert partial_message.mentions.channels_ids == (456,)
         # Attachment
         assert len(partial_message.attachments) == 1
         attachment = partial_message.attachments[0]
@@ -2996,7 +3002,7 @@ class TestEntityFactoryImpl:
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
-        assert partial_message.embeds == [expected_embed]
+        assert partial_message.embeds == (expected_embed,)
         # Reaction
         reaction = partial_message.reactions[0]
         assert reaction.count == 100
@@ -3233,18 +3239,18 @@ class TestEntityFactoryImpl:
         assert message.member is None
         assert message.edited_timestamp is None
         assert message.mentions.everyone is True
-        assert message.mentions.user_ids == []
-        assert message.mentions.role_ids == []
-        assert message.mentions.channels_ids == []
-        assert message.attachments == []
-        assert message.embeds == []
-        assert message.reactions == []
+        assert message.mentions.user_ids == ()
+        assert message.mentions.role_ids == ()
+        assert message.mentions.channels_ids == ()
+        assert message.attachments == ()
+        assert message.embeds == ()
+        assert message.reactions == ()
         assert message.webhook_id is None
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
         assert message.referenced_message is undefined.UNDEFINED
-        assert message.stickers == []
+        assert message.stickers == ()
         assert message.nonce is None
 
     def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):
@@ -3355,7 +3361,7 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web == presence_models.Status.DO_NOT_DISTURB
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
-        assert activity.buttons == ["owo", "no"]
+        assert activity.buttons == ("owo", "no")
         assert isinstance(presence, presence_models.MemberPresence)
 
     def test_deserialize_member_presence_with_unset_fields(
@@ -3407,7 +3413,7 @@ class TestEntityFactoryImpl:
         assert activity.secrets is None
         assert activity.is_instance is None
         assert activity.flags is None
-        assert activity.buttons == []
+        assert activity.buttons == ()
 
     def test_deserialize_member_presence_with_null_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(

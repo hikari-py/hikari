@@ -79,12 +79,11 @@ class TestHTTPResponseError:
         assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
 
     def test_str_when_status_is_not_HTTPStatus(self, error):
-        error.status = "SOME STATUS"
+        error = errors.HTTPResponseError("https://some.url", "SOME STATUS", {}, "raw body")
         assert str(error) == "Some Status: 'raw body' for https://some.url"
 
-    def test_str_when_message_is_not_None(self, error):
-        error.status = "SOME STATUS"
-        error.message = "Some message"
+    def test_str_when_message_is_not_None(self):
+        error = errors.HTTPResponseError("https://some.url", "SOME STATUS", {}, "raw body", "Some message")
         assert str(error) == "Some Status: 'Some message' for https://some.url"
 
 

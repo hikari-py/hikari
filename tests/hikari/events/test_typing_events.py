@@ -65,8 +65,10 @@ class TestGuildTypingEvent:
             user=mock.Mock(id=456),
         )
 
-    def test_channel_when_no_cache(self, event):
-        event.app = object()
+    def test_channel_when_no_cache(self):
+        event = typing_events.GuildTypingEvent(
+            channel_id=None, timestamp=None, shard=None, app=None, guild_id=None, user=None
+        )
 
         assert event.channel is None
 
@@ -78,8 +80,10 @@ class TestGuildTypingEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(123)
 
-    async def test_guild_when_no_cache(self, event):
-        event.app = object()
+    async def test_guild_when_no_cache(self):
+        event = typing_events.GuildTypingEvent(
+            channel_id=None, timestamp=None, shard=None, app=None, guild_id=None, user=None
+        )
 
         assert event.guild is None
 
@@ -139,8 +143,8 @@ class TestDMTypingEvent:
             user_id=456,
         )
 
-    async def test_user_when_no_cache(self, event):
-        event.app = object()
+    async def test_user_when_no_cache(self):
+        event = typing_events.DMTypingEvent(app=None, shard=None, user_id=None, timestamp=None, channel_id=None)
 
         assert event.user is None
 

@@ -87,10 +87,11 @@ class TestChannelFollow:
 class TestPermissionOverwrite:
     def test_unset(self):
         overwrite = channels.PermissionOverwrite(
-            type=channels.PermissionOverwriteType.MEMBER, id=snowflakes.Snowflake(1234321)
+            type=channels.PermissionOverwriteType.MEMBER,
+            id=snowflakes.Snowflake(1234321),
+            allow=permissions.Permissions.CREATE_INSTANT_INVITE,
+            deny=permissions.Permissions.CHANGE_NICKNAME,
         )
-        overwrite.allow = permissions.Permissions.CREATE_INSTANT_INVITE
-        overwrite.deny = permissions.Permissions.CHANGE_NICKNAME
         assert overwrite.unset == permissions.Permissions(-67108866)
 
 
@@ -107,8 +108,10 @@ class TestPartialChannel:
     def test_str_operator(self, model):
         assert str(model) == "foo"
 
-    def test_str_operator_when_name_is_None(self, model):
-        model.name = None
+    def test_str_operator_when_name_is_None(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            channels.PartialChannel, init_=False, rename_impl_=False, name=None, id=1234567
+        )()
         assert str(model) == "Unnamed PartialChannel ID 1234567"
 
 
@@ -137,7 +140,7 @@ class TestGroupDMChannel:
         return channels.GroupDMChannel(
             app=mock_app,
             id=snowflakes.Snowflake(136134),
-            name="super cool group dm",
+            name=None,
             type=channels.ChannelType.DM,
             last_message_id=snowflakes.Snowflake(3232),
             owner_id=snowflakes.Snowflake(1066),
@@ -154,11 +157,13 @@ class TestGroupDMChannel:
             application_id=None,
         )
 
-    def test_str_operator(self, model):
+    def test_str_operator(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            channels.GroupDMChannel, init_=False, name="super cool group dm"
+        )()
         assert str(model) == "super cool group dm"
 
     def test_str_operator_when_name_is_None(self, model):
-        model.name = None
         assert str(model) == "GroupDMChannel with: snoop#0420, yeet#1012, nice#6969"
 
     def test_icon_url(self):
@@ -178,8 +183,8 @@ class TestGroupDMChannel:
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.png?size=4096"
         )
 
-    def test_make_icon_url_when_hash_is_None(self, model):
-        model.icon_hash = None
+    def test_make_icon_url_when_hash_is_None(self):
+        model = hikari_test_helpers.mock_class_namespace(channels.GroupDMChannel, init_=False, icon_hash=None)()
         assert model.make_icon_url() is None
 
 
@@ -269,18 +274,11 @@ class TestGuildChannel:
             parent_id=None,
         )
 
-    @pytest.mark.parametrize("error", [TypeError, AttributeError, NameError])
-    def test_shard_id_property_when_guild_id_error_raised(self, model, error):
-        class BrokenApp:
-            def __getattr__(self, name):
-                if name == "shard_count":
-                    raise error
-                return mock.Mock()
-
-        model.app = BrokenApp()
+    def test_shard_id_property_when_not_shard_aware(self):
+        model = hikari_test_helpers.mock_class_namespace(channels.GuildChannel, init_=False, app=None)()
 
         assert model.shard_id is None
 
-    def test_shard_id_property_when_guild_id_is_not_None(self, model):
+    def test_shard_id_property_when_shard_aware(self, model):
         model.app.shard_count = 3
         assert model.shard_id == 2

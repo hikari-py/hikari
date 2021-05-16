@@ -52,13 +52,13 @@ class TestEmbedResourceWithProxy:
     def test_proxy_url(self, resource_with_proxy):
         assert resource_with_proxy.proxy_url is resource_with_proxy.proxy_resource.url
 
-    def test_proxy_url_when_resource_is_none(self, resource_with_proxy):
-        resource_with_proxy.proxy_resource = None
+    def test_proxy_url_when_resource_is_none(self):
+        resource_with_proxy = embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=None)
         assert resource_with_proxy.proxy_url is None
 
     def test_proxy_filename(self, resource_with_proxy):
         assert resource_with_proxy.proxy_filename is resource_with_proxy.proxy_resource.filename
 
-    def test_proxy_filename_when_resource_is_none(self, resource_with_proxy):
-        resource_with_proxy.proxy_resource = None
+    def test_proxy_filename_when_resource_is_none(self):
+        resource_with_proxy = embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=None)
         assert resource_with_proxy.proxy_filename is None

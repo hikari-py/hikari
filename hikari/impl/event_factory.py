@@ -275,10 +275,10 @@ class EventFactoryImpl(event_factory.EventFactory):
         old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]],
     ) -> guild_events.EmojisUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
-        emojis = [
+        emojis = tuple(
             self._app.entity_factory.deserialize_known_custom_emoji(emoji, guild_id=guild_id)
             for emoji in payload["emojis"]
-        ]
+        )
         return guild_events.EmojisUpdateEvent(
             app=self._app, shard=shard, guild_id=guild_id, emojis=emojis, old_emojis=old_emojis
         )
@@ -670,7 +670,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             for m in payload["members"]
         }
         # Note, these IDs may be returned as ints or strings based on whether they're over a certain value.
-        not_found = [snowflakes.Snowflake(sn) for sn in payload["not_found"]] if "not_found" in payload else []
+        not_found = tuple(snowflakes.Snowflake(sn) for sn in payload["not_found"]) if "not_found" in payload else ()
 
         if presence_payloads := payload.get("presences"):
             presences = {

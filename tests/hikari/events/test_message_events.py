@@ -182,8 +182,8 @@ class TestGuildMessageCreateEvent:
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(342123123)
 
-    def test_channel_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_channel_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageCreateEvent(app=None, message=None, shard=None)
 
         assert event.channel is None
 
@@ -195,8 +195,8 @@ class TestGuildMessageCreateEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(9121234)
 
-    def test_guild_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_guild_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageCreateEvent(app=None, message=None, shard=None)
 
         assert event.guild is None
 
@@ -259,8 +259,8 @@ class TestGuildMessageUpdateEvent:
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)
 
-    def test_channel_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_channel_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageUpdateEvent(app=None, message=None, old_message=None, shard=None)
 
         assert event.channel is None
 
@@ -272,8 +272,8 @@ class TestGuildMessageUpdateEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(800001066)
 
-    def test_guild_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_guild_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageUpdateEvent(app=None, message=None, old_message=None, shard=None)
 
         assert event.guild is None
 
@@ -326,8 +326,10 @@ class TestGuildMessageDeleteEvent:
             is_bulk=True,
         )
 
-    def test_channel_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_channel_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageDeleteEvent(
+            guild_id=None, channel_id=None, app=None, shard=None, message_ids=None, is_bulk=None
+        )
 
         assert event.channel is None
 
@@ -339,8 +341,10 @@ class TestGuildMessageDeleteEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
 
-    def test_guild_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_guild_property_when_no_cache_trait(self):
+        event = message_events.GuildMessageDeleteEvent(
+            guild_id=None, channel_id=None, app=None, shard=None, message_ids=None, is_bulk=None
+        )
 
         assert event.guild is None
 

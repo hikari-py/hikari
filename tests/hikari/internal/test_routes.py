@@ -300,10 +300,9 @@ class TestCDNRoute:
     @pytest.mark.parametrize("size", [64, 256, 2048])
     def test_compile_to_file_calls_compile(self, format, size):
         with mock.patch.object(files, "URL", autospec=files.URL):
-            route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False)(
+            route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False, compile=mock.Mock())(
                 "/hello/world", {"png", "jpg"}, sizable=True
             )
-            route.compile = mock.Mock(spec_set=route.compile)
             route.compile_to_file("https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb")
             route.compile.assert_called_once_with(
                 "https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb"
@@ -313,10 +312,9 @@ class TestCDNRoute:
         resultant_url_str = "http://blep.com/hello/world/weeb/oyy%20lumo"
         resultant_url = files.URL("http://blep.com/hello/world/weeb/oyy%20lumo")
         with mock.patch.object(files, "URL", autospec=files.URL, return_value=resultant_url) as URL:
-            route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False)(
-                "/hello/world/{nya}/{boop}", {"png", "jpg"}, sizable=True
-            )
-            route.compile = mock.Mock(spec_set=route.compile, return_value=resultant_url_str)
+            route = hikari_test_helpers.mock_class_namespace(
+                routes.CDNRoute, slots_=False, compile=mock.Mock(return_value=resultant_url_str)
+            )("/hello/world/{nya}/{boop}", {"png", "jpg"}, sizable=True)
             result = route.compile_to_file("https://blep.com", file_format="png", size=64, boop="oyy lumo", nya="weeb")
 
         URL.assert_called_once_with(resultant_url_str)

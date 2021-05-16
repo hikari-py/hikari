@@ -23,6 +23,7 @@
 import datetime
 
 from hikari import sessions
+from tests.hikari import hikari_test_helpers
 
 
 def test_SessionStartLimit_used_property():
@@ -33,12 +34,10 @@ def test_SessionStartLimit_used_property():
 
 
 def test_SessionStartLimit_reset_at_property():
-    obj = sessions.SessionStartLimit(
-        total=100,
-        remaining=2,
+    obj = hikari_test_helpers.mock_class_namespace(
+        sessions.SessionStartLimit,
+        init_=False,
+        _created_at=datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc),
         reset_after=datetime.timedelta(hours=1, days=10),
-        max_concurrency=1,
-    )
-    obj._created_at = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
-
+    )()
     assert obj.reset_at == datetime.datetime(2020, 8, 1, 23, 22, 36, 988017, tzinfo=datetime.timezone.utc)

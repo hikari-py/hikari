@@ -97,7 +97,7 @@ class EventManager(abc.ABC):
         from hikari.users import User
         from hikari.snowflakes import Snowflake
 
-        @attr.define()
+        @attr.frozen()
         class EveryoneMentionedEvent(Event):
             app: RESTAware = attr.field()
 

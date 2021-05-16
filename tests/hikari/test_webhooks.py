@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import webhooks
+from tests.hikari import hikari_test_helpers
 
 
 class TestWebhook:
@@ -46,8 +47,9 @@ class TestWebhook:
     def test_str(self, webhook):
         assert str(webhook) == "not a webhook"
 
-    def test_str_when_name_is_None(self, webhook):
-        webhook.name = None
+    def test_str_when_name_is_None(self):
+        webhook = hikari_test_helpers.mock_class_namespace(webhooks.Webhook, init_=False, name=None, id=987654321)()
+
         assert str(webhook) == "Unnamed webhook ID 987654321"
 
     @pytest.mark.asyncio
@@ -63,8 +65,8 @@ class TestWebhook:
         webhook.app.rest.fetch_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
 
     @pytest.mark.asyncio
-    async def test_fetch_message_when_no_token(self, webhook):
-        webhook.token = None
+    async def test_fetch_message_when_no_token(self):
+        webhook = hikari_test_helpers.mock_class_namespace(webhooks.Webhook, init_=False, token=None)()
         with pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"):
             await webhook.fetch_message(987)
 
@@ -107,8 +109,8 @@ class TestWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_message_when_no_token(self, webhook):
-        webhook.token = None
+    async def test_edit_message_when_no_token(self):
+        webhook = hikari_test_helpers.mock_class_namespace(webhooks.Webhook, init_=False, token=None)()
         with pytest.raises(ValueError, match=r"Cannot edit a message using a webhook where we don't know the token"):
             await webhook.edit_message(987)
 
@@ -122,7 +124,7 @@ class TestWebhook:
         webhook.app.rest.delete_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
 
     @pytest.mark.asyncio
-    async def test_delete_message_when_no_token(self, webhook):
-        webhook.token = None
+    async def test_delete_message_when_no_token(self):
+        webhook = hikari_test_helpers.mock_class_namespace(webhooks.Webhook, init_=False, token=None)()
         with pytest.raises(ValueError, match=r"Cannot delete a message using a webhook where we don't know the token"):
             assert await webhook.delete_message(987)

@@ -57,10 +57,6 @@ class TestTeamMember:
     def test_id_property(self, model):
         assert model.id is model.user.id
 
-    def test_id_setter(self, model):
-        with pytest.raises(TypeError, match="Cannot mutate the ID of a member"):
-            model.id = 42
-
     def test_is_bot_property(self, model):
         assert model.is_bot is model.user.is_bot
 
@@ -99,15 +95,17 @@ class TestTeam:
         team = applications.Team(id=696969, app=object(), name="test", icon_hash="", members=[], owner_id=0)
         assert str(team) == "Team test (696969)"
 
-    def test_icon_url_property(self, model):
-        model.make_icon_url = mock.Mock(return_value="url")
+    def test_icon_url_property(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            applications.Team, init_=False, make_icon_url=mock.Mock(return_value="url")
+        )()
 
         assert model.icon_url == "url"
 
         model.make_icon_url.assert_called_once_with()
 
-    def test_make_icon_url_when_hash_is_None(self, model):
-        model.icon_hash = None
+    def test_make_icon_url_when_hash_is_None(self):
+        model = applications.Team(app=None, id=None, name=None, icon_hash=None, members=None, owner_id=None)
 
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
@@ -139,15 +137,21 @@ class TestApplication:
             cover_image_hash="ahashcover",
         )()
 
-    def test_cover_image_url_property(self, model):
-        model.make_cover_image_url = mock.Mock(return_value="url")
+    def test_cover_image_url_property(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            applications.Application, init_=False, make_cover_image_url=mock.Mock(return_value="url")
+        )()
 
         assert model.cover_image_url == "url"
 
         model.make_cover_image_url.assert_called_once_with()
 
-    def test_make_cover_image_url_when_hash_is_None(self, model):
-        model.cover_image_hash = None
+    def test_make_cover_image_url_when_hash_is_None(self):
+        model = hikari_test_helpers.mock_class_namespace(
+            applications.Application,
+            init_=False,
+            cover_image_hash=None,
+        )()
 
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))

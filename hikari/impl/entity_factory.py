@@ -277,7 +277,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for member_payload in team_payload["members"]:
                 team_member = application_models.TeamMember(
                     membership_state=application_models.TeamMembershipState(member_payload["membership_state"]),
-                    permissions=member_payload["permissions"],
+                    permissions=tuple(member_payload["permissions"]),
                     team_id=snowflakes.Snowflake(member_payload["team_id"]),
                     user=self.deserialize_user(member_payload["user"]),
                 )
@@ -1274,7 +1274,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=guild_id,
             name=payload["name"],
             icon_hash=payload["icon"],
-            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
+            features=tuple(guild_models.GuildFeature(feature) for feature in payload["features"]),
             splash_hash=payload["splash"],
             discovery_splash_hash=payload["discovery_splash"],
             emojis=emojis,
@@ -1509,7 +1509,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 app=self._app,
                 id=snowflakes.Snowflake(guild_payload["id"]),
                 name=guild_payload["name"],
-                features=[guild_models.GuildFeature(feature) for feature in guild_payload["features"]],
+                features=tuple(guild_models.GuildFeature(feature) for feature in guild_payload["features"]),
                 icon_hash=guild_payload["icon"],
                 splash_hash=guild_payload["splash"],
                 banner_hash=guild_payload["banner"],
