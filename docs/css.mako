@@ -93,8 +93,9 @@ a:hover {
     color: #64B1F2;
 }
 
-.container > h4 {
-    margin-top: 1.5em;
+.container > li {
+    margin-left: 1em;
+    margin-top: 2.5em;
 }
 
 .jumbotron {

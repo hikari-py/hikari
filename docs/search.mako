@@ -55,9 +55,9 @@
             <div class="container">
                 <h1 class="display-4" id="title-banner">
                     <span id="info"></span> <code><span id="query"></span></code>
-                    <small><span id="results-count"></span></small>
                     <noscript>JavaScript is disabled, so search functionality is not available!</noscript>
                 </h1>
+                <h4><span id="results-count"></span></h4>
             </div>
         </div>
 
@@ -65,17 +65,22 @@
         </div>
 
         <script>
-        var Search = {
-            init() {
+        const Search = {
+            init () {
                 this._index = null;
                 this._data = null;
                 this._animate = true;
-                this._pending_query = new URL(window.location).searchParams.get('q');
+                this._pending_query = new URL(window.location).searchParams.get("q");
 
                 if (!this._pending_query) {
-                    $("#info").text("No query provided, so there is nothing to search.");
+                    this._set_result("No query provided, so there is nothing to search");
                     return;
                 }
+                if (this._pending_query < 4) {
+                    this._set_result("Query must be at least 4 characters long");
+                    return;
+                }
+
                 this._searching_animation();
                 this._load_resources();
             },
@@ -84,8 +89,9 @@
                 Search._animate = false;
                 $("#info").text(message);
 
-                if (err)
+                if (err) {
                     throw err;
+                }
             },
 
             _load_resources() {
@@ -93,10 +99,9 @@
                     type: "GET",
                     url: "./index.json",
                     dataType: "json",
-                    cache: true,
                     timeout: 2000,
                     complete: this._complete,
-                    success: function (data) {
+                    success (data) {
                         Search._data = data;
                         Search._check_pending_query();
                     },
@@ -105,10 +110,9 @@
                     type: "GET",
                     url: "./prebuilt_index.json",
                     dataType: "json",
-                    cache: true,
                     timeout: 2000,
                     complete: this._complete,
-                    success: function (data) {
+                    success (data) {
                         Search._index = lunr.Index.load(data);
                         Search._check_pending_query();
                     },
@@ -116,7 +120,7 @@
             },
 
             _complete(_, textstatus) {
-                if (textstatus != "success") {
+                if (textstatus !== "success") {
                     Search._set_result("Failed to load resource", "Failed to load resource");
                 }
             },
@@ -129,7 +133,7 @@
             },
 
             _searching_animation() {
-                var i = 3;
+                let i = 3;
                 function animate() {
                     if (!Search._animate) {
                         return;
@@ -155,21 +159,34 @@
             },
 
             _query(query) {
-                const initial_query = query;
-                const fuzziness = 0;
-                if (fuzziness) {
-                    query = query.split(/\s+/)
-                        .map(str => str.includes('~') ? str : str + '~' + fuzziness).join(' ');
-                }
+                const results = this._index.query(function (builder) {
+                    builder.term(lunr.tokenizer(query), { wildcard: lunr.Query.wildcard.LEADING | lunr.Query.wildcard.TRAILING });
+                });
 
-                const results = this._index.search(query);
+                this._render(query, results);
+            },
 
-                var search_results_html = "";
+            _render(query, results) {
+                // Order the results by score and then alphabetically
+                results.sort(function (right, left) {
+                    if (right.score > left.score) {
+                        return -1
+                    }
+                    if (right.score < left.score) {
+                        return 1
+                    }
+
+                    right = Search._data.index[parseInt(right.ref)].r.toLowerCase();
+                    left = Search._data.index[parseInt(left.ref)].r.toLowerCase();
+                    return (right > left) ? 1 : ((right < left) ? -1 : 0);
+                });
+
+                let search_results_html = "";
                 results.forEach(function (result) {
                     const dobj = Search._data.index[parseInt(result.ref)];
                     const docstring = dobj.d;
-                    const url = Search._data.urls[dobj.u] + '#' + dobj.r;
-                    const pretty_name = dobj.r + (dobj.f ? '()' : '');
+                    const url = Search._data.urls[dobj.u] + ".html#" + dobj.r;
+                    const pretty_name = dobj.r + (dobj.f ? "()" : "");
                     var text = Object.values(result.matchData.metadata)
                         .filter(({ d }) => d !== undefined)
                         .map(({ d: { position } }) => {
@@ -178,32 +195,32 @@
                                 const end = start + length;
                                 return [
                                     start,
-                                    (start - PAD_CHARS > 0 ? '…' : '') +
+                                    (start - PAD_CHARS > 0 ? "…" : "") +
                                     docstring.substring(start - PAD_CHARS, start) +
                                     '<mark>' + docstring.slice(start, end) + '</mark>' +
                                     docstring.substring(end, end + PAD_CHARS) +
-                                    (end + PAD_CHARS < docstring.length ? '…' : '')
+                                    (end + PAD_CHARS < docstring.length ? "…" : "")
                                 ];
                             });
                         })
                         .flat()
                         .sort(([pos1,], [pos2,]) => pos1 - pos2)
                         .map(([, text]) => text)
-                        .join('')
-                        .replace(/……/g, '…');
+                        .join("")
+                        .replace(/……/g, "…");
 
-                    text = '<h4><a href="' + url + '"><code>' + pretty_name + '</code></a></h4><p>' + text + '</p>';
+                    text = '<li><h4><a href="' + url + '"><code>' + pretty_name + '</code></a></h4></li><p>' + text + '</p>';
                     search_results_html += text
                 });
 
                 this._set_result("Showing results for");
-                $("#query").text(initial_query);
-                document.getElementById('search-results').innerHTML = search_results_html;
+                $("#query").text(query);
+                document.getElementById("search-results").innerHTML = search_results_html;
 
-                if (results.length != 1) {
-                    $("#results-count").text("(" + results.length + " results)");
-                } else {
+                if (results.length === 1) {
                     $("#results-count").text("(1 result)");
+                } else {
+                    $("#results-count").text("(" + results.length + " results)");
                 }
             },
         }
@@ -214,4 +231,3 @@
         </script>
     </body>
 </html>
-
