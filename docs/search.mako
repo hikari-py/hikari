@@ -66,7 +66,7 @@
 
         <script>
         const Search = {
-            init () {
+            init() {
                 this._index = null;
                 this._data = null;
                 this._animate = true;
@@ -101,7 +101,7 @@
                     dataType: "json",
                     timeout: 2000,
                     complete: this._complete,
-                    success (data) {
+                    success: function(data) {
                         Search._data = data;
                         Search._check_pending_query();
                     },
@@ -112,7 +112,7 @@
                     dataType: "json",
                     timeout: 2000,
                     complete: this._complete,
-                    success (data) {
+                    success: function(data) {
                         Search._index = lunr.Index.load(data);
                         Search._check_pending_query();
                     },
