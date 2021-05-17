@@ -180,6 +180,13 @@ class TestGuildWidget:
         assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(420)
 
+    @pytest.mark.asyncio
+    async def test_fetch_channel_when_None(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+        model.channel_id = None
+
+        assert await model.fetch_channel() is None
+
 
 class TestMember:
     @pytest.fixture()

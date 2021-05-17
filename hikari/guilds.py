@@ -263,12 +263,14 @@ class GuildWidget:
     is_enabled: bool = attr.field(repr=True)
     """Whether this embed is enabled."""
 
-    async def fetch_channel(self) -> channels_.PartialChannel:
+    async def fetch_channel(self) -> typing.Optional[channels_.PartialChannel]:
         """Fetch the widget channel.
+
+        This will be `builtins.None` if not set.
 
         Returns
         -------
-        hikari.channels.PartialChannel
+        typing.Optional[hikari.channels.PartialChannel]
             The channel. This will be a _derivative_ of
             `hikari.channels.PartialChannel`, depending on the type of
             channel you request for.
@@ -314,6 +316,9 @@ class GuildWidget:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if not self.channel_id:
+            return None
+
         return await self.app.rest.fetch_channel(self.channel_id)
 
 @attr_extensions.with_copy
