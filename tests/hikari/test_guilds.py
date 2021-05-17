@@ -159,6 +159,28 @@ class TestRole:
         assert model.colour == colors.Color(0x1A2B3C)
 
 
+class TestGuildWidget:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return guilds.GuildWidget(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
+
+    def test_app_property(self, model, mock_app):
+        assert model.app is mock_app
+
+    def test_channel_property(self, model):
+        assert model.channel_id == snowflakes.Snowflake(420)
+
+    def test_is_enabled_property(self, model):
+        assert model.is_enabled is True
+
+    @pytest.mark.asyncio
+    async def test_fetch_channel(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+
+        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(420)
+
+
 class TestMember:
     @pytest.fixture()
     def mock_user(self):

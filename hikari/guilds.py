@@ -263,6 +263,58 @@ class GuildWidget:
     is_enabled: bool = attr.field(repr=True)
     """Whether this embed is enabled."""
 
+    async def fetch_channel(self) -> channels_.PartialChannel:
+        """Fetch the widget channel.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            The channel. This will be a _derivative_ of
+            `hikari.channels.PartialChannel`, depending on the type of
+            channel you request for.
+
+            This means that you may get one of
+            `hikari.channels.DMChannel`,
+            `hikari.channels.GroupDMChannel`,
+            `hikari.channels.GuildTextChannel`,
+            `hikari.channels.GuildVoiceChannel`,
+            `hikari.channels.GuildStoreChannel`,
+            `hikari.channels.GuildNewsChannel`.
+
+            Likewise, the `hikari.channels.GuildChannel` can be used to
+            determine if a channel is guild-bound, and
+            `hikari.channels.TextChannel` can be used to determine
+            if the channel provides textual functionality to the application.
+
+            You can check for these using the `builtins.isinstance`
+            builtin function.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_channel(self.channel_id)
 
 @attr_extensions.with_copy
 @attr.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
