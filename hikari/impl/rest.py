@@ -2630,7 +2630,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2639,9 +2639,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> guilds.Role:
         if not undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
-
-        if permissions is undefined.UNDEFINED:
-            permissions = permissions_.Permissions.NONE
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
