@@ -321,6 +321,7 @@ class GuildWidget:
 
         return await self.app.rest.fetch_channel(self.channel_id)
 
+
 @attr_extensions.with_copy
 @attr.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
