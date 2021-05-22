@@ -59,7 +59,7 @@ def _fixed_size_nonce() -> str:
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache", "_event_factory")
+    __slots__: typing.Sequence[str] = "_cache"
 
     def __init__(
         self,
@@ -70,8 +70,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
-        self._event_factory = event_factory
-        super().__init__(intents=intents)
+        super().__init__(event_factory=event_factory, intents=intents)
 
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""

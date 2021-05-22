@@ -41,6 +41,7 @@ from hikari.internal import reflect
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_
+    from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
 
@@ -71,10 +72,11 @@ class EventManagerBase(event_manager.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_intents", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
 
-    def __init__(self, intents: intents_.Intents) -> None:
+    def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
         self._consumers: typing.Dict[str, ConsumerT] = {}
+        self._event_factory = event_factory
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
@@ -86,7 +88,7 @@ class EventManagerBase(event_manager.EventManager):
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        payload_event = self._app.event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+        payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
         self.dispatch(payload_event)
         callback = self._consumers[event_name.casefold()]
         asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")

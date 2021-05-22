@@ -42,7 +42,7 @@ class TestEventManagerBase:
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None
 
-        return EventManagerBaseImpl(mock.Mock())
+        return EventManagerBaseImpl(mock.Mock(), mock.Mock())
 
     def test___init___loads_consumers(self):
         class StubManager(event_manager_base.EventManagerBase):
@@ -55,7 +55,7 @@ class TestEventManagerBase:
             async def not_a_listener(self):
                 raise NotImplementedError
 
-        manager = StubManager(mock.Mock(intents=42))
+        manager = StubManager(mock.Mock(), mock.Mock(intents=42))
         assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
 
     @pytest.mark.asyncio()
@@ -70,9 +70,9 @@ class TestEventManagerBase:
 
         event_manager._handle_dispatch.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
-            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
-        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             mock_shard, mock_payload, name="UNEXISTING_EVENT"
         )
 
@@ -94,9 +94,9 @@ class TestEventManagerBase:
             name="dispatch EXISTING_EVENT",
         )
         event_manager.dispatch.assert_called_once_with(
-            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
-        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             shard, payload, name="EXISTING_EVENT"
         )
 
