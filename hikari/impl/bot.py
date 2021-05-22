@@ -781,6 +781,7 @@ class BotApp(traits.BotAware):
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         self._is_alive = True
+        self._closing_event.clear()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
             requirements.session_start_limit.remaining,
