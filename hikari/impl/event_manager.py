@@ -59,7 +59,7 @@ def _fixed_size_nonce() -> str:
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = "_cache"
+    __slots__: typing.Sequence[str] = ("_cache",)
 
     def __init__(
         self,
