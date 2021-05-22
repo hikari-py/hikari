@@ -42,7 +42,7 @@ from hikari.internal import attr_extensions
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
-    from hikari.interactions import bases
+    from hikari.interactions import bases as interaction_bases
     from hikari.interactions import commands
 
 
@@ -117,7 +117,7 @@ class InteractionCreateEvent(base_events.Event):
         triggered by a REST server.
     """
 
-    interaction: bases.PartialInteraction = attr.field(repr=True)
+    interaction: interaction_bases.PartialInteraction = attr.field(repr=True)
     """Interaction that this event is related to.
 
     Returns

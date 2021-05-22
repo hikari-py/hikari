@@ -30,16 +30,13 @@ import typing
 
 if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
-    from hikari.interactions import bases
+    from hikari.interactions import bases as interaction_bases
+
+    InteractionT = typing.TypeVar("InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
+    ResponseT = typing.TypeVar("ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
 
 
-InteractionT = typing.TypeVar("InteractionT", bound="bases.PartialInteraction", covariant=True)
-ResponseT = typing.TypeVar("ResponseT", bound="special_endpoints.InteractionResponseBuilder", covariant=True)
-
-ListenerT = typing.Callable[
-    [InteractionT],
-    typing.Awaitable[ResponseT],
-]
+ListenerT = typing.Callable[["InteractionT"], typing.Awaitable["ResponseT"]]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
@@ -53,8 +50,6 @@ to respond.
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`
 """
-
-ListenerMapT = typing.Mapping[typing.Type[InteractionT], ListenerT[InteractionT, ResponseT]]
 
 
 class Response(typing.Protocol):
@@ -164,8 +159,8 @@ class InteractionServer(abc.ABC):
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[bases.PartialInteraction], /
-    ) -> typing.Optional[ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
+    ) -> typing.Optional[ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
         raise NotImplementedError
 
     # @typing.overload

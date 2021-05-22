@@ -40,7 +40,7 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
-from hikari.interactions import bases
+from hikari.interactions import bases as interaction_bases
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -671,7 +671,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     """
 
     # Required arguments.
-    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=bases.ResponseType)
+    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=interaction_bases.ResponseType)
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
@@ -724,7 +724,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        is_message_response = self.type is bases.ResponseType.SOURCED_RESPONSE
+        is_message_response = self.type is interaction_bases.ResponseType.SOURCED_RESPONSE
 
         if is_message_response and not data:
             raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")

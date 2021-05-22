@@ -261,7 +261,7 @@ class BotApp(traits.BotAware):
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
-        self._cache = cache_impl.CacheImpl(self, self._intents, cache_settings)
+        self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)

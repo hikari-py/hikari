@@ -1901,7 +1901,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             format_type=message_models.StickerFormatType(payload["format_type"]),
         )
 
-    def _deserialize_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
+    def _deserialize_message_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
         return message_models.MessageInteraction(
             id=snowflakes.Snowflake(payload["id"]),
             type=interaction_models.InteractionType(payload["type"]),
@@ -1980,7 +1980,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         interaction: undefined.UndefinedNoneOr[message_models.MessageInteraction] = undefined.UNDEFINED
         if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_interaction(interaction_payload)
+            interaction = self._deserialize_message_interaction(interaction_payload)
 
         message = message_models.PartialMessage(
             app=self._app,
@@ -2090,7 +2090,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         interaction: typing.Optional[message_models.MessageInteraction] = None
         if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_interaction(interaction_payload)
+            interaction = self._deserialize_message_interaction(interaction_payload)
 
         message = message_models.Message(
             app=self._app,

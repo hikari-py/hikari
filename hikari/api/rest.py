@@ -53,7 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
-    from hikari.interactions import bases
+    from hikari.interactions import bases as interaction_bases
     from hikari.interactions import commands
     from hikari.internal import time
 
@@ -6201,7 +6201,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[commands.Command]:
         """Set the commands for an application.
 
-        !!! note
+        !!! warning
             Any existing commands not included in the provided commands array
             will be deleted.
 
@@ -6406,9 +6406,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_command_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[bases.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
         token: str,
-        response_type: bases.ResponseType,
+        response_type: interaction_bases.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,

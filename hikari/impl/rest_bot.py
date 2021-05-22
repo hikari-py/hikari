@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
     from hikari.api import special_endpoints
-    from hikari.interactions import bases
+    from hikari.interactions import bases as interaction_bases
 
 
 class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServer):
@@ -383,25 +383,27 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
                 name="check for package updates",
             )
 
-        self._server.run(
-            asyncio_debug=asyncio_debug,
-            backlog=backlog,
-            close_loop=close_loop,
-            coroutine_tracking_depth=coroutine_tracking_depth,
-            enable_signal_handlers=enable_signal_handlers,
-            host=host,
-            port=port,
-            path=path,
-            reuse_address=reuse_address,
-            reuse_port=reuse_port,
-            socket=socket,
-            shutdown_timeout=shutdown_timeout,
-            ssl_context=ssl_context,
-        )
+        try:
+            self._server.run(
+                asyncio_debug=asyncio_debug,
+                backlog=backlog,
+                close_loop=close_loop,
+                coroutine_tracking_depth=coroutine_tracking_depth,
+                enable_signal_handlers=enable_signal_handlers,
+                host=host,
+                port=port,
+                path=path,
+                reuse_address=reuse_address,
+                reuse_port=reuse_port,
+                socket=socket,
+                shutdown_timeout=shutdown_timeout,
+                ssl_context=ssl_context,
+            )
 
-        if close_passed_executor and self._executor:
-            self._executor.shutdown(wait=True)
-            self._executor = None
+        finally:
+            if close_passed_executor and self._executor:
+                self._executor.shutdown(wait=True)
+                self._executor = None
 
     async def start(
         self,
@@ -479,9 +481,11 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         )
 
     def get_listener(
-        self, interaction_type: typing.Type[bases.PartialInteraction], /
+        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        interaction_server_.ListenerT[
+            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+        ]
     ]:
         return self._server.get_listener(interaction_type)
 

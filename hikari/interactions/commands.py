@@ -337,7 +337,7 @@ class CommandInteractionOption:
     name: str = attr.field(repr=True)
     """Name of this option."""
 
-    type: OptionType = attr.field(repr=True)
+    type: typing.Union[OptionType, int] = attr.field(repr=True)
     """Type of this option."""
 
     value: typing.Optional[typing.Sequence[typing.Union[str, int, bool]]] = attr.field(repr=True)

@@ -36,7 +36,7 @@ import aiohttp.web_runner
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
-from hikari.interactions import bases
+from hikari.interactions import bases as interaction_bases
 from hikari.internal import data_binding
 from hikari.internal import ed25519
 from hikari.internal import ux
@@ -146,8 +146,8 @@ class InteractionServer(interaction_server.InteractionServer):
         "_application_fetch_lock",
         "_dumps",
         "_entity_factory",
+        "_event",
         "_event_factory",
-        "_future",
         "_hashes",
         "_listeners",
         "_loads",
@@ -170,9 +170,11 @@ class InteractionServer(interaction_server.InteractionServer):
         self._application_fetch_lock = asyncio.Lock()
         self._dumps = dumps
         self._entity_factory = entity_factory
+        self._event = asyncio.Event()
         self._event_factory = event_factory
-        self._future: asyncio.Future[None] = asyncio.Future()
-        self._listeners: ListenerDictT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder] = {}
+        self._listeners: ListenerDictT[
+            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+        ] = {}
         self._loads = loads
         self._rest_client = rest_client
         self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
@@ -257,17 +259,15 @@ class InteractionServer(interaction_server.InteractionServer):
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
         runner = self._runner
-        future = self._future
-        self._runner = None
         await runner.shutdown()
         await runner.cleanup()
-        future.set_result(None)
+        self._event.set()
 
     async def join(self) -> None:
         if not self._runner:
             raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
 
-        await self._future
+        await self._event.wait()
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         verify = self._verify or await self._fetch_public_key()
@@ -405,24 +405,26 @@ class InteractionServer(interaction_server.InteractionServer):
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
-        loop.run_until_complete(
-            self.start(
-                backlog=backlog,
-                enable_signal_handlers=enable_signal_handlers,
-                host=host,
-                port=port,
-                path=path,
-                reuse_address=reuse_address,
-                reuse_port=reuse_port,
-                socket=socket,
-                shutdown_timeout=shutdown_timeout,
-                ssl_context=ssl_context,
+        try:
+            loop.run_until_complete(
+                self.start(
+                    backlog=backlog,
+                    enable_signal_handlers=enable_signal_handlers,
+                    host=host,
+                    port=port,
+                    path=path,
+                    reuse_address=reuse_address,
+                    reuse_port=reuse_port,
+                    socket=socket,
+                    shutdown_timeout=shutdown_timeout,
+                    ssl_context=ssl_context,
+                )
             )
-        )
-        loop.run_until_complete(self.join())
+            loop.run_until_complete(self.join())
 
-        if close_loop:
-            loop.close()
+        finally:
+            if close_loop:
+                loop.close()
 
     async def start(
         self,
@@ -479,7 +481,7 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._runner:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
-        self._future = asyncio.futures.Future()
+        self._event.clear()
         self._runner = aiohttp.web_runner.AppRunner(
             self._server, handle_signals=enable_signal_handlers, access_log=_LOGGER
         )
@@ -536,9 +538,9 @@ class InteractionServer(interaction_server.InteractionServer):
             await site.start()
 
     def get_listener(
-        self, interaction_type: typing.Type[bases.PartialInteraction], /
+        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        interaction_server.ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:
         return self._listeners.get(interaction_type)
 
@@ -555,4 +557,8 @@ class InteractionServer(interaction_server.InteractionServer):
         if not replace and interaction_type in self._listeners:
             raise TypeError(f"Listener already set for {interaction_type!r}")
 
-        self._listeners[interaction_type] = listener  # type: ignore[assignment]
+        if listener:
+            self._listeners[interaction_type] = listener  # type: ignore[assignment]  # TODO: check
+
+        else:
+            self._listeners.pop(interaction_type, None)

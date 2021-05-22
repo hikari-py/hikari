@@ -95,7 +95,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
-    from hikari.interactions import bases
+    from hikari.interactions import bases as interaction_bases
     from hikari.interactions import commands
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
@@ -3027,9 +3027,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_command_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[bases.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
         token: str,
-        response_type: bases.ResponseType,
+        response_type: interaction_bases.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
