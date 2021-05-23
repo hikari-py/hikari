@@ -103,7 +103,7 @@ class TestPartialApplication:
 class TestGuildBan:
     @pytest.fixture()
     def model(self):
-        return guilds.GuildBan(user=mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(123)), reason="Very sussy")
+        return guilds.GuildBan(user=mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(123)), reason="Bored meh")
 
     @pytest.mark.asyncio
     async def test_fetch_user(self, model):
@@ -191,7 +191,7 @@ class TestGuildWidget:
 class TestMember:
     @pytest.fixture()
     def mock_user(self):
-        return mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(123))
+        return mock.Mock(id=snowflakes.Snowflake(123))
 
     @pytest.fixture()
     def model(self, mock_user):
@@ -316,13 +316,13 @@ class TestMember:
     async def test_edit(self, model):
         model.app.rest.edit_member = mock.AsyncMock()
         edit = await model.edit(
-            nick="Kitten", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
+            nick="Imposter", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
         )
 
         model.app.rest.edit_member.assert_awaited_once_with(
             456,
             123,
-            nick="Kitten",
+            nick="Imposter",
             roles=[123, 432, 345],
             mute=False,
             deaf=True,
