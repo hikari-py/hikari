@@ -306,7 +306,7 @@ class MemberPresence:
         Returns
         -------
         hikari.users.User
-            The requested user
+            The requested user.
 
         Raises
         ------
@@ -331,12 +331,12 @@ class MemberPresence:
         return await self.app.rest.fetch_user(self.user_id)
 
     async def fetch_member(self) -> guilds.Member:
-        """Fetch the member.
+        """Fetch the member this presence is for.
 
         Returns
         -------
         hikari.guilds.Member
-            The requested Member
+            The requested member.
 
         Raises
         ------

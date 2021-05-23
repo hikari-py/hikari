@@ -267,29 +267,14 @@ class GuildWidget:
         """Fetch the widget channel.
 
         This will be `builtins.None` if not set.
-
+        
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel. This will be a _derivative_ of
-            `hikari.channels.PartialChannel`, depending on the type of
-            channel you request for.
+        typing.Optional[hikari.channels.GuildChannel]
+            The requested channel.
 
-            This means that you may get one of
-            `hikari.channels.DMChannel`,
-            `hikari.channels.GroupDMChannel`,
-            `hikari.channels.GuildTextChannel`,
-            `hikari.channels.GuildVoiceChannel`,
-            `hikari.channels.GuildStoreChannel`,
-            `hikari.channels.GuildNewsChannel`.
-
-            Likewise, the `hikari.channels.GuildChannel` can be used to
-            determine if a channel is guild-bound, and
-            `hikari.channels.TextChannel` can be used to determine
-            if the channel provides textual functionality to the application.
-
-            You can check for these using the `builtins.isinstance`
-            builtin function.
+            You can check the type of the channel by
+            using `builtins.isinstance`.
 
         Raises
         ------
@@ -1205,7 +1190,7 @@ class GuildBan:
         Returns
         -------
         hikari.users.User
-            The banned user
+            The banned user.
 
         Raises
         ------
@@ -2620,15 +2605,17 @@ class Guild(PartialGuild, abc.ABC):
         return await self.app.rest.fetch_member(self.id, self.owner_id)
 
     async def fetch_widget_channel(self) -> typing.Optional[channels_.PartialChannel]:
-        """Fetch channel that the widget's generated invite will send the user to.
+        """Fetch the widget channel.
 
-        If this information is unavailable or this is not enabled for the guild then
-        this will be `builtins.None`.
+        This will be `builtins.None` if not set.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel that the widget is linked to.
+        typing.Optional[hikari.channels.GuildChannel]
+            The requested channel.
+
+            You can check the type of the channel by
+            using `builtins.isinstance`.
 
         Raises
         ------
