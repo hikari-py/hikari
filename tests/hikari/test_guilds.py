@@ -1052,31 +1052,6 @@ class TestGatewayGuild:
         assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
         model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
 
-    def test_text_channels(self, model, channels):
-        model.app.cache.get_guild_channels_view_for_guild = mock.Mock(return_value=channels)
-
-        assert isinstance(model.text_channels[4321], channels_.GuildTextChannel)
-
-    def test_news_channels(self, model, channels):
-        model.app.cache.get_guild_channels_view_for_guild = mock.Mock(return_value=channels)
-
-        assert isinstance(model.news_channels[3321], channels_.GuildNewsChannel)
-
-    def test_store_channels(self, model, channels):
-        model.app.cache.get_guild_channels_view_for_guild = mock.Mock(return_value=channels)
-
-        assert isinstance(model.store_channels[2321], channels_.GuildStoreChannel)
-
-    def test_voice_channels(self, model, channels):
-        model.app.cache.get_guild_channels_view_for_guild = mock.Mock(return_value=channels)
-
-        assert isinstance(model.voice_channels[5321], channels_.GuildVoiceChannel)
-
-    def test_stage_channels(self, model, channels):
-        model.app.cache.get_guild_channels_view_for_guild = mock.Mock(return_value=channels)
-
-        assert isinstance(model.stage_channels[6321], channels_.GuildStageChannel)
-
     def test_channels_when_no_cache_trait(self, model):
         model.app = object()
         assert model.channels == {}

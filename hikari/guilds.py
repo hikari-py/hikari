@@ -267,7 +267,7 @@ class GuildWidget:
         """Fetch the widget channel.
 
         This will be `builtins.None` if not set.
-        
+
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
@@ -2908,121 +2908,6 @@ class GatewayGuild(Guild):
             return {}
 
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
-
-    @property
-    def text_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildTextChannel]:
-        """Get the text channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildTextChannel]
-            A mapping of channel IDs to objects of the text channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        filtered_channels = {}
-
-        for cid, tchannel in self.channels.items():
-            if not isinstance(tchannel, channels_.GuildTextChannel):
-                continue
-
-            filtered_channels[cid] = tchannel
-
-        return filtered_channels
-
-    @property
-    def news_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildNewsChannel]:
-        """Get the news channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildNewsChannel]
-            A mapping of channel IDs to objects of the news channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        filtered_channels = {}
-
-        for cid, nchannel in self.channels.items():
-            if not isinstance(nchannel, channels_.GuildNewsChannel):
-                continue
-
-            filtered_channels[cid] = nchannel
-
-        return filtered_channels
-
-    @property
-    def store_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildStoreChannel]:
-        """Get the store channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildStoreChannel]
-            A mapping of channel IDs to objects of the store channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        filtered_channels = {}
-
-        for cid, stchannel in self.channels.items():
-            if not isinstance(stchannel, channels_.GuildStoreChannel):
-                continue
-
-            filtered_channels[cid] = stchannel
-
-        return filtered_channels
-
-    @property
-    def voice_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildVoiceChannel]:
-        """Get the voice channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildVoiceChannel]
-            A mapping of channel IDs to objects of the voice channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        filtered_channels = {}
-
-        for cid, vchannel in self.channels.items():
-            if not isinstance(vchannel, channels_.GuildVoiceChannel):
-                continue
-
-            filtered_channels[cid] = vchannel
-
-        return filtered_channels
-
-    @property
-    def stage_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildStageChannel]:
-        """Get the stage channels cached for the guild.
-
-        Returns
-        -------
-        typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildStageChannel]
-            A mapping of channel IDs to objects of the stage channels cached for the
-            guild.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        filtered_channels = {}
-
-        for cid, schannel in self.channels.items():
-            if not isinstance(schannel, channels_.GuildStageChannel):
-                continue
-
-            filtered_channels[cid] = schannel
-
-        return filtered_channels
 
     @property
     def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
