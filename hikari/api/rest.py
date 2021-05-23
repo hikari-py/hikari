@@ -4910,7 +4910,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.guilds.Ban]
+        typing.Sequence[hikari.guilds.GuildBan]
             The requested bans.
 
         Raises
