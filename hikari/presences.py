@@ -301,7 +301,7 @@ class MemberPresence:
     """Platform-specific user-statuses."""
 
     async def fetch_user(self) -> users.PartialUser:
-        """Fetch the user.
+        """Fetch the user this presence is for.
 
         Returns
         -------
