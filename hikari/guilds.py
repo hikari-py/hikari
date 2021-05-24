@@ -2604,7 +2604,7 @@ class Guild(PartialGuild, abc.ABC):
         """
         return await self.app.rest.fetch_member(self.id, self.owner_id)
 
-    async def fetch_widget_channel(self) -> typing.Optional[channels_.PartialChannel]:
+    async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
         This will be `builtins.None` if not set.
@@ -2612,10 +2612,7 @@ class Guild(PartialGuild, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The requested channel.
-
-            You can check the type of the channel by
-            using `builtins.isinstance`.
+            The channel the widget is linked to or else `builtins.None`.
 
         Raises
         ------
@@ -2647,16 +2644,13 @@ class Guild(PartialGuild, abc.ABC):
 
         return await self.app.rest.fetch_channel(self.widget_channel_id)
 
-    async def fetch_afk_channel(self) -> typing.Optional[channels_.PartialChannel]:
+    async def fetch_afk_channel(self) -> typing.Optional[channels_.GuildVoiceChannel]:
         """Fetch the channel that AFK voice users get sent to.
-
-        If this information is unavailable or this is not enabled for the guild then
-        this will be `builtins.None`.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel that the widget is linked to.
+        typing.Optional[hikari.channels.GuildVoiceChannel]
+            The AFK channel or `builtins.None` if not enabled.
 
         Raises
         ------
@@ -2688,15 +2682,14 @@ class Guild(PartialGuild, abc.ABC):
 
         return await self.app.rest.fetch_channel(self.afk_channel_id)
 
-    async def fetch_system_channel(self) -> typing.Optional[channels_.PartialChannel]:
-        """Fetch the system channel or `builtins.None` if it is not enabled.
-
-        Welcome messages and Nitro boost messages may be sent to this channel.
+    async def fetch_system_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+        """Fetch the system channel.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel that the widget is linked to.
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The system channel for this guild or `builtins.None` if not
+            enabled.
 
         Raises
         ------
@@ -2728,15 +2721,15 @@ class Guild(PartialGuild, abc.ABC):
 
         return await self.app.rest.fetch_channel(self.system_channel_id)
 
-    async def fetch_rules_channel(self) -> typing.Optional[channels_.PartialChannel]:
+    async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the channel where guilds display rules and guidelines.
 
         If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
 
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel that the widget is linked to.
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The channel where the rules of the guild are specified or else `builtins.None`.
 
         Raises
         ------
@@ -2768,7 +2761,7 @@ class Guild(PartialGuild, abc.ABC):
 
         return await self.app.rest.fetch_channel(self.rules_channel_id)
 
-    async def fetch_public_updates_channel(self) -> typing.Optional[channels_.PartialChannel]:
+    async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
 
         This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
@@ -2776,8 +2769,8 @@ class Guild(PartialGuild, abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.channels.PartialChannel]
-            The channel that the widget is linked to.
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The channel where discord sents relevent updates to moderators and admins.
 
         Raises
         ------

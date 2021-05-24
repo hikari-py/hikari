@@ -891,7 +891,7 @@ class TestGuild:
     async def test_fetch_widget_channel_when_None(self, model):
         model.widget_channel_id = None
 
-        assert None is await model.fetch_widget_channel()
+        assert await model.fetch_widget_channel() is None
 
     @pytest.mark.asyncio
     async def test_fetch_rules_channel(self, model):
@@ -904,7 +904,7 @@ class TestGuild:
     async def test_fetch_rules_channel_when_None(self, model):
         model.rules_channel_id = None
 
-        assert None is await model.fetch_rules_channel()
+        assert await model.fetch_rules_channel() is None
 
     @pytest.mark.asyncio
     async def test_fetch_system_channel(self, model):
@@ -917,7 +917,7 @@ class TestGuild:
     async def test_fetch_system_channel_when_None(self, model):
         model.system_channel_id = None
 
-        assert None is await model.fetch_system_channel()
+        assert await model.fetch_system_channel() is None
 
     @pytest.mark.asyncio
     async def test_fetch_public_updates_channel(self, model):
@@ -930,7 +930,7 @@ class TestGuild:
     async def test_fetch_public_updates_channel_when_None(self, model):
         model.public_updates_channel_id = None
 
-        assert None is await model.fetch_public_updates_channel()
+        assert await model.fetch_public_updates_channel() is None
 
     @pytest.mark.asyncio
     async def test_fetch_afk_channel(self, model):
@@ -943,7 +943,7 @@ class TestGuild:
     async def test_fetch_afk_channel_when_None(self, model):
         model.afk_channel_id = None
 
-        assert None is await model.fetch_afk_channel()
+        assert await model.fetch_afk_channel() is None
 
 
 class TestRestGuild:
