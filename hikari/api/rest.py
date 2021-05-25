@@ -23,7 +23,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ConnectorFactory", "RESTClient", "TokenStrategy"]
+__all__: typing.List[str] = ["RESTClient", "TokenStrategy"]
 
 import abc
 import typing
@@ -32,9 +32,6 @@ from hikari import traits
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-
-    import aiohttp
-
     from hikari import applications
     from hikari import audit_logs
     from hikari import channels as channels_
@@ -55,20 +52,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import special_endpoints
     from hikari.internal import time
-
-
-class ConnectorFactory(abc.ABC):
-    """Provider of a connector."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Close any resources if they exist."""
-
-    @abc.abstractmethod
-    def acquire(self) -> aiohttp.BaseConnector:
-        """Acquire the connector."""
 
 
 class TokenStrategy(abc.ABC):

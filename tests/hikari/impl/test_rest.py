@@ -52,61 +52,7 @@ from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import routes
 from hikari.internal import time
-from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
-
-######################################
-# BasicLazyCachedTCPConnectorFactory #
-######################################
-
-
-@pytest.fixture()
-def http_settings():
-    return mock.Mock(spec_set=config.HTTPSettings)
-
-
-@pytest.fixture()
-def connector_factory(http_settings):
-    return rest.BasicLazyCachedTCPConnectorFactory(http_settings)
-
-
-class TestBasicLazyCachedTCPConnectorFactory:
-    def test_acquire_when_connector_is_None(self, connector_factory, http_settings):
-        connector_mock = object()
-        connector_factory.connector = None
-
-        with mock.patch.object(aiohttp, "TCPConnector", return_value=connector_mock) as tcp_connector:
-            assert connector_factory.acquire() is connector_mock
-            assert connector_factory.connector is connector_mock
-        tcp_connector.assert_called_once_with(
-            force_close=http_settings.force_close_transports,
-            enable_cleanup_closed=http_settings.enable_cleanup_closed,
-            limit=100,
-            ssl=http_settings.ssl,
-            ttl_dns_cache=10,
-            use_dns_cache=True,
-        )
-
-    def test_acquire_when_connector_is_not_None(self, connector_factory):
-        connector_mock = object()
-        connector_factory.connector = connector_mock
-        assert connector_factory.acquire() is connector_mock
-
-
-@pytest.mark.asyncio()
-class TestBasicLazyCachedTCPConnectorFactoryAsync:
-    async def test_close_when_connector_is_None(self, connector_factory):
-        connector_factory.connector = None
-        await connector_factory.close()
-
-    async def test_close_when_connector_is_not_None(self, connector_factory):
-        connector_mock = mock.Mock(close=mock.AsyncMock())
-        connector_factory.connector = connector_mock
-
-        await connector_factory.close()
-        assert connector_factory.connector is None
-        connector_mock.close.assert_awaited_once_with()
-
 
 #################
 # _RESTProvider #
@@ -304,8 +250,6 @@ class TestClientCredentialsStrategy:
 @pytest.fixture()
 def rest_app():
     return hikari_test_helpers.mock_class_namespace(rest.RESTApp, slots_=False)(
-        connector_factory=mock.Mock(),
-        connector_owner=False,
         executor=None,
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
         max_rate_limit=float("inf"),
@@ -315,25 +259,6 @@ def rest_app():
 
 
 class TestRESTApp:
-    def test__init__when_connector_factory_is_None(self):
-        http_settings = object()
-
-        with mock.patch.object(rest, "BasicLazyCachedTCPConnectorFactory") as factory:
-            rest_app = rest.RESTApp(
-                connector_factory=None,
-                connector_owner=False,
-                executor=None,
-                http_settings=http_settings,
-                max_rate_limit=float("inf"),
-                proxy_settings=None,
-                url=None,
-            )
-
-        factory.assert_called_once_with(http_settings)
-
-        assert rest_app._connector_factory is factory()
-        assert rest_app._connector_owner is True
-
     def test_executor_property(self, rest_app):
         mock_executor = object()
         rest_app._executor = mock_executor
@@ -362,8 +287,6 @@ class TestRESTApp:
             rest_app.acquire(token="token", token_type="Type")
 
         mock_client.assert_called_once_with(
-            connector_factory=rest_app._connector_factory,
-            connector_owner=rest_app._connector_owner,
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
@@ -373,68 +296,6 @@ class TestRESTApp:
             token_type="Type",
             rest_url=rest_app._url,
         )
-
-    def test_acquire_when_even_loop_not_set(self, rest_app):
-        mock_event_loop = object()
-
-        stack = contextlib.ExitStack()
-        _entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
-        stack.enter_context(mock.patch.object(rest, rest.RESTClientImpl.__qualname__))
-        stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
-
-        with stack:
-            rest_app.acquire(token="token", token_type="Type")
-
-        assert rest_app._event_loop is mock_event_loop
-
-        # This is just to test the lambdas so it counts towards coverage
-        assert _entity_factory.call_count == 1
-        factory = _entity_factory.call_args_list[0][0][0]
-        factory.entity_factory
-        factory.rest
-
-    def test_acquire_when__event_loop_and_loop_do_not_equal(self, rest_app):
-        rest_app._event_loop = object()
-        with mock.patch.object(asyncio, "get_running_loop"):
-            with pytest.raises(RuntimeError):
-                rest_app.acquire(token="token", token_type="Type")
-
-    def test___enter__(self, rest_app):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
-        with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
-            rest_app.__enter__()
-
-    def test___exit__(self, rest_app):
-        try:
-            rest_app.__exit__(None, None, None)
-        except AttributeError as exc:
-            pytest.fail(exc)
-
-
-@pytest.mark.asyncio()
-class TestRESTAppAsync:
-    async def test_close_when_connector_owner(self, rest_app):
-        rest_app._connector_owner = True
-        rest_app._connector_factory.close = mock.AsyncMock()
-        await rest_app.close()
-        rest_app._connector_factory.close.assert_awaited_once_with()
-
-    async def test_close_when_not_connector_owner(self, rest_app):
-        rest_app._connector_owner = False
-        rest_app._connector_factory.close = mock.AsyncMock()
-        await rest_app.close()
-        rest_app._connector_factory.close.assert_not_awaited()
-
-    async def test__aenter__(self, rest_app):
-        rest_app.close = mock.AsyncMock()
-        async with rest_app as returned:
-            assert returned is rest_app
-
-    async def test__aexit__(self, rest_app):
-        rest_app.close = mock.AsyncMock()
-        async with rest_app:
-            pass
-        rest_app.close.assert_awaited_once_with()
 
 
 ##################
@@ -450,8 +311,6 @@ def rest_client_class():
 @pytest.fixture()
 def rest_client(rest_client_class):
     obj = rest_client_class(
-        connector_factory=mock.Mock(),
-        connector_owner=False,
         http_settings=mock.Mock(spec=config.HTTPSettings),
         max_rate_limit=float("inf"),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
@@ -517,8 +376,6 @@ class TestRESTClientImpl:
     def test__init__passes_max_rate_limit(self):
         with mock.patch.object(buckets, "RESTBucketManager") as bucket:
             rest.RESTClientImpl(
-                connector_factory=mock.Mock(),
-                connector_owner=True,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
                 proxy_settings=mock.Mock(),
@@ -534,8 +391,6 @@ class TestRESTClientImpl:
     def test__init__when_token_strategy_passed_with_token_type(self):
         with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
             rest.RESTClientImpl(
-                connector_factory=mock.Mock(),
-                connector_owner=True,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
                 proxy_settings=mock.Mock(),
@@ -548,8 +403,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
-            connector_factory=mock.Mock(),
-            connector_owner=True,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -563,8 +416,6 @@ class TestRESTClientImpl:
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
-            connector_factory=mock.Mock(),
-            connector_owner=True,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -578,8 +429,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
-            connector_factory=mock.Mock(),
-            connector_owner=True,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -593,8 +442,6 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
-            connector_factory=mock.Mock(),
-            connector_owner=True,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -629,9 +476,7 @@ class TestRESTClientImpl:
 
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = object()
-        client_session_stub.closed = False
-        connector_mock = mock.Mock()
-        rest_client._connector_factory.acquire = mock.Mock(return_value=connector_mock)
+        rest_client._acquire_tcp_connector = mock.Mock()
         rest_client._http_settings.timeouts.total = 10
         rest_client._http_settings.timeouts.acquire_and_connect = 5
         rest_client._http_settings.timeouts.request_socket_read = 4
@@ -643,7 +488,7 @@ class TestRESTClientImpl:
             assert rest_client._acquire_client_session() is client_session_mock
             assert rest_client._client_session is client_session_mock
             client_session.assert_called_once_with(
-                connector=connector_mock,
+                connector=rest_client._acquire_tcp_connector.return_value,
                 connector_owner=False,
                 raise_for_status=False,
                 timeout=aiohttp.ClientTimeout(total=10, connect=5, sock_read=4, sock_connect=1),
@@ -653,19 +498,49 @@ class TestRESTClientImpl:
             )
 
     def test__acquire_client_session_when_not_None_and_open(self, rest_client):
-        client_session_mock = mock.Mock()
-        client_session_mock.closed = False
+        client_session_mock = mock.Mock(closed=False)
         rest_client._client_session = client_session_mock
 
         assert rest_client._acquire_client_session() is client_session_mock
 
     def test__acquire_client_session_when_not_None_and_closed(self, rest_client):
-        client_session_mock = mock.Mock()
-        client_session_mock.closed = True
+        client_session_mock = mock.Mock(closed=True)
         rest_client._client_session = client_session_mock
 
         with pytest.raises(errors.HTTPClientClosedError):
             assert rest_client._acquire_client_session() is client_session_mock
+
+    def test__acquire_tcp_connector_when_None(self, rest_client):
+        tcp_connector_mock = object()
+        rest_client._http_settings.enable_cleanup_closed = False
+        rest_client._http_settings.force_close_transports = True
+        rest_client._http_settings.ssl = True
+        rest_client._tcp_connector = None
+
+        with mock.patch.object(aiohttp, "TCPConnector", return_value=tcp_connector_mock) as tcp_connector:
+            assert rest_client._acquire_tcp_connector() is tcp_connector_mock
+            assert rest_client._tcp_connector is tcp_connector_mock
+            tcp_connector.assert_called_once_with(
+                enable_cleanup_closed=rest_client.http_settings.enable_cleanup_closed,
+                force_close=rest_client.http_settings.force_close_transports,
+                limit=100,
+                ssl=rest_client.http_settings.ssl,
+                ttl_dns_cache=10,
+                use_dns_cache=True,
+            )
+
+    def test__acquire_tcp_connector_when_not_None_and_open(self, rest_client):
+        tcp_connector_mock = mock.Mock(closed=False)
+        rest_client._tcp_connector = tcp_connector_mock
+
+        assert rest_client._acquire_tcp_connector() is tcp_connector_mock
+
+    def test__acquire_tcp_connector_when_not_None_and_closed(self, rest_client):
+        tcp_connector_mock = mock.Mock(closed=True)
+        rest_client._tcp_connector = tcp_connector_mock
+
+        with pytest.raises(errors.HTTPClientClosedError):
+            assert rest_client._acquire_tcp_connector() is tcp_connector_mock
 
     @pytest.mark.parametrize(
         ("function_input", "expected_output"),

@@ -277,8 +277,6 @@ class BotApp(traits.BotAware):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
-            connector_owner=True,
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
