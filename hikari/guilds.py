@@ -2642,7 +2642,9 @@ class Guild(PartialGuild, abc.ABC):
         if not self.widget_channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.widget_channel_id)
+        widget_channel = await self.app.rest.fetch_channel(self.widget_channel_id)
+        assert widget_channel is None or isinstance(widget_channel, channels_.GuildChannel)
+        return widget_channel
 
     async def fetch_afk_channel(self) -> typing.Optional[channels_.GuildVoiceChannel]:
         """Fetch the channel that AFK voice users get sent to.
@@ -2680,7 +2682,9 @@ class Guild(PartialGuild, abc.ABC):
         if not self.afk_channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.afk_channel_id)
+        afk_channel = await self.app.rest.fetch_channel(self.afk_channel_id)
+        assert afk_channel is None or isinstance(afk_channel, channels_.GuildVoiceChannel)
+        return afk_channel
 
     async def fetch_system_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the system channel.
@@ -2719,7 +2723,9 @@ class Guild(PartialGuild, abc.ABC):
         if not self.system_channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.system_channel_id)
+        system_channel = await self.app.rest.fetch_channel(self.system_channel_id)
+        assert system_channel is None or isinstance(system_channel, channels_.GuildTextChannel)
+        return system_channel
 
     async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the channel where guilds display rules and guidelines.
@@ -2759,7 +2765,9 @@ class Guild(PartialGuild, abc.ABC):
         if not self.rules_channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.rules_channel_id)
+        rules_channel = await self.app.rest.fetch_channel(self.rules_channel_id)
+        assert rules_channel is None or isinstance(rules_channel, channels_.GuildTextChannel)
+        return rules_channel
 
     async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
@@ -2800,7 +2808,9 @@ class Guild(PartialGuild, abc.ABC):
         if not self.public_updates_channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.public_updates_channel_id)
+        updates_channel = await self.app.rest.fetch_channel(self.public_updates_channel_id)
+        assert updates_channel is None or isinstance(updates_channel, channels_.GuildTextChannel)
+        return updates_channel
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

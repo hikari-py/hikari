@@ -882,7 +882,8 @@ class TestGuild:
 
     @pytest.mark.asyncio
     async def test_fetch_widget_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(spec_set=channels_.GuildChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_widget_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(192729)
@@ -895,7 +896,8 @@ class TestGuild:
 
     @pytest.mark.asyncio
     async def test_fetch_rules_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(spec_set=channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_rules_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(123445)
@@ -908,7 +910,8 @@ class TestGuild:
 
     @pytest.mark.asyncio
     async def test_fetch_system_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(spec_set=channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_system_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(123888)
@@ -921,7 +924,8 @@ class TestGuild:
 
     @pytest.mark.asyncio
     async def test_fetch_public_updates_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(spec_set=channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_public_updates_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(99699)
@@ -934,7 +938,8 @@ class TestGuild:
 
     @pytest.mark.asyncio
     async def test_fetch_afk_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(spec_set=channels_.GuildVoiceChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_afk_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(1234)
