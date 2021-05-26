@@ -136,7 +136,7 @@ class _GuildFields:
     premium_subscription_count: typing.Optional[int] = attr.field()
     preferred_locale: str = attr.field()
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    is_nsfw: bool = attr.field()
+    nsfw_level: guild_models.GuildNSFWLevel = attr.field()
 
 
 @attr_extensions.with_copy
@@ -1337,7 +1337,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=payload.get("premium_subscription_count"),
             preferred_locale=payload["preferred_locale"],
             public_updates_channel_id=public_updates_channel_id,
-            is_nsfw=payload["nsfw"],
+            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
         )
 
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
@@ -1367,7 +1367,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
-        guild = guild_models.RESTGuild(
+        return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
             name=guild_fields.name,
@@ -1395,7 +1395,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=guild_fields.description,
             banner_hash=guild_fields.banner_hash,
             premium_tier=guild_fields.premium_tier,
-            is_nsfw=guild_fields.is_nsfw,
+            nsfw_level=guild_fields.nsfw_level,
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
@@ -1404,7 +1404,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             roles=roles,
             emojis=emojis,
         )
-        return guild
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
@@ -1441,7 +1440,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
-            is_nsfw=guild_fields.is_nsfw,
+            nsfw_level=guild_fields.nsfw_level,
             is_large=is_large,
             joined_at=joined_at,
             member_count=member_count,
@@ -1524,7 +1523,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 verification_level=guild_models.GuildVerificationLevel(guild_payload["verification_level"]),
                 vanity_url_code=guild_payload["vanity_url_code"],
                 welcome_screen=self.deserialize_welcome_screen(raw_welcome_screen) if raw_welcome_screen else None,
-                is_nsfw=guild_payload.get("nsfw"),
+                nsfw_level=guild_models.GuildNSFWLevel(guild_payload["nsfw_level"]),
             )
             guild_id = guild.id
         elif "guild_id" in payload:

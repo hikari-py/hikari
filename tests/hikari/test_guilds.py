@@ -452,7 +452,6 @@ class TestGuild:
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(guilds.Guild)(
             app=mock_app,
-            is_nsfw=False,
             id=snowflakes.Snowflake(123),
             splash_hash="splash_hash",
             discovery_splash_hash="discovery_splash_hash",
@@ -469,6 +468,7 @@ class TestGuild:
             is_widget_enabled=False,
             max_video_channel_users=10,
             mfa_level=guilds.GuildMFALevel.NONE,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
             owner_id=snowflakes.Snowflake(1111),
             preferred_locale="en-GB",
             premium_subscription_count=12,
@@ -583,7 +583,6 @@ class TestRestGuild:
             owner_id=snowflakes.Snowflake(1111),
             preferred_locale="en-GB",
             premium_subscription_count=12,
-            is_nsfw=True,
             premium_tier=guilds.GuildPremiumTier.TIER_3,
             public_updates_channel_id=None,
             rules_channel_id=None,
@@ -598,6 +597,7 @@ class TestRestGuild:
             approximate_member_count=100,
             max_presences=100,
             max_members=100,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
 
     def test_get_emoji(self, model):
@@ -618,7 +618,6 @@ class TestGatewayGuild:
     def model(self, mock_app):
         return guilds.GatewayGuild(
             app=mock_app,
-            is_nsfw=True,
             id=snowflakes.Snowflake(123),
             splash_hash="splash_hash",
             discovery_splash_hash="discovery_splash_hash",
@@ -649,6 +648,7 @@ class TestGatewayGuild:
             is_large=True,
             joined_at=None,
             member_count=1,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
 
     def test_channels(self, model):

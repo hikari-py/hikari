@@ -2198,7 +2198,7 @@ class TestEntityFactoryImpl:
             "verification_level": 4,
             "widget_channel_id": "9439394949",
             "widget_enabled": True,
-            "nsfw": True,
+            "nsfw_level": 0,
         }
 
     def test_deserialize_rest_guild(
@@ -2257,7 +2257,7 @@ class TestEntityFactoryImpl:
         assert guild.public_updates_channel_id == 33333333
         assert guild.approximate_member_count == 15
         assert guild.approximate_active_member_count == 7
-        assert guild.is_nsfw is True
+        assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
 
     def test_deserialize_rest_guild_with_unset_fields(self, entity_factory_impl):
         guild = entity_factory_impl.deserialize_rest_guild(
@@ -2275,7 +2275,7 @@ class TestEntityFactoryImpl:
                 "icon": "1a2b3c4d",
                 "id": "265828729970753537",
                 "mfa_level": 1,
-                "nsfw": True,
+                "nsfw_level": 0,
                 "name": "L33t guild",
                 "owner_id": "6969696",
                 "preferred_locale": "en-GB",
@@ -2322,7 +2322,7 @@ class TestEntityFactoryImpl:
                 "max_presences": None,
                 "max_video_channel_users": 25,
                 "mfa_level": 1,
-                "nsfw": False,
+                "nsfw_level": 0,
                 "name": "L33t guild",
                 "owner_id": "6969696",
                 "preferred_locale": "en-GB",
@@ -2410,7 +2410,7 @@ class TestEntityFactoryImpl:
             "voice_states": [voice_state_payload],
             "widget_channel_id": "9439394949",
             "widget_enabled": True,
-            "nsfw": False,
+            "nsfw_level": 0,
         }
 
     def test_deserialize_gateway_guild(
@@ -2465,7 +2465,7 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count == 1
         assert guild.preferred_locale == "en-GB"
         assert guild.public_updates_channel_id == 33333333
-        assert guild.is_nsfw is False
+        assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
 
         assert guild_definition.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(
@@ -2537,7 +2537,7 @@ class TestEntityFactoryImpl:
                 "system_channel_id": "19216801",
                 "vanity_url_code": "loool",
                 "verification_level": 4,
-                "nsfw": True,
+                "nsfw_level": 0,
             }
         )
         guild = guild_definition.guild
@@ -2598,7 +2598,7 @@ class TestEntityFactoryImpl:
                 "voice_states": [],
                 "widget_channel_id": None,
                 "widget_enabled": True,
-                "nsfw": False,
+                "nsfw_level": 0,
             }
         )
         guild = guild_definition.guild
@@ -2660,7 +2660,7 @@ class TestEntityFactoryImpl:
                 "verification_level": 2,
                 "vanity_url_code": "I-am-very-vain",
                 "welcome_screen": guild_welcome_screen_payload,
-                "nsfw": False,
+                "nsfw_level": 1,
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
@@ -2697,7 +2697,7 @@ class TestEntityFactoryImpl:
         assert invite.guild.welcome_screen == entity_factory_impl.deserialize_welcome_screen(
             guild_welcome_screen_payload
         )
-        assert invite.guild.is_nsfw is False
+        assert invite.guild.nsfw_level == guild_models.GuildNSFWLevel.EXPLICIT
 
         assert invite.guild_id == 56188492224814744
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
@@ -2712,12 +2712,10 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_invite_with_unset_guild_fields(self, entity_factory_impl, invite_payload):
         del invite_payload["guild"]["welcome_screen"]
-        del invite_payload["guild"]["nsfw"]
 
         invite = entity_factory_impl.deserialize_invite(invite_payload)
 
         assert invite.guild.welcome_screen is None
-        assert invite.guild.is_nsfw is None
 
     def test_deserialize_invite_with_null_fields(self, entity_factory_impl, partial_channel_payload):
         invite = entity_factory_impl.deserialize_invite(
@@ -2772,7 +2770,7 @@ class TestEntityFactoryImpl:
                 "verification_level": 2,
                 "vanity_url_code": "I-am-very-vain",
                 "welcome_screen": guild_welcome_screen_payload,
-                "nsfw": True,
+                "nsfw_level": 0,
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
@@ -2813,7 +2811,7 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.guild.welcome_screen == entity_factory_impl.deserialize_welcome_screen(
             guild_welcome_screen_payload
         )
-        assert invite_with_metadata.guild.is_nsfw is True
+        assert invite_with_metadata.guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
 
         assert invite_with_metadata.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite_with_metadata.inviter == entity_factory_impl.deserialize_user(user_payload)
@@ -2861,11 +2859,9 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, invite_with_metadata_payload
     ):
         del invite_with_metadata_payload["guild"]["welcome_screen"]
-        del invite_with_metadata_payload["guild"]["nsfw"]
 
         invite = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
         assert invite.guild.welcome_screen is None
-        assert invite.guild.is_nsfw is None
 
     def test_max_age_when_zero(self, entity_factory_impl, invite_with_metadata_payload):
         invite_with_metadata_payload["max_age"] = 0
