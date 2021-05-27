@@ -49,7 +49,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_client_
 
     ListenerDictT = typing.Dict[
@@ -93,15 +92,11 @@ class _Response:
         payload: typing.Optional[str] = None,
         *,
         content_type: typing.Optional[str] = None,
-        headers: typing.Optional[typing.MutableMapping[str, str]] = None,
     ) -> None:
+        self._headers: typing.Optional[typing.Dict[str, str]] = None
         if payload or content_type:
-            if not headers:
-                headers = {}
+            self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_CONTENT_TYPE}
 
-            headers[_CONTENT_TYPE_KEY] = content_type or _TEXT_CONTENT_TYPE
-
-        self._headers = headers
         self._payload = payload.encode() if payload is not None else None
         self._status_code = status_code
 
@@ -125,8 +120,6 @@ class InteractionServer(interaction_server.InteractionServer):
     ----------
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory instance this server should use.
-    event_factory : hikari.api.event_factory.EventFactory
-        The event factory instance this server should use.
 
     Other Parameters
     ----------------
@@ -147,7 +140,6 @@ class InteractionServer(interaction_server.InteractionServer):
         "_dumps",
         "_entity_factory",
         "_event",
-        "_event_factory",
         "_hashes",
         "_listeners",
         "_loads",
@@ -162,7 +154,6 @@ class InteractionServer(interaction_server.InteractionServer):
         *,
         dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
         entity_factory: entity_factory_.EntityFactory,
-        event_factory: event_factory_.EventFactory,
         loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         rest_client: rest_client_.RESTClient,
         public_key: typing.Optional[bytes] = None,
@@ -171,7 +162,6 @@ class InteractionServer(interaction_server.InteractionServer):
         self._dumps = dumps
         self._entity_factory = entity_factory
         self._event = asyncio.Event()
-        self._event_factory = event_factory
         self._listeners: ListenerDictT[
             interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
         ] = {}
@@ -229,7 +219,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except (KeyError, ValueError):
             user_agent = request.headers.get(_USER_AGENT_KEY, "NONE")
-            _LOGGER.info("Received a request with a missing or invalid ed25519 header (UA %r)", user_agent)
+            _LOGGER.info("Received a request with a missing or invalid signature header (UA %r)", user_agent)
             return aiohttp.web.Response(
                 status=_BAD_REQUEST_STATUS,
                 body="Missing or invalid required request signature header(s)",
@@ -293,7 +283,11 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_OK_STATUS, _PONG_PAYLOAD, content_type=_JSON_CONTENT_TYPE)
 
         try:
-            event = self._event_factory.deserialize_interaction_create_event(None, payload)
+            interaction = self._entity_factory.deserialize_interaction(payload)
+
+        except errors.UnrecognisedEntityError:
+            _LOGGER.debug("Ignoring unknown interaction type %s", interaction_type)
+            return _Response(_NOT_IMPLEMENTED, "Interaction type not implemented")
 
         except Exception as exc:
             asyncio.get_running_loop().call_exception_handler(
@@ -301,10 +295,10 @@ class InteractionServer(interaction_server.InteractionServer):
             )
             return _Response(_INTERNAL_SERVER_ERROR_STATUS, "Exception occurred during interaction deserialization")
 
-        if listener := self._listeners.get(type(event.interaction)):
-            _LOGGER.debug("Dispatching interaction %s", event.interaction.id)
+        if listener := self._listeners.get(type(interaction)):
+            _LOGGER.debug("Dispatching interaction %s", interaction.id)
             try:
-                result = await listener(event.interaction)
+                result = await listener(interaction)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(
@@ -316,7 +310,7 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_OK_STATUS, payload, content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
-            "Ignoring interaction %s without registered listener %s", event.interaction.id, event.interaction.type
+            "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
         )
         return _Response(_NOT_IMPLEMENTED, "Handler not set for this interaction type")
 
@@ -548,17 +542,19 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[interaction_server.InteractionT],
         listener: typing.Optional[
-            interaction_server.ListenerT[interaction_server.InteractionT, interaction_server.ResponseT]
+            interaction_server.ListenerT[
+                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+            ]
         ],
         /,
         *,
         replace: bool = False,
     ) -> None:
-        if not replace and interaction_type in self._listeners:
-            raise TypeError(f"Listener already set for {interaction_type!r}")
-
         if listener:
-            self._listeners[interaction_type] = listener  # type: ignore[assignment]  # TODO: check
+            if not replace and interaction_type in self._listeners:
+                raise TypeError(f"Listener already set for {interaction_type!r}")
+
+            self._listeners[interaction_type] = listener
 
         else:
             self._listeners.pop(interaction_type, None)

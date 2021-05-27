@@ -32,7 +32,6 @@ from hikari import config
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
 from hikari.impl import entity_factory as entity_factory_impl
-from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.internal import ux
@@ -44,7 +43,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import event_factory as event_factory_
     from hikari.api import rest as rest_
     from hikari.api import special_endpoints
     from hikari.interactions import bases as interaction_bases
@@ -163,7 +161,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         "_http_settings",
         "_proxy_settings",
         "_entity_factory",
-        "_event_factory",
         "_rest",
         "_server",
     )
@@ -200,13 +197,8 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
 
-        # Event creation
-        self._event_factory = event_factory_impl.EventFactoryImpl(self)
-
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
-            connector_owner=True,
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -220,7 +212,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         # IntegrationServer
         self._server = interaction_server_impl.InteractionServer(
             entity_factory=self._entity_factory,
-            event_factory=self._event_factory,
             public_key=public_key,
             rest_client=self._rest,
         )
@@ -252,10 +243,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
-
-    @property
-    def event_factory(self) -> event_factory_.EventFactory:
-        return self._event_factory
 
     @staticmethod
     def print_banner(banner: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
@@ -493,7 +480,9 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         self,
         interaction_type: typing.Type[interaction_server_.InteractionT],
         listener: typing.Optional[
-            interaction_server_.ListenerT[interaction_server_.InteractionT, interaction_server_.ResponseT]
+            interaction_server_.ListenerT[
+                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+            ]
         ],
         /,
         *,

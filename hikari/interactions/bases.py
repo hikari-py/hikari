@@ -52,7 +52,6 @@ class InteractionType(int, enums.Enum):
     """An interaction triggered by a user calling an application command."""
 
 
-# TODO: is this command specific or not; the docs leave a ton up to the imagination
 @typing.final
 class ResponseType(int, enums.Enum):
     """The type of an interaction response."""

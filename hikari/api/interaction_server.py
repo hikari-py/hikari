@@ -48,7 +48,7 @@ to respond.
 !!! note
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
-    `hikari.impl.special_endpoints`
+    `hikari.impl.special_endpoints`.
 """
 
 
@@ -168,7 +168,7 @@ class InteractionServer(abc.ABC):
     #     self,
     #     interaction_type: typing.Type[commands.CommandInteraction],
     #     listener: typing.Optional[
-    #         MainListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
+    #         MainListenerT[commands.CommandInteraction, special_endpoints.CommandResponseBuilder]
     #     ],
     #     /,
     #     *,
@@ -180,7 +180,9 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: typing.Type[InteractionT],
-        listener: typing.Optional[ListenerT[InteractionT, ResponseT]],
+        listener: typing.Optional[
+            ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        ],
         /,
         *,
         replace: bool = False,
@@ -198,8 +200,8 @@ class InteractionServer(abc.ABC):
         Other Parameters
         ----------------
         replace : builtins.bool
-            Whether this call should replace the previously set listener or not,
-            this call will raise a `builtins.ValueError` if set to `builtins.False`
+            Whether this call should replace the previously set listener or not.
+            This call will raise a `builtins.ValueError` if set to `builtins.False`
             when a listener is already set.
 
         Raises

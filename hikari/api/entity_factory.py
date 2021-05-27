@@ -1037,6 +1037,9 @@ class EntityFactory(abc.ABC):
         -------
         hikari.interactions.bases.PartialInteraction
             The deserialized interaction object.
+
+        Raises
+        ------
         hikari.errors.UnrecognisedEntityError
             If the integration type is unknown.
         """
