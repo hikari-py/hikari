@@ -382,7 +382,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     def deserialize_interaction_create_event(
         self,
-        shard: typing.Optional[gateway_shard.GatewayShard],
+        shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
     ) -> interaction_events.InteractionCreateEvent:
         return interaction_events.InteractionCreateEvent(

@@ -36,7 +36,7 @@ import typing
 
 import attr
 
-from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import commands
 
 
-class CommandEvent(base_events.Event, abc.ABC):
+class CommandEvent(shard_events.ShardEvent, abc.ABC):
     """Base class of events fired for application command changes."""
 
     @property
@@ -104,18 +104,11 @@ class CommandDeleteEvent(CommandEvent):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class InteractionCreateEvent(base_events.Event):
+class InteractionCreateEvent(shard_events.ShardEvent):
     """Event fired when an interaction is created."""
 
-    shard: typing.Optional[gateway_shard.GatewayShard] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """Shard that received this event.
-
-    Returns
-    -------
-    typing.Optional[hikari.api.shard.GatewayShard]
-        The shard that triggered the event. Will be `builtins.None` for events
-        triggered by a REST server.
-    """
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    """Shard that received this event."""
 
     interaction: interaction_bases.PartialInteraction = attr.field(repr=True)
     """Interaction that this event is related to.

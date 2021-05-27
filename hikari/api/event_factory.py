@@ -532,15 +532,15 @@ class EventFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_interaction_create_event(
         self,
-        shard: typing.Optional[gateway_shard.GatewayShard],
+        shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
     ) -> interaction_events.InteractionCreateEvent:
         """Parse a raw payload from Discord into a interaction create event object.
 
         Parameters
         ----------
-        shard : typing.Optional[hikari.api.shard.GatewayShard]
-            The shard that emitted this event if applicable else `builtins.None`.
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
 

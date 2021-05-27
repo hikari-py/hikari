@@ -745,7 +745,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.ib()
     _description: str = attr.ib()
 
-    # TODO: does ID actually matter here?
     # Key-word only not-required arguments.
     id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
 
