@@ -71,15 +71,17 @@ _UNSUPPORTED_MEDIA_TYPE_STATUS: typing.Final[int] = 415
 _INTERNAL_SERVER_ERROR_STATUS: typing.Final[int] = 500
 _NOT_IMPLEMENTED: typing.Final[int] = 501
 
+_UTF_8_CHARSET: typing.Final[str] = "UTF-8"
+
 # Header keys and values
 _X_SIGNATURE_ED25519_HEADER: typing.Final[str] = "X-Signature-Ed25519"
 _X_SIGNATURE_TIMESTAMP_HEADER: typing.Final[str] = "X-Signature-Timestamp"
 _CONTENT_TYPE_KEY: typing.Final[str] = "Content-Type"
 _USER_AGENT_KEY: typing.Final[str] = "User-Agent"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
+_JSON_TYPE_WITH_CHARSET: typing.Final[str] = f"{_JSON_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
-
-_UTF_8_CHARSET: typing.Final[str] = "UTF-8"
+_TEXT_TYPE_WITH_CHARSET: typing.Final[str] = f"{_TEXT_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 
 # Constant response payloads
 _PONG_PAYLOAD: typing.Final[bytes] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode()
@@ -97,7 +99,7 @@ class _Response:
     ) -> None:
         self._headers: typing.Optional[typing.Dict[str, str]] = None
         if payload or content_type:
-            self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_CONTENT_TYPE}
+            self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_TYPE_WITH_CHARSET}
 
         self._payload = payload
         self._status_code = status_code
@@ -293,7 +295,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         if interaction_type == _PING_INTERACTION_TYPE:
             _LOGGER.debug("Responding to ping interaction")
-            return _Response(_OK_STATUS, _PONG_PAYLOAD, content_type=_JSON_CONTENT_TYPE)
+            return _Response(_OK_STATUS, _PONG_PAYLOAD, content_type=_JSON_TYPE_WITH_CHARSET)
 
         try:
             interaction = self._entity_factory.deserialize_interaction(payload)
@@ -320,7 +322,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(_OK_STATUS, payload.encode(), content_type=_JSON_CONTENT_TYPE)
+            return _Response(_OK_STATUS, payload.encode(), content_type=_JSON_TYPE_WITH_CHARSET)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
