@@ -83,9 +83,6 @@ _JSON_TYPE_WITH_CHARSET: typing.Final[str] = f"{_JSON_CONTENT_TYPE}; charset={_U
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
 _TEXT_TYPE_WITH_CHARSET: typing.Final[str] = f"{_TEXT_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 
-# Constant response payloads
-_PONG_PAYLOAD: typing.Final[bytes] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode()
-
 
 class _Response:
     __slots__: typing.Sequence[str] = ("_headers", "_payload", "_status_code")
@@ -115,6 +112,12 @@ class _Response:
     @property
     def status_code(self) -> int:
         return self._status_code
+
+
+# Constant response
+_PONG_RESPONSE: typing.Final[_Response] = _Response(
+    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_TYPE_WITH_CHARSET
+)
 
 
 class InteractionServer(interaction_server.InteractionServer):
@@ -295,7 +298,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         if interaction_type == _PING_INTERACTION_TYPE:
             _LOGGER.debug("Responding to ping interaction")
-            return _Response(_OK_STATUS, _PONG_PAYLOAD, content_type=_JSON_TYPE_WITH_CHARSET)
+            return _PONG_RESPONSE
 
         try:
             interaction = self._entity_factory.deserialize_interaction(payload)
