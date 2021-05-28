@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #
@@ -19,34 +18,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import os
 
-import requests
+# We first format the payload and then replace ' with " to make it valid JSON
+PAYLOAD=$(echo "{
+        'username': 'Github Actions',
+        'embeds': [
+            {
+                'title': '${GITHUB_TAG} has been deployed to PyPI',
+                'color': 6697881,
+                'description': 'Install it now by executing: \`\`\`pip install hikari==${GITHUB_TAG}\`\`\`',
+                'footer': {
+                    'text': 'SHA: ${GITHUB_SHA}'
+                }
+            }
+        ]
+    }" | tr "'" '"')
 
-if os.getenv("CI"):
-    webhook_url = os.environ["DEPLOY_WEBHOOK_URL"]
-    tag = os.environ["GITHUB_TAG"]
-    build_no = os.environ["GITHUB_BUILD_NUMBER"]
-    commit_sha = os.environ["GITHUB_SHA"]
-
-    payload = dict(
-        username="Github Actions",
-        embeds=[
-            dict(
-                title=f"{tag} has been deployed to PyPI",
-                color=0x663399,
-                description="Install it now!",
-                footer=dict(text=f"#{build_no} | {commit_sha}"),
-            )
-        ],
-    )
-
-    with requests.post(webhook_url, json=payload) as resp:
-        print("POST", payload)
-        print(resp.status_code, resp.reason)
-        try:
-            print(resp.json())
-        except:
-            print(resp.content)
-else:
-    print("Skipping webhook, not on CI.")
+curl --request POST \
+  --url ${DEPLOY_WEBHOOK_URL} \
+  --header 'Content-Type: application/json' \
+  --data "${PAYLOAD}"

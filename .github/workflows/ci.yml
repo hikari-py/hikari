@@ -33,10 +33,10 @@ jobs:
         run: |
           pip install wheel
 
-          pip install -e .
+          pip install .
           pip uninstall -y hikari
 
-          pip install -e .[speedups]
+          pip install .[speedups]
           pip uninstall -y hikari
 
       - name: Run tests
@@ -168,7 +168,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       GITHUB_TAG: ${{ github.event.release.tag_name }}
       GITHUB_REPO_SLUG: ${{ github.repository }}
-      GITHUB_BUILD_NUMBER: ${{ github.run_number }}
       DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
