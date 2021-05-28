@@ -504,6 +504,9 @@ class TestInteractionServer:
         assert result.status_code == 501
 
     def test_run(self, mock_interaction_server):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_interaction_server.start = mock.AsyncMock()
         mock_interaction_server.join = mock.AsyncMock()
         mock_socket = object()
@@ -520,6 +523,7 @@ class TestInteractionServer:
             socket=mock_socket,
             shutdown_timeout=431.123,
             ssl_context=mock_context,
+            close_loop=False,
         )
 
         mock_interaction_server.start.assert_awaited_once_with(
@@ -535,6 +539,7 @@ class TestInteractionServer:
             ssl_context=mock_context,
         )
         mock_interaction_server.join.assert_awaited_once()
+        assert asyncio.get_event_loop().is_closed() is False
 
     def test_run_when_already_running(self, mock_interaction_server):
         mock_interaction_server._runner = object()
@@ -546,21 +551,25 @@ class TestInteractionServer:
         mock_interaction_server.start = mock.Mock()
         mock_interaction_server.join = mock.Mock()
 
-        with mock.patch.object(asyncio, "get_event_loop") as get_event_loop:
+        with mock.patch.object(asyncio, "get_running_loop") as get_event_loop:
             mock_interaction_server.run(asyncio_debug=True)
 
             get_event_loop.return_value.set_debug.assert_called_once_with(True)
 
     def test_run_when_close_loop(self, mock_interaction_server):
-        mock_interaction_server.start = mock.Mock()
-        mock_interaction_server.join = mock.Mock()
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
+        mock_interaction_server.start = mock.AsyncMock()
+        mock_interaction_server.join = mock.AsyncMock()
 
-        with mock.patch.object(asyncio, "get_event_loop") as get_event_loop:
-            mock_interaction_server.run(close_loop=True)
-
-            get_event_loop.return_value.close.assert_called_once()
+        mock_interaction_server.run(close_loop=True)
+        assert asyncio.get_event_loop().is_closed() is True
 
     def test_run_when_coroutine_tracking_depth(self, mock_interaction_server):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_interaction_server.start = mock.AsyncMock()
         mock_interaction_server.join = mock.AsyncMock()
 
@@ -572,6 +581,9 @@ class TestInteractionServer:
 
     @pytest.mark.skip(reason="Fix")
     def test_run_when_coroutine_tracking_depth_catches_attribute_error(self, mock_interaction_server):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_interaction_server.start = mock.AsyncMock()
         mock_interaction_server.join = mock.AsyncMock()
 

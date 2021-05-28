@@ -217,6 +217,9 @@ class TestRESTBot:
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
     def test_run(self, mock_rest_bot, mock_interaction_server):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_socket = object()
         mock_context = object()
         mock_rest_bot._executor = None
@@ -259,8 +262,11 @@ class TestRESTBot:
         )
 
     def test_run_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        stack.enter_context(mock.patch.object(asyncio, "get_running_loop"))
         stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
 
         with stack:
@@ -282,12 +288,15 @@ class TestRESTBot:
                 ssl_context=object(),
             )
 
-            asyncio.get_event_loop.return_value.create_task.assert_called_once_with(
+            asyncio.get_running_loop.return_value.create_task.assert_called_once_with(
                 ux.check_for_updates.return_value, name="check for package updates"
             )
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)
 
     def test_run_closes_executor_when_present(self, mock_rest_bot, mock_executor):
+        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_rest_bot.run(
             asyncio_debug=False,
             backlog=321,
@@ -310,6 +319,9 @@ class TestRESTBot:
         assert mock_rest_bot.executor is None
 
     def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot):
+        # Dependent on test-order the current event loop may be pre-filled and closed without pytest.mark.asyncio
+        # therefore we need to ensure there's no pre-set event loop.
+        asyncio.set_event_loop(None)
         mock_rest_bot._executor = None
 
         mock_rest_bot.run(

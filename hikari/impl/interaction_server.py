@@ -165,10 +165,12 @@ class InteractionServer(interaction_server.InteractionServer):
         rest_client: rest_client_.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
-        self._application_fetch_lock = asyncio.Lock()
+        # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
+        self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
         self._dumps = dumps
         self._entity_factory = entity_factory
-        self._event = asyncio.Event()
+        # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
+        self._event: typing.Optional[asyncio.Event] = None
         self._listeners: ListenerDictT[
             interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
         ] = {}
@@ -183,7 +185,16 @@ class InteractionServer(interaction_server.InteractionServer):
     def is_alive(self) -> bool:
         return self._runner is not None
 
+    def _get_event(self) -> asyncio.Event:
+        if self._event is None:
+            self._event = asyncio.Event()
+
+        return self._event
+
     async def _fetch_public_key(self) -> ed25519.VerifierT:
+        if self._application_fetch_lock is None:
+            self._application_fetch_lock = asyncio.Lock()
+
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
         async with self._application_fetch_lock:
             if self._verify:
@@ -269,13 +280,13 @@ class InteractionServer(interaction_server.InteractionServer):
         # This shutdown then cleanup ordering matters.
         await runner.shutdown()
         await runner.cleanup()
-        self._event.set()
+        self._get_event().set()
 
     async def join(self) -> None:
         if not self._runner:
             raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
 
-        await self._event.wait()
+        await self._get_event().wait()
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         verify = self._verify or await self._fetch_public_key()
@@ -405,7 +416,15 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._runner:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
-        loop = asyncio.get_event_loop()
+        # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
+        # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier and
+        # more consistent to just explicitly make a new loop.
+        try:
+            loop = asyncio.get_running_loop()
+
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
         if asyncio_debug:
             loop.set_debug(True)
@@ -493,7 +512,7 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._runner:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
-        self._event.clear()
+        self._get_event().clear()
         self._runner = aiohttp.web_runner.AppRunner(
             self._server, handle_signals=enable_signal_handlers, access_log=_LOGGER
         )

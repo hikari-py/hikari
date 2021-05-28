@@ -363,7 +363,17 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
             SSL context for HTTPS servers.
         """
         if check_for_updates:
-            asyncio.get_event_loop().create_task(
+            # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
+            # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier
+            # and more consistent to just explicitly make a new loop.
+            try:
+                loop = asyncio.get_running_loop()
+
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            loop.create_task(
                 ux.check_for_updates(self._http_settings, self._proxy_settings),
                 name="check for package updates",
             )
