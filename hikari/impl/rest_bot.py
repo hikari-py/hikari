@@ -156,7 +156,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
     """
 
     __slots__: typing.Sequence[str] = (
-        "_banner",
         "_executor",
         "_http_settings",
         "_proxy_settings",
@@ -177,7 +176,7 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         force_color: bool = False,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
-        max_rate_limit: float = 300,
+        max_rate_limit: float = 300.0,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
@@ -189,7 +188,6 @@ class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServ
         self.print_banner(banner, allow_color, force_color)
 
         # Settings and state
-        self._banner = banner
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
         self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()

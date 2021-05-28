@@ -79,8 +79,10 @@ _USER_AGENT_KEY: typing.Final[str] = "User-Agent"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
 
+_UTF_8_CHARSET: typing.Final[str] = "UTF-8"
+
 # Constant response payloads
-_PONG_PAYLOAD: typing.Final[str] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE})
+_PONG_PAYLOAD: typing.Final[bytes] = data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode()
 
 
 class _Response:
@@ -89,7 +91,7 @@ class _Response:
     def __init__(
         self,
         status_code: int,
-        payload: typing.Optional[str] = None,
+        payload: typing.Optional[bytes] = None,
         *,
         content_type: typing.Optional[str] = None,
     ) -> None:
@@ -97,7 +99,7 @@ class _Response:
         if payload or content_type:
             self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_CONTENT_TYPE}
 
-        self._payload = payload.encode() if payload is not None else None
+        self._payload = payload
         self._status_code = status_code
 
     @property
@@ -210,7 +212,10 @@ class InteractionServer(interaction_server.InteractionServer):
         """
         if request.content_type.lower() != _JSON_CONTENT_TYPE:
             return aiohttp.web.Response(
-                status=_UNSUPPORTED_MEDIA_TYPE_STATUS, body="Unsupported Media Type", content_type=_TEXT_CONTENT_TYPE
+                status=_UNSUPPORTED_MEDIA_TYPE_STATUS,
+                body=b"Unsupported Media Type",
+                content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         try:
@@ -222,8 +227,9 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Received a request with a missing or invalid signature header (UA %r)", user_agent)
             return aiohttp.web.Response(
                 status=_BAD_REQUEST_STATUS,
-                body="Missing or invalid required request signature header(s)",
+                body=b"Missing or invalid required request signature header(s)",
                 content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         try:
@@ -231,14 +237,20 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except aiohttp.web.HTTPRequestEntityTooLarge:
             return aiohttp.web.Response(
-                status=_PAYLOAD_TOO_LARGE_STATUS, body="Payload too large", content_type=_TEXT_CONTENT_TYPE
+                status=_PAYLOAD_TOO_LARGE_STATUS,
+                body=b"Payload too large",
+                content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         if not body:
             user_agent = request.headers.get(_USER_AGENT_KEY, "NONE")
             _LOGGER.info("Received a body-less request (UA %r)", user_agent)
             return aiohttp.web.Response(
-                status=_BAD_REQUEST_STATUS, body="POST request must have a body", content_type=_TEXT_CONTENT_TYPE
+                status=_BAD_REQUEST_STATUS,
+                body=b"POST request must have a body",
+                content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         response = await self.on_interaction(body=body, signature=signature_header, timestamp=timestamp_header)
@@ -249,6 +261,7 @@ class InteractionServer(interaction_server.InteractionServer):
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
         runner = self._runner
+        # This shutdown then cleanup ordering matters.
         await runner.shutdown()
         await runner.cleanup()
         self._event.set()
@@ -264,19 +277,19 @@ class InteractionServer(interaction_server.InteractionServer):
 
         if not verify(body, signature, timestamp):
             _LOGGER.error("Received a request with an invalid signature")
-            return _Response(_BAD_REQUEST_STATUS, "Invalid request signature")
+            return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
             payload = self._loads(body.decode("utf-8"))
             interaction_type = int(payload["type"])
 
-        except (data_binding.JSONDecodeError, ValueError) as exc:
+        except (data_binding.JSONDecodeError, ValueError, TypeError) as exc:
             _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
-            return _Response(_BAD_REQUEST_STATUS, "Invalid JSON body")
+            return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
-        except (KeyError, TypeError) as exc:
-            _LOGGER.error("Invalid or missing 'type' field in received JSON payload", exc_info=exc)
-            return _Response(_BAD_REQUEST_STATUS, "Invalid or missing 'type' field in payload")
+        except KeyError as exc:
+            _LOGGER.error("Missing 'type' field in received JSON payload", exc_info=exc)
+            return _Response(_BAD_REQUEST_STATUS, b"Missing required 'type' field in payload")
 
         if interaction_type == _PING_INTERACTION_TYPE:
             _LOGGER.debug("Responding to ping interaction")
@@ -287,32 +300,32 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except errors.UnrecognisedEntityError:
             _LOGGER.debug("Ignoring unknown interaction type %s", interaction_type)
-            return _Response(_NOT_IMPLEMENTED, "Interaction type not implemented")
+            return _Response(_NOT_IMPLEMENTED, b"Interaction type not implemented")
 
         except Exception as exc:
             asyncio.get_running_loop().call_exception_handler(
                 {"message": "Exception occurred during interaction deserialization", "exception": exc}
             )
-            return _Response(_INTERNAL_SERVER_ERROR_STATUS, "Exception occurred during interaction deserialization")
+            return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction deserialization")
 
         if listener := self._listeners.get(type(interaction)):
             _LOGGER.debug("Dispatching interaction %s", interaction.id)
             try:
                 result = await listener(interaction)
+                payload = self._dumps(result.build(self._entity_factory))
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(
                     {"message": "Exception occurred during interaction dispatch", "exception": exc}
                 )
-                return _Response(_INTERNAL_SERVER_ERROR_STATUS, "Exception occurred during interaction dispatch")
+                return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            payload = self._dumps(result.build(self._entity_factory))
-            return _Response(_OK_STATUS, payload, content_type=_JSON_CONTENT_TYPE)
+            return _Response(_OK_STATUS, payload.encode(), content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
         )
-        return _Response(_NOT_IMPLEMENTED, "Handler not set for this interaction type")
+        return _Response(_NOT_IMPLEMENTED, b"Handler not set for this interaction type")
 
     def run(
         self,
@@ -552,7 +565,7 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         if listener:
             if not replace and interaction_type in self._listeners:
-                raise TypeError(f"Listener already set for {interaction_type!r}")
+                raise TypeError(f"Listener already set for {interaction_type.__name__}")
 
             self._listeners[interaction_type] = listener
 
