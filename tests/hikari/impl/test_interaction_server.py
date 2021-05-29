@@ -21,7 +21,6 @@
 # SOFTWARE.
 import asyncio
 import contextlib
-import sys
 
 import aiohttp.web
 import aiohttp.web_runner

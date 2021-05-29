@@ -506,7 +506,7 @@ class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 @typing.runtime_checkable
 class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
-    """Structural super-type for an application which can be run by itself."""
+    """Structural super-type for an application which can be run independently."""
 
     __slots__: typing.Sequence[str] = ()
 
