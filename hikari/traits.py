@@ -29,13 +29,15 @@ __all__: typing.List[str] = [
     "EntityFactoryAware",
     "EventFactoryAware",
     "ExecutorAware",
+    "GatewayBotAware",
     "IntentsAware",
     "NetworkSettingsAware",
     "RESTAware",
+    "RESTBotAware",
+    "Runnable",
     "InteractionServerAware",
     "ShardAware",
     "VoiceAware",
-    "BotAware",
 ]
 
 import typing
@@ -463,25 +465,11 @@ class ShardAware(
         """
 
 
+@typing.runtime_checkable
 class InteractionServerAware(RESTAware, EntityFactoryAware, fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a interaction REST server-aware object."""
 
     __slots__: typing.Sequence[str] = ()
-
-    @property
-    def is_alive(self) -> bool:
-        """Check whether the REST server is alive.
-
-        This is useful as some functions might raise
-        `hikari.errors.ComponentStateConflictError` if this is
-        `builtins.False`.
-
-        Returns
-        -------
-        builtins.bool
-            Whether the bot is running or not.
-        """
-        raise NotImplementedError
 
     @property
     def interaction_server(self) -> interaction_server_.InteractionServer:
@@ -517,22 +505,14 @@ class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 
 @typing.runtime_checkable
-class BotAware(
-    RESTAware,
-    ShardAware,
-    EventFactoryAware,
-    EventManagerAware,
-    CacheAware,
-    fast_protocol.FastProtocolChecking,
-    typing.Protocol,
-):
-    """Structural supertype for a component that is aware of all internals."""
+class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Structural super-type for an application which can be run by itself."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     def is_alive(self) -> bool:
-        """Check whether the bot is running or not.
+        """Check whether the application is running or not.
 
         This is useful as some functions might raise
         `hikari.errors.ComponentStateConflictError` if this is
@@ -547,6 +527,39 @@ class BotAware(
 
     async def close(self) -> None:
         """Kill the application by shutting all components down."""
+
+    async def join(self) -> None:
+        """Wait indefinitely until the application closes.
+
+        This can be placed in a task and cancelled without affecting the
+        application runtime itself. Any exceptions raised by shards will be
+        propagated to here.
+        """
+        raise NotImplementedError
+
+    def run(self) -> None:
+        """Start the application and block until it's finished running."""
+        raise NotImplementedError
+
+    async def start(self) -> None:
+        """Start the application and then return."""
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class GatewayBotAware(
+    RESTAware,
+    Runnable,
+    ShardAware,
+    EventFactoryAware,
+    EventManagerAware,
+    CacheAware,
+    fast_protocol.FastProtocolChecking,
+    typing.Protocol,
+):
+    """Structural supertype for a component that has all the gateway components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     async def join(self, until_close: bool = True) -> None:
         """Wait indefinitely until the application closes.
@@ -580,7 +593,7 @@ class BotAware(
         shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
-        """Start the bot, wait for all shards to become ready, and then return.
+        """Start the bot and block until it's finished running.
 
         Other Parameters
         ----------------
@@ -674,3 +687,10 @@ class BotAware(
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         raise NotImplementedError
+
+
+@typing.runtime_checkable
+class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Structural supertype for a component that has all the RESTful components."""
+
+    __slots__: typing.Sequence[str] = ()

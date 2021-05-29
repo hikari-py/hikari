@@ -75,7 +75,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
-class BotApp(traits.BotAware):
+class BotApp(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot

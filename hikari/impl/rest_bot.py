@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import bases as interaction_bases
 
 
-class RESTBot(traits.InteractionServerAware, interaction_server_.InteractionServer):
+class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     """Basic implementation of an interaction based REST-only bot.
 
     Parameters
