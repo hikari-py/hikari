@@ -152,10 +152,6 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def start(self) -> None:
-        """Start the shard, wait for it to become ready."""
-
-    @abc.abstractmethod
     async def update_presence(
         self,
         *,

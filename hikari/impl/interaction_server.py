@@ -27,7 +27,6 @@ __all__: typing.Sequence[str] = ["InteractionServer"]
 
 import asyncio
 import logging
-import sys
 import typing
 
 import aiohttp.web
@@ -39,7 +38,6 @@ from hikari.api import special_endpoints
 from hikari.interactions import bases as interaction_bases
 from hikari.internal import data_binding
 from hikari.internal import ed25519
-from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import socket as socket_
@@ -342,120 +340,6 @@ class InteractionServer(interaction_server.InteractionServer):
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
         )
         return _Response(_NOT_IMPLEMENTED, b"Handler not set for this interaction type")
-
-    def run(
-        self,
-        asyncio_debug: typing.Optional[bool] = None,
-        backlog: int = 128,
-        close_loop: bool = True,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: bool = True,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        path: typing.Optional[str] = None,
-        port: typing.Optional[int] = None,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
-        shutdown_timeout: float = 60.0,
-        socket: typing.Optional[socket_.socket] = None,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
-    ) -> None:
-        """Open this REST server and block until it closes.
-
-        Other Parameters
-        ----------------
-        asyncio_debug : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then debugging is
-            enabled for the asyncio event loop in use.
-        backlog : builtins.int
-            The number of unaccepted connections that the system will allow before
-            refusing new connections.
-        close_loop : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, then once the bot
-            enters a state where all components have shut down permanently
-            during application shutdown, then all asyngens and background tasks
-            will be destroyed, and the event loop will be shut down.
-
-            This will wait until all `hikari`-owned `aiohttp` connectors have
-            had time to attempt to shut down correctly (around 250ms), and on
-            Python 3.9 and newer, will also shut down the default event loop
-            executor too.
-        coroutine_tracking_depth : typing.Optional[builtins.int]
-            Defaults to `builtins.None`. If an integer value and supported by
-            the interpreter, then this many nested coroutine calls will be
-            tracked with their call origin state. This allows you to determine
-            where non-awaited coroutines may originate from, but generally you
-            do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
-        host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
-            TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[builtins.int]
-            TCP/IP port for the HTTP server.
-        path : typing.Optional[builtins.str]
-            File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[builtins.bool]
-            Tells the kernel to reuse a local socket in TIME_WAIT state, without
-            waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[builtins.bool]
-            Tells the kernel to allow this endpoint to be bound to the same port
-            as other existing endpoints are also bound to.
-        socket : typing.Optional[socket.socket]
-            A pre-existing socket object to accept connections on.
-        shutdown_timeout : builtins.float
-            A delay to wait for graceful server shutdown before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
-        ssl_context : typing.Optional[ssl.SSLContext]
-            SSL context for HTTPS servers.
-        """
-        if self._runner:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
-
-        # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-        # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier and
-        # more consistent to just explicitly make a new loop.
-        try:
-            loop = asyncio.get_running_loop()
-
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        if asyncio_debug:
-            loop.set_debug(True)
-
-        if coroutine_tracking_depth is not None:
-            try:
-                # Provisionally defined in CPython, may be removed without notice.
-                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
-            except AttributeError:
-                _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
-
-        try:
-            loop.run_until_complete(
-                self.start(
-                    backlog=backlog,
-                    enable_signal_handlers=enable_signal_handlers,
-                    host=host,
-                    port=port,
-                    path=path,
-                    reuse_address=reuse_address,
-                    reuse_port=reuse_port,
-                    socket=socket,
-                    shutdown_timeout=shutdown_timeout,
-                    ssl_context=ssl_context,
-                )
-            )
-            loop.run_until_complete(self.join())
-
-        finally:
-            if close_loop:
-                loop.close()
 
     async def start(
         self,

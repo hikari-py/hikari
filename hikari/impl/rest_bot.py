@@ -26,9 +26,12 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ["RESTBot"]
 
 import asyncio
+import logging
+import sys
 import typing
 
 from hikari import config
+from hikari import errors
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
 from hikari.impl import entity_factory as entity_factory_impl
@@ -46,6 +49,9 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import special_endpoints
     from hikari.interactions import bases as interaction_bases
+
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
 
 class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
@@ -272,6 +278,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ux.print_banner(banner, allow_color, force_color)
 
     async def close(self) -> None:
+        # self._server.start should raise errors.ComponentStateConflictError if it's not running
         await self._server.close()
 
     async def join(self) -> None:
@@ -362,43 +369,54 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
         """
-        if check_for_updates:
-            # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-            # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier
-            # and more consistent to just explicitly make a new loop.
+        if self.is_alive:
+            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+
+        # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
+        # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier
+        # and more consistent to just explicitly make a new loop.
+        try:
+            loop = asyncio.get_running_loop()
+
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if asyncio_debug:
+            loop.set_debug(True)
+
+        if coroutine_tracking_depth is not None:
             try:
-                loop = asyncio.get_running_loop()
-
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-            loop.create_task(
-                ux.check_for_updates(self._http_settings, self._proxy_settings),
-                name="check for package updates",
-            )
+                # Provisionally defined in CPython, may be removed without notice.
+                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+            except AttributeError:
+                _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
         try:
-            self._server.run(
-                asyncio_debug=asyncio_debug,
-                backlog=backlog,
-                close_loop=close_loop,
-                coroutine_tracking_depth=coroutine_tracking_depth,
-                enable_signal_handlers=enable_signal_handlers,
-                host=host,
-                port=port,
-                path=path,
-                reuse_address=reuse_address,
-                reuse_port=reuse_port,
-                socket=socket,
-                shutdown_timeout=shutdown_timeout,
-                ssl_context=ssl_context,
+            loop.run_until_complete(
+                self.start(
+                    backlog=backlog,
+                    check_for_updates=check_for_updates,
+                    enable_signal_handlers=enable_signal_handlers,
+                    host=host,
+                    port=port,
+                    path=path,
+                    reuse_address=reuse_address,
+                    reuse_port=reuse_port,
+                    socket=socket,
+                    shutdown_timeout=shutdown_timeout,
+                    ssl_context=ssl_context,
+                )
             )
+            loop.run_until_complete(self.join())
 
         finally:
             if close_passed_executor and self._executor:
                 self._executor.shutdown(wait=True)
                 self._executor = None
+
+            if close_loop:
+                loop.close()
 
     async def start(
         self,
@@ -456,6 +474,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
         """
+        # self._server.start should raise errors.ComponentStateConflictError if it's already running
         if check_for_updates:
             asyncio.create_task(
                 ux.check_for_updates(self._http_settings, self._proxy_settings),
