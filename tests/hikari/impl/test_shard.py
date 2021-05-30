@@ -801,7 +801,7 @@ class TestGatewayShardImpl:
     async def test_start_when_already_running(self, client):
         client._run_task = object()
 
-        with pytest.raises(RuntimeError, match="Cannot run more than one instance of one shard concurrently"):
+        with pytest.raises(errors.ComponentStateConflictError):
             await client.start()
 
     async def test_start_when_shard_closed_before_starting(self, client):
