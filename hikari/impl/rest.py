@@ -187,6 +187,10 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         """
         return self._scopes
 
+    @property
+    def token_type(self) -> typing.Union[applications.TokenType, str]:
+        return applications.TokenType.BEARER
+
     async def acquire(self, client: rest_api.RESTClient) -> str:
         if self._token and not self._is_expired:
             return self._token
@@ -336,6 +340,48 @@ class RESTApp(traits.ExecutorAware):
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
         token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
     ) -> RESTClientImpl:
+        """Acquire an instance of this REST client.
+
+        !!! note
+            The returned REST client should be started before it can be used,
+            either by calling `RESTClientImpl.start` or by using it as an
+            asynchronous context manager.
+
+        Examples
+        --------
+        ```py
+        rest_app = RESTApp()
+
+        # Using the returned client as a context manager to implicitly start
+        # and stop it.
+        async with rest_app.acquire("A token", "Bot") as client:
+            ...
+        ```
+
+        Parameters
+        ----------
+        token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+            The bot or bearer token. If no token is to be used,
+            this can be undefined.
+        token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
+            The type of token in use. This must be passed when a `builtins.str` is
+            passed for `token` but and can be `"Bot"` or `"Bearer"`.
+
+            This should be left as `builtins.None` when either
+            `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+            `token`.
+
+        Returns
+        -------
+        RESTClientImpl
+            An instance of the REST client.
+
+        Raises
+        ------
+        ValueError
+            * If `token_type` is provided when a token strategy is passed for `token`.
+            * if `token_type` is left as `builtins.None` when a string is passed for `token`.
+        """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
@@ -382,11 +428,21 @@ class RESTClientImpl(rest_api.RESTClient):
         The bot or bearer token. If no token is to be used,
         this can be undefined.
     token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`.
+        The type of token in use. This must be passed when a `builtins.str` is
+         passed for `token` but and can be `"Bot"` or `"Bearer"`.
+
+         This should be left as `builtins.None` when either
+         `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+         `token`.
     rest_url : builtins.str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
+
+    Raises
+    ------
+    ValueError
+        * If `token_type` is provided when a token strategy is passed for `token`
+        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -402,6 +458,7 @@ class RESTClientImpl(rest_api.RESTClient):
         "_proxy_settings",
         "_rest_url",
         "_token",
+        "_token_type",
     )
 
     buckets: buckets_.RESTBucketManager
@@ -440,15 +497,21 @@ class RESTClientImpl(rest_api.RESTClient):
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
 
-        self._token: typing.Union[str, rest_api.TokenStrategy, None]
+        self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
+        self._token_type: typing.Optional[str] = None
         if isinstance(token, str):
-            self._token = f"{token_type.title()} {token}" if token_type else token
+            if token_type is None:
+                raise ValueError("Token type required when a str is passed for `token`")
 
-        elif isinstance(token, rest_api.TokenStrategy) and token_type:
-            raise ValueError("Token type should be handled by the token strategy")
+            self._token = f"{token_type.title()} {token}"
+            self._token_type = applications.TokenType(token_type.title())
 
-        else:
+        elif isinstance(token, rest_api.TokenStrategy):
+            if token_type is not None:
+                raise ValueError("Token type should be handled by the token strategy")
+
             self._token = token
+            self._token_type = token.token_type
 
         self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
@@ -461,8 +524,8 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._proxy_settings
 
     @property
-    def token(self) -> typing.Union[str, rest_api.TokenStrategy, None]:
-        return self._token
+    def token_type(self) -> typing.Union[str, applications.TokenType, None]:
+        return self._token_type
 
     @typing.final
     async def close(self) -> None:

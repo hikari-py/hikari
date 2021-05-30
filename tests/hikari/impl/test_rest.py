@@ -123,6 +123,11 @@ class TestClientCredentialsStrategy:
 
         assert token.scopes == (123, 5643)
 
+    def test_token_type_property(self):
+        token = rest.ClientCredentialsStrategy(client=123, client_secret="123123123", scopes=[])
+
+        assert token.token_type is applications.TokenType.BEARER
+
     async def test_acquire_on_new_instance(self, mock_token):
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
 
@@ -410,6 +415,22 @@ class TestRESTClientImpl:
                 entity_factory=None,
             )
 
+    def test__init__when_token_strategy_passed(self):
+        mock_strategy = mock.Mock(rest_api.TokenStrategy)
+        obj = rest.RESTClientImpl(
+            http_settings=mock.Mock(),
+            max_rate_limit=float("inf"),
+            proxy_settings=mock.Mock(),
+            token=mock_strategy,
+            token_type=None,
+            rest_url=None,
+            executor=None,
+            entity_factory=None,
+        )
+
+        assert obj._token is mock_strategy
+        assert obj._token_type is mock_strategy.token_type
+
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             cache=None,
@@ -423,6 +444,7 @@ class TestRESTClientImpl:
             entity_factory=None,
         )
         assert obj._token is None
+        assert obj._token_type is None
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
@@ -437,6 +459,20 @@ class TestRESTClientImpl:
             entity_factory=None,
         )
         assert obj._token == "Type some_token"
+        assert obj._token_type == "Type"
+
+    def test__init__when_token_provided_as_string_without_type(self):
+        with pytest.raises(ValueError, match="Token type required when a str is passed for `token`"):
+            rest.RESTClientImpl(
+                http_settings=mock.Mock(),
+                max_rate_limit=float("inf"),
+                proxy_settings=mock.Mock(),
+                token="some_token",
+                token_type=None,
+                rest_url=None,
+                executor=None,
+                entity_factory=None,
+            )
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
@@ -482,15 +518,15 @@ class TestRESTClientImpl:
         rest_client._http_settings = mock_http_settings
         assert rest_client.http_settings is mock_http_settings
 
-    def test_proxy_settings(self, rest_client):
+    def test_proxy_settings_property(self, rest_client):
         mock_proxy_settings = object()
         rest_client._proxy_settings = mock_proxy_settings
         assert rest_client.proxy_settings is mock_proxy_settings
 
-    def test_token_property(self, rest_client):
-        mock_token = object()
-        rest_client._token = mock_token
-        assert rest_client.token is mock_token
+    def test_token_type_property(self, rest_client):
+        mock_type = object()
+        rest_client._token_type = mock_type
+        assert rest_client.token_type is mock_type
 
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = object()

@@ -61,9 +61,20 @@ class TokenStrategy(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @property
+    @abc.abstractmethod
+    def token_type(self) -> typing.Union[applications.TokenType, str]:
+        """Type of token this token strategy returns.
+
+        Returns
+        -------
+        typing.Union[hikari.applications.TokenType, builtins.str]
+            The type of token this strategy returns.
+        """
+
     @abc.abstractmethod
     async def acquire(self, client: RESTClient) -> str:
-        """Acquire an authorization token (with the prefix).
+        """Acquire an authorization token (including the prefix).
 
         Returns
         -------
@@ -100,16 +111,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def token(self) -> typing.Union[str, TokenStrategy, None]:
-        """Token this client is using for most requests.
+    def token_type(self) -> typing.Union[str, applications.TokenType, None]:
+        """Type of token this client is using for most requests.
 
         Returns
         -------
-        typing.Union[builtins.str, TokenStrategy, builtins.None]
-            The token this client is using for most requests.
+        typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
+            The type of token this client is using for most requests.
 
-            If this is `builtins.None` then this client will only work for some
-            endpoints such as public and webhook ones.
+            If this is `builtins.None` then this client will likely only work
+            for some endpoints such as public and webhook ones.
         """
 
     @abc.abstractmethod
