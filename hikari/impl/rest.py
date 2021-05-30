@@ -460,6 +460,10 @@ class RESTClientImpl(rest_api.RESTClient):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
+    @property
+    def token(self) -> typing.Union[str, rest_api.TokenStrategy, None]:
+        return self._token
+
     @typing.final
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""

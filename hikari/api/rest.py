@@ -98,6 +98,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @property
+    @abc.abstractmethod
+    def token(self) -> typing.Union[str, TokenStrategy, None]:
+        """Token this client is using for most requests.
+
+        Returns
+        -------
+        typing.Union[builtins.str, TokenStrategy, builtins.None]
+            The token this client is using for most requests.
+
+            If this is `builtins.None` then this client will only work for some
+            endpoints such as public and webhook ones.
+        """
+
     @abc.abstractmethod
     async def close(self) -> None:
         """Close the client session."""

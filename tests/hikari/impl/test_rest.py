@@ -487,6 +487,11 @@ class TestRESTClientImpl:
         rest_client._proxy_settings = mock_proxy_settings
         assert rest_client.proxy_settings is mock_proxy_settings
 
+    def test_token_property(self, rest_client):
+        mock_token = object()
+        rest_client._token = mock_token
+        assert rest_client.token is mock_token
+
     def test__acquire_client_session_when_None(self, rest_client):
         client_session_mock = object()
         rest_client._acquire_tcp_connector = mock.Mock()
