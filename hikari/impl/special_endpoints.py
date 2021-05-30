@@ -136,7 +136,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 except asyncio.TimeoutError:
                     pass
 
-        except (asyncio.CancelledError, errors.HTTPClientClosedError):
+        except (asyncio.CancelledError, errors.ComponentStateConflictError):
             pass
 
 

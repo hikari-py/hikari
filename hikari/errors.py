@@ -28,7 +28,7 @@ __all__: typing.List[str] = [
     "HikariError",
     "HikariWarning",
     "HikariInterrupt",
-    "ComponentNotRunningError",
+    "ComponentStateConflictError",
     "UnrecognisedEntityError",
     "NotFoundError",
     "RateLimitedError",
@@ -39,7 +39,6 @@ __all__: typing.List[str] = [
     "RESTErrorCode",
     "HTTPError",
     "HTTPResponseError",
-    "HTTPClientClosedError",
     "ClientHTTPResponseError",
     "InternalServerError",
     "ShardCloseCode",
@@ -104,8 +103,12 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
 
 
 @attr.define(auto_exc=True, repr=False, weakref_slot=False)
-class ComponentNotRunningError(HikariError):
-    """An exception thrown if trying to interact with a component that is not running."""
+class ComponentStateConflictError(HikariError):
+    """Exception thrown when an action cannot be executed in the component's current state.
+
+    Dependent on context this will be thrown for components which are already
+    running or haven't been started yet.
+    """
 
     reason: str = attr.field()
     """A string to explain the issue."""
@@ -219,18 +222,6 @@ class HTTPError(HikariError):
     """Base exception raised if an HTTP error occurs while making a request."""
 
     message: str = attr.field()
-    """The error message."""
-
-
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
-class HTTPClientClosedError(HTTPError):
-    """Exception raised if an `aiohttp.ClientSession` was closed.
-
-    This fires when using a closed `aiohttp.ClientSession` to make a
-    request.
-    """
-
-    message: str = attr.field(default="The client session has been closed, no HTTP requests can occur.", init=False)
     """The error message."""
 
 

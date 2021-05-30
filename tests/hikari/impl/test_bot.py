@@ -268,7 +268,7 @@ class TestBotApp:
     def test_check_if_alive_when_False(self, bot):
         bot._is_alive = False
 
-        with pytest.raises(errors.ComponentNotRunningError):
+        with pytest.raises(errors.ComponentStateConflictError):
             bot._check_if_alive()
 
     def test_check_if_alive(self, bot):

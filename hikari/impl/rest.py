@@ -504,7 +504,7 @@ class RESTClientImpl(rest_api.RESTClient):
             _LOGGER.log(ux.TRACE, "acquired new tcp connector")
 
         elif self._tcp_connector.closed:
-            raise errors.HTTPClientClosedError
+            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
 
         return self._tcp_connector
 
@@ -524,7 +524,7 @@ class RESTClientImpl(rest_api.RESTClient):
             _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
 
         elif self._client_session.closed:
-            raise errors.HTTPClientClosedError
+            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
 
         return self._client_session
 
