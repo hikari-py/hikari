@@ -542,7 +542,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     def _check_if_alive(self) -> None:
         if not self.is_alive:
-            raise errors.ComponentNotRunningError(
+            raise errors.ComponentStateConflictError(
                 f"shard {self._shard_id} is not running so it cannot be interacted with"
             )
 
@@ -589,7 +589,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def start(self) -> None:
         if self._run_task is not None:
-            raise RuntimeError("Cannot run more than one instance of one shard concurrently")
+            raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
 
         run_task = asyncio.create_task(self._run(), name=f"run shard {self._shard_id}")
         self._run_task = run_task

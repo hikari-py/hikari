@@ -644,7 +644,7 @@ class TestGatewayShardImpl:
 
     def test_shard__check_if_alive_when_not_alive(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "is_alive", new=False):
-            with pytest.raises(errors.ComponentNotRunningError):
+            with pytest.raises(errors.ComponentStateConflictError):
                 client._check_if_alive()
 
     def test_shard__check_if_alive_when_alive(self, client):
