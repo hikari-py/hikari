@@ -54,23 +54,36 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections", "_is_alive")
 
     _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
 
     def __init__(self, app: traits.GatewayBotAware) -> None:
         self._app = app
+        app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)
-        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._is_alive = True
+
+    @property
+    def is_alive(self) -> bool:
+        return self._is_alive
+
+    def _check_if_alive(self) -> None:
+        if not self._is_alive:
+            raise errors.ComponentStateConflictError("component cannot be used while it's not alive")
 
     async def disconnect(self) -> None:
+        self._check_if_alive()
         if self._connections:
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
     async def close(self) -> None:
+        self._check_if_alive()
+        self._is_alive = False
         await self.disconnect()
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
@@ -84,6 +97,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         mute: bool = False,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
+        self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
 
