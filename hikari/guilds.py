@@ -40,6 +40,7 @@ __all__: typing.List[str] = [
     "GuildPremiumTier",
     "GuildPreview",
     "GuildMemberBan",
+    "GuildNSFWLevel",
     "Member",
     "Integration",
     "IntegrationAccount",
@@ -244,6 +245,23 @@ class GuildVerificationLevel(int, enums.Enum):
 
     VERY_HIGH = 4
     """Must have a verified phone number."""
+
+
+@typing.final
+class GuildNSFWLevel(int, enums.Enum):
+    """Represents the NSFW level of a guild."""
+
+    DEFAULT = 0
+    """Guild has not been categorized yet."""
+
+    EXPLICIT = 1
+    """Guild contains explicit NSFW content."""
+
+    SAFE = 2
+    """Guild is safe of NSFW content."""
+
+    AGE_RESTRICTED = 3
+    """Guild may contain NSFW content."""
 
 
 @attr_extensions.with_copy
@@ -1189,8 +1207,8 @@ class Guild(PartialGuild, abc.ABC):
     this will be `builtins.None`.
     """
 
-    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
-    """Whether the guild is designated as NSFW."""
+    nsfw_level: GuildNSFWLevel = attr.field(eq=False, hash=False, repr=False)
+    """The NSFW level of the guild."""
 
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
