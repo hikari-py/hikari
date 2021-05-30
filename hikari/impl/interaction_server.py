@@ -181,6 +181,13 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @property
     def is_alive(self) -> bool:
+        """Whether this interaction server is active.
+
+        Returns
+        -------
+        builtins.bool
+            Whether this interaction server is active
+        """
         return self._runner is not None
 
     def _get_event(self) -> asyncio.Event:
@@ -271,6 +278,7 @@ class InteractionServer(interaction_server.InteractionServer):
         return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=response.payload)
 
     async def close(self) -> None:
+        """Gracefully close the server and any open connections."""
         if not self._runner:
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
@@ -281,12 +289,35 @@ class InteractionServer(interaction_server.InteractionServer):
         self._get_event().set()
 
     async def join(self) -> None:
+        """Wait for the process to halt before continuing."""
         if not self._runner:
             raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
 
         await self._get_event().wait()
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
+        """Handle an interaction received from Discord as a REST server.
+
+        !!! note
+            If this server instance is alive then this will be called internally
+            by the server but if the instance isn't alive then this may still be
+            called externally to trigger interaction dispatch.
+
+        Parameters
+        ----------
+        body : builtins.bytes
+            The interaction payload.
+        signature : builtins.bytes
+            Value of the `"X-Signature-Ed25519"` header used to verify the body.
+        timestamp : builtins.bytes
+            Value of the `"X-Signature-Timestamp"` header used to verify the body.
+
+        Returns
+        -------
+        Response
+            Instructions on how the REST server calling this should respond to
+            the interaction request.
+        """
         verify = self._verify or await self._fetch_public_key()
 
         if not verify(body, signature, timestamp):

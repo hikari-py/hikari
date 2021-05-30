@@ -107,33 +107,9 @@ class InteractionServer(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    @property
-    @abc.abstractmethod
-    def is_alive(self) -> bool:
-        """Whether this interaction server is active.
-
-        Returns
-        -------
-        builtins.bool
-            Whether this interaction server is active
-        """
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Gracefully close the server and any open connections."""
-
-    @abc.abstractmethod
-    async def join(self) -> None:
-        """Wait for the process to halt before continuing."""
-
     @abc.abstractmethod
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> Response:
         """Handle an interaction received from Discord as a REST server.
-
-        !!! note
-            If this server instance is alive then this will be called internally
-            by the server but if the instance isn't alive then this may still be
-            called externally to trigger interaction dispatch.
 
         Parameters
         ----------

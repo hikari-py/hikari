@@ -590,6 +590,7 @@ class GatewayShardImpl(shard.GatewayShard):
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
     async def start(self) -> None:
+        """Start the shard, wait for it to become ready."""
         if self._run_task is not None:
             raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
 
