@@ -39,7 +39,6 @@ __all__: typing.List[str] = [
     "RESTErrorCode",
     "HTTPError",
     "HTTPResponseError",
-    "HTTPClientClosedError",
     "ClientHTTPResponseError",
     "InternalServerError",
     "ShardCloseCode",
@@ -223,18 +222,6 @@ class HTTPError(HikariError):
     """Base exception raised if an HTTP error occurs while making a request."""
 
     message: str = attr.field()
-    """The error message."""
-
-
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
-class HTTPClientClosedError(HTTPError):
-    """Exception raised if an `aiohttp.ClientSession` was closed.
-
-    This fires when using a closed `aiohttp.ClientSession` to make a
-    request.
-    """
-
-    message: str = attr.field(default="The client session has been closed, no HTTP requests can occur.", init=False)
     """The error message."""
 
 

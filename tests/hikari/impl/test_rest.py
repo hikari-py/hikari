@@ -507,7 +507,7 @@ class TestRESTClientImpl:
         client_session_mock = mock.Mock(closed=True)
         rest_client._client_session = client_session_mock
 
-        with pytest.raises(errors.HTTPClientClosedError):
+        with pytest.raises(errors.ComponentStateConflictError):
             assert rest_client._acquire_client_session() is client_session_mock
 
     def test__acquire_tcp_connector_when_None(self, rest_client):
@@ -539,7 +539,7 @@ class TestRESTClientImpl:
         tcp_connector_mock = mock.Mock(closed=True)
         rest_client._tcp_connector = tcp_connector_mock
 
-        with pytest.raises(errors.HTTPClientClosedError):
+        with pytest.raises(errors.ComponentStateConflictError):
             assert rest_client._acquire_tcp_connector() is tcp_connector_mock
 
     @pytest.mark.parametrize(
