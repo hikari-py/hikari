@@ -24,7 +24,7 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, undefined
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
@@ -194,10 +194,10 @@ class TestTextChannel:
             type=channels.ChannelType.GUILD_TEXT,
         )
 
-    async def test_history(self, model):
+    async def test_fetch_history(self, model):
         model.app.rest.fetch_messages = mock.AsyncMock()
 
-        await model.history(
+        await model.fetch_history(
             before=datetime.datetime(2020, 4, 1, 1, 0, 0),
             after=datetime.datetime(2020, 4, 1, 0, 0, 0),
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
@@ -209,6 +209,48 @@ class TestTextChannel:
             after=datetime.datetime(2020, 4, 1, 0, 0, 0),
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
         )
+
+    async def test_fetch_message(self, model):
+        model.app.rest.fetch_message = mock.AsyncMock()
+
+        assert await model.fetch_message(133742069) == model.app.rest.fetch_message.return_value
+
+        model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
+
+    async def test_fetch_pins(self, model):
+        model.app.rest.fetch_pins = mock.AsyncMock()
+
+        await model.fetch_pins()
+
+        model.app.rest.fetch_pins.assert_awaited_once_with(12345679)
+
+    async def test_pin_message(self, model):
+        model.app.rest.pin_message = mock.AsyncMock()
+
+        assert await model.pin_message(77790) == model.app.rest.pin_message.return_value
+
+        model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
+
+    async def test_unpin_message(self, model):
+        model.app.rest.unpin_message = mock.AsyncMock()
+
+        assert await model.unpin_message(77790) == model.app.rest.unpin_message.return_value
+
+        model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
+
+    async def test_delete_messages(self, model):
+        model.app.rest.delete_messages = mock.AsyncMock()
+
+        await model.delete_messages([77790, 88890, 1800], 1337)
+
+        model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], other_messages=(1337,))
+
+    async def test_delete_message(self, model):
+        model.app.rest.delete_message = mock.AsyncMock()
+
+        await model.delete_message(1337)
+
+        model.app.rest.delete_messages.assert_awaited_once_with(12345679, 1337)
 
     async def test_send(self, model):
         model.app.rest.create_message = mock.AsyncMock()
@@ -280,3 +322,30 @@ class TestGuildChannel:
 
     def test_mention_property(self, model):
         assert model.mention == "<#69420>"
+    @pytest.mark.asyncio()
+    async def test_edit_overwrite(self, model):
+        model.app.rest.edit_permission_overwrites = mock.AsyncMock()
+
+        await model.edit_overwrite(
+            333, allow=permissions.Permissions.BAN_MEMBERS, deny=permissions.Permissions.CONNECT, reason="vrooom vroom"
+        )
+
+        model.app.rest.edit_permission_overwrites.assert_called_once_with(
+            69420,
+            333,
+            target_type=undefined.UNDEFINED,
+            allow=permissions.Permissions.BAN_MEMBERS,
+            deny=permissions.Permissions.CONNECT,
+            reason="vrooom vroom",
+        )
+
+    @pytest.mark.asyncio()
+    async def test_remove_overwrite(self, model):
+        model.app.rest.delete_permission_overwrite = mock.AsyncMock()
+
+        await model.remove_overwrite(333)
+
+        model.app.rest.delete_permission_overwrite.assert_called_once_with(
+            69420,
+            333,
+        )
