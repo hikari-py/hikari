@@ -447,13 +447,13 @@ class CacheComponents(enums.Flag):
 class CacheSettings:
     """Settings to control the cache."""
 
-    components: CacheComponents = attr.field(default=CacheComponents.ALL)
+    components: CacheComponents = attr.field(converter=CacheComponents, default=CacheComponents.ALL)
     """The cache components to use.
 
     Defaults to `CacheComponents.ALL`.
     """
 
-    max_messages: int = attr.field(default=300)
+    max_messages: int = attr.field(converter=int, default=300)
     """The maximum number of messages to store in the cache at once.
 
     This will have no effect if the messages cache is not enabled.
