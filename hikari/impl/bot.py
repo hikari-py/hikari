@@ -81,9 +81,6 @@ class GatewayBot(traits.GatewayBotAware):
     This is the class you will want to use to start, control, and build a bot
     with.
 
-    !!! warning
-        Bots built from this class are one-use and can only be started/run once.
-
     Parameters
     ----------
     token : builtins.str

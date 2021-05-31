@@ -90,7 +90,12 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     def start(self) -> None:
-        """Start this voice component."""
+        """Start this voice component after it's been closed.
+
+        !!! note
+            For this implementation `VoiceComponentImplstart` is implicitly
+            called while initialising the class.
+        """
         self._is_alive = True
         self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
