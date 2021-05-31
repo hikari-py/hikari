@@ -770,7 +770,8 @@ class CacheImpl(cache.MutableCache):
         return copy.copy(self._me)
 
     def set_me(self, user: users.OwnUser, /) -> None:
-        self._me = copy.copy(user)
+        if self._is_cache_enabled_for(config.CacheComponents.ME):
+            self._me = copy.copy(user)
 
     def update_me(
         self, user: users.OwnUser, /

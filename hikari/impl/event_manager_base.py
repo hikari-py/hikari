@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerBase", "EventStream"]
+__all__: typing.List[str] = ["as_listener", "EventManagerBase", "EventStream"]
 
 import asyncio
 import inspect
@@ -32,6 +32,8 @@ import logging
 import typing
 import warnings
 import weakref
+
+import attr
 
 from hikari import errors
 from hikari import iterators
@@ -43,6 +45,7 @@ from hikari.internal import reflect
 if typing.TYPE_CHECKING:
     import types
 
+    from hikari import config
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -63,6 +66,15 @@ if typing.TYPE_CHECKING:
     ]
     WaiterMapT = typing.Dict[typing.Type[event_manager_.EventT_co], typing.Set[WaiterT[event_manager_.EventT_co]]]
 
+    EventManagerBaseT = typing.TypeVar("EventManagerBaseT", bound="EventManagerBase")
+    UnboundMethodT = typing.Callable[
+        [EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
+        typing.Coroutine[typing.Any, typing.Any, None],
+    ]
+    MethodT = typing.Callable[
+        [gateway_shard.GatewayShard, data_binding.JSONObject],
+        typing.Coroutine[typing.Any, typing.Any, None],
+    ]
 
 def _generate_weak_listener(
     reference: weakref.WeakMethod,
@@ -243,6 +255,29 @@ def _get_mro(cls: typing.Type[base_events.Event]) -> typing.List[typing.Type[bas
     return mro[: mro.index(base_events.Event) + 1]
 
 
+def as_listener(
+    event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
+    cache_resource: typing.Optional[config.CacheComponents] = None,
+    /,
+) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
+    """Add metadata to a listener method to indicate when it should be unmarshalled and dispatched."""
+    event_types = event_types if isinstance(event_types, typing.Sequence) else (event_types,)
+
+    def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
+        method.__CACHE_RESOURCE__ = cache_resource  # type: ignore[attr-defined]
+        method.__EVENT_TYPES__ = event_types  # type: ignore[attr-defined]
+        return method
+
+    return decorator
+
+
+@attr.define()
+class _Consumer:
+    callback: ConsumerT
+    cache_resource: typing.Optional[config.CacheComponents]
+    event_types: typing.Optional[typing.Sequence[typing.Type[base_events.Event]]]
+
+
 class EventManagerBase(event_manager_.EventManager):
     """Provides functionality to consume and dispatch events.
 
@@ -253,7 +288,7 @@ class EventManagerBase(event_manager_.EventManager):
     __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_listeners_non_poly", "_consumers", "_waiters")
 
     def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
-        self._consumers: typing.Dict[str, ConsumerT] = {}
+        self._consumers: typing.Dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
@@ -261,16 +296,39 @@ class EventManagerBase(event_manager_.EventManager):
         self._waiters: WaiterMapT[base_events.Event] = {}
 
         for name, member in inspect.getmembers(self):
-            if name.startswith("on_"):
-                self._consumers[name[3:]] = member
+            if not name.startswith("on_"):
+                continue
+
+            member = typing.cast("MethodT", member)
+            cache_resource = getattr(member, "__CACHE_RESOURCE__", None)
+            event_types = getattr(member, "__EVENT_TYPES__", None)
+
+            cache_resource = typing.cast("typing.Optional[config.CacheComponents]", cache_resource)
+            event_types = typing.cast("typing.Optional[typing.Sequence[typing.Type[base_events.Event]]]", event_types)
+            self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
+
+    def _enabled_for(self, event_type: typing.Type[base_events.Event], /) -> bool:
+        return event_type in self._listeners or event_type in self._waiters
 
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
         self.dispatch(payload_event)
-        callback = self._consumers[event_name.casefold()]
-        asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
+        consumer = self._consumers[event_name.casefold()]
+
+        if consumer.cache_resource is not None and self._app.cache.settings.components & consumer.cache_resource:
+            return
+
+        if consumer.event_types is not None:
+            for event_type in consumer.event_types:
+                if self._enabled_for(event_type):
+                    break
+
+            else:
+                return
+
+        asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
