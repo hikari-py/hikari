@@ -308,6 +308,17 @@ class EventManagerBase(event_manager_.EventManager):
             )
             self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
 
+        base_events.Event.on_new_subclass(self._on_new_event_cls)
+
+    def _on_new_event_cls(self, event_type: typing.Type[base_events.Event], /) -> None:
+        parent_cls = event_type.mro()[1]
+        if issubclass(parent_cls, base_events.Event):
+            if listeners := self._listeners.get(parent_cls):
+                self._listeners[event_type] = listeners.copy()
+
+            if waiters := self._waiters.get(parent_cls):
+                self._waiters[event_type] = waiters.copy()
+
     def _enabled_for(self, event_type: typing.Type[base_events.Event], /) -> bool:
         return event_type in self._listeners or event_type in self._waiters
 

@@ -58,6 +58,7 @@ class Event(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     __subclasses: typing.ClassVar[typing.Set[typing.Type[Event]]]
+    __on_new_subclass: typing.Final[typing.ClassVar[typing.Set[typing.Callable[[typing.Type[Event]], None]]]] = set()
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -73,6 +74,9 @@ class Event(abc.ABC):
                     # This should only ever apply to the base Event class
                     parent_cls.__subclasses = {parent_cls, cls}
 
+        for callback in cls.__on_new_subclass:
+            callback(cls)
+
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
@@ -85,8 +89,19 @@ class Event(abc.ABC):
         """
 
     @classmethod
-    def subclasses(cls) -> typing.Set[typing.Type[Event]]:
-        return cls.__subclass
+    def subclasses(cls) -> typing.AbstractSet[typing.Type[Event]]:
+        """Set of the event class' subclasses."""
+        return cls.__subclasses
+
+    @classmethod
+    def on_new_subclass(cls, listener: typing.Callable[[typing.Type[Event]], None], /) -> None:
+        """Add a callback to be called whenever a new `Event` subclass is made."""
+        cls.__on_new_subclass.add(listener)
+
+    @classmethod
+    def remove_on_new_subclass(cls, listener: typing.Callable[[typing.Type[Event]], None], /) -> None:
+        """Remove a new subclass callback."""
+        cls.__on_new_subclass.remove(listener)
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
