@@ -93,10 +93,10 @@ class GatewayGuildDefinition:
         This may be a partial mapping of presences active in the guild.
     """
 
-    roles: typing.Mapping[snowflakes.Snowflake, guild_models.Role] = attr.field()
+    roles: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Role]] = attr.field()
     """Mapping of role IDs to the roles that belong to the guild."""
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji] = attr.field()
+    emojis: typing.Optional[typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]] = attr.field()
     """Mapping of emoji IDs to the emojis that belong to the guild."""
 
     voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
@@ -931,7 +931,17 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        include_channels: bool = False,
+        include_emojis: bool = True,
+        include_members: bool = False,
+        include_presences: bool = False,
+        include_roles: bool = True,
+        include_voice_states: bool = False,
+    ) -> GatewayGuildDefinition:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters

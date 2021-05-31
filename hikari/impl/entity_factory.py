@@ -1446,7 +1446,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emojis=emojis,
         )
 
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        include_channels: bool = False,
+        include_emojis: bool = True,
+        include_members: bool = False,
+        include_presences: bool = False,
+        include_roles: bool = True,
+        include_voice_states: bool = False,
+    ) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
         is_large = payload.get("large")
         joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
@@ -1488,7 +1498,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
         members: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Member]] = None
-        if "members" in payload:
+        if include_members:
             members = {}
 
             for member_payload in payload["members"]:
@@ -1496,7 +1506,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 members[member.user.id] = member
 
         channels: typing.Optional[typing.Dict[snowflakes.Snowflake, channel_models.GuildChannel]] = None
-        if "channels" in payload:
+        if include_channels:
             channels = {}
 
             for channel_payload in payload["channels"]:
@@ -1510,7 +1520,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 channels[channel.id] = channel
 
         presences: typing.Optional[typing.Dict[snowflakes.Snowflake, presence_models.MemberPresence]] = None
-        if "presences" in payload:
+        if include_presences:
             presences = {}
 
             for presence_payload in payload["presences"]:
@@ -1518,7 +1528,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 presences[presence.user_id] = presence
 
         voice_states: typing.Optional[typing.Dict[snowflakes.Snowflake, voice_models.VoiceState]] = None
-        if "voice_states" in payload:
+        if include_voice_states:
             voice_states = {}
             assert members is not None
 
@@ -1527,14 +1537,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
                 voice_states[voice_state.user_id] = voice_state
 
-        roles = {
-            snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id)
-            for role in payload["roles"]
-        }
-        emojis = {
-            snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
-            for emoji in payload["emojis"]
-        }
+        roles: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Role]] = None
+        if include_roles:
+            roles = {
+                snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id)
+                for role in payload["roles"]
+            }
+
+        emojis: typing.Optional[typing.Dict[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]] = None
+        if include_emojis:
+            emojis = {
+                snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
+                for emoji in payload["emojis"]
+            }
 
         return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis, voice_states)
 

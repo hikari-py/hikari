@@ -162,57 +162,99 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     )
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent]
+        cache_settings = self._cache.settings.components if self._cache else None
+        event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None] = None
 
-        if "unavailable" in payload:
-            event = self._event_factory.deserialize_guild_available_event(shard, payload)
+        if not self._enabled_for(guild_events.GuildAvailableEvent):
+            guild_definition = self._app.entity_factory.deserialize_gateway_guild(
+                payload,
+                include_channels=bool(cache_settings and cache_settings & config.CacheComponents.GUILD_CHANNELS),
+                include_emojis=bool(cache_settings and cache_settings & config.CacheComponents.EMOJIS),
+                include_members=bool(cache_settings and cache_settings & config.CacheComponents.MEMBERS),
+                include_presences=bool(cache_settings and cache_settings & config.CacheComponents.PRESENCES),
+                include_roles=bool(cache_settings and cache_settings & config.CacheComponents.ROLES),
+                include_voice_states=bool(cache_settings and cache_settings & config.CacheComponents.VOICE_STATES),
+            )
+            guild = guild_definition.guild
+            channels = guild_definition.channels
+            emojis = guild.emojis
+            members = guild.members
+            presences = guild.presences
+            roles = guild.roles
+            voice_states = guild.voice_states
+
         else:
-            event = self._event_factory.deserialize_guild_join_event(shard, payload)
+            if "unavailable" in payload:
+                event = self._event_factory.deserialize_guild_available_event(shard, payload)
+            else:
+                event = self._event_factory.deserialize_guild_join_event(shard, payload)
+
+            guild = event.guild
+            channels = event.channels
+            emojis = event.emojis
+            members = event.members
+            presences = event.presences
+            roles = event.roles
+            voice_states = event.voice_states
 
         if self._cache:
-            self._cache.update_guild(event.guild)
+            self._cache.update_guild(guild)
 
-            self._cache.clear_guild_channels_for_guild(event.guild.id)
-            for channel in event.channels.values():
-                self._cache.set_guild_channel(channel)
+            if channels:
+                self._cache.clear_guild_channels_for_guild(guild.id)
+                for channel in channels.values():
+                    self._cache.set_guild_channel(channel)
 
-            self._cache.clear_emojis_for_guild(event.guild.id)
-            for emoji in event.emojis.values():
-                self._cache.set_emoji(emoji)
+            if emojis:
+                self._cache.clear_emojis_for_guild(guild.id)
+                for emoji in emojis.values():
+                    self._cache.set_emoji(emoji)
 
-            self._cache.clear_roles_for_guild(event.guild.id)
-            for role in event.roles.values():
-                self._cache.set_role(role)
+            if roles:
+                self._cache.clear_roles_for_guild(guild.id)
+                for role in roles.values():
+                    self._cache.set_role(role)
 
-            # TODO: do we really want to invalidate these all after an outage.
-            self._cache.clear_members_for_guild(event.guild.id)
-            for member in event.members.values():
-                self._cache.set_member(member)
+            if members:
+                # TODO: do we really want to invalidate these all after an outage.
+                self._cache.clear_members_for_guild(guild.id)
+                for member in members.values():
+                    self._cache.set_member(member)
 
-            self._cache.clear_presences_for_guild(event.guild.id)
-            for presence in event.presences.values():
-                self._cache.set_presence(presence)
+            if presences:
+                self._cache.clear_presences_for_guild(guild.id)
+                for presence in presences.values():
+                    self._cache.set_presence(presence)
 
-            self._cache.clear_voice_states_for_guild(event.guild.id)
-            for voice_state in event.voice_states.values():
-                self._cache.set_voice_state(voice_state)
+            if voice_states:
+                self._cache.clear_voice_states_for_guild(guild.id)
+                for voice_state in voice_states.values():
+                    self._cache.set_voice_state(voice_state)
 
-            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
-            presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
+        recv_chunks = self._enabled_for(shard_events.MemberChunkEvent) or (
+            cache_settings & config.CacheComponents.MEMBERS if cache_settings else False
+        )
+        members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
+        presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
-            # When intents are enabled discord will only send other member objects on the guild create
-            # payload if presence intents are also declared, so if this isn't the case then we also want
-            # to chunk small guilds.
-            if members_declared and (event.guild.is_large or not presences_declared):
-                # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
-                nonce = f"{shard.id}.{_fixed_size_nonce()}"
+        # When intents are enabled discord will only send other member objects on the guild create
+        # payload if presence intents are also declared, so if this isn't the case then we also want
+        # to chunk small guilds.
+        if recv_chunks and members_declared and (guild.is_large or not presences_declared):
+            # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
+            nonce = f"{shard.id}.{_fixed_size_nonce()}"
+
+            if event:
                 event.chunk_nonce = nonce
-                coroutine = _request_guild_members(
-                    shard, event.guild, include_presences=bool(presences_declared), nonce=nonce
-                )
-                asyncio.create_task(coroutine, name=f"{shard.id}:{event.guild.id} guild create members request")
 
-        await self.dispatch(event)
+            coroutine = _request_guild_members(shard, guild, include_presences=bool(presences_declared), nonce=nonce)
+            asyncio.create_task(coroutine, name=f"{shard.id}:{event.guild.id} guild create members request")
+
+            coroutine = shard.request_guild_members(guild, include_presences=bool(presences_declared), nonce=nonce)
+            asyncio.create_task(coroutine, name=f"{shard.id}:{guild.id} guild create members request")
+
+        if event:
+            await self.dispatch(event)
 
     @event_manager_base.as_listener(
         guild_events.GuildUpdateEvent,
@@ -220,21 +262,40 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     )
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        old = self._cache.get_guild(snowflakes.Snowflake(payload["id"])) if self._cache else None
-        event = self._event_factory.deserialize_guild_update_event(shard, payload, old_guild=old)
+        event: typing.Optional[guild_events.GuildUpdateEvent] = None
+        if not self._enabled_for(guild_events.GuildUpdateEvent):
+            cache_settings = self._cache.settings.components if self._cache else None
+            guild_definition = self._app.entity_factory.deserialize_gateway_guild(
+                payload,
+                include_emojis=bool(cache_settings and cache_settings & config.CacheComponents.EMOJIS),
+                include_roles=bool(cache_settings and cache_settings & config.CacheComponents.ROLES),
+            )
+            guild = guild_definition.guild
+            emojis = guild_definition.emojis
+            roles = guild_definition.roles
+
+        else:
+            old = self._cache.get_guild(snowflakes.Snowflake(payload["id"])) if self._cache else None
+            event = self._event_factory.deserialize_guild_update_event(shard, payload, old_guild=old)
+            guild = event.guild
+            emojis = event.emojis
+            roles = event.roles
 
         if self._cache:
-            self._cache.update_guild(event.guild)
+            self._cache.update_guild(guild)
 
-            self._cache.clear_roles_for_guild(event.guild.id)
-            for role in event.roles.values():  # TODO: do we actually get this here?
-                self._cache.set_role(role)
+            if roles:
+                self._cache.clear_roles_for_guild(guild.id)
+                for role in roles.values():
+                    self._cache.set_role(role)
 
-            self._cache.clear_emojis_for_guild(event.guild.id)  # TODO: do we actually get this here?
-            for emoji in event.emojis.values():
-                self._cache.set_emoji(emoji)
+            if emojis:
+                self._cache.clear_emojis_for_guild(guild.id)
+                for emoji in emojis.values():
+                    self._cache.set_emoji(emoji)
 
-        await self.dispatch(event)
+        if event:
+            await self.dispatch(event)
 
     @event_manager_base.as_listener(
         (guild_events.GuildLeaveEvent, guild_events.GuildUnavailableEvent),
