@@ -224,9 +224,6 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
             self._token = f"{response.token_type} {response.access_token}"
             return self._token
 
-    async def close(self) -> None:
-        return None
-
     def invalidate(self, token: typing.Optional[str]) -> None:
         if not token or token == self._token:
             self._expire_at = 0.0
@@ -425,6 +422,55 @@ class RESTApp(traits.ExecutorAware):
         return rest_client
 
 
+@attr.define
+class _LiveAttributes:
+    buckets: buckets_.RESTBucketManager
+    client_session: aiohttp.ClientSession
+    closed_event: asyncio.Event
+    # We've been told in DAPI that this is per token.
+    global_rate_limit: rate_limits.ManualRateLimiter
+    tcp_connector: aiohttp.TCPConnector
+
+    @classmethod
+    def build(
+        cls, max_rate_limit: float, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+    ) -> _LiveAttributes:
+        """Build a live attributes object.
+
+        !!! warning
+            This can only be called when the current thread has an active
+            asyncio loop.
+        """
+        # This asserts that this is called within an active event loop.
+        asyncio.get_running_loop()
+        tcp_connector = net.create_tcp_connector(http_settings)
+        _LOGGER.log(ux.TRACE, "acquired new tcp connector")
+        client_session = net.create_client_session(
+            connector=tcp_connector,
+            # No, this is correct. We manage closing the connector ourselves in this class.
+            # This works around some other lifespan issues.
+            connector_owner=False,
+            http_settings=http_settings,
+            raise_for_status=False,
+            trust_env=proxy_settings.trust_env,
+        )
+        _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
+        return _LiveAttributes(
+            buckets=buckets_.RESTBucketManager(max_rate_limit),
+            client_session=client_session,
+            closed_event=asyncio.Event(),
+            global_rate_limit=rate_limits.ManualRateLimiter(),
+            tcp_connector=tcp_connector,
+        )
+
+    async def close(self) -> None:
+        self.buckets.close()
+        await self.client_session.close()
+        self.closed_event.set()
+        self.global_rate_limit.close()
+        await self.tcp_connector.close()
+
+
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V8-compatible Discord HTTP API.
 
@@ -468,26 +514,17 @@ class RESTClientImpl(rest_api.RESTClient):
     """
 
     __slots__: typing.Sequence[str] = (
-        "buckets",
-        "global_rate_limit",
         "_cache",
-        "_client_session",
-        "_closed_event",
-        "_tcp_connector",
         "_entity_factory",
         "_executor",
         "_http_settings",
+        "_live_attributes",
+        "_max_rate_limit",
         "_proxy_settings",
         "_rest_url",
         "_token",
         "_token_type",
     )
-
-    buckets: buckets_.RESTBucketManager
-    """Bucket ratelimiter manager."""
-
-    global_rate_limit: rate_limits.ManualRateLimiter
-    """Global ratelimiter."""
 
     @attr.define(auto_exc=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
@@ -506,17 +543,12 @@ class RESTClientImpl(rest_api.RESTClient):
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
-        self.buckets = buckets_.RESTBucketManager(max_rate_limit)
-        # We've been told in DAPI that this is per token.
-        self.global_rate_limit = rate_limits.ManualRateLimiter()
-
         self._cache = cache
-        self._client_session: typing.Optional[aiohttp.ClientSession] = None
-        self._tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
-        self._closed_event = asyncio.Event()
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
+        self._live_attributes: typing.Optional[_LiveAttributes] = None
+        self._max_rate_limit = max_rate_limit
         self._proxy_settings = proxy_settings
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
@@ -538,6 +570,20 @@ class RESTClientImpl(rest_api.RESTClient):
         self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
     @property
+    def buckets(self) -> typing.Optional[buckets_.RESTBucketManager]:
+        """Bucket ratelimiter manager."""
+        return self._live_attributes.buckets if self._live_attributes else None
+
+    @property
+    def global_rate_limit(self) -> typing.Optional[rate_limits.ManualRateLimiter]:
+        """Global ratelimiter."""
+        return self._live_attributes.global_rate_limit if self._live_attributes else None
+
+    @property
+    def is_alive(self) -> bool:
+        return self._live_attributes is not None
+
+    @property
     def http_settings(self) -> config.HTTPSettings:
         return self._http_settings
 
@@ -552,16 +598,11 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.final
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""
-        if self._client_session is not None:
-            await self._client_session.close()
-        if self._tcp_connector is not None:
-            await self._tcp_connector.close()
-        if isinstance(self._token, rest_api.TokenStrategy):
-            await self._token.close()
+        if not self._live_attributes:
+            raise errors.ComponentStateConflictError("Cannot close a component which isn't running")
 
-        self.global_rate_limit.close()
-        self.buckets.close()
-        self._closed_event.set()
+        await self._live_attributes.close()
+        self._live_attributes = None
 
         # We have to sleep to allow aiohttp time to close SSL transports...
         # https://github.com/aio-libs/aiohttp/issues/1925
@@ -570,6 +611,14 @@ class RESTClientImpl(rest_api.RESTClient):
         # TODO: Remove when we update to aiohttp 4.0.0
         # https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-715977247
         await asyncio.sleep(0.25)
+
+    def _get_live_attributes(self) -> _LiveAttributes:
+        if not self._live_attributes:
+            self._live_attributes = _LiveAttributes.build(
+                self._max_rate_limit, self._http_settings, self._proxy_settings
+            )
+
+        return self._live_attributes
 
     async def __aenter__(self) -> RESTClientImpl:
         return self
@@ -599,37 +648,6 @@ class RESTClientImpl(rest_api.RESTClient):
             return None
 
     @typing.final
-    def _acquire_tcp_connector(self) -> aiohttp.TCPConnector:
-        if self._tcp_connector is None:
-            self._tcp_connector = net.create_tcp_connector(self._http_settings)
-            _LOGGER.log(ux.TRACE, "acquired new tcp connector")
-
-        elif self._tcp_connector.closed:
-            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
-
-        return self._tcp_connector
-
-    @typing.final
-    def _acquire_client_session(self) -> aiohttp.ClientSession:
-        if self._client_session is None:
-            self._closed_event.clear()
-            self._client_session = net.create_client_session(
-                connector=self._acquire_tcp_connector(),
-                # No, this is correct. We manage closing the connector ourselves in this class.
-                # This works around some other lifespan issues.
-                connector_owner=False,
-                http_settings=self._http_settings,
-                raise_for_status=False,
-                trust_env=self._proxy_settings.trust_env,
-            )
-            _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
-
-        elif self._client_session.closed:
-            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
-
-        return self._client_session
-
-    @typing.final
     async def _request(
         self,
         compiled_route: routes.CompiledRoute,
@@ -643,8 +661,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-        if not self.buckets.is_started:
-            self.buckets.start()
+        live_attributes = self._get_live_attributes()
 
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
@@ -668,11 +685,11 @@ class RESTClientImpl(rest_api.RESTClient):
         while True:
             try:
                 uuid = time.uuid()
-                async with self.buckets.acquire(compiled_route):
+                async with live_attributes.buckets.acquire(compiled_route):
                     # Buckets not using authentication still have a global
                     # rate limit, but it is different from the token one.
                     if not no_auth:
-                        await self.global_rate_limit.acquire()
+                        await live_attributes.global_rate_limit.acquire()
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
@@ -686,8 +703,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         start = time.monotonic()
 
                     # Make the request.
-                    session = self._acquire_client_session()
-                    response = await session.request(
+                    response = await live_attributes.client_session.request(
                         compiled_route.method,
                         url,
                         headers=headers,
@@ -713,7 +729,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         )
 
                     # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                    await self._parse_ratelimits(compiled_route, response)
+                    await self._parse_ratelimits(compiled_route, response, live_attributes)
 
                 # Don't bother processing any further if we got NO CONTENT. There's not anything
                 # to check.
@@ -763,7 +779,9 @@ class RESTClientImpl(rest_api.RESTClient):
         raise await net.generate_error_response(response)
 
     @typing.final
-    async def _parse_ratelimits(self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse) -> None:
+    async def _parse_ratelimits(
+        self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse, live_attributes: _LiveAttributes
+    ) -> None:
         # Handle rate limiting.
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
@@ -772,7 +790,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
-            self.buckets.update_rate_limits(
+            live_attributes.buckets.update_rate_limits(
                 compiled_route=compiled_route,
                 bucket_header=bucket,
                 remaining_header=remaining,
@@ -831,7 +849,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            self.global_rate_limit.throttle(body_retry_after)
+            live_attributes.global_rate_limit.throttle(body_retry_after)
             raise self._RetryRequest
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
@@ -1045,7 +1063,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
     ) -> special_endpoints.TypingIndicator:
         return special_endpoints_impl.TypingIndicator(
-            request_call=self._request, channel=channel, rest_closed_event=self._closed_event
+            request_call=self._request, channel=channel, rest_closed_event=self._get_live_attributes().closed_event
         )
 
     async def fetch_pins(

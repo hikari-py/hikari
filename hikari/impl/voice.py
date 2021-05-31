@@ -61,11 +61,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     def __init__(self, app: traits.GatewayBotAware) -> None:
         self._app = app
-        app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
-
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)
-        self._is_alive = True
+        self._is_alive = False
+        self.start()
 
     @property
     def is_alive(self) -> bool:
@@ -75,17 +74,25 @@ class VoiceComponentImpl(voice.VoiceComponent):
         if not self._is_alive:
             raise errors.ComponentStateConflictError("component cannot be used while it's not alive")
 
-    async def disconnect(self) -> None:
-        self._check_if_alive()
+    async def _disconnect(self) -> None:
         if self._connections:
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+    async def disconnect(self) -> None:
+        self._check_if_alive()
+        await self._disconnect()
+
     async def close(self) -> None:
         self._check_if_alive()
         self._is_alive = False
-        await self.disconnect()
+        await self._disconnect()
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+
+    def start(self) -> None:
+        """Start this voice component."""
+        self._is_alive = True
+        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def connect_to(
         self,

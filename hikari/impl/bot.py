@@ -228,7 +228,6 @@ class GatewayBot(traits.GatewayBotAware):
         "_rest",
         "_shards",
         "_token",
-        "_is_used",
         "_voice",
         "shards",
     )
@@ -262,7 +261,6 @@ class GatewayBot(traits.GatewayBotAware):
         self._intents = intents
         self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
         self._token = token
-        self._is_used = False
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
@@ -750,9 +748,6 @@ class GatewayBot(traits.GatewayBotAware):
         if self._is_alive:
             raise errors.ComponentStateConflictError("bot is already running")
 
-        if self._is_used:
-            raise errors.ComponentStateConflictError("Cannot startup a bot multiple times")
-
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
@@ -793,7 +788,8 @@ class GatewayBot(traits.GatewayBotAware):
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         self._is_alive = True
-        self._is_used = True
+        # This needs to be started before shards.
+        self._voice.start()
         self._closing_event = asyncio.Event()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",

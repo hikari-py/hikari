@@ -85,10 +85,6 @@ class TokenStrategy(abc.ABC):
             prefix.
         """
 
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Close this access token handler."""
-
     def invalidate(self, token: typing.Optional[str]) -> None:
         """Invalidate the cached token in this handler.
 
@@ -110,6 +106,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     """Interface for functionality that a REST API implementation provides."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def is_alive(self) -> bool:
+        """Whether this component is alive."""
 
     @property
     @abc.abstractmethod
