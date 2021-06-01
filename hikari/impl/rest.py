@@ -863,16 +863,17 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        request_to_speak: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("channel_id", channel)
         body.put("suppress", suppress)
 
-        if request_to_speak:
-            # As a note, under current behaviour (as of writing) Discord seems to mostly ignore the value of the
-            # timestamp provided here and generate their own if it's provided as a valid iso8601 timestamp and not null.
+        if isinstance(request_to_speak, datetime.datetime):
+            body.put("request_to_speak_timestamp", request_to_speak.isoformat())
+
+        elif request_to_speak is True:
             body.put("request_to_speak_timestamp", time.utc_datetime().isoformat())
 
         elif request_to_speak is False:
