@@ -381,7 +381,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             * `True` to indicate that the bot wants to speak.
             * `False` to remove any previously set request to speak.
-            * `datetime.datetime` to specify when they want to speak
+            * `datetime.datetime` to specify when they want their request to
+                speak timestamp to be set to.
 
             !!! note
                 If a datetime from the past is passed then Discord will use the
