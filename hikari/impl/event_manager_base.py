@@ -283,7 +283,6 @@ class _Consumer:
 
 def _get_mro(event_type: typing.Type[base_events.Event]) -> typing.List[typing.Type[base_events.Event]]:
     mro = event_type.mro()
-    result = mro[: mro.index(base_events.Event) + 1]
     return typing.cast("typing.List[typing.Type[base_events.Event]]", mro[: mro.index(base_events.Event) + 1])
 
 

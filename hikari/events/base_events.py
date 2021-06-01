@@ -70,7 +70,6 @@ class Event(abc.ABC):
             Event.__dispatches = (Event,)
 
         mro = cls.mro()
-
         cls.__dispatches = tuple(mro[: mro.index(Event) + 1])
 
     @property
