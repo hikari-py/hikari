@@ -1450,6 +1450,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payload: data_binding.JSONObject,
         *,
+        include_guild: bool = True,
         include_channels: bool = False,
         include_emojis: bool = True,
         include_members: bool = False,
@@ -1457,52 +1458,57 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         include_roles: bool = True,
         include_voice_states: bool = False,
     ) -> entity_factory.GatewayGuildDefinition:
-        guild_fields = self._set_guild_attributes(payload)
-        is_large = payload.get("large")
-        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
-        member_count = int(payload["member_count"]) if "member_count" in payload else None
+        guild_id = snowflakes.Snowflake(payload["id"])
+        guild: typing.Optional[guild_models.GatewayGuild] = None
+        if include_guild:
+            guild_fields = self._set_guild_attributes(payload)
+            is_large = payload.get("large")
+            joined_at = (
+                time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
+            )
+            member_count = int(payload["member_count"]) if "member_count" in payload else None
 
-        guild = guild_models.GatewayGuild(
-            app=self._app,
-            id=guild_fields.id,
-            name=guild_fields.name,
-            icon_hash=guild_fields.icon_hash,
-            features=guild_fields.features,
-            splash_hash=guild_fields.splash_hash,
-            discovery_splash_hash=guild_fields.discovery_splash_hash,
-            owner_id=guild_fields.owner_id,
-            afk_channel_id=guild_fields.afk_channel_id,
-            afk_timeout=guild_fields.afk_timeout,
-            verification_level=guild_fields.verification_level,
-            default_message_notifications=guild_fields.default_message_notifications,
-            explicit_content_filter=guild_fields.explicit_content_filter,
-            mfa_level=guild_fields.mfa_level,
-            application_id=guild_fields.application_id,
-            widget_channel_id=guild_fields.widget_channel_id,
-            system_channel_id=guild_fields.system_channel_id,
-            is_widget_enabled=guild_fields.is_widget_enabled,
-            system_channel_flags=guild_fields.system_channel_flags,
-            rules_channel_id=guild_fields.rules_channel_id,
-            max_video_channel_users=guild_fields.max_video_channel_users,
-            vanity_url_code=guild_fields.vanity_url_code,
-            description=guild_fields.description,
-            banner_hash=guild_fields.banner_hash,
-            premium_tier=guild_fields.premium_tier,
-            premium_subscription_count=guild_fields.premium_subscription_count,
-            preferred_locale=guild_fields.preferred_locale,
-            public_updates_channel_id=guild_fields.public_updates_channel_id,
-            nsfw_level=guild_fields.nsfw_level,
-            is_large=is_large,
-            joined_at=joined_at,
-            member_count=member_count,
-        )
+            guild = guild_models.GatewayGuild(
+                app=self._app,
+                id=guild_id,
+                name=guild_fields.name,
+                icon_hash=guild_fields.icon_hash,
+                features=guild_fields.features,
+                splash_hash=guild_fields.splash_hash,
+                discovery_splash_hash=guild_fields.discovery_splash_hash,
+                owner_id=guild_fields.owner_id,
+                afk_channel_id=guild_fields.afk_channel_id,
+                afk_timeout=guild_fields.afk_timeout,
+                verification_level=guild_fields.verification_level,
+                default_message_notifications=guild_fields.default_message_notifications,
+                explicit_content_filter=guild_fields.explicit_content_filter,
+                mfa_level=guild_fields.mfa_level,
+                application_id=guild_fields.application_id,
+                widget_channel_id=guild_fields.widget_channel_id,
+                system_channel_id=guild_fields.system_channel_id,
+                is_widget_enabled=guild_fields.is_widget_enabled,
+                system_channel_flags=guild_fields.system_channel_flags,
+                rules_channel_id=guild_fields.rules_channel_id,
+                max_video_channel_users=guild_fields.max_video_channel_users,
+                vanity_url_code=guild_fields.vanity_url_code,
+                description=guild_fields.description,
+                banner_hash=guild_fields.banner_hash,
+                premium_tier=guild_fields.premium_tier,
+                premium_subscription_count=guild_fields.premium_subscription_count,
+                preferred_locale=guild_fields.preferred_locale,
+                public_updates_channel_id=guild_fields.public_updates_channel_id,
+                nsfw_level=guild_fields.nsfw_level,
+                is_large=is_large,
+                joined_at=joined_at,
+                member_count=member_count,
+            )
 
         members: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Member]] = None
         if include_members:
             members = {}
 
             for member_payload in payload["members"]:
-                member = self.deserialize_member(member_payload, guild_id=guild.id)
+                member = self.deserialize_member(member_payload, guild_id=guild_id)
                 members[member.user.id] = member
 
         channels: typing.Optional[typing.Dict[snowflakes.Snowflake, channel_models.GuildChannel]] = None
@@ -1511,7 +1517,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             for channel_payload in payload["channels"]:
                 try:
-                    channel = self.deserialize_channel(channel_payload, guild_id=guild.id)
+                    channel = self.deserialize_channel(channel_payload, guild_id=guild_id)
                 except errors.UnrecognisedEntityError:
                     # Ignore the channel, this has already been logged
                     continue
@@ -1524,7 +1530,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             presences = {}
 
             for presence_payload in payload["presences"]:
-                presence = self.deserialize_member_presence(presence_payload, guild_id=guild.id)
+                presence = self.deserialize_member_presence(presence_payload, guild_id=guild_id)
                 presences[presence.user_id] = presence
 
         voice_states: typing.Optional[typing.Dict[snowflakes.Snowflake, voice_models.VoiceState]] = None
@@ -1534,24 +1540,26 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             for voice_state_payload in payload["voice_states"]:
                 member = members[snowflakes.Snowflake(voice_state_payload["user_id"])]
-                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
+                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild_id, member=member)
                 voice_states[voice_state.user_id] = voice_state
 
         roles: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Role]] = None
         if include_roles:
             roles = {
-                snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id)
+                snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild_id)
                 for role in payload["roles"]
             }
 
         emojis: typing.Optional[typing.Dict[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]] = None
         if include_emojis:
             emojis = {
-                snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
+                snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_id)
                 for emoji in payload["emojis"]
             }
 
-        return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis, voice_states)
+        return entity_factory.GatewayGuildDefinition(
+            guild_id, guild, channels, members, presences, roles, emojis, voice_states
+        )
 
     #################
     # INVITE MODELS #

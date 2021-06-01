@@ -63,21 +63,17 @@ if typing.TYPE_CHECKING:
 class GatewayGuildDefinition:
     """A structure for handling entities within guild create and update events."""
 
-    guild: guild_models.GatewayGuild = attr.field()
+    id: snowflakes.Snowflake = attr.field()
+    """ID of the guild the definition is for."""
+
+    guild: typing.Optional[guild_models.GatewayGuild] = attr.field()
     """Object of the guild the definition is for."""
 
     channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field()
-    """Mapping of channel IDs to the channels that belong to the guild.
-
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
-    """
+    """Mapping of channel IDs to the channels that belong to the guild."""
 
     members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field()
     """Mapping of user IDs to the members that belong to the guild.
-
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
 
     !!! note
         This may be a partial mapping of members in the guild.
@@ -85,9 +81,6 @@ class GatewayGuildDefinition:
 
     presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field()
     """Mapping of user IDs to the presences that are active in the guild.
-
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
 
     !!! note
         This may be a partial mapping of presences active in the guild.
@@ -100,11 +93,7 @@ class GatewayGuildDefinition:
     """Mapping of emoji IDs to the emojis that belong to the guild."""
 
     voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
-    """Mapping of user IDs to the voice states that are active in the guild.
-
-    !!! note
-        This may be a partial mapping of voice states active in the guild.
-    """
+    """Mapping of user IDs to the voice states that are active in the guild."""
 
 
 class EntityFactory(abc.ABC):
@@ -935,6 +924,7 @@ class EntityFactory(abc.ABC):
         self,
         payload: data_binding.JSONObject,
         *,
+        include_guild: bool = True,
         include_channels: bool = False,
         include_emojis: bool = True,
         include_members: bool = False,
