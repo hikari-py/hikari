@@ -97,6 +97,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         self._cache = cache
         super().__init__(event_factory=event_factory, intents=intents)
 
+    def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
+        return (self._cache and self._cache.settings.components & components) == components
+
     @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME)
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#ready for more info."""
@@ -153,17 +156,17 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     # on_guild_create prefers internal granularity over filtering with event_manager_base.filtered
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        if not self._enabled_for(guild_events.GuildAvailableEvent):
+        if not self._enabled_for_event(guild_events.GuildAvailableEvent):
             event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None] = None
             guild_definition = self._app.entity_factory.deserialize_gateway_guild(
                 payload,
-                include_guild=self._cache_enabled_for_any(config.CacheComponents.GUILDS),
-                include_channels=self._cache_enabled_for_any(config.CacheComponents.GUILD_CHANNELS),
-                include_emojis=self._cache_enabled_for_any(config.CacheComponents.EMOJIS),
-                include_members=self._cache_enabled_for_any(config.CacheComponents.MEMBERS),
-                include_presences=self._cache_enabled_for_any(config.CacheComponents.PRESENCES),
-                include_roles=self._cache_enabled_for_any(config.CacheComponents.ROLES),
-                include_voice_states=self._cache_enabled_for_any(config.CacheComponents.VOICE_STATES),
+                include_guild=self._cache_enabled_for(config.CacheComponents.GUILDS),
+                include_channels=self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS),
+                include_emojis=self._cache_enabled_for(config.CacheComponents.EMOJIS),
+                include_members=self._cache_enabled_for(config.CacheComponents.MEMBERS),
+                include_presences=self._cache_enabled_for(config.CacheComponents.PRESENCES),
+                include_roles=self._cache_enabled_for(config.CacheComponents.ROLES),
+                include_voice_states=self._cache_enabled_for(config.CacheComponents.VOICE_STATES),
             )
             guild = guild_definition.guild
             guild_id = guild_definition.id
@@ -224,7 +227,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 for voice_state in voice_states.values():
                     self._cache.set_voice_state(voice_state)
 
-        recv_chunks = self._enabled_for(shard_events.MemberChunkEvent) or self._cache_enabled_for_any(
+        recv_chunks = self._enabled_for_event(shard_events.MemberChunkEvent) or self._cache_enabled_for(
             config.CacheComponents.MEMBERS
         )
         members_declared = self._intents & intents_.Intents.GUILD_MEMBERS
@@ -250,13 +253,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     # on_guild_update prefers internal granularity over filtering with event_manager_base.filtered
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        if not self._enabled_for(guild_events.GuildUpdateEvent):
+        if not self._enabled_for_event(guild_events.GuildUpdateEvent):
             event: typing.Optional[guild_events.GuildUpdateEvent] = None
             guild_definition = self._app.entity_factory.deserialize_gateway_guild(
                 payload,
-                include_guild=self._cache_enabled_for_any(config.CacheComponents.GUILDS),
-                include_emojis=self._cache_enabled_for_any(config.CacheComponents.EMOJIS),
-                include_roles=self._cache_enabled_for_any(config.CacheComponents.ROLES),
+                include_guild=self._cache_enabled_for(config.CacheComponents.GUILDS),
+                include_emojis=self._cache_enabled_for(config.CacheComponents.EMOJIS),
+                include_roles=self._cache_enabled_for(config.CacheComponents.ROLES),
             )
             guild = guild_definition.guild
             guild_id = guild_definition.id

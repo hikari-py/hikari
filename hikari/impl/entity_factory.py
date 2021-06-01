@@ -1458,8 +1458,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         include_roles: bool = True,
         include_voice_states: bool = False,
     ) -> entity_factory.GatewayGuildDefinition:
-        guild_id = snowflakes.Snowflake(payload["id"])
-        guild: typing.Optional[guild_models.GatewayGuild] = None
+        guild: typing.Optional[guild_models.GatewayGuild]
         if include_guild:
             guild_fields = self._set_guild_attributes(payload)
             is_large = payload.get("large")
@@ -1470,7 +1469,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             guild = guild_models.GatewayGuild(
                 app=self._app,
-                id=guild_id,
+                id=guild_fields.id,
                 name=guild_fields.name,
                 icon_hash=guild_fields.icon_hash,
                 features=guild_fields.features,
@@ -1502,6 +1501,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 joined_at=joined_at,
                 member_count=member_count,
             )
+            guild_id = guild.id
+
+        else:
+            guild = None
+            guild_id = snowflakes.Snowflake(payload["id"])
 
         members: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Member]] = None
         if include_members:

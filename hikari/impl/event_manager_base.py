@@ -42,6 +42,7 @@ from hikari import iterators
 from hikari import undefined
 from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.internal import aio
 from hikari.internal import reflect
 
@@ -309,43 +310,48 @@ class EventManagerBase(event_manager_.EventManager):
                 )
                 self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
 
-    def _cache_enabled_for_any(self, components: config.CacheComponents, /) -> bool:
-        return bool(self._app.cache.settings.components & components)
-
-    def _enabled_for(self, event_type: typing.Type[base_events.Event], /) -> bool:
+    def _enabled_for_event(self, event_type: typing.Type[base_events.Event], /) -> bool:
         for cls in event_type.dispatches():
             if cls in self._listeners or cls in self._waiters:
                 return True
 
         return False
 
+    # This returns int rather than bool to avoid unnecessary bool casts
+    def _enabled_for_consumer(self, consumer: _Consumer) -> int:
+        # If undefined then we can only safely assume that this does link to registered listeners.
+        if consumer.event_types is undefined.UNDEFINED:
+            return True
+
+        if (cached_value := self._dispatches_for_cache.get(consumer, ...)) is True:
+            return True
+
+        if cached_value is ...:
+            for event_type in consumer.event_types:
+                if event_type in self._listeners or event_type in self._waiters:
+                    self._dispatches_for_cache[consumer] = True
+                    return True
+
+            else:
+                self._dispatches_for_cache[consumer] = False
+
+        # If consumer.cache is UNDEFINED then we have to fall back to assuming that the consumer might set state.
+        # If consumer.cache is NONE then it doesn't make set state.
+        return (
+            consumer.cache is undefined.UNDEFINED
+            or consumer.cache != config.CacheComponents.NONE
+            and consumer.cache & self._app.cache.settings.components
+        )
+
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
-        self.dispatch(payload_event)
+        if self._enabled_for_event(shard_events.ShardPayload):
+            payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+            self.dispatch(payload_event)
         consumer = self._consumers[event_name.lower()]
-
-        # If undefined then we can only safely assume that this does link to registered listeners.
-        if consumer.event_types is not undefined.UNDEFINED:
-            if (dispatches_for := self._dispatches_for_cache.get(consumer, ...)) is ...:
-                for event_type in consumer.event_types:
-                    if event_type in self._listeners or event_type in self._waiters:
-                        dispatches_for = True
-                        break
-
-                else:
-                    dispatches_for = False
-
-                self._dispatches_for_cache[consumer] = dispatches_for
-
-            # if consumer.cache is UNDEFINED then it's assumed that the consumer might make cache calls.
-            if not dispatches_for and consumer.cache is not undefined.UNDEFINED:
-                # If consumer.cache is NONE then it doesn't make any cache calls.
-                if consumer.cache is config.CacheComponents.NONE or not self._cache_enabled_for_any(consumer.cache):
-                    return
-
-        asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
+        if self._enabled_for_consumer(consumer):
+            asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
