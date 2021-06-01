@@ -28,6 +28,7 @@ __all__: typing.List[str] = ["as_listener", "EventManagerBase", "EventStream"]
 
 import asyncio
 import inspect
+import itertools
 import logging
 import typing
 import warnings
@@ -258,7 +259,12 @@ def as_listener(
     /,
 ) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
     """Add metadata to a listener method to indicate when it should be unmarshalled and dispatched."""
-    event_types = event_types if isinstance(event_types, typing.Sequence) else (event_types,)
+    if isinstance(event_types, typing.Sequence):
+        # dict.fromkeys is used to remove any duplicate entries here
+        event_types = tuple(dict.fromkeys(itertools.chain.from_iterable(e.dispatches() for e in event_types)))
+
+    else:
+        event_types = event_types.dispatches()
 
     def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
         setattr(method, _CACHE_RESOURCE_ATTRIBUTE, cache_resource)
@@ -275,6 +281,12 @@ class _Consumer:
     event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]
 
 
+def _get_mro(event_type: typing.Type[base_events.Event]) -> typing.List[typing.Type[base_events.Event]]:
+    mro = event_type.mro()
+    result = mro[: mro.index(base_events.Event) + 1]
+    return typing.cast("typing.List[typing.Type[base_events.Event]]", mro[: mro.index(base_events.Event) + 1])
+
+
 class EventManagerBase(event_manager_.EventManager):
     """Provides functionality to consume and dispatch events.
 
@@ -282,14 +294,13 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_listeners_non_poly", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
 
     def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
         self._consumers: typing.Dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
-        self._listeners_non_poly: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
         for name, member in inspect.getmembers(self):
@@ -308,19 +319,18 @@ class EventManagerBase(event_manager_.EventManager):
             )
             self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
 
-        base_events.Event.on_new_subclass(self._on_new_event_cls)
+    def _cache_enabled_for_any(self, components: config.CacheComponents, /) -> bool:
+        return bool(self._app.cache.settings.components & components)
 
-    def _on_new_event_cls(self, event_type: typing.Type[base_events.Event], /) -> None:
-        parent_cls = event_type.mro()[1]
-        if issubclass(parent_cls, base_events.Event):
-            if listeners := self._listeners.get(parent_cls):
-                self._listeners[event_type] = listeners.copy()
+    def _enabled_for(self, event_type: typing.Type[base_events.Event], /, *, polymorphic: bool = True) -> bool:
+        if polymorphic:
+            for cls in event_type.dispatches():
+                if cls in self._listeners or cls in self._waiters:
+                    return True
 
-            if waiters := self._waiters.get(parent_cls):
-                self._waiters[event_type] = waiters.copy()
+            return False
 
-    def _enabled_for(self, event_type: typing.Type[base_events.Event], /) -> bool:
-        return event_type in self._listeners or event_type in self._waiters
+        return event_type in self._waiters or event_type in self._listeners
 
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -332,8 +342,8 @@ class EventManagerBase(event_manager_.EventManager):
         # If undefined then we can only safely assume that this does link to registered listeners.
         if consumer.event_types is not undefined.UNDEFINED:
             for event_type in consumer.event_types:
-                if self._enabled_for(event_type):
-                    break
+                if self._enabled_for(event_type, polymorphic=False):
+                    return
 
             else:
                 # None here indicates that the function doesn't do any cache altering.
@@ -341,8 +351,7 @@ class EventManagerBase(event_manager_.EventManager):
                     return
 
                 # Whereas UNDEFINED indicates that it wasn't specified and we should therefore assume it does to be safe
-                components = self._app.cache.settings.components
-                if consumer.cache is not undefined.UNDEFINED and not components & consumer.cache:
+                if consumer.cache is not undefined.UNDEFINED and not self._cache_enabled_for_any(consumer.cache):
                     return
 
         asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
@@ -373,15 +382,9 @@ class EventManagerBase(event_manager_.EventManager):
         )
 
         try:
-            self._listeners_non_poly[event_type].append(callback)  # type: ignore[arg-type]
+            self._listeners[event_type].append(callback)  # type: ignore[arg-type]
         except KeyError:
-            self._listeners_non_poly[event_type] = [callback]  # type: ignore[list-item]
-
-        for cls in event_type.subclasses():
-            try:
-                self._listeners[cls].append(callback)  # type: ignore[arg-type]
-            except KeyError:
-                self._listeners[cls] = [callback]  # type: ignore[list-item]
+            self._listeners[event_type] = [callback]  # type: ignore[list-item]
 
     def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
@@ -410,12 +413,14 @@ class EventManagerBase(event_manager_.EventManager):
         polymorphic: bool = True,
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         if polymorphic:
-            items = self._listeners.get(event_type)
-            if items is not None:
-                return items.copy()
+            listeners: typing.List[event_manager.CallbackT[event_manager.EventT_co]] = []
+            for cls in event_type.dispatches():
+                listeners.extend(self._listeners[cls])
+
+            return listeners
 
         else:
-            items = self._listeners_non_poly.get(event_type)
+            items = self._listeners.get(event_type)
             if items is not None:
                 return items.copy()
 
@@ -426,7 +431,7 @@ class EventManagerBase(event_manager_.EventManager):
         event_type: typing.Type[event_manager_.EventT_co],
         callback: event_manager_.CallbackT[event_manager_.EventT_co],
     ) -> None:
-        if event_type in self._listeners and (listeners := self._listeners_non_poly.get(event_type)):
+        if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
@@ -437,14 +442,7 @@ class EventManagerBase(event_manager_.EventManager):
 
             listeners.remove(callback)  # type: ignore[arg-type]
             if not listeners:
-                del self._listeners_non_poly[event_type]
-
-            for cls in event_type.subclasses():
-                if listeners := self._listeners.get(cls):
-                    listeners.remove(callback)  # type: ignore[arg-type]
-
-                    if not listeners:
-                        del self._listeners[cls]
+                del self._listeners[event_type]
 
     def listen(
         self,
@@ -485,25 +483,29 @@ class EventManagerBase(event_manager_.EventManager):
         event_type = type(event)
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        if listeners := self._listeners.get(event_type):
-            for callback in listeners:
-                tasks.append(self._invoke_callback(callback, event))
+        for cls in event_type.dispatches():
+            if listeners := self._listeners.get(cls):
+                for callback in listeners:
+                    tasks.append(self._invoke_callback(callback, event))
 
-        if waiter_set := self._waiters.get(event_type):
+            if cls not in self._waiters:
+                continue
+
+            waiter_set = self._waiters[cls]
+
             for waiter in tuple(waiter_set):
                 predicate, future = waiter
                 if not future.done():
                     try:
                         result = predicate(event)
+                        if not result:
+                            continue
                     except Exception as ex:
                         future.set_exception(ex)
                     else:
-                        if result:
-                            future.set_result(event)
+                        future.set_result(event)
 
-                # The future was probably cancelled meaning we need to remove it here.
-                else:
-                    waiter_set.remove(waiter)
+                waiter_set.remove(waiter)
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -531,23 +533,20 @@ class EventManagerBase(event_manager_.EventManager):
         self._check_intents(event_type, 1)
 
         future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
-        pair = (predicate, future)
-        subclasses = event_type.subclasses()
-
-        for cls in subclasses:
-            try:
-                self._waiters[cls].add(pair)  # type: ignore[arg-type]
-            except KeyError:
-                self._waiters[cls] = {pair}  # type: ignore[arg-type]
 
         try:
+            waiter_set = self._waiters[event_type]
+        except KeyError:
+            waiter_set = set()
+            self._waiters[event_type] = waiter_set
+
+        pair = (predicate, future)
+
+        waiter_set.add(pair)  # type: ignore[arg-type]
+        try:
             return await asyncio.wait_for(future, timeout=timeout)
-        finally:
-            for cls in subclasses:
-                try:
-                    self._waiters[cls].remove(pair)  # type: ignore[arg-type]
-                except KeyError:
-                    pass
+        except asyncio.TimeoutError:
+            waiter_set.remove(pair)  # type: ignore[arg-type]
 
             raise
 

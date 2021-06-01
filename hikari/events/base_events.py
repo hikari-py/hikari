@@ -57,25 +57,21 @@ class Event(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    __subclasses: typing.ClassVar[typing.Set[typing.Type[Event]]]
-    __on_new_subclass: typing.Final[typing.ClassVar[typing.Set[typing.Callable[[typing.Type[Event]], None]]]] = set()
+    __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
-        # For convenience's sake we include a class in the set of it's subclasses.
-        # This also matches how issubclass(Foo, Foo) returns True
-        cls.__subclasses = {cls}
+        # hasattr doesn't work with protected variables in this case so we use a try except.
+        # we need to set Event's __dispatches when the first subclass is made as Event itself cannot
+        # be included in a set literal on itself due to not existing yet.
+        try:
+            Event.__dispatches
+        except AttributeError:
+            Event.__dispatches = (Event,)
 
-        for parent_cls in cls.mro():
-            if parent_cls is not cls and issubclass(parent_cls, Event):
-                try:
-                    parent_cls.__subclasses.add(cls)
-                except AttributeError:
-                    # This should only ever apply to the base Event class
-                    parent_cls.__subclasses = {parent_cls, cls}
+        mro = cls.mro()
 
-        for callback in cls.__on_new_subclass:
-            callback(cls)
+        cls.__dispatches = tuple(mro[: mro.index(Event) + 1])
 
     @property
     @abc.abstractmethod
@@ -89,19 +85,9 @@ class Event(abc.ABC):
         """
 
     @classmethod
-    def subclasses(cls) -> typing.AbstractSet[typing.Type[Event]]:
-        """Set of the event class' subclasses."""
-        return cls.__subclasses
-
-    @classmethod
-    def on_new_subclass(cls, listener: typing.Callable[[typing.Type[Event]], None], /) -> None:
-        """Add a callback to be called whenever a new `Event` subclass is made."""
-        cls.__on_new_subclass.add(listener)
-
-    @classmethod
-    def remove_on_new_subclass(cls, listener: typing.Callable[[typing.Type[Event]], None], /) -> None:
-        """Remove a new subclass callback."""
-        cls.__on_new_subclass.remove(listener)
+    def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
+        """Sequence of the event classes this class is dispatched as."""
+        return cls.__dispatches
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
