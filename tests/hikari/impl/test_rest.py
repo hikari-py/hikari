@@ -1414,7 +1414,7 @@ class TestRESTClientImplAsync:
 
     async def test_edit_permission_overwrites(self, rest_client):
         target = StubModel(456)
-        expected_route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
+        expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
         expected_json = {"type": 1, "allow": 4, "deny": 1}
 
@@ -1469,7 +1469,7 @@ class TestRESTClientImplAsync:
         ],
     )
     async def test_edit_permission_overwrites_when_target_undefined(self, rest_client, target, expected_type):
-        expected_route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
+        expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
         expected_json = {"type": expected_type}
 

@@ -315,7 +315,7 @@ POST_CHANNEL_MESSAGES: typing.Final[Route] = Route(POST, "/channels/{channel}/me
 
 POST_DELETE_CHANNEL_MESSAGES_BULK: typing.Final[Route] = Route(POST, "/channels/{channel}/messages/bulk-delete")
 
-PATCH_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(PATCH, "/channels/{channel}/permissions/{overwrite}")
+PUT_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(PUT, "/channels/{channel}/permissions/{overwrite}")
 DELETE_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/permissions/{overwrite}")
 
 GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/pins")
