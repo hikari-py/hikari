@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["as_listener", "EventManagerBase", "EventStream"]
+__all__: typing.List[str] = ["filtered", "EventManagerBase", "EventStream"]
 
 import asyncio
 import inspect
@@ -253,7 +253,7 @@ _CACHE_RESOURCE_ATTRIBUTE = "__CACHE_RESOURCE__"
 _EVENT_TYPES_ATTRIBUTE = "__EVENT_TYPES__"
 
 
-def as_listener(
+def filtered(
     event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
     cache_resource: config.CacheComponents = config.CacheComponents.NONE,
     /,
