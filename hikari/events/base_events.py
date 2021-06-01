@@ -70,7 +70,8 @@ class Event(abc.ABC):
             Event.__dispatches = (Event,)
 
         mro = cls.mro()
-        cls.__dispatches = tuple(mro[: mro.index(Event) + 1])
+        # Non-event classes should be ignored.
+        cls.__dispatches = tuple(cls for cls in mro if issubclass(cls, Event))
 
     @property
     @abc.abstractmethod
@@ -85,7 +86,7 @@ class Event(abc.ABC):
 
     @classmethod
     def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
-        """Sequence of the event classes this class is dispatched as."""
+        """Sequence of the event classes this event is dispatched as."""
         return cls.__dispatches
 
 

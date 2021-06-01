@@ -36,6 +36,7 @@ import weakref
 
 import attr
 
+from hikari import config
 from hikari import errors
 from hikari import iterators
 from hikari import undefined
@@ -47,7 +48,6 @@ from hikari.internal import reflect
 if typing.TYPE_CHECKING:
     import types
 
-    from hikari import config
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -255,7 +255,7 @@ _EVENT_TYPES_ATTRIBUTE = "__EVENT_TYPES__"
 
 def as_listener(
     event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
-    cache_resource: typing.Optional[config.CacheComponents] = None,
+    cache_resource: config.CacheComponents = config.CacheComponents.NONE,
     /,
 ) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
     """Add metadata to a listener method to indicate when it should be unmarshalled and dispatched."""
@@ -277,13 +277,8 @@ def as_listener(
 @attr.frozen()
 class _Consumer:
     callback: ConsumerT
-    cache: typing.Union[config.CacheComponents, None, undefined.UndefinedType]
+    cache: undefined.UndefinedOr[config.CacheComponents]
     event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]
-
-
-def _get_mro(event_type: typing.Type[base_events.Event]) -> typing.List[typing.Type[base_events.Event]]:
-    mro = event_type.mro()
-    return typing.cast("typing.List[typing.Type[base_events.Event]]", mro[: mro.index(base_events.Event) + 1])
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -304,33 +299,25 @@ class EventManagerBase(event_manager_.EventManager):
         self._waiters: WaiterMapT[base_events.Event] = {}
 
         for name, member in inspect.getmembers(self):
-            if not name.startswith("on_"):
-                continue
-
-            member = typing.cast("MethodT", member)
-            cache_resource = getattr(member, _CACHE_RESOURCE_ATTRIBUTE, undefined.UNDEFINED)
-            event_types = getattr(member, _EVENT_TYPES_ATTRIBUTE, undefined.UNDEFINED)
-
-            cache_resource = typing.cast(
-                "typing.Union[config.CacheComponents, None, undefined.UndefinedType]", cache_resource
-            )
-            event_types = typing.cast(
-                "undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]", event_types
-            )
-            self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
+            if name.startswith("on_"):
+                member = typing.cast("MethodT", member)
+                cache_resource = getattr(member, _CACHE_RESOURCE_ATTRIBUTE, undefined.UNDEFINED)
+                event_types = getattr(member, _EVENT_TYPES_ATTRIBUTE, undefined.UNDEFINED)
+                cache_resource = typing.cast("undefined.UndefinedOr[config.CacheComponents]", cache_resource)
+                event_types = typing.cast(
+                    "undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]", event_types
+                )
+                self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
 
     def _cache_enabled_for_any(self, components: config.CacheComponents, /) -> bool:
         return bool(self._app.cache.settings.components & components)
 
-    def _enabled_for(self, event_type: typing.Type[base_events.Event], /, *, polymorphic: bool = True) -> bool:
-        if polymorphic:
-            for cls in event_type.dispatches():
-                if cls in self._listeners or cls in self._waiters:
-                    return True
+    def _enabled_for(self, event_type: typing.Type[base_events.Event], /) -> bool:
+        for cls in event_type.dispatches():
+            if cls in self._listeners or cls in self._waiters:
+                return True
 
-            return False
-
-        return event_type in self._waiters or event_type in self._listeners
+        return False
 
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -343,20 +330,19 @@ class EventManagerBase(event_manager_.EventManager):
         if consumer.event_types is not undefined.UNDEFINED:
             if (dispatches_for := self._dispatches_for_cache.get(consumer, ...)) is ...:
                 for event_type in consumer.event_types:
-                    if self._enabled_for(event_type, polymorphic=False):
-                        self._dispatches_for_cache[consumer] = dispatches_for = True
+                    if event_type in self._listeners or event_type in self._waiters:
+                        dispatches_for = True
                         break
 
                 else:
                     dispatches_for = False
 
-            if not dispatches_for:
-                # None here indicates that the function doesn't do any cache altering.
-                if consumer.cache is None:
-                    return
+                self._dispatches_for_cache[consumer] = dispatches_for
 
-                # Whereas UNDEFINED indicates that it wasn't specified and we should therefore assume it does to be safe
-                if consumer.cache is not undefined.UNDEFINED and not self._cache_enabled_for_any(consumer.cache):
+            # if consumer.cache is UNDEFINED then it's assumed that the consumer might make cache calls.
+            if not dispatches_for and consumer.cache is not undefined.UNDEFINED:
+                # If consumer.cache is NONE then it doesn't make any cache calls.
+                if consumer.cache is config.CacheComponents.NONE or not self._cache_enabled_for_any(consumer.cache):
                     return
 
         asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
@@ -426,11 +412,10 @@ class EventManagerBase(event_manager_.EventManager):
             return listeners
 
         else:
-            items = self._listeners.get(event_type)
-            if items is not None:
+            if items := self._listeners.get(event_type):
                 return items.copy()
 
-        return []
+            return []
 
     def unsubscribe(
         self,
@@ -445,7 +430,6 @@ class EventManagerBase(event_manager_.EventManager):
                 event_type.__module__,
                 event_type.__qualname__,
             )
-
             listeners.remove(callback)  # type: ignore[arg-type]
             if not listeners:
                 del self._listeners[event_type]
@@ -488,10 +472,9 @@ class EventManagerBase(event_manager_.EventManager):
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
-        event_type = type(event)
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        for cls in event_type.dispatches():
+        for cls in event.dispatches():
             if listeners := self._listeners.get(cls):
                 for callback in listeners:
                     tasks.append(self._invoke_callback(callback, event))
@@ -500,7 +483,6 @@ class EventManagerBase(event_manager_.EventManager):
                 continue
 
             waiter_set = self._waiters[cls]
-
             for waiter in tuple(waiter_set):
                 predicate, future = waiter
                 if not future.done():
@@ -555,7 +537,6 @@ class EventManagerBase(event_manager_.EventManager):
             return await asyncio.wait_for(future, timeout=timeout)
         except asyncio.TimeoutError:
             waiter_set.remove(pair)  # type: ignore[arg-type]
-
             raise
 
     @staticmethod
