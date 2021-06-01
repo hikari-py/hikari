@@ -374,6 +374,7 @@ class PartialChannel(snowflakes.Unique):
         """
         return await self.app.rest.delete_channel(self.id)
 
+
 class TextChannel(PartialChannel, abc.ABC):
     """A channel that can have text messages in it."""
 
@@ -800,10 +801,7 @@ class TextChannel(PartialChannel, abc.ABC):
             `builtins.BaseException.__cause__` of the exception will be the
             original error that terminated this process.
         """  # noqa: E501 - Line too long
-        return await self.app.rest.delete_messages(self.id, messages, other_messages=other_messages)
-
-    async def delete_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> None:
-        return await self.app.rest.delete_message(self.id, message)
+        return await self.app.rest.delete_messages(self.id, messages, *other_messages)
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -969,7 +967,6 @@ class GuildChannel(PartialChannel):
 
         return None
 
-
     async def edit_overwrite(
         self,
         target: typing.Union[snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, PermissionOverwrite],
@@ -1028,7 +1025,6 @@ class GuildChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
-
         return await self.app.rest.edit_permission_overwrites(
             self.id, target, target_type=target_type, allow=allow, deny=deny, reason=reason
         )

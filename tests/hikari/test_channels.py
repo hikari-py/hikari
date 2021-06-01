@@ -24,10 +24,11 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels, undefined
+from hikari import channels
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
+from hikari import undefined
 from hikari import users
 from tests.hikari import hikari_test_helpers
 
@@ -243,14 +244,7 @@ class TestTextChannel:
 
         await model.delete_messages([77790, 88890, 1800], 1337)
 
-        model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], other_messages=(1337,))
-
-    async def test_delete_message(self, model):
-        model.app.rest.delete_message = mock.AsyncMock()
-
-        await model.delete_message(1337)
-
-        model.app.rest.delete_messages.assert_awaited_once_with(12345679, 1337)
+        model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], 1337)
 
     async def test_send(self, model):
         model.app.rest.create_message = mock.AsyncMock()
