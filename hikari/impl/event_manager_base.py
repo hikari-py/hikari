@@ -274,7 +274,7 @@ def as_listener(
     return decorator
 
 
-@attr.define()
+@attr.frozen()
 class _Consumer:
     callback: ConsumerT
     cache: typing.Union[config.CacheComponents, None, undefined.UndefinedType]
@@ -293,9 +293,10 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_dispatches_for_cache", "_listeners", "_consumers", "_waiters")
 
     def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
+        self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
         self._consumers: typing.Dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
@@ -340,11 +341,16 @@ class EventManagerBase(event_manager_.EventManager):
 
         # If undefined then we can only safely assume that this does link to registered listeners.
         if consumer.event_types is not undefined.UNDEFINED:
-            for event_type in consumer.event_types:
-                if self._enabled_for(event_type, polymorphic=False):
-                    return
+            if (dispatches_for := self._dispatches_for_cache.get(consumer, ...)) is ...:
+                for event_type in consumer.event_types:
+                    if self._enabled_for(event_type, polymorphic=False):
+                        self._dispatches_for_cache[consumer] = dispatches_for = True
+                        break
 
-            else:
+                else:
+                    dispatches_for = False
+
+            if not dispatches_for:
                 # None here indicates that the function doesn't do any cache altering.
                 if consumer.cache is None:
                     return
@@ -368,6 +374,7 @@ class EventManagerBase(event_manager_.EventManager):
         if not inspect.iscoroutinefunction(callback):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
 
+        self._dispatches_for_cache.clear()
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_intents(event_type, _nested)
@@ -442,6 +449,8 @@ class EventManagerBase(event_manager_.EventManager):
             listeners.remove(callback)  # type: ignore[arg-type]
             if not listeners:
                 del self._listeners[event_type]
+
+            self._dispatches_for_cache.clear()
 
     def listen(
         self,
@@ -525,13 +534,13 @@ class EventManagerBase(event_manager_.EventManager):
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
     ) -> event_manager_.EventT_co:
-
         if predicate is None:
             predicate = _default_predicate
 
         self._check_intents(event_type, 1)
 
         future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
+        self._dispatches_for_cache.clear()
 
         try:
             waiter_set = self._waiters[event_type]
