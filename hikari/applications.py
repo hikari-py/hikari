@@ -564,7 +564,7 @@ class Application(guilds.PartialApplication):
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to `AuthorizationInformation`."""
 
-    public_key: typing.Optional[bytes] = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     is_bot_public: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
