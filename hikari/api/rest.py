@@ -384,8 +384,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             * `datetime.datetime` to specify when they want to speak
 
             !!! note
-                If a datetime which is in the past is provided then Discord will
-                use the current time instead.
+                If a datetime from the past is passed then Discord will use the
+                current time instead.
 
         Raises
         ------
