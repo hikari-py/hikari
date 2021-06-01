@@ -305,12 +305,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             description=payload["description"] or None,
-            is_bot_public=payload.get("bot_public"),
-            is_bot_code_grant_required=payload.get("bot_require_code_grant"),
+            is_bot_public=payload["bot_public"],
+            is_bot_code_grant_required=payload["bot_require_code_grant"],
             owner=self.deserialize_user(payload["owner"]),
-            rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
+            rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
-            public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
+            public_key=bytes.fromhex(payload["verify_key"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -325,7 +325,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:
         application_payload = payload["application"]
-        raw_verify_key = application_payload.get("verify_key")
         application = application_models.AuthorizationApplication(
             id=snowflakes.Snowflake(application_payload["id"]),
             name=application_payload["name"],
@@ -334,7 +333,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
-            public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+            public_key=bytes.fromhex(application_payload["verify_key"]),
             terms_of_service_url=application_payload.get("terms_of_service_url"),
             privacy_policy_url=application_payload.get("privacy_policy_url"),
         )
