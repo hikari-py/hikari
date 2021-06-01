@@ -236,8 +236,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # When intents are enabled discord will only send other member objects on the guild create
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
-        guild_is_large = payload.get("large")
-        if recv_chunks and members_declared and (guild_is_large or not presences_declared):
+        if recv_chunks and members_declared and (payload.get("large") or not presences_declared):
             # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
             nonce = f"{shard.id}.{_fixed_size_nonce()}"
 

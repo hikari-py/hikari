@@ -278,8 +278,13 @@ def filtered(
 @attr.frozen()
 class _Consumer:
     callback: ConsumerT
-    cache: undefined.UndefinedOr[config.CacheComponents]
+    """The callback function for this consumer."""
+
+    cache_components: undefined.UndefinedOr[config.CacheComponents]
+    """Bitfield of the cache components this consumer makes modifying calls to, if set."""
+
     event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]
+    """A sequence of the types of events this consumer dispatches to, if set."""
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -289,11 +294,12 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_dispatches_for_cache", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_consumers", "_enabled_consumers_cache", "_listeners", "_waiters")
 
     def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
         self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
         self._consumers: typing.Dict[str, _Consumer] = {}
+        self._enabled_consumers_cache: typing.Dict[_Consumer, bool] = {}
         self._event_factory = event_factory
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
@@ -301,14 +307,15 @@ class EventManagerBase(event_manager_.EventManager):
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
-                member = typing.cast("MethodT", member)
+                member = typing.cast(MethodT, member)
                 cache_resource = getattr(member, _CACHE_RESOURCE_ATTRIBUTE, undefined.UNDEFINED)
                 event_types = getattr(member, _EVENT_TYPES_ATTRIBUTE, undefined.UNDEFINED)
-                cache_resource = typing.cast("undefined.UndefinedOr[config.CacheComponents]", cache_resource)
-                event_types = typing.cast(
-                    "undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]", event_types
-                )
+                cache_resource: undefined.UndefinedOr[config.CacheComponents] = cache_resource
+                event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]] = event_types
                 self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
+
+    def _clear_enabled_cache(self) -> None:
+        self._enabled_consumers_cache = {}
 
     def _enabled_for_event(self, event_type: typing.Type[base_events.Event], /) -> bool:
         for cls in event_type.dispatches():
@@ -317,30 +324,29 @@ class EventManagerBase(event_manager_.EventManager):
 
         return False
 
-    # This returns int rather than bool to avoid unnecessary bool casts
-    def _enabled_for_consumer(self, consumer: _Consumer) -> int:
-        # If undefined then we can only safely assume that this does link to registered listeners.
+    # This returns int rather than bool to avoid an unnecessary bool cast
+    def _enabled_for_consumer(self, consumer: _Consumer, /) -> int:
+        # If undefined then we can only assume that this may link to registered listeners.
         if consumer.event_types is undefined.UNDEFINED:
             return True
 
-        if (cached_value := self._dispatches_for_cache.get(consumer, ...)) is True:
+        if (cached_value := self._enabled_consumers_cache.get(consumer)) is True:
             return True
 
-        if cached_value is ...:
+        if cached_value is None:
             for event_type in consumer.event_types:
                 if event_type in self._listeners or event_type in self._waiters:
-                    self._dispatches_for_cache[consumer] = True
+                    self._enabled_consumers_cache[consumer] = True
                     return True
 
-            else:
-                self._dispatches_for_cache[consumer] = False
+            self._enabled_consumers_cache[consumer] = False
 
-        # If consumer.cache is UNDEFINED then we have to fall back to assuming that the consumer might set state.
-        # If consumer.cache is NONE then it doesn't make set state.
+        # If cache_components is UNDEFINED then we have to fall back to assuming that the consumer might set state.
+        # If cache_components is NONE then it doesn't make set state calls.
         return (
-            consumer.cache is undefined.UNDEFINED
-            or consumer.cache != config.CacheComponents.NONE
-            and consumer.cache & self._app.cache.settings.components
+            consumer.cache_components is undefined.UNDEFINED
+            or consumer.cache_components != config.CacheComponents.NONE
+            and consumer.cache_components & self._app.cache.settings.components
         )
 
     def consume_raw_event(
@@ -382,7 +388,7 @@ class EventManagerBase(event_manager_.EventManager):
             self._listeners[event_type].append(callback)  # type: ignore[arg-type]
         except KeyError:
             self._listeners[event_type] = [callback]  # type: ignore[list-item]
-            self._dispatches_for_cache.clear()
+            self._clear_enabled_cache()
 
     def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
@@ -439,7 +445,7 @@ class EventManagerBase(event_manager_.EventManager):
             listeners.remove(callback)  # type: ignore[arg-type]
             if not listeners:
                 del self._listeners[event_type]
-                self._dispatches_for_cache.clear()
+                self._clear_enabled_cache()
 
     def listen(
         self,
@@ -508,7 +514,7 @@ class EventManagerBase(event_manager_.EventManager):
                 clear_cache = True
 
         if clear_cache:
-            self._dispatches_for_cache.clear()
+            self._clear_enabled_cache()
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -539,7 +545,7 @@ class EventManagerBase(event_manager_.EventManager):
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
-            self._dispatches_for_cache.clear()
+            self._clear_enabled_cache()
             waiter_set = set()
             self._waiters[event_type] = waiter_set
 
@@ -552,7 +558,7 @@ class EventManagerBase(event_manager_.EventManager):
             waiter_set.remove(pair)  # type: ignore[arg-type]
             if not waiter_set:
                 del self._waiters[event_type]
-                self._dispatches_for_cache.clear()
+                self._clear_enabled_cache()
 
             raise
 
