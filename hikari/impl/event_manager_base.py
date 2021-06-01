@@ -360,7 +360,6 @@ class EventManagerBase(event_manager_.EventManager):
         if not inspect.iscoroutinefunction(callback):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
 
-        self._dispatches_for_cache.clear()
         # `_nested` is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_intents(event_type, _nested)
@@ -377,6 +376,7 @@ class EventManagerBase(event_manager_.EventManager):
             self._listeners[event_type].append(callback)  # type: ignore[arg-type]
         except KeyError:
             self._listeners[event_type] = [callback]  # type: ignore[list-item]
+            self._dispatches_for_cache.clear()
 
     def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
@@ -433,8 +433,7 @@ class EventManagerBase(event_manager_.EventManager):
             listeners.remove(callback)  # type: ignore[arg-type]
             if not listeners:
                 del self._listeners[event_type]
-
-            self._dispatches_for_cache.clear()
+                self._dispatches_for_cache.clear()
 
     def listen(
         self,
@@ -473,6 +472,7 @@ class EventManagerBase(event_manager_.EventManager):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
+        clear_cache = False
 
         for cls in event.dispatches():
             if listeners := self._listeners.get(cls):
@@ -496,6 +496,13 @@ class EventManagerBase(event_manager_.EventManager):
                         future.set_result(event)
 
                 waiter_set.remove(waiter)
+
+            if not waiter_set:
+                del self._waiters[cls]
+                clear_cache = True
+
+        if clear_cache:
+            self._dispatches_for_cache.clear()
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -522,11 +529,11 @@ class EventManagerBase(event_manager_.EventManager):
         self._check_intents(event_type, 1)
 
         future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
-        self._dispatches_for_cache.clear()
 
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
+            self._dispatches_for_cache.clear()
             waiter_set = set()
             self._waiters[event_type] = waiter_set
 
@@ -537,6 +544,10 @@ class EventManagerBase(event_manager_.EventManager):
             return await asyncio.wait_for(future, timeout=timeout)
         except asyncio.TimeoutError:
             waiter_set.remove(pair)  # type: ignore[arg-type]
+            if not waiter_set:
+                del self._waiters[event_type]
+                self._dispatches_for_cache.clear()
+
             raise
 
     @staticmethod
