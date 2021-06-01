@@ -1385,6 +1385,21 @@ class TestRESTClientImplAsync:
             expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": None}
         )
 
+    async def test_edit_my_voice_state_when_providing_datetime_for_request_to_speak(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+        expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
+        mock_datetime = mock.Mock(spec=datetime.datetime, isoformat=mock.Mock(return_value="blamblamblam2"))
+
+        result = await rest_client.edit_my_voice_state(
+            StubModel(5421), StubModel(999), suppress=True, request_to_speak=mock_datetime
+        )
+
+        assert result is None
+        mock_datetime.isoformat.assert_called_once()
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": "blamblamblam2"}
+        )
+
     async def test_edit_my_voice_state_without_optional_fields(self, rest_client):
         rest_client._request = mock.AsyncMock()
         expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
