@@ -2488,7 +2488,7 @@ class TestEntityFactoryImpl:
             "nsfw_level": 0,
         }
 
-    def test_deserialize_gateway_guild(
+    def test_deserialize_gateway_guild_with_all_resources_enabled(
         self,
         entity_factory_impl,
         mock_app,
@@ -2502,7 +2502,17 @@ class TestEntityFactoryImpl:
         guild_role_payload,
         voice_state_payload,
     ):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(deserialize_gateway_guild_payload)
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            deserialize_gateway_guild_payload,
+            include_guild=True,
+            include_channels=True,
+            include_emojis=True,
+            include_members=True,
+            include_presences=True,
+            include_roles=True,
+            include_voice_states=True,
+        )
+        assert guild_definition.id == 265828729970753537
         guild = guild_definition.guild
         assert guild.app is mock_app
         assert guild.id == 265828729970753537
@@ -2584,6 +2594,27 @@ class TestEntityFactoryImpl:
             )
         }
 
+    def test_deserialize_gateway_guild_with_no_resources_enabled(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "123123"},
+            include_guild=False,
+            include_channels=False,
+            include_emojis=False,
+            include_members=False,
+            include_presences=False,
+            include_roles=False,
+            include_voice_states=False,
+        )
+
+        assert guild_definition.id == 123123
+        assert guild_definition.guild is None
+        assert guild_definition.channels is None
+        assert guild_definition.emojis is None
+        assert guild_definition.members is None
+        assert guild_definition.presences is None
+        assert guild_definition.roles is None
+        assert guild_definition.voice_states is None
+
     def test_deserialize_gateway_guild_with_unset_fields(self, entity_factory_impl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {
@@ -2613,7 +2644,8 @@ class TestEntityFactoryImpl:
                 "vanity_url_code": "loool",
                 "verification_level": 4,
                 "nsfw_level": 0,
-            }
+            },
+            include_guild=True,
         )
         guild = guild_definition.guild
         assert guild.joined_at is None
@@ -2623,10 +2655,6 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None
-        assert guild_definition.channels is None
-        assert guild_definition.members is None
-        assert guild_definition.presences is None
-        assert guild_definition.voice_states is None
 
     def test_deserialize_gateway_guild_with_null_fields(self, entity_factory_impl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
@@ -2674,7 +2702,8 @@ class TestEntityFactoryImpl:
                 "widget_channel_id": None,
                 "widget_enabled": True,
                 "nsfw_level": 0,
-            }
+            },
+            include_guild=True,
         )
         guild = guild_definition.guild
         assert guild.icon_hash is None
@@ -2695,7 +2724,9 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, deserialize_gateway_guild_payload
     ):
         deserialize_gateway_guild_payload["channels"] = [{"id": 123, "type": 1000}]
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(deserialize_gateway_guild_payload)
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            deserialize_gateway_guild_payload, include_channels=True
+        )
 
         assert guild_definition.channels == {}
 

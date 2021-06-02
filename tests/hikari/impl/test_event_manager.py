@@ -611,7 +611,8 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_guild_integrations_update(self, event_manager, shard):
-        assert await event_manager.on_guild_integrations_update(shard, {}) is None
+        with pytest.raises(NotImplementedError):
+            await event_manager.on_guild_integrations_update(shard, {})
 
         event_manager.dispatch.assert_not_called()
 
