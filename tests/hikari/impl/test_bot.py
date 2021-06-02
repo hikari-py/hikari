@@ -634,13 +634,6 @@ class TestGatewayBot:
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.start()
 
-    @pytest.mark.asyncio
-    async def test_start_when_used(self, bot):
-        bot._is_used = True
-
-        with pytest.raises(errors.ComponentStateConflictError):
-            await bot.start()
-
     @pytest.mark.skip("TODO")
     def test_start(self, bot):
         ...

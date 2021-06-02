@@ -24,7 +24,6 @@ import contextlib
 import datetime
 import http
 
-import aiohttp
 import mock
 import pytest
 
@@ -243,9 +242,6 @@ class TestClientCredentialsStrategy:
             client=65123, client_secret="12354", scopes=("applications.commands.update", "identify")
         )
 
-    async def test_close(self):
-        await rest.ClientCredentialsStrategy(client=32123, client_secret="54123").close()
-
 
 ###########
 # RESTApp #
@@ -339,12 +335,22 @@ def rest_client_class():
 
 
 @pytest.fixture()
+def live_attributes():
+    return mock.Mock(
+        buckets=mock.Mock(acquire=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock())),
+        global_rate_limit=mock.Mock(acquire=mock.AsyncMock()),
+        close=mock.AsyncMock(),
+    )
+
+
+@pytest.fixture()
+def rest_client(rest_client_class, live_attributes):
 def mock_cache():
     return mock.Mock()
 
 
 @pytest.fixture()
-def rest_client(rest_client_class, mock_cache):
+def rest_client(rest_client_class, live_attributes, mock_cache):
     obj = rest_client_class(
         cache=mock_cache,
         http_settings=mock.Mock(spec=config.HTTPSettings),
@@ -356,8 +362,7 @@ def rest_client(rest_client_class, mock_cache):
         executor=mock.Mock(),
         entity_factory=mock.Mock(),
     )
-    obj.buckets = mock.Mock(acquire=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock()))
-    obj.global_rate_limit = mock.Mock(acquire=mock.AsyncMock())
+    obj._live_attributes = live_attributes
     return obj
 
 
@@ -554,74 +559,6 @@ class TestRESTClientImpl:
         rest_client._token_type = mock_type
         assert rest_client.token_type is mock_type
 
-    def test__acquire_client_session_when_None(self, rest_client):
-        client_session_mock = object()
-        rest_client._acquire_tcp_connector = mock.Mock()
-        rest_client._http_settings.timeouts.total = 10
-        rest_client._http_settings.timeouts.acquire_and_connect = 5
-        rest_client._http_settings.timeouts.request_socket_read = 4
-        rest_client._http_settings.timeouts.request_socket_connect = 1
-        rest_client._proxy_settings.trust_env = False
-        rest_client._client_session = None
-
-        with mock.patch.object(aiohttp, "ClientSession", return_value=client_session_mock) as client_session:
-            assert rest_client._acquire_client_session() is client_session_mock
-            assert rest_client._client_session is client_session_mock
-            client_session.assert_called_once_with(
-                connector=rest_client._acquire_tcp_connector.return_value,
-                connector_owner=False,
-                raise_for_status=False,
-                timeout=aiohttp.ClientTimeout(total=10, connect=5, sock_read=4, sock_connect=1),
-                trust_env=False,
-                version=aiohttp.HttpVersion11,
-                ws_response_class=aiohttp.ClientWebSocketResponse,
-            )
-
-    def test__acquire_client_session_when_not_None_and_open(self, rest_client):
-        client_session_mock = mock.Mock(closed=False)
-        rest_client._client_session = client_session_mock
-
-        assert rest_client._acquire_client_session() is client_session_mock
-
-    def test__acquire_client_session_when_not_None_and_closed(self, rest_client):
-        client_session_mock = mock.Mock(closed=True)
-        rest_client._client_session = client_session_mock
-
-        with pytest.raises(errors.ComponentStateConflictError):
-            assert rest_client._acquire_client_session() is client_session_mock
-
-    def test__acquire_tcp_connector_when_None(self, rest_client):
-        tcp_connector_mock = object()
-        rest_client._http_settings.enable_cleanup_closed = False
-        rest_client._http_settings.force_close_transports = True
-        rest_client._http_settings.ssl = True
-        rest_client._tcp_connector = None
-
-        with mock.patch.object(aiohttp, "TCPConnector", return_value=tcp_connector_mock) as tcp_connector:
-            assert rest_client._acquire_tcp_connector() is tcp_connector_mock
-            assert rest_client._tcp_connector is tcp_connector_mock
-            tcp_connector.assert_called_once_with(
-                enable_cleanup_closed=rest_client.http_settings.enable_cleanup_closed,
-                force_close=rest_client.http_settings.force_close_transports,
-                limit=100,
-                ssl=rest_client.http_settings.ssl,
-                ttl_dns_cache=10,
-                use_dns_cache=True,
-            )
-
-    def test__acquire_tcp_connector_when_not_None_and_open(self, rest_client):
-        tcp_connector_mock = mock.Mock(closed=False)
-        rest_client._tcp_connector = tcp_connector_mock
-
-        assert rest_client._acquire_tcp_connector() is tcp_connector_mock
-
-    def test__acquire_tcp_connector_when_not_None_and_closed(self, rest_client):
-        tcp_connector_mock = mock.Mock(closed=True)
-        rest_client._tcp_connector = tcp_connector_mock
-
-        with pytest.raises(errors.ComponentStateConflictError):
-            assert rest_client._acquire_tcp_connector() is tcp_connector_mock
-
     @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),
         [
@@ -653,7 +590,7 @@ class TestRESTClientImpl:
     # Non-async endpoints #
     #######################
 
-    def test_trigger_typing(self, rest_client):
+    def test_trigger_typing(self, rest_client, live_attributes):
         channel = StubModel(123)
         stub_iterator = mock.Mock()
 
@@ -661,7 +598,7 @@ class TestRESTClientImpl:
             assert rest_client.trigger_typing(channel) == stub_iterator
 
             typing_indicator.assert_called_once_with(
-                request_call=rest_client._request, channel=channel, rest_closed_event=rest_client._closed_event
+                request_call=rest_client._request, channel=channel, rest_closed_event=live_attributes.closed_event
             )
 
     @pytest.mark.parametrize(
@@ -914,20 +851,23 @@ class TestRESTClientImplAsync:
         return ExitException
 
     async def test___aenter__and__aexit__(self, rest_client):
-        with mock.patch.object(rest_client, "close") as close:
-            async with rest_client as client:
-                assert client is rest_client
-                close.assert_not_called()
 
-        close.assert_awaited_once_with()
+        rest_client.close = mock.AsyncMock()
+        rest_client.start = mock.Mock()
+        async with rest_client as client:
+            assert client is rest_client
+            rest_client.start.assert_called_once()
+            rest_client.close.assert_not_called()
+
+        rest_client.close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
-    async def test__request_with_strategy_token(self, rest_client, exit_exception):
+    async def test__request_with_strategy_token(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = mock.Mock(rest_api.TokenStrategy, acquire=mock.AsyncMock(return_value="Bearer ok.ok.ok"))
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route)
@@ -936,7 +876,7 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
 
     @hikari_test_helpers.timeout()
-    async def test__request_retries_strategy_once(self, rest_client, exit_exception):
+    async def test__request_retries_strategy_once(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.UNAUTHORIZED
             content_type = rest._APPLICATION_JSON
@@ -950,11 +890,11 @@ class TestRESTClientImplAsync:
         mock_session = mock.AsyncMock(
             request=hikari_test_helpers.CopyingAsyncMock(side_effect=[StubResponse(), exit_exception])
         )
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = mock.Mock(
             rest_api.TokenStrategy, acquire=mock.AsyncMock(side_effect=["Bearer ok.ok.ok", "Bearer ok2.ok2.ok2"])
         )
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route)
@@ -965,7 +905,7 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
 
     @hikari_test_helpers.timeout()
-    async def test__request_raises_after_retry(self, rest_client, exit_exception):
+    async def test__request_raises_after_retry(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.UNAUTHORIZED
             content_type = rest._APPLICATION_JSON
@@ -983,11 +923,11 @@ class TestRESTClientImplAsync:
         mock_session = mock.AsyncMock(
             request=hikari_test_helpers.CopyingAsyncMock(side_effect=[StubResponse(), StubResponse(), StubResponse()])
         )
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = mock.Mock(
             rest_api.TokenStrategy, acquire=mock.AsyncMock(side_effect=["Bearer ok.ok.ok", "Bearer ok2.ok2.ok2"])
         )
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(errors.UnauthorizedError):
             await rest_client._request(route)
@@ -998,34 +938,34 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_buckets_not_started(self, rest_client, exit_exception):
+    async def test__request_when_buckets_not_started(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client.buckets.is_started = False
-        rest_client.buckets.acquire.side_effect = exit_exception
+        live_attributes.buckets.is_started = False
+        live_attributes.buckets.acquire.side_effect = exit_exception
 
         with pytest.raises(exit_exception):
             await rest_client._request(route)
 
-        rest_client.buckets.start.assert_called_once()
+        live_attributes.buckets.start.assert_called_once()
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_buckets_started(self, rest_client, exit_exception):
+    async def test__request_when_buckets_started(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client.buckets.acquire.side_effect = exit_exception
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.acquire.side_effect = exit_exception
+        live_attributes.buckets.is_started = True
 
         with pytest.raises(exit_exception):
             await rest_client._request(route)
 
-        rest_client.buckets.start.assert_not_called()
+        live_attributes.buckets.start.assert_not_called()
 
     @hikari_test_helpers.timeout()
-    async def test__request_when__token_is_None(self, rest_client, exit_exception):
+    async def test__request_when__token_is_None(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = None
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route)
@@ -1034,12 +974,12 @@ class TestRESTClientImplAsync:
         assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
 
     @hikari_test_helpers.timeout()
-    async def test__request_when__token_is_not_None(self, rest_client, exit_exception):
+    async def test__request_when__token_is_not_None(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = "token"
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route)
@@ -1048,55 +988,55 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_no_auth_passed(self, rest_client, exit_exception):
+    async def test__request_when_no_auth_passed(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = "token"
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route, no_auth=True)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
-        rest_client.buckets.acquire.assert_called_once_with(route)
-        rest_client.buckets.acquire.return_value.assert_used_once()
-        rest_client.global_rate_limit.acquire.assert_not_called()
+        live_attributes.buckets.acquire.assert_called_once_with(route)
+        live_attributes.buckets.acquire.return_value.assert_used_once()
+        live_attributes.global_rate_limit.acquire.assert_not_called()
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_auth_passed(self, rest_client, exit_exception):
+    async def test__request_when_auth_passed(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._token = "token"
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route, auth="ooga booga")
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "ooga booga"
-        rest_client.buckets.acquire.assert_called_once_with(route)
-        rest_client.buckets.acquire.return_value.assert_used_once()
-        rest_client.global_rate_limit.acquire.assert_awaited_once_with()
+        live_attributes.buckets.acquire.assert_called_once_with(route)
+        live_attributes.buckets.acquire.return_value.assert_used_once()
+        live_attributes.global_rate_limit.acquire.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_response_is_NO_CONTENT(self, rest_client):
+    async def test__request_when_response_is_NO_CONTENT(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.NO_CONTENT
             reason = "cause why not"
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._parse_ratelimits = mock.AsyncMock()
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         assert (await rest_client._request(route)) is None
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_response_is_APPLICATION_JSON(self, rest_client):
+    async def test__request_when_response_is_APPLICATION_JSON(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.OK
             content_type = rest._APPLICATION_JSON
@@ -1108,14 +1048,14 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._parse_ratelimits = mock.AsyncMock()
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         assert (await rest_client._request(route)) == {"something": None}
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_response_is_not_JSON(self, rest_client):
+    async def test__request_when_response_is_not_JSON(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.IM_USED
             content_type = "text/html"
@@ -1124,15 +1064,17 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._parse_ratelimits = mock.AsyncMock()
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(errors.HTTPError):
             await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_response_is_not_between_200_and_300(self, rest_client, exit_exception):
+    async def test__request_when_response_is_not_between_200_and_300(
+        self, rest_client, exit_exception, live_attributes
+    ):
         class StubResponse:
             status = http.HTTPStatus.NOT_IMPLEMENTED
             content_type = "text/html"
@@ -1140,31 +1082,28 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._handle_error_response = mock.AsyncMock(side_effect=exit_exception)
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(exit_exception):
             await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_response__RetryRequest_gets_handled(self, rest_client, exit_exception):
-        class StubResponse:
-            status = http.HTTPStatus.USE_PROXY
-            content_type = "text/html"
-            reason = "cause why not"
-
+    async def test__request_when_response__RetryRequest_gets_handled(
+        self, rest_client, exit_exception, live_attributes
+    ):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=[rest_client._RetryRequest, exit_exception]))
-        rest_client.buckets.is_started = True
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
         with pytest.raises(exit_exception):
             await rest_client._request(route)
 
     @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()
-    async def test__request_logger(self, rest_client, enabled):
+    async def test__request_logger(self, rest_client, enabled, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.NO_CONTENT
             headers = {}
@@ -1175,9 +1114,9 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(return_value=StubResponse()))
-        rest_client.buckets.is_started = True
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
         rest_client._parse_ratelimits = mock.AsyncMock()
-        rest_client._acquire_client_session = mock.Mock(return_value=mock_session)
 
         with mock.patch.object(rest, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=enabled))) as logger:
             await rest_client._request(route)
@@ -1195,7 +1134,7 @@ class TestRESTClientImplAsync:
 
             generate_error_response.assert_called_once_with(mock_response)
 
-    async def test__parse_ratelimits_when_not_ratelimited(self, rest_client):
+    async def test__parse_ratelimits_when_not_ratelimited(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.OK
             headers = {}
@@ -1204,10 +1143,10 @@ class TestRESTClientImplAsync:
 
         response = StubResponse()
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        await rest_client._parse_ratelimits(route, response)
+        await rest_client._parse_ratelimits(route, response, live_attributes)
         response.json.assert_not_called()
 
-    async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception):
+    async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -1218,9 +1157,9 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(exit_exception):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-    async def test__parse_ratelimits_when_unexpected_content_type(self, rest_client):
+    async def test__parse_ratelimits_when_unexpected_content_type(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = "text/html"
@@ -1232,9 +1171,9 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.HTTPResponseError):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-    async def test__parse_ratelimits_when_global_ratelimit(self, rest_client):
+    async def test__parse_ratelimits_when_global_ratelimit(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -1246,11 +1185,11 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(rest_client._RetryRequest):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        rest_client.global_rate_limit.throttle.assert_called_once_with(2.0)
+        live_attributes.global_rate_limit.throttle.assert_called_once_with(2.0)
 
-    async def test__parse_ratelimits_when_remaining_header_under_or_equal_to_0(self, rest_client):
+    async def test__parse_ratelimits_when_remaining_header_under_or_equal_to_0(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -1264,9 +1203,9 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(rest_client._RetryRequest):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-    async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
+    async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -1280,9 +1219,9 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(rest_client._RetryRequest):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-    async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client):
+    async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -1294,32 +1233,29 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.RateLimitedError):
-            await rest_client._parse_ratelimits(route, StubResponse())
+            await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-    async def test_close_when__client_session_is_None(self, rest_client):
-        rest_client._client_session = None
-        rest_client._connector_factory = mock.AsyncMock()
-        rest_client.buckets = mock.Mock()
-
-        await rest_client.close()
-
-        rest_client.buckets.close.assert_called_once()
-
-    async def test_close_when__client_session_is_not_None(self, rest_client):
-        rest_client._client_session = mock.AsyncMock()
-        rest_client._connector_factory = mock.AsyncMock()
-        rest_client.buckets = mock.Mock()
+    async def test_close_when__client_session_is_None(self, rest_client, live_attributes):
+        live_attributes.client_session = None
+        live_attributes.buckets = mock.Mock()
 
         await rest_client.close()
 
-        rest_client._client_session.close.assert_called_once()
-        rest_client.buckets.close.assert_called_once()
+        live_attributes.buckets.close.assert_called_once()
 
-    async def test_close_when__token_is_strategy(self, rest_client):
+    async def test_close_when__client_session_is_not_None(self, rest_client, live_attributes):
+        live_attributes.client_session = mock.AsyncMock()
+        live_attributes.buckets = mock.Mock()
+
+        await rest_client.close()
+
+        live_attributes.client_session.close.assert_called_once()
+        live_attributes.buckets.close.assert_called_once()
+
+    async def test_close_when__token_is_strategy(self, rest_client, live_attributes):
         rest_client._token = mock.AsyncMock(rest_api.TokenStrategy)
-        rest_client._client_session = mock.AsyncMock()
-        rest_client._connector_factory = mock.AsyncMock()
-        rest_client.buckets = mock.Mock()
+        live_attributes.client_session = mock.AsyncMock()
+        live_attributes.buckets = mock.Mock()
 
         await rest_client.close()
 
