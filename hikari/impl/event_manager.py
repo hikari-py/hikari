@@ -28,6 +28,7 @@ __all__: typing.List[str] = ["EventManagerImpl"]
 
 import asyncio
 import base64
+import logging
 import random
 import typing
 
@@ -48,6 +49,7 @@ from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.impl import event_manager_base
 from hikari.internal import time
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -57,6 +59,9 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
+
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 
 def _fixed_size_nonce() -> str:
@@ -157,6 +162,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         if not self._enabled_for_event(guild_events.GuildAvailableEvent):
+            _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
             event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None] = None
             guild_definition = self._app.entity_factory.deserialize_gateway_guild(
                 payload,
@@ -253,6 +259,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         if not self._enabled_for_event(guild_events.GuildUpdateEvent):
+            _LOGGER.log(ux.TRACE, "Skipping on_guild_update dispatch due to lack of any registered listeners")
             event: typing.Optional[guild_events.GuildUpdateEvent] = None
             guild_definition = self._app.entity_factory.deserialize_gateway_guild(
                 payload,
