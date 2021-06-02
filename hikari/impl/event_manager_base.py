@@ -351,6 +351,8 @@ class EventManagerBase(event_manager_.EventManager):
         if consumer.event_types is undefined.UNDEFINED:
             return True
 
+        # If event_types is not UNDEFINED then cache_components shouldn't ever be undefined.
+        assert consumer.cache_components is not undefined.UNDEFINED
         if (cached_value := self._enabled_consumers_cache.get(consumer)) is True:
             return True
 
@@ -364,11 +366,9 @@ class EventManagerBase(event_manager_.EventManager):
 
             self._enabled_consumers_cache[consumer] = False
 
-        # If cache_components is UNDEFINED then we have to fall back to assuming that the consumer might alter state.
         # If cache_components is NONE then it doesn't make any altering state calls.
         return (
-            consumer.cache_components is undefined.UNDEFINED
-            or consumer.cache_components != config.CacheComponents.NONE
+            consumer.cache_components != config.CacheComponents.NONE
             and (consumer.cache_components & self._app.cache.settings.components) != 0
         )
 
