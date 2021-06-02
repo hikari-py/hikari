@@ -529,7 +529,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     def _get_ws(self) -> _GatewayTransport:
         if not self._ws:
-            raise errors.ComponentStateConflictError("Shard shutting down")
+            raise errors.ComponentStateConflictError("Shard is shutting down")
 
         return self._ws
 

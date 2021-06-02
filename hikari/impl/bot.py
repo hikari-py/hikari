@@ -760,6 +760,7 @@ class GatewayBot(traits.GatewayBotAware):
                 name="check for package updates",
             )
 
+        self._rest.start()
         requirements_task = asyncio.create_task(
             self._rest.fetch_gateway_bot_info(), name="fetch gateway sharding settings"
         )

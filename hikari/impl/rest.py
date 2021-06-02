@@ -576,16 +576,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
     @property
-    def buckets(self) -> typing.Optional[buckets_.RESTBucketManager]:
-        """Bucket ratelimiter manager."""
-        return self._live_attributes.buckets if self._live_attributes else None
-
-    @property
-    def global_rate_limit(self) -> typing.Optional[rate_limits.ManualRateLimiter]:
-        """Global ratelimiter."""
-        return self._live_attributes.global_rate_limit if self._live_attributes else None
-
-    @property
     def is_alive(self) -> bool:
         return self._live_attributes is not None
 
@@ -618,15 +608,31 @@ class RESTClientImpl(rest_api.RESTClient):
         # https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-715977247
         await asyncio.sleep(0.25)
 
-    def _get_live_attributes(self) -> _LiveAttributes:
-        if not self._live_attributes:
-            self._live_attributes = _LiveAttributes.build(
-                self._max_rate_limit, self._http_settings, self._proxy_settings
-            )
+    @typing.final
+    def start(self) -> None:
+        """Start the HTTP client.
 
-        return self._live_attributes
+        !!! note
+            This must be called within an active event loop.
+
+        Raises
+        ------
+        RuntimeError
+            If this is called in an environment without an active event loop.
+        """
+        if self._live_attributes:
+            raise errors.ComponentStateConflictError("Cannot start a REST Client which is already alive")
+
+        self._live_attributes = _LiveAttributes.build(self._max_rate_limit, self._http_settings, self._proxy_settings)
+
+    def _get_live_attributes(self) -> _LiveAttributes:
+        if self._live_attributes:
+            return self._live_attributes
+
+        raise errors.ComponentStateConflictError("Cannot make any requests with an inactive REST client")
 
     async def __aenter__(self) -> RESTClientImpl:
+        self.start()
         return self
 
     async def __aexit__(

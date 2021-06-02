@@ -64,7 +64,6 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)
         self._is_alive = False
-        self.start()
 
     @property
     def is_alive(self) -> bool:
@@ -72,7 +71,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     def _check_if_alive(self) -> None:
         if not self._is_alive:
-            raise errors.ComponentStateConflictError("component cannot be used while it's not alive")
+            raise errors.ComponentStateConflictError("Component cannot be used while it's not alive")
 
     async def _disconnect(self) -> None:
         if self._connections:
@@ -90,12 +89,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     def start(self) -> None:
-        """Start this voice component after it's been closed.
+        """Start this voice component after it's been closed."""
+        if self._is_alive:
+            raise errors.ComponentStateConflictError("Cannot start a voice component which is already running")
 
-        !!! note
-            For this implementation `VoiceComponentImplstart` is implicitly
-            called while initialising the class.
-        """
         self._is_alive = True
         self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
