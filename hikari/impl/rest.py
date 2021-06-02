@@ -424,7 +424,7 @@ class RESTApp(traits.ExecutorAware):
 
 @attr.define()
 class _LiveAttributes:
-    """Fields which are only present within `RESTClientImpl` while it's "live".
+    """Fields which are only present within `RESTClientImpl` while it's "alive".
 
     !!! note
         This must be started within an active asyncio event loop.
