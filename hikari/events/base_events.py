@@ -62,7 +62,7 @@ class Event(abc.ABC):
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         # hasattr doesn't work with private variables in this case so we use a try except.
-        # We need to set Event's __dispatches when the first subclass is made as Event itself cannot
+        # We need to set Event's __dispatches when the first subclass is made as Event cannot
         # be included in a tuple literal on itself due to not existing yet.
         try:
             Event.__dispatches
