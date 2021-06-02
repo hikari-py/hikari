@@ -67,8 +67,10 @@ if typing.TYPE_CHECKING:
     from hikari import iterators
     from hikari import messages
     from hikari import users
+    from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
+    from hikari.internal import time
 
 
 @typing.final
@@ -967,6 +969,44 @@ class GuildChannel(PartialChannel):
 
         return None
 
+    async def fetch_guild(self) -> guilds.PartialGuild:
+        """Fetch the guild linked to this channel.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to fetch. This can be the object
+            or the ID of an existing guild.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The requested guild.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_guild(self.guild_id)
+
     async def edit_overwrite(
         self,
         target: typing.Union[snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, PermissionOverwrite],
@@ -1066,6 +1106,100 @@ class GuildChannel(PartialChannel):
         """  # noqa: E501 - Line too long
         return await self.app.rest.delete_permission_overwrite(self.id, target)
 
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[VideoQualityMode, int]] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
+        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> PartialChannel:
+        """Edit the text channel.
+
+        Other Parameters
+        ----------------
+        name : hikari.undefined.UndefinedOr[[builtins.str]
+            If provided, the new name for the channel.
+        position : hikari.undefined.UndefinedOr[[builtins.int]
+            If provided, the new position for the channel.
+        topic : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new topic for the channel.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the channel should be marked as NSFW or not.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the new bitrate for the channel.
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+            If provided, the new video quality mode for the channel.
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the new user limit in the channel.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the new rate limit per user in the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            If provided, the voice region to set for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the new permission overwrites for the channel.
+        parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            If provided, the new guild category for the channel.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            The edited channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing permissions to edit the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        return await self.app.rest.edit_channel(
+            self.id,
+            name=name,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            video_quality_mode=video_quality_mode,
+            user_limit=user_limit,
+            rate_limit_per_user=rate_limit_per_user,
+            region=region,
+            permission_overwrites=permission_overwrites,
+            parent_category=parent_category,
+            reason=reason,
+        )
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
@@ -1109,28 +1243,6 @@ class GuildTextChannel(GuildChannel, TextChannel):
         This may be `builtins.None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
-
-    async def edit(
-        self,
-        *,
-        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
-        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> PartialChannel:
-        return await self.app.rest.edit_channel(
-            self.id,
-            name=name,
-            position=position,
-            topic=topic,
-            nsfw=nsfw,
-            permission_overwrites=permission_overwrites,
-            parent_category=parent_category,
-            reason=reason,
-        )
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

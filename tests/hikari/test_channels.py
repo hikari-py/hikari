@@ -343,3 +343,36 @@ class TestGuildChannel:
             69420,
             333,
         )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild(self, model):
+        model.app.rest.fetch_guild = mock.AsyncMock()
+
+        assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
+
+        model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+
+    @pytest.mark.asyncio()
+    async def test_edit(self, model):
+        model.app.rest.edit_channel = mock.AsyncMock()
+
+        assert (
+            await model.edit(name="Supa fast boike", bitrate=420, reason="left right")
+            == model.app.rest.edit_channel.return_value
+        )
+
+        model.app.rest.edit_channel.assert_awaited_once_with(
+            69420,
+            name="Supa fast boike",
+            position=undefined.UNDEFINED,
+            topic=undefined.UNDEFINED,
+            nsfw=undefined.UNDEFINED,
+            bitrate=420,
+            video_quality_mode=undefined.UNDEFINED,
+            user_limit=undefined.UNDEFINED,
+            rate_limit_per_user=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            permission_overwrites=undefined.UNDEFINED,
+            parent_category=undefined.UNDEFINED,
+            reason="left right",
+        )
