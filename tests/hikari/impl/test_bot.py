@@ -470,6 +470,22 @@ class TestBotApp:
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             bot.run(shard_ids={1})
 
+    def test_run_builds_new_loop(self, bot):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "get_event_loop", side_effect=RuntimeError))
+        stack.enter_context(mock.patch.object(asyncio, "new_event_loop"))
+        stack.enter_context(mock.patch.object(asyncio, "set_event_loop"))
+
+        with stack:
+            bot.run(close_loop=False)
+
+            asyncio.get_event_loop.assert_called_once()
+            asyncio.new_event_loop.assert_called_once()
+            asyncio.set_event_loop.assert_called_once_with(asyncio.new_event_loop.return_value)
+
     def test_run_with_asyncio_debug(self, bot):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
