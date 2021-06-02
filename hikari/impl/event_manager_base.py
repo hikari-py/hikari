@@ -44,7 +44,9 @@ from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import aio
+from hikari.internal import fast_protocol
 from hikari.internal import reflect
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import types
@@ -74,10 +76,20 @@ if typing.TYPE_CHECKING:
         [EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
-    MethodT = typing.Callable[
-        [gateway_shard.GatewayShard, data_binding.JSONObject],
-        typing.Coroutine[typing.Any, typing.Any, None],
-    ]
+
+
+@typing.runtime_checkable
+class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
+    async def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, /) -> None:
+        raise NotImplementedError
+
+    @property
+    def __cache_resource__(self) -> config.CacheComponents:
+        raise NotImplementedError
+
+    @property
+    def __event_types__(self) -> typing.Sequence[typing.Type[base_events.Event]]:
+        raise NotImplementedError
 
 def _generate_weak_listener(
     reference: weakref.WeakMethod,
@@ -250,10 +262,6 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
         raise TypeError("Only the first argument for a listener can be required, the event argument.")
 
 
-_CACHE_RESOURCE_ATTRIBUTE = "__CACHE_RESOURCE__"
-_EVENT_TYPES_ATTRIBUTE = "__EVENT_TYPES__"
-
-
 def filtered(
     event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
     cache_resource: config.CacheComponents = config.CacheComponents.NONE,
@@ -268,9 +276,10 @@ def filtered(
         event_types = event_types.dispatches()
 
     def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
-        setattr(method, _CACHE_RESOURCE_ATTRIBUTE, cache_resource)
-        setattr(method, _EVENT_TYPES_ATTRIBUTE, event_types)
-        return method
+        method.__cache_resource__ = cache_resource  # type: ignore[attr-defined]
+        method.__event_types__ = event_types  # type: ignore[attr-defined]
+        assert isinstance(method, _FilteredMethodT), "Incorrect attribute(s) set for a filtered method"
+        return method  # type: ignore[unreachable]
 
     return decorator
 
@@ -307,12 +316,12 @@ class EventManagerBase(event_manager_.EventManager):
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
-                member = typing.cast(MethodT, member)
-                cache_resource = getattr(member, _CACHE_RESOURCE_ATTRIBUTE, undefined.UNDEFINED)
-                event_types = getattr(member, _EVENT_TYPES_ATTRIBUTE, undefined.UNDEFINED)
-                cache_resource: undefined.UndefinedOr[config.CacheComponents] = cache_resource
-                event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]] = event_types
-                self._consumers[name[3:]] = _Consumer(member, cache_resource, event_types)
+                event_name = name[3:]
+                if isinstance(member, _FilteredMethodT):
+                    self._consumers[event_name] = _Consumer(member, member.__cache_resource__, member.__event_types__)
+
+                else:
+                    self._consumers[event_name] = _Consumer(member, undefined.UNDEFINED, undefined.UNDEFINED)
 
     def _clear_enabled_cache(self) -> None:
         self._enabled_consumers_cache = {}
@@ -324,8 +333,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return False
 
-    # This returns int rather than bool to avoid an unnecessary bool cast
-    def _enabled_for_consumer(self, consumer: _Consumer, /) -> int:
+    def _enabled_for_consumer(self, consumer: _Consumer, /) -> bool:
         # If undefined then we can only assume that this may link to registered listeners.
         if consumer.event_types is undefined.UNDEFINED:
             return True
@@ -346,7 +354,7 @@ class EventManagerBase(event_manager_.EventManager):
         return (
             consumer.cache_components is undefined.UNDEFINED
             or consumer.cache_components != config.CacheComponents.NONE
-            and consumer.cache_components & self._app.cache.settings.components
+            and (consumer.cache_components & self._app.cache.settings.components) != 0
         )
 
     def consume_raw_event(
@@ -356,8 +364,7 @@ class EventManagerBase(event_manager_.EventManager):
             payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
             self.dispatch(payload_event)
         consumer = self._consumers[event_name.lower()]
-        if self._enabled_for_consumer(consumer):
-            asyncio.create_task(self._handle_dispatch(consumer.callback, shard, payload), name=f"dispatch {event_name}")
+        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
@@ -562,14 +569,21 @@ class EventManagerBase(event_manager_.EventManager):
 
             raise
 
-    @staticmethod
     async def _handle_dispatch(
-        callback: ConsumerT,
+        self,
+        consumer: _Consumer,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
     ) -> None:
+        if not self._enabled_for_consumer(consumer):
+            name = consumer.callback.__name__
+            _LOGGER.log(
+                ux.TRACE, "Skipping raw dispatch for %s due to lack of any registered listeners or cache need", name
+            )
+            return
+
         try:
-            await callback(shard, payload)
+            await consumer.callback(shard, payload)
         except asyncio.CancelledError:
             # Skip cancelled errors, likely caused by the event loop being shut down.
             pass
