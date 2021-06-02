@@ -803,6 +803,9 @@ class GatewayShardImpl(shard.GatewayShard):
                     last_started_at = time.monotonic()
                     should_restart = await self._run_once()
 
+                    # Since nothing went wrong, we can reset the backoff
+                    backoff.reset()
+
                     if not should_restart:
                         self._logger.info("shard has disconnected and shut down normally")
                         return
