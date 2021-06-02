@@ -70,6 +70,7 @@ class Event(abc.ABC):
             Event.__dispatches = (Event,)
 
         mro = cls.mro()
+        # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
         # Non-event classes should be ignored.
         cls.__dispatches = tuple(cls for cls in mro if issubclass(cls, Event))
 

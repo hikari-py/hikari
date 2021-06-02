@@ -84,7 +84,7 @@ class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
         raise NotImplementedError
 
     @property
-    def __cache_resource__(self) -> config.CacheComponents:
+    def __cache_components__(self) -> config.CacheComponents:
         raise NotImplementedError
 
     @property
@@ -264,10 +264,23 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
 
 def filtered(
     event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
-    cache_resource: config.CacheComponents = config.CacheComponents.NONE,
+    cache_components: config.CacheComponents = config.CacheComponents.NONE,
     /,
 ) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
-    """Add metadata to a listener method to indicate when it should be unmarshalled and dispatched."""
+    """Add metadata to a consumer method to indicate when it should be unmarshalled and dispatched.
+
+    Parameters
+    ----------
+    event_types
+        Types of the events this raw consumer method may dispatch.
+        This may either be a singular type of a sequence of types.
+
+    Other Parameters
+    ----------------
+    cache_components : hikari.config.CacheComponents
+        Bitfield of the cache components this event may make altering calls to.
+        This defaults to `hikari.config.CacheComponents.NONE`.
+    """
     if isinstance(event_types, typing.Sequence):
         # dict.fromkeys is used to remove any duplicate entries here
         event_types = tuple(dict.fromkeys(itertools.chain.from_iterable(e.dispatches() for e in event_types)))
@@ -276,7 +289,7 @@ def filtered(
         event_types = event_types.dispatches()
 
     def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
-        method.__cache_resource__ = cache_resource  # type: ignore[attr-defined]
+        method.__cache_components__ = cache_components  # type: ignore[attr-defined]
         method.__event_types__ = event_types  # type: ignore[attr-defined]
         assert isinstance(method, _FilteredMethodT), "Incorrect attribute(s) set for a filtered method"
         return method  # type: ignore[unreachable]
@@ -318,7 +331,7 @@ class EventManagerBase(event_manager_.EventManager):
             if name.startswith("on_"):
                 event_name = name[3:]
                 if isinstance(member, _FilteredMethodT):
-                    self._consumers[event_name] = _Consumer(member, member.__cache_resource__, member.__event_types__)
+                    self._consumers[event_name] = _Consumer(member, member.__cache_components__, member.__event_types__)
 
                 else:
                     self._consumers[event_name] = _Consumer(member, undefined.UNDEFINED, undefined.UNDEFINED)
@@ -342,6 +355,8 @@ class EventManagerBase(event_manager_.EventManager):
             return True
 
         if cached_value is None:
+            # The behaviour here where an empty sequence for event_types will lead to this always
+            # being skipped unless there's a relevant enabled cache resource is intended behaviour.
             for event_type in consumer.event_types:
                 if event_type in self._listeners or event_type in self._waiters:
                     self._enabled_consumers_cache[consumer] = True
@@ -349,8 +364,8 @@ class EventManagerBase(event_manager_.EventManager):
 
             self._enabled_consumers_cache[consumer] = False
 
-        # If cache_components is UNDEFINED then we have to fall back to assuming that the consumer might set state.
-        # If cache_components is NONE then it doesn't make set state calls.
+        # If cache_components is UNDEFINED then we have to fall back to assuming that the consumer might alter state.
+        # If cache_components is NONE then it doesn't make any altering state calls.
         return (
             consumer.cache_components is undefined.UNDEFINED
             or consumer.cache_components != config.CacheComponents.NONE

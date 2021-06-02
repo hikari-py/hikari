@@ -103,7 +103,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         super().__init__(event_factory=event_factory, intents=intents)
 
     def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
-        return (self._cache and self._cache.settings.components & components) == components
+        return self._cache is not None and (self._cache.settings.components & components) == components
 
     @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME)
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -158,7 +158,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # TODO: we need a method for this specifically
         await self.dispatch(self._event_factory.deserialize_channel_pins_update_event(shard, payload))
 
-    # on_guild_create prefers internal granularity over filtering with event_manager_base.filtered
+    # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large cache scope.
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         if not self._enabled_for_event(guild_events.GuildAvailableEvent):
@@ -255,7 +255,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if event:
             await self.dispatch(event)
 
-    # on_guild_update prefers internal granularity over filtering with event_manager_base.filtered
+    # Internal granularity is preferred for GUILD_UPDATE over decorator based filtering due to its large cache scope.
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
         if not self._enabled_for_event(guild_events.GuildUpdateEvent):
@@ -358,12 +358,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         await self.dispatch(event)
 
-    @event_manager_base.filtered(())
+    @event_manager_base.filtered(())  # An empty sequence here means that this method will always be skipped.
     async def on_guild_integrations_update(self, _: gateway_shard.GatewayShard, __: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-integrations-update for more info."""
         # This is only here to stop this being logged or dispatched as an "unknown event".
         # This event is made redundant by INTEGRATION_CREATE/DELETE/UPDATE and is thus not parsed or dispatched.
-        return None
+        raise NotImplementedError
 
     @event_manager_base.filtered(guild_events.IntegrationCreateEvent)
     async def on_integration_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
