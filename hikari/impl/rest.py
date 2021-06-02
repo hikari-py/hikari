@@ -424,6 +424,12 @@ class RESTApp(traits.ExecutorAware):
 
 @attr.define
 class _LiveAttributes:
+    """Fields which are only present within `RESTClientImpl` while it's "live".
+
+    !!! note
+        This must be started within an active asyncio event loop.
+    """
+
     buckets: buckets_.RESTBucketManager
     client_session: aiohttp.ClientSession
     closed_event: asyncio.Event
