@@ -85,11 +85,11 @@ class VoiceComponentImpl(voice.VoiceComponent):
     async def close(self) -> None:
         self._check_if_alive()
         self._is_alive = False
-        await self._disconnect()
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+        await self._disconnect()
 
     def start(self) -> None:
-        """Start this voice component after it's been closed."""
+        """Start this voice component."""
         if self._is_alive:
             raise errors.ComponentStateConflictError("Cannot start a voice component which is already running")
 

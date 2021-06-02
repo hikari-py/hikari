@@ -422,7 +422,7 @@ class RESTApp(traits.ExecutorAware):
         return rest_client
 
 
-@attr.define
+@attr.define()
 class _LiveAttributes:
     """Fields which are only present within `RESTClientImpl` while it's "live".
 
@@ -594,11 +594,9 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.final
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""
-        if not self._live_attributes:
-            raise errors.ComponentStateConflictError("Cannot close a component which isn't running")
-
-        await self._live_attributes.close()
+        live_attributes = self._get_live_attributes()
         self._live_attributes = None
+        await live_attributes.close()
 
         # We have to sleep to allow aiohttp time to close SSL transports...
         # https://github.com/aio-libs/aiohttp/issues/1925
@@ -629,7 +627,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if self._live_attributes:
             return self._live_attributes
 
-        raise errors.ComponentStateConflictError("Cannot make any requests with an inactive REST client")
+        raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
 
     async def __aenter__(self) -> RESTClientImpl:
         self.start()
