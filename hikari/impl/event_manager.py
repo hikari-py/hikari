@@ -52,6 +52,7 @@ from hikari.internal import time
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    from hikari import emojis as emojis_
     from hikari import guilds
     from hikari import invites
     from hikari import voices
@@ -161,42 +162,65 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large cache scope.
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        if not self._enabled_for_event(guild_events.GuildAvailableEvent):
+        enabled_for_event = self._enabled_for_event(guild_events.GuildAvailableEvent)
+        if not enabled_for_event and self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
+            event: typing.Optional[guild_events.GuildAvailableEvent] = None
             event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None] = None
-            guild_definition = self._app.entity_factory.deserialize_gateway_guild(
-                payload,
-                include_guild=self._cache_enabled_for(config.CacheComponents.GUILDS),
-                include_channels=self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS),
-                include_emojis=self._cache_enabled_for(config.CacheComponents.EMOJIS),
-                include_members=self._cache_enabled_for(config.CacheComponents.MEMBERS),
-                include_presences=self._cache_enabled_for(config.CacheComponents.PRESENCES),
-                include_roles=self._cache_enabled_for(config.CacheComponents.ROLES),
-                include_voice_states=self._cache_enabled_for(config.CacheComponents.VOICE_STATES),
-            )
-            guild = guild_definition.guild
-            guild_id = guild_definition.id
+            guild_definition = self._app.entity_factory.deserialize_gateway_guild(payload)
+
+            if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS):
+                guild_definition.parse_channels()
+
+            if self._cache_enabled_for(config.CacheComponents.EMOJIS):
+                guild_definition.parse_emojis()
+
+            if self._cache_enabled_for(config.CacheComponents.GUILDS):
+                guild_definition.parse_guild()
+
+            if self._cache_enabled_for(config.CacheComponents.MEMBERS):
+                guild_definition.parse_members()
+
+            if self._cache_enabled_for(config.CacheComponents.PRESENCES):
+                guild_definition.parse_presences()
+
+            if self._cache_enabled_for(config.CacheComponents.ROLES):
+                guild_definition.parse_roles()
+
+            if self._cache_enabled_for(config.CacheComponents.VOICE_STATES):
+                guild_definition.parse_voice_states()
+
             channels = guild_definition.channels
             emojis = guild_definition.emojis
+            guild = guild_definition.guild
+            guild_id = guild_definition.id
             members = guild_definition.members
             presences = guild_definition.presences
             roles = guild_definition.roles
             voice_states = guild_definition.voice_states
 
-        else:
+        elif enabled_for_event:
             if "unavailable" in payload:
                 event = self._event_factory.deserialize_guild_available_event(shard, payload)
             else:
                 event = self._event_factory.deserialize_guild_join_event(shard, payload)
 
-            guild = event.guild
-            guild_id = guild.id
             channels = event.channels
             emojis = event.emojis
+            guild = event.guild
+            guild_id = guild.id
             members = event.members
             presences = event.presences
             roles = event.roles
             voice_states = event.voice_states
+
+        else:
+            channels = None
+            emojis = None
+            members = None
+            presences = None
+            roles = None
+            voice_states = None
 
         if self._cache:
             if guild:
@@ -258,41 +282,54 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     # Internal granularity is preferred for GUILD_UPDATE over decorator based filtering due to its large cache scope.
     async def on_guild_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-update for more info."""
-        if not self._enabled_for_event(guild_events.GuildUpdateEvent):
-            _LOGGER.log(ux.TRACE, "Skipping on_guild_update dispatch due to lack of any registered listeners")
+        enabled_for_event = self._enabled_for_event(guild_events.GuildUpdateEvent)
+
+        if not enabled_for_event and self._cache:
+            _LOGGER.log(ux.TRACE, "Skipping on_guild_update raw dispatch due to lack of any registered listeners")
             event: typing.Optional[guild_events.GuildUpdateEvent] = None
-            guild_definition = self._app.entity_factory.deserialize_gateway_guild(
-                payload,
-                include_guild=self._cache_enabled_for(config.CacheComponents.GUILDS),
-                include_emojis=self._cache_enabled_for(config.CacheComponents.EMOJIS),
-                include_roles=self._cache_enabled_for(config.CacheComponents.ROLES),
-            )
+            guild_definition = self._app.entity_factory.deserialize_gateway_guild(payload)
+
+            if self._cache_enabled_for(config.CacheComponents.GUILDS):
+                guild_definition.parse_guild()
+
+            if self._cache_enabled_for(config.CacheComponents.EMOJIS):
+                guild_definition.parse_emojis()
+
+            if self._cache_enabled_for(config.CacheComponents.ROLES):
+                guild_definition.parse_roles()
+
             guild = guild_definition.guild
             guild_id = guild_definition.id
             emojis = guild_definition.emojis
             roles = guild_definition.roles
 
-        else:
-            old = self._cache.get_guild(snowflakes.Snowflake(payload["id"])) if self._cache else None
+        elif enabled_for_event:
+            guild_id = snowflakes.Snowflake(payload["guild_id"])
+            old = self._cache.get_guild(guild_id) if self._cache else None
             event = self._event_factory.deserialize_guild_update_event(shard, payload, old_guild=old)
-            guild = event.guild
-            guild_id = guild.id
             emojis = event.emojis
+            guild = event.guild
             roles = event.roles
+
+        else:
+            _LOGGER.log(
+                ux.TRACE, "Skipping on_guild_update raw dispatch due to lack of any registered listeners or cache need"
+            )
+            return
 
         if self._cache:
             if guild:
                 self._cache.update_guild(guild)
 
-            if roles:
-                self._cache.clear_roles_for_guild(guild_id)
-                for role in roles.values():
-                    self._cache.set_role(role)
-
             if emojis:
                 self._cache.clear_emojis_for_guild(guild_id)
                 for emoji in emojis.values():
                     self._cache.set_emoji(emoji)
+
+            if roles:
+                self._cache.clear_roles_for_guild(guild_id)
+                for role in roles.values():
+                    self._cache.set_role(role)
 
         if event:
             await self.dispatch(event)

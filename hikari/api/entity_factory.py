@@ -28,10 +28,7 @@ __all__: typing.List[str] = ["EntityFactory", "GatewayGuildDefinition"]
 import abc
 import typing
 
-import attr
-
 from hikari import undefined
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
@@ -57,43 +54,94 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import component_interactions
     from hikari.internal import data_binding
 
+    GatewayGuildDefinitionT = typing.TypeVar("GatewayGuildDefinitionT", bound="GatewayGuildDefinition")
 
-@attr_extensions.with_copy
-@attr.define(weakref_slot=False)
-class GatewayGuildDefinition:
-    """A structure for handling entities within guild create and update events."""
 
-    id: snowflakes.Snowflake = attr.field()
+class GatewayGuildDefinition(abc.ABC):
+    """A builder object for handling entities within guild create and update events.
+
+    !!! note
+        By default the only field that's parsed here is `id` with other attributes
+        only being filled if their relevant "parse_resource" method has been
+        called.
+
+    !!! warning
+        If a parse_resource method is called for a resource which isn't present
+        in the provided payload then a `KeyError` will be raised.
+    """
+
+    id: snowflakes.Snowflake
     """ID of the guild the definition is for."""
 
-    guild: typing.Optional[guild_models.GatewayGuild] = attr.field()
+    guild: typing.Optional[guild_models.GatewayGuild]
     """Object of the guild the definition is for."""
 
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field()
+    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]]
     """Mapping of channel IDs to the channels that belong to the guild."""
 
-    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field()
+    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]]
     """Mapping of user IDs to the members that belong to the guild.
 
     !!! note
         This may be a partial mapping of members in the guild.
     """
 
-    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field()
+    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]]
     """Mapping of user IDs to the presences that are active in the guild.
 
     !!! note
         This may be a partial mapping of presences active in the guild.
     """
 
-    roles: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Role]] = attr.field()
+    roles: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Role]]
     """Mapping of role IDs to the roles that belong to the guild."""
 
-    emojis: typing.Optional[typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]] = attr.field()
+    emojis: typing.Optional[typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]]
     """Mapping of emoji IDs to the emojis that belong to the guild."""
 
-    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
+    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]]
     """Mapping of user IDs to the voice states that are active in the guild."""
+
+    def parse_all(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Short hand for calling all the "parse" builder methods."""
+        return (
+            self.parse_guild()
+            .parse_channels()
+            .parse_emojis()
+            .parse_guild()
+            .parse_members()
+            .parse_presences()
+            .parse_roles()
+            .parse_voice_states()
+        )
+
+    @abc.abstractmethod
+    def parse_channels(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the channels in this definition."""
+
+    @abc.abstractmethod
+    def parse_emojis(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the emojis in this definition."""
+
+    @abc.abstractmethod
+    def parse_guild(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the guild in this definition."""
+
+    @abc.abstractmethod
+    def parse_members(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the members in this definition."""
+
+    @abc.abstractmethod
+    def parse_presences(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the channels in this definition."""
+
+    @abc.abstractmethod
+    def parse_roles(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the presences in this definition."""
+
+    @abc.abstractmethod
+    def parse_voice_states(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
+        """Builder method called to parse the voice states in this definition."""
 
 
 class EntityFactory(abc.ABC):
@@ -920,18 +968,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_gateway_guild(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        include_guild: bool = True,
-        include_channels: bool = False,
-        include_emojis: bool = True,
-        include_members: bool = False,
-        include_presences: bool = False,
-        include_roles: bool = True,
-        include_voice_states: bool = False,
-    ) -> GatewayGuildDefinition:
+    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters

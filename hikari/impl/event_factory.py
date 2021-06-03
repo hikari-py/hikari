@@ -193,16 +193,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_guild_available_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(
-            payload,
-            include_guild=True,
-            include_channels=True,
-            include_members=True,
-            include_presences=True,
-            include_voice_states=True,
-            include_emojis=True,
-            include_roles=True,
-        )
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload).parse_all()
         assert guild_information.guild is not None
         assert guild_information.channels is not None
         assert guild_information.emojis is not None
@@ -247,8 +238,8 @@ class EventFactoryImpl(event_factory.EventFactory):
         *,
         old_guild: typing.Optional[guild_models.GatewayGuild],
     ) -> guild_events.GuildUpdateEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(
-            payload, include_guild=True, include_emojis=True, include_roles=True
+        guild_information = (
+            self._app.entity_factory.deserialize_gateway_guild(payload).parse_guild().parse_emojis().parse_roles()
         )
         assert guild_information.guild is not None
         assert guild_information.emojis is not None
