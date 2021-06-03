@@ -355,7 +355,7 @@ class RESTApp(traits.ExecutorAware):
         # Using the returned client as a context manager to implicitly start
         # and stop it.
         async with rest_app.acquire("A token", "Bot") as client:
-            ...
+            user = await client.fetch_my_user()
         ```
 
         Parameters
@@ -441,7 +441,7 @@ class RESTClientImpl(rest_api.RESTClient):
     Raises
     ------
     ValueError
-        * If `token_type` is provided when a token strategy is passed for `token`
+        * If `token_type` is provided when a token strategy is passed for `token`.
         * if `token_type` is left as `builtins.None` when a string is passed for `token`.
     """
 

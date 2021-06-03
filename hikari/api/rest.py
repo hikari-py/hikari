@@ -64,7 +64,7 @@ class TokenStrategy(abc.ABC):
     @property
     @abc.abstractmethod
     def token_type(self) -> typing.Union[applications.TokenType, str]:
-        """Type of token this token strategy returns.
+        """Type of token this strategy returns.
 
         Returns
         -------
