@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import channels
-from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -207,7 +206,10 @@ class TestGuildMessageCreateEvent:
         event.app.cache.get_guild.assert_called_once_with(342123123)
 
     def test_author_property(self, event):
-        assert event.author is event.message.member
+        assert event.author is event.message.author
+
+    def test_member_property(self, event):
+        assert event.member is event.message.member
 
 
 class TestGuildMessageUpdateEvent:
@@ -224,37 +226,46 @@ class TestGuildMessageUpdateEvent:
             shard=mock.Mock(),
         )
 
-    def test_author_property_when_member_defined(self, event):
-        event.message.member = mock.Mock(spec_set=guilds.Member)
+    def test_author_property(self, event):
+        assert event.author is event.message.author
+
+    def test_member_property(self, event):
+        assert event.member is event.message.member
+
+    def test_member_property_when_member_defined(self, event):
+        event.message.member = mock.Mock()
         event.message.author = undefined.UNDEFINED
 
-        assert event.author is event.message.member
+        assert event.member is event.message.member
 
-    def test_author_property_when_member_none_but_cached(self, event):
+    def test_member_property_when_member_none_but_cached(self, event):
         event.message.member = None
-        event.message.author = mock.Mock(spec_set=users.User, id=1234321)
+        event.message.author = mock.Mock(id=1234321)
         event.message.guild_id = snowflakes.Snowflake(696969)
-        real_member = mock.Mock(spec_set=guilds.Member)
+        real_member = mock.Mock()
         event.app.cache.get_member = mock.Mock(return_value=real_member)
 
-        assert event.author is real_member
+        assert event.member is real_member
 
         event.app.cache.get_member.assert_called_once_with(696969, 1234321)
 
-    def test_author_property_when_member_none_but_author_also_none(self, event):
+    def test_member_property_when_member_none_and_author_none(self, event):
         event.message.author = None
         event.message.member = None
 
-        assert event.author is None
+        assert event.member is None
 
         event.app.cache.get_member.assert_not_called()
 
-    def test_author_property_when_member_none_and_uncached_but_author_defined(self, event):
+    def test_member_property_when_member_none_and_uncached(self, event):
         event.message.member = None
+        event.message.author = mock.Mock(id=1234321)
+        event.message.guild_id = snowflakes.Snowflake(696969)
         event.app.cache.get_member = mock.Mock(return_value=None)
-        event.message.author = mock.Mock(spec_set=users.User)
 
-        assert event.author is event.message.author
+        assert event.member is None
+
+        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
 
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)
