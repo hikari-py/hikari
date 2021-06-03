@@ -268,7 +268,7 @@ class EventManagerBase(event_manager.EventManager):
 
         self._check_intents(event_type, 1)
 
-        future: asyncio.Future[event_manager.EventT_co] = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[event_manager.EventT_co] = asyncio.get_running_loop().create_future()
 
         try:
             waiter_set = self._waiters[event_type]

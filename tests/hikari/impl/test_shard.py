@@ -626,17 +626,19 @@ class TestGatewayShardImpl:
         client._intents = intents
         assert client.intents is intents
 
-    @pytest.mark.parametrize(
-        ("run_task", "expected"),
-        [
-            (None, False),
-            (asyncio.get_event_loop().create_future(), True),
-            (aio.completed_future(), False),
-        ],
-    )
-    def test_is_alive_property(self, run_task, expected, client):
-        client._run_task = run_task
-        assert client.is_alive is expected
+    def test_is_alive_property(self, client):
+        client._run_task = None
+        assert client.is_alive is False
+
+    @pytest.mark.asyncio()
+    async def test_is_alive_property_with_active_future(self, client):
+        client._run_task = asyncio.get_running_loop().create_future()
+        assert client.is_alive is True
+
+    @pytest.mark.asyncio()
+    async def test_is_alive_property_with_finished_future(self, client):
+        client._run_task = aio.completed_future()
+        assert client.is_alive is False
 
     def test_shard_count_property(self, client):
         client._shard_count = 69

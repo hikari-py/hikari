@@ -55,8 +55,13 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     -------
     asyncio.Future[T]
         The completed future.
+
+    Raises
+    ------
+    RuntimeError
+        When called in an environment with no running event loop.
     """
-    future = asyncio.get_event_loop().create_future()
+    future = asyncio.get_running_loop().create_future()
     future.set_result(result)
     # MyPy pretends this type hint is valid when it is not. Probably should be
     # in the standard lib but whatever.
