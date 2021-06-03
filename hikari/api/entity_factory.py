@@ -54,94 +54,54 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import component_interactions
     from hikari.internal import data_binding
 
-    GatewayGuildDefinitionT = typing.TypeVar("GatewayGuildDefinitionT", bound="GatewayGuildDefinition")
-
 
 class GatewayGuildDefinition(abc.ABC):
-    """A builder object for handling entities within guild create and update events.
-
-    !!! note
-        By default the only field that's parsed here is `id` with other attributes
-        only being filled if their relevant "parse_resource" method has been
-        called.
+    """Structure for handling entities within guild create and update events.
 
     !!! warning
-        If a parse_resource method is called for a resource which isn't present
-        in the provided payload then a `KeyError` will be raised.
+        The methods on this class may raise `builtins.LookupError` if called
+        when the relevant resource isn't available in the inner payload.
     """
 
-    id: snowflakes.Snowflake
-    """ID of the guild the definition is for."""
-
-    guild: typing.Optional[guild_models.GatewayGuild]
-    """Object of the guild the definition is for."""
-
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]]
-    """Mapping of channel IDs to the channels that belong to the guild."""
-
-    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]]
-    """Mapping of user IDs to the members that belong to the guild.
-
-    !!! note
-        This may be a partial mapping of members in the guild.
-    """
-
-    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]]
-    """Mapping of user IDs to the presences that are active in the guild.
-
-    !!! note
-        This may be a partial mapping of presences active in the guild.
-    """
-
-    roles: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Role]]
-    """Mapping of role IDs to the roles that belong to the guild."""
-
-    emojis: typing.Optional[typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]]
-    """Mapping of emoji IDs to the emojis that belong to the guild."""
-
-    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]]
-    """Mapping of user IDs to the voice states that are active in the guild."""
-
-    def parse_all(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Short hand for calling all the "parse" builder methods."""
-        return (
-            self.parse_guild()
-            .parse_channels()
-            .parse_emojis()
-            .parse_guild()
-            .parse_members()
-            .parse_presences()
-            .parse_roles()
-            .parse_voice_states()
-        )
+    @property
+    def id(self) -> snowflakes.Snowflake:
+        """ID of the guild the definition is for."""
 
     @abc.abstractmethod
-    def parse_channels(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the channels in this definition."""
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+        """Get a mapping of channel IDs to the channels that belong to the guild."""
 
     @abc.abstractmethod
-    def parse_emojis(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the emojis in this definition."""
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]:
+        """Get a mapping of emoji IDs to the emojis that belong to the guild."""
 
     @abc.abstractmethod
-    def parse_guild(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the guild in this definition."""
+    def guild(self) -> guild_models.GatewayGuild:
+        """Get the object of the guild this definition is for."""
 
     @abc.abstractmethod
-    def parse_members(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the members in this definition."""
+    def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
+        """Get a mapping of user IDs to the members that belong to the guild.
+
+        !!! note
+            This may be a partial mapping of members in the guild.
+        """
 
     @abc.abstractmethod
-    def parse_presences(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the channels in this definition."""
+    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
+        """Get a mapping of user IDs to the presences that are active in the guild.
+
+        !!! note
+            This may be a partial mapping of presences active in the guild.
+        """
 
     @abc.abstractmethod
-    def parse_roles(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the presences in this definition."""
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
+        """Get a mapping of role IDs to the roles that belong to the guild."""
 
     @abc.abstractmethod
-    def parse_voice_states(self: GatewayGuildDefinitionT) -> GatewayGuildDefinitionT:
-        """Builder method called to parse the voice states in this definition."""
+    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
+        """Get a mapping of user IDs to the voice states that are active in the guild."""
 
 
 class EntityFactory(abc.ABC):
