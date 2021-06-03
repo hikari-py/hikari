@@ -29,11 +29,14 @@ import weakref
 import mock
 import pytest
 
+from hikari import config
 from hikari import errors
 from hikari import intents
 from hikari import iterators
+from hikari import undefined
 from hikari.events import base_events
 from hikari.events import member_events
+from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.internal import reflect
 from tests.hikari import hikari_test_helpers
@@ -397,17 +400,35 @@ class TestEventManagerBase:
 
     def test___init___loads_consumers(self):
         class StubManager(event_manager_base.EventManagerBase):
+            @event_manager_base.filtered(shard_events.ShardEvent, config.CacheComponents.MEMBERS)
             async def on_foo(self, event):
                 raise NotImplementedError
 
+            @event_manager_base.filtered((shard_events.ShardStateEvent, shard_events.ShardPayloadEvent))
             async def on_bar(self, event):
+                raise NotImplementedError
+
+            async def on_not_decorated(self, event):
                 raise NotImplementedError
 
             async def not_a_listener(self):
                 raise NotImplementedError
 
+        expected_foo_events = (shard_events.ShardEvent, base_events.Event)
+        expected_bar_events = (
+            shard_events.ShardStateEvent,
+            shard_events.ShardEvent,
+            base_events.Event,
+            shard_events.ShardPayloadEvent,
+        )
         manager = StubManager(mock.Mock(), mock.Mock(intents=42))
-        assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
+        assert manager._consumers == {
+            "foo": event_manager_base._Consumer(manager.on_foo, config.CacheComponents.MEMBERS, expected_foo_events),
+            "bar": event_manager_base._Consumer(manager.on_bar, config.CacheComponents.NONE, expected_bar_events),
+            "not_decorated": event_manager_base._Consumer(
+                manager.on_not_decorated, undefined.UNDEFINED, undefined.UNDEFINED
+            ),
+        }
 
     @pytest.mark.asyncio()
     async def test_consume_raw_event_when_KeyError(self, event_manager):
@@ -578,7 +599,7 @@ class TestEventManagerBase:
     def test_get_listeners_when_not_event(self, event_manager):
         assert len(event_manager.get_listeners("test")) == 0
 
-    def test_get_listeners_polimorphic(self, event_manager):
+    def test_get_listeners_polymorphic(self, event_manager):
         event_manager._listeners = {
             base_events.Event: ["this will never appear"],
             member_events.MemberEvent: ["coroutine0"],
@@ -596,17 +617,16 @@ class TestEventManagerBase:
             "coroutine5",
         ]
 
-    def test_get_listeners_no_polimorphic_and_no_results(self, event_manager):
+    def test_get_listeners_monomorphic_and_no_results(self, event_manager):
         event_manager._listeners = {
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],
             member_events.MemberUpdateEvent: ["coroutine3"],
-            member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
             member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
         }
 
         assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == []
 
-    def test_get_listeners_no_polimorphic_and_results(self, event_manager):
+    def test_get_listeners_monomorphic_and_results(self, event_manager):
         event_manager._listeners = {
             member_events.MemberEvent: ["coroutine0"],
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],

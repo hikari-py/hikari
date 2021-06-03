@@ -300,7 +300,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
         return self._presences
 
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
-        if not self._roles:
+        if self._roles is None:
             self._roles = {
                 snowflakes.Snowflake(role["id"]): self._entity_factory.deserialize_role(role, guild_id=self.id)
                 for role in self._payload["roles"]
@@ -1596,7 +1596,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
-        guild_id = snowflakes.Snowflake(payload["guild_id"])
+        guild_id = snowflakes.Snowflake(payload["id"])
         return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self)
 
     #################

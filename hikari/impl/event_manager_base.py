@@ -299,14 +299,20 @@ def filtered(
 
 @attr.frozen()
 class _Consumer:
-    callback: ConsumerT
+    callback: ConsumerT = attr.ib()
     """The callback function for this consumer."""
 
-    cache_components: undefined.UndefinedOr[config.CacheComponents]
+    cache_components: undefined.UndefinedOr[config.CacheComponents] = attr.ib()
     """Bitfield of the cache components this consumer makes modifying calls to, if set."""
 
-    event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]]
+    event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]] = attr.ib()
     """A sequence of the types of events this consumer dispatches to, if set."""
+
+    def __attrs_post_init__(self) -> None:
+        # Letting only one be UNDEFINED just doesn't make sense as either being undefined leads to filtering being
+        # skipped all together making the other redundant.
+        if undefined.count(self.cache_components, self.event_types) == 1:
+            raise ValueError("cache_components and event_types must both either be undefined or defined")
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -375,7 +381,7 @@ class EventManagerBase(event_manager_.EventManager):
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        if self._enabled_for_event(shard_events.ShardPayload):
+        if self._enabled_for_event(shard_events.ShardPayloadEvent):
             payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
             self.dispatch(payload_event)
         consumer = self._consumers[event_name.lower()]

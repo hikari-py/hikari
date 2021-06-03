@@ -47,9 +47,201 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
+from hikari.interactions import command_interactions
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
+from tests.hikari import hikari_test_helpers
+
+
+@pytest.fixture()
+def mock_app() -> traits.RESTAware:
+    return mock.MagicMock(traits.RESTAware)
+
+
+@pytest.fixture()
+def permission_overwrite_payload():
+    return {"id": "4242", "type": 1, "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
+
+
+@pytest.fixture()
+def guild_text_channel_payload(permission_overwrite_payload):
+    return {
+        "id": "123",
+        "guild_id": "567",
+        "name": "general",
+        "type": 0,
+        "position": 6,
+        "permission_overwrites": [permission_overwrite_payload],
+        "rate_limit_per_user": 2,
+        "nsfw": True,
+        "topic": "¯\\_(ツ)_/¯",
+        "last_message_id": "123456",
+        "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
+        "parent_id": "987",
+    }
+
+
+@pytest.fixture()
+def guild_voice_channel_payload(permission_overwrite_payload):
+    return {
+        "id": "555",
+        "guild_id": "789",
+        "name": "Secret Developer Discussions",
+        "type": 2,
+        "nsfw": True,
+        "position": 4,
+        "permission_overwrites": [permission_overwrite_payload],
+        "bitrate": 64000,
+        "user_limit": 3,
+        "rtc_region": "europe",
+        "parent_id": "456",
+        "video_quality_mode": 1,
+    }
+
+
+@pytest.fixture()
+def guild_news_channel_payload(permission_overwrite_payload):
+    return {
+        "id": "7777",
+        "guild_id": "123",
+        "name": "Important Announcements",
+        "type": 5,
+        "position": 0,
+        "permission_overwrites": [permission_overwrite_payload],
+        "nsfw": True,
+        "topic": "Super Important Announcements",
+        "last_message_id": "456",
+        "parent_id": "654",
+        "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
+    }
+
+
+@pytest.fixture()
+def user_payload(self):
+    return {
+        "id": "115590097100865541",
+        "username": "nyaa",
+        "avatar": "b3b24c6d7cbcdec129d5d537067061a8",
+        "banner": "a_221313e1e2edsncsncsmcndsc",
+        "accent_color": 231321,
+        "discriminator": "6127",
+        "bot": True,
+        "system": True,
+        "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
+    }
+
+
+@pytest.fixture()
+def custom_emoji_payload():
+    return {"id": "691225175349395456", "name": "test", "animated": True}
+
+
+@pytest.fixture()
+def known_custom_emoji_payload(user_payload):
+    return {
+        "id": "12345",
+        "name": "testing",
+        "animated": False,
+        "available": True,
+        "roles": ["123", "456"],
+        "user": user_payload,
+        "require_colons": True,
+        "managed": False,
+    }
+
+
+@pytest.fixture()
+def member_payload(self, user_payload):
+    return {
+        "nick": "foobarbaz",
+        "roles": ["11111", "22222", "33333", "44444"],
+        "joined_at": "2015-04-26T06:26:56.936000+00:00",
+        "premium_since": "2019-05-17T06:26:56.936000+00:00",
+        "avatar": "estrogen",
+        "deaf": False,
+        "mute": True,
+        "pending": False,
+        "user": user_payload,
+    }
+
+
+@pytest.fixture()
+def presence_activity_payload(custom_emoji_payload):
+    return {
+        "name": "an activity",
+        "type": 1,
+        "url": "https://69.420.owouwunyaa",
+        "created_at": 1584996792798,
+        "timestamps": {"start": 1584996792798, "end": 1999999792798},
+        "application_id": "40404040404040",
+        "details": "They are doing stuff",
+        "state": "STATED",
+        "emoji": custom_emoji_payload,
+        "party": {"id": "spotify:3234234234", "size": [2, 5]},
+        "assets": {
+            "large_image": "34234234234243",
+            "large_text": "LARGE TEXT",
+            "small_image": "3939393",
+            "small_text": "small text",
+        },
+        "secrets": {"join": "who's a good secret?", "spectate": "I'm a good secret", "match": "No."},
+        "instance": True,
+        "flags": 3,
+        "buttons": ["owo", "no"],
+    }
+
+
+@pytest.fixture()
+def member_presence_payload(user_payload, presence_activity_payload):
+    return {
+        "user": user_payload,
+        "activity": presence_activity_payload,
+        "guild_id": "44004040",
+        "status": "dnd",
+        "activities": [presence_activity_payload],
+        "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+    }
+
+
+@pytest.fixture()
+def guild_role_payload(self):
+    return {
+        "id": "41771983423143936",
+        "name": "WE DEM BOYZZ!!!!!!",
+        "color": 3_447_003,
+        "hoist": True,
+        "unicode_emoji": "\N{OK HAND SIGN}",
+        "icon": "abc123hash",
+        "position": 0,
+        "permissions": "66321471",
+        "managed": False,
+        "mentionable": False,
+        "tags": {
+            "bot_id": "123",
+            "integration_id": "456",
+            "premium_subscriber": None,
+        },
+    }
+
+
+@pytest.fixture()
+def voice_state_payload(member_payload):
+    return {
+        "guild_id": "929292929292992",
+        "channel_id": "157733188964188161",
+        "user_id": "115590097100865541",
+        "member": member_payload,
+        "session_id": "90326bd25d71d39b9ef95b299e3872ff",
+        "deaf": True,
+        "mute": True,
+        "self_deaf": False,
+        "self_mute": True,
+        "self_stream": True,
+        "self_video": True,
+        "suppress": False,
+        "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+    }
 
 
 def test__with_int_cast():
@@ -86,11 +278,364 @@ def test__deserialize_max_age_returns_null():
     assert entity_factory._deserialize_max_age(0) is None
 
 
-class TestEntityFactoryImpl:
+class TestGatewayGuildDefinition:
     @pytest.fixture()
-    def mock_app(self) -> traits.RESTAware:
-        return mock.MagicMock(traits.RESTAware)
+    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
+        return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(mock_app)
 
+    def test_id_property(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "123123451234"})
+
+        assert guild_definition.id == 123123451234
+
+    def test_channels(
+        self, entity_factory_impl, guild_text_channel_payload, guild_voice_channel_payload, guild_news_channel_payload
+    ):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {
+                "id": "265828729970753537",
+                "channels": [guild_text_channel_payload, guild_voice_channel_payload, guild_news_channel_payload],
+            }
+        )
+
+        assert guild_definition.channels() == {
+            123: entity_factory_impl.deserialize_guild_text_channel(
+                guild_text_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            ),
+            555: entity_factory_impl.deserialize_guild_voice_channel(
+                guild_voice_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            ),
+            7777: entity_factory_impl.deserialize_guild_news_channel(
+                guild_news_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            ),
+        }
+
+    def test_channels_returns_cached_values(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"})
+        mock_channel = object()
+        guild_definition._channels = {"123321": mock_channel}
+        entity_factory_impl.deserialize_guild_text_channel = mock.Mock()
+        entity_factory_impl.deserialize_guild_voice_channel = mock.Mock()
+        entity_factory_impl.deserialize_guild_news_channel = mock.Mock()
+
+        assert guild_definition.channels() == {"123321": mock_channel}
+
+        entity_factory_impl.deserialize_guild_text_channel.assert_not_called()
+        entity_factory_impl.deserialize_guild_voice_channel.assert_not_called()
+        entity_factory_impl.deserialize_guild_news_channel.assert_not_called()
+
+    def test_channels_ignores_unrecognised_channels(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "9494949", "channels": [{"id": 123, "type": 1000}]}
+        )
+
+        assert guild_definition.channels() == {}
+
+    def test_emojis(self, entity_factory_impl, known_custom_emoji_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "emojis": [known_custom_emoji_payload]},
+        )
+
+        assert guild_definition.emojis() == {
+            12345: entity_factory_impl.deserialize_known_custom_emoji(
+                known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            )
+        }
+
+    def test_emojis_returns_cached_values(self, entity_factory_impl):
+        mock_emoji = object()
+        entity_factory_impl.deserialize_known_custom_emoji = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"})
+        guild_definition._emojis = {"21323232": mock_emoji}
+
+        assert guild_definition.emojis() == {"21323232": mock_emoji}
+
+        entity_factory_impl.deserialize_known_custom_emoji.assert_not_called()
+
+    def test_guild(self, entity_factory_impl, mock_app):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {
+                "afk_channel_id": "99998888777766",
+                "afk_timeout": 1200,
+                "application_id": "39494949",
+                "banner": "1a2b3c",
+                "default_message_notifications": 1,
+                "description": "This is a server I guess, its a bit crap though",
+                "discovery_splash": "famfamFAMFAMfam",
+                "embed_channel_id": "9439394949",
+                "embed_enabled": True,
+                "explicit_content_filter": 2,
+                "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "icon": "1a2b3c4d",
+                "id": "265828729970753537",
+                "joined_at": "2019-05-17T06:26:56.936000+00:00",
+                "large": False,
+                "max_members": 25000,
+                "max_presences": 250,
+                "max_video_channel_users": 25,
+                "member_count": 14,
+                "mfa_level": 1,
+                "name": "L33t guild",
+                "owner_id": "6969696",
+                "preferred_locale": "en-GB",
+                "premium_subscription_count": 1,
+                "premium_tier": 2,
+                "public_updates_channel_id": "33333333",
+                "rules_channel_id": "42042069",
+                "splash": "0ff0ff0ff",
+                "system_channel_flags": 3,
+                "system_channel_id": "19216801",
+                "unavailable": False,
+                "vanity_url_code": "loool",
+                "verification_level": 4,
+                "widget_channel_id": "9439394949",
+                "widget_enabled": True,
+                "nsfw_level": 0,
+            }
+        )
+
+        guild = guild_definition.guild()
+        assert guild.app is mock_app
+        assert guild.id == 265828729970753537
+        assert guild.name == "L33t guild"
+        assert guild.icon_hash == "1a2b3c4d"
+        assert guild.features == [
+            guild_models.GuildFeature.ANIMATED_ICON,
+            guild_models.GuildFeature.MORE_EMOJI,
+            guild_models.GuildFeature.NEWS,
+            "SOME_UNDOCUMENTED_FEATURE",
+        ]
+        assert guild.splash_hash == "0ff0ff0ff"
+        assert guild.discovery_splash_hash == "famfamFAMFAMfam"
+        assert guild.owner_id == 6969696
+        assert guild.afk_channel_id == 99998888777766
+        assert guild.afk_timeout == datetime.timedelta(seconds=1200)
+        assert guild.verification_level == guild_models.GuildVerificationLevel.VERY_HIGH
+        assert guild.default_message_notifications == guild_models.GuildMessageNotificationsLevel.ONLY_MENTIONS
+        assert guild.explicit_content_filter == guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
+        assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
+        assert guild.application_id == 39494949
+        assert guild.widget_channel_id == 9439394949
+        assert guild.is_widget_enabled is True
+        assert guild.system_channel_id == 19216801
+        assert guild.system_channel_flags == guild_models.GuildSystemChannelFlag(3)
+        assert guild.rules_channel_id == 42042069
+        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert guild.is_large is False
+        assert guild.member_count == 14
+        assert guild.max_video_channel_users == 25
+        assert guild.vanity_url_code == "loool"
+        assert guild.description == "This is a server I guess, its a bit crap though"
+        assert guild.banner_hash == "1a2b3c"
+        assert guild.premium_tier == guild_models.GuildPremiumTier.TIER_2
+        assert guild.premium_subscription_count == 1
+        assert guild.preferred_locale == "en-GB"
+        assert guild.public_updates_channel_id == 33333333
+        assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
+
+    def test_guild_with_unset_fields(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {
+                "afk_channel_id": "99998888777766",
+                "afk_timeout": 1200,
+                "application_id": "39494949",
+                "banner": "1a2b3c",
+                "default_message_notifications": 1,
+                "description": "This is a server I guess, its a bit crap though",
+                "discovery_splash": "famfamFAMFAMfam",
+                "emojis": [],
+                "explicit_content_filter": 2,
+                "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "icon": "1a2b3c4d",
+                "id": "265828729970753537",
+                "mfa_level": 1,
+                "name": "L33t guild",
+                "owner_id": "6969696",
+                "preferred_locale": "en-GB",
+                "premium_tier": 2,
+                "public_updates_channel_id": "33333333",
+                "roles": [],
+                "rules_channel_id": "42042069",
+                "splash": "0ff0ff0ff",
+                "system_channel_flags": 3,
+                "system_channel_id": "19216801",
+                "vanity_url_code": "loool",
+                "verification_level": 4,
+                "nsfw_level": 0,
+            },
+        )
+        guild = guild_definition.guild()
+        assert guild.joined_at is None
+        assert guild.is_large is None
+        assert guild.max_video_channel_users is None
+        assert guild.member_count is None
+        assert guild.premium_subscription_count is None
+        assert guild.widget_channel_id is None
+        assert guild.is_widget_enabled is None
+
+    def test_guild_with_null_fields(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {
+                "afk_channel_id": None,
+                "afk_timeout": 1200,
+                "application_id": None,
+                "banner": None,
+                "channels": [],
+                "default_message_notifications": 1,
+                "description": None,
+                "discovery_splash": None,
+                "embed_channel_id": None,
+                "embed_enabled": True,
+                "emojis": [],
+                "explicit_content_filter": 2,
+                "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "icon": None,
+                "id": "265828729970753537",
+                "joined_at": "2019-05-17T06:26:56.936000+00:00",
+                "large": False,
+                "max_members": 25000,
+                "max_presences": None,
+                "max_video_channel_users": 25,
+                "member_count": 14,
+                "members": [],
+                "mfa_level": 1,
+                "name": "L33t guild",
+                "owner_id": "6969696",
+                "permissions": 66_321_471,
+                "preferred_locale": "en-GB",
+                "premium_subscription_count": None,
+                "premium_tier": 2,
+                "presences": [],
+                "public_updates_channel_id": None,
+                "roles": [],
+                "rules_channel_id": None,
+                "splash": None,
+                "system_channel_flags": 3,
+                "system_channel_id": None,
+                "unavailable": False,
+                "vanity_url_code": None,
+                "verification_level": 4,
+                "voice_states": [],
+                "widget_channel_id": None,
+                "widget_enabled": True,
+                "nsfw_level": 0,
+            },
+        )
+        guild = guild_definition.guild()
+        assert guild.icon_hash is None
+        assert guild.splash_hash is None
+        assert guild.discovery_splash_hash is None
+        assert guild.afk_channel_id is None
+        assert guild.application_id is None
+        assert guild.widget_channel_id is None
+        assert guild.system_channel_id is None
+        assert guild.rules_channel_id is None
+        assert guild.vanity_url_code is None
+        assert guild.description is None
+        assert guild.banner_hash is None
+        assert guild.premium_subscription_count is None
+        assert guild.public_updates_channel_id is None
+
+    def test_guild_returns_cached_values(self, entity_factory_impl):
+        mock_guild = object()
+        entity_factory_impl.set_guild_attributes = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "9393939"})
+        guild_definition._guild = mock_guild
+
+        assert guild_definition.guild() is mock_guild
+
+        entity_factory_impl.set_guild_attributes.assert_not_called()
+
+    def test_members(self, entity_factory_impl, member_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "members": [member_payload]}
+        )
+
+        assert guild_definition.members() == {
+            115590097100865541: entity_factory_impl.deserialize_member(
+                member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            )
+        }
+
+    def test_members_returns_cached_values(self, entity_factory_impl):
+        mock_member = object()
+        entity_factory_impl.deserialize_member = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "92929292"})
+        guild_definition._members = {"93939393": mock_member}
+
+        assert guild_definition.members() == {"93939393": mock_member}
+
+        entity_factory_impl.deserialize_member.assert_not_called()
+
+    def test_presences(self, entity_factory_impl, member_presence_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "presences": [member_presence_payload]}
+        )
+
+        assert guild_definition.presences() == {
+            115590097100865541: entity_factory_impl.deserialize_member_presence(
+                member_presence_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            )
+        }
+
+    def test_presences_returns_cached_values(self, entity_factory_impl):
+        mock_presence = object()
+        entity_factory_impl.deserialize_member_presence = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "29292992"})
+        guild_definition._presences = {"3939393993": mock_presence}
+
+        assert guild_definition.presences() == {"3939393993": mock_presence}
+
+        entity_factory_impl.deserialize_member_presence.assert_not_called()
+
+    def test_roles(self, entity_factory_impl, guild_role_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "roles": [guild_role_payload]}
+        )
+
+        assert guild_definition.roles() == {
+            41771983423143936: entity_factory_impl.deserialize_role(
+                guild_role_payload, guild_id=snowflakes.Snowflake(265828729970753537)
+            )
+        }
+
+    def test_roles_returns_cached_values(self, entity_factory_impl):
+        mock_role = object()
+        entity_factory_impl.deserialize_role = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "9292929"})
+        guild_definition._roles = {"32132123123": mock_role}
+
+        assert guild_definition.roles() == {"32132123123": mock_role}
+
+        entity_factory_impl.deserialize_role.assert_not_called()
+
+    def test_voice_states(self, entity_factory_impl, member_payload, voice_state_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "voice_states": [voice_state_payload], "members": [member_payload]}
+        )
+        assert guild_definition.voice_states() == {
+            115590097100865541: entity_factory_impl.deserialize_voice_state(
+                voice_state_payload,
+                guild_id=snowflakes.Snowflake(265828729970753537),
+                member=entity_factory_impl.deserialize_member(
+                    member_payload,
+                    guild_id=snowflakes.Snowflake(265828729970753537),
+                ),
+            )
+        }
+
+    def test_voice_states_returns_cached_values(self, entity_factory_impl):
+        mock_voice_state = object()
+        entity_factory_impl.deserialize_voice_state = mock.Mock()
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "292929"})
+        guild_definition._voice_states = {"9393939393": mock_voice_state}
+
+        assert guild_definition.voice_states() == {"9393939393": mock_voice_state}
+
+        entity_factory_impl.deserialize_voice_state.assert_not_called()
+
+
+class TestEntityFactoryImpl:
     @pytest.fixture()
     def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
         return entity_factory.EntityFactoryImpl(app=mock_app)
@@ -763,10 +1308,6 @@ class TestEntityFactoryImpl:
         assert follow.channel_id == 41231
         assert follow.webhook_id == 939393
 
-    @pytest.fixture()
-    def permission_overwrite_payload(self):
-        return {"id": "4242", "type": 1, "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
-
     @pytest.mark.parametrize("type", [0, 1])
     def test_deserialize_permission_overwrite(self, entity_factory_impl, type):
         permission_overwrite_payload = {
@@ -937,23 +1478,6 @@ class TestEntityFactoryImpl:
         )
         assert guild_category.parent_id is None
 
-    @pytest.fixture()
-    def guild_text_channel_payload(self, permission_overwrite_payload):
-        return {
-            "id": "123",
-            "guild_id": "567",
-            "name": "general",
-            "type": 0,
-            "position": 6,
-            "permission_overwrites": [permission_overwrite_payload],
-            "rate_limit_per_user": 2,
-            "nsfw": True,
-            "topic": "¯\\_(ツ)_/¯",
-            "last_message_id": "123456",
-            "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
-            "parent_id": "987",
-        }
-
     def test_deserialize_guild_text_channel(
         self, entity_factory_impl, mock_app, guild_text_channel_payload, permission_overwrite_payload
     ):
@@ -1016,22 +1540,6 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
-
-    @pytest.fixture()
-    def guild_news_channel_payload(self, permission_overwrite_payload):
-        return {
-            "id": "7777",
-            "guild_id": "123",
-            "name": "Important Announcements",
-            "type": 5,
-            "position": 0,
-            "permission_overwrites": [permission_overwrite_payload],
-            "nsfw": True,
-            "topic": "Super Important Announcements",
-            "last_message_id": "456",
-            "parent_id": "654",
-            "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
-        }
 
     def test_deserialize_guild_news_channel(
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload
@@ -1150,23 +1658,6 @@ class TestEntityFactoryImpl:
             }
         )
         assert store_chanel.parent_id is None
-
-    @pytest.fixture()
-    def guild_voice_channel_payload(self, permission_overwrite_payload):
-        return {
-            "id": "555",
-            "guild_id": "789",
-            "name": "Secret Developer Discussions",
-            "type": 2,
-            "nsfw": True,
-            "position": 4,
-            "permission_overwrites": [permission_overwrite_payload],
-            "bitrate": 64000,
-            "user_limit": 3,
-            "rtc_region": "europe",
-            "parent_id": "456",
-            "video_quality_mode": 1,
-        }
 
     def test_deserialize_guild_voice_channel(
         self, entity_factory_impl, mock_app, guild_voice_channel_payload, permission_overwrite_payload
@@ -1678,10 +2169,6 @@ class TestEntityFactoryImpl:
         assert emoji.name == "🤷"
         assert isinstance(emoji, emoji_models.UnicodeEmoji)
 
-    @pytest.fixture()
-    def custom_emoji_payload(self):
-        return {"id": "691225175349395456", "name": "test", "animated": True}
-
     def test_deserialize_custom_emoji(self, entity_factory_impl, mock_app, custom_emoji_payload):
         emoji = entity_factory_impl.deserialize_custom_emoji(custom_emoji_payload)
         assert emoji.id == snowflakes.Snowflake(691225175349395456)
@@ -1695,19 +2182,6 @@ class TestEntityFactoryImpl:
         emoji = entity_factory_impl.deserialize_custom_emoji({"id": "691225175349395456", "name": None})
         assert emoji.is_animated is False
         assert emoji.name is None
-
-    @pytest.fixture()
-    def known_custom_emoji_payload(self, user_payload):
-        return {
-            "id": "12345",
-            "name": "testing",
-            "animated": False,
-            "available": True,
-            "roles": ["123", "456"],
-            "user": user_payload,
-            "require_colons": True,
-            "managed": False,
-        }
 
     def test_deserialize_known_custom_emoji(
         self, entity_factory_impl, mock_app, user_payload, known_custom_emoji_payload
@@ -1870,20 +2344,6 @@ class TestEntityFactoryImpl:
 
         assert result == {"channel_id": "4312312", "description": "meow2"}
 
-    @pytest.fixture()
-    def member_payload(self, user_payload):
-        return {
-            "nick": "foobarbaz",
-            "roles": ["11111", "22222", "33333", "44444"],
-            "joined_at": "2015-04-26T06:26:56.936000+00:00",
-            "premium_since": "2019-05-17T06:26:56.936000+00:00",
-            "avatar": "estrogen",
-            "deaf": False,
-            "mute": True,
-            "pending": False,
-            "user": user_payload,
-        }
-
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
         member_payload = {**member_payload, "guild_id": "76543325"}
         member = entity_factory_impl.deserialize_member(member_payload)
@@ -1971,26 +2431,6 @@ class TestEntityFactoryImpl:
         )
         assert member.user is mock_user
         assert member.guild_id == 64234
-
-    @pytest.fixture()
-    def guild_role_payload(self):
-        return {
-            "id": "41771983423143936",
-            "name": "WE DEM BOYZZ!!!!!!",
-            "color": 3_447_003,
-            "hoist": True,
-            "unicode_emoji": "\N{OK HAND SIGN}",
-            "icon": "abc123hash",
-            "position": 0,
-            "permissions": "66321471",
-            "managed": False,
-            "mentionable": False,
-            "tags": {
-                "bot_id": "123",
-                "integration_id": "456",
-                "premium_subscriber": None,
-            },
-        }
 
     def test_deserialize_role(self, entity_factory_impl, mock_app, guild_role_payload):
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
@@ -2431,304 +2871,11 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count is None
         assert guild.public_updates_channel_id is None
 
-    @pytest.fixture()
-    def deserialize_gateway_guild_payload(
-        self,
-        guild_text_channel_payload,
-        guild_voice_channel_payload,
-        guild_news_channel_payload,
-        known_custom_emoji_payload,
-        member_payload,
-        member_presence_payload,
-        guild_role_payload,
-        voice_state_payload,
-    ):
-        return {
-            "afk_channel_id": "99998888777766",
-            "afk_timeout": 1200,
-            "application_id": "39494949",
-            "banner": "1a2b3c",
-            "channels": [guild_text_channel_payload, guild_voice_channel_payload, guild_news_channel_payload],
-            "default_message_notifications": 1,
-            "description": "This is a server I guess, its a bit crap though",
-            "discovery_splash": "famfamFAMFAMfam",
-            "embed_channel_id": "9439394949",
-            "embed_enabled": True,
-            "emojis": [known_custom_emoji_payload],
-            "explicit_content_filter": 2,
-            "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
-            "icon": "1a2b3c4d",
-            "id": "265828729970753537",
-            "joined_at": "2019-05-17T06:26:56.936000+00:00",
-            "large": False,
-            "max_members": 25000,
-            "max_presences": 250,
-            "max_video_channel_users": 25,
-            "member_count": 14,
-            "members": [member_payload],
-            "mfa_level": 1,
-            "name": "L33t guild",
-            "owner_id": "6969696",
-            "preferred_locale": "en-GB",
-            "premium_subscription_count": 1,
-            "premium_tier": 2,
-            "presences": [member_presence_payload],
-            "public_updates_channel_id": "33333333",
-            "roles": [guild_role_payload],
-            "rules_channel_id": "42042069",
-            "splash": "0ff0ff0ff",
-            "system_channel_flags": 3,
-            "system_channel_id": "19216801",
-            "unavailable": False,
-            "vanity_url_code": "loool",
-            "verification_level": 4,
-            "voice_states": [voice_state_payload],
-            "widget_channel_id": "9439394949",
-            "widget_enabled": True,
-            "nsfw_level": 0,
-        }
-
-    def test_deserialize_gateway_guild_with_all_resources_enabled(
-        self,
-        entity_factory_impl,
-        mock_app,
-        deserialize_gateway_guild_payload,
-        guild_text_channel_payload,
-        guild_voice_channel_payload,
-        guild_news_channel_payload,
-        known_custom_emoji_payload,
-        member_payload,
-        member_presence_payload,
-        guild_role_payload,
-        voice_state_payload,
-    ):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            deserialize_gateway_guild_payload,
-            include_guild=True,
-            include_channels=True,
-            include_emojis=True,
-            include_members=True,
-            include_presences=True,
-            include_roles=True,
-            include_voice_states=True,
-        )
-        assert guild_definition.id == 265828729970753537
-        guild = guild_definition.guild
-        assert guild.app is mock_app
-        assert guild.id == 265828729970753537
-        assert guild.name == "L33t guild"
-        assert guild.icon_hash == "1a2b3c4d"
-        assert guild.features == [
-            guild_models.GuildFeature.ANIMATED_ICON,
-            guild_models.GuildFeature.MORE_EMOJI,
-            guild_models.GuildFeature.NEWS,
-            "SOME_UNDOCUMENTED_FEATURE",
-        ]
-        assert guild.splash_hash == "0ff0ff0ff"
-        assert guild.discovery_splash_hash == "famfamFAMFAMfam"
-        assert guild.owner_id == 6969696
-        assert guild.afk_channel_id == 99998888777766
-        assert guild.afk_timeout == datetime.timedelta(seconds=1200)
-        assert guild.verification_level == guild_models.GuildVerificationLevel.VERY_HIGH
-        assert guild.default_message_notifications == guild_models.GuildMessageNotificationsLevel.ONLY_MENTIONS
-        assert guild.explicit_content_filter == guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
-        assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
-        assert guild.application_id == 39494949
-        assert guild.widget_channel_id == 9439394949
-        assert guild.is_widget_enabled is True
-        assert guild.system_channel_id == 19216801
-        assert guild.system_channel_flags == guild_models.GuildSystemChannelFlag(3)
-        assert guild.rules_channel_id == 42042069
-        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
-        assert guild.is_large is False
-        assert guild.member_count == 14
-        assert guild.max_video_channel_users == 25
-        assert guild.vanity_url_code == "loool"
-        assert guild.description == "This is a server I guess, its a bit crap though"
-        assert guild.banner_hash == "1a2b3c"
-        assert guild.premium_tier == guild_models.GuildPremiumTier.TIER_2
-        assert guild.premium_subscription_count == 1
-        assert guild.preferred_locale == "en-GB"
-        assert guild.public_updates_channel_id == 33333333
-        assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
-
-        assert guild_definition.roles == {
-            41771983423143936: entity_factory_impl.deserialize_role(
-                guild_role_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            )
-        }
-        assert guild_definition.emojis == {
-            12345: entity_factory_impl.deserialize_known_custom_emoji(
-                known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            )
-        }
-        assert guild_definition.members == {
-            115590097100865541: entity_factory_impl.deserialize_member(
-                member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            )
-        }
-        assert guild_definition.channels == {
-            123: entity_factory_impl.deserialize_guild_text_channel(
-                guild_text_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            ),
-            555: entity_factory_impl.deserialize_guild_voice_channel(
-                guild_voice_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            ),
-            7777: entity_factory_impl.deserialize_guild_news_channel(
-                guild_news_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            ),
-        }
-        assert guild_definition.presences == {
-            115590097100865541: entity_factory_impl.deserialize_member_presence(
-                member_presence_payload, guild_id=snowflakes.Snowflake(265828729970753537)
-            )
-        }
-        assert guild_definition.voice_states == {
-            115590097100865541: entity_factory_impl.deserialize_voice_state(
-                voice_state_payload,
-                guild_id=snowflakes.Snowflake(265828729970753537),
-                member=entity_factory_impl.deserialize_member(
-                    member_payload,
-                    guild_id=snowflakes.Snowflake(265828729970753537),
-                ),
-            )
-        }
-
-    def test_deserialize_gateway_guild_with_no_resources_enabled(self, entity_factory_impl):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            {"id": "123123"},
-            include_guild=False,
-            include_channels=False,
-            include_emojis=False,
-            include_members=False,
-            include_presences=False,
-            include_roles=False,
-            include_voice_states=False,
-        )
+    def test_deserialize_gateway_guild(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "123123"})
 
         assert guild_definition.id == 123123
-        assert guild_definition.guild is None
-        assert guild_definition.channels is None
-        assert guild_definition.emojis is None
-        assert guild_definition.members is None
-        assert guild_definition.presences is None
-        assert guild_definition.roles is None
-        assert guild_definition.voice_states is None
-
-    def test_deserialize_gateway_guild_with_unset_fields(self, entity_factory_impl):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            {
-                "afk_channel_id": "99998888777766",
-                "afk_timeout": 1200,
-                "application_id": "39494949",
-                "banner": "1a2b3c",
-                "default_message_notifications": 1,
-                "description": "This is a server I guess, its a bit crap though",
-                "discovery_splash": "famfamFAMFAMfam",
-                "emojis": [],
-                "explicit_content_filter": 2,
-                "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
-                "icon": "1a2b3c4d",
-                "id": "265828729970753537",
-                "mfa_level": 1,
-                "name": "L33t guild",
-                "owner_id": "6969696",
-                "preferred_locale": "en-GB",
-                "premium_tier": 2,
-                "public_updates_channel_id": "33333333",
-                "roles": [],
-                "rules_channel_id": "42042069",
-                "splash": "0ff0ff0ff",
-                "system_channel_flags": 3,
-                "system_channel_id": "19216801",
-                "vanity_url_code": "loool",
-                "verification_level": 4,
-                "nsfw_level": 0,
-            },
-            include_guild=True,
-        )
-        guild = guild_definition.guild
-        assert guild.joined_at is None
-        assert guild.is_large is None
-        assert guild.max_video_channel_users is None
-        assert guild.member_count is None
-        assert guild.premium_subscription_count is None
-        assert guild.widget_channel_id is None
-        assert guild.is_widget_enabled is None
-
-    def test_deserialize_gateway_guild_with_null_fields(self, entity_factory_impl):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            {
-                "afk_channel_id": None,
-                "afk_timeout": 1200,
-                "application_id": None,
-                "banner": None,
-                "channels": [],
-                "default_message_notifications": 1,
-                "description": None,
-                "discovery_splash": None,
-                "embed_channel_id": None,
-                "embed_enabled": True,
-                "emojis": [],
-                "explicit_content_filter": 2,
-                "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
-                "icon": None,
-                "id": "265828729970753537",
-                "joined_at": "2019-05-17T06:26:56.936000+00:00",
-                "large": False,
-                "max_members": 25000,
-                "max_presences": None,
-                "max_video_channel_users": 25,
-                "member_count": 14,
-                "members": [],
-                "mfa_level": 1,
-                "name": "L33t guild",
-                "owner_id": "6969696",
-                "permissions": 66_321_471,
-                "preferred_locale": "en-GB",
-                "premium_subscription_count": None,
-                "premium_tier": 2,
-                "presences": [],
-                "public_updates_channel_id": None,
-                "roles": [],
-                "rules_channel_id": None,
-                "splash": None,
-                "system_channel_flags": 3,
-                "system_channel_id": None,
-                "unavailable": False,
-                "vanity_url_code": None,
-                "verification_level": 4,
-                "voice_states": [],
-                "widget_channel_id": None,
-                "widget_enabled": True,
-                "nsfw_level": 0,
-            },
-            include_guild=True,
-        )
-        guild = guild_definition.guild
-        assert guild.icon_hash is None
-        assert guild.splash_hash is None
-        assert guild.discovery_splash_hash is None
-        assert guild.afk_channel_id is None
-        assert guild.application_id is None
-        assert guild.widget_channel_id is None
-        assert guild.system_channel_id is None
-        assert guild.rules_channel_id is None
-        assert guild.vanity_url_code is None
-        assert guild.description is None
-        assert guild.banner_hash is None
-        assert guild.premium_subscription_count is None
-        assert guild.public_updates_channel_id is None
-
-    def test_deserialize_gateway_guild_ignores_unrecognised_channels(
-        self, entity_factory_impl, deserialize_gateway_guild_payload
-    ):
-        deserialize_gateway_guild_payload["channels"] = [{"id": 123, "type": 1000}]
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            deserialize_gateway_guild_payload, include_channels=True
-        )
-
-        assert guild_definition.channels == {}
+        assert guild_definition._payload == {"id": "123123"}
 
     ######################
     # INTERACTION MODELS #
@@ -4339,42 +4486,6 @@ class TestEntityFactoryImpl:
     # PRESENCE MODELS #
     ###################
 
-    @pytest.fixture()
-    def presence_activity_payload(self, custom_emoji_payload):
-        return {
-            "name": "an activity",
-            "type": 1,
-            "url": "https://69.420.owouwunyaa",
-            "created_at": 1584996792798,
-            "timestamps": {"start": 1584996792798, "end": 1999999792798},
-            "application_id": "40404040404040",
-            "details": "They are doing stuff",
-            "state": "STATED",
-            "emoji": custom_emoji_payload,
-            "party": {"id": "spotify:3234234234", "size": [2, 5]},
-            "assets": {
-                "large_image": "34234234234243",
-                "large_text": "LARGE TEXT",
-                "small_image": "3939393",
-                "small_text": "small text",
-            },
-            "secrets": {"join": "who's a good secret?", "spectate": "I'm a good secret", "match": "No."},
-            "instance": True,
-            "flags": 3,
-            "buttons": ["owo", "no"],
-        }
-
-    @pytest.fixture()
-    def member_presence_payload(self, user_payload, presence_activity_payload):
-        return {
-            "user": user_payload,
-            "activity": presence_activity_payload,
-            "guild_id": "44004040",
-            "status": "dnd",
-            "activities": [presence_activity_payload],
-            "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
-        }
-
     def test_deserialize_member_presence(
         self, entity_factory_impl, mock_app, member_presence_payload, custom_emoji_payload, user_payload
     ):
@@ -4716,20 +4827,6 @@ class TestEntityFactoryImpl:
     # USER MODELS #
     ###############
 
-    @pytest.fixture()
-    def user_payload(self):
-        return {
-            "id": "115590097100865541",
-            "username": "nyaa",
-            "avatar": "b3b24c6d7cbcdec129d5d537067061a8",
-            "banner": "a_221313e1e2edsncsncsmcndsc",
-            "accent_color": 231321,
-            "discriminator": "6127",
-            "bot": True,
-            "system": True,
-            "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
-        }
-
     def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload):
         user = entity_factory_impl.deserialize_user(user_payload)
         assert user.app is mock_app
@@ -4824,24 +4921,6 @@ class TestEntityFactoryImpl:
     ################
     # VOICE MODELS #
     ################
-
-    @pytest.fixture()
-    def voice_state_payload(self, member_payload):
-        return {
-            "guild_id": "929292929292992",
-            "channel_id": "157733188964188161",
-            "user_id": "115590097100865541",
-            "member": member_payload,
-            "session_id": "90326bd25d71d39b9ef95b299e3872ff",
-            "deaf": True,
-            "mute": True,
-            "self_deaf": False,
-            "self_mute": True,
-            "self_stream": True,
-            "self_video": True,
-            "suppress": False,
-            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
-        }
 
     def test_deserialize_voice_state_with_guild_id_in_payload(
         self, entity_factory_impl, mock_app, voice_state_payload, member_payload

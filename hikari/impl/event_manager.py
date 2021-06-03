@@ -195,6 +195,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             event = None
             channels = None
             emojis = None
+            guild = None
+            guild_id = snowflakes.Snowflake(payload["id"])
             members = None
             presences = None
             roles = None
@@ -272,7 +274,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             roles = gd.roles() if self._cache_enabled_for(config.CacheComponents.ROLES) else None
 
         elif enabled_for_event:
-            guild_id = snowflakes.Snowflake(payload["guild_id"])
+            guild_id = snowflakes.Snowflake(payload["id"])
             old = self._cache.get_guild(guild_id) if self._cache else None
             event = self._event_factory.deserialize_guild_update_event(shard, payload, old_guild=old)
             emojis = event.emojis
@@ -315,7 +317,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_guild_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-delete for more info."""
         event: typing.Union[guild_events.GuildUnavailableEvent, guild_events.GuildLeaveEvent]
-        if payload.get("unavailable", False):
+        if payload.get("unavailable"):
             event = self._event_factory.deserialize_guild_unavailable_event(shard, payload)
 
             if self._cache:
