@@ -718,6 +718,17 @@ class GuildChannel(PartialChannel):
     """
 
     @property
+    def mention(self) -> str:
+        """Return a raw mention string for the guild channel.
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<#{self.id}>"
+
+    @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 
