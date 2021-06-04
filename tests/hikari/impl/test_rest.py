@@ -388,19 +388,6 @@ class TestRESTClientImpl:
 
         bucket.assert_called_once_with(float("inf"))
 
-    def test__init__when_token_strategy_passed_with_token_type(self):
-        with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
-            rest.RESTClientImpl(
-                http_settings=mock.Mock(),
-                max_rate_limit=float("inf"),
-                proxy_settings=mock.Mock(),
-                token=mock.Mock(rest_api.TokenStrategy),
-                token_type="ooga booga",
-                rest_url=None,
-                executor=None,
-                entity_factory=None,
-            )
-
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
             http_settings=mock.Mock(),

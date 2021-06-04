@@ -331,6 +331,19 @@ class RESTApp(traits.ExecutorAware):
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
         token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
     ) -> RESTClientImpl:
+        """Acquire a new REST client.
+
+        Parameters
+        ----------
+        token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+            The bot or bearer token. If no token is to be used, this can be
+            `builtins.None`. Defaults to `builtins.None`.
+        token_type : typing.Union[builtins.str, hikari.applications.TokenType]
+            The type of the token in use. Defaults to `"Bearer".
+
+            !!! note
+                This argument is ignored if `token` is not a `builtins.string`.
+        """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
@@ -373,14 +386,16 @@ class RESTClientImpl(rest_api.RESTClient):
         This is provided since some endpoints may respond with non-sensible
         rate limits.
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
-        The bot or bearer token. If no token is to be used,
-        this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`.
+        The bot or bearer token. If no token is to be used, this can be
+        `builtins.None`.
+    token_type : typing.Union[builtins.str, hikari.applications.TokenType]
+        The type of the token in use.
+
+        !!! note
+            This argument is ignored if `token` is
+            `hikari.api.rest.TokenStrategy` or `builtins.None`.
     rest_url : builtins.str
-        The HTTP API base URL. This can contain format-string specifiers to
-        interpolate information such as API version in use.
+        The HTTP API base URL.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -416,7 +431,7 @@ class RESTClientImpl(rest_api.RESTClient):
         max_rate_limit: float,
         proxy_settings: config.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
-        token_type: typing.Union[applications.TokenType, str, None],
+        token_type: typing.Union[applications.TokenType, str],
         rest_url: typing.Optional[str],
     ) -> None:
         self.buckets = buckets_.RESTBucketManager(max_rate_limit)
@@ -433,10 +448,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None]
         if isinstance(token, str):
-            self._token = f"{token_type.title()} {token}" if token_type else token
-
-        elif isinstance(token, rest_api.TokenStrategy) and token_type:
-            raise ValueError("Token type should be handled by the token strategy")
+            self._token = f"{token_type.title()} {token}"
 
         else:
             self._token = token
