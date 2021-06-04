@@ -323,7 +323,7 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
             ):
-                hikari_test_helpers.raiser(errors.GatewayError("some reason"))
+                raise errors.GatewayError("some reason")
 
         mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("
@@ -363,7 +363,7 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
             ):
-                hikari_test_helpers.raiser(ValueError("testing"))
+                raise ValueError("testing")
 
         mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("

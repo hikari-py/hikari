@@ -155,21 +155,6 @@ def skip_on_system(os_name: str):
     return decorator
 
 
-def has_sem_open_impl():
-    try:
-        import multiprocessing
-
-        multiprocessing.RLock()
-    except ImportError:
-        return False
-    else:
-        return True
-
-
-def skip_if_no_sem_open(test):
-    return pytest.mark.skipif(not has_sem_open_impl(), reason="Your platform lacks a sem_open implementation")(test)
-
-
 async def idle(for_=REASONABLE_SLEEP_TIME, /):
     await asyncio.sleep(for_)
 
@@ -178,17 +163,6 @@ async def idle(for_=REASONABLE_SLEEP_TIME, /):
 def ensure_occurs_quickly():
     with async_timeout.timeout(REASONABLE_QUICK_RESPONSE_TIME):
         yield
-
-
-async def gather_all_tasks():
-    """Ensure all created tasks except the current are finished before asserting anything."""
-    await asyncio.gather(*(task for task in asyncio.all_tasks() if task is not asyncio.current_task()))
-
-
-def raiser(ex, should_raise=True):
-    """Stop lints complaining about unreachable code."""
-    if should_raise:
-        raise ex
 
 
 class AsyncContextManagerMock:
