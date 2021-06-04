@@ -721,6 +721,10 @@ class GuildChannel(PartialChannel):
     def mention(self) -> str:
         """Return a raw mention string for the guild channel.
 
+        !!! note
+            As of writing, GuildCategory channels are a special case
+            for this and mentions of them will not resolve as clickable.
+
         Returns
         -------
         builtins.str
