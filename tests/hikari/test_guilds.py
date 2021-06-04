@@ -52,6 +52,9 @@ class TestPartialRole:
     def test_str_operator(self, model):
         assert str(model) == "The Big Cool"
 
+    def test_mention_property(self, model):
+        assert model.mention == "<@&1106913972>"
+
 
 def test_PartialApplication_str_operator():
     mock_application = mock.Mock(guilds.PartialApplication)

@@ -584,6 +584,17 @@ class PartialRole(snowflakes.Unique):
     name: str = attr.field(eq=False, hash=False, repr=True)
     """The role's name."""
 
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the role.
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<@&{self.id}>"
+
     def __str__(self) -> str:
         return self.name
 

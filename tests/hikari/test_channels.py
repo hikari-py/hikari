@@ -284,3 +284,6 @@ class TestGuildChannel:
     def test_shard_id_property_when_guild_id_is_not_None(self, model):
         model.app.shard_count = 3
         assert model.shard_id == 2
+
+    def test_mention_property(self, model):
+        assert model.mention == "<#69420>"
