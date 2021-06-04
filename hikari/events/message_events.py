@@ -220,17 +220,27 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> guilds.Member:
+    def author(self) -> users.User:
+        """User object of the user that sent the message.
+
+        Returns
+        -------
+        hikari.users.User
+            The user object of the user that sent the message.
+        """
+        return self.message.author
+
+    @property
+    def member(self) -> typing.Optional[guilds.Member]:
         """Member object of the user that sent the message.
 
         Returns
         -------
-        hikari.guilds.Member
-            The member object of the user that sent the message.
+        typing.Optional[hikari.guilds.Member]
+            The member object of the user that sent the message or
+            `builtins.None` if sent by a webhook.
         """
-        member = self.message.member
-        assert member is not None, "no member given for guild message create event!"
-        return member
+        return self.message.member
 
     @property
     def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
@@ -476,18 +486,34 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 
     @property
     def author(self) -> typing.Optional[users.User]:
-        """Member or user that sent the message.
+        """User that sent the message.
 
         Returns
         -------
         typing.Union[builtins.None, hikari.users.User, hikari.guilds.Member]
-            The user that sent the message. If the member is cached
+            The user that sent the message.
+
+            This will be `builtins.None` in some cases, such as when Discord
+            updates a message with an embed for a URL preview or if the message
+            was sent by a webhook.
+        """
+        return self.message.author
+
+    @property
+    def member(self) -> typing.Optional[guilds.Member]:
+        """Member that sent the message.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Member]
+            The member that sent the message. If the member is cached
             (the intents are enabled), then this will be the corresponding
             member object instead (which is a specialization of the
             user object you should otherwise expect).
 
             This will be `builtins.None` in some cases, such as when Discord
-            updates a message with an embed for a URL preview.
+            updates a message with an embed for a URL preview or if the message
+            was sent by a webhook.
         """
         member = self.message.member
         if member is not None:
@@ -501,7 +527,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             if member is not None:
                 return member
 
-        return author
+        return None
 
     @property
     def channel(self) -> typing.Union[None, channels.GuildTextChannel, channels.GuildNewsChannel]:
