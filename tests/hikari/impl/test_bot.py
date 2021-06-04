@@ -145,7 +145,6 @@ class TestBotApp:
                 logs="DEBUG",
                 max_rate_limit=200,
                 proxy_settings=proxy_settings,
-                rest_url="somewhere.com",
             )
 
         assert bot._http_settings is http_settings
@@ -167,7 +166,6 @@ class TestBotApp:
             http_settings=bot._http_settings,
             max_rate_limit=200,
             proxy_settings=bot._proxy_settings,
-            rest_url="somewhere.com",
             token="token",
             token_type=applications.TokenType.BOT,
         )

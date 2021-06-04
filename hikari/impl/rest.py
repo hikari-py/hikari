@@ -282,9 +282,6 @@ class RESTApp(traits.ExecutorAware):
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
-    url : typing.Optional[builtins.str]
-        The base URL for the API. You can generally leave this as being
-        `builtins.None` and the correct default API base URL will be generated.
 
     !!! note
         This event loop will be bound to a connector when the first call
@@ -296,7 +293,6 @@ class RESTApp(traits.ExecutorAware):
         "_http_settings",
         "_max_rate_limit",
         "_proxy_settings",
-        "_url",
     )
 
     def __init__(
@@ -306,13 +302,11 @@ class RESTApp(traits.ExecutorAware):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         max_rate_limit: float = 300,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
-        url: typing.Optional[str] = None,
     ) -> None:
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._executor = executor
         self._max_rate_limit = max_rate_limit
-        self._url = url
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -345,7 +339,6 @@ class RESTApp(traits.ExecutorAware):
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
-            rest_url=self._url,
         )
 
         return rest_client
@@ -378,9 +371,6 @@ class RESTClientImpl(rest_api.RESTClient):
     token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
         The type of token in use. If no token is used, this can be ignored and
         left to the default value. This can be `"Bot"` or `"Bearer"`.
-    rest_url : builtins.str
-        The HTTP API base URL. This can contain format-string specifiers to
-        interpolate information such as API version in use.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -393,7 +383,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_executor",
         "_http_settings",
         "_proxy_settings",
-        "_rest_url",
         "_token",
     )
 
@@ -417,7 +406,6 @@ class RESTClientImpl(rest_api.RESTClient):
         proxy_settings: config.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None],
-        rest_url: typing.Optional[str],
     ) -> None:
         self.buckets = buckets_.RESTBucketManager(max_rate_limit)
         # We've been told in DAPI that this is per token.
@@ -440,8 +428,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         else:
             self._token = token
-
-        self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
     @property
     def http_settings(self) -> config.HTTPSettings:
@@ -563,7 +549,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
-        url = compiled_route.create_url(self._rest_url)
+        url = compiled_route.create_url(urls.REST_API_URL)
         while True:
             try:
                 uuid = time.uuid()

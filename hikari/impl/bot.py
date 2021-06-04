@@ -170,11 +170,6 @@ class BotApp(traits.BotAware):
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
-    rest_url : typing.Optional[builtins.str]
-        Defaults to the Discord REST API URL if `builtins.None`. Can be
-        overridden if you are attempting to point to an unofficial endpoint, or
-        if you are attempting to mock/stub the Discord API for any reason.
-        Generally you do not want to change this.
 
     !!! note
         `force_color` will always take precedence over `allow_color`.
@@ -243,7 +238,6 @@ class BotApp(traits.BotAware):
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
     ) -> None:
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
@@ -282,7 +276,6 @@ class BotApp(traits.BotAware):
             http_settings=self._http_settings,
             max_rate_limit=max_rate_limit,
             proxy_settings=self._proxy_settings,
-            rest_url=rest_url,
             token=token,
             token_type=applications.TokenType.BOT,
         )

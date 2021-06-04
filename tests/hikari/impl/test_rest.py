@@ -41,7 +41,6 @@ from hikari import invites
 from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
-from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
@@ -254,7 +253,6 @@ def rest_app():
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
         max_rate_limit=float("inf"),
         proxy_settings=mock.Mock(spec_set=config.ProxySettings),
-        url="https://some.url",
     )
 
 
@@ -294,7 +292,6 @@ class TestRESTApp:
             proxy_settings=rest_app._proxy_settings,
             token="token",
             token_type="Type",
-            rest_url=rest_app._url,
         )
 
 
@@ -316,7 +313,6 @@ def rest_client(rest_client_class):
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
         token_type="tYpe",
-        rest_url="https://some.where/api/v3",
         executor=mock.Mock(),
         entity_factory=mock.Mock(),
     )
@@ -381,7 +377,6 @@ class TestRESTClientImpl:
                 proxy_settings=mock.Mock(),
                 token=None,
                 token_type=None,
-                rest_url=None,
                 executor=None,
                 entity_factory=None,
             )
@@ -396,7 +391,6 @@ class TestRESTClientImpl:
                 proxy_settings=mock.Mock(),
                 token=mock.Mock(rest_api.TokenStrategy),
                 token_type="ooga booga",
-                rest_url=None,
                 executor=None,
                 entity_factory=None,
             )
@@ -408,7 +402,6 @@ class TestRESTClientImpl:
             proxy_settings=mock.Mock(),
             token=None,
             token_type=None,
-            rest_url=None,
             executor=None,
             entity_factory=None,
         )
@@ -421,37 +414,10 @@ class TestRESTClientImpl:
             proxy_settings=mock.Mock(),
             token="some_token",
             token_type="tYpe",
-            rest_url=None,
             executor=None,
             entity_factory=None,
         )
         assert obj._token == "Type some_token"
-
-    def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
-        obj = rest.RESTClientImpl(
-            http_settings=mock.Mock(),
-            max_rate_limit=float("inf"),
-            proxy_settings=mock.Mock(),
-            token=None,
-            token_type=None,
-            rest_url=None,
-            executor=None,
-            entity_factory=None,
-        )
-        assert obj._rest_url == urls.REST_API_URL
-
-    def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
-        obj = rest.RESTClientImpl(
-            http_settings=mock.Mock(),
-            max_rate_limit=float("inf"),
-            proxy_settings=mock.Mock(),
-            token=None,
-            token_type=None,
-            rest_url="https://some.where/api/v2",
-            executor=None,
-            entity_factory=None,
-        )
-        assert obj._rest_url == "https://some.where/api/v2"
 
     def test___enter__(self, rest_client):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
