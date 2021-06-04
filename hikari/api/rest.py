@@ -493,6 +493,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @typing.overload
+    @abc.abstractmethod
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
+        *,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a target entity."""
+
+    @typing.overload
+    @abc.abstractmethod
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: snowflakes.Snowflakeish,
+        *,
+        target_type: typing.Union[channels_.PermissionOverwriteType, int],
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a given entity ID and type."""
+
     @abc.abstractmethod
     async def edit_permission_overwrites(
         self,
@@ -501,7 +528,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
         ],
         *,
-        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, str]] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -519,7 +546,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType]
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]

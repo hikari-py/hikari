@@ -289,7 +289,7 @@ class PermissionOverwrite(snowflakes.Unique):
     )
     """The ID of this entity."""
 
-    type: typing.Union[PermissionOverwriteType, str] = attr.field(
+    type: typing.Union[PermissionOverwriteType, int] = attr.field(
         converter=PermissionOverwriteType, hash=True, repr=True
     )
     """The type of entity this overwrite targets."""
@@ -1011,12 +1011,14 @@ class GuildChannel(PartialChannel):
         self,
         target: typing.Union[snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, PermissionOverwrite],
         *,
-        target_type: undefined.UndefinedOr[typing.Union[PermissionOverwriteType, str]] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[typing.Union[PermissionOverwriteType, int]] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
+
+           This creates new overwrite for the channel, if there no other overwrites present.
 
         Parameters
         ----------
@@ -1026,7 +1028,7 @@ class GuildChannel(PartialChannel):
 
         Other Parameters
         ----------------
-        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType]
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
@@ -1065,8 +1067,16 @@ class GuildChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
+        if target_type is undefined.UNDEFINED:
+            assert not isinstance(
+                target, int
+            ), "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+            return await self.app.rest.edit_permission_overwrites(
+                self.id, target, allow=allow, deny=deny, reason=reason
+            )
+
         return await self.app.rest.edit_permission_overwrites(
-            self.id, target, target_type=target_type, allow=allow, deny=deny, reason=reason
+            self.id, typing.cast(int, target), target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 
     async def remove_overwrite(
