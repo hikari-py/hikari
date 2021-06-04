@@ -68,7 +68,7 @@ _ISO_8601_FORMAT: typing.Final[str] = "%Y-%m-%dT%H:%M:%s"
 
 # Default to the standard lib parser, that isn't really ISO compliant but seems
 # to work for what we need.
-def iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.datetime:
+def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.datetime:
     """Parse an ISO-8601-like datestring into a datetime.
 
     Parameters
@@ -87,7 +87,7 @@ def iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.datetime:
     return datetime.datetime.fromisoformat(datetime_str)
 
 
-try:  # pragma: no cover
+try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
     # going to be noticable on big bots where you are parsing hundreds of
     # thousands of "joined_at" fields on users on startup.
@@ -98,9 +98,14 @@ try:  # pragma: no cover
     # Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
     # but somewhat of a subset with some edge cases.
     # See https://tools.ietf.org/html/rfc3339#section-5.6
-    iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339  # noqa: F811 - Redefined function
+    fast_iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339
+
 except ImportError:
-    pass
+    fast_iso8601_datetime_string_to_datetime = None
+
+iso8601_datetime_string_to_datetime = (
+    fast_iso8601_datetime_string_to_datetime or slow_iso8601_datetime_string_to_datetime
+)
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
