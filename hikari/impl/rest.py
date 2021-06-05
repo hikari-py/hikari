@@ -429,11 +429,11 @@ class RESTClientImpl(rest_api.RESTClient):
         this can be undefined.
     token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
         The type of token in use. This must be passed when a `builtins.str` is
-         passed for `token` but and can be `"Bot"` or `"Bearer"`.
+        passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-         This should be left as `builtins.None` when either
-         `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
-         `token`.
+        This should be left as `builtins.None` when either
+        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        `token`.
     rest_url : builtins.str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
