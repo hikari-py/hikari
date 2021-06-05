@@ -377,7 +377,7 @@ class RESTApp(traits.ExecutorAware):
             this can be undefined.
         token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
             The type of token in use. This should only be passed when `builtins.str`
-            is passed for `token` but, can be `"Bot"` or `"Bearer"` and will be
+            is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
             This should be left as `builtins.None` when either
