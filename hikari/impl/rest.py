@@ -335,10 +335,22 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
+    @typing.overload
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
+        ...
+
+    @typing.overload
+    def acquire(
+        self,
+        token: str,
+        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
+    ) -> RESTClientImpl:
+        ...
+
     def acquire(
         self,
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
-        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
+        token_type: typing.Union[str, applications.TokenType, None] = None,
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
@@ -364,8 +376,9 @@ class RESTApp(traits.ExecutorAware):
             The bot or bearer token. If no token is to be used,
             this can be undefined.
         token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-            The type of token in use. This must be passed when a `builtins.str` is
-            passed for `token` but and can be `"Bot"` or `"Bearer"`.
+            The type of token in use. This should only be passed when `builtins.str`
+            is passed for `token` but, can be `"Bot"` or `"Bearer"` and will be
+            default to `"Bearer"` in this situation.
 
             This should be left as `builtins.None` when either
             `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
@@ -380,13 +393,15 @@ class RESTApp(traits.ExecutorAware):
         ------
         ValueError
             * If `token_type` is provided when a token strategy is passed for `token`.
-            * if `token_type` is left as `builtins.None` when a string is passed for `token`.
         """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
         provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
+
+        if token_type is None and isinstance(token, str):
+            token_type = applications.TokenType.BEARER
 
         rest_client = RESTClientImpl(
             cache=None,

@@ -303,6 +303,29 @@ class TestRESTApp:
             rest_url=rest_app._url,
         )
 
+    def test_acquire_defaults_to_bearer_for_a_string_token(self, rest_app):
+        mock_event_loop = object()
+        rest_app._event_loop = mock_event_loop
+
+        stack = contextlib.ExitStack()
+        _entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
+        mock_client = stack.enter_context(mock.patch.object(rest, rest.RESTClientImpl.__qualname__))
+        stack.enter_context(mock.patch.object(asyncio, "get_running_loop", return_value=mock_event_loop))
+
+        with stack:
+            rest_app.acquire(token="token")
+
+        mock_client.assert_called_once_with(
+            entity_factory=_entity_factory(),
+            executor=rest_app._executor,
+            http_settings=rest_app._http_settings,
+            max_rate_limit=float("inf"),
+            proxy_settings=rest_app._proxy_settings,
+            token="token",
+            token_type=applications.TokenType.BEARER,
+            rest_url=rest_app._url,
+        )
+
 
 ##################
 # RESTClientImpl #
