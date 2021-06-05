@@ -378,7 +378,7 @@ class RESTApp(traits.ExecutorAware):
         token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
             The type of token in use. This should only be passed when `builtins.str`
             is passed for `token` but, can be `"Bot"` or `"Bearer"` and will be
-            default to `"Bearer"` in this situation.
+            defaulted to `"Bearer"` in this situation.
 
             This should be left as `builtins.None` when either
             `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
