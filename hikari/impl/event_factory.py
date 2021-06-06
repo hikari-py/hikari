@@ -627,9 +627,9 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     def deserialize_shard_payload_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, *, name: str
-    ) -> shard_events.ShardPayload:
+    ) -> shard_events.ShardPayloadEvent:
         payload = types.MappingProxyType(payload)
-        return shard_events.ShardPayload(app=self._app, shard=shard, payload=payload, name=name)
+        return shard_events.ShardPayloadEvent(app=self._app, shard=shard, payload=payload, name=name)
 
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "ShardEvent",
-    "ShardPayload",
+    "ShardPayloadEvent",
     "ShardStateEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
@@ -71,7 +71,7 @@ class ShardEvent(base_events.Event, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ShardPayload(ShardEvent):
+class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
     !!! note
