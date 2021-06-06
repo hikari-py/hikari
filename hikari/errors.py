@@ -227,10 +227,7 @@ class HTTPError(HikariError):
 
 @typing.final
 class RESTErrorCode(int, enums.Enum):
-    """Error codes provided as further info on errors returned by the REST API."""
-
-    UNKNOWN_ERROR = -1
-    """Error is not known."""
+    """Non-exhaustive enum of error codes provided as further info on errors returned by the REST API."""
 
     GENERAL_ERROR = 0
     """A general error, no further info provided."""
@@ -285,6 +282,9 @@ class RESTErrorCode(int, enums.Enum):
 
     WRITE_LIMIT_HIT = 20_028
     """The global write limit on a channel has been hit."""
+
+    DISALLOWED_WORDS_IN_PUBLIC_STAGES = 20_031
+    """The stage channel contains disallowed words for public stages."""
 
     MAXIMUM_GUILDS = 30_001
     """Maximum number of guilds reached (100)."""
