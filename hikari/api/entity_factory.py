@@ -63,7 +63,10 @@ class GatewayGuildDefinition(abc.ABC):
         when the relevant resource isn't available in the inner payload.
     """
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
+    @abc.abstractmethod
     def id(self) -> snowflakes.Snowflake:
         """ID of the guild the definition is for."""
 

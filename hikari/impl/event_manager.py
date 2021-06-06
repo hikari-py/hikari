@@ -56,6 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites
     from hikari import voices
     from hikari.api import cache as cache_
+    from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
@@ -89,10 +90,11 @@ async def _request_guild_members(
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache",)
+    __slots__: typing.Sequence[str] = ("_cache", "_entity_factory")
 
     def __init__(
         self,
+        entity_factory: entity_factory_.EntityFactory,
         event_factory: event_factory_.EventFactory,
         intents: intents_.Intents,
         /,
@@ -100,7 +102,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
-        super().__init__(event_factory=event_factory, intents=intents)
+        self._entity_factory = entity_factory
+        super().__init__(event_factory=event_factory, intents=intents, cache_settings=cache.settings if cache else None)
 
     def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
         return self._cache is not None and (self._cache.settings.components & components) == components
@@ -165,7 +168,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if not enabled_for_event and self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
             event: typing.Optional[guild_events.GuildAvailableEvent] = None
-            gd = self._app.entity_factory.deserialize_gateway_guild(payload)
+            gd = self._entity_factory.deserialize_gateway_guild(payload)
 
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
@@ -267,8 +270,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if not enabled_for_event and self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_update raw dispatch due to lack of any registered listeners")
             event: typing.Optional[guild_events.GuildUpdateEvent] = None
-            gd = self._app.entity_factory.deserialize_gateway_guild(payload)
-            emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
+            gd = self._entity_factory.deserialize_gateway_guild(payload)
+            emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
             roles = gd.roles() if self._cache_enabled_for(config.CacheComponents.ROLES) else None

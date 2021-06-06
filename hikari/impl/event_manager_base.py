@@ -91,6 +91,7 @@ class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
     def __event_types__(self) -> typing.Sequence[typing.Type[base_events.Event]]:
         raise NotImplementedError
 
+
 def _generate_weak_listener(
     reference: weakref.WeakMethod,
 ) -> typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
@@ -258,7 +259,7 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
     if next(parameters, None) is None:
         raise TypeError("Event listener must have one positional argument for the event object.")
 
-    if any(param.default is not inspect.Parameter.empty for param in parameters):
+    if any(param.default is inspect.Parameter.empty for param in parameters):
         raise TypeError("Only the first argument for a listener can be required, the event argument.")
 
 
@@ -297,22 +298,16 @@ def filtered(
     return decorator
 
 
-@attr.frozen()
+@attr.define(hash=True)
 class _Consumer:
-    callback: ConsumerT = attr.ib()
+    callback: ConsumerT = attr.ib(hash=True)
     """The callback function for this consumer."""
 
-    cache_components: undefined.UndefinedOr[config.CacheComponents] = attr.ib()
-    """Bitfield of the cache components this consumer makes modifying calls to, if set."""
-
-    event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]] = attr.ib()
+    event_types: undefined.UndefinedOr[typing.Sequence[typing.Type[base_events.Event]]] = attr.ib(hash=False)
     """A sequence of the types of events this consumer dispatches to, if set."""
 
-    def __attrs_post_init__(self) -> None:
-        # Letting only one be UNDEFINED just doesn't make sense as either being undefined leads to filtering being
-        # skipped all together making the other redundant.
-        if undefined.count(self.cache_components, self.event_types) == 1:
-            raise ValueError("cache_components and event_types must both either be undefined or defined")
+    is_caching: bool = attr.ib(hash=False)
+    """Cached value of whether or not this consumer is making cache calls in the current env."""
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -322,11 +317,25 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_consumers", "_enabled_consumers_cache", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = (
+        "_consumers",
+        "_dispatches_for_cache",
+        "_enabled_consumers_cache",
+        "_event_factory",
+        "_intents",
+        "_listeners",
+        "_waiters",
+    )
 
-    def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
-        self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
+    def __init__(
+        self,
+        event_factory: event_factory_.EventFactory,
+        intents: intents_.Intents,
+        *,
+        cache_settings: typing.Optional[config.CacheSettings] = None,
+    ) -> None:
         self._consumers: typing.Dict[str, _Consumer] = {}
+        self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
         self._enabled_consumers_cache: typing.Dict[_Consumer, bool] = {}
         self._event_factory = event_factory
         self._intents = intents
@@ -337,10 +346,11 @@ class EventManagerBase(event_manager_.EventManager):
             if name.startswith("on_"):
                 event_name = name[3:]
                 if isinstance(member, _FilteredMethodT):
-                    self._consumers[event_name] = _Consumer(member, member.__cache_components__, member.__event_types__)
+                    caching = bool(cache_settings and (member.__cache_components__ & cache_settings.components))
+                    self._consumers[event_name] = _Consumer(member, member.__event_types__, caching)
 
                 else:
-                    self._consumers[event_name] = _Consumer(member, undefined.UNDEFINED, undefined.UNDEFINED)
+                    self._consumers[event_name] = _Consumer(member, undefined.UNDEFINED, bool(cache_settings))
 
     def _clear_enabled_cache(self) -> None:
         self._enabled_consumers_cache = {}
@@ -354,29 +364,21 @@ class EventManagerBase(event_manager_.EventManager):
 
     def _enabled_for_consumer(self, consumer: _Consumer, /) -> bool:
         # If undefined then we can only assume that this may link to registered listeners.
-        if consumer.event_types is undefined.UNDEFINED:
+        if consumer.event_types is undefined.UNDEFINED or consumer.is_caching:
             return True
 
-        # If event_types is not UNDEFINED then cache_components shouldn't ever be undefined.
-        assert consumer.cache_components is not undefined.UNDEFINED
-        if (cached_value := self._enabled_consumers_cache.get(consumer)) is True:
-            return True
+        if (cached_value := self._enabled_consumers_cache.get(consumer)) is not None:
+            return cached_value
 
-        if cached_value is None:
-            # The behaviour here where an empty sequence for event_types will lead to this always
-            # being skipped unless there's a relevant enabled cache resource is intended behaviour.
-            for event_type in consumer.event_types:
-                if event_type in self._listeners or event_type in self._waiters:
-                    self._enabled_consumers_cache[consumer] = True
-                    return True
+        # The behaviour here where an empty sequence for event_types will lead to this always
+        # being skipped unless there's a relevant enabled cache resource is intended behaviour.
+        for event_type in consumer.event_types:
+            if event_type in self._listeners or event_type in self._waiters:
+                self._enabled_consumers_cache[consumer] = True
+                return True
 
-            self._enabled_consumers_cache[consumer] = False
-
-        # If cache_components is NONE then it doesn't make any altering state calls.
-        return (
-            consumer.cache_components != config.CacheComponents.NONE
-            and (consumer.cache_components & self._app.cache.settings.components) != 0
-        )
+        self._enabled_consumers_cache[consumer] = False
+        return False
 
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -445,10 +447,10 @@ class EventManagerBase(event_manager_.EventManager):
         polymorphic: bool = True,
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         if polymorphic:
-            listeners: typing.List[event_manager.CallbackT[event_manager.EventT_co]] = []
-            for cls in event_type.dispatches():
-                listeners.extend(self._listeners[cls])
-
+            listeners: typing.List[event_manager_.CallbackT[event_manager_.EventT_co]] = []
+            for subscribed_event_type, subscribed_listeners in self._listeners.items():
+                if issubclass(subscribed_event_type, event_type):
+                    listeners += subscribed_listeners
             return listeners
 
         else:
