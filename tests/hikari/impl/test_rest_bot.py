@@ -271,7 +271,7 @@ class TestRESTBot:
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
-        with mock.patch.object(asyncio, "get_running_loop") as get_event_loop:
+        with mock.patch.object(asyncio, "get_event_loop") as get_event_loop:
             mock_rest_bot.run(asyncio_debug=True)
 
             get_event_loop.return_value.set_debug.assert_called_once_with(True)

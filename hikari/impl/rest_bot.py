@@ -376,7 +376,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier
         # and more consistent to just explicitly make a new loop.
         try:
-            loop = asyncio.get_running_loop()
+            loop = asyncio.get_event_loop()
 
         except RuntimeError:
             loop = asyncio.new_event_loop()
