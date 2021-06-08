@@ -28,7 +28,6 @@ __all__: typing.List[str] = [
     "TypingIndicator",
     "GuildBuilder",
     "CommandResponseBuilder",
-    "CommandResponseTypes",
     "InteractionResponseBuilder",
 ]
 
@@ -51,7 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
-    from hikari.interactions import bases as interaction_bases
     from hikari.interactions import commands
     from hikari.internal import data_binding
     from hikari.internal import time
@@ -541,12 +539,12 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> interaction_bases.ResponseType:
+    def type(self) -> int:
         """Return the type of this response.
 
         Returns
         -------
-        hikari.interactions.bases.ResponseType
+        builtins.int
             The type of response this is.
         """
 
@@ -566,13 +564,6 @@ class InteractionResponseBuilder(abc.ABC):
         """
 
 
-CommandResponseTypes = typing.Union[
-    "typing.Literal[interaction_bases.ResponseType.SOURCED_RESPONSE]",
-    "typing.Literal[interaction_bases.ResponseType.DEFERRED_SOURCED_RESPONSE]",
-]
-"""Type hints of the valid response types for a command interaction."""
-
-
 class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of a interaction command response builder used within REST servers.
 
@@ -585,12 +576,12 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> CommandResponseTypes:
+    def type(self) -> typing.Union[int, commands.CommandResponseType]:
         """Type of this response.
 
         Returns
         -------
-        hikari.api.special_endpoints.CommandResponseTypes
+        typing.Union[builtins.int, hikari.interactions.commands.CommandResponseType]
             The type of response this is.
         """
 

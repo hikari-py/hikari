@@ -3029,7 +3029,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
         token: str,
-        response_type: interaction_bases.ResponseType,
+        response_type: typing.Union[int, commands.CommandResponseType],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,

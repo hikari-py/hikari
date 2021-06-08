@@ -151,7 +151,7 @@ class TestCommandInteraction:
         mock_embed_1 = object()
         mock_embed_2 = object()
         await mock_command_interaction.create_initial_response(
-            bases.ResponseType.SOURCED_RESPONSE,
+            commands.CommandResponseType.SOURCED_RESPONSE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -164,7 +164,7 @@ class TestCommandInteraction:
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.SOURCED_RESPONSE,
+            commands.CommandResponseType.SOURCED_RESPONSE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -176,12 +176,12 @@ class TestCommandInteraction:
 
     @pytest.mark.asyncio
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
-        await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        await mock_command_interaction.create_initial_response(commands.CommandResponseType.DEFERRED_SOURCED_RESPONSE)
 
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.DEFERRED_SOURCED_RESPONSE,
+            commands.CommandResponseType.DEFERRED_SOURCED_RESPONSE,
             undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,

@@ -40,7 +40,7 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
-from hikari.interactions import bases as interaction_bases
+from hikari.interactions import commands
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -61,7 +61,6 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
-    from hikari.interactions import commands
 
 
 @typing.final
@@ -666,12 +665,12 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
 
     Parameters
     ----------
-    type : hikari.api.special_endpoints.CommandResponseTypes
+    type : typing.Union[int, hikari.interactions.commands.CommandResponseType]
         The type of interaction response this is.
     """
 
     # Required arguments.
-    _type: special_endpoints.CommandResponseTypes = attr.ib(converter=interaction_bases.ResponseType)
+    _type: typing.Union[int, commands.CommandResponseType] = attr.ib(converter=commands.CommandResponseType)
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
@@ -697,7 +696,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
         return self._embeds.copy()
 
     @property
-    def type(self) -> special_endpoints.CommandResponseTypes:
+    def type(self) -> typing.Union[int, commands.CommandResponseType]:
         return self._type
 
     def add_embed(self, embed: embeds_.Embed, /) -> CommandResponseBuilder:
@@ -724,7 +723,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        is_message_response = self.type is interaction_bases.ResponseType.SOURCED_RESPONSE
+        is_message_response = self.type is commands.CommandResponseType.SOURCED_RESPONSE
 
         if is_message_response and not data:
             raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")

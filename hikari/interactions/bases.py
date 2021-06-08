@@ -23,7 +23,7 @@
 """Base classes and enums inherited and used throughout the interactions flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ResponseType", "InteractionMember", "InteractionType", "PartialInteraction"]
+__all__: typing.List[str] = ["InteractionMember", "InteractionType", "PartialInteraction"]
 
 import typing
 
@@ -36,7 +36,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
-    from hikari import permissions
+    from hikari import permissions as permissions_
     from hikari import traits
 
 
@@ -48,25 +48,6 @@ class InteractionType(int, enums.Enum):
     # server rather than as a part of the public interface.
     APPLICATION_COMMAND = 2
     """An interaction triggered by a user calling an application command."""
-
-
-@typing.final
-class ResponseType(int, enums.Enum):
-    """The type of an interaction response."""
-
-    # PONG isn't here as it should be handled as internal detail of the REST
-    # server rather than as a part of the public interface.
-
-    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
-    SOURCED_RESPONSE = 4
-    """An immediate response to an interaction."""
-
-    DEFERRED_SOURCED_RESPONSE = 5
-    """Acknowledge an interaction with the intention to edit in a response later.
-
-    The user will see a loading state when this type is used until this
-    interaction expires or a response is edited in over REST.
-    """
 
 
 @attr_extensions.with_copy
@@ -106,6 +87,5 @@ class InteractionMember(guilds.Member):
     `InteractionMember.permissions` field.
     """
 
-    permissions: permissions.Permissions = attr.field(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
     """Permissions the member has in the current channel."""
-

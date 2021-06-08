@@ -2831,7 +2831,7 @@ class TestEntityFactoryImpl:
         assert interaction.member.is_mute is True
         assert interaction.member.is_pending is False
         assert interaction.member.permissions == 47
-        assert isinstance(interaction.member, command_models.InteractionMember)
+        assert isinstance(interaction.member, interaction_models.InteractionMember)
 
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
@@ -2880,7 +2880,7 @@ class TestEntityFactoryImpl:
         ]
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(member, command_models.InteractionMember)
+        assert isinstance(member, interaction_models.InteractionMember)
 
         assert interaction.resolved.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)

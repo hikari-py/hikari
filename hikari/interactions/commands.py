@@ -31,6 +31,7 @@ __all__: typing.List[str] = [
     "CommandOption",
     "InteractionChannel",
     "ResolvedOptionData",
+    "CommandResponseType",
     "OptionType",
 ]
 
@@ -52,6 +53,25 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
+
+
+@typing.final
+class CommandResponseType(int, enums.Enum):
+    """The type of an interaction response."""
+
+    # PONG isn't here as it should be handled as internal detail of the REST
+    # server rather than as a part of the public interface.
+
+    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
+    SOURCED_RESPONSE = 4
+    """An immediate response to a command interaction."""
+
+    DEFERRED_SOURCED_RESPONSE = 5
+    """Acknowledge an interaction with the intention to edit in a response later.
+
+    The user will see a loading state when this type is used until this
+    interaction expires or a response is edited in over REST.
+    """
 
 
 @typing.final
@@ -431,7 +451,7 @@ class CommandInteraction(bases.PartialInteraction):
 
     async def create_initial_response(
         self,
-        response_type: bases.ResponseType,
+        response_type: typing.Union[int, CommandResponseType],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -455,7 +475,7 @@ class CommandInteraction(bases.PartialInteraction):
 
         Parameters
         ----------
-        response_type : hikari.interactions.bases.ResponseType
+        response_type : typing.Union[builtins.int, hikari.interactions.commands.CommandResponseType]
             The type of interaction response this is.
 
         Other Parameters
