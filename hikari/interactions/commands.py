@@ -30,7 +30,6 @@ __all__: typing.List[str] = [
     "CommandInteraction",
     "CommandOption",
     "InteractionChannel",
-    "InteractionMember",
     "ResolvedOptionData",
     "OptionType",
 ]
@@ -40,7 +39,6 @@ import typing
 import attr
 
 from hikari import channels
-from hikari import guilds
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -50,6 +48,7 @@ from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
+    from hikari import guilds
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
@@ -319,7 +318,7 @@ class ResolvedOptionData:
     users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
-    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, bases.InteractionMember] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
@@ -359,18 +358,6 @@ class CommandInteractionOption:
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class InteractionMember(guilds.Member):
-    """Model of the member who triggered an interaction.
-
-    Unlike `hikari.guilds.Member`, this object comes with an extra
-    `InteractionMember.permissions` field.
-    """
-
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
-    """Permissions the member has in the current channel."""
-
-
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(bases.PartialInteraction):
@@ -385,7 +372,7 @@ class CommandInteraction(bases.PartialInteraction):
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    member: typing.Optional[InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[bases.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
     This will be `builtins.None` for command interactions triggered in DMs.

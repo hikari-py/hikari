@@ -23,18 +23,20 @@
 """Base classes and enums inherited and used throughout the interactions flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ResponseType", "InteractionType", "PartialInteraction"]
+__all__: typing.List[str] = ["ResponseType", "InteractionMember", "InteractionType", "PartialInteraction"]
 
 import typing
 
 import attr
 
+from hikari import guilds
 from hikari import snowflakes
 from hikari import webhooks
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import permissions
     from hikari import traits
 
 
@@ -94,3 +96,16 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class InteractionMember(guilds.Member):
+    """Model of the member who triggered an interaction.
+
+    Unlike `hikari.guilds.Member`, this object comes with an extra
+    `InteractionMember.permissions` field.
+    """
+
+    permissions: permissions.Permissions = attr.field(eq=False, hash=False, repr=False)
+    """Permissions the member has in the current channel."""
+

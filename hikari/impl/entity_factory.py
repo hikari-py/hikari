@@ -1699,7 +1699,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: snowflakes.Snowflake,
         user: typing.Optional[user_models.User] = None,
-    ) -> command_models.InteractionMember:
+    ) -> interaction_models.InteractionMember:
         if not user:
             user = self.deserialize_user(payload["user"])
 
@@ -1713,7 +1713,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
 
         # TODO: deduplicate member unmarshalling logic
-        return command_models.InteractionMember(
+        return interaction_models.InteractionMember(
             user=user,
             guild_id=guild_id,
             role_ids=role_ids,
@@ -1737,7 +1737,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := data_payload.get("options"):
             options = [self._deserialize_interaction_command_option(option) for option in raw_options]
 
-        member: typing.Optional[command_models.InteractionMember]
+        member: typing.Optional[interaction_models.InteractionMember]
         if member_payload := payload.get("member"):
             assert guild_id is not None
             member = self._deserialize_command_interaction_member(member_payload, guild_id=guild_id)
@@ -1768,7 +1768,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 users = {}
 
-            members: typing.Dict[snowflakes.Snowflake, command_models.InteractionMember] = {}
+            members: typing.Dict[snowflakes.Snowflake, interaction_models.InteractionMember] = {}
             if raw_members := resolved_payload.get("members"):
                 for user_id, member_payload in raw_members.items():
                     assert guild_id is not None
