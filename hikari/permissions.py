@@ -26,6 +26,8 @@ from __future__ import annotations
 
 __all__: typing.List[str] = ["Permissions"]
 
+import functools
+import operator
 import typing
 
 from hikari.internal import enums
@@ -94,19 +96,49 @@ class Permissions(enums.Flag):
     """Allows creation of instant invites."""
 
     KICK_MEMBERS = 1 << 1
-    """Allows kicking members"""
+    """Allows kicking members.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     BAN_MEMBERS = 1 << 2
-    """Allows banning members."""
+    """Allows banning members.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     ADMINISTRATOR = 1 << 3
-    """Allows all permissions and bypasses channel permission overwrites."""
+    """Allows all permissions and bypasses channel permission overwrites.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     MANAGE_CHANNELS = 1 << 4
-    """Allows management and editing of channels."""
+    """Allows management and editing of channels.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     MANAGE_GUILD = 1 << 5
-    """Allows management and editing of the guild."""
+    """Allows management and editing of the guild.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     ADD_REACTIONS = 1 << 6
     """Allows for the addition of reactions to messages."""
@@ -130,7 +162,13 @@ class Permissions(enums.Flag):
     """Allows for sending of `/tts` messages."""
 
     MANAGE_MESSAGES = 1 << 13
-    """Allows for deletion of other users messages."""
+    """Allows for deletion of other users messages.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     EMBED_LINKS = 1 << 14
     """Links sent by users with this permission will be auto-embedded."""
@@ -179,13 +217,31 @@ class Permissions(enums.Flag):
     """Allows for modification of other users nicknames."""
 
     MANAGE_ROLES = 1 << 28
-    """Allows management and editing of roles."""
+    """Allows management and editing of roles.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     MANAGE_WEBHOOKS = 1 << 29
-    """Allows management and editing of webhooks."""
+    """Allows management and editing of webhooks.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     MANAGE_EMOJIS = 1 << 30
-    """Allows management and editing of emojis."""
+    """Allows management and editing of emojis.
+
+    !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
 
     USE_APPLICATION_COMMANDS = 1 << 31
     """Allows for using the application commands of guild integrations within a text channel."""
@@ -198,3 +254,29 @@ class Permissions(enums.Flag):
         development" by Discord meaning that "it may be changed or removed"
         without warning.
     """
+
+    MANAGE_THREADS = 1 << 34
+    """Allows for deleting and archiving threads, and viewing all private threads.
+
+     !!! note
+        In guilds with server-wide 2FA enabled this permission can only be used
+        by users who have two-factor authentication enabled on their account
+        (or their owner's account in the case of bot users) and the guild owner.
+    """
+
+    USE_PUBLIC_THREADS = 1 << 35
+    """Allows for creating and participating in threads."""
+
+    USE_PRIVATE_THREADS = 1 << 36
+    """Allows for creating and participating in private threads."""
+
+    @classmethod
+    def all_permissions(cls) -> Permissions:
+        """Get an instance of `Permissions` with all the known permissions.
+
+        Returns
+        -------
+        Permissions
+            A permissions instance with all the known permissions.
+        """
+        return functools.reduce(operator.ior, Permissions)
