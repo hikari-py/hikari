@@ -19,3 +19,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from hikari import permissions
+
+
+class TestPermissions:
+    def test_all_permissions(self):
+        all_perms = permissions.Permissions.all_permissions()
+
+        assert isinstance(all_perms, permissions.Permissions)
+        assert all_perms == 128849018879

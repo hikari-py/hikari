@@ -370,4 +370,4 @@ class Intents(enums.Flag):
         this intent on the Discord Developer Portal before you can utilise it
         in your application.
         """
-        return bool(self & (self.GUILD_MEMBERS | self.GUILD_PRESENCES))
+        return bool(self & self.ALL_PRIVILEGED)
