@@ -77,10 +77,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
-    application : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
-        Object or ID of the application this bot instance should be associated
-        with. If left as `builtins.None` then the client will try to work this
-        value out based on `token`.
     banner : typing.Optional[builtins.str]
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.

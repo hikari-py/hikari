@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
 
 
 class CommandEvent(shard_events.ShardEvent, abc.ABC):
-    """Base class of events fired for application command changes."""
+    """Base class of events fired for changes to application commands."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -69,7 +69,12 @@ class CommandEvent(shard_events.ShardEvent, abc.ABC):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class CommandCreateEvent(CommandEvent):
-    """Event fired when a command is created for the current application."""
+    """Event fired when a command is created relevant to the current bot.
+
+    !!! note
+        This includes applications created by other bots which share a guild
+        with the current bot.
+    """
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
@@ -81,7 +86,12 @@ class CommandCreateEvent(CommandEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class CommandUpdateEvent(CommandEvent):
-    """Event fired when a command is updated for the current application."""
+    """Event fired when a command is updated relevant to the current bot.
+
+    !!! note
+        This includes applications created by other bots which share a guild
+        with the current bot.
+    """
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
@@ -93,7 +103,12 @@ class CommandUpdateEvent(CommandEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class CommandDeleteEvent(CommandEvent):
-    """Event fired when a command is deleted for the current application."""
+    """Event fired when a command is deleted relevant to the current bot.
+
+    !!! note
+        This includes applications created by other bots which share a guild
+        with the current bot.
+    """
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
