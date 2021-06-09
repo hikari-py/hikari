@@ -40,7 +40,6 @@ __all__: typing.List[str] = [
     "GuildPremiumTier",
     "GuildPreview",
     "GuildBan",
-    "GuildMemberBan",
     "GuildNSFWLevel",
     "Member",
     "Integration",
