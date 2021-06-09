@@ -567,8 +567,13 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        member = await self.fetch_self()
-        return member.roles
+        roles = []
+
+        for f_role in await self.app.rest.fetch_roles(self.guild_id):
+            if f_role in self.role_ids:
+                roles.append(f_role)
+
+        return roles
 
     async def ban(
         self,
@@ -2151,6 +2156,36 @@ class PartialGuild(snowflakes.Unique):
         """
         return await self.app.rest.fetch_guild(self.id)
 
+    async def fetch_roles(self) -> typing.Sequence[Role]:
+        """Fetch the roles of the guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Role]
+            The requested roles.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+            hikari.errors.NotFoundError
+                If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_roles(self.id)
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
@@ -2544,35 +2579,6 @@ class Guild(PartialGuild, abc.ABC):
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
 
-    async def fetch_roles(self) -> typing.Sequence[Role]:
-        """Fetch the roles of the guild.
-
-        Returns
-        -------
-        typing.Sequence[hikari.guilds.Role]
-            The requested roles.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-            hikari.errors.NotFoundError
-                If the guild is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.fetch_roles(self.id)
 
     async def fetch_owner(self) -> Member:
         """Fetch the owner of the guild.
@@ -2643,7 +2649,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         widget_channel = await self.app.rest.fetch_channel(self.widget_channel_id)
-        assert widget_channel is None or isinstance(widget_channel, channels_.GuildChannel)
+        assert isinstance(widget_channel, channels_.GuildChannel)
         return widget_channel
 
     async def fetch_afk_channel(self) -> typing.Optional[channels_.GuildVoiceChannel]:
@@ -2683,7 +2689,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         afk_channel = await self.app.rest.fetch_channel(self.afk_channel_id)
-        assert afk_channel is None or isinstance(afk_channel, channels_.GuildVoiceChannel)
+        assert isinstance(afk_channel, channels_.GuildVoiceChannel)
         return afk_channel
 
     async def fetch_system_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
@@ -2724,7 +2730,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         system_channel = await self.app.rest.fetch_channel(self.system_channel_id)
-        assert system_channel is None or isinstance(system_channel, channels_.GuildTextChannel)
+        assert isinstance(system_channel, channels_.GuildTextChannel)
         return system_channel
 
     async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
@@ -2766,7 +2772,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         rules_channel = await self.app.rest.fetch_channel(self.rules_channel_id)
-        assert rules_channel is None or isinstance(rules_channel, channels_.GuildTextChannel)
+        assert isinstance(rules_channel, channels_.GuildTextChannel)
         return rules_channel
 
     async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
@@ -2809,7 +2815,7 @@ class Guild(PartialGuild, abc.ABC):
             return None
 
         updates_channel = await self.app.rest.fetch_channel(self.public_updates_channel_id)
-        assert updates_channel is None or isinstance(updates_channel, channels_.GuildTextChannel)
+        assert isinstance(updates_channel, channels_.GuildTextChannel)
         return updates_channel
 
 
