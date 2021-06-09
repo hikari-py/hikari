@@ -494,7 +494,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[
-            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+            interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
         ]
     ]:
         return self._server.get_listener(interaction_type)
@@ -504,7 +504,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         interaction_type: typing.Type[interaction_server_.InteractionT],
         listener: typing.Optional[
             interaction_server_.ListenerT[
-                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+                interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
             ]
         ],
         /,

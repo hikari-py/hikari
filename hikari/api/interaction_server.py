@@ -33,7 +33,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import bases as interaction_bases
 
     InteractionT = typing.TypeVar("InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
-    ResponseT = typing.TypeVar("ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
+    ResponseT = typing.TypeVar("ResponseT", bound=special_endpoints.BaseInteractionResponseBuilder, covariant=True)
 
 
 ListenerT = typing.Callable[["InteractionT"], typing.Awaitable["ResponseT"]]
@@ -41,13 +41,13 @@ ListenerT = typing.Callable[["InteractionT"], typing.Awaitable["ResponseT"]]
 
 This should be an async callback which takes in one positional argument which
 subclases `hikari.interactions.bases.PartialInteraction` and may return an
-instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilder`
+instance of the relevant `hikari.api.special_endpoints.BaseInteractionResponseBuilder`
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
 !!! note
     For the standard implementations of
-    `hikari.api.special_endpoints.InteractionResponseBuilder` see
+    `hikari.api.special_endpoints.BaseInteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.
 """
 
@@ -130,13 +130,15 @@ class InteractionServer(abc.ABC):
     # @typing.overload
     # def get_listener(
     #     self, interaction_type: typing.Type[commands.CommandInteraction], /
-    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, special_endpoints.CommandResponseBuilder]]:
+    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]]:
     #     raise NotImplementedError
 
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
-    ) -> typing.Optional[ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+    ) -> typing.Optional[
+        ListenerT[interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder]
+    ]:
         raise NotImplementedError
 
     # @typing.overload
@@ -144,7 +146,7 @@ class InteractionServer(abc.ABC):
     #     self,
     #     interaction_type: typing.Type[commands.CommandInteraction],
     #     listener: typing.Optional[
-    #         MainListenerT[commands.CommandInteraction, special_endpoints.CommandResponseBuilder]
+    #         MainListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
     #     ],
     #     /,
     #     *,
@@ -157,7 +159,7 @@ class InteractionServer(abc.ABC):
         self,
         interaction_type: typing.Type[InteractionT],
         listener: typing.Optional[
-            ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+            ListenerT[interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder]
         ],
         /,
         *,

@@ -26,7 +26,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "CommandResponseBuilder"]
+__all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "InteractionResponseBuilder"]
 
 import asyncio
 import typing
@@ -61,6 +61,9 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+
+    CommandBuilderT = typing.TypeVar("CommandBuilderT", bound="CommandBuilder")
+    InteractionResponseBuilderT = typing.TypeVar("InteractionResponseBuilderT", bound="InteractionResponseBuilder")
 
 
 @typing.final
@@ -660,8 +663,8 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.s(kw_only=False, slots=True, weakref_slot=False)
-class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.CommandResponseBuilder`.
+class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionResponseBuilder`.
 
     Parameters
     ----------
@@ -705,7 +708,7 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     def type(self) -> typing.Union[int, commands.CommandResponseType]:
         return self._type
 
-    def add_embed(self, embed: embeds_.Embed, /) -> CommandResponseBuilder:
+    def add_embed(self: InteractionResponseBuilderT, embed: embeds_.Embed, /) -> InteractionResponseBuilderT:
         self._embeds.append(embed)
         return self
 
@@ -768,7 +771,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def name(self) -> str:
         return self._name
 
-    def add_option(self, option: commands.CommandOption) -> CommandBuilder:
+    def add_option(self: CommandBuilderT, option: commands.CommandOption) -> CommandBuilderT:
         self._options.append(option)
         return self
 

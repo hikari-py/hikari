@@ -170,7 +170,7 @@ class InteractionServer(interaction_server.InteractionServer):
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._event: typing.Optional[asyncio.Event] = None
         self._listeners: ListenerDictT[
-            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+            interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
         ] = {}
         self._loads = loads
         self._rest_client = rest_client
@@ -486,7 +486,9 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
+        interaction_server.ListenerT[
+            interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
+        ]
     ]:
         return self._listeners.get(interaction_type)
 
@@ -495,7 +497,7 @@ class InteractionServer(interaction_server.InteractionServer):
         interaction_type: typing.Type[interaction_server.InteractionT],
         listener: typing.Optional[
             interaction_server.ListenerT[
-                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
+                interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
             ]
         ],
         /,

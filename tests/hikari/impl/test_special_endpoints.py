@@ -47,13 +47,13 @@ class TestTypingIndicator:
 
 class TestCommandResponseBuilder:
     def test_type_property(self):
-        builder = special_endpoints.CommandResponseBuilder(1)
+        builder = special_endpoints.InteractionResponseBuilder(1)
 
         assert builder.type == 1
 
     def test_add_embed(self):
         mock_embed = object()
-        builder = special_endpoints.CommandResponseBuilder(1)
+        builder = special_endpoints.InteractionResponseBuilder(1)
 
         assert builder.embeds == []
 
@@ -62,7 +62,7 @@ class TestCommandResponseBuilder:
         assert builder.embeds == [mock_embed]
 
     def test_build_without_data(self):
-        builder = special_endpoints.CommandResponseBuilder(
+        builder = special_endpoints.InteractionResponseBuilder(
             command_interactions.CommandResponseType.DEFERRED_SOURCED_RESPONSE
         )
 
@@ -72,14 +72,18 @@ class TestCommandResponseBuilder:
         }
 
     def test_build_without_data_for_message_response_type(self):
-        builder = special_endpoints.CommandResponseBuilder(command_interactions.CommandResponseType.SOURCED_RESPONSE)
+        builder = special_endpoints.InteractionResponseBuilder(
+            command_interactions.CommandResponseType.SOURCED_RESPONSE
+        )
 
         with pytest.raises(ValueError, match="Cannot build an empty response for SOURCED_RESPONSE responses."):
             builder.build(object())
 
     def test_build_with_data(self):
         mock_entity_factory = mock.Mock()
-        builder = special_endpoints.CommandResponseBuilder(command_interactions.CommandResponseType.SOURCED_RESPONSE)
+        builder = special_endpoints.InteractionResponseBuilder(
+            command_interactions.CommandResponseType.SOURCED_RESPONSE
+        )
         mock_embed = object()
         builder.add_embed(mock_embed)
         builder.content = "a content"
@@ -104,7 +108,7 @@ class TestCommandResponseBuilder:
         }
 
     def test_build_with_data_for_deferred_response_type(self):
-        builder = special_endpoints.CommandResponseBuilder(
+        builder = special_endpoints.InteractionResponseBuilder(
             command_interactions.CommandResponseType.DEFERRED_SOURCED_RESPONSE
         )
         builder.add_embed(object())

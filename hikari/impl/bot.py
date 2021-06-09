@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBot"]
+__all__: typing.List[str] = ["BotApp", "GatewayBot"]
 
 import asyncio
 import datetime
@@ -54,6 +54,7 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
+from hikari.internal import deprecation
 from hikari.internal import time
 from hikari.internal import ux
 
@@ -1057,3 +1058,20 @@ class GatewayBot(traits.GatewayBotAware):
                 category=errors.HikariWarning,
                 stacklevel=3,
             )
+
+
+class BotApp(GatewayBot):
+    """Deprecated alias for `GatewayBot`.
+
+    .. deprecated:: 2.0.0.dev101
+        Use `GatewayBot` instead.
+    """
+
+    # This is only overridden at runtime in-order to preserve this class'
+    # inherited init pattern from `GatewayBot` without repeating it
+    if not typing.TYPE_CHECKING:
+
+        def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+            super().__init__(*args, **kwargs)
+            # This is called after the super call as __init__ may alter the warnings config
+            deprecation.warn_deprecated(BotApp, stack_level=3)

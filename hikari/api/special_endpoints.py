@@ -27,7 +27,7 @@ __all__: typing.List[str] = [
     "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
-    "CommandResponseBuilder",
+    "BaseInteractionResponseBuilder",
     "InteractionResponseBuilder",
 ]
 
@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
     from hikari.internal import time
 
-    CommandResponseBuilderT = typing.TypeVar("CommandResponseBuilderT", bound="CommandResponseBuilder")
+    InteractionResponseBuilderT = typing.TypeVar("InteractionResponseBuilderT", bound="BaseInteractionResponseBuilder")
     CommandBuilderT = typing.TypeVar("CommandBuilderT", bound="CommandBuilder")
 
 
@@ -534,7 +534,7 @@ class GuildBuilder(abc.ABC):
         """
 
 
-class InteractionResponseBuilder(abc.ABC):
+class BaseInteractionResponseBuilder(abc.ABC):
     """Base class for all interaction response builders used in the interaction server."""
 
     @property
@@ -564,8 +564,8 @@ class InteractionResponseBuilder(abc.ABC):
         """
 
 
-class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
-    """Interface of a interaction command response builder used within REST servers.
+class InteractionResponseBuilder(BaseInteractionResponseBuilder, abc.ABC):
+    """Interface of a interaction message response builder used within REST servers.
 
     This can be returned by the listener registered to
     `hikari.api.interaction_server.InteractionServer` as a response to the interaction
@@ -708,7 +708,7 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_embed(self: CommandResponseBuilderT, embed: embeds_.Embed, /) -> CommandResponseBuilderT:
+    def add_embed(self: InteractionResponseBuilderT, embed: embeds_.Embed, /) -> InteractionResponseBuilderT:
         """Add an embed to this response.
 
         Parameters
@@ -718,7 +718,7 @@ class CommandResponseBuilder(InteractionResponseBuilder, abc.ABC):
 
         Returns
         -------
-        CommandResponseBuilderT
+        InteractionResponseBuilder
             Object of this builder.
         """
 
@@ -797,7 +797,7 @@ class CommandBuilder(abc.ABC):
 
         Returns
         -------
-        CommandBuilderT
+        CommandBuilder
             Object of this command builder.
         """
 
