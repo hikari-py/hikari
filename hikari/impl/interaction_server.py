@@ -92,7 +92,7 @@ class _Response:
         *,
         content_type: typing.Optional[str] = None,
     ) -> None:
-        self._headers: typing.Optional[typing.Dict[str, str]] = None
+        self._headers = None
         if payload or content_type:
             self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_TYPE_WITH_CHARSET}
 

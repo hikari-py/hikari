@@ -276,6 +276,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     async def close(self) -> None:
         # self._server.start should raise errors.ComponentStateConflictError if it's not running
         await self._server.close()
+        await self._rest.close()
 
     async def join(self) -> None:
         await self._server.join()
@@ -369,8 +370,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
         # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-        # if it was just called with None or if it's called on a thread which isn't the main Thread so it's easier
-        # and more consistent to just explicitly make a new loop.
+        # if it was just called with None or if it's called on a thread which isn't the main Thread.
         try:
             loop = asyncio.get_event_loop()
 

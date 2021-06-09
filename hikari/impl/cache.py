@@ -61,8 +61,6 @@ class CacheImpl(cache.MutableCache):
     ----------
     app : hikari.traits.RESTAware
         The object of the REST aware app this is bound to.
-    intents : hikari.intents.Intents
-        The intents set for this instance.
     settings : hikari.config.CacheSettings
         The cache settings to use.
     """

@@ -194,12 +194,13 @@ class TestRESTBot:
             print_banner.assert_called_once_with("okokok", True, False)
 
     @pytest.mark.asyncio()
-    async def test_close(self, mock_rest_bot, mock_interaction_server):
+    async def test_close(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
         mock_interaction_server.close = mock.AsyncMock()
 
         await mock_rest_bot.close()
 
         mock_interaction_server.close.assert_awaited_once()
+        mock_rest_client.close.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test_join(self, mock_rest_bot, mock_interaction_server):
