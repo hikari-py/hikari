@@ -34,7 +34,7 @@ if typing.TYPE_CHECKING:
 
     _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
     _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
-    _CommandResponseBuilderT = typing.Union[
+    _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
 
@@ -130,17 +130,17 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
-    # This overload cannot be included until component interactions are implemented
+    # # This overload cannot be included until component interactions are implemented
     # @typing.overload
     # def get_listener(
     #     self, interaction_type: typing.Type[commands.CommandInteraction], /
-    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, _CommandResponseBuilderT]]:
-    #     raise NotImplementedError
+    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, _MessageResponseBuilderT]]:
+    #     ...
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
-    ) -> typing.Optional[ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+        self, interaction_type: typing.Type[_InteractionT], /
+    ) -> typing.Optional[ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
         """Get the listener registered for an interaction.
 
         Parameters
@@ -155,27 +155,25 @@ class InteractionServer(abc.ABC):
             else `builtins.None`.
         """  # noqa E501 - Line too long
 
-    # This overload cannot be included until component interactions are implemented
+    # # This overload cannot be included until component interactions are implemented
     # @typing.overload
     # def set_listener(
     #     self,
     #     interaction_type: typing.Type[commands.CommandInteraction],
     #     listener: typing.Optional[
-    #         ListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
+    #         ListenerT[commands.CommandInteraction, _MessageResponseBuilderT]
     #     ],
     #     /,
     #     *,
     #     replace: bool = False,
     # ) -> None:
-    #     raise NotImplementedError
+    #     ...
 
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[interaction_bases.PartialInteraction],
-        listener: typing.Optional[
-            ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
-        ],
+        interaction_type: typing.Type[_InteractionT],
+        listener: typing.Optional[ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]],
         /,
         *,
         replace: bool = False,

@@ -486,19 +486,15 @@ class InteractionServer(interaction_server.InteractionServer):
             await site.start()
 
     def get_listener(
-        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
-    ]:
+        self, interaction_type: typing.Type[_InteractionT], /
+    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
         return self._listeners.get(interaction_type)
 
     def set_listener(
         self,
-        interaction_type: typing.Type[interaction_bases.PartialInteraction],
+        interaction_type: typing.Type[_InteractionT],
         listener: typing.Optional[
-            interaction_server.ListenerT[
-                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
-            ]
+            interaction_server.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]
         ],
         /,
         *,
@@ -508,7 +504,7 @@ class InteractionServer(interaction_server.InteractionServer):
             if not replace and interaction_type in self._listeners:
                 raise TypeError(f"Listener already set for {interaction_type.__name__}")
 
-            self._listeners[interaction_type] = listener
+            self._listeners[interaction_type] = listener  # type: ignore[assignment]
 
         else:
             self._listeners.pop(interaction_type, None)

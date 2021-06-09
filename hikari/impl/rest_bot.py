@@ -50,6 +50,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
     from hikari.interactions import bases as interaction_bases
 
+    _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction)
+
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
@@ -491,21 +493,15 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         )
 
     def get_listener(
-        self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
-    ) -> typing.Optional[
-        interaction_server_.ListenerT[
-            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
-        ]
-    ]:
+        self, interaction_type: typing.Type[_InteractionT], /
+    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
         return self._server.get_listener(interaction_type)
 
     def set_listener(
         self,
-        interaction_type: typing.Type[interaction_bases.PartialInteraction],
+        interaction_type: typing.Type[_InteractionT],
         listener: typing.Optional[
-            interaction_server_.ListenerT[
-                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
-            ]
+            interaction_server_.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]
         ],
         /,
         *,
