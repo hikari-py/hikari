@@ -73,7 +73,6 @@ from hikari.files import Rawish
 from hikari.files import Resourceish
 from hikari.guilds import *
 from hikari.impl.bot import GatewayBot
-from hikari.impl.interaction_server import InteractionServer
 from hikari.impl.rest import ClientCredentialsStrategy
 from hikari.impl.rest import RESTApp
 from hikari.impl.rest_bot import RESTBot

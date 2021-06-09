@@ -29,9 +29,10 @@ __all__: typing.List[str] = [
     "CommandInteractionOption",
     "CommandInteraction",
     "CommandOption",
+    "COMMAND_RESPONSE_TYPES",
+    "CommandResponseTypesT",
     "InteractionChannel",
     "ResolvedOptionData",
-    "CommandResponseType",
     "OptionType",
 ]
 
@@ -55,23 +56,18 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-@typing.final
-class CommandResponseType(int, enums.Enum):
-    """The type of an interaction response."""
+COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
+    [bases.ResponseType.SOURCED_RESPONSE, bases.ResponseType.DEFERRED_SOURCED_RESPONSE]
+)
+"""Set of the response types which are valid for a command interaction."""
 
-    # PONG isn't here as it should be handled as internal detail of the REST
-    # server rather than as a part of the public interface.
-
-    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
-    SOURCED_RESPONSE = 4
-    """An immediate response to a command interaction."""
-
-    DEFERRED_SOURCED_RESPONSE = 5
-    """Acknowledge an interaction with the intention to edit in a response later.
-
-    The user will see a loading state when this type is used until this
-    interaction expires or a response is edited in over REST.
-    """
+CommandResponseTypesT = typing.Union[
+    typing.Literal[bases.ResponseType.SOURCED_RESPONSE],
+    typing.Literal[4],
+    typing.Literal[bases.ResponseType.DEFERRED_SOURCED_RESPONSE],
+    typing.Literal[5],
+]
+"""Type-hint of the response types which are valid for a command interaction."""
 
 
 @typing.final
@@ -451,7 +447,7 @@ class CommandInteraction(bases.PartialInteraction):
 
     async def create_initial_response(
         self,
-        response_type: typing.Union[int, CommandResponseType],
+        response_type: CommandResponseTypesT,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -475,7 +471,7 @@ class CommandInteraction(bases.PartialInteraction):
 
         Parameters
         ----------
-        response_type : typing.Union[builtins.int, hikari.interactions.commands.CommandResponseType]
+        response_type : typing.Union[builtins.int, CommandResponseTypesT]
             The type of interaction response this is.
 
         Other Parameters

@@ -49,9 +49,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_client_
 
-    ListenerDictT = typing.Dict[
-        typing.Type[interaction_server.InteractionT],
-        interaction_server.ListenerT[interaction_server.InteractionT, interaction_server.ResponseT],
+    _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
+    _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
+    _ListenerDictT = typing.Dict[
+        typing.Type[_InteractionT],
+        interaction_server.ListenerT[_InteractionT, _ResponseT],
     ]
 
 
@@ -169,8 +171,8 @@ class InteractionServer(interaction_server.InteractionServer):
         self._entity_factory = entity_factory
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._event: typing.Optional[asyncio.Event] = None
-        self._listeners: ListenerDictT[
-            interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
+        self._listeners: _ListenerDictT[
+            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
         ] = {}
         self._loads = loads
         self._rest_client = rest_client
@@ -486,18 +488,16 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[
-            interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
-        ]
+        interaction_server.ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
     ]:
         return self._listeners.get(interaction_type)
 
     def set_listener(
         self,
-        interaction_type: typing.Type[interaction_server.InteractionT],
+        interaction_type: typing.Type[interaction_bases.PartialInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[
-                interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder
+                interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
             ]
         ],
         /,

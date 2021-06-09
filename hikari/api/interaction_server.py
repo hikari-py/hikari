@@ -32,22 +32,25 @@ if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
     from hikari.interactions import bases as interaction_bases
 
-    InteractionT = typing.TypeVar("InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
-    ResponseT = typing.TypeVar("ResponseT", bound=special_endpoints.BaseInteractionResponseBuilder, covariant=True)
+    _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
+    _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
+    _CommandResponseBuilderT = typing.Union[
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+    ]
 
 
-ListenerT = typing.Callable[["InteractionT"], typing.Awaitable["ResponseT"]]
+ListenerT = typing.Callable[["_InteractionT"], typing.Awaitable["_ResponseT"]]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
 subclases `hikari.interactions.bases.PartialInteraction` and may return an
-instance of the relevant `hikari.api.special_endpoints.BaseInteractionResponseBuilder`
+instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilder`
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
 !!! note
     For the standard implementations of
-    `hikari.api.special_endpoints.BaseInteractionResponseBuilder` see
+    `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.
 """
 
@@ -127,26 +130,38 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
+    # This overload cannot be included until component interactions are implemented
     # @typing.overload
     # def get_listener(
     #     self, interaction_type: typing.Type[commands.CommandInteraction], /
-    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]]:
+    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, _CommandResponseBuilderT]]:
     #     raise NotImplementedError
 
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[interaction_bases.PartialInteraction], /
-    ) -> typing.Optional[
-        ListenerT[interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder]
-    ]:
-        raise NotImplementedError
+    ) -> typing.Optional[ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]]:
+        """Get the listener registered for an interaction.
 
+        Parameters
+        ----------
+        interaction_type : typing.Type[hikari.interactions.bases.PartialInteraction]
+            Type of the interaction to get the registered listener for.
+
+        Returns
+        -------
+        typing.Optional[ListenersT[hikari.interactions.bases.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
+            The callback registered for the provided interaction type if found,
+            else `builtins.None`.
+        """  # noqa E501 - Line too long
+
+    # This overload cannot be included until component interactions are implemented
     # @typing.overload
     # def set_listener(
     #     self,
     #     interaction_type: typing.Type[commands.CommandInteraction],
     #     listener: typing.Optional[
-    #         MainListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
+    #         ListenerT[commands.CommandInteraction, special_endpoints.InteractionResponseBuilder]
     #     ],
     #     /,
     #     *,
@@ -157,9 +172,9 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[InteractionT],
+        interaction_type: typing.Type[interaction_bases.PartialInteraction],
         listener: typing.Optional[
-            ListenerT[interaction_bases.PartialInteraction, special_endpoints.BaseInteractionResponseBuilder]
+            ListenerT[interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder]
         ],
         /,
         *,
@@ -169,9 +184,9 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        interaction_type : typing.Type[InteractionT]
+        interaction_type : typing.Type[hikari.interactions.bases.PartialInteraction]
             The type of interaction this listener should be registered for.
-        listener : typing.Optional[MainListenerT[InteractionT]]
+        listener : typing.Optional[ListenerT[hikari.interactions.bases.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
             The asynchronous listener callback to set or `builtins.None` to
             unset the previous listener.
 
@@ -186,4 +201,4 @@ class InteractionServer(abc.ABC):
         ------
         builtins.TypeError
             If `replace` is `builtins.False` when a listener is already set.
-        """
+        """  # noqa E501 - Line too long

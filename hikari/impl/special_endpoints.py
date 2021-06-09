@@ -26,7 +26,13 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CommandBuilder", "TypingIndicator", "GuildBuilder", "InteractionResponseBuilder"]
+__all__: typing.List[str] = [
+    "CommandBuilder",
+    "TypingIndicator",
+    "GuildBuilder",
+    "InteractionDeferredBuilder",
+    "InteractionMessageBuilder",
+]
 
 import asyncio
 import typing
@@ -40,6 +46,7 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
+from hikari.interactions import bases as base_interactions
 from hikari.interactions import commands
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
@@ -62,8 +69,8 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
 
-    CommandBuilderT = typing.TypeVar("CommandBuilderT", bound="CommandBuilder")
-    InteractionResponseBuilderT = typing.TypeVar("InteractionResponseBuilderT", bound="InteractionResponseBuilder")
+    _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
+    _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
 
 
 @typing.final
@@ -660,15 +667,40 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         return log
 
 
-# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.s(kw_only=False, slots=True, weakref_slot=False)
-class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionResponseBuilder`.
+class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
 
     Parameters
     ----------
-    type : typing.Union[int, hikari.interactions.commands.CommandResponseType]
+    type : hikari.interactions.bases.DeferredMessageTypesT
+        The type of interaction response this is.
+    """
+
+    # Required arguments.
+    _type: base_interactions.DeferredMessageTypesT = attr.ib(
+        converter=base_interactions.ResponseType,
+        validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
+    )
+
+    @property
+    def type(self) -> base_interactions.DeferredMessageTypesT:
+        return self._type
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        return {"type": self.type}
+
+
+# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
+@attr_extensions.with_copy
+@attr.s(kw_only=False, slots=True, weakref_slot=False)
+class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionMessageBuilder`.
+
+    Parameters
+    ----------
+    type : hikari.interactions.bases.MessageResponseTypesT
         The type of interaction response this is.
 
     Other Parameters
@@ -679,7 +711,10 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
     """
 
     # Required arguments.
-    _type: typing.Union[int, commands.CommandResponseType] = attr.ib(converter=commands.CommandResponseType)
+    _type: base_interactions.MessageResponseTypesT = attr.ib(
+        converter=base_interactions.ResponseType,
+        validator=attr.validators.in_(base_interactions.MESSAGE_RESPONSE_TYPES),
+    )
 
     # Not-required arguments.
     content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
@@ -705,10 +740,10 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
         return self._embeds.copy()
 
     @property
-    def type(self) -> typing.Union[int, commands.CommandResponseType]:
+    def type(self) -> base_interactions.MessageResponseTypesT:
         return self._type
 
-    def add_embed(self: InteractionResponseBuilderT, embed: embeds_.Embed, /) -> InteractionResponseBuilderT:
+    def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
         self._embeds.append(embed)
         return self
 
@@ -731,14 +766,6 @@ class InteractionResponseBuilder(special_endpoints.InteractionResponseBuilder):
             data["allowed_mentions"] = mentions.generate_allowed_mentions(
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
-
-        is_message_response = self.type == commands.CommandResponseType.SOURCED_RESPONSE
-
-        if is_message_response and not data:
-            raise ValueError(f"Cannot build an empty response for {self.type} responses.")
-
-        elif not is_message_response and data:
-            raise ValueError(f"Cannot include data for {self.type} responses.")
 
         return {"type": self._type, "data": data}
 
@@ -771,7 +798,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def name(self) -> str:
         return self._name
 
-    def add_option(self: CommandBuilderT, option: commands.CommandOption) -> CommandBuilderT:
+    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
         self._options.append(option)
         return self
 

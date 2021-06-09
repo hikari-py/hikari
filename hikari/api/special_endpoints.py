@@ -27,8 +27,9 @@ __all__: typing.List[str] = [
     "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
-    "BaseInteractionResponseBuilder",
+    "InteractionDeferredBuilder",
     "InteractionResponseBuilder",
+    "InteractionMessageBuilder",
 ]
 
 import abc
@@ -50,12 +51,13 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.interactions import bases as base_interactions
     from hikari.interactions import commands
     from hikari.internal import data_binding
     from hikari.internal import time
 
-    InteractionResponseBuilderT = typing.TypeVar("InteractionResponseBuilderT", bound="BaseInteractionResponseBuilder")
-    CommandBuilderT = typing.TypeVar("CommandBuilderT", bound="CommandBuilder")
+    _InteractionResponseBuilderT = typing.TypeVar("_InteractionResponseBuilderT", bound="InteractionResponseBuilder")
+    _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
 
 
 class TypingIndicator(abc.ABC):
@@ -534,17 +536,17 @@ class GuildBuilder(abc.ABC):
         """
 
 
-class BaseInteractionResponseBuilder(abc.ABC):
+class InteractionResponseBuilder(abc.ABC):
     """Base class for all interaction response builders used in the interaction server."""
 
     @property
     @abc.abstractmethod
-    def type(self) -> int:
+    def type(self) -> typing.Union[int, base_interactions.ResponseType]:
         """Return the type of this response.
 
         Returns
         -------
-        builtins.int
+        typing.Union[builtins.int, hikari.interactions.bases.ResponseType]
             The type of response this is.
         """
 
@@ -564,8 +566,24 @@ class BaseInteractionResponseBuilder(abc.ABC):
         """
 
 
-class InteractionResponseBuilder(BaseInteractionResponseBuilder, abc.ABC):
-    """Interface of a interaction message response builder used within REST servers.
+class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of a deferred message interaction response builder."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def type(self) -> base_interactions.DeferredMessageTypesT:
+        """Return the type of this response.
+
+        Returns
+        -------
+        hikari.interactions.bases.DeferredMessageTypesT
+            The type of response this is.
+        """
+
+
+class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of an interaction message response builder used within REST servers.
 
     This can be returned by the listener registered to
     `hikari.api.interaction_server.InteractionServer` as a response to the interaction
@@ -575,20 +593,25 @@ class InteractionResponseBuilder(BaseInteractionResponseBuilder, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @abc.abstractmethod
-    def type(self) -> typing.Union[int, commands.CommandResponseType]:
-        """Type of this response.
+    def type(self) -> base_interactions.MessageResponseTypesT:
+        """Return the type of this response.
 
         Returns
         -------
-        typing.Union[builtins.int, hikari.interactions.commands.CommandResponseType]
+        hikari.interactions.bases.MessageResponseTypesT
             The type of response this is.
         """
 
     @property
     @abc.abstractmethod
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        raise NotImplementedError
+        """Sequence of up to 10 of the embeds included in this response.
+
+        Returns
+        -------
+        typing.Sequence[hikari.embeds.Embed]
+            A sequence of up to 10 ot the embeds included in this response.
+        """
 
     @property
     @abc.abstractmethod
@@ -708,7 +731,7 @@ class InteractionResponseBuilder(BaseInteractionResponseBuilder, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_embed(self: InteractionResponseBuilderT, embed: embeds_.Embed, /) -> InteractionResponseBuilderT:
+    def add_embed(self: _InteractionResponseBuilderT, embed: embeds_.Embed, /) -> _InteractionResponseBuilderT:
         """Add an embed to this response.
 
         Parameters
@@ -718,7 +741,7 @@ class InteractionResponseBuilder(BaseInteractionResponseBuilder, abc.ABC):
 
         Returns
         -------
-        InteractionResponseBuilder
+        InteractionMessageBuilder
             Object of this builder.
         """
 
@@ -784,7 +807,7 @@ class CommandBuilder(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_option(self: CommandBuilderT, option: commands.CommandOption) -> CommandBuilderT:
+    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
         """Add an option to this command.
 
         !!! note

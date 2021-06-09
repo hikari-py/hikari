@@ -24,7 +24,7 @@ import mock
 import pytest
 
 from hikari.impl import special_endpoints
-from hikari.interactions import commands as command_interactions
+from hikari.interactions import bases as base_interactions
 from tests.hikari import hikari_test_helpers
 
 
@@ -45,15 +45,27 @@ class TestTypingIndicator:
             pytest.fail(exc)
 
 
-class TestCommandResponseBuilder:
+class TestInteractionDeferredBuilder:
     def test_type_property(self):
-        builder = special_endpoints.InteractionResponseBuilder(1)
+        builder = special_endpoints.InteractionDeferredBuilder(5)
 
-        assert builder.type == 1
+        assert builder.type == 5
+
+    def test_build(self):
+        builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_SOURCED_RESPONSE)
+
+        assert builder.build(object()) == {"type": base_interactions.ResponseType.DEFERRED_SOURCED_RESPONSE}
+
+
+class TestInteractionMessageBuilder:
+    def test_type_property(self):
+        builder = special_endpoints.InteractionMessageBuilder(4)
+
+        assert builder.type == 4
 
     def test_add_embed(self):
         mock_embed = object()
-        builder = special_endpoints.InteractionResponseBuilder(1)
+        builder = special_endpoints.InteractionMessageBuilder(4)
 
         assert builder.embeds == []
 
@@ -61,29 +73,9 @@ class TestCommandResponseBuilder:
 
         assert builder.embeds == [mock_embed]
 
-    def test_build_without_data(self):
-        builder = special_endpoints.InteractionResponseBuilder(
-            command_interactions.CommandResponseType.DEFERRED_SOURCED_RESPONSE
-        )
-
-        assert builder.build(object()) == {
-            "type": command_interactions.CommandResponseType.DEFERRED_SOURCED_RESPONSE,
-            "data": {},
-        }
-
-    def test_build_without_data_for_message_response_type(self):
-        builder = special_endpoints.InteractionResponseBuilder(
-            command_interactions.CommandResponseType.SOURCED_RESPONSE
-        )
-
-        with pytest.raises(ValueError, match="Cannot build an empty response for SOURCED_RESPONSE responses."):
-            builder.build(object())
-
-    def test_build_with_data(self):
+    def test_build(self):
         mock_entity_factory = mock.Mock()
-        builder = special_endpoints.InteractionResponseBuilder(
-            command_interactions.CommandResponseType.SOURCED_RESPONSE
-        )
+        builder = special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.SOURCED_RESPONSE)
         mock_embed = object()
         builder.add_embed(mock_embed)
         builder.content = "a content"
@@ -97,7 +89,7 @@ class TestCommandResponseBuilder:
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
         assert result == {
-            "type": command_interactions.CommandResponseType.SOURCED_RESPONSE,
+            "type": base_interactions.ResponseType.SOURCED_RESPONSE,
             "data": {
                 "content": "a content",
                 "embeds": [mock_entity_factory.serialize_embed.return_value],
@@ -106,15 +98,6 @@ class TestCommandResponseBuilder:
                 "allowed_mentions": {"parse": [], "users": ["123"], "roles": ["54234"]},
             },
         }
-
-    def test_build_with_data_for_deferred_response_type(self):
-        builder = special_endpoints.InteractionResponseBuilder(
-            command_interactions.CommandResponseType.DEFERRED_SOURCED_RESPONSE
-        )
-        builder.add_embed(object())
-
-        with pytest.raises(ValueError, match="Cannot include data for DEFERRED_SOURCED_RESPONSE responses."):
-            builder.build(mock.Mock())
 
 
 class TestCommandBuilder:

@@ -23,7 +23,16 @@
 """Base classes and enums inherited and used throughout the interactions flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["InteractionMember", "InteractionType", "PartialInteraction"]
+__all__: typing.List[str] = [
+    "DEFERRED_RESPONSE_TYPES",
+    "DeferredMessageTypesT",
+    "InteractionMember",
+    "InteractionType",
+    "MESSAGE_RESPONSE_TYPES",
+    "MessageResponseTypesT",
+    "PartialInteraction",
+    "ResponseType",
+]
 
 import typing
 
@@ -48,6 +57,42 @@ class InteractionType(int, enums.Enum):
     # server rather than as a part of the public interface.
     APPLICATION_COMMAND = 2
     """An interaction triggered by a user calling an application command."""
+
+
+@typing.final
+class ResponseType(int, enums.Enum):
+    """The type of an interaction response."""
+
+    # PONG isn't here as it should be handled as internal detail of the REST
+    # server rather than as a part of the public interface.
+
+    # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
+    SOURCED_RESPONSE = 4
+    """An immediate response to a command interaction."""
+
+    DEFERRED_SOURCED_RESPONSE = 5
+    """Acknowledge an interaction with the intention to edit in a response later.
+
+    The user will see a loading state when this type is used until this
+    interaction expires or a response is edited in over REST.
+    """
+
+
+MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
+    [ResponseType.SOURCED_RESPONSE]
+)
+"""Set of the response types which are valid for message responses."""
+
+MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.SOURCED_RESPONSE], typing.Literal[4]]
+"""Type-hint of the response types which are valid for message responses."""
+
+DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredMessageTypesT]] = frozenset(
+    [ResponseType.DEFERRED_SOURCED_RESPONSE]
+)
+"""Set of the response types which are valid for deferred messages responses."""
+
+DeferredMessageTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_SOURCED_RESPONSE], typing.Literal[5]]
+"""Type-hint of the response types which are valid for deferred messages responses."""
 
 
 @attr_extensions.with_copy
