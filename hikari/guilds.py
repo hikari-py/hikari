@@ -585,13 +585,9 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        roles = []
-
-        for f_role in await self.app.rest.fetch_roles(self.guild_id):
-            if f_role in self.role_ids:
-                roles.append(f_role)
-
-        return roles
+        fetched_roles = await self.app.rest.fetch_roles(self.guild_id)
+        
+        return [role for role in fetched_roles if role.id in self.role_ids]
 
     async def ban(
         self,
@@ -2758,7 +2754,6 @@ class Guild(PartialGuild, abc.ABC):
     @abc.abstractmethod
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
-
 
     async def fetch_owner(self) -> Member:
         """Fetch the owner of the guild.

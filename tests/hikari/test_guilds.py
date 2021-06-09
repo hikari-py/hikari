@@ -269,11 +269,9 @@ class TestMember:
 
     @pytest.mark.asyncio
     async def test_fetch_roles(self, model):
-        model.user.app.rest.fetch_member = mock.AsyncMock()
-
-        assert await model.fetch_roles() is model.user.app.rest.fetch_member.return_value.roles
-
-        model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
+        model.user.app.rest.fetch_roles = mock.AsyncMock()
+        await model.fetch_roles()
+        model.user.app.rest.fetch_roles.assert_awaited_once_with(456)
 
     @pytest.mark.asyncio
     async def test_ban(self, model):
@@ -685,6 +683,15 @@ class TestPartialGuild:
         assert await model.fetch_guild() is model.app.rest.fetch_guild.return_value
         model.app.rest.fetch_guild.assert_awaited_once_with(model.id)
 
+    @pytest.mark.asyncio
+    async def test_fetch_roles(self, model):
+        model.app.rest.fetch_roles = mock.AsyncMock()
+
+        roles = await model.fetch_roles()
+
+        model.app.rest.fetch_roles.assert_awaited_once_with(90210)
+        assert roles is model.app.rest.fetch_roles.return_value
+
 
 class TestGuildPreview:
     @pytest.fixture()
@@ -900,15 +907,6 @@ class TestGuild:
         assert model.make_banner_url(ext="png", size=2048) is None
 
     @pytest.mark.asyncio
-    async def test_fetch_roles(self, model):
-        model.app.rest.fetch_roles = mock.AsyncMock()
-
-        roles = await model.fetch_roles()
-
-        model.app.rest.fetch_roles.assert_awaited_once_with(123)
-        assert roles is model.app.rest.fetch_roles.return_value
-
-    @pytest.mark.asyncio
     async def test_fetch_owner(self, model):
         model.app.rest.fetch_member = mock.AsyncMock()
 
@@ -984,7 +982,7 @@ class TestGuild:
         model.afk_channel_id = None
 
         assert await model.fetch_afk_channel() is None
-        
+
     def test_get_channel(self, model):
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
         model.app.cache.get_guild_channel.assert_called_once_with(456)
