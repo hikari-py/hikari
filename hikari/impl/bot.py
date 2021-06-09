@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BotApp"]
+__all__: typing.List[str] = ["GatewayBot"]
 
 import asyncio
 import datetime
@@ -75,7 +75,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
-class BotApp(traits.GatewayBotAware):
+class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot
@@ -181,7 +181,7 @@ class BotApp(traits.GatewayBotAware):
 
     !!! note
         Settings that control the gateway session are provided to the
-        `BotApp.run` and `BotApp.start` functions in this class. This is done
+        `GatewayBot.run` and `GatewayBot.start` functions in this class. This is done
         to allow you to contextually customise details such as sharding
         configuration without having to re-initialize the entire application
         each time.
@@ -760,7 +760,9 @@ class BotApp(traits.GatewayBotAware):
                 name="check for package updates",
             )
 
-        requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
+        requirements_task = asyncio.create_task(
+            self._rest.fetch_gateway_bot_info(), name="fetch gateway sharding settings"
+        )
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
         requirements = await requirements_task
 

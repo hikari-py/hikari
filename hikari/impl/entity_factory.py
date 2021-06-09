@@ -1053,7 +1053,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # GATEWAY MODELS #
     ##################
 
-    def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBot:
+    def deserialize_gateway_bot_info(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBotInfo:
         session_start_limit_payload = payload["session_start_limit"]
         session_start_limit = gateway_models.SessionStartLimit(
             total=int(session_start_limit_payload["total"]),
@@ -1063,7 +1063,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # would hang the application on start up, so I enforce it is at least 1.
             max_concurrency=max(session_start_limit_payload.get("max_concurrency", 0), 1),
         )
-        return gateway_models.GatewayBot(
+        return gateway_models.GatewayBotInfo(
             url=payload["url"],
             shard_count=int(payload["shards"]),
             session_start_limit=session_start_limit,

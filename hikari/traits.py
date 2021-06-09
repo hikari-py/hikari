@@ -377,7 +377,7 @@ class ShardAware(
 
         !!! note
             If you want to set presences per shard, access the shard you wish
-            to update (e.g. by using `BotApp.shards`), and call
+            to update (e.g. by using `GatewayBot.shards`), and call
             `hikari.api.shard.GatewayShard.update_presence` on that shard.
 
             This method is simply a facade to make performing this in bulk

@@ -2546,13 +2546,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_gateway_bot(self) -> sessions.GatewayBot:
+    async def fetch_gateway_bot_info(self) -> sessions.GatewayBotInfo:
         """Fetch the gateway gateway info for the bot.
 
         Returns
         -------
-        hikari.sessions.GatewayBot
-            The gateway bot.
+        hikari.sessions.GatewayBotInfo
+            The gateway bot information.
 
         Raises
         ------

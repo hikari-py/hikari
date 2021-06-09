@@ -22,7 +22,7 @@
 # SOFTWARE.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of `BotApp`
+To get started, you will want to initialize an instance of `GatewayBot`
 for writing a bot, or `RESTApp` if you only need to use the REST API.
 """
 
@@ -72,7 +72,7 @@ from hikari.files import Pathish
 from hikari.files import Rawish
 from hikari.files import Resourceish
 from hikari.guilds import *
-from hikari.impl.bot import BotApp
+from hikari.impl.bot import GatewayBot
 from hikari.impl.interaction_server import InteractionServer
 from hikari.impl.rest import ClientCredentialsStrategy
 from hikari.impl.rest import RESTApp

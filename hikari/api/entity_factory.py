@@ -705,7 +705,7 @@ class EntityFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
-    def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBot:
+    def deserialize_gateway_bot_info(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBotInfo:
         """Parse a raw payload from Discord into a gateway bot object.
 
         Parameters
@@ -715,8 +715,8 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.sessions.GatewayBot
-            The deserialized gateway bot object.
+        hikari.sessions.GatewayBotInfo
+            The deserialized gateway bot information object.
         """
 
     ################

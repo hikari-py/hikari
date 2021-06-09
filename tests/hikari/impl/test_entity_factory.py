@@ -1723,8 +1723,8 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_gateway_bot(self, entity_factory_impl, gateway_bot_payload):
-        gateway_bot = entity_factory_impl.deserialize_gateway_bot(gateway_bot_payload)
-        assert isinstance(gateway_bot, gateway_models.GatewayBot)
+        gateway_bot = entity_factory_impl.deserialize_gateway_bot_info(gateway_bot_payload)
+        assert isinstance(gateway_bot, gateway_models.GatewayBotInfo)
         assert gateway_bot.url == "wss://gateway.discord.gg"
         assert gateway_bot.shard_count == 1
         # SessionStartLimit

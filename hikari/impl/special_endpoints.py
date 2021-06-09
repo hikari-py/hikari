@@ -667,6 +667,12 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
     ----------
     type : typing.Union[int, hikari.interactions.commands.CommandResponseType]
         The type of interaction response this is.
+
+    Other Parameters
+    ----------------
+    content : hikari.undefined.UndefinedOr[builtins.str]
+        The content of this response, if supplied. This follows the same rules
+        as "content" on create message.
     """
 
     # Required arguments.
@@ -723,13 +729,13 @@ class CommandResponseBuilder(special_endpoints.CommandResponseBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        is_message_response = self.type is commands.CommandResponseType.SOURCED_RESPONSE
+        is_message_response = self.type == commands.CommandResponseType.SOURCED_RESPONSE
 
         if is_message_response and not data:
-            raise ValueError(f"Cannot build an empty response for {self.type.name} responses.")
+            raise ValueError(f"Cannot build an empty response for {self.type} responses.")
 
         elif not is_message_response and data:
-            raise ValueError(f"Cannot include data for {self.type.name} responses.")
+            raise ValueError(f"Cannot include data for {self.type} responses.")
 
         return {"type": self._type, "data": data}
 

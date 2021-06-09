@@ -91,7 +91,7 @@ class TestStreamer:
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(bot.BotApp)
+    return mock.Mock(bot.GatewayBot)
 
 
 class TestEventStream:

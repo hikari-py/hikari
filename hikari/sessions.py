@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBot", "SessionStartLimit"]
+__all__: typing.List[str] = ["GatewayBotInfo", "SessionStartLimit"]
 
 import typing
 
@@ -80,7 +80,7 @@ class SessionStartLimit:
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class GatewayBot:
+class GatewayBotInfo:
     """Used to represent gateway information for the connected bot."""
 
     url: str = attr.field(repr=True)

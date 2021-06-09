@@ -1993,11 +1993,11 @@ class TestRESTClientImplAsync:
         bot = StubModel(123)
         expected_route = routes.GET_GATEWAY_BOT.compile()
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
-        rest_client._entity_factory.deserialize_gateway_bot = mock.Mock(return_value=bot)
+        rest_client._entity_factory.deserialize_gateway_bot_info = mock.Mock(return_value=bot)
 
-        assert await rest_client.fetch_gateway_bot() is bot
+        assert await rest_client.fetch_gateway_bot_info() is bot
         rest_client._request.assert_awaited_once_with(expected_route)
-        rest_client._entity_factory.deserialize_gateway_bot.assert_called_once_with({"id": "123"})
+        rest_client._entity_factory.deserialize_gateway_bot_info.assert_called_once_with({"id": "123"})
 
     async def test_fetch_invite(self, rest_client):
         return_invite = StubModel()

@@ -1817,11 +1817,11 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(url, str)
         return url
 
-    async def fetch_gateway_bot(self) -> sessions.GatewayBot:
+    async def fetch_gateway_bot_info(self) -> sessions.GatewayBotInfo:
         route = routes.GET_GATEWAY_BOT.compile()
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_gateway_bot(response)
+        return self._entity_factory.deserialize_gateway_bot_info(response)
 
     async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
