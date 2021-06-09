@@ -586,7 +586,6 @@ class Member(users.User):
             If an internal error occurs on Discord while handling the request.
         """
         fetched_roles = await self.app.rest.fetch_roles(self.guild_id)
-        
         return [role for role in fetched_roles if role.id in self.role_ids]
 
     async def ban(
