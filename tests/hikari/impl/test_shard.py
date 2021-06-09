@@ -323,7 +323,7 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
             ):
-                hikari_test_helpers.raiser(errors.GatewayError("some reason"))
+                raise errors.GatewayError("some reason")
 
         mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("
@@ -363,7 +363,7 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
             ):
-                hikari_test_helpers.raiser(ValueError("testing"))
+                raise ValueError("testing")
 
         mock_websocket.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.UNEXPECTED_CONDITION, message=b"unexpected fatal client error :-("
@@ -644,7 +644,7 @@ class TestGatewayShardImpl:
 
     def test_shard__check_if_alive_when_not_alive(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "is_alive", new=False):
-            with pytest.raises(errors.ComponentNotRunningError):
+            with pytest.raises(errors.ComponentStateConflictError):
                 client._check_if_alive()
 
     def test_shard__check_if_alive_when_alive(self, client):

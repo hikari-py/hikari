@@ -136,7 +136,7 @@ class _GuildFields:
     premium_subscription_count: typing.Optional[int] = attr.field()
     preferred_locale: str = attr.field()
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    is_nsfw: bool = attr.field()
+    nsfw_level: guild_models.GuildNSFWLevel = attr.field()
 
 
 @attr_extensions.with_copy
@@ -292,6 +292,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             team = application_models.Team(
                 app=self._app,
                 id=snowflakes.Snowflake(team_payload["id"]),
+                name=team_payload["name"],
                 icon_hash=team_payload["icon"],
                 members=members,
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),
@@ -304,12 +305,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             description=payload["description"] or None,
-            is_bot_public=payload.get("bot_public"),
-            is_bot_code_grant_required=payload.get("bot_require_code_grant"),
+            is_bot_public=payload["bot_public"],
+            is_bot_code_grant_required=payload["bot_require_code_grant"],
             owner=self.deserialize_user(payload["owner"]),
-            rpc_origins=payload["rpc_origins"] if "rpc_origins" in payload else None,
+            rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
-            public_key=bytes.fromhex(payload["verify_key"]) if "verify_key" in payload else None,
+            public_key=bytes.fromhex(payload["verify_key"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -324,7 +325,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:
         application_payload = payload["application"]
-        raw_verify_key = application_payload.get("verify_key")
         application = application_models.AuthorizationApplication(
             id=snowflakes.Snowflake(application_payload["id"]),
             name=application_payload["name"],
@@ -333,7 +333,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
-            public_key=bytes.fromhex(raw_verify_key) if raw_verify_key is not None else None,
+            public_key=bytes.fromhex(application_payload["verify_key"]),
             terms_of_service_url=application_payload.get("terms_of_service_url"),
             privacy_policy_url=application_payload.get("privacy_policy_url"),
         )
@@ -1336,7 +1336,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=payload.get("premium_subscription_count"),
             preferred_locale=payload["preferred_locale"],
             public_updates_channel_id=public_updates_channel_id,
-            is_nsfw=payload["nsfw"],
+            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
         )
 
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
@@ -1366,7 +1366,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
-        guild = guild_models.RESTGuild(
+        return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
             name=guild_fields.name,
@@ -1394,7 +1394,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=guild_fields.description,
             banner_hash=guild_fields.banner_hash,
             premium_tier=guild_fields.premium_tier,
-            is_nsfw=guild_fields.is_nsfw,
+            nsfw_level=guild_fields.nsfw_level,
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
@@ -1403,7 +1403,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             roles=roles,
             emojis=emojis,
         )
-        return guild
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
         guild_fields = self._set_guild_attributes(payload)
@@ -1440,7 +1439,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             premium_subscription_count=guild_fields.premium_subscription_count,
             preferred_locale=guild_fields.preferred_locale,
             public_updates_channel_id=guild_fields.public_updates_channel_id,
-            is_nsfw=guild_fields.is_nsfw,
+            nsfw_level=guild_fields.nsfw_level,
             is_large=is_large,
             joined_at=joined_at,
             member_count=member_count,
@@ -1523,7 +1522,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 verification_level=guild_models.GuildVerificationLevel(guild_payload["verification_level"]),
                 vanity_url_code=guild_payload["vanity_url_code"],
                 welcome_screen=self.deserialize_welcome_screen(raw_welcome_screen) if raw_welcome_screen else None,
-                is_nsfw=guild_payload.get("nsfw"),
+                nsfw_level=guild_models.GuildNSFWLevel(guild_payload["nsfw_level"]),
             )
             guild_id = guild.id
         elif "guild_id" in payload:

@@ -735,8 +735,8 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     thus reducing the amount of work needed if only a few objects out of, say,
     100, need to be deserialized.
 
-    This `_next_chunk` should return `builtins.None` once the end of all items has been
-    reached.
+    This `_next_chunk` should return `builtins.None` once the end of all items
+    has been reached.
 
     An example would look like the following:
 

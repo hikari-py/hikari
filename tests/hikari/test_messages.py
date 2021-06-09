@@ -124,19 +124,16 @@ def message():
 
 
 class TestMessage:
-    def test_link_property_when_guild_is_not_none(self, message):
+    def test_make_link_when_guild_is_not_none(self, message):
         message.id = 789
         message.channel_id = 456
-        message._guild_id = 123
-        assert message.link == "https://discord.com/channels/123/456/789"
+        assert message.make_link(123) == "https://discord.com/channels/123/456/789"
 
-    def test_link_property_when_guild_is_none(self, message):
+    def test_make_link_when_guild_is_none(self, message):
         message.app = mock.Mock()
         message.id = 789
         message.channel_id = 456
-        message._guild_id = None
-        message.app.cache.get_guild_channel.return_value = None
-        assert message.link == "https://discord.com/channels/@me/456/789"
+        assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
     def test_guild_id_when_guild_is_not_none(self, message):
         message._guild_id = 123

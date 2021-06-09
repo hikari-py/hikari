@@ -136,7 +136,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 except asyncio.TimeoutError:
                     pass
 
-        except (asyncio.CancelledError, errors.HTTPClientClosedError):
+        except (asyncio.CancelledError, errors.ComponentStateConflictError):
             pass
 
 
@@ -439,12 +439,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflakes.Snowflake.from_data(
-            datetime.datetime.now(tz=datetime.timezone.utc),
-            0,
-            0,
-            value,
-        )
+        return snowflakes.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -555,7 +550,8 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("before" if self._newest_first else "after", self._first_id)
-        query.put("limit", 100)
+        # We rely on Discord's default for the limit here since for this endpoint this has always scaled
+        # along side the maximum page size limit to match the maximum amount of guilds a user can be in.
 
         chunk = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(chunk, list)

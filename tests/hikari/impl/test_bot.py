@@ -108,7 +108,6 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl", return_value=event_manager))
         stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl", return_value=voice))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=rest))
-        stack.enter_context(mock.patch.object(rest_impl, "BasicLazyCachedTCPConnectorFactory"))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
 
@@ -125,7 +124,6 @@ class TestBotApp:
         event_manager = stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl"))
         voice = stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
         rest = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        connector_factory = stack.enter_context(mock.patch.object(rest_impl, "BasicLazyCachedTCPConnectorFactory"))
         init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
         print_banner = stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
         executor = object()
@@ -164,8 +162,6 @@ class TestBotApp:
         voice.assert_called_once_with(bot)
         assert bot._rest is rest.return_value
         rest.assert_called_once_with(
-            connector_factory=connector_factory.return_value,
-            connector_owner=True,
             entity_factory=bot._entity_factory,
             executor=executor,
             http_settings=bot._http_settings,
@@ -175,7 +171,6 @@ class TestBotApp:
             token="token",
             token_type=applications.TokenType.BOT,
         )
-        connector_factory.assert_called_once_with(bot._http_settings)
 
         init_logging.assert_called_once_with("DEBUG", False, True)
         print_banner.assert_called_once_with("testing", False, True)
@@ -188,7 +183,6 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl"))
         stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        stack.enter_context(mock.patch.object(rest_impl, "BasicLazyCachedTCPConnectorFactory"))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
         http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
@@ -196,12 +190,7 @@ class TestBotApp:
         cache_settings = stack.enter_context(mock.patch.object(config, "CacheSettings"))
 
         with stack:
-            bot = bot_impl.BotApp(
-                "token",
-                cache_settings=None,
-                http_settings=None,
-                proxy_settings=None,
-            )
+            bot = bot_impl.BotApp("token", cache_settings=None, http_settings=None, proxy_settings=None)
 
         assert bot._http_settings is http_settings.return_value
         http_settings.assert_called_once_with()
@@ -279,7 +268,7 @@ class TestBotApp:
     def test_check_if_alive_when_False(self, bot):
         bot._is_alive = False
 
-        with pytest.raises(errors.ComponentNotRunningError):
+        with pytest.raises(errors.ComponentStateConflictError):
             bot._check_if_alive()
 
     def test_check_if_alive(self, bot):

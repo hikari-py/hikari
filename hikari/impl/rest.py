@@ -29,7 +29,6 @@ RESTful functionality.
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "BasicLazyCachedTCPConnectorFactory",
     "ClientCredentialsStrategy",
     "RESTApp",
     "RESTClientImpl",
@@ -110,28 +109,6 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-
-
-@typing.final
-class BasicLazyCachedTCPConnectorFactory(rest_api.ConnectorFactory):
-    """Lazy cached TCP connector factory."""
-
-    __slots__: typing.Sequence[str] = ("connector", "http_settings")
-
-    def __init__(self, http_settings: config.HTTPSettings) -> None:
-        self.connector: typing.Optional[aiohttp.TCPConnector] = None
-        self.http_settings = http_settings
-
-    async def close(self) -> None:
-        if self.connector is not None:
-            await self.connector.close()
-            self.connector = None
-
-    def acquire(self) -> aiohttp.BaseConnector:
-        if self.connector is None:
-            self.connector = net.create_tcp_connector(self.http_settings)
-
-        return self.connector
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -286,25 +263,6 @@ class RESTApp(traits.ExecutorAware):
 
     Parameters
     ----------
-    connector_factory : typing.Optional[ConnectorFactory]
-        A factory that produces an `aiohttp.BaseConnector` when requested.
-
-        Defaults to a connector for a shared `aiohttp.TCPConnector` if
-        `builtins.None`.
-
-        The connector factory is expected to handle providing locks around
-        resources and caching any result as desired.
-    connector_owner : builtins.bool
-        If you created the connector yourself, set this to `builtins.True` if
-        you want this component to destroy the connector once closed. Otherwise,
-        `builtins.False` will prevent this and you will have to do this
-        manually. The latter is useful if you wish to maintain a shared
-        connection pool across your application with other non-Hikari
-        components.
-
-        !!! warning
-            If you do not give a `connector_factory`, this will be IGNORED
-            and always be treated as `builtins.True` internally.
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
@@ -334,9 +292,6 @@ class RESTApp(traits.ExecutorAware):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_connector_factory",
-        "_connector_owner",
-        "_event_loop",
         "_executor",
         "_http_settings",
         "_max_rate_limit",
@@ -347,8 +302,6 @@ class RESTApp(traits.ExecutorAware):
     def __init__(
         self,
         *,
-        connector_factory: typing.Optional[rest_api.ConnectorFactory] = None,
-        connector_owner: bool = True,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         max_rate_limit: float = 300,
@@ -357,21 +310,6 @@ class RESTApp(traits.ExecutorAware):
     ) -> None:
         self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
-
-        # Lazy initialized later, since we must initialize this in the event
-        # loop we run the application from, otherwise aiohttp throws complaints
-        # at us. Quart, amongst other libraries, causes issues with this by
-        # making a new event loop on startup, which means if we initialised
-        # the connector here and initialised this class in global scope, it
-        # would potentially end up using the wrong event loop and aiohttp
-        # would then fail when creating an HTTP request.
-        if connector_factory is None:
-            connector_factory = BasicLazyCachedTCPConnectorFactory(self._http_settings)
-            connector_owner = True
-
-        self._connector_factory = connector_factory
-        self._connector_owner = connector_owner
-        self._event_loop: typing.Optional[asyncio.AbstractEventLoop] = None
         self._executor = executor
         self._max_rate_limit = max_rate_limit
         self._url = url
@@ -393,27 +331,13 @@ class RESTApp(traits.ExecutorAware):
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
         token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
     ) -> RESTClientImpl:
-        loop = asyncio.get_running_loop()
-
-        if self._event_loop is None:
-            self._event_loop = loop
-
-        if loop != self._event_loop:
-            raise RuntimeError("Cannot use this object on a different event loop... please create a new instance.")
-
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        provider = _RESTProvider(
-            lambda: entity_factory,
-            self._executor,
-            lambda: rest_client,
-        )
+        provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
         rest_client = RESTClientImpl(
-            connector_factory=self._connector_factory,
-            connector_owner=self._connector_owner,
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -426,34 +350,6 @@ class RESTApp(traits.ExecutorAware):
 
         return rest_client
 
-    async def close(self) -> None:
-        if self._connector_owner:
-            await self._connector_factory.close()
-
-    async def __aenter__(self) -> RESTApp:
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        await self.close()
-
-    def __enter__(self) -> typing.NoReturn:
-        # This is async only.
-        cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
-
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[Exception]],
-        exc_val: typing.Optional[Exception],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        return None
-
 
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V8-compatible Discord HTTP API.
@@ -464,21 +360,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    connector_factory : typing.Optional[ConnectorFactory]
-        A factory that produces an `aiohttp.BaseConnector` when requested.
-
-        Defaults to a connector for a shared `aiohttp.TCPConnector` if
-        `builtins.None`.
-
-        The connector factory is expected to handle providing locks around
-        resources and caching any result as desired.
-    connector_owner : builtins.bool
-        If you created the connector yourself, set this to `builtins.True` if
-        you want this component to destroy the connector once closed. Otherwise,
-        `builtins.False` will prevent this and you will have to do this
-        manually. The latter is useful if you wish to maintain a shared
-        connection pool across your application with other non-Hikari
-        components.
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
@@ -507,8 +388,7 @@ class RESTClientImpl(rest_api.RESTClient):
         "global_rate_limit",
         "_client_session",
         "_closed_event",
-        "_connector_factory",
-        "_connector_owner",
+        "_tcp_connector",
         "_entity_factory",
         "_executor",
         "_http_settings",
@@ -530,8 +410,6 @@ class RESTClientImpl(rest_api.RESTClient):
     def __init__(
         self,
         *,
-        connector_factory: rest_api.ConnectorFactory,
-        connector_owner: bool,
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
@@ -546,9 +424,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self.global_rate_limit = rate_limits.ManualRateLimiter()
 
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
+        self._tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
         self._closed_event = asyncio.Event()
-        self._connector_factory = connector_factory
-        self._connector_owner = connector_owner
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
@@ -579,15 +456,21 @@ class RESTClientImpl(rest_api.RESTClient):
         """Close the HTTP client and any open HTTP connections."""
         if self._client_session is not None:
             await self._client_session.close()
-        await self._connector_factory.close()
+        if self._tcp_connector is not None:
+            await self._tcp_connector.close()
+        if isinstance(self._token, rest_api.TokenStrategy):
+            await self._token.close()
+
         self.global_rate_limit.close()
         self.buckets.close()
         self._closed_event.set()
-        if isinstance(self._token, rest_api.TokenStrategy):
-            await self._token.close()
+
         # We have to sleep to allow aiohttp time to close SSL transports...
         # https://github.com/aio-libs/aiohttp/issues/1925
         # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
+        #
+        # TODO: Remove when we update to aiohttp 4.0.0
+        # https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-715977247
         await asyncio.sleep(0.25)
 
     async def __aenter__(self) -> RESTClientImpl:
@@ -615,13 +498,24 @@ class RESTClientImpl(rest_api.RESTClient):
         return None
 
     @typing.final
+    def _acquire_tcp_connector(self) -> aiohttp.TCPConnector:
+        if self._tcp_connector is None:
+            self._tcp_connector = net.create_tcp_connector(self._http_settings)
+            _LOGGER.log(ux.TRACE, "acquired new tcp connector")
+
+        elif self._tcp_connector.closed:
+            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
+
+        return self._tcp_connector
+
+    @typing.final
     def _acquire_client_session(self) -> aiohttp.ClientSession:
         if self._client_session is None:
             self._closed_event.clear()
             self._client_session = net.create_client_session(
-                connector=self._connector_factory.acquire(),
-                # No, this is correct. We manage closing the connector ourselves in this class if we are
-                # told we own it. This works around some other lifespan issues.
+                connector=self._acquire_tcp_connector(),
+                # No, this is correct. We manage closing the connector ourselves in this class.
+                # This works around some other lifespan issues.
                 connector_owner=False,
                 http_settings=self._http_settings,
                 raise_for_status=False,
@@ -630,7 +524,7 @@ class RESTClientImpl(rest_api.RESTClient):
             _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
 
         elif self._client_session.closed:
-            raise errors.HTTPClientClosedError
+            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
 
         return self._client_session
 
@@ -969,16 +863,17 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        request_to_speak: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("channel_id", channel)
         body.put("suppress", suppress)
 
-        if request_to_speak:
-            # As a note, under current behaviour (as of writing) Discord seems to mostly ignore the value of the
-            # timestamp provided here and generate their own if it's provided as a valid iso8601 timestamp and not null.
+        if isinstance(request_to_speak, datetime.datetime):
+            body.put("request_to_speak_timestamp", request_to_speak.isoformat())
+
+        elif request_to_speak is True:
             body.put("request_to_speak_timestamp", time.utc_datetime().isoformat())
 
         elif request_to_speak is False:
@@ -1024,7 +919,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
                 )
 
-        route = routes.PATCH_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
+        route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
         body = data_binding.JSONObjectBuilder()
         body.put("type", target_type)
         body.put("allow", allow)
@@ -2630,7 +2525,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2639,9 +2534,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> guilds.Role:
         if not undefined.count(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
-
-        if permissions is undefined.UNDEFINED:
-            permissions = permissions_.Permissions.NONE
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()

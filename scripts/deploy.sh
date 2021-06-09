@@ -41,13 +41,13 @@ VERSION=${GITHUB_TAG}
 REF=${GITHUB_SHA}
 
 echo "===== INSTALLING DEPENDENCIES ====="
-python -m pip install \
-    setuptools \
-    wheel \
-    nox \
-    twine \
-    requests \
-    -r requirements.txt
+# Note: We install each of these separately due to issues with the new PIP resolver
+# https://github.com/pypa/pip/issues/9187
+pip install setuptools
+pip install wheel
+pip install twine
+pip install nox
+pip install -r requirements.txt
 
 echo "-- Bumping repository version to ${VERSION} (ref: ${REF}) --"
 sed "s|^__version__.*|__version__ = \"${VERSION}\"|g" -i hikari/_about.py
@@ -76,5 +76,21 @@ python -m twine upload --disable-progress-bar --skip-existing dist/* --non-inter
 echo "===== DEPLOYING PAGES ====="
 source scripts/deploy-pages.sh
 
+echo "===== UPDATING VERSION IN REPOSITORY ====="
+NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
+
+echo "-- Setting up git --"
+git fetch origin
+git checkout -f master
+git config user.name "davfsa"
+git config user.email "29100934+davfsa@users.noreply.github.com"
+
+echo "-- Bumping master version to ${NEW_VERSION} --"
+sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
+
+echo "-- Pushing to repository --"
+git commit -am "Bump version to ${NEW_VERSION}"
+git push
+
 echo "===== SENDING WEBHOOK ====="
-python scripts/deploy_webhook.py
+source scripts/deploy-webhook.sh

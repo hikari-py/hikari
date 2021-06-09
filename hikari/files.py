@@ -180,7 +180,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     if isinstance(url_or_resource, RAWISH_TYPES):
         data = unwrap_bytes(url_or_resource)
         filename = generate_filename_from_details(mimetype=None, extension=None, data=data)
-        return typing.cast("Resource[AsyncReader]", Bytes(url_or_resource, filename))
+        return typing.cast("Resource[AsyncReader]", Bytes(data, filename))
 
     if isinstance(url_or_resource, Resource):
         return url_or_resource

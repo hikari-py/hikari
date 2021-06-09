@@ -41,7 +41,7 @@ def test_parse_iso_8601_date_with_negative_timezone():
     assert offset == datetime.timedelta(hours=-2, minutes=-30)
 
 
-def test_parse_iso_8601_date_with_positive_timezone():
+def test_slow_parse_iso_8601_date_with_positive_timezone():
     string = "2019-10-10T05:22:33.023456+02:30"
     date = time.iso8601_datetime_string_to_datetime(string)
     assert date.year == 2019
@@ -91,6 +91,19 @@ def test_parse_iso_8601_date_with_no_fraction():
     assert date.minute == 22
     assert date.second == 33
     assert date.microsecond == 0
+
+
+def test_speedup_replaces_python_version_when_available():
+    try:
+        import ciso8601
+
+        assert time.fast_iso8601_datetime_string_to_datetime is ciso8601.parse_rfc3339
+        assert time.iso8601_datetime_string_to_datetime is ciso8601.parse_rfc3339
+    except ImportError:
+        # No speedups, test pure version has been setup correctly
+
+        assert time.fast_iso8601_datetime_string_to_datetime is None
+        assert time.iso8601_datetime_string_to_datetime is time.slow_iso8601_datetime_string_to_datetime
 
 
 def test_parse_discord_epoch_to_datetime():

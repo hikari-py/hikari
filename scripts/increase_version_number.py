@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #
@@ -20,21 +19,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Package metadata."""
+"""A little helpful script to increment the package version after every release."""
+import os
+import sys
 
-# DO NOT ADD TYPE HINTS TO THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+sys.path.append(os.getcwd())
 
-__author__ = "Nekokatt"
-__maintainer__ = "davfsa"
-__ci__ = "https://github.com/hikari-py/hikari/actions"
-__copyright__ = "© 2021 davfsa"
-__coverage__ = "https://codeclimate.com/github/hikari-py/hikari"
-__discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://hikari-py.github.io/hikari/hikari"
-__email__ = "davfsa@gmail.com"
-__issue_tracker__ = "https://github.com/hikari-py/hikari/issues"
-__license__ = "MIT"
-__url__ = "https://github.com/hikari-py/hikari"
-__version__ = "2.0.0.dev101"
-__git_sha1__ = "HEAD"
+from hikari.internal import ux
+
+version = ux.HikariVersion(sys.argv[1])
+
+if version.prerelease is not None:
+    # Increase the pre-release number if there
+    prerelease_str, prerelease_num = version.prerelease
+    version.prerelease = (prerelease_str, prerelease_num + 1)
+
+else:
+    # Or add it if missing
+    version.prerelease = (".dev", 0)
+
+print(version)

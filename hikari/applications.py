@@ -393,6 +393,9 @@ class Team(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
+    name: str = attr.field(hash=False, eq=False, repr=True)
+    """The name of this team."""
+
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
@@ -410,7 +413,7 @@ class Team(snowflakes.Unique):
     """The ID of this team's owner."""
 
     def __str__(self) -> str:
-        return f"Team {self.id}"
+        return f"Team {self.name} ({self.id})"
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
@@ -468,17 +471,11 @@ class Application(guilds.PartialApplication):
     )
     """The client application that models may use for procedures."""
 
-    is_bot_public: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
-    """`builtins.True` if the bot associated with this application is public.
+    is_bot_public: bool = attr.field(eq=False, hash=False, repr=True)
+    """`builtins.True` if the bot associated with this application is public."""
 
-    Will be `builtins.None` if this application doesn't have an associated bot.
-    """
-
-    is_bot_code_grant_required: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if this application's bot is requiring code grant for invites.
-
-    Will be `builtins.None` if this application doesn't have a bot.
-    """
+    is_bot_code_grant_required: bool = attr.field(eq=False, hash=False, repr=False)
+    """`builtins.True` if this application's bot is requiring code grant for invites."""
 
     owner: users.User = attr.field(eq=False, hash=False, repr=True)
     """The application's owner."""
@@ -486,7 +483,7 @@ class Application(guilds.PartialApplication):
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    public_key: typing.Optional[bytes] = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     team: typing.Optional[Team] = attr.field(eq=False, hash=False, repr=False)
@@ -567,7 +564,7 @@ class Application(guilds.PartialApplication):
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to `AuthorizationInformation`."""
 
-    public_key: typing.Optional[bytes] = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     is_bot_public: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)

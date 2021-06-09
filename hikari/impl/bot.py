@@ -277,8 +277,6 @@ class BotApp(traits.BotAware):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
-            connector_factory=rest_impl.BasicLazyCachedTCPConnectorFactory(self._http_settings),
-            connector_owner=True,
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -357,7 +355,7 @@ class BotApp(traits.BotAware):
 
     def _check_if_alive(self) -> None:
         if not self._is_alive:
-            raise errors.ComponentNotRunningError("bot is not running so it cannot be interacted with")
+            raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
 
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
@@ -567,13 +565,13 @@ class BotApp(traits.BotAware):
 
         Raises
         ------
-        builtins.RuntimeError
+        hikari.errors.ComponentStateConflictError
             If bot is already running.
         builtins.TypeError
             If `shard_ids` is passed without `shard_count`.
         """
         if self._is_alive:
-            raise RuntimeError("bot is already running")
+            raise errors.ComponentStateConflictError("bot is already running")
 
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
@@ -735,13 +733,13 @@ class BotApp(traits.BotAware):
 
         Raises
         ------
-        builtins.RuntimeError
+        hikari.errors.ComponentStateConflictError
             If bot is already running.
         builtins.TypeError
             If `shard_ids` is passed without `shard_count`.
         """
         if self._is_alive:
-            raise RuntimeError("bot is already running")
+            raise errors.ComponentStateConflictError("bot is already running")
 
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
@@ -781,6 +779,7 @@ class BotApp(traits.BotAware):
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         self._is_alive = True
+        self._closing_event.clear()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
             requirements.session_start_limit.remaining,

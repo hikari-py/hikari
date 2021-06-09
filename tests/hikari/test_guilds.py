@@ -54,6 +54,9 @@ class TestPartialRole:
     def test_str_operator(self, model):
         assert str(model) == "The Big Cool"
 
+    def test_mention_property(self, model):
+        assert model.mention == "<@&1106913972>"
+
 
 def test_PartialApplication_str_operator():
     mock_application = mock.Mock(guilds.PartialApplication)
@@ -758,7 +761,6 @@ class TestGuild:
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(guilds.Guild)(
             app=mock_app,
-            is_nsfw=False,
             id=snowflakes.Snowflake(123),
             splash_hash="splash_hash",
             discovery_splash_hash="discovery_splash_hash",
@@ -775,6 +777,7 @@ class TestGuild:
             is_widget_enabled=False,
             max_video_channel_users=10,
             mfa_level=guilds.GuildMFALevel.NONE,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
             owner_id=snowflakes.Snowflake(1111),
             preferred_locale="en-GB",
             premium_subscription_count=12,
@@ -787,6 +790,38 @@ class TestGuild:
             widget_channel_id=snowflakes.Snowflake(192729),
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
         )
+
+    def test_channels(self, model):
+        assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
+        model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
+
+    def test_channels_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.channels == {}
+
+    def test_members(self, model):
+        assert model.members is model.app.cache.get_members_view_for_guild.return_value
+        model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
+
+    def test_members_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.members == {}
+
+    def test_presences(self, model):
+        assert model.presences is model.app.cache.get_presences_view_for_guild.return_value
+        model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
+
+    def test_presences_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.presences == {}
+
+    def test_voice_states(self, model):
+        assert model.voice_states is model.app.cache.get_voice_states_view_for_guild.return_value
+        model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
+
+    def test_voice_states_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.voice_states == {}
 
     def test_splash_url(self, model):
         splash = object()
@@ -949,6 +984,54 @@ class TestGuild:
         model.afk_channel_id = None
 
         assert await model.fetch_afk_channel() is None
+        
+    def test_get_channel(self, model):
+        assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
+        model.app.cache.get_guild_channel.assert_called_once_with(456)
+
+    def test_get_channel_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_channel(456) is None
+
+    def test_get_member(self, model):
+        assert model.get_member(456) is model.app.cache.get_member.return_value
+        model.app.cache.get_member.assert_called_once_with(123, 456)
+
+    def test_get_member_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_member(456) is None
+
+    def test_get_presence(self, model):
+        assert model.get_presence(456) is model.app.cache.get_presence.return_value
+        model.app.cache.get_presence.assert_called_once_with(123, 456)
+
+    def test_get_presence_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_presence(456) is None
+
+    def test_get_voice_state(self, model):
+        assert model.get_voice_state(456) is model.app.cache.get_voice_state.return_value
+        model.app.cache.get_voice_state.assert_called_once_with(123, 456)
+
+    def test_get_voice_state_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_voice_state(456) is None
+
+    def test_get_my_member_when_not_shardaware(self, model):
+        model.app = object()
+        assert model.get_my_member() is None
+
+    def test_get_my_member_when_no_me(self, model):
+        model.app.me = None
+        assert model.get_my_member() is None
+
+    def test_get_my_member(self, model):
+        model.app.me = mock.Mock(id=123)
+
+        with mock.patch.object(guilds.Guild, "get_member") as get_member:
+            assert model.get_my_member() is get_member.return_value
+
+        get_member.assert_called_once_with(123)
 
 
 class TestRestGuild:
@@ -975,7 +1058,6 @@ class TestRestGuild:
             owner_id=snowflakes.Snowflake(1111),
             preferred_locale="en-GB",
             premium_subscription_count=12,
-            is_nsfw=True,
             premium_tier=guilds.GuildPremiumTier.TIER_3,
             public_updates_channel_id=None,
             rules_channel_id=None,
@@ -990,6 +1072,7 @@ class TestRestGuild:
             approximate_member_count=100,
             max_presences=100,
             max_members=100,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
 
     def test_get_emoji(self, model):
@@ -1010,7 +1093,6 @@ class TestGatewayGuild:
     def model(self, mock_app):
         return guilds.GatewayGuild(
             app=mock_app,
-            is_nsfw=True,
             id=snowflakes.Snowflake(123),
             splash_hash="splash_hash",
             discovery_splash_hash="discovery_splash_hash",
@@ -1041,6 +1123,7 @@ class TestGatewayGuild:
             is_large=True,
             joined_at=None,
             member_count=1,
+            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
 
     @pytest.fixture()
@@ -1069,22 +1152,6 @@ class TestGatewayGuild:
         model.app = object()
         assert model.emojis == {}
 
-    def test_members(self, model):
-        assert model.members is model.app.cache.get_members_view_for_guild.return_value
-        model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
-
-    def test_members_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.members == {}
-
-    def test_presences(self, model):
-        assert model.presences is model.app.cache.get_presences_view_for_guild.return_value
-        model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
-
-    def test_presences_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.presences == {}
-
     def test_roles(self, model):
         assert model.roles is model.app.cache.get_roles_view_for_guild.return_value
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
@@ -1092,22 +1159,6 @@ class TestGatewayGuild:
     def test_roles_when_no_cache_trait(self, model):
         model.app = object()
         assert model.roles == {}
-
-    def test_voice_states(self, model):
-        assert model.voice_states is model.app.cache.get_voice_states_view_for_guild.return_value
-        model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
-
-    def test_voice_states_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.voice_states == {}
-
-    def test_get_channel(self, model):
-        assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
-        model.app.cache.get_guild_channel.assert_called_once_with(456)
-
-    def test_get_channel_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_channel(456) is None
 
     def test_get_emoji(self, model):
         assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
@@ -1117,22 +1168,6 @@ class TestGatewayGuild:
         model.app = object()
         assert model.get_emoji(456) is None
 
-    def test_get_member(self, model):
-        assert model.get_member(456) is model.app.cache.get_member.return_value
-        model.app.cache.get_member.assert_called_once_with(123, 456)
-
-    def test_get_member_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_member(456) is None
-
-    def test_get_presence(self, model):
-        assert model.get_presence(456) is model.app.cache.get_presence.return_value
-        model.app.cache.get_presence.assert_called_once_with(123, 456)
-
-    def test_get_presence_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_presence(456) is None
-
     def test_get_role(self, model):
         assert model.get_role(456) is model.app.cache.get_role.return_value
         model.app.cache.get_role.assert_called_once_with(456)
@@ -1140,27 +1175,3 @@ class TestGatewayGuild:
     def test_get_role_when_no_cache_trait(self, model):
         model.app = object()
         assert model.get_role(456) is None
-
-    def test_get_voice_state(self, model):
-        assert model.get_voice_state(456) is model.app.cache.get_voice_state.return_value
-        model.app.cache.get_voice_state.assert_called_once_with(123, 456)
-
-    def test_get_voice_state_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_voice_state(456) is None
-
-    def test_get_my_member_when_not_shardaware(self, model):
-        model.app = object()
-        assert model.get_my_member() is None
-
-    def test_get_my_member_when_no_me(self, model):
-        model.app.me = None
-        assert model.get_my_member() is None
-
-    def test_get_my_member(self, model):
-        model.app.me = mock.Mock(id=123)
-
-        with mock.patch.object(guilds.GatewayGuild, "get_member") as get_member:
-            assert model.get_my_member() is get_member.return_value
-
-        get_member.assert_called_once_with(123)

@@ -27,6 +27,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["EventFactoryImpl"]
 
 import datetime
+import types
 import typing
 
 from hikari import applications as application_models
@@ -78,7 +79,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         if isinstance(channel, channel_models.GuildChannel):
             return channel_events.GuildChannelCreateEvent(app=self._app, shard=shard, channel=channel)
         if isinstance(channel, channel_models.PrivateChannel):
-            raise NotImplementedError("DM channel create events are undoumcneted behaviour")
+            raise NotImplementedError("DM channel create events are undocumented behaviour")
         raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
 
     def deserialize_channel_update_event(
@@ -623,6 +624,12 @@ class EventFactoryImpl(event_factory.EventFactory):
     ################
     # SHARD EVENTS #
     ################
+
+    def deserialize_shard_payload_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, *, name: str
+    ) -> shard_events.ShardPayloadEvent:
+        payload = types.MappingProxyType(payload)
+        return shard_events.ShardPayloadEvent(app=self._app, shard=shard, payload=payload, name=name)
 
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

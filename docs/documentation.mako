@@ -880,7 +880,7 @@
                             %>
 
                             ## Purposely using one item per list for layout reasons.
-                            <li class="monospaced">
+                            <li class="monospaced text-truncate">
                                 ${link(c, with_prefixes=True, css_classes="sidebar-nav-pill", dotted=False, simple_names=True)}
 
                                 <ul class="list-unstyled nested text-truncate">

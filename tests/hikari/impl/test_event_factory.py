@@ -817,6 +817,16 @@ class TestEventFactoryImpl:
     # SHARD EVENTS #
     ################
 
+    def test_deserialize_shard_payload_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "123123"}
+
+        event = event_factory.deserialize_shard_payload_event(mock_shard, mock_payload, name="ooga booga")
+
+        assert event.app is mock_app
+        assert event.name == "ooga booga"
+        assert event.payload == mock_payload
+        assert event.shard is mock_shard
+
     def test_deserialize_ready_event(self, event_factory, mock_app, mock_shard):
         mock_user_payload = object()
         mock_payload = {

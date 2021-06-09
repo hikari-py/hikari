@@ -8,7 +8,7 @@ mock==4.0.3
 # Py.test stuff.
 pytest==6.2.4
 pytest-asyncio==0.15.1
-pytest-cov==2.11.1
+pytest-cov==2.12.1
 pytest-randomly==3.8.0
 
 # Coverage testing.
@@ -36,9 +36,9 @@ mypy==0.812
 
 safety~=1.10.3
 
-
 #############
 # FORMATING #
 #############
-black==21.5b1
+
+black==21.5b2
 isort==5.8.0

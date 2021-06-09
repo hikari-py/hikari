@@ -542,8 +542,8 @@ class PartialMessage(snowflakes.Unique):
     If the message is not in a guild, this will be `builtins.None`.
 
     This will also be `builtins.None` in some cases such as when Discord updates
-    a message with an embed URL preview or in messages fetched from the
-    REST API.
+    a message with an embed URL preview, in messages fetched from the
+    REST API or messages sent by discord.
     """
 
     content: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
@@ -640,16 +640,26 @@ class PartialMessage(snowflakes.Unique):
 
         return channel.guild_id
 
-    @property
-    def link(self) -> str:
-        """Jump link to the message.
+    def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
+        """Generate a jump link to this message.
+
+        Other Parameters
+        ----------------
+        guild : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild this message is in or `builtins.None`
+            to generate a DM message link.
+
+            !!! note
+                This parameter is necessary since `PartialMessage.guild_id`
+                isn't returned by the REST API regardless of whether the message
+                is in a DM or not.
 
         Returns
         -------
         builtins.str
             The jump link to the message.
         """
-        guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
+        guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
     async def fetch_channel(self) -> channels.PartialChannel:

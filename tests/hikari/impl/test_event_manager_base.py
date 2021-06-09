@@ -60,26 +60,44 @@ class TestEventManagerBase:
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_KeyError(self, event_manager):
+        mock_payload = {"id": "3123123123"}
+        mock_shard = mock.Mock(id=123)
         event_manager._handle_dispatch = mock.Mock()
+        event_manager.dispatch = mock.Mock()
+
         with pytest.raises(LookupError):
-            event_manager.consume_raw_event("UNEXISTING_EVENT", mock.Mock(id=123), {})
+            event_manager.consume_raw_event("UNEXISTING_EVENT", mock_shard, mock_payload)
 
         event_manager._handle_dispatch.assert_not_called()
+        event_manager.dispatch.assert_called_once_with(
+            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+        )
+        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+            mock_shard, mock_payload, name="UNEXISTING_EVENT"
+        )
 
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
         event_manager._handle_dispatch = mock.Mock()
+        event_manager.dispatch = mock.Mock()
         on_existing_event = object()
         event_manager._consumers = {"existing_event": on_existing_event}
         shard = object()
+        payload = {"berp": "baz"}
 
         with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event("EXISTING_EVENT", shard, {"berp": "baz"})
+            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
 
         event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
         create_task.assert_called_once_with(
             event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}),
             name="dispatch EXISTING_EVENT",
+        )
+        event_manager.dispatch.assert_called_once_with(
+            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+        )
+        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+            shard, payload, name="EXISTING_EVENT"
         )
 
     @pytest.mark.asyncio

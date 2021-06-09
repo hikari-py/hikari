@@ -501,7 +501,7 @@ class BotAware(
         """Check whether the bot is running or not.
 
         This is useful as some functions might raise
-        `hikari.errors.ComponentNotRunningError` if this is
+        `hikari.errors.ComponentStateConflictError` if this is
         `builtins.False`.
 
         Returns

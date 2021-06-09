@@ -718,6 +718,21 @@ class GuildChannel(PartialChannel):
     """
 
     @property
+    def mention(self) -> str:
+        """Return a raw mention string for the guild channel.
+
+        !!! note
+            As of writing, GuildCategory channels are a special case
+            for this and mentions of them will not resolve as clickable.
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<#{self.id}>"
+
+    @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 

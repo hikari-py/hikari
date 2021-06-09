@@ -28,7 +28,6 @@ __all__: typing.List[str] = ["GatewayShardImpl"]
 
 import asyncio
 import contextlib
-import json
 import logging
 import platform
 import sys
@@ -156,7 +155,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: aiohttp.typedefs.JSONDecoder = json.loads,
+        loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         timeout: typing.Optional[float] = None,
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
@@ -170,7 +169,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         data: data_binding.JSONObject,
         compress: typing.Optional[int] = None,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
+        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
     ) -> None:
         pl = dumps(data)
         if self.logger.isEnabledFor(ux.TRACE):
@@ -534,7 +533,7 @@ class GatewayShardImpl(shard.GatewayShard):
         data: data_binding.JSONObject,
         compress: typing.Optional[int] = None,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = json.dumps,
+        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
     ) -> None:
         await self._total_rate_limit.acquire()
 
@@ -542,7 +541,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     def _check_if_alive(self) -> None:
         if not self.is_alive:
-            raise errors.ComponentNotRunningError(
+            raise errors.ComponentStateConflictError(
                 f"shard {self._shard_id} is not running so it cannot be interacted with"
             )
 
@@ -589,7 +588,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def start(self) -> None:
         if self._run_task is not None:
-            raise RuntimeError("Cannot run more than one instance of one shard concurrently")
+            raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
 
         run_task = asyncio.create_task(self._run(), name=f"run shard {self._shard_id}")
         self._run_task = run_task
@@ -802,6 +801,9 @@ class GatewayShardImpl(shard.GatewayShard):
                 try:
                     last_started_at = time.monotonic()
                     should_restart = await self._run_once()
+
+                    # Since nothing went wrong, we can reset the backoff
+                    backoff.reset()
 
                     if not should_restart:
                         self._logger.info("shard has disconnected and shut down normally")

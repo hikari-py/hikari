@@ -23,7 +23,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ConnectorFactory", "RESTClient", "TokenStrategy"]
+__all__: typing.List[str] = ["RESTClient", "TokenStrategy"]
 
 import abc
 import typing
@@ -32,8 +32,7 @@ from hikari import traits
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-
-    import aiohttp
+    import datetime
 
     from hikari import applications
     from hikari import audit_logs
@@ -55,20 +54,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import special_endpoints
     from hikari.internal import time
-
-
-class ConnectorFactory(abc.ABC):
-    """Provider of a connector."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    async def close(self) -> None:
-        """Close any resources if they exist."""
-
-    @abc.abstractmethod
-    def acquire(self) -> aiohttp.BaseConnector:
-        """Acquire the connector."""
 
 
 class TokenStrategy(abc.ABC):
@@ -370,9 +355,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        request_to_speak: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
     ) -> None:
         """Edit the current user's voice state in a stage channel.
+
+        !!! note
+            The current user has to have already joined the target stage channel
+            before any calls can be made to this endpoint.
 
         Parameters
         ----------
@@ -387,10 +376,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If specificed, whether the user should be allowed to become a speaker
             in the target stage channel with `builtin.True` suppressing them from
             becoming one.
+        request_to_speak : typing.Union[hikari.undefined.UndefinedType, builtins.bool, datetime.datetime]
+            Whether to request to speak. This may be one of the following:
 
-        !!! note
-            The current user has to have already joined the target stage channel
-            before any calls can be made to this endpoint.
+            * `True` to indicate that the bot wants to speak.
+            * `False` to remove any previously set request to speak.
+            * `datetime.datetime` to specify when they want their request to
+                speak timestamp to be set to.
+
+            !!! note
+                If a datetime from the past is passed then Discord will use the
+                current time instead.
 
         Raises
         ------

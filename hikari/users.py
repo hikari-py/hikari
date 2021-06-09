@@ -93,6 +93,9 @@ class UserFlag(enums.Flag):
     Only applies to users that verified their account before 20th August 2019.
     """
 
+    DISCORD_CERTIFIED_MODERATOR = 1 << 18
+    """Discord Certified Moderator."""
+
 
 @typing.final
 class PremiumType(int, enums.Enum):

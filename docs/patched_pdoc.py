@@ -21,88 +21,92 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
+import os.path as path
+import re
 
-def main():
-    import json
-    import os.path as path
-    import re
-    from functools import lru_cache
+import pdoc
+from pdoc import cli
 
-    import pdoc
-    from pdoc import cli
 
-    # We don't document stuff on the index of the documentation, but pdoc doesn't know that,
-    # so we have to patch the function that generates the index.
-    def _patched_generate_lunr_search(modules, index_docstrings, template_config):
-        # This will only be called once due to how we generate the documentation, so we can ignore the rest
-        assert len(modules) == 1, "expected only 1 module to be generated, got more"
-        top_module = modules[0]
+def _patched_generate_lunr_search(modules, index_docstrings, template_config):
+    # This will only be called once due to how we generate the documentation, so we can ignore the rest
+    assert len(modules) == 1, "expected only 1 module to be generated, got more"
+    top_module = modules[0]
 
-        def trim_docstring(docstring):
-            return re.sub(
-                r"""
-                \s+|                   # whitespace sequences
-                \s+[-=~]{3,}\s+|       # title underlines
-                ^[ \t]*[`~]{3,}\w*$|   # code blocks
-                \s*[`#*]+\s*|          # common markdown chars
-                \s*([^\w\d_>])\1\s*|   # sequences of punct of the same kind
-                \s*</?\w*[^>]*>\s*     # simple HTML tags
-            """,
-                " ",
-                docstring,
-                flags=re.VERBOSE | re.MULTILINE,
-            )
+    def trim_docstring(docstring):
+        return re.sub(
+            r"""
+            \s+[-=~]{3,}\s+|       # title underlines
+            ^[ \t]*[`~]{3,}\w*$|   # code blocks
+            \s*[`#*]+\s*|          # common markdown chars
+            \s*([^\w\d_>])\1\s*|   # sequences of punct of the same kind
+            \s*</?\w*[^>]*>\s*     # simple HTML tags
+            \s+                    # whitespace sequences
+        """,
+            " ",
+            docstring,
+            flags=re.VERBOSE | re.MULTILINE,
+        )
 
-        def recursive_add_to_index(dobj):
-            url = to_url_id(dobj.module)
-            if url != 0:  # 0 is index.html
-                # r: ref
-                # u: url
-                # d: doc
-                # f: function
-                info = {"r": dobj.refname, "u": url}
-                if index_docstrings:
-                    info["d"] = trim_docstring(dobj.docstring)
-                if isinstance(dobj, pdoc.Function):
-                    info["f"] = 1
+    def recursive_add_to_index(dobj):
+        if dobj.module.name != "hikari":  # Do not index root
+            url = to_url_id(dobj)
+            # r: ref
+            # u: url
+            # d: docstring
+            # f: function
+            info = {"r": dobj.refname, "u": url}
+            if index_docstrings:
+                info["d"] = trim_docstring(dobj.docstring)
+            if isinstance(dobj, pdoc.Function):
+                info["f"] = 1
 
-                index.append(info)
+            index.append(info)
 
-            for member_dobj in getattr(dobj, "doc", {}).values():
-                if url == 0 and not isinstance(dobj, pdoc.Module):
-                    # Don't document anything that is not a submodule in root package
-                    continue
+        for member_dobj in getattr(dobj, "doc", {}).values():
+            if dobj.module.name == "hikari" and not isinstance(member_dobj, pdoc.Module):
+                continue
 
-                recursive_add_to_index(member_dobj)
+            recursive_add_to_index(member_dobj)
 
-        @lru_cache()
-        def to_url_id(module):
-            url = module.url()
-            if top_module.is_package:  # Reference from subfolder if its a package
-                _, url = url.split("/", maxsplit=1)
-            if url not in url_cache:
-                url_cache[url] = len(url_cache)
-            return url_cache[url]
+    def to_url_id(dobj):
+        # pdocs' .url() doesn't take in account that some attributes are inherited,
+        # which generates an invalid url. Because of this, we need to take matter
+        # into our own hands.
+        url = dobj.refname.replace(".", "/")
+        if not isinstance(dobj, pdoc.Module):
+            depth = 1
+            obj = getattr(dobj, "cls", None)
+            while obj:
+                depth += 1
+                obj = getattr(obj, "cls", None)
 
-        index = []
-        url_cache = {}
-        recursive_add_to_index(top_module)
-        urls = sorted(url_cache.keys(), key=url_cache.__getitem__)
+            url = "/".join(url.split("/")[:-depth])
 
-        # If top module is a package, output the index in its subfolder, else, in the output dir
-        main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")
-        with cli._open_write_file(path.join(main_path, "index.json")) as f:
-            json.dump({"index": index, "urls": urls}, f)
+        if top_module.is_package:  # Reference from subfolder if its a package
+            _, url = url.split("/", maxsplit=1)
+        if url not in url_cache:
+            url_cache[url] = len(url_cache)
+        return url_cache[url]
 
-        # Generate search.html
-        with cli._open_write_file(path.join(main_path, "search.html")) as f:
-            rendered_template = pdoc._render_template("/search.mako", module=top_module, **template_config)
-            f.write(rendered_template)
+    index = []
+    url_cache = {}
+    recursive_add_to_index(top_module)
+    urls = sorted(url_cache.keys(), key=url_cache.__getitem__)
 
-    cli._generate_lunr_search = _patched_generate_lunr_search
+    # If top module is a package, output the index in its subfolder, else, in the output dir
+    main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")
+    with cli._open_write_file(path.join(main_path, "index.json")) as f:
+        json.dump({"urls": urls, "index": index}, f)
 
-    cli.main()
+    # Generate search.html
+    with cli._open_write_file(path.join(main_path, "search.html")) as f:
+        rendered_template = pdoc._render_template("/search.mako", module=top_module, **template_config)
+        f.write(rendered_template)
 
 
 if __name__ == "__main__":
-    main()
+    cli._generate_lunr_search = _patched_generate_lunr_search
+
+    cli.main()

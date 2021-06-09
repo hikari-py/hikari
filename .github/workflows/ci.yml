@@ -19,13 +19,13 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
         if: ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -33,10 +33,10 @@ jobs:
         run: |
           pip install wheel
 
-          pip install -e .
+          pip install .
           pip uninstall -y hikari
 
-          pip install -e .[speedups]
+          pip install .[speedups]
           pip uninstall -y hikari
 
       - name: Run tests
@@ -62,12 +62,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.8
 
@@ -93,12 +93,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.8
 
@@ -112,12 +112,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.8
 
@@ -131,12 +131,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.8
 
@@ -168,19 +168,18 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       GITHUB_TAG: ${{ github.event.release.tag_name }}
       GITHUB_REPO_SLUG: ${{ github.repository }}
-      GITHUB_BUILD_NUMBER: ${{ github.run_number }}
       DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 1
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: 3.8
 
