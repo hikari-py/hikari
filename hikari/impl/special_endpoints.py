@@ -152,7 +152,6 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             pass
 
 
-# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
@@ -717,34 +716,104 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     )
 
     # Not-required arguments.
-    content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
+    _content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
-    flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.ib(
+    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.ib(
         default=undefined.UNDEFINED, kw_only=True
     )
-    is_tts: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
-    mentions_everyone: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
-    user_mentions: undefined.UndefinedOr[
-        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
-    role_mentions: undefined.UndefinedOr[
+    _is_tts: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _mentions_everyone: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _role_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _user_mentions: undefined.UndefinedOr[
+        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
     _embeds: typing.List[embeds_.Embed] = attr.ib(factory=list, init=False)
 
     @property
+    def content(self) -> undefined.UndefinedOr[str]:
+        return self._content
+
+    @property
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
         return self._embeds.copy()
+
+    @property
+    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+        return self._flags
+
+    @property
+    def is_tts(self) -> undefined.UndefinedOr[bool]:
+        return self._is_tts
+
+    @property
+    def mentions_everyone(self) -> undefined.UndefinedOr[bool]:
+        return self._mentions_everyone
+
+    @property
+    def role_mentions(
+        self,
+    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+        return self._role_mentions
 
     @property
     def type(self) -> base_interactions.MessageResponseTypesT:
         return self._type
 
+    @property
+    def user_mentions(
+        self,
+    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+        return self._user_mentions
+
     def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
         self._embeds.append(embed)
+        return self
+
+    def set_content(
+        self: _InteractionMessageBuilderT, content: undefined.UndefinedOr[str], /
+    ) -> _InteractionMessageBuilderT:
+        self._content = content
+        return self
+
+    def set_flags(
+        self: _InteractionMessageBuilderT, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /
+    ) -> _InteractionMessageBuilderT:
+        self._flags = flags
+        return self
+
+    def set_tts(self: _InteractionMessageBuilderT, tts: undefined.UndefinedOr[bool], /) -> _InteractionMessageBuilderT:
+        self._is_tts = tts
+        return self
+
+    def set_mentions_everyone(
+        self: _InteractionMessageBuilderT, state: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /
+    ) -> _InteractionMessageBuilderT:
+        self._mentions_everyone = state
+        return self
+
+    def set_role_mentions(
+        self: _InteractionMessageBuilderT,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionMessageBuilderT:
+        self._role_mentions = role_mentions
+        return self
+
+    def set_user_mentions(
+        self: _InteractionMessageBuilderT,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionMessageBuilderT:
+        self._user_mentions = user_mentions
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
@@ -770,7 +839,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return {"type": self._type, "data": data}
 
 
-# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.s(kw_only=False, slots=True, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
@@ -781,7 +849,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _description: str = attr.ib()
 
     # Key-word only not-required arguments.
-    id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
     _options: typing.List[commands.CommandOption] = attr.ib(factory=list, init=False)
@@ -789,6 +857,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def description(self) -> str:
         return self._description
+
+    @property
+    def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
+        return self._id
 
     @property
     def options(self) -> typing.Sequence[commands.CommandOption]:
@@ -800,6 +872,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
         self._options.append(option)
+        return self
+
+    def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
+        self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

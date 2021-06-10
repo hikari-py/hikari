@@ -26,6 +26,7 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from hikari.impl import special_endpoints
 from hikari.interactions import bases
 from hikari.interactions import commands
 
@@ -138,6 +139,18 @@ class TestCommandInteraction:
             options=[],
             resolved=None,
         )
+
+    def test_build_response(self, mock_command_interaction):
+        builder = mock_command_interaction.build_response()
+
+        assert builder.type is bases.ResponseType.SOURCED_RESPONSE
+        assert isinstance(builder, special_endpoints.InteractionMessageBuilder)
+
+    def test_build_deferred_response(self, mock_command_interaction):
+        builder = mock_command_interaction.build_deferred_response()
+
+        assert builder.type is bases.ResponseType.DEFERRED_SOURCED_RESPONSE
+        assert isinstance(builder, special_endpoints.InteractionDeferredBuilder)
 
     @pytest.mark.asyncio
     async def test_fetch_initial_response(self, mock_command_interaction, mock_app):

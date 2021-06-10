@@ -572,6 +572,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @abc.abstractmethod
     def type(self) -> base_interactions.DeferredMessageTypesT:
         """Return the type of this response.
 
@@ -592,7 +593,10 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    # Required fields
+
     @property
+    @abc.abstractmethod
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Return the type of this response.
 
@@ -601,6 +605,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         hikari.interactions.bases.MessageResponseTypesT
             The type of response this is.
         """
+
+    # Extendable fields
 
     @property
     @abc.abstractmethod
@@ -613,6 +619,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             A sequence of up to 10 ot the embeds included in this response.
         """
 
+    # Settable fields
+
     @property
     @abc.abstractmethod
     def content(self) -> undefined.UndefinedOr[str]:
@@ -623,10 +631,6 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         hikari.undefined.UndefinedOr[builtins.str]
             The response's message content, if set.
         """
-
-    @content.setter
-    def content(self, content: undefined.UndefinedOr[str], /) -> None:
-        raise NotImplementedError
 
     @property
     @abc.abstractmethod
@@ -644,10 +648,6 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `hikari.undefined.UNDEFINED`.
         """
 
-    @flags.setter
-    def flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> None:
-        raise NotImplementedError
-
     @property
     @abc.abstractmethod
     def is_tts(self) -> undefined.UndefinedOr[bool]:
@@ -660,10 +660,6 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             If left as `hikari.undefined.UNDEFINED` then this will be disabled.
         """
 
-    @is_tts.setter
-    def is_tts(self, tts: undefined.UndefinedOr[bool], /) -> None:
-        raise NotImplementedError
-
     @property
     @abc.abstractmethod
     def mentions_everyone(self) -> undefined.UndefinedOr[bool]:
@@ -675,35 +671,6 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Whether @everyone mentions should be enabled for this response.
             If left as `hikari.undefined.UNDEFINED` then they will be disabled.
         """
-
-    @mentions_everyone.setter
-    def mentions_everyone(self, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def user_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
-        """Whether and what user mentions should be enabled for this response.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            Either a sequence of object/IDs of the users mentions should be enabled for,
-            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
-            mentions or `True` to allow all user mentions.
-        """  # noqa: E501 - Line too long
-
-    @user_mentions.setter
-    def user_mentions(
-        self,
-        mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-        ] = undefined.UNDEFINED,
-        /,
-    ) -> None:
-        raise NotImplementedError
 
     @property
     @abc.abstractmethod
@@ -720,15 +687,20 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             mentions or `True` to allow all role mentions.
         """  # noqa: E501 - Line too long
 
-    @role_mentions.setter
-    def role_mentions(
+    @property
+    @abc.abstractmethod
+    def user_mentions(
         self,
-        mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-        ] = undefined.UNDEFINED,
-        /,
-    ) -> None:
-        raise NotImplementedError
+    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+        """Whether and what user mentions should be enabled for this response.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+            Either a sequence of object/IDs of the users mentions should be enabled for,
+            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
+            mentions or `True` to allow all user mentions.
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def add_embed(self: _InteractionResponseBuilderT, embed: embeds_.Embed, /) -> _InteractionResponseBuilderT:
@@ -744,6 +716,122 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         InteractionMessageBuilder
             Object of this builder.
         """
+
+    @abc.abstractmethod
+    def set_content(
+        self: _InteractionResponseBuilderT, content: undefined.UndefinedOr[str], /
+    ) -> _InteractionResponseBuilderT:
+        """Set the response's message content.
+
+        Parameters
+        ----------
+        content : hikari.undefined.UndefinedOr[builtins.str]
+            The message content to set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
+
+    @abc.abstractmethod
+    def set_flags(
+        self: _InteractionResponseBuilderT, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /
+    ) -> _InteractionResponseBuilderT:
+        """Set message flags for this response.
+
+        !!! note
+            As of writing, the only message flag which can be set is EPHEMERAL.
+
+        Parameters
+        ----------
+        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The message flags to set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
+
+    @abc.abstractmethod
+    def set_tts(
+        self: _InteractionResponseBuilderT, tts: undefined.UndefinedOr[bool], /
+    ) -> _InteractionResponseBuilderT:
+        """Set whether this response should trigger text-to-speech processing.
+
+        Parameters
+        ----------
+        tts : Whether this response should trigger text-to-speech processing.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
+
+    @abc.abstractmethod
+    def set_mentions_everyone(
+        self: _InteractionResponseBuilderT, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /
+    ) -> _InteractionResponseBuilderT:
+        """Set whether this response should be able to mention @everyone/@here.
+
+        Parameters
+        ----------
+        mentions : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this response should be able to mention @everyone/@here.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
+
+    @abc.abstractmethod
+    def set_role_mentions(
+        self: _InteractionResponseBuilderT,
+        mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionResponseBuilderT:
+        """Set whether and what role mentions should be possible for this response.
+
+        Parameters
+        ----------
+        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+            Either a sequence of object/IDs of the roles mentions should be enabled for,
+            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any role
+            mentions or `True` to allow all role mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def set_user_mentions(
+        self: _InteractionResponseBuilderT,
+        mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionResponseBuilderT:
+        """Set whether and what user mentions should be possible for this response.
+
+        Parameters
+        ----------
+        mentions: hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+            Either a sequence of object/IDs of the users mentions should be enabled for,
+            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
+            mentions or `True` to allow all user mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """  # noqa: E501 - Line too long
 
 
 class CommandBuilder(abc.ABC):
@@ -802,9 +890,20 @@ class CommandBuilder(abc.ABC):
             The ID of this command if set.
         """
 
-    @id.setter
-    def id(self, id_: undefined.UndefinedOr[snowflakes.Snowflake], /) -> None:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
+        """Set the ID of this command.
+
+        Parameters
+        ----------
+        id_ : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
 
     @abc.abstractmethod
     def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:

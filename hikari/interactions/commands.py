@@ -44,6 +44,7 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import enums
@@ -54,6 +55,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
+    from hikari.api import special_endpoints
 
 
 COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
@@ -412,6 +414,53 @@ class CommandInteraction(bases.PartialInteraction):
 
     resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
+
+    def build_response(self) -> special_endpoints.InteractionMessageBuilder:
+        """Get a message response builder for use in the REST server flow.
+
+        !!! note
+            For interactions received over the gateway
+            `CommandInteraction.create_initial_response` should be used to set
+            the interaction response message.
+
+        Examples
+        --------
+        ```py
+        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response()
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
+        ```
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            Interaction message response builder object.
+        """
+        return special_endpoints_impl.InteractionMessageBuilder(type=bases.ResponseType.SOURCED_RESPONSE)
+
+    def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
+        """Get a deferred message response builder for use in the REST server flow.
+
+        !!! note
+            For interactions received over the gateway
+            `CommandInteraction.create_initial_response` should be used to set
+            the interaction response message.
+
+        !!! note
+            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
+            the result of this call can be returned as is without any modifications
+            being made to it.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            Deferred interaction message response builder object.
+        """
+        return special_endpoints_impl.InteractionDeferredBuilder(type=bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
 
     async def fetch_initial_response(self) -> messages.Message:
         """Fetch the initial response of this interaction.
