@@ -143,13 +143,13 @@ class TestCommandInteraction:
     def test_build_response(self, mock_command_interaction):
         builder = mock_command_interaction.build_response()
 
-        assert builder.type is bases.ResponseType.SOURCED_RESPONSE
+        assert builder.type is bases.ResponseType.CREATE_MESSAGE
         assert isinstance(builder, special_endpoints.InteractionMessageBuilder)
 
     def test_build_deferred_response(self, mock_command_interaction):
         builder = mock_command_interaction.build_deferred_response()
 
-        assert builder.type is bases.ResponseType.DEFERRED_SOURCED_RESPONSE
+        assert builder.type is bases.ResponseType.DEFERRED_MESSAGE_CREATE
         assert isinstance(builder, special_endpoints.InteractionDeferredBuilder)
 
     @pytest.mark.asyncio
@@ -164,7 +164,7 @@ class TestCommandInteraction:
         mock_embed_1 = object()
         mock_embed_2 = object()
         await mock_command_interaction.create_initial_response(
-            bases.ResponseType.SOURCED_RESPONSE,
+            bases.ResponseType.CREATE_MESSAGE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -177,7 +177,7 @@ class TestCommandInteraction:
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.SOURCED_RESPONSE,
+            bases.ResponseType.CREATE_MESSAGE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -189,12 +189,12 @@ class TestCommandInteraction:
 
     @pytest.mark.asyncio
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
-        await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
         mock_app.rest.create_command_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.DEFERRED_SOURCED_RESPONSE,
+            bases.ResponseType.DEFERRED_MESSAGE_CREATE,
             undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,

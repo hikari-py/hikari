@@ -67,31 +67,31 @@ class ResponseType(int, enums.Enum):
     # server rather than as a part of the public interface.
 
     # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
-    SOURCED_RESPONSE = 4
-    """An immediate response to a command interaction."""
+    CREATE_MESSAGE = 4
+    """An immediate message response to an interaction."""
 
-    DEFERRED_SOURCED_RESPONSE = 5
-    """Acknowledge an interaction with the intention to edit in a response later.
+    DEFERRED_MESSAGE_CREATE = 5
+    """Acknowledge an interaction with the intention to edit in a message response later.
 
     The user will see a loading state when this type is used until this
-    interaction expires or a response is edited in over REST.
+    interaction expires or a message response is edited in over REST.
     """
 
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
-    [ResponseType.SOURCED_RESPONSE]
+    [ResponseType.CREATE_MESSAGE]
 )
 """Set of the response types which are valid for message responses."""
 
-MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.SOURCED_RESPONSE], typing.Literal[4]]
+MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.CREATE_MESSAGE], typing.Literal[4]]
 """Type-hint of the response types which are valid for message responses."""
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredMessageTypesT]] = frozenset(
-    [ResponseType.DEFERRED_SOURCED_RESPONSE]
+    [ResponseType.DEFERRED_MESSAGE_CREATE]
 )
 """Set of the response types which are valid for deferred messages responses."""
 
-DeferredMessageTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_SOURCED_RESPONSE], typing.Literal[5]]
+DeferredMessageTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE], typing.Literal[5]]
 """Type-hint of the response types which are valid for deferred messages responses."""
 
 

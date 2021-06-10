@@ -316,7 +316,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Returns
         -------
-        Response
+        hikari.api.interaction_server.Response
             Instructions on how the REST server calling this should respond to
             the interaction request.
         """

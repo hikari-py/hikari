@@ -59,14 +59,14 @@ if typing.TYPE_CHECKING:
 
 
 COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
-    [bases.ResponseType.SOURCED_RESPONSE, bases.ResponseType.DEFERRED_SOURCED_RESPONSE]
+    [bases.ResponseType.CREATE_MESSAGE, bases.ResponseType.DEFERRED_MESSAGE_CREATE]
 )
 """Set of the response types which are valid for a command interaction."""
 
 CommandResponseTypesT = typing.Union[
-    typing.Literal[bases.ResponseType.SOURCED_RESPONSE],
+    typing.Literal[bases.ResponseType.CREATE_MESSAGE],
     typing.Literal[4],
-    typing.Literal[bases.ResponseType.DEFERRED_SOURCED_RESPONSE],
+    typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_CREATE],
     typing.Literal[5],
 ]
 """Type-hint of the response types which are valid for a command interaction."""
@@ -440,7 +440,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Interaction message response builder object.
         """
-        return special_endpoints_impl.InteractionMessageBuilder(type=bases.ResponseType.SOURCED_RESPONSE)
+        return special_endpoints_impl.InteractionMessageBuilder(type=bases.ResponseType.CREATE_MESSAGE)
 
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
@@ -460,7 +460,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Deferred interaction message response builder object.
         """
-        return special_endpoints_impl.InteractionDeferredBuilder(type=bases.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        return special_endpoints_impl.InteractionDeferredBuilder(type=bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
     async def fetch_initial_response(self) -> messages.Message:
         """Fetch the initial response of this interaction.

@@ -52,9 +52,9 @@ class TestInteractionDeferredBuilder:
         assert builder.type == 5
 
     def test_build(self):
-        builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_SOURCED_RESPONSE)
+        builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-        assert builder.build(object()) == {"type": base_interactions.ResponseType.DEFERRED_SOURCED_RESPONSE}
+        assert builder.build(object()) == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
 
 
 class TestInteractionMessageBuilder:
@@ -107,7 +107,7 @@ class TestInteractionMessageBuilder:
         mock_entity_factory = mock.Mock()
         mock_embed = object()
         builder = (
-            special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.SOURCED_RESPONSE)
+            special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.CREATE_MESSAGE)
             .add_embed(mock_embed)
             .set_content("a content")
             .set_flags(2323)
@@ -121,7 +121,7 @@ class TestInteractionMessageBuilder:
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
         assert result == {
-            "type": base_interactions.ResponseType.SOURCED_RESPONSE,
+            "type": base_interactions.ResponseType.CREATE_MESSAGE,
             "data": {
                 "content": "a content",
                 "embeds": [mock_entity_factory.serialize_embed.return_value],
