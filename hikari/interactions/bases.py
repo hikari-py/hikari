@@ -25,7 +25,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "DEFERRED_RESPONSE_TYPES",
-    "DeferredMessageTypesT",
+    "DeferredResponseTypesT",
     "InteractionMember",
     "InteractionType",
     "MESSAGE_RESPONSE_TYPES",
@@ -86,12 +86,12 @@ MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] 
 MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.CREATE_MESSAGE], typing.Literal[4]]
 """Type-hint of the response types which are valid for message responses."""
 
-DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredMessageTypesT]] = frozenset(
+DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
     [ResponseType.DEFERRED_MESSAGE_CREATE]
 )
 """Set of the response types which are valid for deferred messages responses."""
 
-DeferredMessageTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE], typing.Literal[5]]
+DeferredResponseTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE], typing.Literal[5]]
 """Type-hint of the response types which are valid for deferred messages responses."""
 
 

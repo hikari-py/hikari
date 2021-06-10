@@ -673,18 +673,18 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     Parameters
     ----------
-    type : hikari.interactions.bases.DeferredMessageTypesT
+    type : hikari.interactions.bases.DeferredResponseTypesT
         The type of interaction response this is.
     """
 
     # Required arguments.
-    _type: base_interactions.DeferredMessageTypesT = attr.field(
+    _type: base_interactions.DeferredResponseTypesT = attr.field(
         converter=base_interactions.ResponseType,
         validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
 
     @property
-    def type(self) -> base_interactions.DeferredMessageTypesT:
+    def type(self) -> base_interactions.DeferredResponseTypesT:
         return self._type
 
     def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

@@ -573,12 +573,12 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> base_interactions.DeferredMessageTypesT:
+    def type(self) -> base_interactions.DeferredResponseTypesT:
         """Return the type of this response.
 
         Returns
         -------
-        hikari.interactions.bases.DeferredMessageTypesT
+        hikari.interactions.bases.DeferredResponseTypesT
             The type of response this is.
         """
 
