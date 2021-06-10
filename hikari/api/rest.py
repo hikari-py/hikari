@@ -1176,10 +1176,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! warning
-            You are expected to make a connection to the gateway and identify
-            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
