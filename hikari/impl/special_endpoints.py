@@ -667,7 +667,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=False, slots=True, weakref_slot=False)
+@attr.define(kw_only=False, weakref_slot=False)
 class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
 
@@ -678,7 +678,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     """
 
     # Required arguments.
-    _type: base_interactions.DeferredMessageTypesT = attr.ib(
+    _type: base_interactions.DeferredMessageTypesT = attr.field(
         converter=base_interactions.ResponseType,
         validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
@@ -691,9 +691,8 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         return {"type": self.type}
 
 
-# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
-@attr.s(kw_only=False, slots=True, weakref_slot=False)
+@attr.define(kw_only=False, weakref_slot=False)
 class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionMessageBuilder`.
 
@@ -710,29 +709,29 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     """
 
     # Required arguments.
-    _type: base_interactions.MessageResponseTypesT = attr.ib(
+    _type: base_interactions.MessageResponseTypesT = attr.field(
         converter=base_interactions.ResponseType,
         validator=attr.validators.in_(base_interactions.MESSAGE_RESPONSE_TYPES),
     )
 
     # Not-required arguments.
-    _content: undefined.UndefinedOr[str] = attr.ib(default=undefined.UNDEFINED)
+    _content: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
-    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.ib(
+    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.field(
         default=undefined.UNDEFINED, kw_only=True
     )
-    _is_tts: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
-    _mentions_everyone: undefined.UndefinedOr[bool] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _is_tts: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _mentions_everyone: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _role_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
-    _embeds: typing.List[embeds_.Embed] = attr.ib(factory=list, init=False)
+    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, init=False)
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
@@ -840,19 +839,19 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
 
 @attr_extensions.with_copy
-@attr.s(kw_only=False, slots=True, weakref_slot=False)
+@attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
     # Required arguments.
-    _name: str = attr.ib()
-    _description: str = attr.ib()
+    _name: str = attr.field()
+    _description: str = attr.field()
 
     # Key-word only not-required arguments.
-    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.ib(default=undefined.UNDEFINED, kw_only=True)
+    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
-    _options: typing.List[commands.CommandOption] = attr.ib(factory=list, init=False)
+    _options: typing.List[commands.CommandOption] = attr.field(factory=list, init=False)
 
     @property
     def description(self) -> str:
