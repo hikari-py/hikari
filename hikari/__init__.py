@@ -72,6 +72,7 @@ from hikari.files import Pathish
 from hikari.files import Rawish
 from hikari.files import Resourceish
 from hikari.guilds import *
+from hikari.impl.bot import BotApp
 from hikari.impl.bot import GatewayBot
 from hikari.impl.rest import ClientCredentialsStrategy
 from hikari.impl.rest import RESTApp
