@@ -152,6 +152,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             pass
 
 
+# As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):

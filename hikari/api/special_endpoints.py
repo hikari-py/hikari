@@ -836,8 +836,7 @@ class CommandBuilder(abc.ABC):
         r"""Name to set for this command.
 
         !!! warning
-            This should be inclusively between 1-32 characters in length and
-            should match the regex `^[\w-]{1,32}$`.
+            This should match the regex `^[a-z0-9_-]{1,32}$`.
 
         Returns
         -------

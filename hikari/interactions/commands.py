@@ -60,7 +60,13 @@ if typing.TYPE_CHECKING:
 COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
     [bases.ResponseType.CREATE_MESSAGE, bases.ResponseType.DEFERRED_MESSAGE_CREATE]
 )
-"""Set of the response types which are valid for a command interaction."""
+"""Set of the response types which are valid for a command interaction.
+
+This includes:
+
+* `hikari.interactions.bases.ResponseType.CREATE_MESSAGE`
+* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`
+"""
 
 CommandResponseTypesT = typing.Union[
     typing.Literal[bases.ResponseType.CREATE_MESSAGE],
@@ -68,7 +74,13 @@ CommandResponseTypesT = typing.Union[
     typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_CREATE],
     typing.Literal[5],
 ]
-"""Type-hint of the response types which are valid for a command interaction."""
+"""Type-hint of the response types which are valid for a command interaction.
+
+The following types are valid for this:
+
+* `hikari.interactions.bases.ResponseType.CREATE_MESSAGE`/`4`
+* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+"""
 
 
 @typing.final
@@ -127,8 +139,7 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will be inclusively between 1-32 characters in length and will
-        match the regex `^[\w-]{1,32}$`.
+        This will match the regex `^[a-z0-9_-]{1,32}$`.
     """
 
     description: str = attr.field(repr=False)
@@ -171,8 +182,7 @@ class Command(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will be inclusively between 1-32 characters in length and will
-        match the regex `^[\w-]{1,32}$`.
+        This will match the regex `^[a-z0-9_-]{1,32}$`.
     """
 
     description: str = attr.field(eq=False, hash=False, repr=False)

@@ -6035,8 +6035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should be inclusively between 1-32
-            characters in length and should match the regex `^[\w-]{1,32}$`.
+            The command's name. This should match the regex `^[a-z0-9_-]{1,32}$`.
         description : builtins.str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.
@@ -6166,8 +6165,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should be inclusively between 1-32
-            characters in length and should match the regex `^[\w-]{1,32}$`.
+            The command's name. This should match the regex `^[a-z0-9_-]{1,32}$`.
         description : builtins.str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.

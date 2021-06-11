@@ -81,18 +81,38 @@ class ResponseType(int, enums.Enum):
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
     [ResponseType.CREATE_MESSAGE]
 )
-"""Set of the response types which are valid for message responses."""
+"""Set of the response types which are valid for message responses.
+
+This includes the following:
+
+* `ResponseType.CREATE_MESSAGE`
+"""
 
 MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.CREATE_MESSAGE], typing.Literal[4]]
-"""Type-hint of the response types which are valid for message responses."""
+"""Type-hint of the response types which are valid for message responses.
+
+The following are valid for this:
+
+* `ResponseType.CREATE_MESSAGE`/`4`
+"""
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
     [ResponseType.DEFERRED_MESSAGE_CREATE]
 )
-"""Set of the response types which are valid for deferred messages responses."""
+"""Set of the response types which are valid for deferred messages responses.
+
+This includes the following:
+
+* `ResponseType.DEFERRED_MESSAGE_CREATE`
+"""
 
 DeferredResponseTypesT = typing.Union[typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE], typing.Literal[5]]
-"""Type-hint of the response types which are valid for deferred messages responses."""
+"""Type-hint of the response types which are valid for deferred messages responses.
+
+The following are valid for this:
+
+* `ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+"""
 
 
 @attr_extensions.with_copy
