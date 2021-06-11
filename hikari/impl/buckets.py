@@ -353,9 +353,6 @@ class RESTBucketManager:
         greater than this will instead raise an error.
     """
 
-    _POLL_PERIOD: typing.Final[typing.ClassVar[int]] = 20
-    _EXPIRE_PERIOD: typing.Final[typing.ClassVar[int]] = 10
-
     __slots__: typing.Sequence[str] = (
         "routes_to_hashes",
         "real_hashes_to_buckets",
@@ -406,7 +403,7 @@ class RESTBucketManager:
     def __del__(self) -> None:
         self.close()
 
-    def start(self, poll_period: float = _POLL_PERIOD, expire_after: float = _EXPIRE_PERIOD) -> None:
+    def start(self, poll_period: float = 20.0, expire_after: float = 10.0) -> None:
         """Start this ratelimiter up.
 
         This spins up internal garbage collection logic in the background to

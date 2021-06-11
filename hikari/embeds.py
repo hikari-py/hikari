@@ -295,7 +295,7 @@ class Embed:
     )
 
     # Don't document this.
-    __pdoc__: typing.Final[typing.ClassVar[typing.Mapping[str, typing.Any]]] = {"from_received_embed": False}
+    __pdoc__: typing.ClassVar[typing.Mapping[str, typing.Any]] = {"from_received_embed": False}
 
     @classmethod
     def from_received_embed(
