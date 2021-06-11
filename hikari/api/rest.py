@@ -6029,6 +6029,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    def command_builder(self, name: str, description: str, /) -> special_endpoints.CommandBuilder:
+        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The command's name. This should be inclusively between 1-32
+            characters in length and should match the regex `^[\w-]{1,32}$`.
+        description : builtins.str
+            The description to set for the command.
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.CommandBuilder
+            The created command builder object.
+        """
+
+    @abc.abstractmethod
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6360,6 +6379,40 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    def interaction_deferred_builder(
+        self, type: typing.Union[interaction_bases.ResponseType, int], /
+    ) -> special_endpoints.InteractionDeferredBuilder:
+        """Create a builder for a deferred message interaction response.
+
+        Parameters
+        ----------
+        type: typing.Union[hikari.interactions.bases.ResponseType, builtins.int]
+            The type of deferred message response this builder is for.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionDeferredBuilder
+            The deferred message interaction response builder object.
+        """
+
+    @abc.abstractmethod
+    def interaction_message_builder(
+        self, type: typing.Union[interaction_bases.ResponseType, int], /
+    ) -> special_endpoints.InteractionMessageBuilder:
+        """Create a builder for a message interaction response.
+
+        Parameters
+        ----------
+        type : typing.Union[hikari.interactions.bases.ResponseType, builtins.int]
+            The type of message response this builder is for.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            The interaction message response builder object.
         """
 
     @abc.abstractmethod

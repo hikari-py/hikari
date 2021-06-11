@@ -2895,6 +2895,9 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
+    def command_builder(self, name: str, description: str, /) -> special_endpoints.CommandBuilder:
+        return special_endpoints_impl.CommandBuilder(name=name, description=description)
+
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -3016,6 +3019,16 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         await self._request(route)
+
+    def interaction_deferred_builder(
+        self, type_: typing.Union[interaction_bases.ResponseType, int], /
+    ) -> special_endpoints.InteractionDeferredBuilder:
+        return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
+
+    def interaction_message_builder(
+        self, type_: typing.Union[interaction_bases.ResponseType, int], /
+    ) -> special_endpoints.InteractionMessageBuilder:
+        return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
     async def fetch_command_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str

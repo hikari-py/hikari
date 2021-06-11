@@ -56,8 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
     from hikari.internal import time
 
-    _InteractionResponseBuilderT = typing.TypeVar("_InteractionResponseBuilderT", bound="InteractionResponseBuilder")
-    _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
+    _T = typing.TypeVar("_T")
 
 
 class TypingIndicator(abc.ABC):
@@ -703,7 +702,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    def add_embed(self: _InteractionResponseBuilderT, embed: embeds_.Embed, /) -> _InteractionResponseBuilderT:
+    def add_embed(self: _T, embed: embeds_.Embed, /) -> _T:
         """Add an embed to this response.
 
         Parameters
@@ -718,9 +717,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_content(
-        self: _InteractionResponseBuilderT, content: undefined.UndefinedOr[str], /
-    ) -> _InteractionResponseBuilderT:
+    def set_content(self: _T, content: undefined.UndefinedOr[str], /) -> _T:
         """Set the response's message content.
 
         Parameters
@@ -735,9 +732,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(
-        self: _InteractionResponseBuilderT, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /
-    ) -> _InteractionResponseBuilderT:
+    def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
         """Set message flags for this response.
 
         !!! note
@@ -755,9 +750,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_tts(
-        self: _InteractionResponseBuilderT, tts: undefined.UndefinedOr[bool], /
-    ) -> _InteractionResponseBuilderT:
+    def set_tts(self: _T, tts: undefined.UndefinedOr[bool], /) -> _T:
         """Set whether this response should trigger text-to-speech processing.
 
         Parameters
@@ -771,9 +764,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_mentions_everyone(
-        self: _InteractionResponseBuilderT, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /
-    ) -> _InteractionResponseBuilderT:
+    def set_mentions_everyone(self: _T, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /) -> _T:
         """Set whether this response should be able to mention @everyone/@here.
 
         Parameters
@@ -789,12 +780,12 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_role_mentions(
-        self: _InteractionResponseBuilderT,
+        self: _T,
         mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         /,
-    ) -> _InteractionResponseBuilderT:
+    ) -> _T:
         """Set whether and what role mentions should be possible for this response.
 
         Parameters
@@ -812,12 +803,12 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_user_mentions(
-        self: _InteractionResponseBuilderT,
+        self: _T,
         mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         /,
-    ) -> _InteractionResponseBuilderT:
+    ) -> _T:
         """Set whether and what user mentions should be possible for this response.
 
         Parameters
@@ -891,7 +882,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
+    def set_id(self: _T, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _T:
         """Set the ID of this command.
 
         Parameters
@@ -906,7 +897,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
+    def add_option(self: _T, option: commands.CommandOption) -> _T:
         """Add an option to this command.
 
         !!! note

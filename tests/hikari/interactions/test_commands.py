@@ -26,7 +26,6 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
-from hikari.impl import special_endpoints
 from hikari.interactions import bases
 from hikari.interactions import commands
 
@@ -140,17 +139,19 @@ class TestCommandInteraction:
             resolved=None,
         )
 
-    def test_build_response(self, mock_command_interaction):
+    def test_build_response(self, mock_command_interaction, mock_app):
+        mock_app.rest.interaction_message_builder = mock.Mock()
         builder = mock_command_interaction.build_response()
 
-        assert builder.type is bases.ResponseType.CREATE_MESSAGE
-        assert isinstance(builder, special_endpoints.InteractionMessageBuilder)
+        assert builder is mock_app.rest.interaction_message_builder.return_value
+        mock_app.rest.interaction_message_builder.assert_called_once_with(bases.ResponseType.CREATE_MESSAGE)
 
-    def test_build_deferred_response(self, mock_command_interaction):
+    def test_build_deferred_response(self, mock_command_interaction, mock_app):
+        mock_app.rest.interaction_deferred_builder = mock.Mock()
         builder = mock_command_interaction.build_deferred_response()
 
-        assert builder.type is bases.ResponseType.DEFERRED_MESSAGE_CREATE
-        assert isinstance(builder, special_endpoints.InteractionDeferredBuilder)
+        assert builder is mock_app.rest.interaction_deferred_builder.return_value
+        mock_app.rest.interaction_deferred_builder.assert_called_once_with(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
     @pytest.mark.asyncio
     async def test_fetch_initial_response(self, mock_command_interaction, mock_app):

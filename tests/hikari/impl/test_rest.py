@@ -3326,6 +3326,13 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "oeoekfgkdkf"})
 
+    def test_command_builder(self, rest_client):
+        result = rest_client.command_builder("a name", "very very good")
+
+        assert result.name == "a name"
+        assert result.description == "very very good"
+        assert isinstance(result, special_endpoints.CommandBuilder)
+
     async def test_fetch_application_command_with_guild(self, rest_client):
         expected_route = routes.GET_APPLICATION_GUILD_COMMAND.compile(application=32154, guild=5312312, command=42123)
         rest_client._request = mock.AsyncMock(return_value={"id": "424242"})
@@ -3495,6 +3502,18 @@ class TestRESTClientImplAsync:
         await rest_client.delete_application_command(StubModel(312312), StubModel(65234323))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    def test_interaction_deferred_builder(self, rest_client):
+        result = rest_client.interaction_deferred_builder(5)
+
+        assert result.type == 5
+        assert isinstance(result, special_endpoints.InteractionDeferredBuilder)
+
+    def test_interaction_message_builder(self, rest_client):
+        result = rest_client.interaction_message_builder(4)
+
+        assert result.type == 4
+        assert isinstance(result, special_endpoints.InteractionMessageBuilder)
 
     async def test_fetch_command_response(self, rest_client):
         expected_route = routes.GET_INTERACTION_RESPONSE.compile(webhook=1235432, token="go homo or go gnomo")

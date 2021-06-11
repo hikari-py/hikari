@@ -44,7 +44,6 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
-from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import bases
 from hikari.internal import attr_extensions
 from hikari.internal import enums
@@ -440,7 +439,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Interaction message response builder object.
         """
-        return special_endpoints_impl.InteractionMessageBuilder(type=bases.ResponseType.CREATE_MESSAGE)
+        return self.app.rest.interaction_message_builder(bases.ResponseType.CREATE_MESSAGE)
 
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
@@ -460,7 +459,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Deferred interaction message response builder object.
         """
-        return special_endpoints_impl.InteractionDeferredBuilder(type=bases.ResponseType.DEFERRED_MESSAGE_CREATE)
+        return self.app.rest.interaction_deferred_builder(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
     async def fetch_initial_response(self) -> messages.Message:
         """Fetch the initial response of this interaction.

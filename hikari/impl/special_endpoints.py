@@ -816,19 +816,13 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        data: data_binding.JSONObject = {}
-
-        if self.content is not undefined.UNDEFINED:
-            data["content"] = self.content
-
+        data = data_binding.JSONObjectBuilder()
+        data.put("content", self.content)
         if self._embeds:
             data["embeds"] = [entity_factory.serialize_embed(embed) for embed in self._embeds]
 
-        if self.flags is not undefined.UNDEFINED:
-            data["flags"] = self.flags
-
-        if self.is_tts is not undefined.UNDEFINED:
-            data["tts"] = self.is_tts
+        data.put("flags", self.flags)
+        data.put("tts", self.is_tts)
 
         if not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions):
             data["allowed_mentions"] = mentions.generate_allowed_mentions(
