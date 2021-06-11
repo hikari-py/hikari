@@ -110,6 +110,10 @@ _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 
+# Custom emoji mentions are in the format of <:name:id> for static emoji, or
+# <a:name:id> for animated emoji.
+_CUSTOM_EMOJI_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"<a?:([^:]+:\d+)>")
+
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
     """Strategy class for handling client credential OAuth2 authorization.
@@ -1300,11 +1304,8 @@ class RESTClientImpl(rest_api.RESTClient):
             except Exception as ex:
                 raise errors.BulkDeleteError(deleted, pending) from ex
 
-    # Custom emoji mentions are in the format of <:name:id> for static emoji, or
-    # <a:name:id> for animated emoji.
-    _CUSTOM_EMOJI_PATTERN: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"<a?:([^:]+:\d+)>")
-
-    def _transform_emoji_to_url_format(self, emoji: emojis.Emojiish) -> str:
+    @staticmethod
+    def _transform_emoji_to_url_format(emoji: emojis.Emojiish) -> str:
         # Given an emojiish, check if it is a valid custom emoji mention. If it
         # is, then convert it to the name:id format (remove the wrapping
         # characters), then return it. If the emoji is an emojis.CustomEmoji
@@ -1314,7 +1315,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if isinstance(emoji, emojis.CustomEmoji):
             return emoji.url_name
 
-        if isinstance(emoji, str) and (custom_mention_match := self._CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
+        if isinstance(emoji, str) and (custom_mention_match := _CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
             return custom_mention_match.group(1)
 
         return str(emoji)
