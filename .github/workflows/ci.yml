@@ -102,9 +102,17 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Linting
+      - name: Check stubs
         run: |
           pip install nox
+          nox -s generate-stubs
+          if [ "$(git status --short)" ]; then
+            echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
+            exit 1
+          fi
+
+      - name: Linting
+        run: |
           nox -s safety mypy flake8
 
   twemoji:
