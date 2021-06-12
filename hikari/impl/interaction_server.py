@@ -284,11 +284,15 @@ class InteractionServer(interaction_server.InteractionServer):
         if not self._runner:
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
+        event = self._get_event()
         runner = self._runner
+        self._application_fetch_lock = None
+        self._event = None
+        self._runner = None
         # This shutdown then cleanup ordering matters.
         await runner.shutdown()
         await runner.cleanup()
-        self._get_event().set()
+        event.set()
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
