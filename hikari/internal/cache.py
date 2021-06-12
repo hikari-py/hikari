@@ -740,7 +740,8 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
         author=copy.copy(embed.author) if embed.author else None,
         provider=copy.copy(embed.provider) if embed.provider else None,
         footer=copy.copy(embed.footer) if embed.footer else None,
-        fields=list(map(copy.copy, embed.fields)),  # type: ignore[arg-type]
+        # this lambda is a stupid workaround for mypy not being able to map(copy.copy, [5, 6, 7])
+        fields=list(map(lambda field: copy.copy(field), embed.fields)),
     )
 
 
