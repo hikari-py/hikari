@@ -48,7 +48,6 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
-import inspect
 import io
 import mimetypes
 import os
@@ -60,7 +59,6 @@ import urllib.request
 import aiohttp.client
 import attr
 
-from hikari.internal import aio
 from hikari.internal import net
 from hikari.internal import time
 
@@ -979,7 +977,7 @@ class IteratorReader(AsyncReader):
             except StopIteration:
                 pass
 
-        elif isinstance(self.data, typing.AsyncIterable):            
+        elif isinstance(self.data, typing.AsyncIterable):
             async for chunk in self.data:
                 yield self._assert_bytes(chunk)
 
