@@ -102,29 +102,42 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
 
     __slots__: typing.Sequence[str] = ("_builder", "_data", "_predicate")
 
+    @typing.overload
+    def __init__(
+        self,
+        items: typing.Mapping[KeyT, ValueT],
+        *,
+        builder: typing.Literal[None] = None,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def __init__(
+        self,
+        items: typing.Mapping[KeyT, DataT],
+        *,
+        builder: typing.Callable[[DataT], ValueT],
+    ) -> None:
+        ...
+
     def __init__(
         self,
         items: typing.Mapping[KeyT, typing.Union[ValueT, DataT]],
         *,
         builder: typing.Optional[typing.Callable[[DataT], ValueT]] = None,
-        predicate: typing.Optional[typing.Callable[[typing.Any], bool]] = None,
     ) -> None:
         self._builder = builder
         self._data = items
-        self._predicate = predicate
 
     @classmethod
     def _copy(cls, value: ValueT) -> ValueT:
         return copy.copy(value)
 
     def __contains__(self, key: typing.Any) -> bool:
-        return key in self._data and (self._predicate is None or self._predicate(self._data[key]))
+        return key in self._data
 
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
-
-        if self._predicate is not None and not self._predicate(entry):
-            raise KeyError(key)
 
         if self._builder is not None:
             entry = self._builder(entry)  # type: ignore[arg-type]
@@ -135,28 +148,32 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
         return entry
 
     def __iter__(self) -> typing.Iterator[KeyT]:
-        if self._predicate is None:
-            return iter(self._data)
-        else:
-            return (key for key, value in self._data.items() if self._predicate(value))
+        return iter(self._data)
 
     def __len__(self) -> int:
-        if self._predicate is None:
-            return len(self._data)
+        return len(self._data)
+
+    @typing.overload
+    def get_item_at(self, index: int, /) -> ValueT:
+        ...
+
+    @typing.overload
+    def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]:
+        ...
+
+    def get_item_at(self, index: typing.Union[slice, int]) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
+        result = collections.get_index_or_slice(self._data, index)
+
+        if isinstance(result, typing.Sequence):
+            if self._builder is not None:
+                return [self._builder(item) for item in result]  # type: ignore[arg-type]
+            else:
+                return [self._copy(item) for item in result]  # type: ignore[arg-type]
         else:
-            return sum(1 for value in self._data.values() if self._predicate(value))
-
-    def get_item_at(self, index: int) -> ValueT:
-        current_index = -1
-
-        for key, value in self._data.items():
-            if self._predicate is None or self._predicate(value):
-                index += 1
-
-            if current_index == index:
-                return self[key]
-
-        raise IndexError(index)
+            if self._builder is not None:
+                return self._builder(result)  # type: ignore[arg-type]
+            else:
+                return self._copy(result)  # type: ignore[arg-type]
 
     def iterator(self) -> iterators.LazyIterator[ValueT]:
         return iterators.FlatLazyIterator(self.values())
