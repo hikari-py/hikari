@@ -49,7 +49,6 @@ _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/tw
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
@@ -58,6 +57,8 @@ class Emoji(files.WebResource, abc.ABC):
     This is achieved in the same way as using a
     `hikari.files.WebResource` would achieve this.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

@@ -47,9 +47,10 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     """Base for any voice-related event."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

@@ -48,10 +48,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MEMBERS)
 class MemberEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any events that concern guild members."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

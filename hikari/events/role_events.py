@@ -51,6 +51,8 @@ if typing.TYPE_CHECKING:
 class RoleEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that involves guild roles."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
