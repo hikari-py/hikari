@@ -383,10 +383,6 @@ class Member(users.User):
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
-    @id.setter
-    def id(self, value: snowflakes.Snowflake) -> None:
-        raise TypeError("Cannot mutate the ID of a member")
-
     @property
     def is_bot(self) -> bool:
         return self.user.is_bot

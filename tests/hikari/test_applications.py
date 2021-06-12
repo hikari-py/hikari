@@ -57,10 +57,6 @@ class TestTeamMember:
     def test_id_property(self, model):
         assert model.id is model.user.id
 
-    def test_id_setter(self, model):
-        with pytest.raises(TypeError, match="Cannot mutate the ID of a member"):
-            model.id = 42
-
     def test_is_bot_property(self, model):
         assert model.is_bot is model.user.is_bot
 
