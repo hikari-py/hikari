@@ -733,13 +733,8 @@ class Embed:
         if name is None and url is None and icon is None:
             self._author = None
         else:
-            self._author = EmbedAuthor()
-            self._author.name = name
-            self._author.url = url
-            if icon is not None:
-                self._author.icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon))
-            else:
-                self._author.icon = None
+            real_icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon)) if icon is not None else None
+            self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
     def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[files.Resourceish] = None) -> Embed:
@@ -787,12 +782,8 @@ class Embed:
 
             self._footer = None
         else:
-            self._footer = EmbedFooter()
-            self._footer.text = text
-            if icon is not None:
-                self._footer.icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon))
-            else:
-                self._footer.icon = None
+            real_icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon)) if icon is not None else None
+            self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
     def set_image(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:

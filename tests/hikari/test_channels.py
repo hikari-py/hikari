@@ -269,15 +269,8 @@ class TestGuildChannel:
             parent_id=None,
         )
 
-    @pytest.mark.parametrize("error", [TypeError, AttributeError, NameError])
-    def test_shard_id_property_when_guild_id_error_raised(self, model, error):
-        class BrokenApp:
-            def __getattr__(self, name):
-                if name == "shard_count":
-                    raise error
-                return mock.Mock()
-
-        model.app = BrokenApp()
+    def test_shard_id_property_when_not_shard_aware(self, model):
+        model.app = None
 
         assert model.shard_id is None
 
