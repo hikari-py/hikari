@@ -958,10 +958,10 @@ class IteratorReader(AsyncReader):
             for i in range(0, len(self.data), _MAGIC):
                 yield self.data[i : i + _MAGIC]  # noqa: E203 - Whitespace before ":"
 
-        elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
+        elif isinstance(self.data, typing.AsyncIterator) or isinstance(self.data, typing.AsyncGenerator):
             try:
                 while True:
-                    yield self._assert_bytes(await self.data.__anext__())  # type: ignore[union-attr]
+                    yield self._assert_bytes(await self.data.__anext__())
             except StopAsyncIteration:
                 pass
 
@@ -972,15 +972,15 @@ class IteratorReader(AsyncReader):
             except StopIteration:
                 pass
 
-        elif inspect.isgenerator(self.data):
+        elif isinstance(self.data, typing.Generator):
             try:
                 while True:
-                    yield self._assert_bytes(self.data.send(None))  # type: ignore[union-attr]
+                    yield self._assert_bytes(self.data.send(None))
             except StopIteration:
                 pass
 
-        elif aio.is_async_iterable(self.data):
-            async for chunk in self.data:  # type: ignore[union-attr]
+        elif isinstance(self.data, typing.AsyncIterable):            
+            async for chunk in self.data:
                 yield self._assert_bytes(chunk)
 
         elif isinstance(self.data, typing.Iterable):

@@ -333,7 +333,7 @@ class HTTPSettings:
     _ssl: typing.Union[bool, ssl_.SSLContext] = attr.field(
         default=True,
         converter=_ssl_factory,
-        validator=attr.validators.instance_of(ssl_.SSLContext),  # type: ignore[assignment,arg-type]
+        validator=attr.validators.instance_of((ssl_.SSLContext, bool)),
     )
 
     @property
