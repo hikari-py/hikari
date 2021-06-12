@@ -79,6 +79,34 @@ class Cache(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    def get_dm_channel_id(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
+    ) -> typing.Optional[snowflakes.Snowflake]:
+        """Get the DM channel ID for a user.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Objet or ID of the user to get the DM channel ID for.
+
+        Returns
+        -------
+        typing.Optional[hikari.snowflakes.Snowflake]
+            ID of the DM channel which was found cached for the supplied user or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_dm_channel_ids_view(self) -> CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        """Get a view of the cached DM channel IDs.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.snowflakes.Snowflake]
+            Cache view of user IDs to DM channel IDs.
+        """
+
+    @abc.abstractmethod
     def get_emoji(
         self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
     ) -> typing.Optional[emojis.KnownCustomEmoji]:
@@ -637,6 +665,52 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def clear(self) -> None:
         """Clear the full cache."""
+
+    @abc.abstractmethod
+    def clear_dm_channel_ids(self) -> CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        """Remove all the cached DM channel IDs.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.snowflakes.Snowflake]
+            Cache view of user IDs to DM channel IDs which were cleared from
+            the cache.
+        """
+
+    @abc.abstractmethod
+    def delete_dm_channel_id(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
+    ) -> typing.Optional[snowflakes.Snowflake]:
+        """Remove a DM channel ID from the cache.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to remove the cached DM channel ID for.
+
+        Returns
+        -------
+        typing.Optional[hikari.snowflakes.Snowflake]
+            The DM channel ID which was removed from the cache if found, else
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def set_dm_channel_id(
+        self,
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
+    ) -> None:
+        """Add a DM channel ID to the cache.
+
+        Parameters
+        ----------
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to add a DM channel ID to the cache for.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the DM channel to add to the cache.
+        """
 
     @abc.abstractmethod
     def clear_emojis(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:

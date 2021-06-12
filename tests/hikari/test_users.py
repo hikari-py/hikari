@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -45,21 +46,18 @@ class TestPartialUser:
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
     @pytest.mark.asyncio()
-    async def test_send(self, obj):
+    async def test_send_uses_cached_id(self, obj):
+        obj.id = 4123123
         embed = object()
         attachment = object()
         attachments = [object(), object()]
         user_mentions = [object(), object()]
         role_mentions = [object(), object()]
-        mock_channel = mock.Mock(id=456)
-        mock_message = object()
         reply = object()
         mentions_reply = object()
 
-        obj.app = mock.Mock()
-        obj.fetch_dm_channel = mock.AsyncMock(return_value=mock_channel)
-        obj.app.rest.create_message = mock.AsyncMock(return_value=mock_message)
-        obj._dm_channel = None
+        obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
+        obj.fetch_dm_channel = mock.AsyncMock()
 
         returned = await obj.send(
             content="test",
@@ -75,11 +73,12 @@ class TestPartialUser:
             mentions_reply=mentions_reply,
         )
 
-        assert returned is mock_message
+        assert returned is obj.app.rest.create_message.return_value
 
-        obj.fetch_dm_channel.assert_awaited_once_with()
+        obj.app.cache.get_dm_channel_id.assert_called_once_with(4123123)
+        obj.fetch_dm_channel.assert_not_called()
         obj.app.rest.create_message.assert_awaited_once_with(
-            channel=456,
+            channel=obj.app.cache.get_dm_channel_id.return_value,
             content="test",
             embed=embed,
             attachment=attachment,
@@ -92,6 +91,110 @@ class TestPartialUser:
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
         )
+
+    @pytest.mark.asyncio()
+    async def test_send_when_not_cached(self, obj):
+        obj.id = 522234
+        embed = object()
+        attachment = object()
+        attachments = [object(), object()]
+        user_mentions = [object(), object()]
+        role_mentions = [object(), object()]
+        reply = object()
+        mentions_reply = object()
+
+        obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
+        obj.app.cache.get_dm_channel_id = mock.Mock(return_value=None)
+        obj.fetch_dm_channel = mock.AsyncMock()
+
+        returned = await obj.send(
+            content="test",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            reply=reply,
+            mentions_everyone=False,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            mentions_reply=mentions_reply,
+        )
+
+        assert returned is obj.app.rest.create_message.return_value
+
+        obj.app.cache.get_dm_channel_id.assert_called_once_with(522234)
+        obj.fetch_dm_channel.assert_awaited_once()
+        obj.app.rest.create_message.assert_awaited_once_with(
+            channel=obj.fetch_dm_channel.return_value.id,
+            content="test",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            mentions_everyone=False,
+            reply=reply,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            mentions_reply=mentions_reply,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_send_when_not_cache_aware(self, obj):
+        obj.id = 522234
+        embed = object()
+        attachment = object()
+        attachments = [object(), object()]
+        user_mentions = [object(), object()]
+        role_mentions = [object(), object()]
+        reply = object()
+        mentions_reply = object()
+
+        obj.app = mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
+        obj.fetch_dm_channel = mock.AsyncMock()
+
+        returned = await obj.send(
+            content="test",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            reply=reply,
+            mentions_everyone=False,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            mentions_reply=mentions_reply,
+        )
+
+        assert returned is obj.app.rest.create_message.return_value
+
+        obj.fetch_dm_channel.assert_awaited_once()
+        obj.app.rest.create_message.assert_awaited_once_with(
+            channel=obj.fetch_dm_channel.return_value.id,
+            content="test",
+            embed=embed,
+            attachment=attachment,
+            attachments=attachments,
+            nonce="nonce",
+            tts=True,
+            mentions_everyone=False,
+            reply=reply,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            mentions_reply=mentions_reply,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_dm_channel(self, obj):
+        obj.id = 123
+        obj.app = mock.Mock()
+        obj.app.rest.create_dm_channel = mock.AsyncMock()
+
+        assert await obj.fetch_dm_channel() == obj.app.rest.create_dm_channel.return_value
+
+        obj.app.rest.create_dm_channel.assert_awaited_once_with(123)
 
 
 class TestUser:
@@ -201,30 +304,6 @@ class TestPartialUserImpl:
 
     def test_mention_property(self, obj):
         assert obj.mention == "<@123>"
-
-    @pytest.mark.asyncio()
-    async def test_fetch_dm_channel_when_not_cached(self, obj):
-        mock_channel = mock.Mock(id=456)
-
-        obj.id = 123
-        obj.app = mock.Mock()
-        obj.app.rest.create_dm_channel = mock.AsyncMock(return_value=mock_channel)
-        obj._dm_channel = None
-
-        assert await obj.fetch_dm_channel() == mock_channel
-
-        assert obj._dm_channel == mock_channel
-        obj.app.rest.create_dm_channel.assert_awaited_once_with(123)
-
-    @pytest.mark.asyncio()
-    async def test_fetch_dm_channel_when_cached(self, obj):
-        mock_channel = mock.Mock(id=456)
-        obj._dm_channel = mock_channel
-
-        assert await obj.fetch_dm_channel() == mock_channel
-
-        assert obj._dm_channel == mock_channel
-        obj.app.rest.create_dm_channel.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):

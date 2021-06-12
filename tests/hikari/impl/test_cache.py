@@ -83,6 +83,64 @@ class TestCacheImpl:
 
         cache_impl._create_cache.assert_called_once_with()
 
+    def test_clear_dm_channel_ids(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({123: 5423, 23123: 54123123})
+
+        result = cache_impl.clear_dm_channel_ids()
+
+        assert result == {123: 5423, 23123: 54123123}
+        assert cache_impl._dm_channel_entries == {}
+
+    def test_delete_dm_channel_id(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({54123: 2123123, 5434: 1234})
+
+        result = cache_impl.delete_dm_channel_id(54123)
+
+        assert result == 2123123
+        assert cache_impl._dm_channel_entries == {5434: 1234}
+
+    def test_delete_dm_channel_id_for_unknown_user(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({54123: 2123123, 5434: 1234})
+
+        result = cache_impl.delete_dm_channel_id(65234123123)
+
+        assert result is None
+        assert cache_impl._dm_channel_entries == {54123: 2123123, 5434: 1234}
+
+    def test_get_dm_channel_id(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({24123123: 453123, 5423: 123, 653: 1223})
+
+        assert cache_impl.get_dm_channel_id(5423) == 123
+
+    def test_get_dm_channel_id_for_unknown_user(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({24123123: 453123, 5423: 123, 653: 1223})
+
+        assert cache_impl.get_dm_channel_id(65656565) is None
+
+    def test_get_dm_channel_ids_view(self, cache_impl):
+        cache_impl._dm_channel_entries = collections.FreezableDict({222: 333, 643: 213, 54234: 1231321})
+
+        assert cache_impl.get_dm_channel_ids_view() == {222: 333, 643: 213, 54234: 1231321}
+
+    def test_set_dm_channel_id(self, cache_impl):
+        cache_impl._user_entries = collections.FreezableDict({43123123: object()})
+
+        cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
+
+        assert cache_impl._dm_channel_entries == {43123123: 12222}
+
+    def test_set_dm_channel_id_when_user_not_known(self, cache_impl):
+        cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
+
+        assert cache_impl._dm_channel_entries == {}
+
+    def test_set_dm_channel_id_when_not_enabled(self, cache_impl):
+        cache_impl._user_entries = collections.FreezableDict({43123123: object()})
+        cache_impl._settings.components = 0
+        cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
+
+        assert cache_impl._dm_channel_entries == {}
+
     def test__build_emoji(self, cache_impl):
         mock_user = mock.MagicMock(users.User)
         emoji_data = cache_utilities.KnownCustomEmojiData(
@@ -1938,7 +1996,23 @@ class TestCacheImpl:
 
         cache_impl._garbage_collect_user(mock_user, decrement=1)
 
-        assert dict(cache_impl._user_entries) == {snowflakes.Snowflake(645234): mock_other_user}
+        assert cache_impl._user_entries == {snowflakes.Snowflake(645234): mock_other_user}
+
+    def test__garbage_collect_user_for_known_unreferenced_user_removes_cached_dm_channelo(self, cache_impl):
+        mock_user = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=1)
+        cache_impl._dm_channel_entries = collections.FreezableDict({21231234: 123123123})
+        mock_other_user = mock.Mock(cache_utilities.RefCell, ref_count=1)
+        cache_impl._user_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(21231234): mock_user,
+                snowflakes.Snowflake(645234): mock_other_user,
+            }
+        )
+
+        cache_impl._garbage_collect_user(mock_user, decrement=1)
+
+        assert cache_impl._user_entries == {snowflakes.Snowflake(645234): mock_other_user}
+        assert cache_impl._dm_channel_entries == {}
 
     def test_garbage_collect_user_for_referenced_user(self, cache_impl):
         mock_user = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=2)

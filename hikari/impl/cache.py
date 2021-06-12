@@ -67,6 +67,7 @@ class CacheImpl(cache.MutableCache):
 
     __slots__: typing.Sequence[str] = (
         "_app",
+        "_dm_channel_entries",
         "_emoji_entries",
         "_guild_channel_entries",
         "_guild_entries",
@@ -81,6 +82,7 @@ class CacheImpl(cache.MutableCache):
         "_settings",
     )
 
+    _dm_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, snowflakes.Snowflake]
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
     _me: typing.Optional[users.OwnUser]
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
@@ -112,6 +114,7 @@ class CacheImpl(cache.MutableCache):
         return self._settings
 
     def _create_cache(self) -> None:
+        self._dm_channel_entries = collections.FreezableDict()
         self._emoji_entries = collections.FreezableDict()
         self._guild_channel_entries = collections.FreezableDict()
         self._guild_entries = collections.FreezableDict()
@@ -138,6 +141,34 @@ class CacheImpl(cache.MutableCache):
             return None
 
         self._create_cache()
+
+    def clear_dm_channel_ids(self) -> cache.CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        result = self._dm_channel_entries
+        self._dm_channel_entries = collections.FreezableDict()
+        return cache_utility.CacheMappingView(result)
+
+    def delete_dm_channel_id(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
+    ) -> typing.Optional[snowflakes.Snowflake]:
+        return self._dm_channel_entries.pop(snowflakes.Snowflake(user), None)
+
+    def get_dm_channel_id(
+        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
+    ) -> typing.Optional[snowflakes.Snowflake]:
+        return self._dm_channel_entries.get(snowflakes.Snowflake(user))
+
+    def get_dm_channel_ids_view(self) -> cache.CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        return cache_utility.CacheMappingView(self._dm_channel_entries.freeze())
+
+    def set_dm_channel_id(
+        self,
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
+    ) -> None:
+        user = snowflakes.Snowflake(user)
+        if self._is_cache_enabled_for(config.CacheComponents.EMOJIS) and user in self._user_entries:
+            self._dm_channel_entries[user] = snowflakes.Snowflake(channel)
 
     def _build_emoji(
         self,
@@ -1192,6 +1223,7 @@ class CacheImpl(cache.MutableCache):
 
         if self._can_remove_user(user) and user.object.id in self._user_entries:
             del self._user_entries[user.object.id]
+            self._dm_channel_entries.pop(user.object.id, None)
 
     def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> typing.Optional[users.User]:
         user = self._user_entries.get(snowflakes.Snowflake(user))
