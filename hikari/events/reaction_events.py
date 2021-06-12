@@ -60,10 +60,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any message reaction event."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -88,10 +89,11 @@ class ReactionEvent(shard_events.ShardEvent, abc.ABC):
         """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in guild messages."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -105,16 +107,18 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction-bound event in private messages."""
 
+    __slots__: typing.Sequence[str] = ()
 
-@attr.define(kw_only=True, weakref_slot=False)
+
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionAddEvent(ReactionEvent, abc.ABC):
     """Event base for any reaction that is added to a message."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -140,10 +144,11 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     """Event base for any single reaction that is removed from a message."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -170,16 +175,18 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
         """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteAllEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed from a message."""
 
+    __slots__: typing.Sequence[str] = ()
 
-@attr.define(kw_only=True, weakref_slot=False)
+
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     """Event base fired when all reactions are removed for one emoji."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

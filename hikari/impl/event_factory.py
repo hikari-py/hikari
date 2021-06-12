@@ -65,6 +65,8 @@ if typing.TYPE_CHECKING:
 class EventFactoryImpl(event_factory.EventFactory):
     """Implementation for a single-application bot event factory."""
 
+    __slots__: typing.Sequence[str] = ("_app",)
+
     def __init__(self, app: traits.RESTAware) -> None:
         self._app = app
 

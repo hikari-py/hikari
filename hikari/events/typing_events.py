@@ -55,6 +55,8 @@ if typing.TYPE_CHECKING:
 class TypingEvent(shard_events.ShardEvent, abc.ABC):
     """Base event fired when a user begins typing in a channel."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
