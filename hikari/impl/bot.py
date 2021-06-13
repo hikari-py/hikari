@@ -361,7 +361,7 @@ class BotApp(traits.BotAware):
             _LOGGER.debug("bot requested to shutdown [force:%s]", force)
             self._closing_event.set()
 
-        if not self._closing_event or not force:
+        if not self._closing_event or not force:  # If closing event is None then this is already closing.
             return
 
         self._closing_event = None
@@ -417,7 +417,7 @@ class BotApp(traits.BotAware):
         self._check_if_alive()
 
         awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
-        if until_close and self._closing_event:  # If closing event is None then this is already going away.
+        if until_close and self._closing_event:  # If closing event is None then this is already closing.
             awaitables.append(self._closing_event.wait())
 
         await aio.first_completed(*awaitables)
