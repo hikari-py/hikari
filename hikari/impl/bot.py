@@ -197,7 +197,7 @@ class GatewayBot(traits.GatewayBotAware):
     import hikari
 
     # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-    bot = hikari.Bot(
+    bot = hikari.GatewayBot(
         token=os.environ["BOT_TOKEN"],
         logs={
             "version": 1,
