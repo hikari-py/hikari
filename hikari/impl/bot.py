@@ -417,7 +417,7 @@ class BotApp(traits.BotAware):
         self._check_if_alive()
 
         awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
-        if until_close and self._closing_event:  # If the closing event isn't set then this is already going away.
+        if until_close and self._closing_event:  # If closing event is None then this is already going away.
             awaitables.append(self._closing_event.wait())
 
         await aio.first_completed(*awaitables)
