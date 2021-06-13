@@ -278,12 +278,22 @@ class TestBotApp:
 
     @pytest.mark.asyncio
     async def test_close_when_not_force(self, bot, event_manager):
-        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
+        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         bot._is_alive = True
 
         await bot.close(force=False)
 
         bot._closing_event.set.assert_called_once_with()
+        assert bot._is_alive is True
+
+    @pytest.mark.asyncio
+    async def test_close_when_not_force_and_closing_event_set(self, bot, event_manager):
+        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
+        bot._is_alive = True
+
+        await bot.close(force=False)
+
+        bot._closing_event.set.assert_not_called()
         assert bot._is_alive is True
 
     @pytest.mark.asyncio
@@ -773,7 +783,7 @@ class TestBotApp:
         activity = object()
         status = object()
         bot._shards = {}
-        bot._closing_event = mock.Mock()
+        closing_event = mock.Mock()
         shard = mock.Mock()
         shard_obj = shard.return_value
         shard_obj.is_alive = True
@@ -789,6 +799,7 @@ class TestBotApp:
                     shard_id=1,
                     shard_count=3,
                     url="https://some.website",
+                    closing_event=closing_event,
                 )
 
                 assert returned is shard_obj
@@ -810,7 +821,7 @@ class TestBotApp:
             url="https://some.website",
         )
         assert bot._shards == {1: shard_obj}
-        first_completed.assert_awaited_once_with(shard_obj.start.return_value, bot._closing_event.wait.return_value)
+        first_completed.assert_awaited_once_with(shard_obj.start.return_value, closing_event.wait.return_value)
 
     @pytest.mark.asyncio
     async def test_start_one_shard_when_not_alive(self, bot):
@@ -833,6 +844,7 @@ class TestBotApp:
                         shard_id=1,
                         shard_count=3,
                         url="https://some.website",
+                        closing_event=bot._closing_event,
                     )
 
     @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])

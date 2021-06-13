@@ -804,7 +804,7 @@ class BotApp(traits.BotAware):
             if not window:
                 continue
             if self._shards:
-                close_waiter = asyncio.create_task(self._get_closing_event().wait())
+                close_waiter = asyncio.create_task(self._closing_event.wait())
                 shard_joiners = [s.join() for s in self._shards.values()]
 
                 try:
@@ -846,6 +846,7 @@ class BotApp(traits.BotAware):
                         shard_id=candidate_shard_id,
                         shard_count=shard_count,
                         url=requirements.url,
+                        closing_event=self._closing_event,
                     )
                     for candidate_shard_id in window
                     if candidate_shard_id in shard_ids
@@ -957,6 +958,7 @@ class BotApp(traits.BotAware):
         shard_id: int,
         shard_count: int,
         url: str,
+        closing_event: asyncio.Event,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
             http_settings=self._http_settings,
@@ -977,7 +979,7 @@ class BotApp(traits.BotAware):
         self._shards[shard_id] = new_shard
 
         start = time.monotonic()
-        await aio.first_completed(new_shard.start(), self._get_closing_event().wait())
+        await aio.first_completed(new_shard.start(), closing_event.wait())
         end = time.monotonic()
 
         if new_shard.is_alive:
