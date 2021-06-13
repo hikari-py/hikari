@@ -1832,7 +1832,6 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route)
 
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
-        user = snowflakes.Snowflake(user)
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
