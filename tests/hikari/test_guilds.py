@@ -178,10 +178,6 @@ class TestMember:
     def test_id_property(self, model, mock_user):
         assert model.id is mock_user.id
 
-    def test_id_setter_property(self, model):
-        with pytest.raises(TypeError):
-            model.id = 456
-
     def test_username_property(self, model, mock_user):
         assert model.username is mock_user.username
 

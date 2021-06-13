@@ -124,11 +124,6 @@ class Unique(abc.ABC):
             The snowflake ID of this object.
         """
 
-    # TODO: make immutable interface, as this is a major risk to consistent hash codes.
-    @id.setter
-    def id(self, value: Snowflake) -> None:
-        """Set the ID on this entity."""
-
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
