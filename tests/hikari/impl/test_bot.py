@@ -279,25 +279,20 @@ class TestBotApp:
     @pytest.mark.asyncio
     async def test_close_when_not_force(self, bot, event_manager):
         bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
-        bot._closed = False
         bot._is_alive = True
 
         await bot.close(force=False)
 
         bot._closing_event.set.assert_called_once_with()
-        assert bot._closed is False
         assert bot._is_alive is True
 
     @pytest.mark.asyncio
     async def test_close_when_already_closed(self, bot, event_manager):
-        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
-        bot._closed = True
+        bot._closing_event = None
         bot._is_alive = True
 
         await bot.close(force=True)
 
-        bot._closing_event.set.assert_called_once_with()
-        assert bot._closed is True
         assert bot._is_alive is True
 
     @pytest.mark.asyncio
@@ -334,8 +329,7 @@ class TestBotApp:
         event_manager.dispatch = mock.AsyncMock()
         rest.close = AwaitMock()
         voice.close = AwaitMock()
-        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
-        bot._closed = False
+        bot._closing_event = closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         bot._is_alive = True
         error = RuntimeError()
         shard0 = mock.Mock(id=0, close=AwaitMock())
@@ -347,8 +341,8 @@ class TestBotApp:
             await bot.close(force=True)
 
         # Closing event and args
-        bot._closing_event.set.assert_called_once_with()
-        assert bot._closed is True
+        closing_event.set.assert_called_once_with()
+        assert bot._closing_event is None
         assert bot._is_alive is False
 
         # Closing components
