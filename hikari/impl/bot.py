@@ -355,12 +355,6 @@ class BotApp(traits.BotAware):
         if not self._is_alive:
             raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
 
-    def _get_closing_event(self) -> asyncio.Event:
-        if not self._closing_event:
-            self._closing_event = asyncio.Event()
-
-        return self._closing_event
-
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
         if self._closing_event and not self._closing_event.is_set():
