@@ -188,7 +188,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         return self._scopes
 
     @property
-    def token_type(self) -> typing.Union[applications.TokenType, str]:
+    def token_type(self) -> applications.TokenType:
         return applications.TokenType.BEARER
 
     async def acquire(self, client: rest_api.RESTClient) -> str:
