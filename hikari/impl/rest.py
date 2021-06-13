@@ -798,8 +798,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         result = self._entity_factory.deserialize_channel(response)
 
-        if result.type is channels_.ChannelType.DM and self._cache:
-            assert isinstance(result, channels_.DMChannel)
+        if self._cache and isinstance(result, channels_.DMChannel):
             self._cache.set_dm_channel_id(result.recipient.id, result.id)
 
         return result
@@ -1833,12 +1832,18 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route)
 
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
+        user = snowflakes.Snowflake(user)
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("recipient_id", user)
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_dm(response)
+        channel = self._entity_factory.deserialize_dm(response)
+
+        if self._cache:
+            self._cache.set_dm_channel_id(user, channel.id)
+
+        return channel
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()

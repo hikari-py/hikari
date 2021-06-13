@@ -2049,16 +2049,30 @@ class TestRESTClientImplAsync:
         await rest_client.leave_guild(StubModel(123))
         rest_client._request.assert_awaited_once_with(expected_route)
 
-    async def test_create_dm_channel(self, rest_client):
-        dm_channel = StubModel(123)
+    async def test_create_dm_channel(self, rest_client, mock_cache):
+        dm_channel = StubModel(43234)
         expected_route = routes.POST_MY_CHANNELS.compile()
         expected_json = {"recipient_id": "123"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._request = mock.AsyncMock(return_value={"id": "43234"})
         rest_client._entity_factory.deserialize_dm = mock.Mock(return_value=dm_channel)
 
         assert await rest_client.create_dm_channel(StubModel(123)) == dm_channel
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
-        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "123"})
+        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
+        mock_cache.set_dm_channel_id.assert_called_once_with(123, dm_channel.id)
+
+    async def test_create_dm_channel_when_cacheless(self, rest_client, mock_cache):
+        rest_client._cache = None
+        dm_channel = StubModel(43234)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"recipient_id": "123"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "43234"})
+        rest_client._entity_factory.deserialize_dm = mock.Mock(return_value=dm_channel)
+
+        assert await rest_client.create_dm_channel(StubModel(123)) == dm_channel
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
+        mock_cache.set_dm_channel_id.assert_not_called()
 
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)
