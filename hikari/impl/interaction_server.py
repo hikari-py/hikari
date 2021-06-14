@@ -280,15 +280,13 @@ class InteractionServer(interaction_server.InteractionServer):
             return
 
         self._is_closing = True
-        close_event = self._close_event
-        runner = self._runner
         self._application_fetch_lock = None
+        # This shutdown then cleanup ordering matters.
+        await self._runner.shutdown()
+        await self._runner.cleanup()
+        self._close_event.set()
         self._close_event = None
         self._runner = None
-        # This shutdown then cleanup ordering matters.
-        await runner.shutdown()
-        await runner.cleanup()
-        close_event.set()
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
