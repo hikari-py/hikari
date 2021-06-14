@@ -391,7 +391,7 @@ class RESTApp(traits.ExecutorAware):
 
         Raises
         ------
-        ValueError
+        builtins.ValueError
             If `token_type` is provided when a token strategy is passed for `token`.
         """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
