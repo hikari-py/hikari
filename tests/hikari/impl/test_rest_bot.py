@@ -122,6 +122,7 @@ class TestRESTBot:
             ux.init_logging.assert_called_once_with("ERROR", False, True)
             entity_factory_impl.EntityFactoryImpl.assert_called_once_with(result)
             rest_impl.RESTClientImpl.assert_called_once_with(
+                cache=None,
                 entity_factory=mock_entity_factory,
                 executor=mock_executor,
                 http_settings=mock_http_settings,
@@ -169,6 +170,7 @@ class TestRESTBot:
             result = cls("token", "token_type")
 
             rest_impl.RESTClientImpl.assert_called_once_with(
+                cache=None,
                 entity_factory=result.entity_factory,
                 executor=None,
                 http_settings=config.HTTPSettings.return_value,

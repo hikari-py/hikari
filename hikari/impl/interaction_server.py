@@ -51,10 +51,6 @@ if typing.TYPE_CHECKING:
 
     _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
     _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
-    _ListenerDictT = typing.Dict[
-        typing.Type[_InteractionT],
-        interaction_server.ListenerT[_InteractionT, _ResponseT],
-    ]
 
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
@@ -171,9 +167,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._entity_factory = entity_factory
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._event: typing.Optional[asyncio.Event] = None
-        self._listeners: _ListenerDictT[
-            interaction_bases.PartialInteraction, special_endpoints.InteractionResponseBuilder
-        ] = {}
+        self._listeners: typing.Dict[typing.Type[interaction_bases.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._rest_client = rest_client
         self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
@@ -234,6 +228,7 @@ class InteractionServer(interaction_server.InteractionServer):
             The aiohttp response.
         """
         if request.content_type.lower() != _JSON_CONTENT_TYPE:
+            _LOGGER.debug("Payload with invalid media type %r received", request.content_type)
             return aiohttp.web.Response(
                 status=_UNSUPPORTED_MEDIA_TYPE_STATUS,
                 body=b"Unsupported Media Type",
@@ -247,7 +242,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except (KeyError, ValueError):
             user_agent = request.headers.get(_USER_AGENT_KEY, "NONE")
-            _LOGGER.info("Received a request with a missing or invalid signature header (UA %r)", user_agent)
+            _LOGGER.debug("Received a request with a missing or invalid signature header (UA %r)", user_agent)
             return aiohttp.web.Response(
                 status=_BAD_REQUEST_STATUS,
                 body=b"Missing or invalid required request signature header(s)",
@@ -259,6 +254,7 @@ class InteractionServer(interaction_server.InteractionServer):
             body = await request.read()
 
         except aiohttp.web.HTTPRequestEntityTooLarge:
+            _LOGGER.debug("Received a request with a payload that's too large to process")
             return aiohttp.web.Response(
                 status=_PAYLOAD_TOO_LARGE_STATUS,
                 body=b"Payload too large",
@@ -268,7 +264,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         if not body:
             user_agent = request.headers.get(_USER_AGENT_KEY, "NONE")
-            _LOGGER.info("Received a body-less request (UA %r)", user_agent)
+            _LOGGER.debug("Received a body-less request (UA %r)", user_agent)
             return aiohttp.web.Response(
                 status=_BAD_REQUEST_STATUS,
                 body=b"POST request must have a body",
@@ -508,7 +504,7 @@ class InteractionServer(interaction_server.InteractionServer):
             if not replace and interaction_type in self._listeners:
                 raise TypeError(f"Listener already set for {interaction_type.__name__}")
 
-            self._listeners[interaction_type] = listener  # type: ignore[assignment]
+            self._listeners[interaction_type] = listener
 
         else:
             self._listeners.pop(interaction_type, None)

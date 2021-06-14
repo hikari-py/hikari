@@ -201,6 +201,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
+            cache=None,
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -276,7 +277,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ux.print_banner(banner, allow_color, force_color)
 
     async def close(self) -> None:
-        # self._server.start should raise errors.ComponentStateConflictError if it's not running
+        # self._server.close should raise errors.ComponentStateConflictError if it's not running
         await self._server.close()
         await self._rest.close()
 
@@ -288,7 +289,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     def run(
         self,
-        asyncio_debug: typing.Optional[bool] = None,
+        asyncio_debug: bool = False,
         backlog: int = 128,
         check_for_updates: bool = True,
         close_loop: bool = True,

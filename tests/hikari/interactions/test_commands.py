@@ -209,10 +209,15 @@ class TestCommandInteraction:
     async def test_edit_initial_response_with_optional_args(self, mock_command_interaction, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
+        mock_attachment_1 = object()
+        mock_attachment_2 = object()
         result = await mock_command_interaction.edit_initial_response(
             "new content",
             embed=mock_embed_1,
             embeds=[mock_embed_2],
+            attachment=mock_attachment_1,
+            attachments=[mock_attachment_2],
+            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[123123],
             role_mentions=[562134],
@@ -225,6 +230,9 @@ class TestCommandInteraction:
             "new content",
             embed=mock_embed_1,
             embeds=[mock_embed_2],
+            attachment=mock_attachment_1,
+            attachments=[mock_attachment_2],
+            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[123123],
             role_mentions=[562134],
@@ -241,6 +249,9 @@ class TestCommandInteraction:
             undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            replace_attachments=False,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
