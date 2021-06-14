@@ -455,7 +455,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Raises
     ------
-    ValueError
+    builtins.ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
         * if `token_type` is left as `builtins.None` when a string is passed for `token`.
     """
