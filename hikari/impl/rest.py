@@ -1696,12 +1696,14 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
 
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
         body.put("avatar_url", avatar_url)
+        body.put("flags", flags)
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
         return await self._create_message(

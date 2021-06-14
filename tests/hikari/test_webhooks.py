@@ -51,6 +51,7 @@ class TestExecutableWebhook:
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
+            flags=64,
         )
 
         assert result is executable_webhook.app.rest.execute_webhook.return_value
@@ -67,6 +68,7 @@ class TestExecutableWebhook:
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
+            flags=64,
         )
 
     @pytest.mark.asyncio
@@ -87,6 +89,7 @@ class TestExecutableWebhook:
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()

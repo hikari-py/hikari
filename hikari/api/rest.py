@@ -2142,6 +2142,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute a webhook.
 
@@ -2207,6 +2208,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The flags to set for this webhook message.
+
+            !!! warning
+                As of writing this can only be set for interaction webhooks
+                and the only settable flag is EPHEMERAL; this field is just
+                ignored for non-interaction webhooks.
 
         !!! note
             Attachments can be passed as many different things, to aid in
