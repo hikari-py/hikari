@@ -390,8 +390,8 @@ class RESTClientImpl(rest_api.RESTClient):
     """
 
     __slots__: typing.Sequence[str] = (
-        "buckets",
-        "global_rate_limit",
+        "_buckets",
+        "_global_rate_limit",
         "_cache",
         "_client_session",
         "_closed_event",
@@ -403,12 +403,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_rest_url",
         "_token",
     )
-
-    buckets: buckets_.RESTBucketManager
-    """Bucket ratelimiter manager."""
-
-    global_rate_limit: rate_limits.ManualRateLimiter
-    """Global ratelimiter."""
 
     @attr.define(auto_exc=True, repr=False, weakref_slot=False)
     class _RetryRequest(RuntimeError):
@@ -427,9 +421,9 @@ class RESTClientImpl(rest_api.RESTClient):
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
-        self.buckets = buckets_.RESTBucketManager(max_rate_limit)
+        self._buckets = buckets_.RESTBucketManager(max_rate_limit)
         # We've been told in DAPI that this is per token.
-        self.global_rate_limit = rate_limits.ManualRateLimiter()
+        self._global_rate_limit = rate_limits.ManualRateLimiter()
 
         self._cache = cache
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
@@ -470,8 +464,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if isinstance(self._token, rest_api.TokenStrategy):
             await self._token.close()
 
-        self.global_rate_limit.close()
-        self.buckets.close()
+        self._global_rate_limit.close()
+        self._buckets.close()
         self._closed_event.set()
 
         # We have to sleep to allow aiohttp time to close SSL transports...
@@ -513,7 +507,7 @@ class RESTClientImpl(rest_api.RESTClient):
             _LOGGER.log(ux.TRACE, "acquired new tcp connector")
 
         elif self._tcp_connector.closed:
-            raise errors.ComponentStateConflictError("The client session has been closed, no HTTP requests can occur.")
+            raise errors.ComponentStateConflictError("The TCP connector has been closed, no HTTP requests can occur.")
 
         return self._tcp_connector
 
@@ -551,8 +545,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-        if not self.buckets.is_started:
-            self.buckets.start()
+        if not self._buckets.is_started:
+            self._buckets.start()
 
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
@@ -576,11 +570,11 @@ class RESTClientImpl(rest_api.RESTClient):
         while True:
             try:
                 uuid = time.uuid()
-                async with self.buckets.acquire(compiled_route):
+                async with self._buckets.acquire(compiled_route):
                     # Buckets not using authentication still have a global
                     # rate limit, but it is different from the token one.
                     if not no_auth:
-                        await self.global_rate_limit.acquire()
+                        await self._global_rate_limit.acquire()
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
@@ -680,7 +674,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
-            self.buckets.update_rate_limits(
+            self._buckets.update_rate_limits(
                 compiled_route=compiled_route,
                 bucket_header=bucket,
                 remaining_header=remaining,
@@ -739,7 +733,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            self.global_rate_limit.throttle(body_retry_after)
+            self._global_rate_limit.throttle(body_retry_after)
             raise self._RetryRequest
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
