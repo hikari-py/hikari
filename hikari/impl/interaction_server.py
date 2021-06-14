@@ -32,6 +32,7 @@ import typing
 import aiohttp.web
 import aiohttp.web_runner
 
+from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
@@ -45,9 +46,8 @@ if typing.TYPE_CHECKING:
 
     import aiohttp.typedefs
 
-    from hikari import applications
-    from hikari.api import entity_factory as entity_factory_
-    from hikari.api import rest as rest_client_
+    from hikari.api import entity_factory as entity_factory_api
+    from hikari.api import rest as rest_api
 
     _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
     _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
@@ -156,9 +156,9 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         *,
         dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
-        entity_factory: entity_factory_.EntityFactory,
+        entity_factory: entity_factory_api.EntityFactory,
         loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
-        rest_client: rest_client_.RESTClient,
+        rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
@@ -196,11 +196,11 @@ class InteractionServer(interaction_server.InteractionServer):
             if self._verify:
                 return self._verify
 
-            try:
-                application = (await self._rest_client.fetch_authorization()).application
-
-            except errors.UnauthorizedError:
+            if self._rest_client.token_type == applications.TokenType.BOT:
                 application = await self._rest_client.fetch_application()
+
+            else:
+                application = (await self._rest_client.fetch_authorization()).application
 
             self._verify = ed25519.build_ed25519_verifier(application.public_key)
             return self._verify

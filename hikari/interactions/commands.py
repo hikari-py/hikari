@@ -524,10 +524,10 @@ class CommandInteraction(bases.PartialInteraction):
         """Create the initial response for this interaction.
 
         !!! warning
-            Calling this on an interaction which already has an initial response
-            with further calls will result in this raising a
-            `hikari.errors.NotFoundError`. This includes if the REST interaction
-            server has already responded to the request.
+            Calling this on an interaction which already has an initial
+            response will result in this raising a `hikari.errors.NotFoundError`.
+            This includes if the REST interaction server has already responded
+            to the request.
 
         Parameters
         ----------

@@ -45,8 +45,8 @@ if typing.TYPE_CHECKING:
     import ssl
 
     from hikari import applications
-    from hikari.api import entity_factory as entity_factory_
-    from hikari.api import rest as rest_
+    from hikari.api import entity_factory as entity_factory_api
+    from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
     from hikari.interactions import bases as interaction_bases
 
@@ -61,10 +61,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     Parameters
     ----------
-    token : builtins.str
-        The bot or application token to use.
-    token_type : typing.Union[hikari.applications.TokenType, builtins.str]
-        The type of token being passed, this may be "Bot" or "Bearer".
+    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+        The bot or bearer token. If no token is to be used,
+        this can be undefined.
+    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
+        The type of token in use. This should only be passed when `builtins.str`
+        is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
+        defaulted to `"Bearer"` in this situation.
+
+        This should be left as `builtins.None` when either
+        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        `token`.
 
     Other Parameters
     ----------------
@@ -157,6 +164,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     !!! note
         `force_color` will always take precedence over `allow_color`.
+
+    Raises
+    ------
+    builtins.ValueError
+        * If `token_type` is provided when a token strategy is passed for `token`.
+        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -170,9 +183,46 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         "_server",
     )
 
+    @typing.overload
     def __init__(
         self,
-        token: typing.Union[str, rest_.TokenStrategy],
+        token: rest_api.TokenStrategy,
+        *,
+        public_key: typing.Union[bytes, str, None] = None,
+        allow_color: bool = True,
+        banner: typing.Optional[str] = "hikari",
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        force_color: bool = False,
+        http_settings: typing.Optional[config.HTTPSettings] = None,
+        logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
+        max_rate_limit: float = 300.0,
+        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        rest_url: typing.Optional[str] = None,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def __init__(
+        self,
+        token: str,
+        token_type: typing.Union[str, applications.TokenType],
+        public_key: typing.Union[bytes, str, None] = None,
+        *,
+        allow_color: bool = True,
+        banner: typing.Optional[str] = "hikari",
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        force_color: bool = False,
+        http_settings: typing.Optional[config.HTTPSettings] = None,
+        logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
+        max_rate_limit: float = 300.0,
+        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        rest_url: typing.Optional[str] = None,
+    ) -> None:
+        ...
+
+    def __init__(
+        self,
+        token: typing.Union[str, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None] = None,
         public_key: typing.Union[bytes, str, None] = None,
         *,
@@ -232,11 +282,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         return self._server
 
     @property
-    def rest(self) -> rest_.RESTClient:
+    def rest(self) -> rest_api.RESTClient:
         return self._rest
 
     @property
-    def entity_factory(self) -> entity_factory_.EntityFactory:
+    def entity_factory(self) -> entity_factory_api.EntityFactory:
         return self._entity_factory
 
     @property

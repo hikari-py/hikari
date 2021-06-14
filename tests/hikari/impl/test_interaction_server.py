@@ -133,8 +133,8 @@ class TestInteractionServer:
         assert mock_interaction_server.is_alive is True
 
     @pytest.mark.asyncio()
-    async def test__fetch_public_key_fetch_authorization(self, mock_interaction_server, mock_rest_client):
-        mock_rest_client.fetch_authorization = mock.AsyncMock()
+    async def test__fetch_public_key_with_bearer_token(self, mock_interaction_server, mock_rest_client):
+        mock_rest_client.token_type = "Bearer"
         mock_lock = mock.AsyncMock()
         mock_interaction_server._application_fetch_lock = mock_lock
 
@@ -151,11 +151,8 @@ class TestInteractionServer:
         mock_lock.__aexit__.assert_awaited_once()
 
     @pytest.mark.asyncio()
-    async def test__fetch_public_key_fetch_application(self, mock_interaction_server, mock_rest_client):
-        mock_rest_client.fetch_authorization = mock.AsyncMock(
-            side_effect=errors.UnauthorizedError(url="", headers={}, raw_body="")
-        )
-        mock_rest_client.fetch_application = mock.AsyncMock()
+    async def test__fetch_public_key_fetch_with_bot_token(self, mock_interaction_server, mock_rest_client):
+        mock_rest_client.token_type = "Bot"
         mock_lock = mock.AsyncMock()
         mock_interaction_server._application_fetch_lock = mock_lock
 
@@ -164,7 +161,7 @@ class TestInteractionServer:
 
             build_verifier.assert_called_once_with(mock_rest_client.fetch_application.return_value.public_key)
 
-        mock_rest_client.fetch_authorization.assert_awaited_once()
+        mock_rest_client.fetch_authorization.assert_not_called()
         mock_rest_client.fetch_application.assert_awaited_once()
         mock_lock.__aenter__.assert_awaited_once()
         mock_lock.__aexit__.assert_awaited_once()
