@@ -506,9 +506,6 @@ class Member(users.User):
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
-    async def fetch_dm_channel(self) -> channels_.DMChannel:
-        return await self.user.fetch_dm_channel()
-
     async def ban(
         self,
         *,

@@ -162,6 +162,7 @@ class TestBotApp:
         voice.assert_called_once_with(bot)
         assert bot._rest is rest.return_value
         rest.assert_called_once_with(
+            cache=bot._cache,
             entity_factory=bot._entity_factory,
             executor=executor,
             http_settings=bot._http_settings,

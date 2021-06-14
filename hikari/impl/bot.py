@@ -277,6 +277,7 @@ class BotApp(traits.BotAware):
 
         # RESTful API.
         self._rest = rest_impl.RESTClientImpl(
+            cache=self._cache,
             entity_factory=self._entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,

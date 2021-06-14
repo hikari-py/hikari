@@ -287,6 +287,7 @@ class TestRESTApp:
             rest_app.acquire(token="token", token_type="Type")
 
         mock_client.assert_called_once_with(
+            cache=None,
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
@@ -309,8 +310,14 @@ def rest_client_class():
 
 
 @pytest.fixture()
-def rest_client(rest_client_class):
+def mock_cache():
+    return mock.Mock()
+
+
+@pytest.fixture()
+def rest_client(rest_client_class, mock_cache):
     obj = rest_client_class(
+        cache=mock_cache,
         http_settings=mock.Mock(spec=config.HTTPSettings),
         max_rate_limit=float("inf"),
         proxy_settings=mock.Mock(spec=config.ProxySettings),
@@ -376,6 +383,7 @@ class TestRESTClientImpl:
     def test__init__passes_max_rate_limit(self):
         with mock.patch.object(buckets, "RESTBucketManager") as bucket:
             rest.RESTClientImpl(
+                cache=None,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
                 proxy_settings=mock.Mock(),
@@ -391,6 +399,7 @@ class TestRESTClientImpl:
     def test__init__when_token_strategy_passed_with_token_type(self):
         with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
             rest.RESTClientImpl(
+                cache=None,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
                 proxy_settings=mock.Mock(),
@@ -403,6 +412,7 @@ class TestRESTClientImpl:
 
     def test__init__when_token_is_None_sets_token_to_None(self):
         obj = rest.RESTClientImpl(
+            cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -416,6 +426,7 @@ class TestRESTClientImpl:
 
     def test__init__when_token_and_token_type_is_not_None_generates_token_with_type(self):
         obj = rest.RESTClientImpl(
+            cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -429,6 +440,7 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_None_generates_url_using_default_url(self):
         obj = rest.RESTClientImpl(
+            cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -442,6 +454,7 @@ class TestRESTClientImpl:
 
     def test__init__when_rest_url_is_not_None_generates_url_using_given_url(self):
         obj = rest.RESTClientImpl(
+            cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -1285,6 +1298,29 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
+    async def test_fetch_channel_with_dm_channel_when_cacheful(self, rest_client, mock_cache):
+        expected_route = routes.GET_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock(spec=channels.DMChannel, type=channels.ChannelType.DM)
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "NO"})
+
+        assert await rest_client.fetch_channel(StubModel(123)) == mock_object
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+        mock_cache.set_dm_channel_id.assert_called_once_with(mock_object.recipient.id, mock_object.id)
+
+    async def test_fetch_channel_with_dm_channel_when_cacheless(self, rest_client, mock_cache):
+        expected_route = routes.GET_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock(spec=channels.DMChannel, type=channels.ChannelType.DM)
+        rest_client._cache = None
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "NO"})
+
+        assert await rest_client.fetch_channel(StubModel(123)) == mock_object
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+        mock_cache.set_dm_channel_id.assert_not_called()
+
     async def test_edit_channel(self, rest_client):
         expected_route = routes.PATCH_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
@@ -2013,16 +2049,31 @@ class TestRESTClientImplAsync:
         await rest_client.leave_guild(StubModel(123))
         rest_client._request.assert_awaited_once_with(expected_route)
 
-    async def test_create_dm_channel(self, rest_client):
-        dm_channel = StubModel(123)
+    async def test_create_dm_channel(self, rest_client, mock_cache):
+        dm_channel = StubModel(43234)
+        user = StubModel(123)
         expected_route = routes.POST_MY_CHANNELS.compile()
         expected_json = {"recipient_id": "123"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._request = mock.AsyncMock(return_value={"id": "43234"})
+        rest_client._entity_factory.deserialize_dm = mock.Mock(return_value=dm_channel)
+
+        assert await rest_client.create_dm_channel(user) == dm_channel
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
+        mock_cache.set_dm_channel_id.assert_called_once_with(user, dm_channel.id)
+
+    async def test_create_dm_channel_when_cacheless(self, rest_client, mock_cache):
+        rest_client._cache = None
+        dm_channel = StubModel(43234)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"recipient_id": "123"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "43234"})
         rest_client._entity_factory.deserialize_dm = mock.Mock(return_value=dm_channel)
 
         assert await rest_client.create_dm_channel(StubModel(123)) == dm_channel
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
-        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "123"})
+        rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
+        mock_cache.set_dm_channel_id.assert_not_called()
 
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)

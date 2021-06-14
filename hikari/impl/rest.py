@@ -91,6 +91,7 @@ if typing.TYPE_CHECKING:
     from hikari import templates
     from hikari import voices
     from hikari import webhooks
+    from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
@@ -342,6 +343,7 @@ class RESTApp(traits.ExecutorAware):
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
         rest_client = RESTClientImpl(
+            cache=None,
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -390,6 +392,7 @@ class RESTClientImpl(rest_api.RESTClient):
     __slots__: typing.Sequence[str] = (
         "buckets",
         "global_rate_limit",
+        "_cache",
         "_client_session",
         "_closed_event",
         "_tcp_connector",
@@ -414,6 +417,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def __init__(
         self,
         *,
+        cache: typing.Optional[cache_api.MutableCache],
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
@@ -427,6 +431,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
 
+        self._cache = cache
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
         self._closed_event = asyncio.Event()
@@ -791,7 +796,12 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_channel(response)
+        result = self._entity_factory.deserialize_channel(response)
+
+        if self._cache and isinstance(result, channels_.DMChannel):
+            self._cache.set_dm_channel_id(result.recipient.id, result.id)
+
+        return result
 
     async def edit_channel(
         self,
@@ -1827,7 +1837,12 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("recipient_id", user)
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_dm(response)
+        channel = self._entity_factory.deserialize_dm(response)
+
+        if self._cache:
+            self._cache.set_dm_channel_id(user, channel.id)
+
+        return channel
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()

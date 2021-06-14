@@ -983,7 +983,7 @@ def copy_guild_channel(channel: ChannelT) -> ChannelT:
 
 
 class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[KeyT, ValueT]]):
-    """A special case of the Mapping View which avoids copying the already immutable views contained within it."""
+    """A special case of the Mapping View which avoids copying the immutable values contained within it."""
 
     __slots__: typing.Sequence[str] = ()
 

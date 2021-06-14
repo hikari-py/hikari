@@ -205,13 +205,6 @@ class TestMember:
         assert result is mock_user.make_avatar_url.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_dm_channel(self, model, mock_user):
-        mock_user.fetch_dm_channel = mock.AsyncMock()
-        result = await model.fetch_dm_channel()
-        mock_user.fetch_dm_channel.assert_awaited_once_with()
-        assert result is mock_user.fetch_dm_channel.return_value
-
-    @pytest.mark.asyncio
     async def test_fetch_self(self, model):
         model.user.app.rest.fetch_member = mock.AsyncMock()
 
