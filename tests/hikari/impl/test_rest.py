@@ -316,6 +316,7 @@ class TestRESTApp:
             rest_app.acquire(token="token")
 
         mock_client.assert_called_once_with(
+            cache=None,
             entity_factory=_entity_factory(),
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
@@ -441,6 +442,7 @@ class TestRESTClientImpl:
     def test__init__when_token_strategy_passed(self):
         mock_strategy = mock.Mock(rest_api.TokenStrategy)
         obj = rest.RESTClientImpl(
+            cache=None,
             http_settings=mock.Mock(),
             max_rate_limit=float("inf"),
             proxy_settings=mock.Mock(),
@@ -487,6 +489,7 @@ class TestRESTClientImpl:
     def test__init__when_token_provided_as_string_without_type(self):
         with pytest.raises(ValueError, match="Token type required when a str is passed for `token`"):
             rest.RESTClientImpl(
+                cache=None,
                 http_settings=mock.Mock(),
                 max_rate_limit=float("inf"),
                 proxy_settings=mock.Mock(),
