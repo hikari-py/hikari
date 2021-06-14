@@ -160,8 +160,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_close_event",
         "_executor",
         "_http_settings",
+        "_is_closing",
         "_proxy_settings",
         "_entity_factory",
         "_rest",
@@ -192,8 +194,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self.print_banner(banner, allow_color, force_color)
 
         # Settings and state
+        self._close_event: typing.Optional[asyncio.Event] = None
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
+        self._is_closing = False
         self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
 
         # Entity creation
@@ -221,7 +225,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     @property
     def is_alive(self) -> bool:
-        return self._server.is_alive
+        return self._close_event is not None
 
     @property
     def interaction_server(self) -> interaction_server_.InteractionServer:
@@ -277,12 +281,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ux.print_banner(banner, allow_color, force_color)
 
     async def close(self) -> None:
-        # self._server.close should raise errors.ComponentStateConflictError if it's not running
+        if not self._close_event:
+            raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
+
+        if self._is_closing:
+            await self.join()
+            return
+
+        self._is_closing = True
+        close_event = self._close_event
         await self._server.close()
         await self._rest.close()
+        close_event.set()
+        self._close_event = None
 
     async def join(self) -> None:
-        await self._server.join()
+        if not self._close_event:
+            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+
+        await self._close_event.wait()
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server_.Response:
         return await self._server.on_interaction(body, signature, timestamp)
@@ -370,7 +387,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            raise errors.ComponentStateConflictError("Cannot start a bot that's already active")
 
         # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
         # if it was just called with None or if it's called on a thread which isn't the main Thread.
@@ -473,7 +490,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
         """
-        # self._server.start should raise errors.ComponentStateConflictError if it's already running
+        if self.is_alive:
+            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+
+        self._close_event = asyncio.Event()
+
         if check_for_updates:
             asyncio.create_task(
                 ux.check_for_updates(self._http_settings, self._proxy_settings),

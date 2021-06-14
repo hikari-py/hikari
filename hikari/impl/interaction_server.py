@@ -140,10 +140,10 @@ class InteractionServer(interaction_server.InteractionServer):
 
     __slots__: typing.Sequence[str] = (
         "_application_fetch_lock",
+        "_close_event",
         "_dumps",
         "_entity_factory",
-        "_event",
-        "_hashes",
+        "_is_closing",
         "_listeners",
         "_loads",
         "_rest_client",
@@ -163,10 +163,11 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
+        # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
+        self._close_event: typing.Optional[asyncio.Event] = None
         self._dumps = dumps
         self._entity_factory = entity_factory
-        # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
-        self._event: typing.Optional[asyncio.Event] = None
+        self._is_closing = False
         self._listeners: typing.Dict[typing.Type[interaction_bases.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._rest_client = rest_client
@@ -185,12 +186,6 @@ class InteractionServer(interaction_server.InteractionServer):
             Whether this interaction server is active
         """
         return self._runner is not None
-
-    def _get_event(self) -> asyncio.Event:
-        if self._event is None:
-            self._event = asyncio.Event()
-
-        return self._event
 
     async def _fetch_public_key(self) -> ed25519.VerifierT:
         if self._application_fetch_lock is None:
@@ -277,25 +272,30 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
-        if not self._runner:
+        if not self._runner or not self._close_event:
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
-        event = self._get_event()
+        if self._is_closing:
+            await self.join()
+            return
+
+        self._is_closing = True
+        close_event = self._close_event
         runner = self._runner
         self._application_fetch_lock = None
-        self._event = None
+        self._close_event = None
         self._runner = None
         # This shutdown then cleanup ordering matters.
         await runner.shutdown()
         await runner.cleanup()
-        event.set()
+        close_event.set()
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
-        if not self._runner:
+        if not self._close_event:
             raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
 
-        await self._get_event().wait()
+        await self._close_event.wait()
 
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
@@ -429,7 +429,8 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._runner:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
-        self._get_event().clear()
+        self._close_event = asyncio.Event()
+        self._is_closing = False
         self._runner = aiohttp.web_runner.AppRunner(
             self._server, handle_signals=enable_signal_handlers, access_log=_LOGGER
         )

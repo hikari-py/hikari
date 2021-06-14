@@ -186,8 +186,10 @@ class TestRESTBot:
             assert result.http_settings is config.HTTPSettings.return_value
             assert result.proxy_settings is config.ProxySettings.return_value
 
-    def test_is_alive_property(self, mock_rest_bot, mock_interaction_server):
-        assert mock_rest_bot.interaction_server.is_alive is mock_interaction_server.is_alive
+    @pytest.mark.parametrize(("close_event", "expected"), [(object(), True), (None, False)])
+    def test_is_alive_property(self, mock_rest_bot, close_event, expected):
+        mock_rest_bot._close_event = close_event
+        assert mock_rest_bot.is_alive is expected
 
     def test_print_banner(self, mock_rest_bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
@@ -197,20 +199,48 @@ class TestRESTBot:
 
     @pytest.mark.asyncio()
     async def test_close(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
+        mock_rest_bot._close_event = close_event = mock.Mock()
         mock_interaction_server.close = mock.AsyncMock()
+        mock_rest_bot._is_closing = False
 
         await mock_rest_bot.close()
 
         mock_interaction_server.close.assert_awaited_once()
         mock_rest_client.close.assert_awaited_once()
+        close_event.set.assert_called_once()
+        assert mock_rest_bot._is_closing is True
 
     @pytest.mark.asyncio()
-    async def test_join(self, mock_rest_bot, mock_interaction_server):
-        mock_interaction_server.join = mock.AsyncMock()
+    async def test_close_when_is_closing(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
+        mock_rest_bot._close_event = close_event = mock.Mock()
+        mock_interaction_server.close = mock.AsyncMock()
+        mock_rest_bot._is_closing = True
+        mock_rest_bot.join = mock.AsyncMock()
+
+        await mock_rest_bot.close()
+
+        mock_interaction_server.close.assert_not_called()
+        mock_rest_client.close.assert_not_called()
+        close_event.set.assert_not_called()
+        mock_rest_bot.join.assert_awaited_once()
+
+    @pytest.mark.asyncio()
+    async def test_close_when_inactive(self, mock_rest_bot):
+        with pytest.raises(errors.ComponentStateConflictError):
+            await mock_rest_bot.close()
+
+    @pytest.mark.asyncio()
+    async def test_join(self, mock_rest_bot):
+        mock_rest_bot._close_event = mock.AsyncMock()
 
         await mock_rest_bot.join()
 
-        mock_interaction_server.join.assert_awaited_once()
+        mock_rest_bot._close_event.wait.assert_awaited_once()
+
+    @pytest.mark.asyncio()
+    async def test_join_when_not_alive(self, mock_rest_bot):
+        with pytest.raises(errors.ComponentStateConflictError):
+            await mock_rest_bot.join()
 
     @pytest.mark.asyncio()
     async def test_on_interaction(self, mock_rest_bot, mock_interaction_server):
@@ -221,8 +251,7 @@ class TestRESTBot:
         assert result is mock_interaction_server.on_interaction.return_value
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
-    def test_run(self, mock_rest_bot, mock_interaction_server):
-        mock_rest_bot.interaction_server.is_alive = False
+    def test_run(self, mock_rest_bot):
         # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
@@ -270,7 +299,6 @@ class TestRESTBot:
         assert asyncio.get_event_loop().is_closed() is False
 
     def test_run_when_asyncio_debug(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive = False
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -280,7 +308,6 @@ class TestRESTBot:
             get_event_loop.return_value.set_debug.assert_called_once_with(True)
 
     def test_run_when_close_loop(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive = False
         # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
@@ -292,7 +319,6 @@ class TestRESTBot:
 
     @pytest.mark.skipif(not hasattr(sys, "set_coroutine_origin_tracking_depth"), reason="target sys function not found")
     def test_run_when_coroutine_tracking_depth(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive = False
         # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
@@ -308,7 +334,6 @@ class TestRESTBot:
     @pytest.mark.skip(reason="Fix")
     @pytest.mark.skipif(not hasattr(sys, "set_coroutine_origin_tracking_depth"), reason="target sys function not found")
     def test_run_when_coroutine_tracking_depth_catches_attribute_error(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive = False
         # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
@@ -323,13 +348,13 @@ class TestRESTBot:
             mock_rest_bot.run(coroutine_tracking_depth=42)
 
     def test_run_when_already_running(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive.return_value = True
+        mock_rest_bot._close_event = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             mock_rest_bot.run()
 
     def test_run_closes_executor_when_present(self, mock_rest_bot, mock_executor):
-        mock_rest_bot.interaction_server.is_alive = False
+        mock_rest_bot.join = mock.AsyncMock()
         # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
@@ -355,10 +380,10 @@ class TestRESTBot:
         assert mock_rest_bot.executor is None
 
     def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot):
-        mock_rest_bot.interaction_server.is_alive = False
         # Dependent on test-order the current event loop may be pre-filled and closed without pytest.mark.asyncio
         # therefore we need to ensure there's no pre-set event loop.
         asyncio.set_event_loop(None)
+        mock_rest_bot.join = mock.AsyncMock()
         mock_rest_bot._executor = None
 
         mock_rest_bot.run(
@@ -441,6 +466,16 @@ class TestRESTBot:
                 ux.check_for_updates.return_value, name="check for package updates"
             )
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)
+
+    @pytest.mark.asyncio()
+    async def test_start_when_is_alive(self, mock_rest_bot):
+        mock_rest_bot._close_event = object()
+
+        with mock.patch.object(ux, "check_for_updates", new=mock.Mock()) as check_for_updates:
+            with pytest.raises(errors.ComponentStateConflictError):
+                await mock_rest_bot.start()
+
+            check_for_updates.assert_not_called()
 
     def test_get_listener(self, mock_rest_bot, mock_interaction_server):
         mock_type = object()

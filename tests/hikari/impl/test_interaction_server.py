@@ -289,14 +289,32 @@ class TestInteractionServer:
     async def test_close(self, mock_interaction_server):
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
+        mock_interaction_server._is_closing = False
         mock_interaction_server._runner = mock_runner
-        mock_interaction_server._event = mock_event
+        mock_interaction_server._close_event = mock_event
 
         await mock_interaction_server.close()
 
         mock_runner.shutdown.assert_awaited_once()
         mock_runner.cleanup.assert_awaited_once()
         mock_event.set.assert_called_once()
+        assert mock_interaction_server._is_closing is True
+
+    @pytest.mark.asyncio()
+    async def test_close_when_closing(self, mock_interaction_server):
+        mock_runner = mock.AsyncMock()
+        mock_event = mock.Mock()
+        mock_interaction_server._runner = mock_runner
+        mock_interaction_server._close_event = mock_event
+        mock_interaction_server._is_closing = True
+        mock_interaction_server.join = mock.AsyncMock()
+
+        await mock_interaction_server.close()
+
+        mock_runner.shutdown.assert_not_called()
+        mock_runner.cleanup.assert_not_called()
+        mock_event.set.assert_not_called()
+        mock_interaction_server.join.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test_close_when_not_running(self, mock_interaction_server):
@@ -307,7 +325,7 @@ class TestInteractionServer:
     async def test_join(self, mock_interaction_server):
         mock_event = mock.AsyncMock()
         mock_interaction_server._runner = object()
-        mock_interaction_server._event = mock_event
+        mock_interaction_server._close_event = mock_event
 
         await mock_interaction_server.join()
 
@@ -506,11 +524,13 @@ class TestInteractionServer:
     async def test_start(self, mock_interaction_server, mock_application):
         mock_context = object()
         mock_socket = object()
+        mock_interaction_server._is_closing = True
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(asyncio, "Event"))
 
         with stack:
             await mock_interaction_server.start(
@@ -557,6 +577,8 @@ class TestInteractionServer:
             aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
             aiohttp.web.UnixSite.return_value.start.assert_awaited_once()
             aiohttp.web.SockSite.return_value.start.assert_awaited_once()
+            assert mock_interaction_server._close_event is asyncio.Event.return_value
+            assert mock_interaction_server._is_closing is False
 
     @pytest.mark.asyncio()
     async def test_start_with_default_behaviour(self, mock_interaction_server, mock_application):
