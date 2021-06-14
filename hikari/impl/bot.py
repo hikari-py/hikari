@@ -213,7 +213,6 @@ class BotApp(traits.BotAware):
     __slots__: typing.Sequence[str] = (
         "_cache",
         "_closing_event",
-        "_closed",
         "_entity_factory",
         "_event_manager",
         "_event_factory",
@@ -250,8 +249,7 @@ class BotApp(traits.BotAware):
         self.print_banner(banner, allow_color, force_color)
 
         # Settings and state
-        self._closing_event = asyncio.Event()
-        self._closed = False
+        self._closing_event: typing.Optional[asyncio.Event] = None
         self._is_alive = False
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
@@ -360,15 +358,14 @@ class BotApp(traits.BotAware):
 
     async def close(self, force: bool = True) -> None:
         """Kill the application by shutting all components down."""
-        if not self._closing_event.is_set():
+        if self._closing_event and not self._closing_event.is_set():
             _LOGGER.debug("bot requested to shutdown [force:%s]", force)
+            self._closing_event.set()
 
-        self._closing_event.set()
-
-        if self._closed or not force:
+        if not self._closing_event or not force:  # If closing event is None then this is already closing.
             return
 
-        self._closed = True
+        self._closing_event = None
 
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
             future = asyncio.ensure_future(awaitable)
@@ -421,7 +418,7 @@ class BotApp(traits.BotAware):
         self._check_if_alive()
 
         awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
-        if until_close:
+        if until_close and self._closing_event:  # If closing event is None then this is already closing.
             awaitables.append(self._closing_event.wait())
 
         await aio.first_completed(*awaitables)
@@ -780,7 +777,7 @@ class BotApp(traits.BotAware):
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         self._is_alive = True
-        self._closing_event.clear()
+        self._closing_event = asyncio.Event()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
             requirements.session_start_limit.remaining,
@@ -844,6 +841,7 @@ class BotApp(traits.BotAware):
                         shard_id=candidate_shard_id,
                         shard_count=shard_count,
                         url=requirements.url,
+                        closing_event=self._closing_event,
                     )
                     for candidate_shard_id in window
                     if candidate_shard_id in shard_ids
@@ -955,6 +953,7 @@ class BotApp(traits.BotAware):
         shard_id: int,
         shard_count: int,
         url: str,
+        closing_event: asyncio.Event,
     ) -> shard_impl.GatewayShardImpl:
         new_shard = shard_impl.GatewayShardImpl(
             http_settings=self._http_settings,
@@ -975,7 +974,7 @@ class BotApp(traits.BotAware):
         self._shards[shard_id] = new_shard
 
         start = time.monotonic()
-        await aio.first_completed(new_shard.start(), self._closing_event.wait())
+        await aio.first_completed(new_shard.start(), closing_event.wait())
         end = time.monotonic()
 
         if new_shard.is_alive:
