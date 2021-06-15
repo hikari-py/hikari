@@ -263,6 +263,9 @@ class _RESTProvider(traits.RESTAware):
         return self._rest().proxy_settings
 
 
+_NONE_OR_UNDEFINED: typing.Final[typing.Set[undefined.UndefinedOr[None]]] = {None, undefined.UNDEFINED}
+
+
 class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
@@ -1154,6 +1157,7 @@ class RESTClientImpl(rest_api.RESTClient):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1168,18 +1172,27 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
+        if not undefined.count(embed, embeds):
+            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+
         if not undefined.count(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
+        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
             raise ValueError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
             )
 
+        if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
+            raise TypeError(
+                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "use 'embed' (singular) instead?"
+            )
+
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
-        if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
+        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
             # Syntatic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
@@ -1211,10 +1224,19 @@ class RESTClientImpl(rest_api.RESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
+        serialized_embeds: data_binding.JSONArray = []
+
         if embed is not undefined.UNDEFINED:
             embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-            body.put("embed", embed_payload)
             final_attachments.extend(embed_attachments)
+            serialized_embeds.append(embed_payload)
+        elif embeds is not undefined.UNDEFINED:
+            for embed in embeds:
+                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
+                final_attachments.extend(embed_attachments)
+                serialized_embeds.append(embed_payload)
+
+        body.put("embeds", serialized_embeds)
 
         if final_attachments:
             form = data_binding.URLEncodedForm()
@@ -1256,6 +1278,7 @@ class RESTClientImpl(rest_api.RESTClient):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
@@ -1304,13 +1327,24 @@ class RESTClientImpl(rest_api.RESTClient):
         if attachments:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        if isinstance(embed, embeds_.Embed):
-            embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-            body.put("embed", embed_payload)
-            final_attachments.extend(embed_attachments)
+        serialized_embeds: data_binding.JSONArray = []
+        update_embeds: bool = False
+        if embed is not undefined.UNDEFINED:
+            update_embeds = True
+            if embed is not None:
+                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
+                serialized_embeds.append(embed_payload)
+                final_attachments.extend(embed_attachments)
+        elif embeds is not undefined.UNDEFINED:
+            update_embeds = True
+            if embeds is not None:
+                for embed in embeds:
+                    embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
+                    serialized_embeds.append(embed_payload)
+                    final_attachments.extend(embed_attachments)
 
-        elif embed is None:
-            body.put("embed", None)
+        if update_embeds:
+            body.put("embeds", serialized_embeds)
 
         if replace_attachments:
             body.put("attachments", None)
@@ -1618,13 +1652,13 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
             )
 
-        if not isinstance(attachments, typing.Collection) and attachments is not undefined.UNDEFINED:
+        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
@@ -1734,7 +1768,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
