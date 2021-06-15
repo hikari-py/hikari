@@ -1092,7 +1092,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
@@ -2173,7 +2173,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,

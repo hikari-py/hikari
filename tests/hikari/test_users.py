@@ -49,6 +49,7 @@ class TestPartialUser:
     async def test_send_uses_cached_id(self, obj):
         obj.id = 4123123
         embed = object()
+        embeds = [object()]
         attachment = object()
         attachments = [object(), object()]
         user_mentions = [object(), object()]
@@ -62,6 +63,7 @@ class TestPartialUser:
         returned = await obj.send(
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -81,6 +83,7 @@ class TestPartialUser:
             channel=obj.app.cache.get_dm_channel_id.return_value,
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -96,6 +99,7 @@ class TestPartialUser:
     async def test_send_when_not_cached(self, obj):
         obj.id = 522234
         embed = object()
+        embeds = [object(), object()]
         attachment = object()
         attachments = [object(), object()]
         user_mentions = [object(), object()]
@@ -110,6 +114,7 @@ class TestPartialUser:
         returned = await obj.send(
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -129,6 +134,7 @@ class TestPartialUser:
             channel=obj.fetch_dm_channel.return_value.id,
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -144,6 +150,7 @@ class TestPartialUser:
     async def test_send_when_not_cache_aware(self, obj):
         obj.id = 522234
         embed = object()
+        embeds = [object(), object()]
         attachment = object()
         attachments = [object(), object()]
         user_mentions = [object(), object()]
@@ -157,6 +164,7 @@ class TestPartialUser:
         returned = await obj.send(
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -175,6 +183,7 @@ class TestPartialUser:
             channel=obj.fetch_dm_channel.return_value.id,
             content="test",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",

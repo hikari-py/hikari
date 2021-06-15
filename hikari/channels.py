@@ -61,7 +61,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import embeds
+    from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
     from hikari import iterators
@@ -404,7 +404,8 @@ class TextChannel(PartialChannel, abc.ABC):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds.Embed] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -429,9 +430,9 @@ class TextChannel(PartialChannel, abc.ABC):
             in the content. Any other value here will be cast to a
             `builtins.str`.
 
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
+            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            is provided, then this will instead update the embed. This allows
+            for simpler syntax when sending an embed alone.
 
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
@@ -441,6 +442,8 @@ class TextChannel(PartialChannel, abc.ABC):
         ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -538,6 +541,7 @@ class TextChannel(PartialChannel, abc.ABC):
             channel=self.id,
             content=content,
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce=nonce,

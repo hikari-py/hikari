@@ -28,6 +28,7 @@ from hikari import emojis
 from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import routes
@@ -164,11 +165,13 @@ class TestAsyncMessage:
         message.id = 123
         message.channel_id = 456
         embed = object()
+        embeds = [object(), object()]
         attachment = object()
         roles = [object()]
         await message.edit(
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=[attachment, attachment],
             replace_attachments=True,
@@ -183,6 +186,7 @@ class TestAsyncMessage:
             channel=456,
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=[attachment, attachment],
             replace_attachments=True,
@@ -198,6 +202,7 @@ class TestAsyncMessage:
         message.id = 123
         message.channel_id = 456
         embed = object()
+        embeds = [object(), object()]
         roles = [object()]
         attachment = object()
         attachments = [object()]
@@ -205,6 +210,7 @@ class TestAsyncMessage:
         await message.respond(
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -219,6 +225,7 @@ class TestAsyncMessage:
             channel=456,
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -235,12 +242,14 @@ class TestAsyncMessage:
         message.id = 123
         message.channel_id = 456
         embed = object()
+        embeds = [object()]
         roles = [object()]
         attachment = object()
         attachments = [object()]
         await message.respond(
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -255,6 +264,7 @@ class TestAsyncMessage:
             channel=456,
             content="test content",
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce="nonce",
@@ -264,6 +274,27 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
+        )
+
+    async def test_respond_when_reply_is_False(self, message):
+        message.app = mock.AsyncMock()
+        message.id = 123
+        message.channel_id = 456
+        await message.respond(reply=False)
+        message.app.rest.create_message.assert_awaited_once_with(
+            channel=456,
+            content=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            reply=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+            mentions_reply=undefined.UNDEFINED,
         )
 
     async def test_delete(self, message):

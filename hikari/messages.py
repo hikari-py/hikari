@@ -702,6 +702,7 @@ class PartialMessage(snowflakes.Unique):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
@@ -720,18 +721,18 @@ class PartialMessage(snowflakes.Unique):
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
-            The message content to update with. If
+            If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
             be changed. If `builtins.None`, then the content will be removed.
 
             Any other value will be cast to a `builtins.str` before sending.
 
-            If this is a `hikari.embeds.Embed` and neither the
-            `embed` or `embeds` kwargs are provided or if this is a
-            `hikari.files.Resourceish` and neither the `attachment` or
-            `attachments` kwargs are provided, the values will be overwritten.
-            This allows for simpler syntax when sending an embed or an
-            attachment alone.
+            If this is a `hikari.embeds.Embed` and neither the `embed` or
+            `embeds` kwargs are provided or if this is a
+            `hikari.files.Resourceish` and neither the
+            `attachment` or `attachments` kwargs are provided, the values will
+            be overwritten. This allows for simpler syntax when sending an
+            embed or an attachment alone.
 
         Other Parameters
         ----------------
@@ -741,12 +742,12 @@ class PartialMessage(snowflakes.Unique):
             present, is not changed. If this is `builtins.None`, then the embed
             is removed, if present. Otherwise, the new embed that was provided
             will be used as the replacement.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If provided, the attachment to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
-            attachment is removed, if present. Otherwise, the new attachment
-            that was provided will be attached.
+        embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
+            If provided, the embeds to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous embeds if
+            present are not changed. If this is `builtins.None`, then the embeds
+            are removed ,if present. Otherwise, the new embeds that were provided
+            will be used as the replacement.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
@@ -856,6 +857,7 @@ class PartialMessage(snowflakes.Unique):
             channel=self.channel_id,
             content=content,
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             replace_attachments=replace_attachments,
@@ -871,6 +873,7 @@ class PartialMessage(snowflakes.Unique):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -897,9 +900,9 @@ class PartialMessage(snowflakes.Unique):
             in the content. Any other value here will be cast to a
             `builtins.str`.
 
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
+            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            is provided, then this will instead update the embed. This allows
+            for simpler syntax when sending an embed alone.
 
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
@@ -909,6 +912,8 @@ class PartialMessage(snowflakes.Unique):
         ----------------
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -1005,10 +1010,14 @@ class PartialMessage(snowflakes.Unique):
         if reply is True:
             reply = self
 
+        elif reply is False:
+            reply = undefined.UNDEFINED
+
         return await self.app.rest.create_message(
             channel=self.channel_id,
             content=content,
             embed=embed,
+            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
             nonce=nonce,
