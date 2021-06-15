@@ -176,9 +176,9 @@ and `ciso8601`, which will provide you with a small performance boost.
 
 ### `uvloop`
 
-**If you use Linux**, you will get additional performance benefits from using
-a library called `uvloop`. This replaces the default `asyncio` event loop with
-one that uses `libuv` internally. You can run `pip install uvloop` and then
+**If you use a UNIX based system**, you will get additional performance benefits
+from using a library called `uvloop`. This replaces the default `asyncio` event
+loop with one that uses `libuv` internally. You can run `pip install uvloop` and then
 amend your script to be something similar to the following example to utilise it
 in your application:
 
@@ -190,7 +190,7 @@ if os.name != "nt":
     import uvloop
     uvloop.install()
 
-bot = hikari.Bot(...)
+bot = hikari.BotApp(...)
 ...
 ```
 
