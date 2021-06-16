@@ -742,7 +742,7 @@ class PartialMessage(snowflakes.Unique):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
-        embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
+        embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
             If this is `builtins.None` then any present embeds are removed.
