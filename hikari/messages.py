@@ -738,16 +738,16 @@ class PartialMessage(snowflakes.Unique):
         ----------------
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed, if
-            present, is not changed. If this is `builtins.None`, then the embed
-            is removed, if present. Otherwise, the new embed that was provided
-            will be used as the replacement.
+            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            If this is `builtins.None` then any present embeds are removed.
+            Otherwise, the new embed that was provided will be used as the
+            replacement.
         embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embeds to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embeds if
-            present are not changed. If this is `builtins.None`, then the embeds
-            are removed ,if present. Otherwise, the new embeds that were provided
-            will be used as the replacement.
+            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            If this is `builtins.None` then any present embeds are removed.
+            Otherwise, the new embeds that were provided will be used as the
+            replacement.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
