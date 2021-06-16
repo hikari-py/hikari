@@ -1652,7 +1652,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.count(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
