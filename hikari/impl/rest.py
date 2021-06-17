@@ -1128,6 +1128,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body: data_binding.JSONObjectBuilder,
         query: typing.Optional[data_binding.StringMapBuilder] = None,
         *,
+        no_auth: bool = False,
         content: undefined.UndefinedOr[typing.Any],
         embed: undefined.UndefinedOr[embeds_.Embed],
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
@@ -1142,7 +1143,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if not undefined.count(embed, embeds):
+        if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
@@ -1157,7 +1158,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "use 'embed' (singular) instead?"
             )
 
-        if undefined.count(embed, embeds) == 2 and isinstance(content, embeds_.Embed):
+        if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntatic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
@@ -1212,11 +1213,11 @@ class RESTClientImpl(rest_api.RESTClient):
                     mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
                     form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
 
-                response = await self._request(route, form=form, query=query)
+                response = await self._request(route, form=form, query=query, no_auth=no_auth)
             finally:
                 await stack.aclose()
         else:
-            response = await self._request(route, json=body, query=query)
+            response = await self._request(route, json=body, query=query, no_auth=no_auth)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1278,6 +1279,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route: routes.CompiledRoute,
         body: data_binding.JSONObjectBuilder,
         *,
+        no_auth: bool = False,
         content: undefined.UndefinedOr[typing.Any],
         embed: undefined.UndefinedNoneOr[embeds_.Embed],
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]],
@@ -1289,10 +1291,10 @@ class RESTClientImpl(rest_api.RESTClient):
         user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
         role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
     ) -> messages_.Message:
-        if not undefined.count(attachment, attachments):
+        if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
-        if not undefined.count(embed, embeds):
+        if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
@@ -1372,11 +1374,11 @@ class RESTClientImpl(rest_api.RESTClient):
                     mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
                     form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
 
-                response = await self._request(route, form=form)
+                response = await self._request(route, form=form, no_auth=no_auth)
             finally:
                 await stack.aclose()
         else:
-            response = await self._request(route, json=body)
+            response = await self._request(route, json=body, no_auth=no_auth)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1710,6 +1712,7 @@ class RESTClientImpl(rest_api.RESTClient):
             route,
             body,
             query,
+            no_auth=True,
             content=content,
             embed=embed,
             embeds=embeds,
@@ -1733,41 +1736,6 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    async def _edit_webhook_message(
-        self,
-        route: routes.CompiledRoute,
-        *,
-        content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
-        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-        ] = undefined.UNDEFINED,
-        role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-        ] = undefined.UNDEFINED,
-    ) -> messages_.Message:
-        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
-        body = data_binding.JSONObjectBuilder()
-        return await self._edit_message(
-            route,
-            body,
-            content=content,
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            replace_attachments=replace_attachments,
-            mentions_everyone=mentions_everyone,
-            mentions_reply=undefined.UNDEFINED,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-        )
-
     async def edit_webhook_message(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
@@ -1788,8 +1756,12 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        return await self._edit_webhook_message(
-            routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message),
+        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        body = data_binding.JSONObjectBuilder()
+        return await self._edit_message(
+            route,
+            body,
+            no_auth=True,
             content=content,
             embed=embed,
             embeds=embeds,
@@ -1797,6 +1769,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachments=attachments,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
+            mentions_reply=undefined.UNDEFINED,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
@@ -3088,11 +3061,21 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if embed is not undefined.UNDEFINED:
-            embed_payload, _ = self._entity_factory.serialize_embed(embed)
+            embed_payload, attachments = self._entity_factory.serialize_embed(embed)
+            if attachments:
+                raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
+
             data.put("embeds", [embed_payload])
 
         elif embeds is not undefined.UNDEFINED:
-            data.put("embeds", [raw_embed for raw_embed, _ in map(self._entity_factory.serialize_embed, embeds)])
+            embed_payloads: data_binding.JSONArray = []
+            for embed in embeds:
+                serialized_embed, attachments = self._entity_factory.serialize_embed(embed)
+                embed_payloads.append(embed)
+                if attachments:
+                    raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
+
+            data.put("embeds", embed_payloads)
 
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)
@@ -3116,8 +3099,11 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        return await self._edit_webhook_message(
-            routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token),
+        route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
+        return await self._edit_message(
+            route,
+            data_binding.JSONObjectBuilder(),
+            no_auth=True,
             content=content,
             embed=embed,
             embeds=embeds,
@@ -3127,6 +3113,7 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            mentions_reply=undefined.UNDEFINED,
         )
 
     async def delete_command_response(
