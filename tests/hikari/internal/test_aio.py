@@ -21,6 +21,7 @@
 # SOFTWARE.
 import asyncio
 
+import mock.mock
 import pytest
 
 from hikari.internal import aio
@@ -379,3 +380,34 @@ class TestAllOf:
             await waiter
         assert waiter.cancelled(), "future was forcefully cancelled?"
         assert waiter.done(), "asyncio.CancelledError not raised?"
+
+
+def test_get_or_make_loop():
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False))
+    asyncio.set_event_loop(mock_loop)
+
+    assert aio.get_or_make_loop() is mock_loop
+
+
+def test_get_or_make_loop_handles_runtime_error():
+    asyncio.set_event_loop(None)
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+
+    with mock.patch.object(asyncio, "new_event_loop", return_value=mock_loop) as new_event_loop:
+        assert aio.get_or_make_loop() is mock_loop
+
+        new_event_loop.assert_called_once_with()
+
+    assert asyncio.get_event_loop() is mock_loop
+
+
+def test_get_or_make_loop_handles_closed_loop():
+    asyncio.set_event_loop(mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=True)))
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+
+    with mock.patch.object(asyncio, "new_event_loop", return_value=mock_loop) as new_event_loop:
+        assert aio.get_or_make_loop() is mock_loop
+
+        new_event_loop.assert_called_once_with()
+
+    assert asyncio.get_event_loop() is mock_loop

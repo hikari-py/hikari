@@ -576,15 +576,7 @@ class BotApp(traits.BotAware):
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
-        # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-        # if it was just called with None or if it's called on a thread which isn't the main Thread.
-        try:
-            loop = asyncio.get_event_loop()
-
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
+        loop = aio.get_or_make_loop()
         signals = ("SIGINT", "SIGTERM")
 
         if asyncio_debug:
@@ -1033,6 +1025,9 @@ class BotApp(traits.BotAware):
 
         _LOGGER.debug("closing event loop")
         loop.close()
+        # Closed loops cannot be re-used and other things present in this runtime may be relying on get_event_loop
+        # returning a usable loop.
+        asyncio.set_event_loop(None)
 
     @staticmethod
     def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:

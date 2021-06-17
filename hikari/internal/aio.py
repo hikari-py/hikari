@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "completed_future",
+    "get_or_make_loop",
     "is_async_iterator",
     "is_async_iterable",
     "first_completed",
@@ -190,3 +191,27 @@ async def all_of(
             await gatherer  # pragma: no cover
         except asyncio.CancelledError:
             pass
+
+
+def get_or_make_loop() -> asyncio.AbstractEventLoop:
+    """Get the current usable event loop or create a new one.
+
+    Returns
+    -------
+    asyncio.AbstractEventLoop
+    """
+    # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
+    # if it was just called with None or if it's called on a thread which isn't the main Thread.
+    try:
+        loop = asyncio.get_event_loop()
+
+        # Closed loops cannot be re-used.
+        if not loop.is_closed():
+            return loop
+
+    except RuntimeError:
+        pass
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop

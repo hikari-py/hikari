@@ -21,6 +21,7 @@
 # SOFTWARE.
 import asyncio
 import sys
+import typing
 
 import pytest
 
@@ -28,8 +29,10 @@ sys.set_coroutine_origin_tracking_depth(100)
 
 
 class TestingPolicy(asyncio.DefaultEventLoopPolicy):
-    def set_event_loop(self, loop) -> None:
-        loop.set_debug(True)
+    def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
+        if loop:
+            loop.set_debug(True)
+
         super().set_event_loop(loop)
 
 
