@@ -542,17 +542,12 @@ class CommandInteraction(bases.PartialInteraction):
             in the content. Any other value here will be cast to a
             `builtins.str`.
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor
-            no `embeds` kwarg is provided, then this will instead
-            update the embed. This allows for simpler syntax when
-            sending an embed alone.
-
-            Likewise, if this is a `hikari.files.Resource`, then the
-            content is instead treated as an attachment if no `attachment` and
-            no `attachments` kwargs are provided.
+            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            is provided, then this will instead update the embed. This allows
+            for simpler syntax when sending an embed alone.
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
         flags : typing.Union[builtins.int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
@@ -591,12 +586,9 @@ class CommandInteraction(bases.PartialInteraction):
             If both `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
-            being empty with no attachments or embeds; messages with more than
+            being empty with no embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
-            limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            limits; invalid image URLs in embeds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -668,9 +660,17 @@ class CommandInteraction(bases.PartialInteraction):
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
-            If provided, the message embed.
-        embeds : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
-            If provided, the message embeds.
+            If provided, the embed to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            If this is `builtins.None` then any present embeds are removed.
+            Otherwise, the new embed that was provided will be used as the
+            replacement.
+        embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the embeds to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            If this is `builtins.None` then any present embeds are removed.
+            Otherwise, the new embeds that were provided will be used as the
+            replacement.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
@@ -739,9 +739,7 @@ class CommandInteraction(bases.PartialInteraction):
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            invalid image URLs in embeds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError

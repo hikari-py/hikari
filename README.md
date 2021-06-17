@@ -26,7 +26,7 @@ Python 3.8, 3.9 and 3.10-dev are currently supported.
 ```py
 import hikari
 
-bot = hikari.BotApp(token="...")
+bot = hikari.GatewayBot(token="...")
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
