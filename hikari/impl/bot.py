@@ -862,10 +862,8 @@ class BotApp(traits.BotAware):
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
 
-    def subscribe(
-        self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]
-    ) -> event_manager_.CallbackT[typing.Any]:
-        return self._event_manager.subscribe(event_type, callback)
+    def subscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+        self._event_manager.subscribe(event_type, callback)
 
     def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         self._event_manager.unsubscribe(event_type, callback)
