@@ -76,6 +76,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
     async def _disconnect(self) -> None:
         if self._connections:
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
+            # We rely on the assumption that _on_connection_close will be called here rather than explicitly
+            # emptying self._connections.
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
     async def disconnect(self) -> None:
@@ -110,11 +112,6 @@ class VoiceComponentImpl(voice.VoiceComponent):
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
 
-        if shard_id is None:
-            raise errors.VoiceError(
-                "Cannot connect to voice. Ensure the application is configured as a gateway zookeeper and try again."
-            )
-
         if guild_id in self._connections:
             raise errors.VoiceError(
                 "The bot is already in a voice channel for this guild. Close the other connection first, or "
@@ -136,10 +133,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        user = None
-        if self._app.cache:
-            user = self._app.cache.get_me()
-        if user is None:
+        user = self._app.cache.get_me()
+        if not user:
             user = await self._app.rest.fetch_my_user()
 
         await asyncio.wait_for(shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=5.0)

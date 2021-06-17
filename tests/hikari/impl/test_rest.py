@@ -43,7 +43,9 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.impl import buckets
 from hikari.impl import entity_factory
+from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
@@ -240,6 +242,66 @@ class TestClientCredentialsStrategy:
         mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
             client=65123, client_secret="12354", scopes=("applications.commands.update", "identify")
         )
+
+
+###################
+# _LiveAttributes #
+###################
+
+
+class Test_LiveAttributes:
+    def test_build(self):
+        stack = contextlib.ExitStack()
+        create_tcp_connector = stack.enter_context(mock.patch.object(net, "create_tcp_connector"))
+        create_client_session = stack.enter_context(mock.patch.object(net, "create_client_session"))
+        bucket_manager = stack.enter_context(mock.patch.object(buckets, "RESTBucketManager"))
+        manual_rate_limiter = stack.enter_context(mock.patch.object(rate_limits, "ManualRateLimiter"))
+        stack.enter_context(mock.patch.object(asyncio, "get_running_loop"))
+        mock_settings = object()
+        mock_proxy_settings = mock.Mock()
+
+        with stack:
+            attributes = rest._LiveAttributes.build(123.321, mock_settings, mock_proxy_settings)
+
+        assert isinstance(attributes, rest._LiveAttributes)
+        assert attributes.buckets is bucket_manager.return_value
+        assert attributes.client_session is create_client_session.return_value
+        assert isinstance(attributes.closed_event, asyncio.Event)
+        assert attributes.global_rate_limit is manual_rate_limiter.return_value
+        assert attributes.tcp_connector is create_tcp_connector.return_value
+
+        bucket_manager.assert_called_once_with(123.321)
+        create_tcp_connector.assert_called_once_with(mock_settings)
+        create_client_session.assert_called_once_with(
+            connector=create_tcp_connector.return_value,
+            connector_owner=False,
+            http_settings=mock_settings,
+            raise_for_status=False,
+            trust_env=mock_proxy_settings.trust_env,
+        )
+        manual_rate_limiter.assert_called_once_with()
+
+    def test_build_when_no_running_loop(self):
+        with pytest.raises(RuntimeError):
+            rest._LiveAttributes.build(123.321, object(), object())
+
+    @pytest.mark.asyncio()
+    async def test_close(self):
+        attributes = rest._LiveAttributes(
+            buckets=mock.Mock(),
+            client_session=mock.AsyncMock(),
+            closed_event=mock.Mock(),
+            global_rate_limit=mock.Mock(),
+            tcp_connector=mock.AsyncMock(),
+        )
+
+        await attributes.close()
+
+        attributes.buckets.close.assert_called_once_with()
+        attributes.client_session.close.assert_awaited_once_with()
+        attributes.closed_event.set.assert_called_once_with()
+        attributes.global_rate_limit.close.assert_called_once_with()
+        attributes.tcp_connector.close.assert_awaited_once_with()
 
 
 ###########
@@ -540,6 +602,36 @@ class TestRESTClientImpl:
         mock_type = object()
         rest_client._token_type = mock_type
         assert rest_client.token_type is mock_type
+
+    async def test_close(self, rest_client):
+        rest_client._live_attributes = mock_live_attributes = mock.AsyncMock()
+
+        await rest_client.close()
+
+        mock_live_attributes.close.assert_awaited_once_with()
+        assert rest_client._live_attributes is None
+
+    def test_start(self, rest_client):
+        rest_client._live_attributes = None
+
+        with mock.patch.object(rest._LiveAttributes, "build") as build:
+            rest_client.start()
+
+            build.assert_called_once_with(
+                rest_client._max_rate_limit, rest_client.http_settings, rest_client.proxy_settings
+            )
+            assert rest_client._live_attributes is build.return_value
+
+    def test__get_live_attributes_when_active(self, rest_client):
+        mock_attributes = rest_client._live_attributes = object()
+
+        assert rest_client._get_live_attributes() is mock_attributes
+
+    def test__get_live_attributes_when_inactive(self, rest_client):
+        rest_client._live_attributes = None
+
+        with pytest.raises(errors.ComponentStateConflictError):
+            rest_client._get_live_attributes()
 
     @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),

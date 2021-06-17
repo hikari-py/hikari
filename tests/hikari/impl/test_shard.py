@@ -710,6 +710,17 @@ class TestGatewayShardImpl:
         client._user_id = 123
         assert await client.get_user_id() == 123
 
+    def test__get_ws_when_active(self, client):
+        mock_ws = client._ws = object()
+
+        assert client._get_ws() is mock_ws
+
+    def test__get_ws_when_inactive(self, client):
+        client._ws = None
+
+        with pytest.raises(errors.ComponentStateConflictError):
+            client._get_ws()
+
     async def test_join(self, client):
         client._closed_event = mock.Mock(wait=mock.AsyncMock())
 

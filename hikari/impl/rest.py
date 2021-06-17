@@ -470,9 +470,9 @@ class _LiveAttributes:
         )
 
     async def close(self) -> None:
+        self.closed_event.set()
         self.buckets.close()
         await self.client_session.close()
-        self.closed_event.set()
         self.global_rate_limit.close()
         await self.tcp_connector.close()
 
