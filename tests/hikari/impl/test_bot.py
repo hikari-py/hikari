@@ -480,7 +480,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
             bot.run(close_loop=False, asyncio_debug=True)
@@ -492,7 +492,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         coroutine_tracking_depth = stack.enter_context(
             mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError)
         )
@@ -507,7 +507,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         signal_function = stack.enter_context(
             mock.patch.object(signal, "signal", side_effect=[None, AttributeError, None, AttributeError])
         )
@@ -534,7 +534,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=raise_signal))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl, "_LOGGER", isEnabledFor=mock.Mock(return_value=logging)))
-        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
         set_close_flag = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_set_close_flag", new=mock.Mock()))
         run_coroutine_threadsafe = stack.enter_context(mock.patch.object(asyncio, "run_coroutine_threadsafe"))
 
@@ -550,7 +550,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(asyncio, "get_event_loop"))
+        stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         executor = mock.Mock()
         bot._executor = executor
 
@@ -566,7 +566,7 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
         destroy_loop = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_destroy_loop"))
-        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
             bot.run(close_loop=True)
@@ -588,7 +588,7 @@ class TestBotApp:
         start_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
         join_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
         close_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        loop = stack.enter_context(mock.patch.object(asyncio, "get_event_loop")).return_value
+        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
             bot.run(
