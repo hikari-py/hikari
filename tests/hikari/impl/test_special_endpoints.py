@@ -107,7 +107,7 @@ class TestInteractionMessageBuilder:
         mock_entity_factory = mock.Mock()
         mock_embed = object()
         builder = (
-            special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.CREATE_MESSAGE)
+            special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
             .add_embed(mock_embed)
             .set_content("a content")
             .set_flags(2323)
@@ -121,7 +121,7 @@ class TestInteractionMessageBuilder:
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
         assert result == {
-            "type": base_interactions.ResponseType.CREATE_MESSAGE,
+            "type": base_interactions.ResponseType.MESSAGE_CREATE,
             "data": {
                 "content": "a content",
                 "embeds": [mock_entity_factory.serialize_embed.return_value],

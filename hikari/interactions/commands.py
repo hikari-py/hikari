@@ -59,18 +59,18 @@ if typing.TYPE_CHECKING:
 
 
 COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
-    [bases.ResponseType.CREATE_MESSAGE, bases.ResponseType.DEFERRED_MESSAGE_CREATE]
+    [bases.ResponseType.MESSAGE_CREATE, bases.ResponseType.DEFERRED_MESSAGE_CREATE]
 )
 """Set of the response types which are valid for a command interaction.
 
 This includes:
 
-* `hikari.interactions.bases.ResponseType.CREATE_MESSAGE`
+* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`
 * `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`
 """
 
 CommandResponseTypesT = typing.Union[
-    typing.Literal[bases.ResponseType.CREATE_MESSAGE],
+    typing.Literal[bases.ResponseType.MESSAGE_CREATE],
     typing.Literal[4],
     typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_CREATE],
     typing.Literal[5],
@@ -79,7 +79,7 @@ CommandResponseTypesT = typing.Union[
 
 The following types are valid for this:
 
-* `hikari.interactions.bases.ResponseType.CREATE_MESSAGE`/`4`
+* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`/`4`
 * `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
 """
 
@@ -450,7 +450,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Interaction message response builder object.
         """
-        return self.app.rest.interaction_message_builder(bases.ResponseType.CREATE_MESSAGE)
+        return self.app.rest.interaction_message_builder(bases.ResponseType.MESSAGE_CREATE)
 
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
@@ -502,7 +502,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_command_response(self.application_id, self.token)
+        return await self.app.rest.fetch_interaction_response(self.application_id, self.token)
 
     async def create_initial_response(
         self,
@@ -608,7 +608,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
-        await self.app.rest.create_command_response(
+        await self.app.rest.create_interaction_response(
             self.id,
             self.token,
             response_type,
@@ -758,7 +758,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
-        return await self.app.rest.edit_command_response(
+        return await self.app.rest.edit_interaction_response(
             self.application_id,
             self.token,
             content,
@@ -795,7 +795,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.delete_command_response(self.application_id, self.token)
+        await self.app.rest.delete_interaction_response(self.application_id, self.token)
 
     async def fetch_channel(self) -> channels.PartialChannel:
         """Fetch the guild channel this was triggered in.

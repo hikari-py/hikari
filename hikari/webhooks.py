@@ -184,6 +184,10 @@ class ExecutableWebhook(abc.ABC):
                 and the only settable flag is EPHEMERAL; this field is just
                 ignored for non-interaction webhooks.
 
+        !!! warning
+            As of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
         Returns
         -------
         hikari.messages.Message

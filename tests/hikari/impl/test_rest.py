@@ -3515,36 +3515,36 @@ class TestRESTClientImplAsync:
         assert result.type == 4
         assert isinstance(result, special_endpoints.InteractionMessageBuilder)
 
-    async def test_fetch_command_response(self, rest_client):
+    async def test_fetch_interaction_response(self, rest_client):
         expected_route = routes.GET_INTERACTION_RESPONSE.compile(webhook=1235432, token="go homo or go gnomo")
         rest_client._request = mock.AsyncMock(return_value={"id": "94949494949"})
 
-        result = await rest_client.fetch_command_response(StubModel(1235432), "go homo or go gnomo")
+        result = await rest_client.fetch_interaction_response(StubModel(1235432), "go homo or go gnomo")
 
         assert result is rest_client._entity_factory.deserialize_message.return_value
         rest_client._entity_factory.deserialize_message.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
 
     @pytest.mark.skip("TODO")
-    async def test_create_command_response_with_optionals(self, rest_client):
+    async def test_create_interaction_response_with_optionals(self, rest_client):
         ...
 
     @pytest.mark.skip("TODO")
-    async def test_create_command_response_without_optionals(self, rest_client):
+    async def test_create_interaction_response_without_optionals(self, rest_client):
         ...
 
     @pytest.mark.skip("TODO: this basically dupes test_edit_webhook_message")
-    async def test_edit_command_response_with_optionals(self, rest_client):
+    async def test_edit_interaction_response_with_optionals(self, rest_client):
         ...
 
     @pytest.mark.skip("TODO: this basically dupes test_edit_webhook_message")
-    async def test_edit_command_response_without_optionals(self, rest_client):
+    async def test_edit_interaction_response_without_optionals(self, rest_client):
         ...
 
-    async def test_delete_command_response(self, rest_client):
+    async def test_delete_interaction_response(self, rest_client):
         expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=1235431, token="go homo now")
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_command_response(StubModel(1235431), "go homo now")
+        await rest_client.delete_interaction_response(StubModel(1235431), "go homo now")
 
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)

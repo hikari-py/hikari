@@ -67,7 +67,7 @@ class ResponseType(int, enums.Enum):
     # server rather than as a part of the public interface.
 
     # Type 2 and 3 aren't included as they were deprecated/removed by Discord.
-    CREATE_MESSAGE = 4
+    MESSAGE_CREATE = 4
     """An immediate message response to an interaction."""
 
     DEFERRED_MESSAGE_CREATE = 5
@@ -79,21 +79,21 @@ class ResponseType(int, enums.Enum):
 
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
-    [ResponseType.CREATE_MESSAGE]
+    [ResponseType.MESSAGE_CREATE]
 )
 """Set of the response types which are valid for message responses.
 
 This includes the following:
 
-* `ResponseType.CREATE_MESSAGE`
+* `ResponseType.MESSAGE_CREATE`
 """
 
-MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.CREATE_MESSAGE], typing.Literal[4]]
+MessageResponseTypesT = typing.Union[typing.Literal[ResponseType.MESSAGE_CREATE], typing.Literal[4]]
 """Type-hint of the response types which are valid for message responses.
 
 The following are valid for this:
 
-* `ResponseType.CREATE_MESSAGE`/`4`
+* `ResponseType.MESSAGE_CREATE`/`4`
 """
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(

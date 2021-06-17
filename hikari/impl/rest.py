@@ -3005,7 +3005,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
-    async def fetch_command_response(
+    async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         route = routes.GET_INTERACTION_RESPONSE.compile(webhook=application, token=token)
@@ -3013,7 +3013,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    async def create_command_response(
+    async def create_interaction_response(
         self,
         interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
         token: str,
@@ -3080,7 +3080,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)
 
-    async def edit_command_response(
+    async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         token: str,
@@ -3116,7 +3116,7 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_reply=undefined.UNDEFINED,
         )
 
-    async def delete_command_response(
+    async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)

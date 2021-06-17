@@ -144,7 +144,7 @@ class TestCommandInteraction:
         builder = mock_command_interaction.build_response()
 
         assert builder is mock_app.rest.interaction_message_builder.return_value
-        mock_app.rest.interaction_message_builder.assert_called_once_with(bases.ResponseType.CREATE_MESSAGE)
+        mock_app.rest.interaction_message_builder.assert_called_once_with(bases.ResponseType.MESSAGE_CREATE)
 
     def test_build_deferred_response(self, mock_command_interaction, mock_app):
         mock_app.rest.interaction_deferred_builder = mock.Mock()
@@ -157,15 +157,15 @@ class TestCommandInteraction:
     async def test_fetch_initial_response(self, mock_command_interaction, mock_app):
         result = await mock_command_interaction.fetch_initial_response()
 
-        assert result is mock_app.rest.fetch_command_response.return_value
-        mock_app.rest.fetch_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
+        assert result is mock_app.rest.fetch_interaction_response.return_value
+        mock_app.rest.fetch_interaction_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
     @pytest.mark.asyncio()
     async def test_create_initial_response_with_optional_args(self, mock_command_interaction, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
         await mock_command_interaction.create_initial_response(
-            bases.ResponseType.CREATE_MESSAGE,
+            bases.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -176,10 +176,10 @@ class TestCommandInteraction:
             role_mentions=[6324523],
         )
 
-        mock_app.rest.create_command_response.assert_awaited_once_with(
+        mock_app.rest.create_interaction_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.CREATE_MESSAGE,
+            bases.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             flags=64,
@@ -194,7 +194,7 @@ class TestCommandInteraction:
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
         await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-        mock_app.rest.create_command_response.assert_awaited_once_with(
+        mock_app.rest.create_interaction_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
             bases.ResponseType.DEFERRED_MESSAGE_CREATE,
@@ -226,8 +226,8 @@ class TestCommandInteraction:
             role_mentions=[562134],
         )
 
-        assert result is mock_app.rest.edit_command_response.return_value
-        mock_app.rest.edit_command_response.assert_awaited_once_with(
+        assert result is mock_app.rest.edit_interaction_response.return_value
+        mock_app.rest.edit_interaction_response.assert_awaited_once_with(
             43123,
             "httptptptptptptptp",
             "new content",
@@ -245,8 +245,8 @@ class TestCommandInteraction:
     async def test_edit_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
         result = await mock_command_interaction.edit_initial_response()
 
-        assert result is mock_app.rest.edit_command_response.return_value
-        mock_app.rest.edit_command_response.assert_awaited_once_with(
+        assert result is mock_app.rest.edit_interaction_response.return_value
+        mock_app.rest.edit_interaction_response.assert_awaited_once_with(
             43123,
             "httptptptptptptptp",
             undefined.UNDEFINED,
@@ -264,7 +264,7 @@ class TestCommandInteraction:
     async def test_delete_initial_response(self, mock_command_interaction, mock_app):
         await mock_command_interaction.delete_initial_response()
 
-        mock_app.rest.delete_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
+        mock_app.rest.delete_interaction_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_command_interaction, mock_app):

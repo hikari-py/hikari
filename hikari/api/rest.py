@@ -2170,6 +2170,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
+        username : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the username to override the webhook's username
+            for this request.
+        avatar_url : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the url of an image to override the webhook's
+            avatar with for this request.
         embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
@@ -2215,6 +2221,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 As of writing this can only be set for interaction webhooks
                 and the only settable flag is EPHEMERAL; this field is just
                 ignored for non-interaction webhooks.
+
+        !!! warning
+            As of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -6422,7 +6432,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_command_response(
+    async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         """Fetch the initial response for an interaction.
@@ -6463,7 +6473,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_command_response(
+    async def create_interaction_response(
         self,
         interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
         token: str,
@@ -6576,7 +6586,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def edit_command_response(
+    async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         token: str,
@@ -6720,7 +6730,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
-    async def delete_command_response(
+    async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         """Delete the initial response of an interaction.
