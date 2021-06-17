@@ -277,7 +277,7 @@ class TestBotApp:
 
         bot._check_if_alive()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_close_when_not_force(self, bot, event_manager):
         bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         bot._is_alive = True
@@ -287,7 +287,7 @@ class TestBotApp:
         bot._closing_event.set.assert_called_once_with()
         assert bot._is_alive is True
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_close_when_not_force_and_closing_event_set(self, bot, event_manager):
         bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
         bot._is_alive = True
@@ -297,7 +297,7 @@ class TestBotApp:
         bot._closing_event.set.assert_not_called()
         assert bot._is_alive is True
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_close_when_already_closed(self, bot, event_manager):
         bot._closing_event = None
         bot._is_alive = True
@@ -306,7 +306,7 @@ class TestBotApp:
 
         assert bot._is_alive is True
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_close_when_force(self, bot, event_manager, event_factory, rest, voice, cache):
         def null_call(arg):
             return arg
@@ -414,7 +414,7 @@ class TestBotApp:
 
         event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_join_when_not_until_close(self, bot, event_manager):
         shard0 = mock.Mock()
         shard1 = mock.Mock()
@@ -430,7 +430,7 @@ class TestBotApp:
             *(shard0.join.return_value, shard1.join.return_value, shard2.join.return_value)
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_join_when_until_close(self, bot):
         shard0 = mock.Mock()
         shard1 = mock.Mock()
@@ -628,12 +628,12 @@ class TestBotApp:
             status=status,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_start_when_shard_ids_specified_without_shard_count(self, bot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             await bot.start(shard_ids={1})
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_start_when_already_running(self, bot):
         bot._is_alive = True
 
@@ -669,7 +669,7 @@ class TestBotApp:
 
         bot._event_manager.unsubscribe.assert_called_once_with(event_type, callback)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_wait_for(self, bot):
         event_type = object()
         predicate = object()
@@ -702,7 +702,7 @@ class TestBotApp:
 
         calculate_shard_id.assert_called_once_with(96, 702763150025556029)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_update_presence(self, bot):
         status = object()
         activity = object()
@@ -730,7 +730,7 @@ class TestBotApp:
         shard1.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
         shard2.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_update_voice_state(self, bot):
         shard = mock.Mock()
         shard.update_voice_state = mock.AsyncMock()
@@ -745,7 +745,7 @@ class TestBotApp:
             guild=115590097100865541, channel=123, self_mute=True, self_deaf=False
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_request_guild_members(self, bot):
         shard = mock.Mock(shard_count=3)
         shard.request_guild_members = mock.AsyncMock()
@@ -772,14 +772,14 @@ class TestBotApp:
             nonce="NONCE",
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_set_close_flag(self, bot):
         with mock.patch.object(bot_impl.BotApp, "close") as close:
             await bot._set_close_flag("Terminated", 15)
 
         close.assert_awaited_once_with(force=False)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_start_one_shard(self, bot):
         activity = object()
         status = object()
@@ -824,7 +824,7 @@ class TestBotApp:
         assert bot._shards == {1: shard_obj}
         first_completed.assert_awaited_once_with(shard_obj.start.return_value, closing_event.wait.return_value)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_start_one_shard_when_not_alive(self, bot):
         activity = object()
         status = object()

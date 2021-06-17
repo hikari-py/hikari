@@ -53,7 +53,7 @@ class GuildEvent:
         event.app.cache.get_unavailable_guild.assert_called_once_with(534123123)
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_guild(self, event):
         event.app.rest.fetch_guild = mock.AsyncMock()
         result = await event.fetch_guild()
@@ -61,7 +61,7 @@ class GuildEvent:
         assert result is event.app.rest.fetch_guild.return_value
         event.app.rest.fetch_guild.assert_called_once_with(534123123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_guild_preview(self, event):
         event.app.rest.fetch_guild_preview = mock.AsyncMock()
         result = await event.fetch_guild_preview()

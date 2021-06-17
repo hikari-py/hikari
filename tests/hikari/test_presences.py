@@ -50,14 +50,14 @@ class TestMemberPresence:
             client_status=mock.Mock(presences.ClientStatus),
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_user(self, model):
         model.app.rest.fetch_user = mock.AsyncMock()
 
         assert await model.fetch_user() is model.app.rest.fetch_user.return_value
         model.app.rest.fetch_user.assert_awaited_once_with(432)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_member(self, model):
         model.app.rest.fetch_member = mock.AsyncMock()
 

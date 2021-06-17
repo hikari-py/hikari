@@ -172,7 +172,7 @@ class TestTimedCacheMap:
         del mock_map["ok"]
         assert mock_map == {"ayanami": "rei qt"}
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test___delitem___garbage_collection(self):
         mock_map = collections.TimedCacheMap(
             expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
@@ -186,7 +186,7 @@ class TestTimedCacheMap:
         del mock_map["ayanami"]
         assert mock_map == {"rei": "aww"}
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test___delitem___garbage_collection_on_expire_set(self):
         expire_call = mock.Mock()
         mock_map = collections.TimedCacheMap(
@@ -239,7 +239,7 @@ class TestTimedCacheMap:
         mock_map["ok"] = "foo"
         assert list(mock_map.items())[2] == ("ok", "foo")
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test___setitem___garbage_collection(self):
         mock_map = collections.TimedCacheMap(
             expiry=datetime.timedelta(seconds=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3)
