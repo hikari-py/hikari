@@ -147,7 +147,6 @@ class InteractionServer(interaction_server.InteractionServer):
         "_listeners",
         "_loads",
         "_rest_client",
-        "_runner",
         "_server",
         "_verify",
     )
@@ -171,9 +170,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._listeners: typing.Dict[typing.Type[interaction_bases.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._rest_client = rest_client
-        self._runner: typing.Optional[aiohttp.web_runner.AppRunner] = None
-        self._server = aiohttp.web.Application()
-        self._server.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])
+        self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._verify = ed25519.build_ed25519_verifier(public_key) if public_key is not None else None
 
     @property
@@ -185,7 +182,7 @@ class InteractionServer(interaction_server.InteractionServer):
         builtins.bool
             Whether this interaction server is active
         """
-        return self._runner is not None
+        return self._server is not None
 
     async def _fetch_public_key(self) -> ed25519.VerifierT:
         if self._application_fetch_lock is None:
@@ -272,7 +269,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
-        if not self._runner or not self._close_event:
+        if not self._server or not self._close_event:
             raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
 
         if self._is_closing:
@@ -282,11 +279,11 @@ class InteractionServer(interaction_server.InteractionServer):
         self._is_closing = True
         self._application_fetch_lock = None
         # This shutdown then cleanup ordering matters.
-        await self._runner.shutdown()
-        await self._runner.cleanup()
+        await self._server.shutdown()
+        await self._server.cleanup()
         self._close_event.set()
         self._close_event = None
-        self._runner = None
+        self._server = None
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
@@ -424,15 +421,15 @@ class InteractionServer(interaction_server.InteractionServer):
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
         """
-        if self._runner:
+        if self._server:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
         self._close_event = asyncio.Event()
         self._is_closing = False
-        self._runner = aiohttp.web_runner.AppRunner(
-            self._server, handle_signals=enable_signal_handlers, access_log=_LOGGER
-        )
-        await self._runner.setup()
+        aio_app = aiohttp.web.Application()
+        aio_app.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])
+        self._server = aiohttp.web_runner.AppRunner(aio_app, handle_signals=enable_signal_handlers, access_log=_LOGGER)
+        await self._server.setup()
         sites: typing.List[aiohttp.web.BaseSite] = []
 
         if host is not None:
@@ -442,7 +439,7 @@ class InteractionServer(interaction_server.InteractionServer):
             for h in host:
                 sites.append(
                     aiohttp.web.TCPSite(
-                        self._runner,
+                        self._server,
                         h,
                         port,
                         shutdown_timeout=shutdown_timeout,
@@ -456,7 +453,7 @@ class InteractionServer(interaction_server.InteractionServer):
         elif path is None and socket is None or port is None:
             sites.append(
                 aiohttp.web.TCPSite(
-                    self._runner,
+                    self._server,
                     port=port,
                     shutdown_timeout=shutdown_timeout,
                     ssl_context=ssl_context,
@@ -469,14 +466,14 @@ class InteractionServer(interaction_server.InteractionServer):
         if path is not None:
             sites.append(
                 aiohttp.web.UnixSite(
-                    self._runner, path, shutdown_timeout=shutdown_timeout, ssl_context=ssl_context, backlog=backlog
+                    self._server, path, shutdown_timeout=shutdown_timeout, ssl_context=ssl_context, backlog=backlog
                 )
             )
 
         if socket is not None:
             sites.append(
                 aiohttp.web.SockSite(
-                    self._runner, socket, shutdown_timeout=shutdown_timeout, ssl_context=ssl_context, backlog=backlog
+                    self._server, socket, shutdown_timeout=shutdown_timeout, ssl_context=ssl_context, backlog=backlog
                 )
             )
 

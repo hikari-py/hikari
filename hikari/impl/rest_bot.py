@@ -37,6 +37,7 @@ from hikari.api import interaction_server as interaction_server_
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
+from hikari.internal import aio
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -439,15 +440,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if self.is_alive:
             raise errors.ComponentStateConflictError("Cannot start a bot that's already active")
 
-        # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-        # if it was just called with None or if it's called on a thread which isn't the main Thread.
-        try:
-            loop = asyncio.get_event_loop()
-
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
+        loop = aio.get_or_make_loop()
         if asyncio_debug:
             loop.set_debug(True)
 
@@ -543,6 +536,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if self.is_alive:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
+        self._is_closing = False
         self._close_event = asyncio.Event()
 
         if check_for_updates:

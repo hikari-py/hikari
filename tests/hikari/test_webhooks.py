@@ -34,7 +34,7 @@ class TestExecutableWebhook:
             webhooks.ExecutableWebhook, slots_=False, app=mock.AsyncMock()
         )()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_execute_with_optionals(self, executable_webhook):
         mock_attachment_1 = object()
         mock_attachment_2 = object()
@@ -71,7 +71,7 @@ class TestExecutableWebhook:
             flags=64,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_execute_without_optionals(self, executable_webhook):
         result = await executable_webhook.execute()
 

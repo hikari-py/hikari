@@ -75,26 +75,21 @@ class TestInteractionServer:
         return mock.Mock()
 
     @pytest.fixture()
-    def mock_application(self):
-        return mock.Mock(aiohttp.web.Application)
-
-    @pytest.fixture()
-    def mock_interaction_server(self, mock_entity_factory, mock_rest_client, mock_verifier, mock_application):
+    def mock_interaction_server(self, mock_entity_factory, mock_rest_client, mock_verifier):
         cls = hikari_test_helpers.mock_class_namespace(interaction_server_impl.InteractionServer, slots_=False)
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ed25519, "build_ed25519_verifier", return_value=mock_verifier))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application", return_value=mock_application))
 
         with stack:
             return cls(entity_factory=mock_entity_factory, rest_client=mock_rest_client)
 
-    def test___init__(self, mock_application, mock_verifier, mock_rest_client, mock_entity_factory):
+    def test___init__(self, mock_verifier, mock_rest_client, mock_entity_factory):
         mock_dumps = object()
         mock_loads = object()
 
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application", return_value=mock_application))
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
         stack.enter_context(mock.patch.object(ed25519, "build_ed25519_verifier", return_value=mock_verifier))
 
         with stack:
@@ -106,17 +101,13 @@ class TestInteractionServer:
                 public_key=b"okokok",
             )
 
-            aiohttp.web.Application.assert_called_once()
-            mock_application.add_routes.assert_called_once_with([aiohttp.web.post("/", result.aiohttp_hook)])
-            assert result._server is mock_application
-
         assert result._dumps is mock_dumps
         assert result._entity_factory is mock_entity_factory
         assert result._loads is mock_loads
         assert result._rest_client is mock_rest_client
         assert result._verify is mock_verifier
 
-    def test___init___without_public_key(self, mock_application, mock_verifier, mock_rest_client, mock_entity_factory):
+    def test___init___without_public_key(self, mock_verifier, mock_rest_client, mock_entity_factory):
         with mock.patch.object(aiohttp.web, "Application"):
             result = interaction_server_impl.InteractionServer(
                 dumps=object(), entity_factory=object(), loads=object(), rest_client=object()
@@ -128,7 +119,7 @@ class TestInteractionServer:
         assert mock_interaction_server.is_alive is False
 
     def test_is_alive_property_when_active(self, mock_interaction_server):
-        mock_interaction_server._runner = object()
+        mock_interaction_server._server = object()
 
         assert mock_interaction_server.is_alive is True
 
@@ -287,7 +278,7 @@ class TestInteractionServer:
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
         mock_interaction_server._is_closing = False
-        mock_interaction_server._runner = mock_runner
+        mock_interaction_server._server = mock_runner
         mock_interaction_server._close_event = mock_event
 
         await mock_interaction_server.close()
@@ -301,7 +292,7 @@ class TestInteractionServer:
     async def test_close_when_closing(self, mock_interaction_server):
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
-        mock_interaction_server._runner = mock_runner
+        mock_interaction_server._server = mock_runner
         mock_interaction_server._close_event = mock_event
         mock_interaction_server._is_closing = True
         mock_interaction_server.join = mock.AsyncMock()
@@ -321,7 +312,7 @@ class TestInteractionServer:
     @pytest.mark.asyncio()
     async def test_join(self, mock_interaction_server):
         mock_event = mock.AsyncMock()
-        mock_interaction_server._runner = object()
+        mock_interaction_server._server = object()
         mock_interaction_server._close_event = mock_event
 
         await mock_interaction_server.join()
@@ -460,7 +451,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_interaction_when_response_builder_error(self, mock_interaction_server, mock_entity_factory):
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
@@ -483,7 +474,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_interaction_when_json_encode_fails(self, mock_interaction_server, mock_entity_factory):
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
@@ -518,7 +509,7 @@ class TestInteractionServer:
         assert result.status_code == 501
 
     @pytest.mark.asyncio()
-    async def test_start(self, mock_interaction_server, mock_application):
+    async def test_start(self, mock_interaction_server):
         mock_context = object()
         mock_socket = object()
         mock_interaction_server._is_closing = True
@@ -527,6 +518,7 @@ class TestInteractionServer:
         stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
         stack.enter_context(mock.patch.object(asyncio, "Event"))
 
         with stack:
@@ -543,8 +535,12 @@ class TestInteractionServer:
                 ssl_context=mock_context,
             )
 
+            aiohttp.web.Application.assert_called_once_with()
+            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
+                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+            )
             aiohttp.web_runner.AppRunner.assert_called_once_with(
-                mock_application, handle_signals=False, access_log=interaction_server_impl._LOGGER
+                aiohttp.web.Application.return_value, handle_signals=False, access_log=interaction_server_impl._LOGGER
             )
             aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
             aiohttp.web.TCPSite.assert_called_once_with(
@@ -578,17 +574,22 @@ class TestInteractionServer:
             assert mock_interaction_server._is_closing is False
 
     @pytest.mark.asyncio()
-    async def test_start_with_default_behaviour(self, mock_interaction_server, mock_application):
+    async def test_start_with_default_behaviour(self, mock_interaction_server):
         mock_context = object()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context)
 
+            aiohttp.web.Application.assert_called_once_with()
+            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
+                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+            )
             aiohttp.web_runner.AppRunner.assert_called_once_with(
-                mock_application, handle_signals=True, access_log=interaction_server_impl._LOGGER
+                aiohttp.web.Application.return_value, handle_signals=True, access_log=interaction_server_impl._LOGGER
             )
             aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
             aiohttp.web.TCPSite.assert_called_once_with(
@@ -602,18 +603,23 @@ class TestInteractionServer:
             )
             aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
 
-    @pytest.mark.asyncio
-    async def test_start_with_multiple_hosts(self, mock_interaction_server, mock_application):
+    @pytest.mark.asyncio()
+    async def test_start_with_multiple_hosts(self, mock_interaction_server):
         mock_context = object()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context, host=["123", "4312"], port=453123)
 
+            aiohttp.web.Application.assert_called_once_with()
+            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
+                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+            )
             aiohttp.web_runner.AppRunner.assert_called_once_with(
-                mock_application, handle_signals=True, access_log=interaction_server_impl._LOGGER
+                aiohttp.web.Application.return_value, handle_signals=True, access_log=interaction_server_impl._LOGGER
             )
             aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
             aiohttp.web.TCPSite.assert_has_calls(
@@ -644,7 +650,7 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio()
     async def test_start_when_already_running(self, mock_interaction_server):
-        mock_interaction_server._runner = object()
+        mock_interaction_server._server = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_interaction_server.start()

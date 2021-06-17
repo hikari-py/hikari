@@ -1017,7 +1017,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_webhook_update_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_application_command_create(self, event_manager, shard, event_factory):
         payload = {"id": "4544333334dd44"}
 
@@ -1026,7 +1026,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_command_create_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event_factory.deserialize_command_create_event.return_value)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_application_command_update(self, event_manager, shard, event_factory):
         payload = {"id": "454433333444"}
 
@@ -1035,7 +1035,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_command_update_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event_factory.deserialize_command_update_event.return_value)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_application_command_delete(self, event_manager, shard, event_factory):
         payload = {"id": "4544444"}
 
@@ -1044,7 +1044,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_command_delete_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event_factory.deserialize_command_delete_event.return_value)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_interaction_create(self, event_manager, shard, event_factory):
         payload = {"id": "123"}
 

@@ -48,14 +48,14 @@ class TestCommand:
             guild_id=snowflakes.Snowflake(31231235),
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_self(self, mock_command, mock_app):
         result = await mock_command.fetch_self()
 
         assert result is mock_app.rest.fetch_application_command.return_value
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_self_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -64,7 +64,7 @@ class TestCommand:
         assert result is mock_app.rest.fetch_application_command.return_value
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_without_optional_args(self, mock_command, mock_app):
         result = await mock_command.edit()
 
@@ -78,7 +78,7 @@ class TestCommand:
             options=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_with_optional_args(self, mock_command, mock_app):
         mock_option = object()
         result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
@@ -88,7 +88,7 @@ class TestCommand:
             65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -104,13 +104,13 @@ class TestCommand:
             options=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_delete(self, mock_command, mock_app):
         await mock_command.delete()
 
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_delete_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -153,14 +153,14 @@ class TestCommandInteraction:
         assert builder is mock_app.rest.interaction_deferred_builder.return_value
         mock_app.rest.interaction_deferred_builder.assert_called_once_with(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_initial_response(self, mock_command_interaction, mock_app):
         result = await mock_command_interaction.fetch_initial_response()
 
         assert result is mock_app.rest.fetch_command_response.return_value
         mock_app.rest.fetch_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_create_initial_response_with_optional_args(self, mock_command_interaction, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
@@ -190,7 +190,7 @@ class TestCommandInteraction:
             role_mentions=[6324523],
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
         await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
 
@@ -208,7 +208,7 @@ class TestCommandInteraction:
             role_mentions=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_initial_response_with_optional_args(self, mock_command_interaction, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
@@ -241,7 +241,7 @@ class TestCommandInteraction:
             role_mentions=[562134],
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
         result = await mock_command_interaction.edit_initial_response()
 
@@ -260,13 +260,13 @@ class TestCommandInteraction:
             role_mentions=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_delete_initial_response(self, mock_command_interaction, mock_app):
         await mock_command_interaction.delete_initial_response()
 
         mock_app.rest.delete_command_response.assert_awaited_once_with(43123, "httptptptptptptptp")
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_command_interaction, mock_app):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildChannel)
         assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value

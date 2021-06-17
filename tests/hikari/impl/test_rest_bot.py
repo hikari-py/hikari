@@ -33,6 +33,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import rest_bot as rest_bot_impl
+from hikari.internal import aio
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
@@ -302,20 +303,10 @@ class TestRESTBot:
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
-        with mock.patch.object(asyncio, "get_event_loop") as get_event_loop:
+        with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
             mock_rest_bot.run(asyncio_debug=True)
 
-            get_event_loop.return_value.set_debug.assert_called_once_with(True)
-
-    def test_run_when_close_loop(self, mock_rest_bot):
-        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
-        mock_rest_bot.start = mock.AsyncMock()
-        mock_rest_bot.join = mock.AsyncMock()
-
-        mock_rest_bot.run(close_loop=True)
-        assert asyncio.get_event_loop().is_closed() is True
+            get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
     @pytest.mark.skipif(not hasattr(sys, "set_coroutine_origin_tracking_depth"), reason="target sys function not found")
     def test_run_when_coroutine_tracking_depth(self, mock_rest_bot):
@@ -410,6 +401,7 @@ class TestRESTBot:
     async def test_start(self, mock_rest_bot, mock_interaction_server):
         mock_socket = object()
         mock_ssl_context = object()
+        mock_rest_bot._is_closing = True
 
         with mock.patch.object(ux, "check_for_updates"):
             await mock_rest_bot.start(
@@ -440,6 +432,7 @@ class TestRESTBot:
             shutdown_timeout=4312312.3132132,
             ssl_context=mock_ssl_context,
         )
+        assert mock_rest_bot._is_closing is False
 
     @pytest.mark.asyncio()
     async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
