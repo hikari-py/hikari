@@ -29,6 +29,7 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import errors
 from hikari import intents
 from hikari import presences
 from hikari.impl import event_manager
@@ -60,14 +61,33 @@ def test_fixed_size_nonce():
     encode.return_value.decode.assert_called_once_with("ascii")
 
 
+@pytest.fixture()
+def shard():
+    return mock.Mock(id=987)
+
+
+@pytest.mark.asyncio()
+async def test__request_guild_members(shard):
+    shard.request_guild_members = mock.AsyncMock()
+
+    await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
+
+    shard.request_guild_members.assert_awaited_once_with(123, include_presences=True, nonce="okokok")
+
+
+@pytest.mark.asyncio()
+async def test__request_guild_members_handles_state_conflict_error(shard):
+    shard.request_guild_members = mock.AsyncMock(side_effect=errors.ComponentStateConflictError(reason="OK"))
+
+    await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
+
+    shard.request_guild_members.assert_awaited_once_with(123, include_presences=True, nonce="okokok")
+
+
 class TestEventManagerImpl:
     @pytest.fixture()
     def event_factory(self):
         return mock.Mock()
-
-    @pytest.fixture()
-    def shard(self):
-        return mock.Mock(id=987)
 
     @pytest.fixture()
     def event_manager(self, event_factory):
@@ -267,15 +287,23 @@ class TestEventManagerImpl:
         event_factory.deserialize_guild_create_event.return_value = event
         shard.request_guild_members = mock.Mock()
 
-        with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid") as uuid:
-                await event_manager.on_guild_create(shard, payload)
+        stack = contextlib.ExitStack()
+        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        uuid = stack.enter_context(mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid"))
+        _request_guild_members = stack.enter_context(
+            mock.patch("hikari.impl.event_manager._request_guild_members", new_callable=mock.Mock)
+        )
+
+        with stack:
+            await event_manager.on_guild_create(shard, payload)
 
         uuid.assert_called_once_with()
         nonce = "987.uuid"
         assert event.chunk_nonce == nonce
-        shard.request_guild_members.assert_called_once_with(event.guild, include_presences=True, nonce=nonce)
-        create_task.assert_called_once_with(shard.request_guild_members(), name="987:123 guild create members request")
+        _request_guild_members.assert_called_once_with(shard, event.guild, include_presences=True, nonce=nonce)
+        create_task.assert_called_once_with(
+            _request_guild_members.return_value, name="987:123 guild create members request"
+        )
 
         event_manager._cache.update_guild.assert_called_once_with(event.guild)
 

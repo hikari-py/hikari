@@ -43,7 +43,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
-from hikari.impl import buckets
 from hikari.impl import entity_factory
 from hikari.impl import rest
 from hikari.impl import special_endpoints
@@ -344,7 +343,6 @@ def live_attributes():
 
 
 @pytest.fixture()
-def rest_client(rest_client_class, live_attributes):
 def mock_cache():
     return mock.Mock()
 
@@ -414,22 +412,6 @@ class StubModel(snowflakes.Unique):
 
 
 class TestRESTClientImpl:
-    def test__init__passes_max_rate_limit(self):
-        with mock.patch.object(buckets, "RESTBucketManager") as bucket:
-            rest.RESTClientImpl(
-                cache=None,
-                http_settings=mock.Mock(),
-                max_rate_limit=float("inf"),
-                proxy_settings=mock.Mock(),
-                token=None,
-                token_type=None,
-                rest_url=None,
-                executor=None,
-                entity_factory=None,
-            )
-
-        bucket.assert_called_once_with(float("inf"))
-
     def test__init__when_token_strategy_passed_with_token_type(self):
         with pytest.raises(ValueError, match="Token type should be handled by the token strategy"):
             rest.RESTClientImpl(
@@ -938,28 +920,6 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
 
     @hikari_test_helpers.timeout()
-    async def test__request_when_buckets_not_started(self, rest_client, exit_exception, live_attributes):
-        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        live_attributes.buckets.is_started = False
-        live_attributes.buckets.acquire.side_effect = exit_exception
-
-        with pytest.raises(exit_exception):
-            await rest_client._request(route)
-
-        live_attributes.buckets.start.assert_called_once()
-
-    @hikari_test_helpers.timeout()
-    async def test__request_when_buckets_started(self, rest_client, exit_exception, live_attributes):
-        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        live_attributes.buckets.acquire.side_effect = exit_exception
-        live_attributes.buckets.is_started = True
-
-        with pytest.raises(exit_exception):
-            await rest_client._request(route)
-
-        live_attributes.buckets.start.assert_not_called()
-
-    @hikari_test_helpers.timeout()
     async def test__request_when__token_is_None(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
@@ -1234,32 +1194,6 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
-
-    async def test_close_when__client_session_is_None(self, rest_client, live_attributes):
-        live_attributes.client_session = None
-        live_attributes.buckets = mock.Mock()
-
-        await rest_client.close()
-
-        live_attributes.buckets.close.assert_called_once()
-
-    async def test_close_when__client_session_is_not_None(self, rest_client, live_attributes):
-        live_attributes.client_session = mock.AsyncMock()
-        live_attributes.buckets = mock.Mock()
-
-        await rest_client.close()
-
-        live_attributes.client_session.close.assert_called_once()
-        live_attributes.buckets.close.assert_called_once()
-
-    async def test_close_when__token_is_strategy(self, rest_client, live_attributes):
-        rest_client._token = mock.AsyncMock(rest_api.TokenStrategy)
-        live_attributes.client_session = mock.AsyncMock()
-        live_attributes.buckets = mock.Mock()
-
-        await rest_client.close()
-
-        rest_client._token.close.assert_awaited_once()
 
     #############
     # Endpoints #
