@@ -1001,10 +1001,6 @@ class PartialMessage(snowflakes.Unique):
             `role_mentions` or `user_mentions`.
         builtins.TypeError
             If both `attachment` and `attachments` are specified.
-
-        !!! warning
-            You are expected to make a connection to the gateway and identify
-            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
         if reply is True:
             reply = self

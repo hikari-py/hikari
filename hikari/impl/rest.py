@@ -91,6 +91,7 @@ if typing.TYPE_CHECKING:
     from hikari import templates
     from hikari import voices
     from hikari import webhooks
+    from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
@@ -109,6 +110,10 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
+
+# Custom emoji mentions are in the format of <:name:id> for static emoji, or
+# <a:name:id> for animated emoji.
+_CUSTOM_EMOJI_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"<a?:([^:]+:\d+)>")
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -181,6 +186,10 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
             The scopes this token strategy authenticates for.
         """
         return self._scopes
+
+    @property
+    def token_type(self) -> applications.TokenType:
+        return applications.TokenType.BEARER
 
     async def acquire(self, client: rest_api.RESTClient) -> str:
         if self._token and not self._is_expired:
@@ -326,18 +335,76 @@ class RESTApp(traits.ExecutorAware):
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
+    @typing.overload
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
+        ...
+
+    @typing.overload
+    def acquire(
+        self,
+        token: str,
+        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
+    ) -> RESTClientImpl:
+        ...
+
     def acquire(
         self,
         token: typing.Union[str, rest_api.TokenStrategy, None] = None,
-        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER,
+        token_type: typing.Union[str, applications.TokenType, None] = None,
     ) -> RESTClientImpl:
+        """Acquire an instance of this REST client.
+
+        !!! note
+            The returned REST client should be started before it can be used,
+            either by calling `RESTClientImpl.start` or by using it as an
+            asynchronous context manager.
+
+        Examples
+        --------
+        ```py
+        rest_app = RESTApp()
+
+        # Using the returned client as a context manager to implicitly start
+        # and stop it.
+        async with rest_app.acquire("A token", "Bot") as client:
+            user = await client.fetch_my_user()
+        ```
+
+        Parameters
+        ----------
+        token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+            The bot or bearer token. If no token is to be used,
+            this can be undefined.
+        token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
+            The type of token in use. This should only be passed when `builtins.str`
+            is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
+            defaulted to `"Bearer"` in this situation.
+
+            This should be left as `builtins.None` when either
+            `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+            `token`.
+
+        Returns
+        -------
+        RESTClientImpl
+            An instance of the REST client.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `token_type` is provided when a token strategy is passed for `token`.
+        """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
         provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
+        if token_type is None and isinstance(token, str):
+            token_type = applications.TokenType.BEARER
+
         rest_client = RESTClientImpl(
+            cache=None,
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
@@ -376,16 +443,27 @@ class RESTClientImpl(rest_api.RESTClient):
         The bot or bearer token. If no token is to be used,
         this can be undefined.
     token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. If no token is used, this can be ignored and
-        left to the default value. This can be `"Bot"` or `"Bearer"`.
+        The type of token in use. This must be passed when a `builtins.str` is
+        passed for `token` but and can be `"Bot"` or `"Bearer"`.
+
+        This should be left as `builtins.None` when either
+        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        `token`.
     rest_url : builtins.str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
+
+    Raises
+    ------
+    builtins.ValueError
+        * If `token_type` is provided when a token strategy is passed for `token`.
+        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
     """
 
     __slots__: typing.Sequence[str] = (
         "buckets",
         "global_rate_limit",
+        "_cache",
         "_client_session",
         "_closed_event",
         "_tcp_connector",
@@ -395,6 +473,7 @@ class RESTClientImpl(rest_api.RESTClient):
         "_proxy_settings",
         "_rest_url",
         "_token",
+        "_token_type",
     )
 
     buckets: buckets_.RESTBucketManager
@@ -410,6 +489,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def __init__(
         self,
         *,
+        cache: typing.Optional[cache_api.MutableCache],
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
@@ -423,6 +503,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # We've been told in DAPI that this is per token.
         self.global_rate_limit = rate_limits.ManualRateLimiter()
 
+        self._cache = cache
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
         self._tcp_connector: typing.Optional[aiohttp.TCPConnector] = None
         self._closed_event = asyncio.Event()
@@ -431,15 +512,21 @@ class RESTClientImpl(rest_api.RESTClient):
         self._http_settings = http_settings
         self._proxy_settings = proxy_settings
 
-        self._token: typing.Union[str, rest_api.TokenStrategy, None]
+        self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
+        self._token_type: typing.Optional[str] = None
         if isinstance(token, str):
-            self._token = f"{token_type.title()} {token}" if token_type else token
+            if token_type is None:
+                raise ValueError("Token type required when a str is passed for `token`")
 
-        elif isinstance(token, rest_api.TokenStrategy) and token_type:
-            raise ValueError("Token type should be handled by the token strategy")
+            self._token = f"{token_type.title()} {token}"
+            self._token_type = applications.TokenType(token_type.title())
 
-        else:
+        elif isinstance(token, rest_api.TokenStrategy):
+            if token_type is not None:
+                raise ValueError("Token type should be handled by the token strategy")
+
             self._token = token
+            self._token_type = token.token_type
 
         self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
 
@@ -450,6 +537,10 @@ class RESTClientImpl(rest_api.RESTClient):
     @property
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
+
+    @property
+    def token_type(self) -> typing.Union[str, applications.TokenType, None]:
+        return self._token_type
 
     @typing.final
     async def close(self) -> None:
@@ -787,7 +878,12 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_channel(response)
+        result = self._entity_factory.deserialize_channel(response)
+
+        if self._cache and isinstance(result, channels_.DMChannel):
+            self._cache.set_dm_channel_id(result.recipient.id, result.id)
+
+        return result
 
     async def edit_channel(
         self,
@@ -1300,11 +1396,8 @@ class RESTClientImpl(rest_api.RESTClient):
             except Exception as ex:
                 raise errors.BulkDeleteError(deleted, pending) from ex
 
-    # Custom emoji mentions are in the format of <:name:id> for static emoji, or
-    # <a:name:id> for animated emoji.
-    _CUSTOM_EMOJI_PATTERN: typing.Final[typing.ClassVar[typing.Pattern[str]]] = re.compile(r"<a?:([^:]+:\d+)>")
-
-    def _transform_emoji_to_url_format(self, emoji: emojis.Emojiish) -> str:
+    @staticmethod
+    def _transform_emoji_to_url_format(emoji: emojis.Emojiish) -> str:
         # Given an emojiish, check if it is a valid custom emoji mention. If it
         # is, then convert it to the name:id format (remove the wrapping
         # characters), then return it. If the emoji is an emojis.CustomEmoji
@@ -1314,7 +1407,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if isinstance(emoji, emojis.CustomEmoji):
             return emoji.url_name
 
-        if isinstance(emoji, str) and (custom_mention_match := self._CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
+        if isinstance(emoji, str) and (custom_mention_match := _CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
             return custom_mention_match.group(1)
 
         return str(emoji)
@@ -1826,7 +1919,12 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("recipient_id", user)
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_dm(response)
+        channel = self._entity_factory.deserialize_dm(response)
+
+        if self._cache:
+            self._cache.set_dm_channel_id(user, channel.id)
+
+        return channel
 
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()

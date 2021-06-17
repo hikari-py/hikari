@@ -57,10 +57,6 @@ class TestTeamMember:
     def test_id_property(self, model):
         assert model.id is model.user.id
 
-    def test_id_setter(self, model):
-        with pytest.raises(TypeError, match="Cannot mutate the ID of a member"):
-            model.id = 42
-
     def test_is_bot_property(self, model):
         assert model.is_bot is model.user.is_bot
 
@@ -72,14 +68,6 @@ class TestTeamMember:
 
     def test_username_property(self, model):
         assert model.username is model.user.username
-
-    @pytest.mark.asyncio
-    async def test_fetch_dm_channel(self, model):
-        model.user.fetch_dm_channel = mock.AsyncMock()
-
-        result = await model.fetch_dm_channel()
-        assert result is model.user.fetch_dm_channel.return_value
-        model.user.fetch_dm_channel.assert_awaited_once()
 
     def test_str_operator(self):
         mock_team_member = mock.Mock(

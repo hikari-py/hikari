@@ -52,9 +52,10 @@ REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 class Event(abc.ABC):
     """Base event type that all Hikari events should subclass."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

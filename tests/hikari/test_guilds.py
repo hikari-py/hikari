@@ -222,10 +222,6 @@ class TestMember:
     def test_id_property(self, model, mock_user):
         assert model.id is mock_user.id
 
-    def test_id_setter_property(self, model):
-        with pytest.raises(TypeError):
-            model.id = 456
-
     def test_username_property(self, model, mock_user):
         assert model.username is mock_user.username
 
@@ -251,13 +247,6 @@ class TestMember:
         result = model.make_avatar_url(ext="png", size=4096)
         mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
         assert result is mock_user.make_avatar_url.return_value
-
-    @pytest.mark.asyncio
-    async def test_fetch_dm_channel(self, model, mock_user):
-        mock_user.fetch_dm_channel = mock.AsyncMock()
-        result = await model.fetch_dm_channel()
-        mock_user.fetch_dm_channel.assert_awaited_once_with()
-        assert result is mock_user.fetch_dm_channel.return_value
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, model):

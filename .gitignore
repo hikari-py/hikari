@@ -60,8 +60,5 @@ credentials.env
 # Profiling in pytest
 prof/
 
-# Generated stubs for MyPy --strict hackfixes
-__init__.pyi
-
 # Logs
 *.log

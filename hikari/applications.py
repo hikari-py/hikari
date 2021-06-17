@@ -59,7 +59,6 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels
     from hikari import files
     from hikari import permissions as permissions_
     from hikari import traits
@@ -347,10 +346,6 @@ class TeamMember(users.User):
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
-    @id.setter
-    def id(self, value: snowflakes.Snowflake) -> typing.NoReturn:
-        raise TypeError("Cannot mutate the ID of a member")
-
     @property
     def is_bot(self) -> bool:
         return self.user.is_bot
@@ -366,9 +361,6 @@ class TeamMember(users.User):
     @property
     def username(self) -> str:
         return self.user.username
-
-    async def fetch_dm_channel(self) -> channels.DMChannel:
-        return await self.user.fetch_dm_channel()
 
     def __str__(self) -> str:
         return str(self.user)

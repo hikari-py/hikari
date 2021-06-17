@@ -32,6 +32,7 @@ import typing
 import attr
 
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
@@ -44,7 +45,6 @@ if typing.TYPE_CHECKING:
     from hikari import files
     from hikari import guilds
     from hikari import messages
-    from hikari import traits
 
 
 @typing.final
@@ -180,7 +180,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             The mention string to use.
         """
 
-    @abc.abstractmethod
     async def fetch_dm_channel(self) -> channels.DMChannel:
         """Fetch the DM channel for this user.
 
@@ -209,6 +208,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        return await self.app.rest.create_dm_channel(self.id)
 
     async def fetch_self(self) -> User:
         """Get this user's up-to-date object by performing an API call.
@@ -389,15 +389,16 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! warning
-            You are expected to make a connection to the gateway and identify
-            once before being able to use this endpoint for a bot.
         """  # noqa: E501 - Line too long
-        channel = await self.fetch_dm_channel()
+        channel_id = None
+        if isinstance(self.app, traits.CacheAware):
+            channel_id = self.app.cache.get_dm_channel_id(self.id)
+
+        if channel_id is None:
+            channel_id = (await self.fetch_dm_channel()).id
 
         return await self.app.rest.create_message(
-            channel=channel.id,
+            channel=channel_id,
             content=content,
             embed=embed,
             attachment=attachment,
@@ -576,16 +577,6 @@ class PartialUserImpl(PartialUser):
 
     flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False)
     """Public flags for this user."""
-
-    _dm_channel: typing.Optional[channels.DMChannel] = attr.field(
-        eq=False, hash=False, init=False, repr=False, default=None
-    )
-
-    async def fetch_dm_channel(self) -> channels.DMChannel:
-        if self._dm_channel is None:
-            self._dm_channel = await self.app.rest.create_dm_channel(self.id)
-
-        return self._dm_channel
 
     @property
     def mention(self) -> str:

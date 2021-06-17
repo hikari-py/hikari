@@ -64,12 +64,13 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(
     intents.Intents.GUILDS, intents.Intents.GUILD_BANS, intents.Intents.GUILD_EMOJIS, intents.Intents.GUILD_PRESENCES
 )
 class GuildEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any guild-bound event."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -119,7 +120,6 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         return await self.app.rest.fetch_guild_preview(self.guild_id)
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildVisibilityEvent(GuildEvent, abc.ABC):
     """Event base for any event that changes the visibility of a guild.
@@ -129,6 +129,8 @@ class GuildVisibilityEvent(GuildEvent, abc.ABC):
     to an outage, when the user is kicked/banned/leaves a guild, or when
     the user joins a new guild.
     """
+
+    __slots__: typing.Sequence[str] = ()
 
 
 @attr_extensions.with_copy
@@ -325,10 +327,11 @@ class GuildUpdateEvent(GuildEvent):
         return self.guild.id
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanEvent(GuildEvent, abc.ABC):
     """Event base for any guild ban or unban."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -443,10 +446,11 @@ class EmojisUpdateEvent(GuildEvent):
         return await self.app.rest.fetch_guild_emojis(self.guild_id)
 
 
-@attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)
 class IntegrationEvent(GuildEvent, abc.ABC):
     """Event base for any integration related events."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

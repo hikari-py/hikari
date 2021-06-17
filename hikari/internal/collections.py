@@ -106,7 +106,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
 class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
     """A mapping that wraps a dict, but can also be frozen."""
 
-    __slots__ = ("_data",)
+    __slots__: typing.Sequence[str] = ("_data",)
 
     def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /) -> None:
         self._data = source or {}
@@ -138,7 +138,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
 
 class _FrozenDict(typing.MutableMapping[KeyT, ValueT]):
-    __slots__ = ("_source",)
+    __slots__: typing.Sequence[str] = ("_source",)
 
     def __init__(self, source: typing.Dict[KeyT, typing.Tuple[float, ValueT]], /) -> None:
         self._source = source
@@ -182,7 +182,7 @@ class TimedCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
         This will always be called after the entry has been removed.
     """
 
-    __slots__ = ("_data", "_expiry", "_on_expire")
+    __slots__: typing.Sequence[str] = ("_data", "_expiry", "_on_expire")
 
     def __init__(
         self,
@@ -269,7 +269,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
         This will always be called after the entry has been removed.
     """
 
-    __slots__ = ("_data", "_limit", "_on_expire")
+    __slots__: typing.Sequence[str] = ("_data", "_limit", "_on_expire")
 
     def __init__(
         self,
