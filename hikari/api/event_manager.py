@@ -161,7 +161,7 @@ class EventManager(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def subscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> CallbackT[typing.Any]:
+    def subscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> None:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -188,11 +188,6 @@ class EventManager(abc.ABC):
 
         bot.subscribe(MessageCreateEvent, on_message)
         ```
-
-        Returns
-        -------
-        typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]
-            The event callback that was passed in.
 
         See Also
         --------

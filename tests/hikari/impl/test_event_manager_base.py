@@ -165,7 +165,7 @@ class TestEventManagerBase:
             ...
 
         with mock.patch.object(event_manager_base.EventManagerBase, "_check_intents") as check:
-            assert event_manager.subscribe(member_events.MemberCreateEvent, test, _nested=1) == test
+            event_manager.subscribe(member_events.MemberCreateEvent, test, _nested=1)
 
         assert event_manager._listeners == {member_events.MemberCreateEvent: [test]}
         check.assert_called_once_with(member_events.MemberCreateEvent, 1)
@@ -180,7 +180,7 @@ class TestEventManagerBase:
         event_manager._listeners[member_events.MemberCreateEvent] = [test2]
 
         with mock.patch.object(event_manager_base.EventManagerBase, "_check_intents") as check:
-            assert event_manager.subscribe(member_events.MemberCreateEvent, test, _nested=2) == test
+            event_manager.subscribe(member_events.MemberCreateEvent, test, _nested=2)
 
         assert event_manager._listeners == {member_events.MemberCreateEvent: [test2, test]}
         check.assert_called_once_with(member_events.MemberCreateEvent, 2)

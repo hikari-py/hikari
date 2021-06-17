@@ -97,7 +97,7 @@ class EventManagerBase(event_manager.EventManager):
         callback: event_manager.CallbackT[event_manager.EventT_co],
         *,
         _nested: int = 0,
-    ) -> event_manager.CallbackT[event_manager.EventT_co]:
+    ) -> None:
         if not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
@@ -120,8 +120,6 @@ class EventManagerBase(event_manager.EventManager):
         )
 
         self._listeners[event_type].append(callback)  # type: ignore[arg-type]
-
-        return callback
 
     def _check_intents(self, event_type: typing.Type[event_manager.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
