@@ -214,6 +214,7 @@ class TestTextChannel:
         model.app.rest.create_message = mock.AsyncMock()
         mock_attachment = object()
         mock_embed = object()
+        mock_embeds = object()
         mock_attachments = [object(), object(), object()]
         mock_reply = object()
 
@@ -224,6 +225,7 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
+            embeds=mock_embeds,
             reply=mock_reply,
             mentions_everyone=False,
             user_mentions=[123, 456],
@@ -239,6 +241,7 @@ class TestTextChannel:
             attachment=mock_attachment,
             attachments=mock_attachments,
             embed=mock_embed,
+            embeds=mock_embeds,
             reply=mock_reply,
             mentions_everyone=False,
             user_mentions=[123, 456],
