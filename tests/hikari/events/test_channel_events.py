@@ -54,7 +54,7 @@ class TestGuildChannelEvent:
         event.app.cache.get_available_guild.assert_called_once_with(929292929)
         event.app.cache.get_unavailable_guild.assert_called_once_with(929292929)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_guild(self, event):
         event.app.rest.fetch_guild = mock.AsyncMock()
         result = await event.fetch_guild()
@@ -68,7 +68,7 @@ class TestGuildChannelEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(432432432)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_channel(self, event):
         event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock.MagicMock(spec=channels.GuildChannel))
         result = await event.fetch_channel()

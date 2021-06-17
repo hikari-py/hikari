@@ -50,7 +50,7 @@ class TestWebhook:
         webhook.name = None
         assert str(webhook) == "Unnamed webhook ID 987654321"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_message(self, webhook):
         message = object()
         returned_message = object()
@@ -62,13 +62,13 @@ class TestWebhook:
 
         webhook.app.rest.fetch_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_message_when_no_token(self, webhook):
         webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"):
             await webhook.fetch_message(987)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_message(self, webhook):
         message = object()
         embed = object()
@@ -106,13 +106,13 @@ class TestWebhook:
             role_mentions=[567, 890],
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_edit_message_when_no_token(self, webhook):
         webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot edit a message using a webhook where we don't know the token"):
             await webhook.edit_message(987)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_delete_message(self, webhook):
         message = object()
         webhook.app.rest.delete_webhook_message = mock.AsyncMock()
@@ -121,7 +121,7 @@ class TestWebhook:
 
         webhook.app.rest.delete_webhook_message.assert_called_once_with(987654321, token="abc123bca", message=message)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_delete_message_when_no_token(self, webhook):
         webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot delete a message using a webhook where we don't know the token"):

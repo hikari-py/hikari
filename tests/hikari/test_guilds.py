@@ -204,7 +204,7 @@ class TestMember:
         mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
         assert result is mock_user.make_avatar_url.return_value
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_fetch_self(self, model):
         model.user.app.rest.fetch_member = mock.AsyncMock()
 
@@ -212,7 +212,7 @@ class TestMember:
 
         model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
 
