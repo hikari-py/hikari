@@ -1025,8 +1025,7 @@ class BotApp(traits.BotAware):
 
         _LOGGER.debug("closing event loop")
         loop.close()
-        # Closed loops cannot be re-used and other things present in this runtime may be relying on get_event_loop
-        # returning a usable loop.
+        # Closed loops cannot be re-used so it should also be un-set.
         asyncio.set_event_loop(None)
 
     @staticmethod
