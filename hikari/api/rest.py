@@ -1180,10 +1180,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content; if `reply` is
-            not found or not in the same channel as `channel`.
+            invalid image URLs in embeds; if `reply` is ot found or not in the
+            same channel as `channel`.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -1409,9 +1407,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
             in them, embeds that exceed one of the many embed
-            limits; invalid image URLs in embeds; users in `user_mentions` not
-            being mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            limits; invalid image URLs in embeds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -2255,9 +2251,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            invalid image URLs in embeds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2464,9 +2458,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; users in `user_mentions` not being
-            mentioned in the message content; roles in `role_mentions` not
-            being mentioned in the message content.
+            invalid image URLs in embeds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
