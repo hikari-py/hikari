@@ -61,22 +61,22 @@ class TestCoroutineFunctionStubUsedInTests:
 
 
 class TestCompletedFuture:
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_awaitable(self, args):
         await aio.completed_future(*args)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_completed(self, args):
         future = aio.completed_future(*args)
         assert future.done()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_default_result_is_none(self):
         assert aio.completed_future().result() is None
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_non_default_result(self):
         assert aio.completed_future(...).result() is ...
 
@@ -96,7 +96,7 @@ class TestIsAsyncIterator:
 
         assert aio.is_async_iterator(AsyncIterator)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_genexp(self):
         async def genexp():
             yield ...

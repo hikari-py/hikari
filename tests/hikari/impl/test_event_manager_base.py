@@ -58,7 +58,7 @@ class TestEventManagerBase:
         manager = StubManager(mock.Mock(intents=42))
         assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_consume_raw_event_when_KeyError(self, event_manager):
         mock_payload = {"id": "3123123123"}
         mock_shard = mock.Mock(id=123)
@@ -76,7 +76,7 @@ class TestEventManagerBase:
             mock_shard, mock_payload, name="UNEXISTING_EVENT"
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_consume_raw_event_when_found(self, event_manager):
         event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
@@ -100,7 +100,7 @@ class TestEventManagerBase:
             shard, payload, name="EXISTING_EVENT"
         )
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_handle_dispatch_invokes_callback(self, event_manager, event_loop):
         callback = mock.AsyncMock()
         error_handler = mock.MagicMock()
@@ -113,7 +113,7 @@ class TestEventManagerBase:
         callback.assert_awaited_once_with(shard, pl)
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager, event_loop):
         callback = mock.AsyncMock(side_effect=asyncio.CancelledError)
         error_handler = mock.MagicMock()
@@ -125,7 +125,7 @@ class TestEventManagerBase:
 
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
         exc = Exception("aaaa!")
         callback = mock.AsyncMock(side_effect=exc)
