@@ -1202,31 +1202,31 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
-        body.put(
-            "allowed_mentions",
-            self._generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-        )
-        body.put("content", content, conversion=str)
-        body.put("tts", tts)
-
         final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
         if attachment is not undefined.UNDEFINED:
             final_attachments.append(files.ensure_resource(attachment))
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        serialized_embeds: data_binding.JSONArray = []
+        serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
 
         if embed is not undefined.UNDEFINED:
             embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
             final_attachments.extend(embed_attachments)
-            serialized_embeds.append(embed_payload)
+            serialized_embeds = [embed_payload]
         elif embeds is not undefined.UNDEFINED:
+            serialized_embeds = []
             for embed in embeds:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                 final_attachments.extend(embed_attachments)
                 serialized_embeds.append(embed_payload)
 
+        body.put(
+            "allowed_mentions",
+            self._generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
+        )
+        body.put("content", content, conversion=str)
+        body.put("tts", tts)
         body.put("embeds", serialized_embeds)
 
         if final_attachments:
