@@ -1739,6 +1739,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "stickers" in payload:
             stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
 
+        content = payload.get("content", undefined.UNDEFINED)
+        if content is not undefined.UNDEFINED:
+            content = content or None  # Default to None if content is an empty string
+
         message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1746,14 +1750,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             author=author,
             member=member,
-            content=payload["content"] if "content" in payload else undefined.UNDEFINED,
+            content=content,
             timestamp=timestamp,
             edited_timestamp=edited_timestamp,
-            is_tts=payload["tts"] if "tts" in payload else undefined.UNDEFINED,
+            is_tts=payload.get("tts", undefined.UNDEFINED),
             attachments=attachments,
             embeds=embeds,
             reactions=reactions,
-            is_pinned=payload["pinned"] if "pinned" in payload else undefined.UNDEFINED,
+            is_pinned=payload.get("pinned", undefined.UNDEFINED),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED,
             type=message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED,
             activity=activity,
@@ -1762,7 +1766,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             referenced_message=referenced_message,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             stickers=stickers,
-            nonce=payload["nonce"] if "nonce" in payload else undefined.UNDEFINED,
+            nonce=payload.get("nonce", undefined.UNDEFINED),
             # We initialize these next.
             mentions=NotImplemented,
         )
@@ -1850,7 +1854,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             author=author,
             member=member,
-            content=payload["content"],
+            content=payload["content"] or None,
             timestamp=time.iso8601_datetime_string_to_datetime(payload["timestamp"]),
             edited_timestamp=edited_timestamp,
             is_tts=payload["tts"],
