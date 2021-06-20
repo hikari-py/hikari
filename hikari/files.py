@@ -980,7 +980,7 @@ class IteratorReader(AsyncReader):
                 pass
 
         elif aio.is_async_iterable(self.data):
-            async for chunk in self.data:  # type: ignore[union-attr]
+            async for chunk in self.data:
                 yield self._assert_bytes(chunk)
 
         elif isinstance(self.data, typing.Iterable):
