@@ -48,6 +48,7 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
+import inspect
 import io
 import mimetypes
 import os
@@ -59,6 +60,7 @@ import urllib.request
 import aiohttp.client
 import attr
 
+from hikari.internal import aio
 from hikari.internal import net
 from hikari.internal import time
 
@@ -956,10 +958,10 @@ class IteratorReader(AsyncReader):
             for i in range(0, len(self.data), _MAGIC):
                 yield self.data[i : i + _MAGIC]  # noqa: E203 - Whitespace before ":"
 
-        elif isinstance(self.data, typing.AsyncIterator) or isinstance(self.data, typing.AsyncGenerator):
+        elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(await self.data.__anext__())
+                    yield self._assert_bytes(await self.data.__anext__())  # type: ignore[union-attr]
             except StopAsyncIteration:
                 pass
 
@@ -970,15 +972,15 @@ class IteratorReader(AsyncReader):
             except StopIteration:
                 pass
 
-        elif isinstance(self.data, typing.Generator):
+        elif inspect.isgenerator(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(self.data.send(None))
+                    yield self._assert_bytes(self.data.send(None))  # type: ignore[union-attr]
             except StopIteration:
                 pass
 
-        elif isinstance(self.data, typing.AsyncIterable):
-            async for chunk in self.data:
+        elif aio.is_async_iterable(self.data):
+            async for chunk in self.data:  # type: ignore[union-attr]
                 yield self._assert_bytes(chunk)
 
         elif isinstance(self.data, typing.Iterable):
