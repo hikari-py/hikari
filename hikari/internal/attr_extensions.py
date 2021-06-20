@@ -113,7 +113,7 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     globals_ = {"cls": cls}
     _LOGGER.log(ux.TRACE, "generating shallow copy function for %r: %r", cls, code)
     exec(code, globals_)  # noqa: S102 - Use of exec detected.
-    return typing.cast("typing.Callable[[ModelT], ModelT]", globals_["copy"])
+    return globals_["copy"]
 
 
 def get_or_generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
