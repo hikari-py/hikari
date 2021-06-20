@@ -161,6 +161,15 @@ class GuildFeature(str, enums.Enum):
     PREVIEW_ENABLED = "PREVIEW_ENABLED"
     """Guild can be viewed before Membership Screening is complete."""
 
+    TICKETED_EVENTS_ENABLED = "TICKETED_EVENTS_ENABLED"
+    """Guild has enabled ticketed events."""
+
+    MONETIZATION_ENABLED = "MONETIZATION_ENABLED"
+    """Guild has enabled monetization."""
+
+    MORE_STICKERS = "MONETIZATION_ENABLED"
+    """Guild has an increased custom stickers slots."""
+
 
 GuildFeatureish = typing.Union[str, GuildFeature]
 """Type hint for possible guild features.
