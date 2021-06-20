@@ -174,16 +174,16 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
 
     Returns
     -------
-    typing.Optional[Resource]
-        The resource to use, or `builtins.None` if `builtins.None` was input.
+    Resource
+        The resource to use.
     """
+    if isinstance(url_or_resource, Resource):
+        return url_or_resource
+
     if isinstance(url_or_resource, RAWISH_TYPES):
         data = unwrap_bytes(url_or_resource)
         filename = generate_filename_from_details(mimetype=None, extension=None, data=data)
         return typing.cast("Resource[AsyncReader]", Bytes(data, filename))
-
-    if isinstance(url_or_resource, Resource):
-        return url_or_resource
 
     url_or_resource = str(url_or_resource)
 
@@ -953,7 +953,7 @@ class IteratorReader(AsyncReader):
     async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _MAGIC):
-                yield self.data[i : i + _MAGIC]  # noqa: E203
+                yield self.data[i : i + _MAGIC]  # noqa: E203 - Whitespace before ":"
 
         elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
             try:

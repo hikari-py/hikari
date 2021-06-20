@@ -766,8 +766,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     __slots__: typing.Sequence[str] = ("_buffer",)
 
     def __init__(self) -> None:
-        empty_genexp = typing.cast("typing.Generator[ValueT, None, None]", (_ for _ in ()))
-        self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = empty_genexp
+        self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = (_ for _ in ())
 
     @abc.abstractmethod
     async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
