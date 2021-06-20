@@ -100,14 +100,12 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
         This may be `builtins.None` if all entries should be exposed.
     """
 
-    __slots__: typing.Sequence[str] = ("_builder", "_data", "_predicate")
+    __slots__: typing.Sequence[str] = ("_builder", "_data")
 
     @typing.overload
     def __init__(
         self,
         items: typing.Mapping[KeyT, ValueT],
-        *,
-        builder: typing.Literal[None] = None,
     ) -> None:
         ...
 
@@ -161,7 +159,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
     def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]:
         ...
 
-    def get_item_at(self, index: typing.Union[slice, int]) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
+    def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
         result = collections.get_index_or_slice(self._data, index)
 
         if isinstance(result, typing.Sequence):
@@ -196,7 +194,7 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
     def __len__(self) -> typing.Literal[0]:
         return 0
 
-    def get_item_at(self, index: int) -> typing.NoReturn:
+    def get_item_at(self, index: typing.Union[slice, int]) -> typing.NoReturn:
         raise IndexError(index)
 
     def iterator(self) -> iterators.LazyIterator[ValueT]:
@@ -757,8 +755,7 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
         author=copy.copy(embed.author) if embed.author else None,
         provider=copy.copy(embed.provider) if embed.provider else None,
         footer=copy.copy(embed.footer) if embed.footer else None,
-        # this lambda is a stupid workaround for mypy not being able to map(copy.copy, [5, 6, 7])
-        fields=list(map(lambda field: copy.copy(field), embed.fields)),
+        fields=[copy.copy(field) for field in embed.fields],
     )
 
 
