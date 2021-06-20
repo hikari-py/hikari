@@ -313,6 +313,12 @@ class RESTErrorCode(int, enums.Enum):
     MAXIMUM_INVITES = 30_016
     """Maximum number of invites reached (1000)."""
 
+    MAXIMUM_ANIMATED_EMOJIS = 30_018
+    """Maximum number of animated emojis reached."""
+
+    MAXIMUM_NUMBER_OF_SERVER_MEMBERS_REACHED = 30_019
+    """Maximum number of server members reached."""
+
     GUILD_ALREADY_HAS_TEMPLATE = 30_031
     """Guild already has a template."""
 
