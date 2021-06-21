@@ -330,10 +330,10 @@ class HTTPSettings:
         if value is not None and (not isinstance(value, int) or value <= 0):
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
-    _ssl: typing.Union[bool, ssl_.SSLContext] = attr.field(
-        default=True,
+    _ssl: ssl_.SSLContext = attr.field(
+        factory=lambda: _ssl_factory(True),
         converter=_ssl_factory,
-        validator=attr.validators.instance_of((ssl_.SSLContext, bool)),
+        validator=attr.validators.instance_of(ssl_.SSLContext),
     )
 
     @property
