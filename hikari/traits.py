@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "BotAware",
     "CacheAware",
     "EventManagerAware",
     "EntityFactoryAware",
@@ -687,6 +688,15 @@ class GatewayBotAware(
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         raise NotImplementedError
+
+
+@typing.runtime_checkable
+class BotAware(GatewayBotAware, fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Deprecated alias for `GatewayBotAware`.
+
+    .. deprecated:: 2.0.0.dev101
+        Use `GatewayBotAware` instead.
+    """
 
 
 @typing.runtime_checkable

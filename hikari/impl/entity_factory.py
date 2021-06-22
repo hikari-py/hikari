@@ -1989,7 +1989,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             author=author,
             member=member,
-            content=payload["content"] if "content" in payload else undefined.UNDEFINED,
+            content=content,
             timestamp=timestamp,
             edited_timestamp=edited_timestamp,
             is_tts=payload.get("tts", undefined.UNDEFINED),
