@@ -385,8 +385,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
-        "_closed",
-        "_closing",
+        "_closed_event",
+        "_closing_event",
         "_chunking_rate_limit",
         "_event_manager",
         "_event_factory",
@@ -450,8 +450,8 @@ class GatewayShardImpl(shard.GatewayShard):
         new_query = urllib.parse.urlencode(query)
 
         self._activity = initial_activity
-        self._closing = asyncio.Event()
-        self._closed = asyncio.Event()
+        self._closing_event = asyncio.Event()
+        self._closed_event = asyncio.Event()
         self._chunking_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} chunking rate limit",
             *_CHUNKING_RATELIMIT,
@@ -505,7 +505,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return self._shard_count
 
     async def close(self) -> None:
-        if not self._closing.is_set():
+        if not self._closing_event.is_set():
             try:
                 if self._ws is not None:
                     self._logger.debug(
@@ -513,10 +513,13 @@ class GatewayShardImpl(shard.GatewayShard):
                         "disconnecting immediately with GOING AWAY"
                     )
                     await self._ws.send_close(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting")
-                self._closing.set()
+                self._closing_event.set()
             finally:
                 self._chunking_rate_limit.close()
                 self._total_rate_limit.close()
+
+        # Wait for the shard to fully close
+        await self._closed_event.wait()
 
     async def get_user_id(self) -> snowflakes.Snowflake:
         await self._handshake_completed.wait()
@@ -526,7 +529,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def join(self) -> None:
         """Wait for this shard to close, if running."""
-        await self._closed.wait()
+        await self._closed_event.wait()
 
     async def _send_json(
         self,
@@ -701,7 +704,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_ack_received = time.monotonic()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
-        while not self._closing.is_set() and not self._closed.is_set():
+        while not self._closing_event.is_set() and not self._closed_event.is_set():
             if self._last_heartbeat_ack_received <= self._last_heartbeat_sent:
                 # Gateway is zombie, close and request reconnect.
                 self._logger.warning(
@@ -718,7 +721,7 @@ class GatewayShardImpl(shard.GatewayShard):
             await self._send_heartbeat()
 
             try:
-                await asyncio.wait_for(self._closing.wait(), timeout=heartbeat_interval)
+                await asyncio.wait_for(self._closing_event.wait(), timeout=heartbeat_interval)
                 # We are closing
                 break
             except asyncio.TimeoutError:
@@ -774,8 +777,8 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
     async def _run(self) -> None:
-        self._closed.clear()
-        self._closing.clear()
+        self._closed_event.clear()
+        self._closing_event.clear()
         last_started_at = -float("inf")
 
         backoff = rate_limits.ExponentialBackOff(
@@ -785,13 +788,13 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
         try:
-            while not self._closing.is_set() and not self._closed.is_set():
+            while not self._closing_event.is_set() and not self._closed_event.is_set():
                 if time.monotonic() - last_started_at < _BACKOFF_WINDOW:
                     backoff_time = next(backoff)
                     self._logger.info("backing off reconnecting for %.2fs", backoff_time)
 
                     try:
-                        await asyncio.wait_for(self._closing.wait(), timeout=backoff_time)
+                        await asyncio.wait_for(self._closing_event.wait(), timeout=backoff_time)
                         # We were told to close.
                         return
                     except asyncio.TimeoutError:
@@ -837,8 +840,8 @@ class GatewayShardImpl(shard.GatewayShard):
                     self._logger.error("encountered some unhandled error", exc_info=ex)
                     raise
         finally:
-            self._closing.set()
-            self._closed.set()
+            self._closing_event.set()
+            self._closed_event.set()
 
     async def _run_once(self) -> bool:
         self._handshake_completed.clear()
@@ -872,7 +875,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     self._logger.debug("identifying with new session")
                     await self._identify()
 
-                if self._closing.is_set():
+                if self._closing_event.is_set():
                     self._logger.debug(
                         "closing flag was set during handshake, disconnecting with GOING AWAY "
                         "(_run_once => do not reconnect)"
@@ -883,7 +886,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     return False
 
                 # Event polling.
-                while not self._closing.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
+                while not self._closing_event.is_set() and not heartbeat_task.done() and not heartbeat_task.cancelled():
                     try:
                         result = await self._poll_events()
 
@@ -932,7 +935,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
 
             # Ignore errors if we are closing
-            if self._closing.is_set() or self._closed.is_set():
+            if self._closing_event.is_set() or self._closed_event.is_set():
                 return False
 
             # Check if we made the socket close or handled it. If we didn't, we should always try to
@@ -1013,7 +1016,7 @@ class GatewayShardImpl(shard.GatewayShard):
             )
             raise errors.GatewayError(f"Expected opcode {_HELLO}, but received {payload[_OP]}")
 
-        if self._closing.is_set():
+        if self._closing_event.is_set():
             self._logger.debug(
                 "closing flag was set before we could handshake, disconnecting with GOING AWAY "
                 "(_run_once => do not reconnect)"

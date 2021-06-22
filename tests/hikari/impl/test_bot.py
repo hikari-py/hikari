@@ -278,40 +278,32 @@ class TestBotApp:
         bot._check_if_alive()
 
     @pytest.mark.asyncio()
-    async def test_close_when_not_force(self, bot, event_manager):
-        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
-        bot._is_alive = True
-
-        await bot.close(force=False)
-
-        bot._closing_event.set.assert_called_once_with()
-        assert bot._is_alive is True
-
-    @pytest.mark.asyncio()
-    async def test_close_when_not_force_and_closing_event_set(self, bot, event_manager):
-        bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
-        bot._is_alive = True
-
-        await bot.close(force=False)
-
-        bot._closing_event.set.assert_not_called()
-        assert bot._is_alive is True
-
-    @pytest.mark.asyncio()
     async def test_close_when_already_closed(self, bot, event_manager):
         bot._closing_event = None
+        bot._closed_event = None
         bot._is_alive = True
 
-        await bot.close(force=True)
+        await bot.close()
 
         assert bot._is_alive is True
 
     @pytest.mark.asyncio()
-    async def test_close_when_force(self, bot, event_manager, event_factory, rest, voice, cache):
+    async def test_close_when_already_closing(self, bot, event_manager):
+        bot._closing_event = object()
+        bot._closed_event = mock.AsyncMock()
+        bot._is_alive = True
+
+        await bot.close()
+
+        bot._closed_event.wait.assert_awaited_once_with()
+        assert bot._is_alive is True
+
+    @pytest.mark.asyncio()
+    async def test_close(self, bot, event_manager, event_factory, rest, voice, cache):
         def null_call(arg):
             return arg
 
-        class AwaitMock:
+        class AwaitableMock:
             def __init__(self, error=None):
                 self._awaited_count = 0
                 self._error = error
@@ -335,25 +327,30 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(asyncio, "as_completed", side_effect=null_call))
         ensure_future = stack.enter_context(mock.patch.object(asyncio, "ensure_future", side_effect=null_call))
         get_running_loop = stack.enter_context(mock.patch.object(asyncio, "get_running_loop"))
-        all_of = stack.enter_context(mock.patch.object(aio, "all_of", new=mock.AsyncMock()))
+        new_event = stack.enter_context(mock.patch.object(asyncio, "Event"))
+        mock_future = mock.Mock()
+        get_running_loop.return_value.create_future.return_value = mock_future
 
         event_manager.dispatch = mock.AsyncMock()
-        rest.close = AwaitMock()
-        voice.close = AwaitMock()
+        rest.close = AwaitableMock()
+        voice.close = AwaitableMock()
         bot._closing_event = closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
+        bot._closed_event = None
         bot._is_alive = True
         error = RuntimeError()
-        shard0 = mock.Mock(id=0, close=AwaitMock())
-        shard1 = mock.Mock(id=1, close=AwaitMock(error=error))
-        shard2 = mock.Mock(id=2, close=AwaitMock())
+        shard0 = mock.Mock(id=0, close=AwaitableMock())
+        shard1 = mock.Mock(id=1, close=AwaitableMock(error))
+        shard2 = mock.Mock(id=2, close=AwaitableMock())
         bot._shards = {0: shard0, 1: shard1, 2: shard2}
 
         with stack:
-            await bot.close(force=True)
+            await bot.close()
 
-        # Closing event and args
+        # Events and args
         closing_event.set.assert_called_once_with()
         assert bot._closing_event is None
+        new_event.return_value.set.assert_called_once_with()
+        assert bot._closed_event is None
         assert bot._is_alive is False
 
         # Closing components
@@ -383,9 +380,6 @@ class TestBotApp:
                 "exception": error,
             }
         )
-
-        # Joining shards
-        all_of.assert_awaited_once_with(*(shard0.join(), shard1.join(), shard2.join()), timeout=3)
 
         # Clear out maps
         assert bot._shards == {}
@@ -777,7 +771,7 @@ class TestBotApp:
         with mock.patch.object(bot_impl.BotApp, "close") as close:
             await bot._set_close_flag("Terminated", 15)
 
-        close.assert_awaited_once_with(force=False)
+        close.assert_awaited_once_with()
 
     @pytest.mark.asyncio()
     async def test_start_one_shard(self, bot):

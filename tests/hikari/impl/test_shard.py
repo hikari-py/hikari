@@ -653,45 +653,51 @@ class TestGatewayShardImpl:
         with mock.patch.object(shard.GatewayShardImpl, "is_alive", new=True):
             client._check_if_alive()
 
-    async def test_close_when_closing_set(self, client):
-        client._closing = mock.Mock(is_set=mock.Mock(return_value=True))
+    async def test_close_when_closing_event_set(self, client):
+        client._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
+        client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._send_close = mock.Mock()
         client._chunking_rate_limit = mock.Mock()
         client._total_rate_limit = mock.Mock()
 
         await client.close()
 
-        client._closing.set.assert_not_called()
+        client._closing_event.set.assert_not_called()
         client._send_close.assert_not_called()
         client._chunking_rate_limit.close.assert_not_called()
         client._total_rate_limit.close.assert_not_called()
+        client._closed_event.wait.assert_awaited_once_with()
 
-    async def test_close_when_closing_not_set(self, client):
-        client._closing = mock.Mock(is_set=mock.Mock(return_value=False))
+    async def test_close_when_closing_event_not_set(self, client):
+        client._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._ws = mock.Mock(send_close=mock.AsyncMock())
         client._chunking_rate_limit = mock.Mock()
         client._total_rate_limit = mock.Mock()
 
         await client.close()
 
-        client._closing.set.assert_called_once_with()
+        client._closing_event.set.assert_called_once_with()
         client._ws.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting"
         )
         client._chunking_rate_limit.close.assert_called_once_with()
         client._total_rate_limit.close.assert_called_once_with()
+        client._closed_event.wait.assert_awaited_once_with()
 
-    async def test_close_when_closing_not_set_and_ws_is_None(self, client):
-        client._closing = mock.Mock(is_set=mock.Mock(return_value=False))
+    async def test_close_when_closing_event_not_set_and_ws_is_None(self, client):
+        client._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._ws = None
         client._chunking_rate_limit = mock.Mock()
         client._total_rate_limit = mock.Mock()
 
         await client.close()
 
-        client._closing.set.assert_called_once_with()
+        client._closing_event.set.assert_called_once_with()
         client._chunking_rate_limit.close.assert_called_once_with()
         client._total_rate_limit.close.assert_called_once_with()
+        client._closed_event.wait.assert_awaited_once_with()
 
     async def test_when__user_id_is_None(self, client):
         client._handshake_completed = mock.Mock(wait=mock.AsyncMock())
@@ -705,11 +711,11 @@ class TestGatewayShardImpl:
         assert await client.get_user_id() == 123
 
     async def test_join(self, client):
-        client._closed = mock.Mock(wait=mock.AsyncMock())
+        client._closed_event = mock.Mock(wait=mock.AsyncMock())
 
         await client.join()
 
-        client._closed.wait.assert_awaited_once_with()
+        client._closed_event.wait.assert_awaited_once_with()
 
     async def test_request_guild_members_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
         client._check_if_alive = mock.Mock()
@@ -1009,15 +1015,15 @@ class TestGatewayShardImpl:
     async def test__heartbeat(self, client):
         client._last_heartbeat_sent = 5
         client._logger = mock.Mock()
-        client._closing = mock.Mock(is_set=mock.Mock(return_value=False))
-        client._closed = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
+        client._closed_event = mock.Mock(is_set=mock.Mock(return_value=False))
         client._send_heartbeat = mock.AsyncMock()
 
         with mock.patch.object(time, "monotonic", return_value=10):
             with mock.patch.object(asyncio, "wait_for", side_effect=[asyncio.TimeoutError, None]) as wait_for:
                 assert await client._heartbeat(20) is False
 
-        wait_for.assert_awaited_with(client._closing.wait(), timeout=20)
+        wait_for.assert_awaited_with(client._closing_event.wait(), timeout=20)
 
     @hikari_test_helpers.timeout()
     async def test__heartbeat_when_zombie(self, client):
