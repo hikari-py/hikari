@@ -213,6 +213,7 @@ class BotApp(traits.BotAware):
     __slots__: typing.Sequence[str] = (
         "_cache",
         "_closing_event",
+        "_closed_event",
         "_entity_factory",
         "_event_manager",
         "_event_factory",
@@ -250,6 +251,7 @@ class BotApp(traits.BotAware):
 
         # Settings and state
         self._closing_event: typing.Optional[asyncio.Event] = None
+        self._closed_event: typing.Optional[asyncio.Event] = None
         self._is_alive = False
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
@@ -356,16 +358,23 @@ class BotApp(traits.BotAware):
         if not self._is_alive:
             raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
 
-    async def close(self, force: bool = True) -> None:
+    async def close(self) -> None:
         """Kill the application by shutting all components down."""
-        if self._closing_event and not self._closing_event.is_set():
-            _LOGGER.debug("bot requested to shutdown [force:%s]", force)
-            self._closing_event.set()
+        self._check_if_alive()
 
-        if not self._closing_event or not force:  # If closing event is None then this is already closing.
+        if self._closed_event:  # Closing is in progress from another call, wait for that to complete.
+            await self._closed_event.wait()
             return
 
+        if self._closing_event is None:  # If closing event is None then this is already closed.
+            return
+
+        _LOGGER.debug("bot requested to shutdown")
+        self._closed_event = asyncio.Event()
+        self._closing_event.set()
         self._closing_event = None
+
+        loop = asyncio.get_running_loop()
 
         async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
             future = asyncio.ensure_future(awaitable)
@@ -373,8 +382,6 @@ class BotApp(traits.BotAware):
             try:
                 await future
             except Exception as ex:
-                loop = asyncio.get_running_loop()
-
                 loop.call_exception_handler(
                     {
                         "message": f"{name} raised an exception during shutdown",
@@ -396,15 +403,14 @@ class BotApp(traits.BotAware):
         for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
             await coro
 
-        # Join any shards until they finish
-        await aio.all_of(*(s.join() for s in self._shards.values()), timeout=len(self._shards))
-
         # Clear out cache and shard map
         self._cache.clear()
         self._shards.clear()
         self._is_alive = False
 
         await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
+        self._closed_event.set()
+        self._closed_event = None
 
     def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
         return self._event_manager.dispatch(event)
@@ -939,7 +945,7 @@ class BotApp(traits.BotAware):
         # solution.
         _LOGGER.debug("received interrupt %s (%s), will start shutting down shortly", signame, signum)
 
-        await self.close(force=False)
+        await self.close()
 
     async def _start_one_shard(
         self,
