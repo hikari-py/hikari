@@ -3048,6 +3048,7 @@ class TestEntityFactoryImpl:
         assert partial_message.nonce == "171000788183678976"
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
+        message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
         message_payload["member"] = None
         message_payload["application"]["primary_sku_id"] = None
@@ -3056,7 +3057,10 @@ class TestEntityFactoryImpl:
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
         del message_payload["application"]["cover_image"]
+
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+
+        assert partial_message.content is None
         assert partial_message.edited_timestamp is None
         assert partial_message._guild_id is not None
         assert partial_message.member is None
@@ -3069,6 +3073,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
+
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
@@ -3213,7 +3218,7 @@ class TestEntityFactoryImpl:
             "id": "123",
             "channel_id": "456",
             "author": user_payload,
-            "content": "some info",
+            "content": "",
             "timestamp": "2020-03-21T21:20:16.510000+00:00",
             "edited_timestamp": None,
             "tts": True,
@@ -3228,6 +3233,7 @@ class TestEntityFactoryImpl:
 
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.app is mock_app
+        assert message.content is None
         assert message._guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
