@@ -252,12 +252,12 @@ class TestSupportsColor:
 
     @pytest.mark.parametrize("colorterm", ["truecolor", "24bit", "TRUECOLOR", "24BIT"])
     def test_when_COLORTERM_has_correct_value(self, colorterm):
-        with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0", "COLORTERM": colorterm}, clear=True):
+        with mock.patch.dict(os.environ, {"COLORTERM": colorterm}, clear=True):
             assert ux.supports_color(True, False) is True
 
     def test_when_plat_is_Pocket_PC(self):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0"}, clear=True))
+        stack.enter_context(mock.patch.dict(os.environ, {}, clear=True))
         stack.enter_context(mock.patch.object(sys, "platform", new="Pocket PC"))
 
         with stack:
@@ -276,7 +276,7 @@ class TestSupportsColor:
         ],
     )
     def test_when_plat_is_win32(self, term_program, ansicon, isatty, expected):
-        environ = {"CLICOLOR_FORCE": "0", "TERM_PROGRAM": term_program}
+        environ = {"TERM_PROGRAM": term_program}
         if ansicon:
             environ["ANSICON"] = "ooga booga"
 
@@ -291,7 +291,7 @@ class TestSupportsColor:
     @pytest.mark.parametrize("isatty", [True, False])
     def test_when_plat_is_not_win32(self, isatty):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0"}, clear=True))
+        stack.enter_context(mock.patch.dict(os.environ, {}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new="linux"))
 

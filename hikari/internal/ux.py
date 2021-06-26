@@ -136,7 +136,7 @@ def init_logging(
     logging.captureWarnings(True)
 
 
-_UNCONDITIONAL_ANSI_FLAGS = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
+_UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
 """Set of env variables which always indicate that ANSI flags should be included."""
 
 
