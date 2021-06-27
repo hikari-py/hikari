@@ -233,47 +233,35 @@ class TestSupportsColor:
         assert ux.supports_color(False, True) is False
 
     def test_when_CLICOLOR_FORCE_in_env(self):
-        with mock.patch.object(os, "getenv", return_value="1") as getenv:
+        with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "1"}, clear=True):
             assert ux.supports_color(True, False) is True
 
-        getenv.assert_called_once_with("CLICOLOR_FORCE", "0")
-
     def test_when_force_color(self):
-        with mock.patch.object(os, "getenv", return_value="0") as getenv:
+        with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0"}, clear=True):
             assert ux.supports_color(True, True) is True
-
-        getenv.assert_called_once_with("CLICOLOR_FORCE", "0")
 
     def test_when_CLICOLOR_and_is_a_tty(self):
         with mock.patch.object(sys.stdout, "isatty", return_value=True):
-            with mock.patch.object(os, "getenv", side_effect=["0", "1"]) as getenv:
+            with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0", "CLICOLOR": "1"}, clear=True):
                 assert ux.supports_color(True, False) is True
 
-        assert getenv.call_count == 2
-        getenv.assert_has_calls([mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0")])
+    def test_when_CLICOLOR_is_0(self):
+        with mock.patch.object(sys.stdout, "isatty", return_value=True):
+            with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0", "CLICOLOR": "0"}, clear=True):
+                assert ux.supports_color(True, False) is False
 
     @pytest.mark.parametrize("colorterm", ["truecolor", "24bit", "TRUECOLOR", "24BIT"])
     def test_when_COLORTERM_has_correct_value(self, colorterm):
-        with mock.patch.object(os, "getenv", side_effect=["0", "0", colorterm]) as getenv:
+        with mock.patch.dict(os.environ, {"COLORTERM": colorterm}, clear=True):
             assert ux.supports_color(True, False) is True
-
-        assert getenv.call_count == 3
-        getenv.assert_has_calls(
-            [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("COLORTERM", "")]
-        )
 
     def test_when_plat_is_Pocket_PC(self):
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", return_value="0"))
+        stack.enter_context(mock.patch.dict(os.environ, {}, clear=True))
         stack.enter_context(mock.patch.object(sys, "platform", new="Pocket PC"))
 
         with stack:
             assert ux.supports_color(True, False) is False
-
-        assert getenv.call_count == 3
-        getenv.assert_has_calls(
-            [mock.call("CLICOLOR_FORCE", "0"), mock.call("CLICOLOR", "0"), mock.call("COLORTERM", "")]
-        )
 
     @pytest.mark.parametrize(
         ("term_program", "ansicon", "isatty", "expected"),
@@ -288,78 +276,49 @@ class TestSupportsColor:
         ],
     )
     def test_when_plat_is_win32(self, term_program, ansicon, isatty, expected):
+        environ = {"TERM_PROGRAM": term_program}
+        if ansicon:
+            environ["ANSICON"] = "ooga booga"
+
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", "", term_program, ""]))
+        stack.enter_context(mock.patch.dict(os.environ, environ, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new="win32"))
-        stack.enter_context(mock.patch.object(os, "environ", new=["ANSICON"] if ansicon else []))
 
         with stack:
             assert ux.supports_color(True, False) is expected
 
-        assert getenv.call_count == 5
-        getenv.assert_has_calls(
-            [
-                mock.call("CLICOLOR_FORCE", "0"),
-                mock.call("CLICOLOR", "0"),
-                mock.call("COLORTERM", ""),
-                mock.call("TERM_PROGRAM", None),
-                mock.call("PYCHARM_HOSTED", ""),
-            ]
-        )
-
     @pytest.mark.parametrize("isatty", [True, False])
     def test_when_plat_is_not_win32(self, isatty):
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", side_effect=["0", "0", "", ""]))
+        stack.enter_context(mock.patch.dict(os.environ, {}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new="linux"))
 
         with stack:
             assert ux.supports_color(True, False) is isatty
 
-        assert getenv.call_count == 4
-        getenv.assert_has_calls(
-            [
-                mock.call("CLICOLOR_FORCE", "0"),
-                mock.call("CLICOLOR", "0"),
-                mock.call("COLORTERM", ""),
-                mock.call("PYCHARM_HOSTED", ""),
-            ]
-        )
-
     @pytest.mark.parametrize("isatty", [True, False])
     @pytest.mark.parametrize("plat", ["linux", "win32"])
     def test_when_PYCHARM_HOSTED(self, isatty, plat):
         stack = contextlib.ExitStack()
-        getenv = stack.enter_context(mock.patch.object(os, "getenv", return_value="0"))
+        stack.enter_context(mock.patch.dict(os.environ, {"PYCHARM_HOSTED": "OOGA BOOGA"}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
         stack.enter_context(mock.patch.object(sys, "platform", new=plat))
 
         with stack:
             assert ux.supports_color(True, False) is True
 
-        if plat == "win32":
-            assert getenv.call_count == 5
-            getenv.assert_has_calls(
-                [
-                    mock.call("CLICOLOR_FORCE", "0"),
-                    mock.call("CLICOLOR", "0"),
-                    mock.call("COLORTERM", ""),
-                    mock.call("TERM_PROGRAM", None),
-                    mock.call("PYCHARM_HOSTED", ""),
-                ]
-            )
-        else:
-            assert getenv.call_count == 4
-            getenv.assert_has_calls(
-                [
-                    mock.call("CLICOLOR_FORCE", "0"),
-                    mock.call("CLICOLOR", "0"),
-                    mock.call("COLORTERM", ""),
-                    mock.call("PYCHARM_HOSTED", ""),
-                ]
-            )
+    @pytest.mark.parametrize("isatty", [True, False])
+    @pytest.mark.parametrize("plat", ["linux", "win32"])
+    def test_when_WT_SESSION(self, isatty, plat):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.dict(os.environ, {"WT_SESSION": "OOGA BOOGA"}, clear=True))
+        stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
+        stack.enter_context(mock.patch.object(sys, "platform", new=plat))
+
+        with stack:
+            assert ux.supports_color(True, False) is True
 
 
 class TestHikariVersion:
