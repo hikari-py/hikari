@@ -136,6 +136,10 @@ def init_logging(
     logging.captureWarnings(True)
 
 
+_UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
+"""Set of env variables which always indicate that ANSI flags should be included."""
+
+
 def print_banner(package: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
     """Print a banner of choice to `sys.stdout`.
 
@@ -223,30 +227,34 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     # isatty is not always implemented, https://code.djangoproject.com/ticket/6223
     is_a_tty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
-    if os.getenv("CLICOLOR_FORCE", "0") != "0" or force_color:
+    clicolor = os.environ.get("CLICOLOR")
+    if os.environ.get("CLICOLOR_FORCE", "0") != "0" or force_color:
         # https://bixense.com/clicolors/
         return True
-    elif os.getenv("CLICOLOR", "0") != "0" and is_a_tty:
+    if clicolor is not None and clicolor != "0" and is_a_tty:
         # https://bixense.com/clicolors/
         return True
-    elif os.getenv("COLORTERM", "").casefold() in ("truecolor", "24bit"):
+    if clicolor == "0":
+        # https://bixense.com/clicolors/
+        return False
+    if os.environ.get("COLORTERM", "").casefold() in ("truecolor", "24bit"):
         # Seems to be used by Gnome Terminal, and Tmpod will beat me if I don't add it.
         # https://gist.github.com/XVilka/8346728#true-color-detection
         return True
 
     plat = sys.platform
+    if plat == "Pocket PC":
+        return False
+
     color_support = False
+    if plat == "win32":
+        color_support |= os.environ.get("TERM_PROGRAM") in ("mintty", "Terminus")
+        color_support |= "ANSICON" in os.environ
+        color_support &= is_a_tty
+    else:
+        color_support = is_a_tty
 
-    if plat != "Pocket PC":
-        if plat == "win32":
-            color_support |= os.getenv("TERM_PROGRAM", None) in ("mintty", "Terminus")
-            color_support |= "ANSICON" in os.environ
-            color_support &= is_a_tty
-        else:
-            color_support = is_a_tty
-
-        color_support |= bool(os.getenv("PYCHARM_HOSTED", ""))
-
+    color_support |= bool(os.environ.keys() & _UNCONDITIONAL_ANSI_FLAGS)
     return color_support
 
 
