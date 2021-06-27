@@ -31,7 +31,6 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
-from hikari import users
 from hikari.impl import bot
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
@@ -656,7 +655,7 @@ class TestPartialGuild:
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock(return_value=model)
 
-        assert await model.fetch_guild() is model.app.rest.fetch_guild.return_value
+        assert await model.fetch_self() is model.app.rest.fetch_guild.return_value
         model.app.rest.fetch_guild.assert_awaited_once_with(model.id)
 
     @pytest.mark.asyncio

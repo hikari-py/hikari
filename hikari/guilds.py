@@ -2114,7 +2114,7 @@ class PartialGuild(snowflakes.Unique):
         """
         return await self.app.rest.delete_channel(category)
 
-    async def fetch_guild(self) -> RESTGuild:
+    async def fetch_self(self) -> RESTGuild:
         """Fetch the guild.
 
         Returns
