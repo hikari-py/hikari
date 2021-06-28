@@ -316,6 +316,7 @@ class TestGuildChannel:
 
     def test_mention_property(self, model):
         assert model.mention == "<#69420>"
+
     @pytest.mark.asyncio()
     async def test_edit_overwrite(self, model):
         model.app.rest.edit_permission_overwrites = mock.AsyncMock()
