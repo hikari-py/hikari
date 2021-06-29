@@ -57,7 +57,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.interactions import base_interactions
     from hikari.interactions import commands
-    from hikari.interactions import components
     from hikari.internal import data_binding
     from hikari.internal import time
 
@@ -1019,7 +1018,7 @@ class ActionRowBuilder(ComponentBuilder):
 
     def add_button(
         self: _T,
-        style: typing.Union[int, components.ButtonStyle],
+        style: typing.Union[int, messages.ButtonStyle],
         *,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1031,7 +1030,7 @@ class ActionRowBuilder(ComponentBuilder):
 
         Parameters
         ----------
-        style : typing.Union[builtins.int, hikari.interactions.components.ButtonStyle]
+        style : typing.Union[builtins.int, hikari.messages.ButtonStyle]
             The button's style.
 
         Other Parameters

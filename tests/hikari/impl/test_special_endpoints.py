@@ -24,11 +24,11 @@ import mock
 import pytest
 
 from hikari import emojis
+from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import components
 from tests.hikari import hikari_test_helpers
 
 
@@ -228,7 +228,7 @@ class TestCommandBuilder:
 class Test_ButtonBuilder:
     def test_build(self):
         result = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
+            style=messages.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -238,8 +238,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": components.ComponentType.BUTTON,
-            "style": components.ButtonStyle.DANGER,
+            "type": messages.ComponentType.BUTTON,
+            "style": messages.ButtonStyle.DANGER,
             "emoji": {"name": "emoji_name"},
             "label": "no u",
             "custom_id": "ooga booga",
@@ -248,7 +248,7 @@ class Test_ButtonBuilder:
 
     def test_build_without_optional_fields(self):
         result = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.LINK,
+            style=messages.ButtonStyle.LINK,
             url="OK",
             emoji_id="123321",
             emoji_name=undefined.UNDEFINED,
@@ -258,8 +258,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": components.ComponentType.BUTTON,
-            "style": components.ButtonStyle.LINK,
+            "type": messages.ComponentType.BUTTON,
+            "style": messages.ButtonStyle.LINK,
             "emoji": {"id": "123321"},
             "disabled": False,
             "url": "OK",
@@ -270,7 +270,7 @@ class Test_ButtonBuilder:
             special_endpoints._ButtonBuilder(
                 emoji_id=undefined.UNDEFINED,
                 emoji_name=undefined.UNDEFINED,
-                style=components.ButtonStyle.LINK,
+                style=messages.ButtonStyle.LINK,
                 url=undefined.UNDEFINED,
                 label=undefined.UNDEFINED,
                 custom_id=undefined.UNDEFINED,
@@ -282,7 +282,7 @@ class Test_ButtonBuilder:
             special_endpoints._ButtonBuilder(
                 emoji_id=undefined.UNDEFINED,
                 emoji_name=undefined.UNDEFINED,
-                style=components.ButtonStyle.LINK,
+                style=messages.ButtonStyle.LINK,
                 url="hi",
                 label=undefined.UNDEFINED,
                 custom_id="an ID",
@@ -294,7 +294,7 @@ class Test_ButtonBuilder:
             special_endpoints._ButtonBuilder(
                 emoji_id=undefined.UNDEFINED,
                 emoji_name=undefined.UNDEFINED,
-                style=components.ButtonStyle.DANGER,
+                style=messages.ButtonStyle.DANGER,
                 url="hi",
                 label=undefined.UNDEFINED,
                 custom_id="an ID",
@@ -306,7 +306,7 @@ class Test_ButtonBuilder:
             special_endpoints._ButtonBuilder(
                 emoji_id=undefined.UNDEFINED,
                 emoji_name=undefined.UNDEFINED,
-                style=components.ButtonStyle.DANGER,
+                style=messages.ButtonStyle.DANGER,
                 url=undefined.UNDEFINED,
                 label=undefined.UNDEFINED,
                 custom_id=undefined.UNDEFINED,
@@ -318,7 +318,7 @@ class Test_ButtonBuilder:
             special_endpoints._ButtonBuilder(
                 emoji_id=123,
                 emoji_name="hi",
-                style=components.ButtonStyle.DANGER,
+                style=messages.ButtonStyle.DANGER,
                 url=undefined.UNDEFINED,
                 label=undefined.UNDEFINED,
                 custom_id="hi",
@@ -349,7 +349,7 @@ def test__build_emoji_when_undefined():
 class TestActionRowBuilder:
     def test_add_button(self):
         builder = special_endpoints.ActionRowBuilder().add_button(
-            style=components.ButtonStyle.DANGER,
+            style=messages.ButtonStyle.DANGER,
             label="ok",
             emoji=emojis.UnicodeEmoji("gat"),
             custom_id="go home",
@@ -360,20 +360,20 @@ class TestActionRowBuilder:
         assert isinstance(result, special_endpoints._ButtonBuilder)
         assert result._emoji_id is undefined.UNDEFINED
         assert result._emoji_name == "gat"
-        assert result._style is components.ButtonStyle.DANGER
+        assert result._style is messages.ButtonStyle.DANGER
         assert result._label == "ok"
         assert result._custom_id == "go home"
         assert result._is_disabled is True
         assert result._url is undefined.UNDEFINED
 
     def test_add_button_for_other_fields(self):
-        builder = special_endpoints.ActionRowBuilder().add_button(style=components.ButtonStyle.LINK, url="ggg")
+        builder = special_endpoints.ActionRowBuilder().add_button(style=messages.ButtonStyle.LINK, url="ggg")
 
         result = builder._components[0]
         assert isinstance(result, special_endpoints._ButtonBuilder)
         assert result._emoji_id is undefined.UNDEFINED
         assert result._emoji_name is undefined.UNDEFINED
-        assert result._style is components.ButtonStyle.LINK
+        assert result._style is messages.ButtonStyle.LINK
         assert result._label is undefined.UNDEFINED
         assert result._custom_id is undefined.UNDEFINED
         assert result._is_disabled is False
@@ -389,7 +389,7 @@ class TestActionRowBuilder:
         result = row.build()
 
         assert result == {
-            "type": components.ComponentType.ACTION_ROW,
+            "type": messages.ComponentType.ACTION_ROW,
             "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
         }
         mock_component_1.build.assert_called_once_with()

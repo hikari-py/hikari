@@ -46,11 +46,12 @@ from hikari import emojis
 from hikari import errors
 from hikari import files
 from hikari import iterators
+from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import components
+from hikari.interactions import commands
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -66,7 +67,6 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import embeds as embeds_
     from hikari import guilds
-    from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
     from hikari import voices
@@ -931,7 +931,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 class _ButtonBuilder(special_endpoints.ComponentBuilder):
     _emoji_id: undefined.UndefinedOr[str] = attr.field()
     _emoji_name: undefined.UndefinedOr[str] = attr.field()
-    _style: typing.Union[int, components.ButtonStyle] = attr.field(converter=components.ButtonStyle)
+    _style: typing.Union[int, messages.ButtonStyle] = attr.field(converter=messages.ButtonStyle)
     _label: undefined.UndefinedOr[str] = attr.field()
     _custom_id: undefined.UndefinedOr[str] = attr.field()
     _url: undefined.UndefinedOr[str] = attr.field()
@@ -940,7 +940,7 @@ class _ButtonBuilder(special_endpoints.ComponentBuilder):
     def build(self) -> data_binding.JSONObject:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = components.ComponentType.BUTTON
+        data["type"] = messages.ComponentType.BUTTON
         data["style"] = self._style
         data["disabled"] = self._is_disabled
         data.put("label", self._label)
@@ -957,7 +957,7 @@ class _ButtonBuilder(special_endpoints.ComponentBuilder):
         return data
 
     def __attrs_post_init__(self) -> None:
-        if self._style == components.ButtonStyle.LINK:
+        if self._style == messages.ButtonStyle.LINK:
             if self._url is undefined.UNDEFINED:
                 raise ValueError("url must be specified for a LINK style button")
 
@@ -1009,7 +1009,7 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
     def add_button(
         self: _ActionRowBuilderT,
-        style: typing.Union[int, components.ButtonStyle],
+        style: typing.Union[int, messages.ButtonStyle],
         *,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -1027,6 +1027,6 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
     def build(self) -> data_binding.JSONObject:
         return {
-            "type": components.ComponentType.ACTION_ROW,
+            "type": messages.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }

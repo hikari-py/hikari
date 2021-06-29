@@ -24,23 +24,16 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = [
-    "ActionRowComponent",
-    "ButtonComponent",
-    "ButtonStyle",
     "ComponentInteraction",
     "COMPONENT_RESPONSE_TYPES",
     "ComponentResponseTypesT",
-    "ComponentType",
-    "PartialComponent",
 ]
 
 import typing
 
 import attr
 
-from hikari import emojis
 from hikari.interactions import bases
-from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import messages
@@ -95,133 +88,6 @@ The following types are valid for this:
 """
 
 
-@typing.final
-class ComponentType(int, enums.Enum):
-    """Types of components found within Discord."""
-
-    ACTION_ROW = 1
-    """A non-interactive container component for other types of components.
-
-    !!! note
-        As this is a container component it can never be contained within another
-        component and therefore will always be top-level.l
-    """
-
-    BUTTON = 2
-    """A button component.
-
-    !!! note
-        This cannot be top-level and must be within a container component such
-        as `ComponentType.ACTION_ROW`.
-    """
-
-
-@typing.final
-class ButtonStyle(int, enums.Enum):
-    """Enum of the available button styles.
-
-    More information, such as how these look, can be found at
-    https://discord.com/developers/docs/interactions/message-components#buttons-button-styles
-    """
-
-    PRIMARY = 1
-    """A blurple "call to action" button."""
-
-    SECONDARY = 2
-    """A grey neutral button."""
-
-    SUCCESS = 3
-    """A green button."""
-
-    DANGER = 4
-    """A red button (usually indicates a destructive action)."""
-
-    LINK = 5
-    """A grey button which navigates to a URL.
-
-    !!! warning
-        Unlike the other button styles, clicking this one will not trigger an
-        interaction and custom_id shouldn't be included for this style.
-    """
-
-
-@attr.define(kw_only=True, weakref_slot=False)
-class PartialComponent:
-    """Base class for all component entities."""
-
-    type: typing.Union[ComponentType, int] = attr.field()
-    """The type of component this is."""
-
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class ButtonComponent(PartialComponent):
-    """Represents a message button component.
-
-    !!! note
-        This is an embedded component and will only ever be found within
-        top-level container components such as `ActionRowComponent`.
-    """
-
-    style: typing.Union[ButtonStyle, int] = attr.field(eq=False)
-    """The button's style."""
-
-    label: typing.Optional[str] = attr.field(eq=False)
-    """Text label which appears on the button."""
-
-    emoji: typing.Optional[emojis.Emoji] = attr.field(eq=False)
-    """Custom or unicode emoji which appears on the button."""
-
-    custom_id: typing.Optional[str] = attr.field(hash=True)
-    """Developer defined identifier for this button (will be >= 100 characters).
-
-    !!! note
-        This is required for the following button styles:
-
-        * `ButtonStyle.PRIMARY`
-        * `ButtonStyle.SECONDARY`
-        * `ButtonStyle.SUCCESS`
-        * `ButtonStyle.DANGER`
-    """
-
-    url: typing.Optional[str] = attr.field(eq=False)
-    """Url for `ButtonStyle.LINK` style buttons."""
-
-    is_disabled: bool = attr.field(eq=False)
-    """Whether the button is disabled."""
-
-
-@attr.define(weakref_slot=False)
-class ActionRowComponent(PartialComponent):
-    """Represents a row of components attached to a message.
-
-    !!! note
-        This is a top-level container component and will never be found within
-        another component.
-    """
-
-    components: typing.Sequence[PartialComponent] = attr.field()
-    """Sequence of the components contained within this row."""
-
-    @typing.overload
-    def __getitem__(self, index: int, /) -> PartialComponent:
-        ...
-
-    @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[PartialComponent]:
-        ...
-
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[PartialComponent, typing.Sequence[PartialComponent]]:
-        return self.components[index_or_slice]
-
-    def __iter__(self) -> typing.Iterator[PartialComponent]:
-        return iter(self.components)
-
-    def __len__(self) -> int:
-        return len(self.components)
-
-
 @attr.define(hash=True, weakref_slot=False)
 class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
     """Represents a component interaction on Discord."""
@@ -229,7 +95,7 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
     channel_id: snowflakes.Snowflake = attr.field(eq=False)
     """ID of the channel this interaction was triggered in."""
 
-    component_type: typing.Union[ComponentType, int] = attr.field(eq=False)
+    component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
     """The type of component which triggers this interaction.
 
     !!! note

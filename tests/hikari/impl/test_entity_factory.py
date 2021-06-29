@@ -3116,70 +3116,6 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
         }
 
-    @pytest.fixture()
-    def action_row_payload(self, button_payload):
-        return {"type": 1, "components": [button_payload]}
-
-    def test_deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
-        action_row = entity_factory_impl.deserialize_action_row(action_row_payload)
-
-        assert action_row.type is component_interactions.ComponentType.ACTION_ROW
-        assert action_row.components == [entity_factory_impl.deserialize_component(button_payload)]
-
-    def test_deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
-        action_row = entity_factory_impl.deserialize_action_row(
-            {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
-        )
-
-        assert action_row.components == []
-
-    @pytest.fixture()
-    def button_payload(self, custom_emoji_payload):
-        return {
-            "type": 2,
-            "label": "Click me!",
-            "style": 1,
-            "emoji": custom_emoji_payload,
-            "custom_id": "click_one",
-            "url": "okokok",
-            "disabled": True,
-        }
-
-    def test_deserialize_deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
-        button = entity_factory_impl.deserialize_button(button_payload)
-
-        assert button.type is component_interactions.ComponentType.BUTTON
-        assert button.style is component_interactions.ButtonStyle.PRIMARY
-        assert button.label == "Click me!"
-        assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
-        assert button.custom_id == "click_one"
-        assert button.is_disabled is True
-        assert button.url == "okokok"
-
-    def test_deserialize_deserialize_button_with_unset_fields(
-        self, entity_factory_impl, button_payload, custom_emoji_payload
-    ):
-        button = entity_factory_impl.deserialize_button({"type": 2, "style": 5})
-
-        assert button.type is component_interactions.ComponentType.BUTTON
-        assert button.style is component_interactions.ButtonStyle.LINK
-        assert button.label is None
-        assert button.emoji is None
-        assert button.custom_id is None
-        assert button.url is None
-        assert button.is_disabled is False
-
-    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload):
-        for expected_type, payload in [
-            (component_interactions.ActionRowComponent, action_row_payload),
-            (component_interactions.ButtonComponent, button_payload),
-        ]:
-            assert type(entity_factory_impl.deserialize_component(payload)) is expected_type
-
-    def test_deserialize_component_handles_unknown_type(self, entity_factory_impl):
-        with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl.deserialize_component({"type": -9434994})
-
     def test_deserialize_component_interaction(
         self, entity_factory_impl, component_interaction_payload, interaction_member_payload, mock_app, message_payload
     ):
@@ -3192,7 +3128,7 @@ class TestEntityFactoryImpl:
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
         assert interaction.channel_id == 345626669114982999
-        assert interaction.component_type is component_interactions.ComponentType.BUTTON
+        assert interaction.component_type is message_models.ComponentType.BUTTON
         assert interaction.custom_id == "click_one"
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
@@ -3541,6 +3477,70 @@ class TestEntityFactoryImpl:
     ##################
     # MESSAGE MODELS #
     ##################
+
+    @pytest.fixture()
+    def action_row_payload(self, button_payload):
+        return {"type": 1, "components": [button_payload]}
+
+    def test_deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
+        action_row = entity_factory_impl.deserialize_action_row(action_row_payload)
+
+        assert action_row.type is message_models.ComponentType.ACTION_ROW
+        assert action_row.components == [entity_factory_impl.deserialize_component(button_payload)]
+
+    def test_deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
+        action_row = entity_factory_impl.deserialize_action_row(
+            {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
+        )
+
+        assert action_row.components == []
+
+    @pytest.fixture()
+    def button_payload(self, custom_emoji_payload):
+        return {
+            "type": 2,
+            "label": "Click me!",
+            "style": 1,
+            "emoji": custom_emoji_payload,
+            "custom_id": "click_one",
+            "url": "okokok",
+            "disabled": True,
+        }
+
+    def test_deserialize_deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
+        button = entity_factory_impl.deserialize_button(button_payload)
+
+        assert button.type is message_models.ComponentType.BUTTON
+        assert button.style is message_models.ButtonStyle.PRIMARY
+        assert button.label == "Click me!"
+        assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        assert button.custom_id == "click_one"
+        assert button.is_disabled is True
+        assert button.url == "okokok"
+
+    def test_deserialize_deserialize_button_with_unset_fields(
+        self, entity_factory_impl, button_payload, custom_emoji_payload
+    ):
+        button = entity_factory_impl.deserialize_button({"type": 2, "style": 5})
+
+        assert button.type is message_models.ComponentType.BUTTON
+        assert button.style is message_models.ButtonStyle.LINK
+        assert button.label is None
+        assert button.emoji is None
+        assert button.custom_id is None
+        assert button.url is None
+        assert button.is_disabled is False
+
+    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload):
+        for expected_type, payload in [
+            (message_models.ActionRowComponent, action_row_payload),
+            (message_models.ButtonComponent, button_payload),
+        ]:
+            assert type(entity_factory_impl.deserialize_component(payload)) is expected_type
+
+    def test_deserialize_component_handles_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_component({"type": -9434994})
 
     @pytest.fixture()
     def partial_application_payload(self):

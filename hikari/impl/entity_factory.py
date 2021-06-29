@@ -239,8 +239,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._component_type_mapping = {
-            component_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
-            component_models.ComponentType.BUTTON: self.deserialize_button,
+            message_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
+            message_models.ComponentType.BUTTON: self.deserialize_button,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -1881,41 +1881,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return payload
 
-    def deserialize_action_row(self, payload: data_binding.JSONObject) -> component_models.ActionRowComponent:
-        components: typing.List[component_models.PartialComponent] = []
-
-        for component_payload in payload["components"]:
-            try:
-                components.append(self.deserialize_component(component_payload))
-
-            except errors.UnrecognisedEntityError:
-                pass
-
-        return component_models.ActionRowComponent(
-            type=component_models.ComponentType(payload["type"]), components=components
-        )
-
-    def deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
-        emoji_payload = payload.get("emoji")
-        return component_models.ButtonComponent(
-            type=component_models.ComponentType(payload["type"]),
-            style=component_models.ButtonStyle(payload["style"]),
-            label=payload.get("label"),
-            emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
-            custom_id=payload.get("custom_id"),
-            url=payload.get("url"),
-            is_disabled=payload.get("disabled", False),
-        )
-
-    def deserialize_component(self, payload: data_binding.JSONObject) -> component_models.PartialComponent:
-        component_type = component_models.ComponentType(payload["type"])
-
-        if deserialize := self._component_type_mapping.get(component_type):
-            return deserialize(payload)
-
-        _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}") from None
-
     def deserialize_component_interaction(
         self, payload: data_binding.JSONObject
     ) -> component_models.ComponentInteraction:
@@ -1962,7 +1927,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             token=payload["token"],
             version=payload["version"],
             custom_id=data_payload["custom_id"],
-            component_type=component_models.ComponentType(data_payload["component_type"]),
+            component_type=message_models.ComponentType(data_payload["component_type"]),
             message=message,
             message_flags=message_flags,
             message_id=message_id,
@@ -2020,6 +1985,41 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
     # MESSAGE MODELS #
     ##################
+
+    def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
+        components: typing.List[message_models.PartialComponent] = []
+
+        for component_payload in payload["components"]:
+            try:
+                components.append(self.deserialize_component(component_payload))
+
+            except errors.UnrecognisedEntityError:
+                pass
+
+        return message_models.ActionRowComponent(
+            type=message_models.ComponentType(payload["type"]), components=components
+        )
+
+    def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+        emoji_payload = payload.get("emoji")
+        return message_models.ButtonComponent(
+            type=message_models.ComponentType(payload["type"]),
+            style=message_models.ButtonStyle(payload["style"]),
+            label=payload.get("label"),
+            emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
+            custom_id=payload.get("custom_id"),
+            url=payload.get("url"),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
+        component_type = message_models.ComponentType(payload["type"])
+
+        if deserialize := self._component_type_mapping.get(component_type):
+            return deserialize(payload)
+
+        _LOGGER.debug("Unknown component type %s", component_type)
+        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}") from None
 
     def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
         return message_models.MessageActivity(
@@ -2158,7 +2158,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[typing.List[component_models.PartialComponent]] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[typing.List[message_models.PartialComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
             components = []
             for component_payload in component_payloads:
@@ -2279,7 +2279,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[component_models.PartialComponent] = []
+        components: typing.List[message_models.PartialComponent] = []
         if component_payloads := payload.get("components"):
             for component_payload in component_payloads:
                 try:
