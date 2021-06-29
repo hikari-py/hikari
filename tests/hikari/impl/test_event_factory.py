@@ -30,6 +30,7 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari.events import channel_events
 from hikari.events import guild_events
+from hikari.events import interaction_events
 from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
@@ -451,6 +452,50 @@ class TestEventFactoryImpl:
         assert event.user.flags is undefined.UNDEFINED
 
         assert event.presence is mock_app.entity_factory.deserialize_member_presence.return_value
+
+    ######################
+    # INTERACTION EVENTS #
+    ######################
+
+    def test_deserialize_command_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "123"}
+
+        result = event_factory.deserialize_command_create_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
+        assert result.shard is mock_shard
+        assert result.command is mock_app.entity_factory.deserialize_command.return_value
+        assert isinstance(result, interaction_events.CommandCreateEvent)
+
+    def test_deserialize_command_update_event(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "12344"}
+
+        result = event_factory.deserialize_command_update_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
+        assert result.shard is mock_shard
+        assert result.command is mock_app.entity_factory.deserialize_command.return_value
+        assert isinstance(result, interaction_events.CommandUpdateEvent)
+
+    def test_deserialize_command_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "1561232344"}
+
+        result = event_factory.deserialize_command_delete_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_command.assert_called_once_with(payload)
+        assert result.shard is mock_shard
+        assert result.command is mock_app.entity_factory.deserialize_command.return_value
+        assert isinstance(result, interaction_events.CommandDeleteEvent)
+
+    def test_deserialize_interaction_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "1561232344"}
+
+        result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
+        assert result.shard is mock_shard
+        assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
+        assert isinstance(result, interaction_events.InteractionCreateEvent)
 
     #################
     # MEMBER EVENTS #

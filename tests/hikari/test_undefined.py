@@ -63,3 +63,48 @@ class TestUndefined:
 
     def test__getstate__(self):
         assert undefined.UNDEFINED.__getstate__() is False
+
+
+@pytest.mark.parametrize(
+    ("values", "result"),
+    [
+        ((), True),
+        (("321", undefined.UNDEFINED, 33123), False),
+        ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), True),
+        (("123", 23123, 34123, 312321, 543453, 432, 41, 231, 1243, 321), False),
+        ((undefined.UNDEFINED,), True),
+        ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, 34123), False),
+    ],
+)
+def test_all_undefined(values, result):
+    assert undefined.all_undefined(*values) is result
+
+
+@pytest.mark.parametrize(
+    ("values", "result"),
+    [
+        ((undefined.UNDEFINED,), True),
+        ((), False),
+        ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), True),
+        (("123", 432, 123, "43", 1223, "541324", 123453, 123, "543", 123), False),
+        ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, "34r123"), True),
+        ((undefined.UNDEFINED, 34123, 5432123, "312", False), True),
+    ],
+)
+def test_any_undefined(values, result):
+    assert undefined.any_undefined(*values) is result
+
+
+@pytest.mark.parametrize(
+    ("values", "result"),
+    [
+        ((undefined.UNDEFINED, undefined.UNDEFINED, "43123", "5421234"), 2),
+        ((undefined.UNDEFINED, 233, 123, "4532123", 32123), 1),
+        ((), 0),
+        (("123", 543, "123", 321, "543", 123), 0),
+        ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED), 5),
+        ((undefined.UNDEFINED, "32123123", undefined.UNDEFINED, 34123123, undefined.UNDEFINED), 3),
+    ],
+)
+def test_count(values, result):
+    assert undefined.count(*values) == result

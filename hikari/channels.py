@@ -244,6 +244,7 @@ class ChannelFollow:
         return channel
 
 
+@typing.final
 class PermissionOverwriteType(int, enums.Enum):
     """The type of entity a Permission Overwrite targets."""
 

@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "URLEncodedForm",
     "dump_json",
     "load_json",
+    "JSONDecodeError",
     "JSONObjectBuilder",
     "cast_json_array",
 ]
@@ -79,11 +80,13 @@ _StringMapBuilderArg = typing.Union[
 ]
 
 if typing.TYPE_CHECKING:
+    JSONDecodeError: typing.Type[Exception] = Exception
+    """Exception raised when loading an invalid JSON string"""
 
-    def dump_json(_: typing.Union[JSONArray, JSONObject]) -> str:
+    def dump_json(_: typing.Union[JSONArray, JSONObject], /) -> str:
         """Convert a Python type to a JSON string."""
 
-    def load_json(_: typing.AnyStr) -> typing.Union[JSONArray, JSONObject]:
+    def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
         """Convert a JSON string to a Python type."""
 
 
@@ -95,6 +98,9 @@ else:
 
     load_json = json.loads
     """Convert a JSON string to a Python type."""
+
+    JSONDecodeError = json.JSONDecodeError
+    """Exception raised when loading an invalid JSON string"""
 
 
 @typing.final

@@ -46,7 +46,7 @@ from hikari.internal import aio
 from hikari.internal import ux
 
 
-class TestBotApp:
+class TestGatewayBot:
     @pytest.fixture()
     def cache(self):
         return mock.Mock()
@@ -109,10 +109,10 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl", return_value=voice))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=rest))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
 
         with stack:
-            return bot_impl.BotApp(
+            return bot_impl.GatewayBot(
                 "token", executor=executor, http_settings=http_settings, proxy_settings=proxy_settings, intents=intents
             )
 
@@ -125,7 +125,7 @@ class TestBotApp:
         voice = stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
         rest = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
-        print_banner = stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
+        print_banner = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
         executor = object()
         cache_settings = object()
         http_settings = object()
@@ -133,7 +133,7 @@ class TestBotApp:
         intents = object()
 
         with stack:
-            bot = bot_impl.BotApp(
+            bot = bot_impl.GatewayBot(
                 "token",
                 allow_color=False,
                 banner="testing",
@@ -153,7 +153,7 @@ class TestBotApp:
         assert bot._cache is cache.return_value
         cache.assert_called_once_with(bot, cache_settings)
         assert bot._event_manager is event_manager.return_value
-        event_manager.assert_called_once_with(bot, cache=cache.return_value)
+        event_manager.assert_called_once_with(event_factory.return_value, intents, cache=cache.return_value)
         assert bot._entity_factory is entity_factory.return_value
         entity_factory.assert_called_once_with(bot)
         assert bot._event_factory is event_factory.return_value
@@ -185,13 +185,13 @@ class TestBotApp:
         stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "print_banner"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
         http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
         cache_settings = stack.enter_context(mock.patch.object(config, "CacheSettings"))
 
         with stack:
-            bot = bot_impl.BotApp("token", cache_settings=None, http_settings=None, proxy_settings=None)
+            bot = bot_impl.GatewayBot("token", cache_settings=None, http_settings=None, proxy_settings=None)
 
         assert bot._http_settings is http_settings.return_value
         http_settings.assert_called_once_with()
@@ -416,7 +416,7 @@ class TestBotApp:
         bot._shards = {0: shard0, 1: shard1, 2: shard2}
 
         with mock.patch.object(aio, "first_completed") as first_completed:
-            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
                 await bot.join(until_close=False)
 
         check_if_alive.assert_called_once_with()
@@ -433,7 +433,7 @@ class TestBotApp:
         bot._closing_event = mock.Mock()
 
         with mock.patch.object(aio, "first_completed") as first_completed:
-            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
                 await bot.join(until_close=True)
 
         check_if_alive.assert_called_once_with()
@@ -471,9 +471,9 @@ class TestBotApp:
 
     def test_run_with_asyncio_debug(self, bot):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -483,9 +483,9 @@ class TestBotApp:
 
     def test_run_with_coroutine_tracking_depth(self, bot):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         coroutine_tracking_depth = stack.enter_context(
             mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError)
@@ -498,9 +498,9 @@ class TestBotApp:
 
     def test_run_with_enable_signal_handlers(self, bot):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         signal_function = stack.enter_context(
             mock.patch.object(signal, "signal", side_effect=[None, AttributeError, None, AttributeError])
@@ -524,12 +524,12 @@ class TestBotApp:
             signal.raise_signal(signal.Signals.SIGTERM)
 
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=raise_signal))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=raise_signal))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl, "_LOGGER", isEnabledFor=mock.Mock(return_value=logging)))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
-        set_close_flag = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_set_close_flag", new=mock.Mock()))
+        set_close_flag = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_set_close_flag", new=mock.Mock()))
         run_coroutine_threadsafe = stack.enter_context(mock.patch.object(asyncio, "run_coroutine_threadsafe"))
 
         with stack:
@@ -541,9 +541,9 @@ class TestBotApp:
 
     def test_run_with_close_passed_executor(self, bot):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         executor = mock.Mock()
         bot._executor = executor
@@ -556,10 +556,10 @@ class TestBotApp:
 
     def test_run_with_close_loop(self, bot):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
-        destroy_loop = stack.enter_context(mock.patch.object(bot_impl.BotApp, "_destroy_loop"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        destroy_loop = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_destroy_loop"))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -579,9 +579,9 @@ class TestBotApp:
         status = object()
 
         stack = contextlib.ExitStack()
-        start_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "start", new=mock.Mock()))
-        join_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "join", new=mock.Mock()))
-        close_function = stack.enter_context(mock.patch.object(bot_impl.BotApp, "close", new=mock.Mock()))
+        start_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        join_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        close_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -641,7 +641,7 @@ class TestBotApp:
     def test_stream(self, bot):
         event_type = object()
 
-        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+        with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
             bot.stream(event_type, timeout=100, limit=400)
 
         check_if_alive.assert_called_once_with()
@@ -669,7 +669,7 @@ class TestBotApp:
         predicate = object()
         bot._event_manager.wait_for = mock.AsyncMock()
 
-        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+        with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
             await bot.wait_for(event_type, timeout=100, predicate=predicate)
 
         check_if_alive.assert_called_once_with()
@@ -708,9 +708,9 @@ class TestBotApp:
         shard2 = mock.Mock()
         bot._shards = {0: shard0, 1: shard1, 2: shard2}
 
-        with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+        with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
             with mock.patch.object(aio, "all_of") as all_of:
-                with mock.patch.object(bot_impl.BotApp, "_validate_activity") as validate_activity:
+                with mock.patch.object(bot_impl.GatewayBot, "_validate_activity") as validate_activity:
                     await bot.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
 
         check_if_alive.assert_called_once_with()
@@ -729,8 +729,8 @@ class TestBotApp:
         shard = mock.Mock()
         shard.update_voice_state = mock.AsyncMock()
 
-        with mock.patch.object(bot_impl.BotApp, "_get_shard", return_value=shard) as get_shard:
-            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
                 await bot.update_voice_state(115590097100865541, 123, self_mute=True, self_deaf=False)
 
         check_if_alive.assert_called_once_with()
@@ -744,8 +744,8 @@ class TestBotApp:
         shard = mock.Mock(shard_count=3)
         shard.request_guild_members = mock.AsyncMock()
 
-        with mock.patch.object(bot_impl.BotApp, "_get_shard", return_value=shard) as get_shard:
-            with mock.patch.object(bot_impl.BotApp, "_check_if_alive") as check_if_alive:
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
                 await bot.request_guild_members(
                     115590097100865541,
                     include_presences=True,
@@ -768,7 +768,7 @@ class TestBotApp:
 
     @pytest.mark.asyncio()
     async def test_set_close_flag(self, bot):
-        with mock.patch.object(bot_impl.BotApp, "close") as close:
+        with mock.patch.object(bot_impl.GatewayBot, "close") as close:
             await bot._set_close_flag("Terminated", 15)
 
         close.assert_awaited_once_with()

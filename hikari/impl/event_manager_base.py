@@ -34,15 +34,16 @@ import warnings
 
 from hikari import errors
 from hikari import event_stream
-from hikari import traits
 from hikari.api import event_manager
 from hikari.events import base_events
 from hikari.internal import aio
-from hikari.internal import data_binding
 from hikari.internal import reflect
 
 if typing.TYPE_CHECKING:
+    from hikari import intents as intents_
+    from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
+    from hikari.internal import data_binding
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
@@ -71,11 +72,12 @@ class EventManagerBase(event_manager.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
 
-    def __init__(self, app: traits.BotAware) -> None:
-        self._app = app
+    def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
         self._consumers: typing.Dict[str, ConsumerT] = {}
+        self._event_factory = event_factory
+        self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
@@ -86,7 +88,7 @@ class EventManagerBase(event_manager.EventManager):
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        payload_event = self._app.event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+        payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
         self.dispatch(payload_event)
         callback = self._consumers[event_name.casefold()]
         asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
@@ -128,7 +130,7 @@ class EventManagerBase(event_manager.EventManager):
 
         if expected_intent_groups:
             for expected_intent_group in expected_intent_groups:
-                if (self._app.intents & expected_intent_group) == expected_intent_group:
+                if (self._intents & expected_intent_group) == expected_intent_group:
                     break
             else:
                 expected_intents_str = ", ".join(map(str, expected_intent_groups))
@@ -251,7 +253,7 @@ class EventManagerBase(event_manager.EventManager):
         limit: typing.Optional[int] = None,
     ) -> event_stream.Streamer[event_manager.EventT_co]:
         self._check_intents(event_type, 1)
-        return event_stream.EventStream(self._app, event_type, timeout=timeout, limit=limit)
+        return event_stream.EventStream(self, event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,

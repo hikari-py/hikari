@@ -121,6 +121,8 @@ def message():
         nonce=None,
         referenced_message=None,
         stickers=[],
+        interaction=None,
+        application_id=123123,
     )
 
 

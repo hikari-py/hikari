@@ -38,6 +38,7 @@ from hikari import users as user_models
 from hikari.api import event_factory
 from hikari.events import channel_events
 from hikari.events import guild_events
+from hikari.events import interaction_events
 from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
@@ -346,6 +347,47 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
         return guild_events.PresenceUpdateEvent(
             app=self._app, shard=shard, presence=presence, user=user, old_presence=old_presence
+        )
+
+    ######################
+    # INTERACTION EVENTS #
+    ######################
+
+    def deserialize_command_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandCreateEvent:
+        return interaction_events.CommandCreateEvent(
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+        )
+
+    def deserialize_command_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandUpdateEvent:
+        return interaction_events.CommandUpdateEvent(
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+        )
+
+    def deserialize_command_delete_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.CommandDeleteEvent:
+        return interaction_events.CommandDeleteEvent(
+            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
+        )
+
+    def deserialize_interaction_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> interaction_events.InteractionCreateEvent:
+        return interaction_events.InteractionCreateEvent(
+            shard=shard,
+            interaction=self._app.entity_factory.deserialize_interaction(payload),
         )
 
     #################

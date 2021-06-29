@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BotApp"]
+__all__: typing.List[str] = ["BotApp", "GatewayBot"]
 
 import asyncio
 import datetime
@@ -54,6 +54,7 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
+from hikari.internal import deprecation
 from hikari.internal import time
 from hikari.internal import ux
 
@@ -75,7 +76,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
-class BotApp(traits.BotAware):
+class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
     This is the class you will want to use to start, control, and build a bot
@@ -181,7 +182,7 @@ class BotApp(traits.BotAware):
 
     !!! note
         Settings that control the gateway session are provided to the
-        `BotApp.run` and `BotApp.start` functions in this class. This is done
+        `GatewayBot.run` and `GatewayBot.start` functions in this class. This is done
         to allow you to contextually customise details such as sharding
         configuration without having to re-initialize the entire application
         each time.
@@ -196,7 +197,7 @@ class BotApp(traits.BotAware):
     import hikari
 
     # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-    bot = hikari.Bot(
+    bot = hikari.GatewayBot(
         token=os.environ["BOT_TOKEN"],
         logs={
             "version": 1,
@@ -263,14 +264,14 @@ class BotApp(traits.BotAware):
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
-        # Event handling
-        self._event_manager = event_manager_impl.EventManagerImpl(self, cache=self._cache)
-
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
 
         # Event creation
         self._event_factory = event_factory_impl.EventFactoryImpl(self)
+
+        # Event handling
+        self._event_manager = event_manager_impl.EventManagerImpl(self._event_factory, self._intents, cache=self._cache)
 
         # Voice subsystem
         self._voice = voice_impl.VoiceComponentImpl(self)
@@ -760,7 +761,9 @@ class BotApp(traits.BotAware):
                 name="check for package updates",
             )
 
-        requirements_task = asyncio.create_task(self._rest.fetch_gateway_bot(), name="fetch gateway sharding settings")
+        requirements_task = asyncio.create_task(
+            self._rest.fetch_gateway_bot_info(), name="fetch gateway sharding settings"
+        )
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
         requirements = await requirements_task
 
@@ -1055,3 +1058,20 @@ class BotApp(traits.BotAware):
                 category=errors.HikariWarning,
                 stacklevel=3,
             )
+
+
+class BotApp(GatewayBot):
+    """Deprecated alias for `GatewayBot`.
+
+    .. deprecated:: 2.0.0.dev101
+        Use `GatewayBot` instead.
+    """
+
+    # This is only overridden at runtime in-order to preserve this class'
+    # inherited init pattern from `GatewayBot` without repeating it
+    if not typing.TYPE_CHECKING:
+
+        def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+            super().__init__(*args, **kwargs)
+            # This is called after the super call as __init__ may alter the warnings config
+            deprecation.warn_deprecated(BotApp, stack_level=3)

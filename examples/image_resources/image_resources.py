@@ -30,7 +30,7 @@ import re
 
 import hikari
 
-bot = hikari.BotApp(token=os.environ["BOT_TOKEN"])
+bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 
 
 @bot.listen()

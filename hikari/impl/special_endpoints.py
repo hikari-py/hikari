@@ -26,10 +26,15 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = ["TypingIndicator", "GuildBuilder"]
+__all__: typing.List[str] = [
+    "CommandBuilder",
+    "TypingIndicator",
+    "GuildBuilder",
+    "InteractionDeferredBuilder",
+    "InteractionMessageBuilder",
+]
 
 import asyncio
-import datetime
 import typing
 
 import attr
@@ -41,8 +46,11 @@ from hikari import iterators
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
+from hikari.interactions import bases as base_interactions
+from hikari.interactions import commands
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
 
@@ -53,12 +61,16 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import audit_logs
     from hikari import colors
+    from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+
+    _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
+    _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
 
 
 @typing.final
@@ -280,13 +292,13 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
-        if not undefined.count(color, colour):
+        if not undefined.any_undefined(color, colour):
             raise TypeError("Cannot specify 'color' and 'colour' together.")
 
         if len(self._roles) == 0:
             if name != "@everyone":
                 raise ValueError("First role must always be the '@everyone' role")
-            if undefined.count(color, colour, hoist, mentionable, position) != 5:
+            if not undefined.all_undefined(color, colour, hoist, mentionable, position):
                 raise ValueError(
                     "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
                 )
@@ -439,7 +451,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     def _new_snowflake(self) -> snowflakes.Snowflake:
         value = self._counter
         self._counter += 1
-        return snowflakes.Snowflake.from_data(datetime.datetime.now(tz=datetime.timezone.utc), 0, 0, value)
+        return snowflakes.Snowflake.from_data(time.utc_datetime(), 0, 0, value)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -653,3 +665,218 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         log = self._entity_factory.deserialize_audit_log(response)
         self._first_id = str(min(log.entries.keys()))
         return log
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=False, weakref_slot=False)
+class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
+
+    Parameters
+    ----------
+    type : hikari.interactions.bases.DeferredResponseTypesT
+        The type of interaction response this is.
+    """
+
+    # Required arguments.
+    _type: base_interactions.DeferredResponseTypesT = attr.field(
+        converter=base_interactions.ResponseType,
+        validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
+    )
+
+    @property
+    def type(self) -> base_interactions.DeferredResponseTypesT:
+        return self._type
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        return {"type": self.type}
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=False, weakref_slot=False)
+class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionMessageBuilder`.
+
+    Parameters
+    ----------
+    type : hikari.interactions.bases.MessageResponseTypesT
+        The type of interaction response this is.
+
+    Other Parameters
+    ----------------
+    content : hikari.undefined.UndefinedOr[builtins.str]
+        The content of this response, if supplied. This follows the same rules
+        as "content" on create message.
+    """
+
+    # Required arguments.
+    _type: base_interactions.MessageResponseTypesT = attr.field(
+        converter=base_interactions.ResponseType,
+        validator=attr.validators.in_(base_interactions.MESSAGE_RESPONSE_TYPES),
+    )
+
+    # Not-required arguments.
+    _content: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
+
+    # Key-word only not-required arguments.
+    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_tts: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _mentions_everyone: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _role_mentions: undefined.UndefinedOr[
+        typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _user_mentions: undefined.UndefinedOr[
+        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    # Non-arguments.
+    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, init=False)
+
+    @property
+    def content(self) -> undefined.UndefinedOr[str]:
+        return self._content
+
+    @property
+    def embeds(self) -> typing.Sequence[embeds_.Embed]:
+        return self._embeds.copy()
+
+    @property
+    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+        return self._flags
+
+    @property
+    def is_tts(self) -> undefined.UndefinedOr[bool]:
+        return self._is_tts
+
+    @property
+    def mentions_everyone(self) -> undefined.UndefinedOr[bool]:
+        return self._mentions_everyone
+
+    @property
+    def role_mentions(
+        self,
+    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+        return self._role_mentions
+
+    @property
+    def type(self) -> base_interactions.MessageResponseTypesT:
+        return self._type
+
+    @property
+    def user_mentions(
+        self,
+    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+        return self._user_mentions
+
+    def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
+        self._embeds.append(embed)
+        return self
+
+    def set_content(
+        self: _InteractionMessageBuilderT, content: undefined.UndefinedOr[str], /
+    ) -> _InteractionMessageBuilderT:
+        self._content = content
+        return self
+
+    def set_flags(
+        self: _InteractionMessageBuilderT, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /
+    ) -> _InteractionMessageBuilderT:
+        self._flags = flags
+        return self
+
+    def set_tts(self: _InteractionMessageBuilderT, tts: undefined.UndefinedOr[bool], /) -> _InteractionMessageBuilderT:
+        self._is_tts = tts
+        return self
+
+    def set_mentions_everyone(
+        self: _InteractionMessageBuilderT, state: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /
+    ) -> _InteractionMessageBuilderT:
+        self._mentions_everyone = state
+        return self
+
+    def set_role_mentions(
+        self: _InteractionMessageBuilderT,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionMessageBuilderT:
+        self._role_mentions = role_mentions
+        return self
+
+    def set_user_mentions(
+        self: _InteractionMessageBuilderT,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        /,
+    ) -> _InteractionMessageBuilderT:
+        self._user_mentions = user_mentions
+        return self
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        data = data_binding.JSONObjectBuilder()
+        data.put("content", self.content)
+        if self._embeds:
+            data["embeds"] = [entity_factory.serialize_embed(embed) for embed in self._embeds]
+
+        data.put("flags", self.flags)
+        data.put("tts", self.is_tts)
+
+        if not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions):
+            data["allowed_mentions"] = mentions.generate_allowed_mentions(
+                self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
+            )
+
+        return {"type": self._type, "data": data}
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=False, weakref_slot=False)
+class CommandBuilder(special_endpoints.CommandBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
+
+    # Required arguments.
+    _name: str = attr.field()
+    _description: str = attr.field()
+
+    # Key-word only not-required arguments.
+    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    # Non-arguments.
+    _options: typing.List[commands.CommandOption] = attr.field(factory=list, init=False)
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @property
+    def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
+        return self._id
+
+    @property
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        return self._options.copy()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
+        self._options.append(option)
+        return self
+
+    def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
+        self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
+        return self
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        options = [entity_factory.serialize_command_option(option) for option in self._options]
+        data: data_binding.JSONObject = {"name": self._name, "description": self._description, "options": options}
+
+        if self.id is not undefined.UNDEFINED:
+            data["id"] = str(self.id)
+
+        return data
