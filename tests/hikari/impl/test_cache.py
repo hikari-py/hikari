@@ -2417,6 +2417,7 @@ class TestCacheImpl:
         mock_application = mock.MagicMock(messages.MessageApplication)
         mock_reference = mock.MagicMock(messages.MessageReference)
         mock_referenced_message = object()
+        mock_component = object()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
@@ -2448,6 +2449,7 @@ class TestCacheImpl:
             stickers=(mock_sticker,),
             interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
+            components=(mock_component,),
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2505,6 +2507,7 @@ class TestCacheImpl:
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
         assert result.interaction is mock_interaction.build_entity.return_value
+        assert result.components == (mock_component,)
 
     def test__build_message_with_null_fields(self, cache_impl):
         mentions = cache_utilities.MentionsData(
@@ -2539,6 +2542,7 @@ class TestCacheImpl:
             stickers=(),
             interaction=None,
             application_id=None,
+            components=(),
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))

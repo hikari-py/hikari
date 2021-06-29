@@ -2158,6 +2158,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
+        components: undefined.UndefinedOr[typing.List[component_models.PartialComponent]] = undefined.UNDEFINED
+        if component_payloads := payload.get("components"):
+            components = []
+            for component_payload in component_payloads:
+                try:
+                    components.append(self.deserialize_component(component_payload))
+
+                except errors.UnrecognisedEntityError:
+                    pass
+
         message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2184,6 +2194,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             nonce=payload.get("nonce", undefined.UNDEFINED),
             application_id=application_id,
             interaction=interaction,
+            components=components,
             # We initialize these next.
             mentions=NotImplemented,
         )
@@ -2268,6 +2279,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
+        components: typing.List[component_models.PartialComponent] = []
+        if component_payloads := payload.get("components"):
+            for component_payload in component_payloads:
+                try:
+                    components.append(self.deserialize_component(component_payload))
+
+                except errors.UnrecognisedEntityError:
+                    pass
+
         message = message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2294,6 +2314,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             nonce=payload.get("nonce"),
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
             interaction=interaction,
+            components=components,
             # We initialize these next.
             mentions=NotImplemented,
         )

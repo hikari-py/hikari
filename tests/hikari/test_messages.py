@@ -123,6 +123,7 @@ def message():
         stickers=[],
         interaction=None,
         application_id=123123,
+        components=[],
     )
 
 
