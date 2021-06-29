@@ -1001,7 +1001,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
         ],
         *,
-        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, str]] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,

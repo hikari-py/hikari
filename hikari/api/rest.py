@@ -513,7 +513,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
         *,
-        target_type: channels_.PermissionOverwriteType,
+        target_type: typing.Union[channels_.PermissionOverwriteType, int],
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -528,7 +528,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
         ],
         *,
-        target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -546,7 +546,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        target_type : hikari.undefined.UndefinedOr[hikari.channels.PermissionOverwriteType]
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
