@@ -138,4 +138,4 @@ def any_undefined(*items: typing.Any) -> bool:
 
 def count(*items: typing.Any) -> int:
     """Count the number of items that are provided that are `UNDEFINED`."""
-    return sum(1 for item in items if item is UNDEFINED)
+    return sum(item is UNDEFINED for item in items)
