@@ -352,6 +352,7 @@ class BanEvent(GuildEvent, abc.ABC):
         hikari.users.User
             The user affected by this event.
         """
+        return await self.app.rest.fetch_user(self.user)
 
 
 @attr_extensions.with_copy
