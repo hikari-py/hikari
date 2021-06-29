@@ -678,8 +678,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         max_uses: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[invites.TargetType] = undefined.UNDEFINED,
         target_user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        target_user_type: undefined.UndefinedOr[invites.TargetUserType] = undefined.UNDEFINED,
+        target_application: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[guilds.PartialApplication]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -700,11 +703,22 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, whether the invite only grants temporary membership.
         unique : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the invite should be unique.
+        target_type : hikari.undefined.UndefinedOr[hikari.invites.TargetType]
+            If provided, the target type of this invite.
         target_user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the target user id for this invite. This may be the
             object or the ID of an existing user.
-        target_user_type : hikari.undefined.UndefinedOr[hikari.invites.TargetUserType]
-            If provided, the type of target user for this invite.
+
+            !!! note
+                This is required if `target_type` is `STREAM` and the targeted
+                user must be streaming into the channel.
+        target_application : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+            If provided, the target application id for this invite. This may be
+            the object or the ID of an existing application.
+
+            !!! note
+                This is required if `target_type` is `EMBEDDED_APPLICATION` and
+                the targeted application must have the `EMBEDDED` flag.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

@@ -25,7 +25,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "TargetUserType",
+    "TargetType",
     "VanityURL",
     "InviteGuild",
     "Invite",
@@ -47,6 +47,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import applications
     from hikari import channels
     from hikari import files
     from hikari import snowflakes
@@ -55,11 +56,14 @@ if typing.TYPE_CHECKING:
 
 
 @typing.final
-class TargetUserType(int, enums.Enum):
-    """The reason a invite targets a user."""
+class TargetType(int, enums.Enum):
+    """The target of the invite."""
 
     STREAM = 1
     """This invite is targeting a "Go Live" stream."""
+
+    EMBEDDED_APPLICATION = 2
+    """This invite is targeting an embedded application."""
 
 
 class InviteCode(abc.ABC):
@@ -255,11 +259,14 @@ class Invite(InviteCode):
     inviter: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
 
+    target_type: typing.Union[TargetType, int, None] = attr.ib(eq=False, hash=False, repr=False)
+    """The type of the target of this invite, if applicable."""
+
     target_user: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
     """The object of the user who this invite targets, if set."""
 
-    target_user_type: typing.Union[TargetUserType, int, None] = attr.field(eq=False, hash=False, repr=False)
-    """The type of user target this invite is, if applicable."""
+    target_application: typing.Optional[applications.InviteApplication] = attr.ib(eq=False, hash=False, repr=False)
+    """The embedded application this invite targets, if applicable."""
 
     approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.

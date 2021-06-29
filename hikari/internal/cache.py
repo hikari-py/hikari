@@ -68,6 +68,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import channels as channels_
     from hikari import traits
     from hikari import users as users_
@@ -336,8 +337,9 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field()
     channel_id: snowflakes.Snowflake = attr.field()
     inviter: typing.Optional[RefCell[users_.User]] = attr.field()
+    target_type: typing.Union[invites.TargetType, int, None] = attr.field()
     target_user: typing.Optional[RefCell[users_.User]] = attr.field()
-    target_user_type: typing.Union[invites.TargetUserType, int, None] = attr.field()
+    target_application: typing.Optional[applications.InviteApplication] = attr.ib()
     uses: int = attr.field()
     max_uses: typing.Optional[int] = attr.field()
     max_age: typing.Optional[datetime.timedelta] = attr.field()
@@ -349,7 +351,8 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             code=self.code,
             guild_id=self.guild_id,
             channel_id=self.channel_id,
-            target_user_type=self.target_user_type,
+            target_type=self.target_type,
+            target_application=self.target_application,
             uses=self.uses,
             max_uses=self.max_uses,
             max_age=self.max_age,
@@ -384,7 +387,8 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
             code=invite.code,
             guild_id=invite.guild_id,
             channel_id=invite.channel_id,
-            target_user_type=invite.target_user_type,
+            target_type=invite.target_type,
+            target_application=invite.target_application,
             uses=invite.uses,
             max_uses=invite.max_uses,
             max_age=invite.max_age,

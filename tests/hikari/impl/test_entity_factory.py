@@ -187,7 +187,7 @@ class TestEntityFactoryImpl:
         return {**user_payload, "flags": 1 << 10}
 
     @pytest.fixture()
-    def application_information_payload(self, owner_payload, user_payload):
+    def application_payload(self, owner_payload, user_payload):
         return {
             "id": "209333111222",
             "name": "Dream Sweet in Sea Major",
@@ -217,9 +217,10 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_application(
-        self, entity_factory_impl, mock_app, application_information_payload, owner_payload, user_payload
+        self, entity_factory_impl, mock_app, application_payload, owner_payload, user_payload
     ):
-        application = entity_factory_impl.deserialize_application(application_information_payload)
+        application = entity_factory_impl.deserialize_application(application_payload)
+
         assert application.app is mock_app
         assert application.id == 209333111222
         assert application.name == "Dream Sweet in Sea Major"
@@ -262,7 +263,6 @@ class TestEntityFactoryImpl:
             {
                 "id": "209333111222",
                 "name": "Dream Sweet in Sea Major",
-                "icon": "3123123",
                 "description": "I am an application",
                 "summary": "not a blank string",
                 "bot_public": True,
@@ -271,11 +271,13 @@ class TestEntityFactoryImpl:
                 "owner": owner_payload,
             }
         )
+
         assert application.rpc_origins is None
         assert application.team is None
         assert application.guild_id is None
         assert application.primary_sku_id is None
         assert application.slug is None
+        assert application.icon_hash is None
         assert application.cover_image_hash is None
         assert application.privacy_policy_url is None
         assert application.terms_of_service_url is None
@@ -286,8 +288,8 @@ class TestEntityFactoryImpl:
                 "id": "209333111222",
                 "name": "Dream Sweet in Sea Major",
                 "icon": None,
-                "description": "I am an application",
-                "summary": "not a blank string",
+                "description": "",
+                "summary": "",
                 "team": None,
                 "owner": owner_payload,
                 "bot_public": True,
@@ -295,8 +297,24 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
             }
         )
+
+        assert application.description is None
+        assert application.summary is None
         assert application.icon_hash is None
+        assert application.cover_image_hash is None
         assert application.team is None
+
+    @pytest.fixture()
+    def invite_application_payload(self):
+        return {
+            "id": "773336526917861400",
+            "name": "Betrayal.io",
+            "icon": "0227b2e89ea08d666c43003fbadbc72a",
+            "description": "Play inside Discord with your friends!",
+            "summary": "Play inside Discord with your friends! (but as a summary)",
+            "cover_image": "0227b2e89ea08d666c43003fbadbc72a (but as cover)",
+            "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
+        }
 
     @pytest.fixture()
     def authorization_information_payload(self, user_payload):
@@ -3011,7 +3029,12 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def invite_payload(
-        self, partial_channel_payload, user_payload, alternative_user_payload, guild_welcome_screen_payload
+        self,
+        partial_channel_payload,
+        user_payload,
+        alternative_user_payload,
+        guild_welcome_screen_payload,
+        invite_application_payload,
     ):
         return {
             "code": "aCode",
@@ -3030,8 +3053,9 @@ class TestEntityFactoryImpl:
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
+            "target_type": 1,
             "target_user": alternative_user_payload,
-            "target_user_type": 1,
+            "target_application": invite_application_payload,
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "expires_at": "2021-05-08T00:15:24.534000+00:00",
@@ -3046,6 +3070,7 @@ class TestEntityFactoryImpl:
         user_payload,
         guild_welcome_screen_payload,
         alternative_user_payload,
+        application_payload,
     ):
         invite = entity_factory_impl.deserialize_invite(invite_payload)
         assert invite.app is mock_app
@@ -3069,21 +3094,31 @@ class TestEntityFactoryImpl:
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite.channel_id == 561884984214814750
         assert invite.inviter == entity_factory_impl.deserialize_user(user_payload)
+        assert invite.target_type == invite_models.TargetType.STREAM
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
-        assert invite.target_user_type == invite_models.TargetUserType.STREAM
         assert invite.approximate_member_count == 84
         assert invite.approximate_active_member_count == 42
         assert invite.expires_at == datetime.datetime(2021, 5, 8, 0, 15, 24, 534000, tzinfo=datetime.timezone.utc)
         assert isinstance(invite, invite_models.Invite)
 
-    def test_deserialize_invite_with_unset_guild_fields(self, entity_factory_impl, invite_payload):
-        del invite_payload["guild"]["welcome_screen"]
+        # InviteApplication
+        application = invite.target_application
+        assert application.app is mock_app
+        assert application.id == 773336526917861400
+        assert application.name == "Betrayal.io"
+        assert application.description == "Play inside Discord with your friends!"
+        assert application.summary == "Play inside Discord with your friends! (but as a summary)"
+        assert (
+            application.public_key
+            == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
+        )
+        assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
+        assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
+        assert isinstance(application, application_models.InviteApplication)
 
-        invite = entity_factory_impl.deserialize_invite(invite_payload)
-
-        assert invite.guild.welcome_screen is None
-
-    def test_deserialize_invite_with_null_fields(self, entity_factory_impl, partial_channel_payload):
+    def test_deserialize_invite_with_null_fields(
+        self, entity_factory_impl, partial_channel_payload, invite_application_payload
+    ):
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
@@ -3091,9 +3126,18 @@ class TestEntityFactoryImpl:
                 "approximate_member_count": 231,
                 "approximate_presence_count": 9,
                 "expires_at": None,
+                "target_application": {
+                    "id": "773336526917861400",
+                    "name": "Betrayal.io",
+                    "description": "",
+                    "summary": "",
+                    "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
+                },
             }
         )
         assert invite.expires_at is None
+        assert invite.target_application.description is None
+        assert invite.target_application.summary is None
 
     def test_deserialize_invite_with_unset_fields(self, entity_factory_impl, partial_channel_payload):
         invite = entity_factory_impl.deserialize_invite(
@@ -3108,9 +3152,26 @@ class TestEntityFactoryImpl:
         assert invite.channel_id == 43123123
         assert invite.guild is None
         assert invite.inviter is None
+        assert invite.target_type is None
         assert invite.target_user is None
-        assert invite.target_user_type is None
+        assert invite.target_application is None
         assert invite.expires_at is None
+
+    def test_deserialize_invite_with_unset_sub_fields(self, entity_factory_impl, invite_payload):
+        del invite_payload["guild"]["welcome_screen"]
+        invite_payload["target_application"] = {
+            "id": "773336526917861400",
+            "name": "Betrayal.io",
+            "description": "Play inside Discord with your friends!",
+            "summary": "Play inside Discord with your friends! (but as a summary)",
+            "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
+        }
+
+        invite = entity_factory_impl.deserialize_invite(invite_payload)
+
+        assert invite.guild.welcome_screen is None
+        assert invite.target_application.icon_hash is None
+        assert invite.target_application.cover_image_hash is None
 
     def test_deserialize_invite_with_guild_and_channel_ids_without_objects(self, entity_factory_impl):
         invite = entity_factory_impl.deserialize_invite({"code": "aCode", "guild_id": "42", "channel_id": "202020"})
@@ -3121,7 +3182,12 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def invite_with_metadata_payload(
-        self, partial_channel_payload, user_payload, alternative_user_payload, guild_welcome_screen_payload
+        self,
+        partial_channel_payload,
+        user_payload,
+        alternative_user_payload,
+        guild_welcome_screen_payload,
+        invite_application_payload,
     ):
         return {
             "code": "aCode",
@@ -3140,8 +3206,9 @@ class TestEntityFactoryImpl:
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
+            "target_type": 1,
             "target_user": alternative_user_payload,
-            "target_user_type": 1,
+            "target_application": invite_application_payload,
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "uses": 3,
@@ -3160,6 +3227,7 @@ class TestEntityFactoryImpl:
         user_payload,
         alternative_user_payload,
         guild_welcome_screen_payload,
+        invite_application_payload,
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
         assert invite_with_metadata.app is mock_app
@@ -3181,8 +3249,8 @@ class TestEntityFactoryImpl:
 
         assert invite_with_metadata.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite_with_metadata.inviter == entity_factory_impl.deserialize_user(user_payload)
+        assert invite_with_metadata.target_type == invite_models.TargetType.STREAM
         assert invite_with_metadata.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
-        assert invite_with_metadata.target_user_type == invite_models.TargetUserType.STREAM
         assert invite_with_metadata.approximate_member_count == 84
         assert invite_with_metadata.approximate_active_member_count == 42
         assert invite_with_metadata.uses == 3
@@ -3196,6 +3264,21 @@ class TestEntityFactoryImpl:
             2022, 11, 25, 12, 23, 29, 936000, tzinfo=datetime.timezone.utc
         )
         assert isinstance(invite_with_metadata, invite_models.InviteWithMetadata)
+
+        # InviteApplication
+        application = invite_with_metadata.target_application
+        assert application.app is mock_app
+        assert application.id == 773336526917861400
+        assert application.name == "Betrayal.io"
+        assert application.description == "Play inside Discord with your friends!"
+        assert application.summary == "Play inside Discord with your friends! (but as a summary)"
+        assert (
+            application.public_key
+            == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
+        )
+        assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
+        assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
+        assert isinstance(application, application_models.InviteApplication)
 
     def test_deserialize_invite_with_metadata_with_unset_and_0_fields(
         self, entity_factory_impl, partial_channel_payload
@@ -3215,8 +3298,9 @@ class TestEntityFactoryImpl:
         )
         assert invite_with_metadata.guild is None
         assert invite_with_metadata.inviter is None
+        assert invite_with_metadata.target_type is None
         assert invite_with_metadata.target_user is None
-        assert invite_with_metadata.target_user_type is None
+        assert invite_with_metadata.target_application is None
         assert invite_with_metadata.max_age is None
         assert invite_with_metadata.max_uses is None
         assert invite_with_metadata.expires_at is None

@@ -1601,8 +1601,9 @@ class TestRESTClientImplAsync:
             "max_uses": 4,
             "temporary": True,
             "unique": True,
+            "target_type": invites.TargetType.STREAM,
             "target_user_id": "456",
-            "target_user_type": invites.TargetUserType.STREAM,
+            "target_application_id": "789",
         }
 
         result = await rest_client.create_invite(
@@ -1611,8 +1612,9 @@ class TestRESTClientImplAsync:
             max_uses=4,
             temporary=True,
             unique=True,
+            target_type=invites.TargetType.STREAM,
             target_user=StubModel(456),
-            target_user_type=invites.TargetUserType.STREAM,
+            target_application=StubModel(789),
             reason="cause why not :)",
         )
 
