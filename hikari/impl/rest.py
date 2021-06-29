@@ -582,18 +582,21 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         await self.close()
 
-    def __enter__(self) -> typing.NoReturn:
-        # This is async only.
-        cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
+    if not typing.TYPE_CHECKING:
 
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[Exception]],
-        exc_val: typing.Optional[Exception],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        return None
+        def __enter__(self) -> typing.NoReturn:
+            # This is async only.
+            cls = type(self)
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+        def __exit__(
+            self,
+            exc_type: typing.Optional[typing.Type[Exception]],
+            exc_val: typing.Optional[Exception],
+            exc_tb: typing.Optional[types.TracebackType],
+        ) -> None:
+            return None
 
     @typing.final
     def _acquire_tcp_connector(self) -> aiohttp.TCPConnector:

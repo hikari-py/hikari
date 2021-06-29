@@ -121,18 +121,21 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         if self._task is not None:
             self._task.cancel()
 
-    def __enter__(self) -> typing.NoReturn:
-        # This is async only.
-        cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
+    if not typing.TYPE_CHECKING:
 
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[Exception]],
-        exc_val: typing.Optional[Exception],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        return None
+        def __enter__(self) -> typing.NoReturn:
+            # This is async only.
+            cls = type(self)
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+        def __exit__(
+            self,
+            exc_type: typing.Optional[typing.Type[Exception]],
+            exc_val: typing.Optional[Exception],
+            exc_tb: typing.Optional[types.TracebackType],
+        ) -> None:
+            return None
 
     async def _keep_typing(self) -> None:
         # Cancelled error will occur when the context manager is requested to
