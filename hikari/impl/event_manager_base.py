@@ -135,6 +135,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     ) -> None:
         await self.close()
 
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
     if not typing.TYPE_CHECKING:
 
         def __enter__(self) -> typing.NoReturn:
