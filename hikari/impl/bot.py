@@ -62,7 +62,6 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
 
     from hikari import channels
-    from hikari import event_stream
     from hikari import guilds
     from hikari import users as users_
     from hikari.api import cache as cache_
@@ -867,7 +866,7 @@ class GatewayBot(traits.GatewayBotAware):
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[event_manager_.EventT_co]:
+    ) -> event_manager_.EventStream[event_manager_.EventT_co]:
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
 
