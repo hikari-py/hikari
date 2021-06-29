@@ -22,14 +22,17 @@
 import mock
 import pytest
 
+from hikari import channels
 from hikari import snowflakes
+from hikari import traits
 from hikari.interactions import bases
 from hikari.interactions import components
+from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock()
+    return mock.Mock(rest=mock.AsyncMock())
 
 
 class TestComponentInteraction:
@@ -54,6 +57,7 @@ class TestComponentInteraction:
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
+        mock_app.rest.interaction_message_builder = mock.Mock()
         response = mock_component_interaction.build_response(4)
 
         assert response is mock_app.rest.interaction_message_builder.return_value
@@ -64,6 +68,7 @@ class TestComponentInteraction:
             mock_component_interaction.build_response(999)
 
     def test_build_deferred_response(self, mock_component_interaction, mock_app):
+        mock_app.rest.interaction_deferred_builder = mock.Mock()
         response = mock_component_interaction.build_deferred_response(5)
 
         assert response is mock_app.rest.interaction_deferred_builder.return_value
@@ -72,3 +77,86 @@ class TestComponentInteraction:
     def test_build_deferred_response_with_invalid_type(self, mock_component_interaction):
         with pytest.raises(ValueError, match="Invalid type passed for a deferred response"):
             mock_component_interaction.build_deferred_response(33333)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_channel(self, mock_component_interaction, mock_app):
+        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextChannel)
+
+        assert await mock_component_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
+
+        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
+
+    def test_get_channel(self, mock_component_interaction, mock_app):
+        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.GuildTextChannel)
+
+        assert mock_component_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
+
+        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+
+    def test_get_channel_without_cache(self, mock_component_interaction):
+        mock_component_interaction.app = mock.Mock(traits.RESTAware)
+
+        assert mock_component_interaction.get_channel() is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild(self, mock_component_interaction, mock_app):
+        mock_component_interaction.guild_id = 43123123
+
+        assert await mock_component_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
+
+        mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild_for_dm_interaction(self, mock_component_interaction, mock_app):
+        mock_component_interaction.guild_id = None
+
+        assert await mock_component_interaction.fetch_guild() is None
+
+        mock_app.rest.fetch_guild.assert_not_called()
+
+    def test_get_guild(self, mock_component_interaction, mock_app):
+        mock_component_interaction.guild_id = 874356
+
+        assert mock_component_interaction.get_guild() is mock_app.cache.get_guild.return_value
+
+        mock_app.cache.get_guild.assert_called_once_with(874356)
+
+    def test_get_guild_for_dm_interaction(self, mock_component_interaction, mock_app):
+        mock_component_interaction.guild_id = None
+
+        assert mock_component_interaction.get_guild() is None
+
+        mock_app.cache.get_guild.assert_not_called()
+
+    def test_get_guild_when_cacheless(self, mock_component_interaction, mock_app):
+        mock_component_interaction.guild_id = 321123
+        mock_component_interaction.app = mock.Mock(traits.RESTAware)
+
+        assert mock_component_interaction.get_guild() is None
+
+        mock_app.cache.get_guild.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_fetch_parent_message(self):
+        stub_interaction = hikari_test_helpers.mock_class_namespace(
+            components.ComponentInteraction, fetch_message=mock.AsyncMock(), init_=False
+        )()
+        stub_interaction.message_id = 3421
+
+        assert await stub_interaction.fetch_parent_message() is stub_interaction.fetch_message.return_value
+
+        stub_interaction.fetch_message.assert_awaited_once_with(3421)
+
+    def test_get_parent_message(self, mock_component_interaction, mock_app):
+        mock_component_interaction.message_id = 321655
+
+        assert mock_component_interaction.get_parent_message() is mock_app.cache.get_message.return_value
+
+        mock_app.cache.get_message.assert_called_once_with(321655)
+
+    def test_get_parent_message_when_cacheless(self, mock_component_interaction, mock_app):
+        mock_component_interaction.app = mock.Mock(traits.RESTAware)
+
+        assert mock_component_interaction.get_parent_message() is None
+
+        mock_app.cache.get_message.assert_not_called()

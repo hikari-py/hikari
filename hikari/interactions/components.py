@@ -33,9 +33,12 @@ import typing
 
 import attr
 
+from hikari import channels
+from hikari import traits
 from hikari.interactions import bases
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
     from hikari import messages
     from hikari import snowflakes
     from hikari import users
@@ -209,3 +212,154 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
             raise ValueError("Invalid type passed for a deferred response")
 
         return self.app.rest.interaction_deferred_builder(type_)
+
+    async def fetch_channel(self) -> channels.TextChannel:
+        """Fetch the channel this interaction occurred in.
+
+        Returns
+        -------
+        hikari.channels.TextChannel
+            The channel. This will be a _derivative_ of `hikari.channels.TextChannel`.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.TextChannel)
+        return channel
+
+    def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
+        """Get the guild channel this interaction occurred in.
+
+        !!! note
+            This will always return `builtins.None` for interactions triggered
+            in a DM channel.
+
+        Returns
+        -------
+        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, builtins.None]
+            The object of the guild channel that was found in the cache or
+            `builtins.None`.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            channel = self.app.cache.get_guild_channel(self.channel_id)
+            assert isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
+            return channel
+
+        return None
+
+    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
+        """Fetch the guild this interaction happened in.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.RESTGuild]
+            Object of the guild this interaction happened in or `builtins.None`
+            if this occurred within a DM channel.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.guild_id:
+            return None
+
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the object of this interaction's guild guild from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else `builtins.None`.
+        """
+        if self.guild_id and isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_guild(self.guild_id)
+
+        return None
+
+    async def fetch_parent_message(self) -> messages.Message:
+        """Fetch the message which this interaction was triggered on.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The requested message.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `token` is not available.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found or the webhook's message wasn't found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.fetch_message(self.message_id)
+
+    def get_parent_message(self) -> typing.Optional[messages.PartialMessage]:
+        """Get the message which this interaction was triggered on from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.Message]
+            The object of the message found in the cache or `builtins.None`.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_message(self.message_id)
+
+        return None
