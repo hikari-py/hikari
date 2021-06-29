@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import files
     from hikari import guilds
     from hikari import messages
+    from hikari.api import special_endpoints
 
 
 @typing.final
@@ -242,10 +243,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
@@ -279,16 +282,21 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
         Other Parameters
         ----------------
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
-            If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
+        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to include in this message.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -370,7 +378,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; `reply` not found or not in the same
-            channel.
+            channel; too many components.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -402,10 +410,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         return await self.app.rest.create_message(
             channel=channel_id,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             nonce=nonce,
             tts=tts,
             reply=reply,
@@ -698,10 +708,12 @@ class OwnUser(UserImpl):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,

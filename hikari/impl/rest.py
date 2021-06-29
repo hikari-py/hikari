@@ -1169,10 +1169,12 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         no_auth: bool = False,
         content: undefined.UndefinedOr[typing.Any],
-        embed: undefined.UndefinedOr[embeds_.Embed],
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
         attachment: undefined.UndefinedOr[files.Resourceish],
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed],
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
         tts: undefined.UndefinedOr[bool],
         mentions_everyone: undefined.UndefinedOr[bool],
         mentions_reply: undefined.UndefinedOr[bool],
@@ -1182,6 +1184,9 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
+        if not undefined.any_undefined(component, components):
+            raise ValueError("You may only specify one of 'component' or 'components', not both")
+
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
@@ -1189,6 +1194,12 @@ class RESTClientImpl(rest_api.RESTClient):
             raise ValueError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
+            )
+
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+            raise TypeError(
+                "You passed a non collection to 'components', but this expected a collection. Maybe you "
+                "meant to use 'collection' (singular) instead?"
             )
 
         if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
@@ -1218,6 +1229,12 @@ class RESTClientImpl(rest_api.RESTClient):
             final_attachments.append(files.ensure_resource(attachment))
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
+
+        if component is not undefined.UNDEFINED:
+            body.put("components", [component.build()])
+
+        elif components is not undefined.UNDEFINED:
+            body.put("components", [component.build() for component in components])
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
 
@@ -1266,10 +1283,12 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
@@ -1290,10 +1309,12 @@ class RESTClientImpl(rest_api.RESTClient):
             route,
             body,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             tts=tts,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -1320,10 +1341,14 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         no_auth: bool = False,
         content: undefined.UndefinedOr[typing.Any],
-        embed: undefined.UndefinedNoneOr[embeds_.Embed],
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]],
         attachment: undefined.UndefinedOr[files.Resourceish],
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed],
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]],
         replace_attachments: bool,
         mentions_everyone: undefined.UndefinedOr[bool],
         mentions_reply: undefined.UndefinedOr[bool],
@@ -1333,6 +1358,9 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
+        if not undefined.any_undefined(component, components):
+            raise ValueError("You may only specify one of 'component' or 'components', not both")
+
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
@@ -1340,6 +1368,12 @@ class RESTClientImpl(rest_api.RESTClient):
             raise ValueError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
+            )
+
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+            raise TypeError(
+                "You passed a non collection to 'components', but this expected a collection. Maybe you "
+                "meant to use 'collection' (singular) instead?"
             )
 
         if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
@@ -1380,8 +1414,21 @@ class RESTClientImpl(rest_api.RESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
+        serialized_components: typing.Optional[typing.List[data_binding.JSONObject]] = None
+        if component is not undefined.UNDEFINED:
+            if component is not None:
+                serialized_components = [component.build()]
+
+            body.put("components", serialized_components)
+
+        elif components is not undefined.UNDEFINED:
+            if components is not None:
+                serialized_components = [component.build() for component in components]
+
+            body.put("components", serialized_components)
+
         serialized_embeds: data_binding.JSONArray = []
-        update_embeds: bool = False
+        update_embeds = False
         if embed is not undefined.UNDEFINED:
             update_embeds = True
             if embed is not None:
@@ -1428,10 +1475,14 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1450,10 +1501,12 @@ class RESTClientImpl(rest_api.RESTClient):
             route,
             body,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -1731,10 +1784,12 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1761,10 +1816,12 @@ class RESTClientImpl(rest_api.RESTClient):
             query,
             no_auth=True,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             tts=tts,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
@@ -1792,10 +1849,14 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1814,10 +1875,12 @@ class RESTClientImpl(rest_api.RESTClient):
             body,
             no_auth=True,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=undefined.UNDEFINED,
@@ -3231,6 +3294,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3241,14 +3306,24 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> None:
+        if not undefined.any_undefined(component, components):
+            raise ValueError("You may only specify one of 'component' or 'components', not both")
+
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if not isinstance(embeds, typing.Collection) and embeds is not undefined.UNDEFINED:
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+            raise TypeError(
+                "You passed a non collection to 'components', but this expected a collection. Maybe you "
+                "meant to use 'collection' (singular) instead?"
+            )
+
+        if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
             )
+
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
@@ -3268,6 +3343,12 @@ class RESTClientImpl(rest_api.RESTClient):
             "allowed_mentions",
             mentions.generate_allowed_mentions(mentions_everyone, undefined.UNDEFINED, user_mentions, role_mentions),
         )
+
+        if component is not undefined.UNDEFINED:
+            data.put("components", [component.build()])
+
+        elif components is not undefined.UNDEFINED:
+            data.put("components", [component.build() for component in components])
 
         if embed is not undefined.UNDEFINED:
             embed_payload, attachments = self._entity_factory.serialize_embed(embed)
@@ -3295,10 +3376,14 @@ class RESTClientImpl(rest_api.RESTClient):
         token: str,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -3314,10 +3399,12 @@ class RESTClientImpl(rest_api.RESTClient):
             data_binding.JSONObjectBuilder(),
             no_auth=True,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
@@ -3330,3 +3417,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, no_auth=True)
+
+    def build_action_row_component(self) -> special_endpoints.ActionRowBuilder:
+        return special_endpoints_impl.ActionRowBuilder()

@@ -46,9 +46,9 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
-from hikari.impl import entity_factory
-from hikari.interactions import base_interactions
+from hikari.impl import entity_fbase_interactions
 from hikari.interactions import command_interactions
+from hikari.interactions import components as component_interactions
 
 
 def test__with_int_cast():
@@ -2842,8 +2842,59 @@ class TestEntityFactoryImpl:
         assert type(interaction) is base_interactions.PartialInteraction
 
     @pytest.fixture()
-    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload):
+    def interaction_member_payload(self, user_payload):
+        return {
+            "user": user_payload,
+            "is_pending": False,
+            "joined_at": "2020-09-27T22:58:10.282000+00:00",
+            "nick": "Snab",
+            "pending": False,
+            "permissions": "17179869183",
+            "premium_since": "2020-10-01T23:06:10.431000+00:00",
+            "roles": [
+                "582345963851743243",
+                "582689893965365248",
+                "734164204679856290",
+                "757331666388910181",
+            ],
+        }
+
+    def test__deserialize_interaction_member(self, entity_factory_impl, interaction_member_payload, user_payload):
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+        assert member.id == 115590097100865541
+        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
+        assert member.nickname == "Snab"
+        assert member.guild_id == 43123123
+        assert member.is_deaf is undefined.UNDEFINED
+        assert member.is_mute is undefined.UNDEFINED
+        assert member.is_pending is False
+        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.role_ids == [
+            582345963851743243,
+            582689893965365248,
+            734164204679856290,
+            757331666388910181,
+            43123123,
+        ]
+        assert member.user == entity_factory_impl.deserialize_user(user_payload)
+        assert member.permissions == permission_models.Permissions(17179869183)
+        assert isinstance(member, interaction_models.InteractionMember)
+
+    def test__deserialize_interaction_member_with_passed_user(
+        self, entity_factory_impl, interaction_member_payload, user_payload
+    ):
+        mock_user = object()
+        member = entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=43123123, user=mock_user
+        )
+
+        assert member.user is mock_user
+
+    @pytest.fixture()
+    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload, interaction_member_payload):
+        member_payload = member_payload.copy()
         member_payload["permissions"] = "47"
+        del member_payload["user"]
         return {
             "id": "3490190239012093",
             "type": 2,
@@ -2863,37 +2914,32 @@ class TestEntityFactoryImpl:
                             "type": 0,
                         }
                     },
-                    "members": {
-                        "115590097100865541": {
-                            "is_pending": False,
-                            "joined_at": "2020-09-27T22:58:10.282000+00:00",
-                            "nick": "Snab",
-                            "pending": False,
-                            "permissions": "17179869183",
-                            "premium_since": "2020-10-01T23:06:10.431000+00:00",
-                            "roles": [
-                                "582345963851743243",
-                                "582689893965365248",
-                                "734164204679856290",
-                                "757331666388910181",
-                            ],
-                        }
-                    },
+                    "members": {"115590097100865541": member_payload},
                     "roles": {"41771983423143936": guild_role_payload},
                     "users": {"115590097100865541": user_payload},
                 },
             },
             "channel_id": "49949494",
-            "member": member_payload,
+            "member": interaction_member_payload,
             "token": "moe cat girls",
             "version": 69420,
             "application_id": "76234234",
         }
 
     def test_deserialize_command_interaction(
-        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload, guild_role_payload
+        self,
+        entity_factory_impl,
+        mock_app,
+        command_interaction_payload,
+        user_payload,
+        guild_role_payload,
+        interaction_member_payload,
+        member_payload,
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
+        member_payload = member_payload.copy()
+        del member_payload["user"]
+        member_payload["permissions"] = "47"
 
         assert interaction.app is mock_app
         assert interaction.application_id == 76234234
@@ -2905,23 +2951,9 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id == 43123123
 
         # InteractionMember
-        assert interaction.member.app is mock_app
-        assert interaction.member.guild_id == 43123123
-        assert interaction.member.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.member.nickname == "foobarbaz"
-        assert interaction.member.role_ids == [11111, 22222, 33333, 44444, 43123123]
-        assert interaction.member.joined_at == datetime.datetime(
-            2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        assert interaction.member == entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=43123123
         )
-        assert interaction.member.premium_since == datetime.datetime(
-            2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
-        )
-        assert interaction.member.is_deaf is False
-        assert interaction.member.is_mute is True
-        assert interaction.member.is_pending is False
-        assert interaction.member.permissions == 47
-        assert isinstance(interaction.member, base_interactions.InteractionMember)
-
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
         assert interaction.command_name == "okokokok"
@@ -2952,24 +2984,9 @@ class TestEntityFactoryImpl:
         # InteractionMember
         assert len(interaction.resolved.members) == 1
         member = interaction.resolved.members[115590097100865541]
-        assert member.id == 115590097100865541
-        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
-        assert member.nickname == "Snab"
-        assert member.guild_id == 43123123
-        assert member.is_deaf is undefined.UNDEFINED
-        assert member.is_mute is undefined.UNDEFINED
-        assert member.is_pending is False
-        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
-        assert member.role_ids == [
-            582345963851743243,
-            582689893965365248,
-            734164204679856290,
-            757331666388910181,
-            43123123,
-        ]
-        assert member.user == entity_factory_impl.deserialize_user(user_payload)
-        assert member.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(member, base_interactions.InteractionMember)
+        assert member == entity_factory_impl._deserialize_interaction_member(
+            member_payload, guild_id=43123123, user=entity_factory_impl.deserialize_user(user_payload)
+        )
 
         assert interaction.resolved.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
@@ -3014,8 +3031,13 @@ class TestEntityFactoryImpl:
         assert interaction.resolved.roles == {}
         assert interaction.resolved.users == {}
 
-    def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
-        for payload, expected_type in [(command_interaction_payload, command_interactions.CommandInteraction)]:
+    def test_deserialize_interaction_returns_expected_type(
+        self, entity_factory_impl, command_interaction_payload, component_interaction_payload
+    ):
+        for payload, expected_type in [
+            (command_interaction_payload, command_interactions.CommandInteraction),
+            (component_interaction_payload, component_interactions.ComponentInteraction),
+        ]:
             assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
 
     def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
@@ -3078,6 +3100,134 @@ class TestEntityFactoryImpl:
                 }
             ],
         }
+
+    @pytest.fixture()
+    def component_interaction_payload(self, interaction_member_payload, message_payload):
+        return {
+            "version": 1,
+            "type": 3,
+            "token": "unique_interaction_token",
+            "message": message_payload,
+            "member": interaction_member_payload,
+            "id": "846462639134605312",
+            "guild_id": "290926798626357999",
+            "data": {"custom_id": "click_one", "component_type": 2},
+            "channel_id": "345626669114982999",
+            "application_id": "290926444748734465",
+        }
+
+    @pytest.fixture()
+    def action_row_payload(self, button_payload):
+        return {"type": 1, "components": [button_payload]}
+
+    def test_deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
+        action_row = entity_factory_impl.deserialize_action_row(action_row_payload)
+
+        assert action_row.type is component_interactions.ComponentType.ACTION_ROW
+        assert action_row.components == [entity_factory_impl.deserialize_component(button_payload)]
+
+    def test_deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
+        action_row = entity_factory_impl.deserialize_action_row(
+            {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
+        )
+
+        assert action_row.components == []
+
+    @pytest.fixture()
+    def button_payload(self, custom_emoji_payload):
+        return {
+            "type": 2,
+            "label": "Click me!",
+            "style": 1,
+            "emoji": custom_emoji_payload,
+            "custom_id": "click_one",
+            "url": "okokok",
+            "disabled": True,
+        }
+
+    def test_deserialize_deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
+        button = entity_factory_impl.deserialize_button(button_payload)
+
+        assert button.type is component_interactions.ComponentType.BUTTON
+        assert button.style is component_interactions.ButtonStyle.PRIMARY
+        assert button.label == "Click me!"
+        assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        assert button.custom_id == "click_one"
+        assert button.is_disabled is True
+        assert button.url == "okokok"
+
+    def test_deserialize_deserialize_button_with_unset_fields(
+        self, entity_factory_impl, button_payload, custom_emoji_payload
+    ):
+        button = entity_factory_impl.deserialize_button({"type": 2, "style": 5})
+
+        assert button.type is component_interactions.ComponentType.BUTTON
+        assert button.style is component_interactions.ButtonStyle.LINK
+        assert button.label is None
+        assert button.emoji is None
+        assert button.custom_id is None
+        assert button.url is None
+        assert button.is_disabled is False
+
+    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload):
+        for expected_type, payload in [
+            (component_interactions.ActionRowComponent, action_row_payload),
+            (component_interactions.ButtonComponent, button_payload),
+        ]:
+            assert type(entity_factory_impl.deserialize_component(payload)) is expected_type
+
+    def test_deserialize_component_handles_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_component({"type": -9434994})
+
+    def test_deserialize_component_interaction(
+        self, entity_factory_impl, component_interaction_payload, interaction_member_payload, mock_app, message_payload
+    ):
+        interaction = entity_factory_impl.deserialize_component_interaction(component_interaction_payload)
+
+        assert interaction.app is mock_app
+        assert interaction.id == 846462639134605312
+        assert interaction.application_id == 290926444748734465
+        assert interaction.type is interaction_models.InteractionType.MESSAGE_COMPONENT
+        assert interaction.token == "unique_interaction_token"
+        assert interaction.version == 1
+        assert interaction.channel_id == 345626669114982999
+        assert interaction.component_type is component_interactions.ComponentType.BUTTON
+        assert interaction.custom_id == "click_one"
+        assert interaction.guild_id == 290926798626357999
+        assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
+        assert interaction.message_flags == interaction.message.flags
+        assert interaction.message_id == interaction.message.id
+        assert interaction.member == entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=290926798626357999
+        )
+        assert interaction.user is interaction.member.user
+        assert isinstance(interaction, component_interactions.ComponentInteraction)
+
+    def test_deserialize_component_interaction_with_undefined_fields(
+        self, entity_factory_impl, user_payload, message_payload
+    ):
+        interaction = entity_factory_impl.deserialize_component_interaction(
+            {
+                "version": 1,
+                "type": 3,
+                "token": "unique_interaction_token",
+                "message": {"id": "3412312312", "flags": "96"},
+                "user": user_payload,
+                "id": "846462639134605312",
+                "data": {"custom_id": "click_one", "component_type": 2},
+                "channel_id": "345626669114982999",
+                "application_id": "290926444748734465",
+            }
+        )
+
+        assert interaction.guild_id is None
+        assert interaction.member is None
+        assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
+        assert interaction.message is None
+        assert interaction.message_flags == 96
+        assert interaction.message_id == 3412312312
+        assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     #################
     # INVITE MODELS #
@@ -3405,9 +3555,36 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture()
+    def referenced_message(self, user_payload):
+        return {
+            "id": "12312312",
+            "channel_id": "949494",
+            "author": user_payload,
+            "content": "OK",
+            "timestamp": "2020-03-21T21:20:16.510000+00:00",
+            "edited_timestamp": None,
+            "tts": True,
+            "mentions_everyone": False,
+            "mentions": [],
+            "mention_roles": [],
+            "attachments": [],
+            "embeds": [],
+            "type": 1,
+            "pinned": True,
+            "flags": "222",
+        }
+
+    @pytest.fixture()
     def message_payload(
-        self, user_payload, member_payload, custom_emoji_payload, partial_application_payload, embed_payload
+        self,
+        user_payload,
+        member_payload,
+        custom_emoji_payload,
+        partial_application_payload,
+        embed_payload,
+        referenced_message,
     ):
+        member_payload = member_payload.copy()
         del member_payload["user"]
         return {
             "id": "123",
@@ -3449,7 +3626,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "278325129692446720",
                 "message_id": "306588351130107906",
             },
-            "referenced_message": {"message_reference_payload": "testing"},
+            "referenced_message": referenced_message,
             "flags": 2,
             "sticker_items": [
                 {
@@ -3473,9 +3650,9 @@ class TestEntityFactoryImpl:
         partial_application_payload,
         custom_emoji_payload,
         embed_payload,
+        referenced_message,
     ):
-        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_message") as deserialize_message:
-            partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
         assert partial_message.app is mock_app
         assert partial_message.id == 123
@@ -3545,8 +3722,7 @@ class TestEntityFactoryImpl:
         assert partial_message.message_reference.guild_id == 278325129692446720
         assert isinstance(partial_message.message_reference, message_models.MessageReference)
 
-        assert partial_message.referenced_message is deserialize_message.return_value
-        deserialize_message.assert_called_once_with({"message_reference_payload": "testing"})
+        assert partial_message.referenced_message == entity_factory_impl.deserialize_message(referenced_message)
         assert partial_message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker
@@ -3634,18 +3810,9 @@ class TestEntityFactoryImpl:
         partial_application_payload,
         custom_emoji_payload,
         embed_payload,
+        referenced_message,
     ):
-        referenced_message = object()
-        original = entity_factory_impl.deserialize_message
-
-        def side_effect(call_args):
-            if call_args == {"message_reference_payload": "testing"}:
-                return referenced_message
-
-            return original(call_args)
-
-        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_message", side_effect=side_effect):
-            message = entity_factory_impl.deserialize_message(message_payload)
+        message = entity_factory_impl.deserialize_message(message_payload)
 
         assert message.app is mock_app
         assert message.id == 123
@@ -3713,7 +3880,7 @@ class TestEntityFactoryImpl:
         assert message.message_reference.guild_id == 278325129692446720
         assert isinstance(message.message_reference, message_models.MessageReference)
 
-        assert message.referenced_message is referenced_message
+        assert message.referenced_message == entity_factory_impl.deserialize_message(referenced_message)
         assert message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker
@@ -3754,6 +3921,7 @@ class TestEntityFactoryImpl:
             "attachments": [],
             "embeds": [],
             "pinned": True,
+            "flags": "2222",
             "type": 0,
         }
 

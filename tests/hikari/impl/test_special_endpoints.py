@@ -23,8 +23,12 @@
 import mock
 import pytest
 
+from hikari import emojis
+from hikari import snowflakes
+from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.interactions import components
 from tests.hikari import hikari_test_helpers
 
 
@@ -219,3 +223,174 @@ class TestCommandBuilder:
         result = builder.build(mock.Mock())
 
         assert result == {"name": "we are numberr", "description": "oner", "options": []}
+
+
+class Test_ButtonBuilder:
+    def test_build(self):
+        result = special_endpoints._ButtonBuilder(
+            style=components.ButtonStyle.DANGER,
+            url=undefined.UNDEFINED,
+            emoji_id=undefined.UNDEFINED,
+            emoji_name="emoji_name",
+            label="no u",
+            custom_id="ooga booga",
+            is_disabled=True,
+        ).build()
+
+        assert result == {
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.DANGER,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+            "custom_id": "ooga booga",
+            "disabled": True,
+        }
+
+    def test_build_without_optional_fields(self):
+        result = special_endpoints._ButtonBuilder(
+            style=components.ButtonStyle.LINK,
+            url="OK",
+            emoji_id="123321",
+            emoji_name=undefined.UNDEFINED,
+            label=undefined.UNDEFINED,
+            custom_id=undefined.UNDEFINED,
+            is_disabled=False,
+        ).build()
+
+        assert result == {
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.LINK,
+            "emoji": {"id": "123321"},
+            "disabled": False,
+            "url": "OK",
+        }
+
+    def test_validation_when_url_not_provided_for_link(self):
+        with pytest.raises(ValueError, match="url must be specified for a LINK style button"):
+            special_endpoints._ButtonBuilder(
+                emoji_id=undefined.UNDEFINED,
+                emoji_name=undefined.UNDEFINED,
+                style=components.ButtonStyle.LINK,
+                url=undefined.UNDEFINED,
+                label=undefined.UNDEFINED,
+                custom_id=undefined.UNDEFINED,
+                is_disabled=False,
+            )
+
+    def test_validation_when_custom_id_provided_for_link(self):
+        with pytest.raises(ValueError, match="custom_id cannot be specified for a LINK style button"):
+            special_endpoints._ButtonBuilder(
+                emoji_id=undefined.UNDEFINED,
+                emoji_name=undefined.UNDEFINED,
+                style=components.ButtonStyle.LINK,
+                url="hi",
+                label=undefined.UNDEFINED,
+                custom_id="an ID",
+                is_disabled=False,
+            )
+
+    def test_validation_when_url_provided_for_not_link(self):
+        with pytest.raises(ValueError, match="url cannot be specified for a non-LINK style button"):
+            special_endpoints._ButtonBuilder(
+                emoji_id=undefined.UNDEFINED,
+                emoji_name=undefined.UNDEFINED,
+                style=components.ButtonStyle.DANGER,
+                url="hi",
+                label=undefined.UNDEFINED,
+                custom_id="an ID",
+                is_disabled=False,
+            )
+
+    def test_validation_when_custom_id_not_provided_for_not_link(self):
+        with pytest.raises(ValueError, match="custom_id must be specified for a non-LINK style button"):
+            special_endpoints._ButtonBuilder(
+                emoji_id=undefined.UNDEFINED,
+                emoji_name=undefined.UNDEFINED,
+                style=components.ButtonStyle.DANGER,
+                url=undefined.UNDEFINED,
+                label=undefined.UNDEFINED,
+                custom_id=undefined.UNDEFINED,
+                is_disabled=False,
+            )
+
+    def test_validation_when_both_emoji_id_and_emoji_name(self):
+        with pytest.raises(ValueError, match="Only one of emoji_id or emoji_name may be provided"):
+            special_endpoints._ButtonBuilder(
+                emoji_id=123,
+                emoji_name="hi",
+                style=components.ButtonStyle.DANGER,
+                url=undefined.UNDEFINED,
+                label=undefined.UNDEFINED,
+                custom_id="hi",
+                is_disabled=False,
+            )
+
+
+@pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])
+def test__build_emoji_with_unicode_emoji(emoji):
+    result = special_endpoints._build_emoji(emoji)
+
+    assert result == (undefined.UNDEFINED, "UNICORN")
+
+
+@pytest.mark.parametrize(
+    "emoji", [snowflakes.Snowflake(54123123), 54123123, emojis.CustomEmoji(id=54123123, name=None, is_animated=None)]
+)
+def test__build_emoji_with_custom_emoji(emoji):
+    result = special_endpoints._build_emoji(emoji)
+
+    assert result == ("54123123", undefined.UNDEFINED)
+
+
+def test__build_emoji_when_undefined():
+    assert special_endpoints._build_emoji(undefined.UNDEFINED) == (undefined.UNDEFINED, undefined.UNDEFINED)
+
+
+class TestActionRowBuilder:
+    def test_add_button(self):
+        builder = special_endpoints.ActionRowBuilder().add_button(
+            style=components.ButtonStyle.DANGER,
+            label="ok",
+            emoji=emojis.UnicodeEmoji("gat"),
+            custom_id="go home",
+            disabled=True,
+        )
+
+        result = builder._components[0]
+        assert isinstance(result, special_endpoints._ButtonBuilder)
+        assert result._emoji_id is undefined.UNDEFINED
+        assert result._emoji_name == "gat"
+        assert result._style is components.ButtonStyle.DANGER
+        assert result._label == "ok"
+        assert result._custom_id == "go home"
+        assert result._is_disabled is True
+        assert result._url is undefined.UNDEFINED
+
+    def test_add_button_for_other_fields(self):
+        builder = special_endpoints.ActionRowBuilder().add_button(style=components.ButtonStyle.LINK, url="ggg")
+
+        result = builder._components[0]
+        assert isinstance(result, special_endpoints._ButtonBuilder)
+        assert result._emoji_id is undefined.UNDEFINED
+        assert result._emoji_name is undefined.UNDEFINED
+        assert result._style is components.ButtonStyle.LINK
+        assert result._label is undefined.UNDEFINED
+        assert result._custom_id is undefined.UNDEFINED
+        assert result._is_disabled is False
+        assert result._url == "ggg"
+
+    def test_build(self):
+        mock_component_1 = mock.Mock()
+        mock_component_2 = mock.Mock()
+
+        row = special_endpoints.ActionRowBuilder()
+        row._components = [mock_component_1, mock_component_2]
+
+        result = row.build()
+
+        assert result == {
+            "type": components.ComponentType.ACTION_ROW,
+            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+        }
+        mock_component_1.build.assert_called_once_with()
+        mock_component_2.build.assert_called_once_with()

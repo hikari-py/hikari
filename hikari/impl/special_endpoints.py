@@ -27,6 +27,7 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "ActionRowBuilder",
     "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
@@ -41,6 +42,7 @@ import attr
 
 from hikari import channels
 from hikari import commands
+from hikari import emojis
 from hikari import errors
 from hikari import files
 from hikari import iterators
@@ -48,6 +50,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.interactions import components
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -72,6 +75,7 @@ if typing.TYPE_CHECKING:
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
     _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
+    _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
 
 
 @typing.final
@@ -921,3 +925,108 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
         return data
+
+
+@attr.define(weakref_slot=False)
+class _ButtonBuilder(special_endpoints.ComponentBuilder):
+    _emoji_id: undefined.UndefinedOr[str] = attr.field()
+    _emoji_name: undefined.UndefinedOr[str] = attr.field()
+    _style: typing.Union[int, components.ButtonStyle] = attr.field(converter=components.ButtonStyle)
+    _label: undefined.UndefinedOr[str] = attr.field()
+    _custom_id: undefined.UndefinedOr[str] = attr.field()
+    _url: undefined.UndefinedOr[str] = attr.field()
+    _is_disabled: bool = attr.field()
+
+    def build(self) -> data_binding.JSONObject:
+        data = data_binding.JSONObjectBuilder()
+
+        data["type"] = components.ComponentType.BUTTON
+        data["style"] = self._style
+        data["disabled"] = self._is_disabled
+        data.put("label", self._label)
+
+        if self._emoji_id is not undefined.UNDEFINED:
+            data["emoji"] = {"id": self._emoji_id}
+
+        elif self._emoji_name is not undefined.UNDEFINED:
+            data["emoji"] = {"name": self._emoji_name}
+
+        data.put("custom_id", self._custom_id)
+        data.put("url", self._url)
+
+        return data
+
+    def __attrs_post_init__(self) -> None:
+        if self._style == components.ButtonStyle.LINK:
+            if self._url is undefined.UNDEFINED:
+                raise ValueError("url must be specified for a LINK style button")
+
+            if self._custom_id is not undefined.UNDEFINED:
+                raise ValueError("custom_id cannot be specified for a LINK style button")
+
+        else:
+            if self._url is not undefined.UNDEFINED:
+                raise ValueError("url cannot be specified for a non-LINK style button")
+
+            if self._custom_id is undefined.UNDEFINED:
+                raise ValueError("custom_id must be specified for a non-LINK style button")
+
+        if not undefined.any_undefined(self._emoji_id, self._emoji_name):
+            raise ValueError("Only one of emoji_id or emoji_name may be provided")
+
+
+def _build_emoji(
+    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED
+) -> typing.Tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
+    """Build an emoji into the format accepted in buttons.
+
+    Parameters
+    ----------
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+        The ID, object or raw string of an emoji to set on a component.
+
+    Returns
+    -------
+    typing.Union[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+        A union of the custom emoji's id if defined (index 0) or the unicode
+        emoji's string representation (index 1).
+    """
+    # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
+    if emoji is not undefined.UNDEFINED:
+        if isinstance(emoji, (int, emojis.CustomEmoji)):
+            return str(int(emoji)), undefined.UNDEFINED
+
+        return undefined.UNDEFINED, str(emoji)
+
+    return undefined.UNDEFINED, undefined.UNDEFINED
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class ActionRowBuilder(special_endpoints.ActionRowBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
+
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, init=False)
+
+    def add_button(
+        self: _ActionRowBuilderT,
+        style: typing.Union[int, components.ButtonStyle],
+        *,
+        label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED,
+        custom_id: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        disabled: bool = False,
+    ) -> _ActionRowBuilderT:
+        self._components.append(
+            _ButtonBuilder(
+                *_build_emoji(emoji), style=style, label=label, custom_id=custom_id, url=url, is_disabled=disabled
+            )
+        )
+
+        return self
+
+    def build(self) -> data_binding.JSONObject:
+        return {
+            "type": components.ComponentType.ACTION_ROW,
+            "components": [component.build() for component in self._components],
+        }

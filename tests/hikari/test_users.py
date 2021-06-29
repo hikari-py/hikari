@@ -52,6 +52,8 @@ class TestPartialUser:
         embeds = [object()]
         attachment = object()
         attachments = [object(), object()]
+        component = object()
+        components = [object(), object()]
         user_mentions = [object(), object()]
         role_mentions = [object(), object()]
         reply = object()
@@ -66,6 +68,8 @@ class TestPartialUser:
             embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
             nonce="nonce",
             tts=True,
             reply=reply,
@@ -86,6 +90,8 @@ class TestPartialUser:
             embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
             nonce="nonce",
             tts=True,
             mentions_everyone=False,
@@ -98,33 +104,11 @@ class TestPartialUser:
     @pytest.mark.asyncio()
     async def test_send_when_not_cached(self, obj):
         obj.id = 522234
-        embed = object()
-        embeds = [object(), object()]
-        attachment = object()
-        attachments = [object(), object()]
-        user_mentions = [object(), object()]
-        role_mentions = [object(), object()]
-        reply = object()
-        mentions_reply = object()
-
         obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
         obj.app.cache.get_dm_channel_id = mock.Mock(return_value=None)
         obj.fetch_dm_channel = mock.AsyncMock()
 
-        returned = await obj.send(
-            content="test",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
-            reply=reply,
-            mentions_everyone=False,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            mentions_reply=mentions_reply,
-        )
+        returned = await obj.send()
 
         assert returned is obj.app.rest.create_message.return_value
 
@@ -132,67 +116,49 @@ class TestPartialUser:
         obj.fetch_dm_channel.assert_awaited_once()
         obj.app.rest.create_message.assert_awaited_once_with(
             channel=obj.fetch_dm_channel.return_value.id,
-            content="test",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
-            mentions_everyone=False,
-            reply=reply,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            mentions_reply=mentions_reply,
+            content=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            reply=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+            mentions_reply=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()
     async def test_send_when_not_cache_aware(self, obj):
         obj.id = 522234
-        embed = object()
-        embeds = [object(), object()]
-        attachment = object()
-        attachments = [object(), object()]
-        user_mentions = [object(), object()]
-        role_mentions = [object(), object()]
-        reply = object()
-        mentions_reply = object()
-
         obj.app = mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
         obj.fetch_dm_channel = mock.AsyncMock()
 
-        returned = await obj.send(
-            content="test",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
-            reply=reply,
-            mentions_everyone=False,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            mentions_reply=mentions_reply,
-        )
+        returned = await obj.send()
 
         assert returned is obj.app.rest.create_message.return_value
 
         obj.fetch_dm_channel.assert_awaited_once()
         obj.app.rest.create_message.assert_awaited_once_with(
             channel=obj.fetch_dm_channel.return_value.id,
-            content="test",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
-            mentions_everyone=False,
-            reply=reply,
-            user_mentions=user_mentions,
-            role_mentions=role_mentions,
-            mentions_reply=mentions_reply,
+            content=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            reply=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+            mentions_reply=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()

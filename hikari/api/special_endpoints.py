@@ -24,7 +24,9 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "ActionRowBuilder",
     "CommandBuilder",
+    "ComponentBuilder",
     "TypingIndicator",
     "GuildBuilder",
     "InteractionDeferredBuilder",
@@ -44,6 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import commands
     from hikari import embeds as embeds_
+    from hikari import emojis
     from hikari import files
     from hikari import guilds
     from hikari import messages
@@ -53,6 +56,8 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
     from hikari.interactions import base_interactions
+    from hikari.interactions import commands
+    from hikari.interactions import components
     from hikari.internal import data_binding
     from hikari.internal import time
 
@@ -988,4 +993,75 @@ class CommandBuilder(abc.ABC):
         -------
         hikari.internal.data_binding.JSONObject
             The built json object representation of this builder.
+        """
+
+
+class ComponentBuilder:
+    """Base class for all component builder classes."""
+
+    __slots__: typing.Sequence[str] = []
+
+    @abc.abstractmethod
+    def build(self) -> data_binding.JSONObject:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The built json object representation of this builder.
+        """
+
+
+class ActionRowBuilder(ComponentBuilder):
+    """Builder class for action row components."""
+
+    __slots__: typing.Sequence[str] = []
+
+    def add_button(
+        self: _T,
+        style: typing.Union[int, components.ButtonStyle],
+        *,
+        label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED,
+        custom_id: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        disabled: bool = False,
+    ) -> _T:
+        """Add a button component to this action row builder.
+
+        Parameters
+        ----------
+        style : typing.Union[builtins.int, hikari.interactions.components.ButtonStyle]
+            The button's style.
+
+        Other Parameters
+        ----------------
+        label : builtins.str
+            The text label to that should appear on this button. This may be
+            up to 80 characters long.
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+            Object, ID or raw string of the emoji which should be displayed on
+            this button.
+        custom_id : hikari.undefined.UndefinedOr[builtins.str]
+            A developer-defined custom identifier used to identify which button
+            triggered component interactions.
+
+            !!! warning
+                This cannot be included for URL style buttons as these do not
+                trigger interactions but ***must*** be included for other
+                button types.
+        url : hikari.undefined.UndefinedOr[builtins.str]
+            The URL a LINK-style button should redirect to.
+
+            !!! warning
+                This can only and must be included for URL style buttons.
+
+        disabled : builtins.bool
+            Whether this button should be disabled or not.
+            Defaults to `builtins.False`.
+
+        Returns
+        -------
+        ActionRowBuilder
+            Object of this action row builder.
         """

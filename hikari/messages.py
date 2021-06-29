@@ -60,6 +60,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis as emojis_
     from hikari import stickers as stickers_
     from hikari import users as users_
+    from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
 
 _T = typing.TypeVar("_T")
@@ -584,7 +585,7 @@ class PartialMessage(snowflakes.Unique):
     message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(hash=False, eq=False, repr=False)
     """The message reference data."""
 
-    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
+    flags: undefined.UndefinedOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
     stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attr.field(
@@ -699,10 +700,14 @@ class PartialMessage(snowflakes.Unique):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -734,6 +739,27 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the attachment to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            present, is not changed. If this is `builtins.None`, then the
+            attachment is removed, if present. Otherwise, the new attachment
+            that was provided will be attached.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+            If provided, the attachments to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            present, are not changed. If this is `builtins.None`, then the
+            attachments is removed, if present. Otherwise, the new attachments
+            that were provided will be attached.
+        component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to set for this message.
+            This component will replace any previously set components and passing
+            `builtins.None` will remove all components.
+        components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects set for
+            this message. These components will replace any previously set
+            components and passing `builtins.None` or an empty sequence will
+            remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
@@ -746,12 +772,6 @@ class PartialMessage(snowflakes.Unique):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
-            If provided, the attachments to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
-            attachments is removed, if present. Otherwise, the new attachments
-            that were provided will be attached.
         replace_attachments: bool
             Whether to replace the attachments with the provided ones. Defaults
             to `builtins.False`.
@@ -852,10 +872,12 @@ class PartialMessage(snowflakes.Unique):
             message=self.id,
             channel=self.channel_id,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -868,10 +890,12 @@ class PartialMessage(snowflakes.Unique):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: typing.Union[
@@ -906,16 +930,21 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
-            If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
+        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to include in this message.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be TTS (Text To Speech).
         nonce : hikari.undefined.UndefinedOr[builtins.str]
@@ -986,7 +1015,7 @@ class PartialMessage(snowflakes.Unique):
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; `reply` not found or not in the same
-            channel.
+            channel; too many components.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -1010,10 +1039,12 @@ class PartialMessage(snowflakes.Unique):
         return await self.app.rest.create_message(
             channel=self.channel_id,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             nonce=nonce,
             tts=tts,
             reply=reply,
@@ -1336,7 +1367,7 @@ class Message(PartialMessage):
     message_reference: typing.Optional[MessageReference]
     """The message reference data."""
 
-    flags: typing.Optional[MessageFlag]
+    flags: MessageFlag
     """The message flags."""
 
     stickers: typing.Sequence[stickers_.PartialSticker]

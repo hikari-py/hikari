@@ -58,6 +58,7 @@ from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
+from hikari.interactions import components as component_models
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
@@ -179,6 +180,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_app",
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
+        "_component_type_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
         "_interaction_type_mapping",
@@ -236,6 +238,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
+        self._component_type_mapping = {
+            component_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
+            component_models.ComponentType.BUTTON: self.deserialize_button,
+        }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
             channel_models.ChannelType.GROUP_DM: self.deserialize_group_dm,
@@ -252,6 +258,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], base_interactions.PartialInteraction]
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
+            interaction_models.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -1731,7 +1738,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=suboptions,
         )
 
-    def _deserialize_command_interaction_member(
+    def _deserialize_interaction_member(
         self,
         payload: data_binding.JSONObject,
         *,
@@ -1780,7 +1787,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         member: typing.Optional[base_interactions.InteractionMember]
         if member_payload := payload.get("member"):
             assert guild_id is not None
-            member = self._deserialize_command_interaction_member(member_payload, guild_id=guild_id)
+            member = self._deserialize_interaction_member(member_payload, guild_id=guild_id)
             # See https://github.com/discord/discord-api-docs/pull/2568
             user = member.user
 
@@ -1813,7 +1820,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 for user_id, member_payload in raw_members.items():
                     assert guild_id is not None
                     user_id = snowflakes.Snowflake(user_id)
-                    members[user_id] = self._deserialize_command_interaction_member(
+                    members[user_id] = self._deserialize_interaction_member(
                         member_payload, user=users[user_id], guild_id=guild_id
                     )
 
@@ -1855,6 +1862,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if deserialize := self._interaction_type_mapping.get(interaction_type):
             return deserialize(payload)
 
+        _LOGGER.debug("Unknown interaction type %s", interaction_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}") from None
 
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
@@ -1872,6 +1880,93 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]
 
         return payload
+
+    def deserialize_action_row(self, payload: data_binding.JSONObject) -> component_models.ActionRowComponent:
+        components: typing.List[component_models.PartialComponent] = []
+
+        for component_payload in payload["components"]:
+            try:
+                components.append(self.deserialize_component(component_payload))
+
+            except errors.UnrecognisedEntityError:
+                pass
+
+        return component_models.ActionRowComponent(
+            type=component_models.ComponentType(payload["type"]), components=components
+        )
+
+    def deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
+        emoji_payload = payload.get("emoji")
+        return component_models.ButtonComponent(
+            type=component_models.ComponentType(payload["type"]),
+            style=component_models.ButtonStyle(payload["style"]),
+            label=payload.get("label"),
+            emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
+            custom_id=payload.get("custom_id"),
+            url=payload.get("url"),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def deserialize_component(self, payload: data_binding.JSONObject) -> component_models.PartialComponent:
+        component_type = component_models.ComponentType(payload["type"])
+
+        if deserialize := self._component_type_mapping.get(component_type):
+            return deserialize(payload)
+
+        _LOGGER.debug("Unknown component type %s", component_type)
+        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}") from None
+
+    def deserialize_component_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.ComponentInteraction:
+        data_payload = payload["data"]
+
+        guild_id = None
+        if raw_guild_id := payload.get("guild_id"):
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
+        member: typing.Optional[interaction_models.InteractionMember]
+        if member_payload := payload.get("member"):
+            assert guild_id is not None
+            member = self._deserialize_interaction_member(member_payload, guild_id=guild_id)
+            # See https://github.com/discord/discord-api-docs/pull/2568
+            user = member.user
+
+        else:
+            member = None
+            user = self.deserialize_user(payload["user"])
+
+        message_payload = payload["message"]
+        message_flags = int(message_payload["flags"])
+
+        # Under current behaviour only id and flags are received for ephemeral messages.
+        if message_flags & message_models.MessageFlag.EPHEMERAL:
+            message = None
+            message_flags = message_models.MessageFlag(message_flags)
+            message_id = snowflakes.Snowflake(message_payload["id"])
+
+        else:
+            message = self.deserialize_message(payload["message"])
+            message_flags = message.flags
+            message_id = message.id
+
+        return component_models.ComponentInteraction(
+            app=self._app,
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            id=snowflakes.Snowflake(payload["id"]),
+            type=interaction_models.InteractionType(payload["type"]),
+            guild_id=guild_id,
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            member=member,
+            user=user,
+            token=payload["token"],
+            version=payload["version"],
+            custom_id=data_payload["custom_id"],
+            component_type=component_models.ComponentType(data_payload["component_type"]),
+            message=message,
+            message_flags=message_flags,
+            message_id=message_id,
+        )
 
     ##################
     # STICKER MODELS #
@@ -2194,7 +2289,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
             message_reference=message_reference,
             referenced_message=referenced_message,
-            flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else None,
+            flags=message_models.MessageFlag(payload["flags"]),
             stickers=stickers,
             nonce=payload.get("nonce"),
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
