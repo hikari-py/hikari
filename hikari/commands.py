@@ -59,6 +59,7 @@ class OptionType(int, enums.Enum):
 
     This is range limited between -2^53 and 2^53.
     """
+
     BOOLEAN = 5
     """Denotes a command option where the value will be a bool."""
 
@@ -89,7 +90,7 @@ class CommandChoice:
     name: str = attr.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    value: typing.Union[str, int, float] = attr.field(repr=True)
+    value: typing.Union[str, int] = attr.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
 

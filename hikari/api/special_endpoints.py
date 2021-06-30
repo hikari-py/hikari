@@ -894,7 +894,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def options(self) -> typing.Sequence[command_interactions.CommandOption]:
+    def options(self) -> typing.Sequence[commands.CommandOption]:
         """Sequence of up to 25 of the options set for this command.
 
         Returns
@@ -930,7 +930,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_option(self: _T, option: command_interactions.CommandOption) -> _T:
+    def add_option(self: _T, option: commands.CommandOption) -> _T:
         """Add an option to this command.
 
         !!! note

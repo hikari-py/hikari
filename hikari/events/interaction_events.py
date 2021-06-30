@@ -56,7 +56,7 @@ class CommandEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def command(self) -> command_interactions.Command:
+    def command(self) -> commands.Command:
         """Object of the command this event is for.
 
         Returns
@@ -79,7 +79,7 @@ class CommandCreateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -96,7 +96,7 @@ class CommandUpdateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -113,7 +113,7 @@ class CommandDeleteEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
