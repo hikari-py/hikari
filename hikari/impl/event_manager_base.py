@@ -362,8 +362,8 @@ class EventManagerBase(event_manager_.EventManager):
         ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
             nonlocal event_type
 
-            # Avoid resolving the forward references in the function if event_type was explicitly provided as this
-            # may lead to errors.
+            # Avoid resolving forward references in the function's signature if
+            # event_type was explicitly provided as this may lead to errors.
             if event_type is not None:
                 _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
 
