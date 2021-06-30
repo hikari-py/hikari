@@ -54,7 +54,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections", "_is_alive")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections", "_is_alive", "_is_closing")
 
     _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
@@ -64,6 +64,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)
         self._is_alive = False
+        self._is_closing = False
 
     @property
     def is_alive(self) -> bool:
@@ -72,6 +73,9 @@ class VoiceComponentImpl(voice.VoiceComponent):
     def _check_if_alive(self) -> None:
         if not self._is_alive:
             raise errors.ComponentStateConflictError("Component cannot be used while it's not alive")
+
+        if self._is_closing:
+            raise errors.ComponentStateConflictError("Component cannot be used while it's closing")
 
     async def _disconnect(self) -> None:
         if self._connections:
@@ -86,9 +90,11 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     async def close(self) -> None:
         self._check_if_alive()
-        self._is_alive = False
+        self._is_closing = True
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
         await self._disconnect()
+        self._is_alive = False
+        self._is_closing = False
 
     def start(self) -> None:
         """Start this voice component."""

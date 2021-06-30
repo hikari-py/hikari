@@ -53,6 +53,13 @@ class TestVoiceComponentImpl:
         with pytest.raises(errors.ComponentStateConflictError):
             voice_client._check_if_alive()
 
+    def test__check_if_alive_when_closing(self, voice_client):
+        voice_client._is_alive = True
+        voice_client._is_closing = True
+
+        with pytest.raises(errors.ComponentStateConflictError):
+            voice_client._check_if_alive()
+
     @pytest.mark.asyncio()
     async def test_disconnect(self, voice_client):
         mock_connection = mock.AsyncMock()
@@ -74,6 +81,7 @@ class TestVoiceComponentImpl:
         )
         voice_client._disconnect.assert_awaited_once_with()
         assert voice_client._is_alive is False
+        assert voice_client._is_closing is False
 
     def test_start(self, voice_client, mock_app):
         voice_client._is_alive = False

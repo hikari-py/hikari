@@ -671,8 +671,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-        live_attributes = self._get_live_attributes()
-
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
 
@@ -695,11 +693,11 @@ class RESTClientImpl(rest_api.RESTClient):
         while True:
             try:
                 uuid = time.uuid()
-                async with live_attributes.buckets.acquire(compiled_route):
+                async with self._get_live_attributes().buckets.acquire(compiled_route):
                     # Buckets not using authentication still have a global
                     # rate limit, but it is different from the token one.
                     if not no_auth:
-                        await live_attributes.global_rate_limit.acquire()
+                        await self._get_live_attributes().global_rate_limit.acquire()
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
@@ -713,7 +711,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         start = time.monotonic()
 
                     # Make the request.
-                    response = await live_attributes.client_session.request(
+                    response = await self._get_live_attributes().client_session.request(
                         compiled_route.method,
                         url,
                         headers=headers,
@@ -739,7 +737,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         )
 
                     # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                    await self._parse_ratelimits(compiled_route, response, live_attributes)
+                    await self._parse_ratelimits(compiled_route, response, self._get_live_attributes())
 
                 # Don't bother processing any further if we got NO CONTENT. There's not anything
                 # to check.
