@@ -53,8 +53,8 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari import webhooks
     from hikari.api import special_endpoints
-    from hikari.interactions import bases as interaction_bases
-    from hikari.interactions import commands
+    from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
     from hikari.internal import time
 
 
@@ -6125,16 +6125,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> command_interactions.Command:
         """Fetch a command set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -6146,7 +6146,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             Object of the fetched command.
 
         Raises
@@ -6177,7 +6177,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         """Fetch the commands set for an application.
 
         Parameters
@@ -6195,7 +6195,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.commands.Command]
+        typing.Sequence[hikari.interactions.command_interactions.Command]
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
@@ -6231,8 +6231,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         r"""Create an application command.
 
         Parameters
@@ -6251,12 +6251,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.command_interactions.CommandOption]]
             A sequence of up to 10 options for this command.
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             Object of the created command.
 
         Raises
@@ -6290,7 +6290,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         """Set the commands for an application.
 
         !!! warning
@@ -6314,7 +6314,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.commands.Command]
+        typing.Sequence[hikari.interactions.command_interactions.Command]
             A sequence of the set command objects.
 
         Raises
@@ -6346,20 +6346,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         """Edit a registered application command.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
             Object or ID of the command to modify.
 
         Other Parameters
@@ -6374,13 +6374,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.command_interactions.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             The edited command object.
 
         Raises
@@ -6412,7 +6412,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
@@ -6421,7 +6421,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
             Object or ID of the command to delete.
 
         Other Parameters
@@ -6456,13 +6456,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_deferred_builder(
-        self, type: typing.Union[interaction_bases.ResponseType, int], /
+        self, type: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionDeferredBuilder:
         """Create a builder for a deferred message interaction response.
 
         Parameters
         ----------
-        type: typing.Union[hikari.interactions.bases.ResponseType, builtins.int]
+        type: typing.Union[hikari.interactions.base_interactions.ResponseType, builtins.int]
             The type of deferred message response this builder is for.
 
         Returns
@@ -6473,13 +6473,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_message_builder(
-        self, type: typing.Union[interaction_bases.ResponseType, int], /
+        self, type: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
         """Create a builder for a message interaction response.
 
         Parameters
         ----------
-        type : typing.Union[hikari.interactions.bases.ResponseType, builtins.int]
+        type : typing.Union[hikari.interactions.base_interactions.ResponseType, builtins.int]
             The type of message response this builder is for.
 
         Returns
@@ -6532,9 +6532,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_interaction_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: typing.Union[int, interaction_bases.ResponseType],
+        response_type: typing.Union[int, base_interactions.ResponseType],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
@@ -6559,11 +6559,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.bases.PartialInteraction]
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
         token : builtins.str
             The command interaction's token.
-        response_type : typing.Union[builtins.int, hikari.interactions.bases.ResponseType]
+        response_type : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
             The type of interaction response this is.
 
         Other Parameters

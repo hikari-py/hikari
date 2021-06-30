@@ -24,7 +24,7 @@ import mock
 import pytest
 
 from hikari import traits
-from hikari.interactions import bases
+from hikari.interactions import base_interactions
 
 
 @pytest.fixture()
@@ -35,11 +35,11 @@ def mock_app():
 class TestPartialInteraction:
     @pytest.fixture()
     def mock_partial_interaction(self, mock_app):
-        return bases.PartialInteraction(
+        return base_interactions.PartialInteraction(
             app=mock_app,
             id=34123,
             application_id=651231,
-            type=bases.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
         )

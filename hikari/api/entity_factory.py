@@ -50,8 +50,8 @@ if typing.TYPE_CHECKING:
     from hikari import users as user_models
     from hikari import voices as voice_models
     from hikari import webhooks as webhook_models
-    from hikari.interactions import bases as interaction_models
-    from hikari.interactions import commands as command_models
+    from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
     from hikari.internal import data_binding
 
 
@@ -960,7 +960,7 @@ class EntityFactory(abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> command_models.Command:
+    ) -> command_interactions.Command:
         """Parse a raw payload from Discord into a command object.
 
         Parameters
@@ -976,7 +976,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             The deserialized command object.
 
         Raises
@@ -988,9 +988,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_partial_interaction(
-        self, payload: data_binding.JSONObject
-    ) -> interaction_models.PartialInteraction:
+    def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a partial interaction object.
 
         Parameters
@@ -1000,12 +998,14 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.bases.PartialInteraction
+        hikari.interactions.base_interactions.PartialInteraction
             The deserialized partial interaction object.
         """
 
     @abc.abstractmethod
-    def deserialize_command_interaction(self, payload: data_binding.JSONObject) -> command_models.CommandInteraction:
+    def deserialize_command_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> command_interactions.CommandInteraction:
         """Parse a raw payload from Discord into a command interaction object.
 
         Parameters
@@ -1015,12 +1015,12 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.commands.CommandInteraction
+        hikari.interactions.command_interactions.CommandInteraction
             The deserialized command interaction object.
         """
 
     @abc.abstractmethod
-    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
+    def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a interaction object.
 
         !!! note
@@ -1035,7 +1035,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.bases.PartialInteraction
+        hikari.interactions.base_interactions.PartialInteraction
             The deserialized interaction object.
 
         Raises
@@ -1045,12 +1045,12 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_command_option(self, option: command_models.CommandOption) -> data_binding.JSONObject:
+    def serialize_command_option(self, option: command_interactions.CommandOption) -> data_binding.JSONObject:
         """Serialize a command option object to a json serializable dict.
 
         Parameters
         ----------
-        option: hikari.interactions.commands.CommandOption
+        option: hikari.interactions.command_interactions.CommandOption
             The command option object to serialize.
 
         Returns

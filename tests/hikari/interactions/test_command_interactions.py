@@ -26,8 +26,8 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
-from hikari.interactions import bases
-from hikari.interactions import commands
+from hikari.interactions import base_interactions
+from hikari.interactions import command_interactions
 
 
 @pytest.fixture()
@@ -38,7 +38,7 @@ def mock_app():
 class TestCommand:
     @pytest.fixture()
     def mock_command(self, mock_app):
-        return commands.Command(
+        return command_interactions.Command(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
             application_id=snowflakes.Snowflake(65234123),
@@ -122,10 +122,10 @@ class TestCommand:
 class TestCommandInteraction:
     @pytest.fixture()
     def mock_command_interaction(self, mock_app):
-        return commands.CommandInteraction(
+        return command_interactions.CommandInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
-            type=bases.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
@@ -144,14 +144,16 @@ class TestCommandInteraction:
         builder = mock_command_interaction.build_response()
 
         assert builder is mock_app.rest.interaction_message_builder.return_value
-        mock_app.rest.interaction_message_builder.assert_called_once_with(bases.ResponseType.MESSAGE_CREATE)
+        mock_app.rest.interaction_message_builder.assert_called_once_with(base_interactions.ResponseType.MESSAGE_CREATE)
 
     def test_build_deferred_response(self, mock_command_interaction, mock_app):
         mock_app.rest.interaction_deferred_builder = mock.Mock()
         builder = mock_command_interaction.build_deferred_response()
 
         assert builder is mock_app.rest.interaction_deferred_builder.return_value
-        mock_app.rest.interaction_deferred_builder.assert_called_once_with(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
+        mock_app.rest.interaction_deferred_builder.assert_called_once_with(
+            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
+        )
 
     @pytest.mark.asyncio()
     async def test_fetch_initial_response(self, mock_command_interaction, mock_app):
@@ -165,7 +167,7 @@ class TestCommandInteraction:
         mock_embed_1 = object()
         mock_embed_2 = object()
         await mock_command_interaction.create_initial_response(
-            bases.ResponseType.MESSAGE_CREATE,
+            base_interactions.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -179,7 +181,7 @@ class TestCommandInteraction:
         mock_app.rest.create_interaction_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.MESSAGE_CREATE,
+            base_interactions.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             flags=64,
@@ -192,12 +194,12 @@ class TestCommandInteraction:
 
     @pytest.mark.asyncio()
     async def test_create_initial_response_without_optional_args(self, mock_command_interaction, mock_app):
-        await mock_command_interaction.create_initial_response(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
+        await mock_command_interaction.create_initial_response(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
         mock_app.rest.create_interaction_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            bases.ResponseType.DEFERRED_MESSAGE_CREATE,
+            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
             undefined.UNDEFINED,
             flags=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,

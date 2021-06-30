@@ -36,7 +36,7 @@ from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
-from hikari.interactions import bases as interaction_bases
+from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 from hikari.internal import ed25519
 
@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
 
-    _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction, covariant=True)
+    _InteractionT = typing.TypeVar("_InteractionT", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
 
 
@@ -167,7 +167,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._dumps = dumps
         self._entity_factory = entity_factory
         self._is_closing = False
-        self._listeners: typing.Dict[typing.Type[interaction_bases.PartialInteraction], typing.Any] = {}
+        self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None

@@ -49,9 +49,9 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
-    from hikari.interactions import bases as interaction_bases
+    from hikari.interactions import base_interactions
 
-    _InteractionT = typing.TypeVar("_InteractionT", bound=interaction_bases.PartialInteraction)
+    _InteractionT = typing.TypeVar("_InteractionT", bound=base_interactions.PartialInteraction)
 
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")

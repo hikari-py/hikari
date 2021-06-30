@@ -94,8 +94,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
-    from hikari.interactions import bases as interaction_bases
-    from hikari.interactions import commands
+    from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -2920,9 +2920,9 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> command_interactions.Command:
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -2939,7 +2939,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMANDS.compile(application=application)
 
@@ -2958,8 +2958,8 @@ class RESTClientImpl(rest_api.RESTClient):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
 
@@ -2982,7 +2982,7 @@ class RESTClientImpl(rest_api.RESTClient):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         if guild is undefined.UNDEFINED:
             route = routes.PUT_APPLICATION_COMMANDS.compile(application=application)
 
@@ -2997,13 +2997,13 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
 
@@ -3026,7 +3026,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         if guild is undefined.UNDEFINED:
@@ -3040,12 +3040,12 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route)
 
     def interaction_deferred_builder(
-        self, type_: typing.Union[interaction_bases.ResponseType, int], /
+        self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
     def interaction_message_builder(
-        self, type_: typing.Union[interaction_bases.ResponseType, int], /
+        self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
@@ -3059,9 +3059,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_interaction_response(
         self,
-        interaction: snowflakes.SnowflakeishOr[interaction_bases.PartialInteraction],
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: typing.Union[int, interaction_bases.ResponseType],
+        response_type: typing.Union[int, base_interactions.ResponseType],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,

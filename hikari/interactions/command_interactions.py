@@ -44,7 +44,7 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
-from hikari.interactions import bases
+from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
@@ -59,28 +59,28 @@ if typing.TYPE_CHECKING:
 
 
 COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
-    [bases.ResponseType.MESSAGE_CREATE, bases.ResponseType.DEFERRED_MESSAGE_CREATE]
+    [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE]
 )
 """Set of the response types which are valid for a command interaction.
 
 This includes:
 
-* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
 """
 
 CommandResponseTypesT = typing.Union[
-    typing.Literal[bases.ResponseType.MESSAGE_CREATE],
+    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
     typing.Literal[4],
-    typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_CREATE],
+    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
     typing.Literal[5],
 ]
 """Type-hint of the response types which are valid for a command interaction.
 
 The following types are valid for this:
 
-* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`/`4`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
 """
 
 
@@ -216,7 +216,7 @@ class Command(snowflakes.Unique):
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             Object of the fetched command.
 
         Raises
@@ -266,13 +266,13 @@ class Command(snowflakes.Unique):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.commands.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.command_interactions.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             The edited command object.
 
         Raises
@@ -355,7 +355,7 @@ class ResolvedOptionData:
     users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
-    members: typing.Mapping[snowflakes.Snowflake, bases.InteractionMember] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
@@ -397,7 +397,7 @@ class CommandInteractionOption:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(bases.PartialInteraction):
+class CommandInteraction(base_interactions.PartialInteraction):
     """Represents a command interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -409,7 +409,7 @@ class CommandInteraction(bases.PartialInteraction):
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    member: typing.Optional[bases.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -459,7 +459,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Interaction message response builder object.
         """
-        return self.app.rest.interaction_message_builder(bases.ResponseType.MESSAGE_CREATE)
+        return self.app.rest.interaction_message_builder(base_interactions.ResponseType.MESSAGE_CREATE)
 
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
@@ -479,7 +479,7 @@ class CommandInteraction(bases.PartialInteraction):
         hikari.api.special_endpoints.InteractionMessageBuilder
             Deferred interaction message response builder object.
         """
-        return self.app.rest.interaction_deferred_builder(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
+        return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
     async def fetch_initial_response(self) -> messages.Message:
         """Fetch the initial response of this interaction.

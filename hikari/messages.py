@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import users as users_
-    from hikari.interactions import bases as interaction_bases
+    from hikari.interactions import base_interactions
 
 _T = typing.TypeVar("_T")
 
@@ -509,7 +509,7 @@ class MessageInteraction:
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """ID of the interaction this message was sent by."""
 
-    type: typing.Union[interaction_bases.InteractionType, int] = attr.field(eq=False, repr=True)
+    type: typing.Union[base_interactions.InteractionType, int] = attr.field(eq=False, repr=True)
     """The type of interaction this message was created by."""
 
     name: str = attr.field(eq=False, repr=True)

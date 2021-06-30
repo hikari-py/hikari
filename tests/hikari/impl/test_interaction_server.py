@@ -31,7 +31,7 @@ from hikari import errors
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
-from hikari.interactions import bases as interaction_base
+from hikari.interactions import base_interactions
 from hikari.internal import ed25519
 from tests.hikari import hikari_test_helpers
 
@@ -328,12 +328,12 @@ class TestInteractionServer:
     async def test_on_interaction(self, mock_interaction_server, mock_entity_factory):
         mock_verifier = mock.Mock(return_value=True)
         mock_interaction_server._verify = mock_verifier
-        mock_entity_factory.deserialize_interaction.return_value = interaction_base.PartialInteraction(
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
             app=None, id=123, application_id=541324, type=2, token="ok", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value={"ok": "No boomer"}))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, mock_listener)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
 
         result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
@@ -435,10 +435,12 @@ class TestInteractionServer:
     async def test_on_interaction_on_dispatch_error(self, mock_interaction_server, mock_entity_factory):
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
-        mock_entity_factory.deserialize_interaction.return_value = interaction_base.PartialInteraction(
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
             app=None, id=123, application_id=541324, type=2, token="ok", version=1
         )
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, mock.Mock(side_effect=mock_exception))
+        mock_interaction_server.set_listener(
+            base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
+        )
 
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
@@ -455,12 +457,12 @@ class TestInteractionServer:
     async def test_on_interaction_when_response_builder_error(self, mock_interaction_server, mock_entity_factory):
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
-        mock_entity_factory.deserialize_interaction.return_value = interaction_base.PartialInteraction(
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
             app=None, id=123, application_id=541324, type=2, token="ok", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
-            interaction_base.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
+            base_interactions.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
         )
 
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
@@ -479,12 +481,12 @@ class TestInteractionServer:
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
-        mock_entity_factory.deserialize_interaction.return_value = interaction_base.PartialInteraction(
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
             app=None, id=123, application_id=541324, type=2, token="ok", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock())
         mock_interaction_server.set_listener(
-            interaction_base.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
+            base_interactions.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
         )
 
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
@@ -656,37 +658,37 @@ class TestInteractionServer:
             await mock_interaction_server.start()
 
     def test_get_listener_when_unknown(self, mock_interaction_server):
-        assert mock_interaction_server.get_listener(interaction_base.PartialInteraction) is None
+        assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is None
 
     def test_get_listener_when_registered(self, mock_interaction_server):
         mock_listener = object()
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, mock_listener)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
 
-        assert mock_interaction_server.get_listener(interaction_base.PartialInteraction) is mock_listener
+        assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is mock_listener
 
     def test_set_listener(self, mock_interaction_server):
         mock_listener = object()
 
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, mock_listener)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
 
-        assert mock_interaction_server.get_listener(interaction_base.PartialInteraction) is mock_listener
+        assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is mock_listener
 
     def test_set_listener_when_already_registered_without_replace(self, mock_interaction_server):
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, object())
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
 
         with pytest.raises(TypeError):
-            mock_interaction_server.set_listener(interaction_base.PartialInteraction, object())
+            mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
 
     def test_set_listener_when_already_registered_with_replace(self, mock_interaction_server):
         mock_listener = object()
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, object())
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
 
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, mock_listener, replace=True)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener, replace=True)
 
-        assert mock_interaction_server.get_listener(interaction_base.PartialInteraction) is mock_listener
+        assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is mock_listener
 
     def test_set_listener_when_removing_listener(self, mock_interaction_server):
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, object())
-        mock_interaction_server.set_listener(interaction_base.PartialInteraction, None)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, None)
 
-        assert mock_interaction_server.get_listener(interaction_base.PartialInteraction) is None
+        assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is None

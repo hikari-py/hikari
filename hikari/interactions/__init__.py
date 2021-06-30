@@ -23,5 +23,5 @@
 """Models and enums related to Discord's interactions system."""
 from __future__ import annotations
 
-from hikari.interactions.bases import *
-from hikari.interactions.commands import *
+from hikari.interactions.base_interactions import *
+from hikari.interactions.command_interactions import *

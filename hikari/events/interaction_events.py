@@ -42,8 +42,8 @@ from hikari.internal import attr_extensions
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
-    from hikari.interactions import bases as interaction_bases
-    from hikari.interactions import commands
+    from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
 
 
 class CommandEvent(shard_events.ShardEvent, abc.ABC):
@@ -56,12 +56,12 @@ class CommandEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def command(self) -> commands.Command:
+    def command(self) -> command_interactions.Command:
         """Object of the command this event is for.
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.interactions.command_interactions.Command
             The command this event is for.
         """
 
@@ -79,7 +79,7 @@ class CommandCreateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.field(repr=True)
+    command: command_interactions.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -96,7 +96,7 @@ class CommandUpdateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.field(repr=True)
+    command: command_interactions.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -113,7 +113,7 @@ class CommandDeleteEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: commands.Command = attr.field(repr=True)
+    command: command_interactions.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -125,12 +125,12 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received this event."""
 
-    interaction: interaction_bases.PartialInteraction = attr.field(repr=True)
+    interaction: base_interactions.PartialInteraction = attr.field(repr=True)
     """Interaction that this event is related to.
 
     Returns
     -------
-    hikari.interactions.bases.PartialInteraction
+    hikari.interactions.base_interactions.PartialInteraction
         Object of the interaction that this event is related to.
     """
 

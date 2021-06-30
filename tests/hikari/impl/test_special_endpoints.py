@@ -24,7 +24,7 @@ import mock
 import pytest
 
 from hikari.impl import special_endpoints
-from hikari.interactions import bases as base_interactions
+from hikari.interactions import base_interactions
 from tests.hikari import hikari_test_helpers
 
 
