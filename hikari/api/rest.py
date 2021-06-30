@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import audit_logs
     from hikari import channels as channels_
     from hikari import colors
+    from hikari import commands
     from hikari import embeds as embeds_
     from hikari import emojis
     from hikari import files
@@ -54,7 +55,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
-    from hikari.interactions import command_interactions
     from hikari.internal import time
 
 
@@ -6125,16 +6125,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[command_interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> command_interactions.Command:
+    ) -> commands.Command:
         """Fetch a command set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -6146,7 +6146,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.command_interactions.Command
+        hikari.commands.Command
             Object of the fetched command.
 
         Raises
@@ -6177,7 +6177,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[command_interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         """Fetch the commands set for an application.
 
         Parameters
@@ -6195,7 +6195,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.command_interactions.Command]
+        typing.Sequence[hikari.commands.Command]
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
@@ -6231,8 +6231,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> command_interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         r"""Create an application command.
 
         Parameters
@@ -6251,12 +6251,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.command_interactions.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
 
         Returns
         -------
-        hikari.interactions.command_interactions.Command
+        hikari.commands.Command
             Object of the created command.
 
         Raises
@@ -6290,7 +6290,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[command_interactions.Command]:
+    ) -> typing.Sequence[commands.Command]:
         """Set the commands for an application.
 
         !!! warning
@@ -6314,7 +6314,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.command_interactions.Command]
+        typing.Sequence[hikari.commands.Command]
             A sequence of the set command objects.
 
         Raises
@@ -6346,20 +6346,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[command_interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
-    ) -> command_interactions.Command:
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+    ) -> commands.Command:
         """Edit a registered application command.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
             Object or ID of the command to modify.
 
         Other Parameters
@@ -6374,13 +6374,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.interactions.command_interactions.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.interactions.command_interactions.Command
+        hikari.commands.Command
             The edited command object.
 
         Raises
@@ -6412,7 +6412,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[command_interactions.Command],
+        command: snowflakes.SnowflakeishOr[commands.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
@@ -6421,7 +6421,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.interactions.command_interactions.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
             Object or ID of the command to delete.
 
         Other Parameters

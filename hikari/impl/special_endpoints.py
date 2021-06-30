@@ -40,6 +40,7 @@ import typing
 import attr
 
 from hikari import channels
+from hikari import commands
 from hikari import errors
 from hikari import files
 from hikari import iterators
@@ -47,7 +48,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import command_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -878,7 +878,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
-    _options: typing.List[command_interactions.CommandOption] = attr.field(factory=list, init=False)
+    _options: typing.List[commands.CommandOption] = attr.field(factory=list, init=False)
 
     @property
     def description(self) -> str:
@@ -889,14 +889,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._id
 
     @property
-    def options(self) -> typing.Sequence[command_interactions.CommandOption]:
+    def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
     @property
     def name(self) -> str:
         return self._name
 
-    def add_option(self: _CommandBuilderT, option: command_interactions.CommandOption) -> _CommandBuilderT:
+    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
         self._options.append(option)
         return self
 

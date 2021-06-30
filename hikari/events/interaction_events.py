@@ -40,10 +40,10 @@ from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import commands
     from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.interactions import base_interactions
-    from hikari.interactions import command_interactions
 
 
 class CommandEvent(shard_events.ShardEvent, abc.ABC):
@@ -56,12 +56,12 @@ class CommandEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def command(self) -> command_interactions.Command:
+    def command(self) -> commands.Command:
         """Object of the command this event is for.
 
         Returns
         -------
-        hikari.interactions.command_interactions.Command
+        hikari.commands.Command
             The command this event is for.
         """
 
@@ -79,7 +79,7 @@ class CommandCreateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -96,7 +96,7 @@ class CommandUpdateEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 
@@ -113,7 +113,7 @@ class CommandDeleteEvent(CommandEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    command: command_interactions.Command = attr.field(repr=True)
+    command: commands.Command = attr.field(repr=True)
     # <<inherited docstring from CommandEvent>>.
 
 

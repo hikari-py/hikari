@@ -28,6 +28,7 @@ from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
+from hikari import commands
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -2728,7 +2729,7 @@ class TestEntityFactoryImpl:
         # CommandOption
         assert len(command.options) == 1
         option = command.options[0]
-        assert option.type is command_interactions.OptionType.SUB_COMMAND
+        assert option.type is commands.OptionType.SUB_COMMAND
         assert option.name == "a dumb name"
         assert option.description == "42"
         assert option.is_required is True
@@ -2737,7 +2738,7 @@ class TestEntityFactoryImpl:
         assert len(option.options) == 1
 
         suboption = option.options[0]
-        assert suboption.type is command_interactions.OptionType.USER
+        assert suboption.type is commands.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False
@@ -2748,11 +2749,11 @@ class TestEntityFactoryImpl:
         choice = suboption.choices[0]
         assert choice.name == "a choice"
         assert choice.value == "4 u"
-        assert isinstance(choice, command_interactions.CommandChoice)
+        assert isinstance(choice, commands.CommandChoice)
 
-        assert isinstance(suboption, command_interactions.CommandOption)
-        assert isinstance(option, command_interactions.CommandOption)
-        assert isinstance(command, command_interactions.Command)
+        assert isinstance(suboption, commands.CommandOption)
+        assert isinstance(option, commands.CommandOption)
+        assert isinstance(command, commands.Command)
 
     def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
@@ -2780,7 +2781,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
-        assert isinstance(command, command_interactions.Command)
+        assert isinstance(command, commands.Command)
 
     @pytest.fixture()
     def partial_interaction_payload(self):
@@ -2893,12 +2894,12 @@ class TestEntityFactoryImpl:
         option = interaction.options[0]
         assert option.name == "an option"
         assert option.value is None
-        assert option.type is command_interactions.OptionType.SUB_COMMAND
+        assert option.type is commands.OptionType.SUB_COMMAND
         assert len(option.options) == 1
         sub_option = option.options[0]
         assert sub_option.name == "go ice"
         assert sub_option.value == "42"
-        assert sub_option.type is command_interactions.OptionType.INTEGER
+        assert sub_option.type is commands.OptionType.INTEGER
         assert sub_option.options is None
         assert isinstance(sub_option, command_interactions.CommandInteractionOption)
         assert isinstance(option, command_interactions.CommandInteractionOption)
@@ -2985,12 +2986,12 @@ class TestEntityFactoryImpl:
             entity_factory_impl.deserialize_interaction({"type": -999})
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
-        option = command_interactions.CommandOption(
-            type=command_interactions.OptionType.INTEGER,
+        option = commands.CommandOption(
+            type=commands.OptionType.INTEGER,
             name="a name",
             description="go away",
             is_required=True,
-            choices=[command_interactions.CommandChoice(name="a", value="choice")],
+            choices=[commands.CommandChoice(name="a", value="choice")],
             options=None,
         )
 
@@ -3005,19 +3006,19 @@ class TestEntityFactoryImpl:
         }
 
     def test_serialize_command_option_with_options(self, entity_factory_impl):
-        option = command_interactions.CommandOption(
-            type=command_interactions.OptionType.SUB_COMMAND,
+        option = commands.CommandOption(
+            type=commands.OptionType.SUB_COMMAND,
             name="a name",
             description="go away",
             is_required=True,
             choices=None,
             options=[
-                command_interactions.CommandOption(
-                    type=command_interactions.OptionType.STRING,
+                commands.CommandOption(
+                    type=commands.OptionType.STRING,
                     name="go home",
                     description="you're drunk",
                     is_required=False,
-                    choices=[command_interactions.CommandChoice(name="boo", value="hoo")],
+                    choices=[commands.CommandChoice(name="boo", value="hoo")],
                     options=None,
                 )
             ],

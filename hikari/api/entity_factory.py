@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
     from hikari import applications as application_models
     from hikari import audit_logs as audit_log_models
     from hikari import channels as channel_models
+    from hikari import commands
     from hikari import embeds as embed_models
     from hikari import emojis as emoji_models
     from hikari import files
@@ -960,7 +961,7 @@ class EntityFactory(abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> command_interactions.Command:
+    ) -> commands.Command:
         """Parse a raw payload from Discord into a command object.
 
         Parameters
@@ -976,7 +977,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.command_interactions.Command
+        hikari.commands.Command
             The deserialized command object.
 
         Raises
@@ -1045,12 +1046,12 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_command_option(self, option: command_interactions.CommandOption) -> data_binding.JSONObject:
+    def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         """Serialize a command option object to a json serializable dict.
 
         Parameters
         ----------
-        option: hikari.interactions.command_interactions.CommandOption
+        option: hikari.commands.CommandOption
             The command option object to serialize.
 
         Returns

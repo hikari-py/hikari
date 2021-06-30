@@ -42,6 +42,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels
     from hikari import colors
+    from hikari import commands
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
@@ -52,7 +53,6 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
     from hikari.interactions import base_interactions
-    from hikari.interactions import command_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
 
@@ -894,12 +894,12 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def options(self) -> typing.Sequence[command_interactions.CommandOption]:
+    def options(self) -> typing.Sequence[commands.CommandOption]:
         """Sequence of up to 25 of the options set for this command.
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.command_interactions.CommandOption]
+        typing.Sequence[hikari.commands.CommandOption]
             A sequence of up to 25 of the options set for this command.
         """
 
@@ -930,7 +930,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_option(self: _T, option: command_interactions.CommandOption) -> _T:
+    def add_option(self: _T, option: commands.CommandOption) -> _T:
         """Add an option to this command.
 
         !!! note
@@ -938,7 +938,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        option : hikari.interactions.command_interactions.CommandOption
+        option : hikari.commands.CommandOption
             The option to add to this command.
 
         Returns
