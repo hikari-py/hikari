@@ -302,6 +302,23 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
     @classmethod
     def parse(cls, string: str, /) -> CustomEmoji:
+        """Parse a given emoji mention string into a custom emoji object.
+
+        Parameters
+        ----------
+        string : builtins.str
+            The emoji mention to parse.
+
+        Returns
+        -------
+        CustomEmoji
+            The parsed emoji object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If a mention is given that has an invalid format.
+        """
         if emoji_match := _CUSTOM_EMOJI_REGEX.match(string):
             return CustomEmoji(
                 id=snowflakes.Snowflake(emoji_match.group("id")),
