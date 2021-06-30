@@ -1821,33 +1821,41 @@ class TestEntityFactoryImpl:
 
         assert welcome_screen.channels[0].channel_id == 87656344532234
         assert welcome_screen.channels[0].description == "Follow for nothing"
-        assert isinstance(welcome_screen.channels[0].emoji, emoji_models.UnicodeEmoji)
-        assert welcome_screen.channels[0].emoji.name == "📡"
-        assert isinstance(welcome_screen.channels[1].emoji, emoji_models.CustomEmoji)
-        assert welcome_screen.channels[1].emoji.name == "dogGoesMeow"
-        assert welcome_screen.channels[1].emoji.id == 31231351234
-        assert welcome_screen.channels[1].emoji.is_animated is None
+
+        assert isinstance(welcome_screen.channels[0].emoji_name, emoji_models.UnicodeEmoji)
+        assert welcome_screen.channels[0].emoji_name == "📡"
+        assert welcome_screen.channels[0].emoji_id is None
+
+        assert not isinstance(welcome_screen.channels[1].emoji_name, emoji_models.UnicodeEmoji)
+        assert welcome_screen.channels[1].emoji_name == "dogGoesMeow"
+        assert welcome_screen.channels[1].emoji_id == 31231351234
 
     def test_serialize_welcome_channel_with_custom_emoji(self, entity_factory_impl, mock_app):
         channel = guild_models.WelcomeChannel(
             channel_id=snowflakes.Snowflake(431231),
             description="meow",
-            emoji=emoji_models.CustomEmoji(id=snowflakes.Snowflake(564123), name="boom", is_animated=None),
+            emoji_id=snowflakes.Snowflake(564123),
+            emoji_name="boom",
         )
         result = entity_factory_impl.serialize_welcome_channel(channel)
 
-        assert result == {"channel_id": "431231", "description": "meow", "emoji_id": "564123", "emoji_name": "boom"}
+        assert result == {"channel_id": "431231", "description": "meow", "emoji_id": "564123"}
 
     def test_serialize_welcome_channel_with_unicode_emoji(self, entity_factory_impl, mock_app):
         channel = guild_models.WelcomeChannel(
-            channel_id=snowflakes.Snowflake(4312311), description="meow1", emoji=emoji_models.UnicodeEmoji("a")
+            channel_id=snowflakes.Snowflake(4312311),
+            description="meow1",
+            emoji_name=emoji_models.UnicodeEmoji("a"),
+            emoji_id=None,
         )
         result = entity_factory_impl.serialize_welcome_channel(channel)
 
         assert result == {"channel_id": "4312311", "description": "meow1", "emoji_name": "a"}
 
     def test_serialize_welcome_channel_with_no_emoji(self, entity_factory_impl, mock_app):
-        channel = guild_models.WelcomeChannel(channel_id=snowflakes.Snowflake(4312312), description="meow2", emoji=None)
+        channel = guild_models.WelcomeChannel(
+            channel_id=snowflakes.Snowflake(4312312), description="meow2", emoji_id=None, emoji_name=None
+        )
         result = entity_factory_impl.serialize_welcome_channel(channel)
 
         assert result == {"channel_id": "4312312", "description": "meow2"}

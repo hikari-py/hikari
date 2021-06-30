@@ -453,7 +453,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     """A data model for storing known custom emoji data in an in-memory cache."""
 
     id: snowflakes.Snowflake = attr.field()
-    name: typing.Optional[str] = attr.field()
+    name: str = attr.field()
     is_animated: bool = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.field()

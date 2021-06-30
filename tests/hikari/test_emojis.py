@@ -29,7 +29,6 @@ class TestEmoji:
     @pytest.mark.parametrize(
         ("input", "output"),
         [
-            ("12345", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=None)),
             ("<:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<bar:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
@@ -71,14 +70,9 @@ class TestCustomEmoji:
         emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="peepoSad", is_animated=True)
         assert str(emoji) == "peepoSad"
 
-    def test_str_operator_when_name_is_None(self):
-        emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=True)
-        assert str(emoji) == "Unnamed emoji ID 12345"
-
     @pytest.mark.parametrize(
         ("input", "output"),
         [
-            ("12345", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name=None, is_animated=None)),
             ("<:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<bar:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
@@ -88,5 +82,5 @@ class TestCustomEmoji:
         assert emojis.CustomEmoji.parse(input) == output
 
     def test_parse_unhappy_path(self):
-        with pytest.raises(ValueError, match="Expected an emoji ID or emoji mention"):
+        with pytest.raises(ValueError, match="Expected an emoji mention"):
             emojis.CustomEmoji.parse("xxx")

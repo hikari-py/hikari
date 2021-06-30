@@ -62,7 +62,7 @@ class Emoji(files.WebResource, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name(self) -> typing.Optional[str]:
+    def name(self) -> str:
         """Return the generic name/representation for this emoji."""
 
     @property
@@ -74,11 +74,6 @@ class Emoji(files.WebResource, abc.ABC):
     @abc.abstractmethod
     def url_name(self) -> str:
         """Name of the part of the emoji to use in requests."""
-
-    @property
-    def is_mentionable(self) -> bool:
-        """Whether the emoji can be mentioned or not."""
-        return True
 
     @property
     @abc.abstractmethod
@@ -98,14 +93,14 @@ class Emoji(files.WebResource, abc.ABC):
         -------
         Emoji
             The parsed emoji object. This will be a `CustomEmoji` if a custom
-            emoji ID or mention, or a `UnicodeEmoji` otherwise.
+            emoji mention, or a `UnicodeEmoji` otherwise.
 
         Raises
         ------
         builtins.ValueError
             If a mention is given that has an invalid format.
         """
-        if string.isdigit() or string.startswith("<") and string.endswith(">"):
+        if string.startswith("<") and string.endswith(">"):
             return CustomEmoji.parse(string)
         return UnicodeEmoji.parse(string)
 
@@ -275,21 +270,14 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
-    """The name of the emoji.
+    name: str = attr.field(eq=False, hash=False, repr=True)
+    """The name of the emoji."""
 
-    This can be `builtins.None` in reaction events.
-    """
-
-    is_animated: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
-    """Whether the emoji is animated.
-
-    Will be `builtins.None` when received in Message Reaction Remove and Message
-    Reaction Remove Emoji events.
-    """
+    is_animated: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the emoji is animated."""
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed emoji ID {self.id}"
+        return self.name
 
     @property
     def filename(self) -> str:
@@ -306,10 +294,6 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
     @property
-    def is_mentionable(self) -> bool:
-        return self.is_animated is not None
-
-    @property
     @typing.final
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
@@ -318,9 +302,6 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
     @classmethod
     def parse(cls, string: str, /) -> CustomEmoji:
-        if string.isdigit():
-            return CustomEmoji(id=snowflakes.Snowflake(string), name=None, is_animated=None)
-
         if emoji_match := _CUSTOM_EMOJI_REGEX.match(string):
             return CustomEmoji(
                 id=snowflakes.Snowflake(emoji_match.group("id")),
@@ -328,7 +309,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
                 is_animated=emoji_match.group("flags").lower() == "a",
             )
 
-        raise ValueError("Expected an emoji ID or emoji mention")
+        raise ValueError("Expected an emoji mention")
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -359,13 +340,6 @@ class KnownCustomEmoji(CustomEmoji):
     !!! note
         This will be `builtins.None` if you are missing the `MANAGE_EMOJIS`
         permission in the server the emoji is from.
-    """
-
-    is_animated: bool = attr.field(eq=False, hash=False, repr=True)
-    """Whether the emoji is animated.
-
-    Unlike in `CustomEmoji`, this information is always known, and will thus
-    never be `builtins.None`.
     """
 
     is_colons_required: bool = attr.field(eq=False, hash=False, repr=False)
