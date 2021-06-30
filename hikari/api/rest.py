@@ -6125,9 +6125,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> command_interactions.Command:
         """Fetch a command set for an application.
 
         Parameters
@@ -6177,7 +6177,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         """Fetch the commands set for an application.
 
         Parameters
@@ -6231,8 +6231,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: str,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         r"""Create an application command.
 
         Parameters
@@ -6290,7 +6290,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[command_interactions.Command]:
         """Set the commands for an application.
 
         !!! warning
@@ -6346,13 +6346,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+        options: undefined.UndefinedOr[typing.Sequence[command_interactions.CommandOption]] = undefined.UNDEFINED,
+    ) -> command_interactions.Command:
         """Edit a registered application command.
 
         Parameters
@@ -6412,7 +6412,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[command_interactions.Command],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
