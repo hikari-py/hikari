@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
+import contextlib
 import logging
 import unittest
 import warnings
@@ -34,6 +35,7 @@ from hikari import iterators
 from hikari.events import base_events
 from hikari.events import member_events
 from hikari.impl import event_manager_base
+from hikari.internal import reflect
 from tests.hikari import hikari_test_helpers
 
 
@@ -660,10 +662,17 @@ class TestEventManagerBase:
             async def test():
                 ...
 
-    def test_listen_when_more_then_one_param(self, event_manager):
+    def test_listen_when_more_then_one_param_when_provided_in_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
+            async def test(a, b, c):
+                ...
+
+    def test_listen_when_more_then_one_param_when_provided_in_decorator(self, event_manager):
+        with pytest.raises(TypeError):
+
+            @event_manager.listen(object)
             async def test(a, b, c):
                 ...
 
@@ -675,12 +684,18 @@ class TestEventManagerBase:
                 ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager):
-        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
+        stack = contextlib.ExitStack()
+
+        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
+        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
+
+        with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent)
             async def test(event):
                 ...
 
+        resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
     def test_listen_when_param_provided_in_typehint(self, event_manager):
