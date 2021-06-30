@@ -229,6 +229,14 @@ def _default_predicate(_: event_manager_.EventT_inv) -> bool:
     return True
 
 
+def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> None:
+    if next(parameters, None) is None:
+        raise TypeError("Event listener must have one positional argument for the event object.")
+
+    if any(param.default is not inspect.Parameter.empty for param in parameters):
+        raise TypeError("Only the first argument for a listener can be required, the event argument.")
+
+
 class EventManagerBase(event_manager_.EventManager):
     """Provides functionality to consume and dispatch events.
 
@@ -354,15 +362,17 @@ class EventManagerBase(event_manager_.EventManager):
         ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
             nonlocal event_type
 
-            signature = reflect.resolve_signature(callback)
-            params = signature.parameters.values()
+            # Avoid resolving forward references in the function's signature if
+            # event_type was explicitly provided as this may lead to errors.
+            if event_type is not None:
+                _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
 
-            if len(params) != 1:
-                raise TypeError("Event listener must have exactly one parameter, the event object.")
+            else:
+                signature = reflect.resolve_signature(callback)
+                params = signature.parameters.values()
+                _assert_is_listener(iter(params))
+                event_param = next(iter(params))
 
-            event_param = next(iter(params))
-
-            if event_type is None:
                 if event_param.annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
