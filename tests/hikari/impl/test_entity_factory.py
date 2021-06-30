@@ -1811,6 +1811,7 @@ class TestEntityFactoryImpl:
                     "emoji_id": None,
                     "emoji_name": None,
                 },
+                {"channel_id": "92929292929", "description": "hi there", "emoji_id": "49494949", "emoji_name": None},
             ],
         }
 
@@ -1829,6 +1830,12 @@ class TestEntityFactoryImpl:
         assert not isinstance(welcome_screen.channels[1].emoji_name, emoji_models.UnicodeEmoji)
         assert welcome_screen.channels[1].emoji_name == "dogGoesMeow"
         assert welcome_screen.channels[1].emoji_id == 31231351234
+
+        assert welcome_screen.channels[2].emoji_name is None
+        assert welcome_screen.channels[2].emoji_id is None
+
+        assert welcome_screen.channels[3].emoji_name is None
+        assert welcome_screen.channels[3].emoji_id == 49494949
 
     def test_serialize_welcome_channel_with_custom_emoji(self, entity_factory_impl, mock_app):
         channel = guild_models.WelcomeChannel(
