@@ -1125,7 +1125,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if welcome_channel.emoji_id is not None:
             payload["emoji_id"] = str(welcome_channel.emoji_id)
-            # TODO: do we need to include the name in this scenario?
 
         elif welcome_channel.emoji_name is not None:
             payload["emoji_name"] = str(welcome_channel.emoji_name)
