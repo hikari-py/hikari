@@ -1103,9 +1103,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
 
             emoji_name: typing.Union[None, emoji_models.UnicodeEmoji, str]
-            if emoji_name := channel_payload["emoji_name"]:
-                if not emoji_id:
-                    emoji_name = emoji_models.UnicodeEmoji(emoji_name)
+            if (emoji_name := channel_payload["emoji_name"]) and not emoji_id:
+                emoji_name = emoji_models.UnicodeEmoji(emoji_name)
 
             channels.append(
                 guild_models.WelcomeChannel(
