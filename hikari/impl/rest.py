@@ -1524,7 +1524,7 @@ class RESTClientImpl(rest_api.RESTClient):
     @staticmethod
     def _transform_emoji_to_url_format(
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]],
         /,
     ) -> str:
         if isinstance(emoji, emojis.Emoji):
@@ -1543,7 +1543,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
             emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
@@ -1557,7 +1557,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
             emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
@@ -1571,7 +1571,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
             emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
@@ -1586,7 +1586,7 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
             emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
@@ -1609,7 +1609,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
         return special_endpoints_impl.ReactorIterator(
             entity_factory=self._entity_factory,

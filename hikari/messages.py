@@ -1091,14 +1091,14 @@ class PartialMessage(snowflakes.Unique):
     async def add_reaction(
         self,
         emoji: str,
-        emoji_id: snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji],
+        emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
     ) -> None:
         ...
 
     async def add_reaction(
         self,
         emoji: typing.Union[str, emojis_.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         r"""Add a reaction to this message.
 
@@ -1112,7 +1112,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
             This should only be provided when the custom emoji's name is passed
             for `emoji` as a `builtins.str`.
@@ -1167,7 +1167,7 @@ class PartialMessage(snowflakes.Unique):
     async def remove_reaction(
         self,
         emoji: str,
-        emoji_id: snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji],
+        emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> None:
@@ -1176,7 +1176,7 @@ class PartialMessage(snowflakes.Unique):
     async def remove_reaction(
         self,
         emoji: typing.Union[str, emojis_.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> None:
@@ -1189,7 +1189,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to remove the reaction for.
             This should only be provided when the custom emoji's name is passed
             for `emoji` as a `builtins.str`.
@@ -1253,15 +1253,15 @@ class PartialMessage(snowflakes.Unique):
     @typing.overload
     async def remove_all_reactions(
         self,
-        emoji: typing.Union[str, emojis_.UnicodeEmoji],
-        emoji_id: snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji],
+        emoji: str,
+        emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
     ) -> None:
         ...
 
     async def remove_all_reactions(
         self,
         emoji: undefined.UndefinedOr[typing.Union[str, emojis_.Emoji]] = undefined.UNDEFINED,
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.UnicodeEmoji]] = undefined.UNDEFINED,
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
@@ -1270,7 +1270,7 @@ class PartialMessage(snowflakes.Unique):
         emoji : hikari.undefined.UndefinedOr[typing.Union[builtins.str, hikari.emojis.Emoji]]
             Object or name of the emoji to get the reactions for. If not specified
             then all reactions are removed.
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
             This should only be provided when the custom emoji's name is passed
             for `emoji` as a `builtins.str`.
