@@ -667,7 +667,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
             raise StopAsyncIteration
 
         log = self._entity_factory.deserialize_audit_log(response)
-        # Since deserialize_audit_log may skip entries it doesn't recognise
+        # Since deserialize_audit_log may skip entries it doesn't recognise,
         # first_id has to be calculated based on the raw payload as log.entries
         # may be missing entries.
         self._first_id = str(min(entry["id"] for entry in audit_log_entries))
