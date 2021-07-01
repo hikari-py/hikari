@@ -45,7 +45,6 @@ import logging
 import math
 import os
 import platform
-import re
 import sys
 import typing
 
@@ -114,10 +113,6 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-
-# Custom emoji mentions are in the format of <:name:id> for static emoji, or
-# <a:name:id> for animated emoji.
-_CUSTOM_EMOJI_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"<a?:([^:]+:\d+)>")
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -1527,29 +1522,31 @@ class RESTClientImpl(rest_api.RESTClient):
                 raise errors.BulkDeleteError(deleted, pending) from ex
 
     @staticmethod
-    def _transform_emoji_to_url_format(emoji: emojis.Emojiish) -> str:
-        # Given an emojiish, check if it is a valid custom emoji mention. If it
-        # is, then convert it to the name:id format (remove the wrapping
-        # characters), then return it. If the emoji is an emojis.CustomEmoji
-        # directly, then get the url_name of it. All other emojis and objects
-        # can just be cast to string, as they are probably unicode emoji objects
-        # or unicode emoji strings.
-        if isinstance(emoji, emojis.CustomEmoji):
+    def _transform_emoji_to_url_format(
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]],
+        /,
+    ) -> str:
+        if isinstance(emoji, emojis.Emoji):
+            if emoji_id is not undefined.UNDEFINED:
+                raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
+
             return emoji.url_name
 
-        if isinstance(emoji, str) and (custom_mention_match := _CUSTOM_EMOJI_PATTERN.match(emoji)) is not None:
-            return custom_mention_match.group(1)
+        if emoji_id is not undefined.UNDEFINED:
+            return f"{emoji}:{snowflakes.Snowflake(emoji_id)}"
 
-        return str(emoji)
+        return emoji
 
     async def add_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji),
+            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1559,10 +1556,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji),
+            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1572,10 +1570,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=self._transform_emoji_to_url_format(emoji),
+            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1585,11 +1584,12 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=self._transform_emoji_to_url_format(emoji),
+            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
             user=user,
@@ -1608,14 +1608,15 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
         return special_endpoints_impl.ReactorIterator(
             entity_factory=self._entity_factory,
             request_call=self._request,
             channel=channel,
             message=message,
-            emoji=self._transform_emoji_to_url_format(emoji),
+            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
         )
 
     async def create_webhook(

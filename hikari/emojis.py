@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
+__all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
 
 import abc
 import re
@@ -362,17 +362,3 @@ class KnownCustomEmoji(CustomEmoji):
 
     May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
     """
-
-
-Emojiish = typing.Union[str, Emoji]
-r"""Type hint representing a string emoji or an `Emoji`-derived object.
-
-Examples include:
-
-- Unicode emoji strings, such as `"\N{OK HAND SIGN}"`, `"\N{OK HAND SIGN}"`,
-    `"\U0001f44c"`.
-- Custom emoji names in the format `name:id`, such as
-    `"rosaThonk:733073048646713364"`.
-- Derivative instances of `Emoji`, i.e. `UnicodeEmoji`, `CustomEmoji` and
-    `KnownCustomEmoji`.
-"""

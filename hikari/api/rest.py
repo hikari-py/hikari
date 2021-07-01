@@ -1552,7 +1552,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
 
@@ -1565,8 +1566,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to add a reaction to. This may be the
             object or the ID of an existing message.
-        emoji : hikari.emojis.Emojiish
-            The emoji to react to the message with.
+        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+            Object or name of the emoji to react with.
+
+        Other Parameters
+        ----------------
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+            ID of the custom emoji to react with.
+            This should only be provided when the custom emoji's name is passed
+            for `emoji` as a `builtins.str`.
 
         Raises
         ------
@@ -1600,7 +1608,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a reaction that your application user created.
 
@@ -1612,8 +1621,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reaction from. This may be the
             object or the ID of an existing message.
-        emoji : hikari.emojis.Emojiish
-            The emoji to remove your reaction from.
+        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+            Object or name of the emoji to remove your reaction for.
+
+        Other Parameters
+        ----------------
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+            ID of the custom emoji to remove your reaction for.
+            This should only be provided when the custom emoji's name is passed
+            for `emoji` as a `builtins.str`.
 
         Raises
         ------
@@ -1644,7 +1660,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete all reactions for a single emoji on a given message.
 
@@ -1656,8 +1673,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reactions from. This may be the
             object or the ID of an existing message.
-        emoji : hikari.emojis.Emojiish
-            The emoji to delete all reactions from.
+        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+            Object or name of the emoji to remove all the reactions for.
+
+        Other Parameters
+        ----------------
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+            ID of the custom emoji to remove all the reactions for.
+            This should only be provided when the custom emoji's name is passed
+            for `emoji` as a `builtins.str`.
 
         Raises
         ------
@@ -1690,8 +1714,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a reaction from a message.
 
@@ -1706,8 +1731,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reaction from. This may be the
             object or the ID of an existing message.
-        emoji : hikari.emojis.Emojiish
-            The emoji to delete all reactions from.
+        user: hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to remove the reaction of.
+        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+            Object or name of the emoji to react with.
+
+        Other Parameters
+        ----------------
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+            ID of the custom emoji to react with.
+            This should only be provided when the custom emoji's name is passed
+            for `emoji` as a `builtins.str`.
 
         Raises
         ------
@@ -1783,7 +1817,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: emojis.Emojiish,
+        emoji: typing.Union[str, emojis.Emoji],
+        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.UnicodeEmoji]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
 
@@ -1795,8 +1830,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete all reaction from. This may be the
             object or the ID of an existing message.
-        emoji : hikari.emojis.Emojiish
-            The emoji to filter reactions by.
+        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+            Object or name of the emoji to get the reactions for.
+
+        Other Parameters
+        ----------------
+        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.UnicodeEmoji]]
+            ID of the custom emoji to get the reactions for.
+            This should only be provided when the custom emoji's name is passed
+            for `emoji` as a `builtins.str`.
 
         Returns
         -------
