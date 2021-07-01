@@ -1082,14 +1082,14 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
         return special_endpoints_impl.TypingIndicator(
             request_call=self._request, channel=channel, rest_closed_event=self._get_live_attributes().closed_event
         )
 
     async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> typing.Sequence[messages_.Message]:
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
         response = await self._request(route)
@@ -1098,7 +1098,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def pin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.PUT_CHANNEL_PINS.compile(channel=channel, message=message)
@@ -1106,7 +1106,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def unpin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
@@ -1114,7 +1114,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def fetch_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
@@ -1157,7 +1157,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
@@ -1267,7 +1267,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1428,7 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1467,7 +1467,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
@@ -1475,7 +1475,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
             snowflakes.SnowflakeishIterable[messages_.PartialMessage],
@@ -1544,7 +1544,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def add_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1557,7 +1557,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_my_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1570,7 +1570,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1583,7 +1583,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
@@ -1598,7 +1598,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_all_reactions(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
@@ -1606,7 +1606,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def fetch_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
@@ -1620,7 +1620,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_webhook(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         name: str,
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1658,7 +1658,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_channel_webhooks(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
@@ -1681,7 +1681,7 @@ class RESTClientImpl(rest_api.RESTClient):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:

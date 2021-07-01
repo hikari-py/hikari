@@ -223,12 +223,12 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     message_id: snowflakes.Snowflake = attr.field(repr=True)
     """The ID of the message that's being pinned or unpinned."""
 
-    async def fetch_channel(self) -> channels.TextChannel:
+    async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch The channel where this message was pinned or unpinned.
 
         Returns
         -------
-        hikari.channels.TextChannel
+        hikari.channels.TextableChannel
             The channel where this message was pinned or unpinned.
 
         Raises
@@ -254,7 +254,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextChannel)
+        assert isinstance(channel, channels.TextableChannel)
         return channel
 
     async def fetch_message(self) -> messages.Message:
@@ -319,12 +319,12 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     channel_id: snowflakes.Snowflake = attr.field(repr=True)
     """The ID of guild text based channel where these message(s) were deleted."""
 
-    async def fetch_channel(self) -> channels.GuildTextChannel:
+    async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Fetch the guild text based channel where these message(s) were deleted.
 
         Returns
         -------
-        hikari.channels.GuildTextChannel
+        hikari.channels.TextableGuildChannel
             The guild text based channel where these message(s) were deleted.
 
         Raises
@@ -350,7 +350,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.GuildTextChannel)
+        assert isinstance(channel, channels.TextableGuildChannel)
         return channel
 
 

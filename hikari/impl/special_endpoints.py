@@ -94,7 +94,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         rest_closed_event: asyncio.Event,
     ) -> None:
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
@@ -471,7 +471,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         direction: str,
         first_id: undefined.UndefinedOr[str],
     ) -> None:
@@ -513,7 +513,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         request_call: typing.Callable[
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
-        channel: snowflakes.SnowflakeishOr[channels.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
     ) -> None:

@@ -159,7 +159,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Likewise, the `hikari.channels.GuildChannel` can be used to
             determine if a channel is guild-bound, and
-            `hikari.channels.TextChannel` can be used to determine
+            `hikari.channels.TextableChannel` can be used to determine
             if the channel provides textual functionality to the application.
 
             You can check for these using the `builtins.isinstance`
@@ -395,7 +395,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or Id of the guild to edit a voice state in.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
             Object or Id of the channel to edit a voice state in.
 
         Other Parameters
@@ -456,7 +456,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or Id of the guild to edit a voice state in.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
             Object or Id of the channel to edit a voice state in.
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or Id of the user to to edit the voice state of.
@@ -757,7 +757,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def trigger_typing(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
@@ -782,7 +782,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to trigger typing in. This may be the object or
             the ID of an existing channel.
 
@@ -821,13 +821,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch pins from. This may be the object or
             the ID of an existing channel.
 
@@ -862,14 +862,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def pin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Pin an existing message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to pin a message in. This may be the object or
             the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -903,14 +903,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def unpin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Unpin a given message from a given text channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to unpin a message in. This may be the object or
             the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -944,7 +944,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def fetch_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
@@ -954,7 +954,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch messages in. This may be the object or
             the ID of an existing channel.
 
@@ -1020,14 +1020,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         """Fetch a specific message in the given text channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch messages in. This may be the object or
             the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1066,7 +1066,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1089,7 +1089,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to create the message in.
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
@@ -1272,7 +1272,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1295,7 +1295,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to create the message in. This may be
             the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1452,14 +1452,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Delete a given message in a given channel.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to delete the message in. This may be
             the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1493,7 +1493,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
             snowflakes.SnowflakeishIterable[messages_.PartialMessage],
@@ -1505,7 +1505,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to bulk delete the messages in. This may be
             the object or the ID of an existing channel.
         messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
@@ -1550,7 +1550,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def add_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1558,9 +1558,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to add the reaction to is. This
-            may be a `hikari.channels.TextChannel` or the ID of an existing
+            may be a `hikari.channels.TextableChannel` or the ID of an existing
             channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to add a reaction to. This may be the
@@ -1598,7 +1598,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_my_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1606,7 +1606,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to delete the reaction from is.
             This may be the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1642,7 +1642,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1650,7 +1650,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to delete the reactions from is.
             This may be the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1688,7 +1688,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
@@ -1700,7 +1700,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to delete the reaction from is.
             This may be the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1738,14 +1738,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_all_reactions(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Delete all reactions from a message.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to delete all reactions from is.
             This may be the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1781,7 +1781,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def fetch_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
@@ -1789,7 +1789,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the message to delete all reactions from is.
             This may be the object or the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -1840,7 +1840,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_webhook(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         name: str,
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1850,7 +1850,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel where the webhook will be created. This may be
             the object or the ID of an existing channel.
         name : str
@@ -1947,15 +1947,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_channel_webhooks(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all channel webhooks.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch the webhooks for. This
-            may be a `hikari.channels.TextChannel` or the ID of an
+            may be a `hikari.channels.TextableChannel` or the ID of an
             existing channel.
 
         Returns
@@ -2035,7 +2035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
         """Edit a webhook.
@@ -2056,7 +2056,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new webhook avatar. If `builtins.None`, will
             remove the webhook avatar.
-        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]]
             If provided, the text channel to move the webhook to.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.

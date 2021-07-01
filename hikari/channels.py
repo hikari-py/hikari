@@ -31,7 +31,8 @@ __all__: typing.List[str] = [
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
-    "TextChannel",
+    "TextableChannel",
+    "TextableGuildChannel",
     "PrivateChannel",
     "DMChannel",
     "GroupDMChannel",
@@ -44,7 +45,6 @@ __all__: typing.List[str] = [
     "GuildStageChannel",
 ]
 
-import abc
 import typing
 
 import attr
@@ -380,8 +380,8 @@ class PartialChannel(snowflakes.Unique):
         return await self.app.rest.delete_channel(self.id)
 
 
-class TextChannel(PartialChannel, abc.ABC):
-    """A channel that can have text messages in it."""
+class TextableChannel(PartialChannel):
+    """Mixin class for a channel which can have text messages in it."""
 
     # This is a mixin, do not add slotted fields.
     __slots__: typing.Sequence[str] = ()
@@ -825,7 +825,7 @@ class PrivateChannel(PartialChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class DMChannel(PrivateChannel, TextChannel):
+class DMChannel(PrivateChannel, TextableChannel):
     """Represents a direct message text channel that is between you and another user."""
 
     recipient: users.User = attr.field(eq=False, hash=False, repr=False)
@@ -845,7 +845,7 @@ class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
     !!! note
-        This doesn't have the methods found on `TextChannel` as bots cannot
+        This doesn't have the methods found on `TextableChannel` as bots cannot
         interact with a group DM that they own by sending or seeing messages in
         it.
     """
@@ -1216,6 +1216,13 @@ class GuildChannel(PartialChannel):
         )
 
 
+class TextableGuildChannel(GuildChannel, TextableChannel):
+    """Mixin class for any guild channel which can have text messages in it."""
+
+    # This is a mixin, do not add slotted fields.
+    __slots__: typing.Sequence[str] = ()
+
+
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(GuildChannel):
     """Represents a guild category channel.
@@ -1226,7 +1233,7 @@ class GuildCategory(GuildChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildTextChannel(GuildChannel, TextChannel):
+class GuildTextChannel(TextableGuildChannel):
     """Represents a guild text channel."""
 
     topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -1261,7 +1268,7 @@ class GuildTextChannel(GuildChannel, TextChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildNewsChannel(GuildChannel, TextChannel):
+class GuildNewsChannel(TextableGuildChannel):
     """Represents an news channel."""
 
     topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
