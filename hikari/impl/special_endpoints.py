@@ -662,11 +662,15 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         response = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(response, dict)
 
-        if not response["audit_log_entries"]:
+        audit_log_entries = response["audit_log_entries"]
+        if not audit_log_entries:
             raise StopAsyncIteration
 
         log = self._entity_factory.deserialize_audit_log(response)
-        self._first_id = str(min(log.entries.keys()))
+        # Since deserialize_audit_log may skip entries it doesn't recognise
+        # first_id has to be calculated based on the raw payload as log.entries
+        # may be missing entries.
+        self._first_id = str(min(entry["id"] for entry in audit_log_entries))
         return log
 
 
