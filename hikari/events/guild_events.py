@@ -352,6 +352,7 @@ class BanEvent(GuildEvent, abc.ABC):
         hikari.users.User
             The user affected by this event.
         """
+        return await self.app.rest.fetch_user(self.user)
 
 
 @attr_extensions.with_copy
@@ -371,8 +372,19 @@ class BanCreateEvent(BanEvent):
 
     user: users.User = attr.field()
     # <<inherited docstring from BanEvent>>.
+    
+    @property
+    def user_id(self) -> snowflakes.Snowflake:
+        """User ID of the user that got banned.
 
-    async def fetch_ban(self) -> guilds.GuildBan:
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            ID of the user the event concerns.
+        """
+        return self.user.id
+
+    async def fetch_ban(self) -> guilds.GuildMemberBan:
         """Perform an API call to fetch the details about this ban.
 
         This will include the optionally defined audit log reason for the
@@ -380,7 +392,7 @@ class BanCreateEvent(BanEvent):
 
         Returns
         -------
-        hikari.guilds.GuildBan
+        hikari.guilds.GuildMemberBan
             The ban details.
         """
         return await self.app.rest.fetch_ban(self.guild_id, self.user)

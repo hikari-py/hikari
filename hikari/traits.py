@@ -24,17 +24,21 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "BotAware",
     "CacheAware",
     "EventManagerAware",
     "EntityFactoryAware",
     "EventFactoryAware",
     "ExecutorAware",
+    "GatewayBotAware",
     "IntentsAware",
     "NetworkSettingsAware",
     "RESTAware",
+    "RESTBotAware",
+    "Runnable",
+    "InteractionServerAware",
     "ShardAware",
     "VoiceAware",
-    "BotAware",
 ]
 
 import typing
@@ -57,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
+    from hikari.api import interaction_server as interaction_server_
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
@@ -373,7 +378,7 @@ class ShardAware(
 
         !!! note
             If you want to set presences per shard, access the shard you wish
-            to update (e.g. by using `BotApp.shards`), and call
+            to update (e.g. by using `GatewayBot.shards`), and call
             `hikari.api.shard.GatewayShard.update_presence` on that shard.
 
             This method is simply a facade to make performing this in bulk
@@ -462,6 +467,24 @@ class ShardAware(
 
 
 @typing.runtime_checkable
+class InteractionServerAware(RESTAware, EntityFactoryAware, fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Structural supertype for a interaction REST server-aware object."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    def interaction_server(self) -> interaction_server_.InteractionServer:
+        """Interaction server this app is bound to.
+
+        Returns
+        -------
+        hikari.api.interaction_server.InteractionServer
+            The interaction server this app is bound to.
+        """
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
 class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for a cache-aware object.
 
@@ -483,22 +506,14 @@ class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 
 @typing.runtime_checkable
-class BotAware(
-    RESTAware,
-    ShardAware,
-    EventFactoryAware,
-    EventManagerAware,
-    CacheAware,
-    fast_protocol.FastProtocolChecking,
-    typing.Protocol,
-):
-    """Structural supertype for a component that is aware of all internals."""
+class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Structural super-type for an application which can be run independently."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     def is_alive(self) -> bool:
-        """Check whether the bot is running or not.
+        """Check whether the application is running or not.
 
         This is useful as some functions might raise
         `hikari.errors.ComponentStateConflictError` if this is
@@ -513,6 +528,39 @@ class BotAware(
 
     async def close(self) -> None:
         """Kill the application by shutting all components down."""
+
+    async def join(self) -> None:
+        """Wait indefinitely until the application closes.
+
+        This can be placed in a task and cancelled without affecting the
+        application runtime itself. Any exceptions raised by shards will be
+        propagated to here.
+        """
+        raise NotImplementedError
+
+    def run(self) -> None:
+        """Start the application and block until it's finished running."""
+        raise NotImplementedError
+
+    async def start(self) -> None:
+        """Start the application and then return."""
+        raise NotImplementedError
+
+
+@typing.runtime_checkable
+class GatewayBotAware(
+    RESTAware,
+    Runnable,
+    ShardAware,
+    EventFactoryAware,
+    EventManagerAware,
+    CacheAware,
+    fast_protocol.FastProtocolChecking,
+    typing.Protocol,
+):
+    """Structural supertype for a component that has all the gateway components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     async def join(self, until_close: bool = True) -> None:
         """Wait indefinitely until the application closes.
@@ -546,7 +594,7 @@ class BotAware(
         shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
-        """Start the bot, wait for all shards to become ready, and then return.
+        """Start the bot and block until it's finished running.
 
         Other Parameters
         ----------------
@@ -640,3 +688,19 @@ class BotAware(
             Defaults to `hikari.presences.Status.ONLINE`.
         """
         raise NotImplementedError
+
+
+@typing.runtime_checkable
+class BotAware(GatewayBotAware, fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Deprecated alias for `GatewayBotAware`.
+
+    .. deprecated:: 2.0.0.dev101
+        Use `GatewayBotAware` instead.
+    """
+
+
+@typing.runtime_checkable
+class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolChecking, typing.Protocol):
+    """Structural supertype for a component that has all the RESTful components."""
+
+    __slots__: typing.Sequence[str] = ()

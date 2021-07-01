@@ -246,9 +246,8 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     if plat == "Pocket PC":
         return False
 
-    color_support = False
     if plat == "win32":
-        color_support |= os.environ.get("TERM_PROGRAM") in ("mintty", "Terminus")
+        color_support = os.environ.get("TERM_PROGRAM") in ("mintty", "Terminus")
         color_support |= "ANSICON" in os.environ
         color_support &= is_a_tty
     else:

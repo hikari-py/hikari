@@ -24,8 +24,9 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["WebhookType", "Webhook"]
+__all__: typing.List[str] = ["ExecutableWebhook", "WebhookType", "Webhook"]
 
+import abc
 import typing
 
 import attr
@@ -59,96 +60,48 @@ class WebhookType(int, enums.Enum):
     """Channel Follower webhook."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Webhook(snowflakes.Unique):
-    """Represents a webhook object on Discord.
+class ExecutableWebhook(abc.ABC):
+    """An abstract class with logic for executing entities as webhooks."""
 
-    This is an endpoint that can have messages sent to it using standard
-    HTTP requests, which enables external services that are not bots to
-    send informational messages to specific channels.
-    """
-
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
-    """The client application that models may use for procedures."""
-
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    """The ID of this entity."""
-
-    type: typing.Union[WebhookType, int] = attr.field(eq=False, hash=False, repr=True)
-    """The type of the webhook."""
-
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
-    """The guild ID of the webhook."""
-
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The channel ID this webhook is for."""
-
-    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
-    """The user that created the webhook
-
-    !!! info
-        This will be `builtins.None` when getting a webhook with bot authorization rather
-        than the webhook's token.
-    """
-
-    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
-    """The name of the webhook."""
-
-    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The avatar hash of the webhook."""
-
-    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The token for the webhook.
-
-    !!! info
-        This is only available for incoming webhooks that are created in the
-        channel settings.
-    """
-
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the application that created this webhook."""
-
-    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the channel a `CHANNEL_FOLLOWER` webhook is following.
-
-    Will be `builtins.None` for other webhook types.
-    """
-
-    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the guild a `CHANNEL_FOLLOWER` webhook is following.
-
-    Will be `builtins.None` for other webhook types.
-    """
-
-    def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+    # This is a mixin, do not add slotted fields.
+    __slots__: typing.Sequence[str] = ()
 
     @property
-    def mention(self) -> str:
-        """Return a raw mention string for the given webhook's user.
-
-        !!! note
-            This exists purely for consistency. Webhooks do not receive events
-            from the gateway, and without some bot backend to support it, will
-            not be able to detect mentions of their webhook.
-
-        Example
-        -------
-
-        ```py
-        >>> some_webhook.mention
-        '<@123456789123456789>'
-        ```
+    @abc.abstractmethod
+    def app(self) -> traits.RESTAware:
+        """Client application that models may use for procedures.
 
         Returns
         -------
-        builtins.str
-            The mention string to use.
+        hikari.traits.RESTAware
+            The client application that models may use for procedures.
         """
-        return f"<@{self.id}>"
+
+    @property
+    @abc.abstractmethod
+    def webhook_id(self) -> snowflakes.Snowflake:
+        """ID used to execute this entity as a webhook.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            The ID used to execute this entity as a webhook.
+        """
+
+    @property
+    @abc.abstractmethod
+    def token(self) -> typing.Optional[str]:
+        """Webhook's token.
+
+        !!! info
+            If this is `builtins.None` then the methods provided by `ExecutableWebhook`
+            will always raise a `builtins.ValueError`.
+
+        Returns
+        -------
+        typing.Optional[builtins.str]
+            The token for the webhook if known, else `builtins.None`.
+        """
 
     async def execute(
         self,
@@ -167,6 +120,7 @@ class Webhook(snowflakes.Unique):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds_.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
@@ -222,6 +176,17 @@ class Webhook(snowflakes.Unique):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The flags to set for this webhook message.
+
+            !!! warning
+                As of writing this can only be set for interaction webhooks
+                and the only settable flag is EPHEMERAL; this field is just
+                ignored for non-interaction webhooks.
+
+        !!! warning
+            As of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
 
         Returns
         -------
@@ -252,7 +217,7 @@ class Webhook(snowflakes.Unique):
             raise ValueError("Cannot send a message using a webhook where we don't know the token")
 
         return await self.app.rest.execute_webhook(
-            webhook=self.id,
+            webhook=self.webhook_id,
             token=self.token,
             content=content,
             username=username,
@@ -264,6 +229,7 @@ class Webhook(snowflakes.Unique):
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
         )
 
     async def fetch_message(self, message: snowflakes.SnowflakeishOr[messages_.Message]) -> messages_.Message:
@@ -305,7 +271,7 @@ class Webhook(snowflakes.Unique):
         if self.token is None:
             raise ValueError("Cannot fetch a message using a webhook where we don't know the token")
 
-        return await self.app.rest.fetch_webhook_message(self.id, token=self.token, message=message)
+        return await self.app.rest.fetch_webhook_message(self.webhook_id, token=self.token, message=message)
 
     async def edit_message(
         self,
@@ -463,7 +429,7 @@ class Webhook(snowflakes.Unique):
             raise ValueError("Cannot edit a message using a webhook where we don't know the token")
 
         return await self.app.rest.edit_webhook_message(
-            self.id,
+            self.webhook_id,
             token=self.token,
             message=message,
             content=content,
@@ -511,7 +477,104 @@ class Webhook(snowflakes.Unique):
         if self.token is None:
             raise ValueError("Cannot delete a message using a webhook where we don't know the token")
 
-        await self.app.rest.delete_webhook_message(self.id, token=self.token, message=message)
+        await self.app.rest.delete_webhook_message(self.webhook_id, token=self.token, message=message)
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class Webhook(snowflakes.Unique, ExecutableWebhook):
+    """Represents a webhook object on Discord.
+
+    This is an endpoint that can have messages sent to it using standard
+    HTTP requests, which enables external services that are not bots to
+    send informational messages to specific channels.
+    """
+
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """The client application that models may use for procedures."""
+
+    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    """The ID of this entity."""
+
+    type: typing.Union[WebhookType, int] = attr.field(eq=False, hash=False, repr=True)
+    """The type of the webhook."""
+
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    """The guild ID of the webhook."""
+
+    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The channel ID this webhook is for."""
+
+    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
+    """The user that created the webhook
+
+    !!! info
+        This will be `builtins.None` when getting a webhook with bot authorization rather
+        than the webhook's token.
+    """
+
+    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The name of the webhook."""
+
+    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The avatar hash of the webhook."""
+
+    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The token for the webhook.
+
+    !!! info
+        This is only available for incoming webhooks that are created in the
+        channel settings.
+    """
+
+    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the application that created this webhook."""
+
+    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the channel a `CHANNEL_FOLLOWER` webhook is following.
+
+    Will be `builtins.None` for other webhook types.
+    """
+
+    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the guild a `CHANNEL_FOLLOWER` webhook is following.
+
+    Will be `builtins.None` for other webhook types.
+    """
+
+    def __str__(self) -> str:
+        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+
+    @property
+    def webhook_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ExecutableWebhook>>.
+        return self.id
+
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the given webhook's user.
+
+        !!! note
+            This exists purely for consistency. Webhooks do not receive events
+            from the gateway, and without some bot backend to support it, will
+            not be able to detect mentions of their webhook.
+
+        Example
+        -------
+
+        ```py
+        >>> some_webhook.mention
+        '<@123456789123456789>'
+        ```
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<@{self.id}>"
 
     async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.

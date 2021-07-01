@@ -30,6 +30,7 @@ from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
+from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
 from hikari import invites as invite_models
@@ -44,6 +45,8 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
+from hikari.interactions import bases as interaction_models
+from hikari.interactions import commands as command_models
 
 
 def test__with_int_cast():
@@ -1279,6 +1282,10 @@ class TestEntityFactoryImpl:
         ]:
             assert isinstance(entity_factory_impl.deserialize_channel(payload), expected_type)
 
+    def test_deserialize_channel_handles_unknown_channel_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_channel({"type": -9999999999})
+
     ################
     # EMBED MODELS #
     ################
@@ -1716,8 +1723,8 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_gateway_bot(self, entity_factory_impl, gateway_bot_payload):
-        gateway_bot = entity_factory_impl.deserialize_gateway_bot(gateway_bot_payload)
-        assert isinstance(gateway_bot, gateway_models.GatewayBot)
+        gateway_bot = entity_factory_impl.deserialize_gateway_bot_info(gateway_bot_payload)
+        assert isinstance(gateway_bot, gateway_models.GatewayBotInfo)
         assert gateway_bot.url == "wss://gateway.discord.gg"
         assert gateway_bot.shard_count == 1
         # SessionStartLimit
@@ -2627,6 +2634,362 @@ class TestEntityFactoryImpl:
 
         assert guild_definition.channels == {}
 
+    ######################
+    # INTERACTION MODELS #
+    ######################
+
+    @pytest.fixture()
+    def command_payload(self):
+        return {
+            "id": "1231231231",
+            "application_id": "12354123",
+            "guild_id": "49949494",
+            "name": "good name",
+            "description": "very good description",
+            "options": [
+                {
+                    "type": 1,
+                    "name": "a dumb name",
+                    "description": "42",
+                    "required": True,
+                    "options": [
+                        {
+                            "type": 6,
+                            "name": "a name",
+                            "description": "84",
+                            "choices": [{"name": "a choice", "value": "4 u"}],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def test_deserialize_command(self, entity_factory_impl, mock_app, command_payload):
+        command = entity_factory_impl.deserialize_command(payload=command_payload)
+
+        assert command.app is mock_app
+        assert command.id == 1231231231
+        assert command.application_id == 12354123
+        assert command.guild_id == 49949494
+        assert command.name == "good name"
+        assert command.description == "very good description"
+
+        # CommandOption
+        assert len(command.options) == 1
+        option = command.options[0]
+        assert option.type is command_models.OptionType.SUB_COMMAND
+        assert option.name == "a dumb name"
+        assert option.description == "42"
+        assert option.is_required is True
+        assert option.description == "42"
+        assert option.choices is None
+        assert len(option.options) == 1
+
+        suboption = option.options[0]
+        assert suboption.type is command_models.OptionType.USER
+        assert suboption.name == "a name"
+        assert suboption.description == "84"
+        assert suboption.is_required is False
+        assert suboption.options is None
+
+        # CommandChoice
+        assert len(suboption.choices) == 1
+        choice = suboption.choices[0]
+        assert choice.name == "a choice"
+        assert choice.value == "4 u"
+        assert isinstance(choice, command_models.CommandChoice)
+
+        assert isinstance(suboption, command_models.CommandOption)
+        assert isinstance(option, command_models.CommandOption)
+        assert isinstance(command, command_models.Command)
+
+    def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
+        payload = {
+            "id": "1231231231",
+            "application_id": "12354123",
+            "name": "good name",
+            "description": "very good description",
+            "options": [],
+        }
+
+        command = entity_factory_impl.deserialize_command(payload, guild_id=123123)
+
+        assert command.guild_id == 123123
+
+    def test_deserialize_command_with_null_values(self, entity_factory_impl):
+        payload = {
+            "id": "1231231231",
+            "application_id": "12354123",
+            "guild_id": "49949494",
+            "name": "good name",
+            "description": "very good description",
+            "options": [],
+        }
+
+        command = entity_factory_impl.deserialize_command(payload)
+
+        assert command.options is None
+        assert isinstance(command, command_models.Command)
+
+    @pytest.fixture()
+    def partial_interaction_payload(self):
+        return {
+            "id": "795459528803745843",
+            "token": "-- token redacted --",
+            "type": 1,
+            "version": 1,
+            "application_id": "1",
+        }
+
+    def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
+        interaction = entity_factory_impl.deserialize_partial_interaction(partial_interaction_payload)
+
+        assert interaction.app is mock_app
+        assert interaction.id == 795459528803745843
+        assert interaction.token == "-- token redacted --"
+        assert interaction.type == 1
+        assert interaction.version == 1
+        assert interaction.application_id == 1
+        assert type(interaction) is interaction_models.PartialInteraction
+
+    @pytest.fixture()
+    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload):
+        member_payload["permissions"] = "47"
+        return {
+            "id": "3490190239012093",
+            "type": 2,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "options": [
+                    {"name": "an option", "type": 1, "options": [{"name": "go ice", "type": 4, "value": "42"}]},
+                ],
+                "resolved": {
+                    "channels": {
+                        "695382395666300958": {
+                            "id": "695382395666300958",
+                            "name": "discord-announcements",
+                            "permissions": "17179869183",
+                            "type": 0,
+                        }
+                    },
+                    "members": {
+                        "115590097100865541": {
+                            "is_pending": False,
+                            "joined_at": "2020-09-27T22:58:10.282000+00:00",
+                            "nick": "Snab",
+                            "pending": False,
+                            "permissions": "17179869183",
+                            "premium_since": "2020-10-01T23:06:10.431000+00:00",
+                            "roles": [
+                                "582345963851743243",
+                                "582689893965365248",
+                                "734164204679856290",
+                                "757331666388910181",
+                            ],
+                        }
+                    },
+                    "roles": {"41771983423143936": guild_role_payload},
+                    "users": {"115590097100865541": user_payload},
+                },
+            },
+            "channel_id": "49949494",
+            "member": member_payload,
+            "token": "moe cat girls",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
+    def test_deserialize_command_interaction(
+        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload, guild_role_payload
+    ):
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
+
+        assert interaction.app is mock_app
+        assert interaction.application_id == 76234234
+        assert interaction.id == 3490190239012093
+        assert interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert interaction.token == "moe cat girls"
+        assert interaction.version == 69420
+        assert interaction.channel_id == 49949494
+        assert interaction.guild_id == 43123123
+
+        # InteractionMember
+        assert interaction.member.app is mock_app
+        assert interaction.member.guild_id == 43123123
+        assert interaction.member.user == entity_factory_impl.deserialize_user(user_payload)
+        assert interaction.member.nickname == "foobarbaz"
+        assert interaction.member.role_ids == [11111, 22222, 33333, 44444, 43123123]
+        assert interaction.member.joined_at == datetime.datetime(
+            2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        )
+        assert interaction.member.premium_since == datetime.datetime(
+            2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        )
+        assert interaction.member.is_deaf is False
+        assert interaction.member.is_mute is True
+        assert interaction.member.is_pending is False
+        assert interaction.member.permissions == 47
+        assert isinstance(interaction.member, interaction_models.InteractionMember)
+
+        assert interaction.user is interaction.member.user
+        assert interaction.command_id == 43123123
+        assert interaction.command_name == "okokokok"
+
+        # CommandInteractionOption
+        assert len(interaction.options) == 1
+        option = interaction.options[0]
+        assert option.name == "an option"
+        assert option.value is None
+        assert option.type is command_models.OptionType.SUB_COMMAND
+        assert len(option.options) == 1
+        sub_option = option.options[0]
+        assert sub_option.name == "go ice"
+        assert sub_option.value == "42"
+        assert sub_option.type is command_models.OptionType.INTEGER
+        assert sub_option.options is None
+        assert isinstance(sub_option, command_models.CommandInteractionOption)
+        assert isinstance(option, command_models.CommandInteractionOption)
+
+        # ResolvedOptionData
+        assert len(interaction.resolved.channels) == 1
+        channel = interaction.resolved.channels[695382395666300958]
+        assert channel.type is channel_models.ChannelType.GUILD_TEXT
+        assert channel.id == 695382395666300958
+        assert channel.name == "discord-announcements"
+        assert channel.permissions == permission_models.Permissions(17179869183)
+        assert isinstance(channel, command_models.InteractionChannel)
+        # InteractionMember
+        assert len(interaction.resolved.members) == 1
+        member = interaction.resolved.members[115590097100865541]
+        assert member.id == 115590097100865541
+        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
+        assert member.nickname == "Snab"
+        assert member.guild_id == 43123123
+        assert member.is_deaf is undefined.UNDEFINED
+        assert member.is_mute is undefined.UNDEFINED
+        assert member.is_pending is False
+        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.role_ids == [
+            582345963851743243,
+            582689893965365248,
+            734164204679856290,
+            757331666388910181,
+            43123123,
+        ]
+        assert member.user == entity_factory_impl.deserialize_user(user_payload)
+        assert member.permissions == permission_models.Permissions(17179869183)
+        assert isinstance(member, interaction_models.InteractionMember)
+
+        assert interaction.resolved.roles == {
+            41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
+        }
+        assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert isinstance(interaction.resolved, command_models.ResolvedOptionData)
+
+        assert isinstance(interaction, command_models.CommandInteraction)
+
+    def test_deserialize_command_interaction_with_null_attributes(
+        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+    ):
+        del command_interaction_payload["guild_id"]
+        del command_interaction_payload["member"]
+        command_interaction_payload["user"] = user_payload
+        del command_interaction_payload["data"]["options"]
+        del command_interaction_payload["data"]["resolved"]
+
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
+
+        assert interaction.guild_id is None
+        assert interaction.member is None
+        assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
+        assert interaction.options is None
+        assert interaction.resolved is None
+
+    def test_deserialize_command_interaction_with_empty_resolved_resources(
+        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+    ):
+        del command_interaction_payload["data"]["resolved"]["channels"]
+        del command_interaction_payload["data"]["resolved"]["members"]
+        del command_interaction_payload["data"]["resolved"]["roles"]
+        del command_interaction_payload["data"]["resolved"]["users"]
+        # This makes sure the bool check to see if there's anything in resolve will still pass
+        # to separate this case from it just not being provided
+        command_interaction_payload["data"]["resolved"]["not a real field"] = 42
+
+        interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
+
+        assert interaction.resolved.channels == {}
+        assert interaction.resolved.members == {}
+        assert interaction.resolved.roles == {}
+        assert interaction.resolved.users == {}
+
+    def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
+        for payload, expected_type in [(command_interaction_payload, command_models.CommandInteraction)]:
+            assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
+
+    def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_interaction({"type": -999})
+
+    def test_serialize_command_option_with_choices(self, entity_factory_impl):
+        option = command_models.CommandOption(
+            type=command_models.OptionType.INTEGER,
+            name="a name",
+            description="go away",
+            is_required=True,
+            choices=[command_models.CommandChoice(name="a", value="choice")],
+            options=None,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 4,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "choices": [{"name": "a", "value": "choice"}],
+        }
+
+    def test_serialize_command_option_with_options(self, entity_factory_impl):
+        option = command_models.CommandOption(
+            type=command_models.OptionType.SUB_COMMAND,
+            name="a name",
+            description="go away",
+            is_required=True,
+            choices=None,
+            options=[
+                command_models.CommandOption(
+                    type=command_models.OptionType.STRING,
+                    name="go home",
+                    description="you're drunk",
+                    is_required=False,
+                    choices=[command_models.CommandChoice(name="boo", value="hoo")],
+                    options=None,
+                )
+            ],
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 1,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "options": [
+                {
+                    "type": 3,
+                    "description": "you're drunk",
+                    "name": "go home",
+                    "required": False,
+                    "choices": [{"name": "boo", "value": "hoo"}],
+                }
+            ],
+        }
+
     #################
     # INVITE MODELS #
     #################
@@ -2945,6 +3308,8 @@ class TestEntityFactoryImpl:
                 }
             ],
             "nonce": "171000788183678976",
+            "application_id": "123123123123",
+            "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
         }
 
     def test_deserialize_partial_message(
@@ -3046,6 +3411,14 @@ class TestEntityFactoryImpl:
         assert isinstance(sticker, message_models.Sticker)
 
         assert partial_message.nonce == "171000788183678976"
+        assert partial_message.application_id == 123123123123
+
+        # MessageInteraction
+        assert partial_message.interaction.id == 123123123
+        assert partial_message.interaction.name == "OKOKOK"
+        assert partial_message.interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(partial_message.interaction, message_models.MessageInteraction)
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
@@ -3101,6 +3474,8 @@ class TestEntityFactoryImpl:
         assert partial_message.flags is undefined.UNDEFINED
         assert partial_message.stickers is undefined.UNDEFINED
         assert partial_message.nonce is undefined.UNDEFINED
+        assert partial_message.application_id is undefined.UNDEFINED
+        assert partial_message.interaction is undefined.UNDEFINED
 
     def test_deserialize_full_message(
         self,
@@ -3207,6 +3582,14 @@ class TestEntityFactoryImpl:
         assert isinstance(sticker, message_models.Sticker)
 
         assert message.nonce == "171000788183678976"
+        assert message.application_id == 123123123123
+
+        # MessageInteraction
+        assert message.interaction.id == 123123123
+        assert message.interaction.name == "OKOKOK"
+        assert message.interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(message.interaction, message_models.MessageInteraction)
 
     def test_deserialize_message_with_null_and_unset_fields(
         self,
@@ -3251,6 +3634,8 @@ class TestEntityFactoryImpl:
         assert message.referenced_message is undefined.UNDEFINED
         assert message.stickers == []
         assert message.nonce is None
+        assert message.application_id is None
+        assert message.interaction is None
 
     def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["primary_sku_id"] = None

@@ -59,7 +59,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
     _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
 
-    def __init__(self, app: traits.BotAware) -> None:
+    def __init__(self, app: traits.GatewayBotAware) -> None:
         self._app = app
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)

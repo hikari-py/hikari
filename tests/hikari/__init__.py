@@ -30,7 +30,7 @@ sys.set_coroutine_origin_tracking_depth(100)
 
 class TestingPolicy(asyncio.DefaultEventLoopPolicy):
     def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
-        if loop:
+        if loop is not None:
             loop.set_debug(True)
 
         super().set_event_loop(loop)

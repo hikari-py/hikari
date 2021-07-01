@@ -38,7 +38,7 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.BotApp)
+    return mock.Mock(spec_set=bot.GatewayBot)
 
 
 class TestPartialRole:

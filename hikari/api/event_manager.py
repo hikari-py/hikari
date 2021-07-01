@@ -23,14 +23,17 @@
 """Core interface for components that manage events in the library."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManager"]
+__all__: typing.List[str] = ["EventManager", "EventStream"]
 
 import abc
 import asyncio
 import typing
 
+from hikari import iterators
+
 if typing.TYPE_CHECKING:
-    from hikari import event_stream
+    import types
+
     from hikari.api import shard as gateway_shard
     from hikari.events import base_events
     from hikari.internal import data_binding
@@ -42,6 +45,83 @@ if typing.TYPE_CHECKING:
     ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
+
+EventT = typing.TypeVar("EventT", bound="base_events.Event")
+
+
+class EventStream(iterators.LazyIterator[EventT], abc.ABC):
+    """A base abstract class for all event streamers.
+
+    Unlike `hikari.iterators.LazyIterator` (which this extends), an event
+    streamer must be started and closed.
+
+    Examples
+    --------
+    A streamer may either be started and closed using `async with` syntax
+    where `EventStream.open` and `EventStream.close` are implicitly called based on
+    context.
+
+    ```py
+    async with EventStream(app, EventType, timeout=50) as stream:
+        async for entry in stream:
+            ...
+    ```
+
+    A streamer may also be directly started and closed using the `EventStream.close`
+    and `EventStream.open`. Note that if you don't call `EventStream.close` after
+    opening a streamer when you're finished with it then it may queue events
+    events in memory indefinitely.
+
+    ```py
+    stream = EventStream(app, EventType, timeout=50)
+    await stream.open()
+    async for event in stream:
+        ...
+
+    await stream.close()
+    ```
+
+    See Also
+    --------
+    LazyIterator: `hikari.iterators.LazyIterator`
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    async def close(self) -> None:
+        """Mark this streamer as closed to stop it from queueing and receiving events.
+
+        If called on an already closed streamer then this will do nothing.
+
+        !!! note
+            `async with streamer` may be used as a short-cut for opening and
+            closing a streamer.
+        """
+
+    @abc.abstractmethod
+    async def open(self) -> None:
+        """Mark this streamer as opened to let it start receiving and queueing events.
+
+        If called on an already started streamer then this will do nothing.
+
+        !!! note
+            `async with streamer` may be used as a short-cut for opening and
+            closing a stream.
+        """
+
+    @abc.abstractmethod
+    async def __aenter__(self) -> EventStream[EventT]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        raise NotImplementedError
 
 
 class EventManager(abc.ABC):
@@ -303,7 +383,7 @@ class EventManager(abc.ABC):
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[EventT_co]:
+    ) -> EventStream[EventT_co]:
         """Return a stream iterator for the given event and sub-events.
 
         Parameters
@@ -322,7 +402,7 @@ class EventManager(abc.ABC):
 
         Returns
         -------
-        hikari.event_stream.Streamer[hikari.events.base_events.Event]
+        EventStream[hikari.events.base_events.Event]
             The async iterator to handle streamed events. This must be started
             with `async with stream:` or `await stream.open()` before
             asynchronously iterating over it.

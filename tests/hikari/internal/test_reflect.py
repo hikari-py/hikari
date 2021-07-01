@@ -19,12 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import inspect
+import sys
 import typing
+
+import mock
+import pytest
 
 from hikari.internal import reflect
 
 
-class TestResolveSignature:
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="This strategy is specific to 3.10 > versions")
+class TestResolveSignatureOldStrategy:
     def test_handles_normal_references(self):
         def foo(bar: str, bat: int) -> str:
             ...
@@ -110,3 +116,14 @@ class TestResolveSignature:
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 <= versions")
+def test_resolve_signature():
+    foo = object()
+
+    with mock.patch.object(inspect, "signature") as signature:
+        sig = reflect.resolve_signature(foo)
+
+    assert sig is signature.return_value
+    signature.assert_called_once_with(foo, eval_str=True)

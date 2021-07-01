@@ -50,6 +50,8 @@ if typing.TYPE_CHECKING:
     from hikari import users as user_models
     from hikari import voices as voice_models
     from hikari import webhooks as webhook_models
+    from hikari.interactions import bases as interaction_models
+    from hikari.interactions import commands as command_models
     from hikari.internal import data_binding
 
 
@@ -364,7 +366,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -400,7 +402,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -436,7 +438,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -472,7 +474,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -508,7 +510,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -543,7 +545,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -703,7 +705,7 @@ class EntityFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
-    def deserialize_gateway_bot(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBot:
+    def deserialize_gateway_bot_info(self, payload: data_binding.JSONObject) -> gateway_models.GatewayBotInfo:
         """Parse a raw payload from Discord into a gateway bot object.
 
         Parameters
@@ -713,8 +715,8 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.sessions.GatewayBot
-            The deserialized gateway bot object.
+        hikari.sessions.GatewayBotInfo
+            The deserialized gateway bot information object.
         """
 
     ################
@@ -802,7 +804,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -873,7 +875,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
@@ -946,6 +948,115 @@ class EntityFactory(abc.ABC):
             several components to allow separate caching and linking
             between entities in various relational cache implementations
             internally.
+        """
+
+    ######################
+    # INTERACTION MODELS #
+    ######################
+
+    @abc.abstractmethod
+    def deserialize_command(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> command_models.Command:
+        """Parse a raw payload from Discord into a command object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this command belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
+        Returns
+        -------
+        hikari.interactions.commands.Command
+            The deserialized command object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload for the payload of
+            the integration.
+        """
+
+    @abc.abstractmethod
+    def deserialize_partial_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_models.PartialInteraction:
+        """Parse a raw payload from Discord into a partial interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.bases.PartialInteraction
+            The deserialized partial interaction object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_command_interaction(self, payload: data_binding.JSONObject) -> command_models.CommandInteraction:
+        """Parse a raw payload from Discord into a command interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.commands.CommandInteraction
+            The deserialized command interaction object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_interaction(self, payload: data_binding.JSONObject) -> interaction_models.PartialInteraction:
+        """Parse a raw payload from Discord into a interaction object.
+
+        !!! note
+            This isn't required to implement logic for deserializing
+            PING interactions and if you want to unmarshal those
+            `EntityFactory.deserialize_partial_interaction` should be compatible.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.bases.PartialInteraction
+            The deserialized interaction object.
+
+        Raises
+        ------
+        hikari.errors.UnrecognisedEntityError
+            If the integration type is unknown.
+        """
+
+    @abc.abstractmethod
+    def serialize_command_option(self, option: command_models.CommandOption) -> data_binding.JSONObject:
+        """Serialize a command option object to a json serializable dict.
+
+        Parameters
+        ----------
+        option: hikari.interactions.commands.CommandOption
+            The command option object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the command option.
         """
 
     #################
@@ -1067,7 +1178,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is not an attribute of the `payload` dict, and no
             guild ID was passed for the `guild_id` parameter.
 
@@ -1169,7 +1280,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        KeyError
+        builtins.KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.

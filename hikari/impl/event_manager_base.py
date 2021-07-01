@@ -24,25 +24,29 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerBase"]
+__all__: typing.List[str] = ["EventManagerBase", "EventStream"]
 
 import asyncio
 import inspect
 import logging
 import typing
 import warnings
+import weakref
 
 from hikari import errors
-from hikari import event_stream
-from hikari import traits
-from hikari.api import event_manager
+from hikari import iterators
+from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.internal import aio
-from hikari.internal import data_binding
 from hikari.internal import reflect
 
 if typing.TYPE_CHECKING:
+    import types
+
+    from hikari import intents as intents_
+    from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
+    from hikari.internal import data_binding
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
@@ -51,31 +55,201 @@ if typing.TYPE_CHECKING:
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
     ListenerMapT = typing.MutableMapping[
-        typing.Type[event_manager.EventT_co],
-        typing.MutableSequence[event_manager.CallbackT[event_manager.EventT_co]],
+        typing.Type[event_manager_.EventT_co],
+        typing.MutableSequence[event_manager_.CallbackT[event_manager_.EventT_co]],
     ]
-    WaiterT = typing.Tuple[event_manager.PredicateT[event_manager.EventT_co], asyncio.Future[event_manager.EventT_co]]
+    WaiterT = typing.Tuple[
+        event_manager_.PredicateT[event_manager_.EventT_co], asyncio.Future[event_manager_.EventT_co]
+    ]
     WaiterMapT = typing.MutableMapping[
-        typing.Type[event_manager.EventT_co], typing.MutableSet[WaiterT[event_manager.EventT_co]]
+        typing.Type[event_manager_.EventT_co], typing.MutableSet[WaiterT[event_manager_.EventT_co]]
     ]
 
 
-def _default_predicate(_: event_manager.EventT_inv) -> bool:
+def _generate_weak_listener(
+    reference: weakref.WeakMethod,
+) -> typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
+    async def call_weak_method(event: event_manager_.EventT) -> None:
+        method = reference()
+        if method is None:
+            raise TypeError(
+                "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
+            )
+
+        await method(event)
+
+    return call_weak_method
+
+
+class EventStream(event_manager_.EventStream[event_manager_.EventT]):
+    """An implementation of an event `EventStream` class.
+
+    !!! note
+        While calling `EventStream.filter` on an active "opened" event stream
+        will return a wrapping lazy iterator, calling it on an inactive "closed"
+        event stream will return the event stream and add the given predicates
+        to the streamer.
+    """
+
+    __slots__ = (
+        "__weakref__",
+        "_active",
+        "_event_manager",
+        "_event_type",
+        "_filters",
+        "_queue",
+        "_registered_listener",
+        "_timeout",
+    )
+
+    def __init__(
+        self,
+        event_manager: event_manager_.EventManager,
+        event_type: typing.Type[event_manager_.EventT],
+        *,
+        timeout: typing.Union[float, int, None],
+        limit: typing.Optional[int] = None,
+    ) -> None:
+        self._event_manager = event_manager
+        self._active = False
+        self._event_type = event_type
+        self._filters: iterators.All[event_manager_.EventT] = iterators.All(())
+        # We accept `None` to represent unlimited here to be consistent with how `None` is already used to represent
+        # unlimited for timeout in other places.
+        self._queue: asyncio.Queue[event_manager_.EventT] = asyncio.Queue(limit or 0)
+        self._registered_listener: typing.Optional[
+            typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
+        ] = None
+        # The registered wrapping function for the weak ref to this class's _listener method.
+        self._timeout = timeout
+
+    async def __aenter__(self) -> EventStream[event_manager_.EventT]:
+        await self.open()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        await self.close()
+
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
+    if not typing.TYPE_CHECKING:
+
+        def __enter__(self) -> typing.NoReturn:
+            # This is async only.
+            cls = type(self)
+            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+
+        def __exit__(
+            self,
+            exc_type: typing.Optional[typing.Type[Exception]],
+            exc_val: typing.Optional[Exception],
+            exc_tb: typing.Optional[types.TracebackType],
+        ) -> None:
+            return None
+
+    async def __anext__(self) -> event_manager_.EventT:
+        if not self._active:
+            raise TypeError("stream must be started with `async with` before entering it")
+
+        try:
+            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
+        except asyncio.TimeoutError:
+            raise StopAsyncIteration from None
+
+    def __await__(self) -> typing.Generator[None, None, typing.Sequence[event_manager_.EventT]]:
+        return self._await_all().__await__()
+
+    def __del__(self) -> None:
+        # For the sake of protecting highly intelligent people who forget to close this, we register the event listener
+        # with a weakref then try to close this on deletion. While this may lead to their consoles being spammed, this
+        # is a small price to pay as it'll be way more obvious what's wrong than if we just left them with a vague
+        # ominous memory leak.
+        if self._active:
+            _LOGGER.warning("active %r streamer fell out of scope before being closed", self._event_type.__name__)
+            try:
+                asyncio.ensure_future(self.close())
+            except RuntimeError:
+                pass
+
+    async def _await_all(self) -> typing.Sequence[event_manager_.EventT]:
+        await self.open()
+        result = [event async for event in self]
+        await self.close()
+        return result
+
+    async def _listener(self, event: event_manager_.EventT) -> None:
+        if not self._filters(event):
+            return
+
+        try:
+            self._queue.put_nowait(event)
+        except asyncio.QueueFull:
+            pass
+
+    async def close(self) -> None:
+        if self._active and self._registered_listener is not None:
+            try:
+                self._event_manager.unsubscribe(self._event_type, self._registered_listener)
+            except ValueError:
+                pass
+
+            self._registered_listener = None
+
+        self._active = False
+
+    def filter(
+        self,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[event_manager_.EventT], bool]],
+        **attrs: typing.Any,
+    ) -> typing.Union[EventStream[event_manager_.EventT], iterators.LazyIterator[event_manager_.EventT]]:
+        if self._active:
+            return super().filter(*predicates, **attrs)
+
+        self._filters |= self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
+        return self
+
+    async def open(self) -> None:
+        if not self._active:
+            # For the sake of protecting highly intelligent people who forget to close this, we register the event
+            # listener with a weakref then try to close this on deletion. While this may lead to their consoles being
+            # spammed, this is a small price to pay as it'll be way more obvious what's wrong than if we just left them
+            # with a vague ominous memory leak.
+            reference = weakref.WeakMethod(self._listener)  # type: ignore[arg-type]
+            listener = _generate_weak_listener(reference)
+            self._registered_listener = listener
+            self._event_manager.subscribe(self._event_type, listener)
+            self._active = True
+
+
+def _default_predicate(_: event_manager_.EventT_inv) -> bool:
     return True
 
 
-class EventManagerBase(event_manager.EventManager):
+def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> None:
+    if next(parameters, None) is None:
+        raise TypeError("Event listener must have one positional argument for the event object.")
+
+    if any(param.default is not inspect.Parameter.empty for param in parameters):
+        raise TypeError("Only the first argument for a listener can be required, the event argument.")
+
+
+class EventManagerBase(event_manager_.EventManager):
     """Provides functionality to consume and dispatch events.
 
     Specific event handlers should be in functions named `on_xxx` where `xxx`
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
 
-    def __init__(self, app: traits.BotAware) -> None:
-        self._app = app
+    def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
         self._consumers: typing.Dict[str, ConsumerT] = {}
+        self._event_factory = event_factory
+        self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
         self._waiters: WaiterMapT[base_events.Event] = {}
 
@@ -86,15 +260,15 @@ class EventManagerBase(event_manager.EventManager):
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        payload_event = self._app.event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+        payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
         self.dispatch(payload_event)
         callback = self._consumers[event_name.casefold()]
         asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
-        event_type: typing.Type[event_manager.EventT_co],
-        callback: event_manager.CallbackT[event_manager.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
+        callback: event_manager_.CallbackT[event_manager_.EventT_co],
         *,
         _nested: int = 0,
     ) -> None:
@@ -121,14 +295,14 @@ class EventManagerBase(event_manager.EventManager):
 
         self._listeners[event_type].append(callback)  # type: ignore[arg-type]
 
-    def _check_intents(self, event_type: typing.Type[event_manager.EventT_co], nested: int) -> None:
+    def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
         # could be enabled to receive this event.
         expected_intent_groups = base_events.get_required_intents_for(event_type)
 
         if expected_intent_groups:
             for expected_intent_group in expected_intent_groups:
-                if (self._app.intents & expected_intent_group) == expected_intent_group:
+                if (self._intents & expected_intent_group) == expected_intent_group:
                     break
             else:
                 expected_intents_str = ", ".join(map(str, expected_intent_groups))
@@ -142,13 +316,13 @@ class EventManagerBase(event_manager.EventManager):
 
     def get_listeners(
         self,
-        event_type: typing.Type[event_manager.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
         /,
         *,
         polymorphic: bool = True,
-    ) -> typing.Collection[event_manager.CallbackT[event_manager.EventT_co]]:
+    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         if polymorphic:
-            listeners: typing.List[event_manager.CallbackT[event_manager.EventT_co]] = []
+            listeners: typing.List[event_manager_.CallbackT[event_manager_.EventT_co]] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():
                 if issubclass(subscribed_event_type, event_type):
                     listeners += subscribed_listeners
@@ -162,8 +336,8 @@ class EventManagerBase(event_manager.EventManager):
 
     def unsubscribe(
         self,
-        event_type: typing.Type[event_manager.EventT_co],
-        callback: event_manager.CallbackT[event_manager.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
+        callback: event_manager_.CallbackT[event_manager_.EventT_co],
     ) -> None:
         if event_type in self._listeners:
             _LOGGER.debug(
@@ -179,24 +353,26 @@ class EventManagerBase(event_manager.EventManager):
 
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[event_manager.EventT_co]] = None,
+        event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None,
     ) -> typing.Callable[
-        [event_manager.CallbackT[event_manager.EventT_co]], event_manager.CallbackT[event_manager.EventT_co]
+        [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
     ]:
         def decorator(
-            callback: event_manager.CallbackT[event_manager.EventT_co],
-        ) -> event_manager.CallbackT[event_manager.EventT_co]:
+            callback: event_manager_.CallbackT[event_manager_.EventT_co],
+        ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
             nonlocal event_type
 
-            signature = reflect.resolve_signature(callback)
-            params = signature.parameters.values()
+            # Avoid resolving forward references in the function's signature if
+            # event_type was explicitly provided as this may lead to errors.
+            if event_type is not None:
+                _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
 
-            if len(params) != 1:
-                raise TypeError("Event listener must have exactly one parameter, the event object.")
+            else:
+                signature = reflect.resolve_signature(callback)
+                params = signature.parameters.values()
+                _assert_is_listener(iter(params))
+                event_param = next(iter(params))
 
-            event_param = next(iter(params))
-
-            if event_type is None:
                 if event_param.annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
@@ -207,7 +383,7 @@ class EventManagerBase(event_manager.EventManager):
 
         return decorator
 
-    def dispatch(self, event: event_manager.EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
@@ -245,28 +421,28 @@ class EventManagerBase(event_manager.EventManager):
 
     def stream(
         self,
-        event_type: typing.Type[event_manager.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_stream.Streamer[event_manager.EventT_co]:
+    ) -> event_manager_.EventStream[event_manager_.EventT_co]:
         self._check_intents(event_type, 1)
-        return event_stream.EventStream(self._app, event_type, timeout=timeout, limit=limit)
+        return EventStream(self, event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_manager.EventT_co],
+        event_type: typing.Type[event_manager_.EventT_co],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_manager.PredicateT[event_manager.EventT_co]] = None,
-    ) -> event_manager.EventT_co:
+        predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
+    ) -> event_manager_.EventT_co:
 
         if predicate is None:
             predicate = _default_predicate
 
         self._check_intents(event_type, 1)
 
-        future: asyncio.Future[event_manager.EventT_co] = asyncio.get_running_loop().create_future()
+        future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
 
         try:
             waiter_set = self._waiters[event_type]
@@ -306,7 +482,7 @@ class EventManagerBase(event_manager.EventManager):
             )
 
     async def _invoke_callback(
-        self, callback: event_manager.CallbackT[event_manager.EventT_inv], event: event_manager.EventT_inv
+        self, callback: event_manager_.CallbackT[event_manager_.EventT_inv], event: event_manager_.EventT_inv
     ) -> None:
         try:
             await callback(event)

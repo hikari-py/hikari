@@ -20,16 +20,367 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
+import contextlib
+import logging
+import unittest
 import warnings
+import weakref
 
 import mock
 import pytest
 
 from hikari import errors
 from hikari import intents
+from hikari import iterators
 from hikari.events import base_events
 from hikari.events import member_events
 from hikari.impl import event_manager_base
+from hikari.internal import reflect
+from tests.hikari import hikari_test_helpers
+
+
+class TestGenerateWeakListener:
+    @pytest.mark.asyncio()
+    async def test__generate_weak_listener_when_method_is_None(self):
+        def test():
+            return None
+
+        call_weak_method = event_manager_base._generate_weak_listener(test)
+
+        with pytest.raises(
+            TypeError,
+            match=r"dead weak referenced subscriber method cannot be executed, try actually closing your event streamers",
+        ):
+            await call_weak_method(None)
+
+    @pytest.mark.asyncio()
+    async def test__generate_weak_listener(self):
+        mock_listener = mock.AsyncMock()
+        mock_event = object()
+
+        def test():
+            return mock_listener
+
+        call_weak_method = event_manager_base._generate_weak_listener(test)
+
+        await call_weak_method(mock_event)
+
+        mock_listener.assert_awaited_once_with(mock_event)
+
+
+@pytest.fixture()
+def mock_app():
+    return mock.Mock()
+
+
+class TestEventStream:
+    @pytest.mark.asyncio()
+    async def test___aenter___and___aexit__(
+        self,
+    ):
+        stub_stream = hikari_test_helpers.mock_class_namespace(
+            event_manager_base.EventStream, open=mock.AsyncMock(), close=mock.AsyncMock()
+        )(mock_app, base_events.Event, timeout=None)
+
+        async with stub_stream:
+            stub_stream.open.assert_awaited_once()
+            stub_stream.close.assert_not_called()
+
+        stub_stream.open.assert_awaited_once()
+        stub_stream.close.assert_awaited_once()
+
+    def test___enter__(self):
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        stub_stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            mock_app, base_events.Event, timeout=None
+        )
+
+        with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
+            stub_stream.__enter__()
+
+    def test___exit__(self):
+        stub_stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            mock_app, base_events.Event, timeout=None
+        )
+
+        try:
+            stub_stream.__exit__(None, None, None)
+        except AttributeError as exc:
+            pytest.fail(exc)
+
+    @pytest.mark.asyncio()
+    async def test__listener_when_filter_returns_false(self, mock_app):
+        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
+        stream.filter(lambda _: False)
+        mock_event = object()
+
+        assert await stream._listener(mock_event) is None
+        assert stream._queue.qsize() == 0
+
+    @pytest.mark.asyncio()
+    async def test__listener_when_filter_passes_and_queue_full(self, mock_app):
+        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=2)
+        stream._queue.put_nowait(object())
+        stream._queue.put_nowait(object())
+        stream.filter(lambda _: True)
+        mock_event = object()
+
+        assert await stream._listener(mock_event) is None
+        assert stream._queue.qsize() == 2
+        assert stream._queue.get_nowait() is not mock_event
+        assert stream._queue.get_nowait() is not mock_event
+
+    @pytest.mark.asyncio()
+    async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app):
+        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
+        stream._queue.put_nowait(object())
+        stream._queue.put_nowait(object())
+        stream.filter(lambda _: True)
+        mock_event = object()
+
+        assert await stream._listener(mock_event) is None
+        assert stream._queue.qsize() == 3
+        assert stream._queue.get_nowait() is not mock_event
+        assert stream._queue.get_nowait() is not mock_event
+        assert stream._queue.get_nowait() is mock_event
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test___anext___when_stream_closed(self):
+        streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=float("inf"))
+
+        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        with pytest.raises(TypeError):
+            await streamer.__anext__()
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test___anext___times_out(self):
+        streamer = event_manager_base.EventStream(
+            mock.Mock(), event_type=base_events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME
+        )
+
+        async with streamer:
+            async for _ in streamer:
+                pytest.fail("streamer shouldn't have yielded anything")
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test___anext___waits_for_next_event(self):
+        mock_event = object()
+        streamer = event_manager_base.EventStream(
+            mock.Mock(), event_type=base_events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3
+        )
+
+        async def add_event():
+            await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
+            streamer._queue.put_nowait(mock_event)
+
+        asyncio.create_task(add_event())
+
+        async with streamer:
+            async for event in streamer:
+                assert event is mock_event
+                return
+
+            pytest.fail("streamer should've yielded something")
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test___anext__(self):
+        mock_event = object()
+        streamer = event_manager_base.EventStream(
+            event_manager=mock.Mock(),
+            event_type=base_events.Event,
+            timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME,
+        )
+        streamer._queue.put_nowait(mock_event)
+
+        async with streamer:
+            async for event in streamer:
+                assert event is mock_event
+                return
+
+        pytest.fail("streamer should've yielded something")
+
+    @pytest.mark.asyncio()
+    async def test___await__(self):
+        mock_event_0 = object()
+        mock_event_1 = object()
+        mock_event_2 = object()
+        streamer = hikari_test_helpers.mock_class_namespace(
+            event_manager_base.EventStream,
+            close=mock.AsyncMock(),
+            open=mock.AsyncMock(),
+            init_=False,
+            _active=False,
+            __anext__=mock.AsyncMock(side_effect=[mock_event_0, mock_event_1, mock_event_2]),
+        )()
+
+        assert await streamer == [mock_event_0, mock_event_1, mock_event_2]
+        streamer.open.assert_awaited_once()
+        streamer.close.assert_awaited_once()
+
+    def test___del___for_active_stream(self):
+        mock_coroutine = object()
+        close_method = mock.Mock(return_value=mock_coroutine)
+        streamer = hikari_test_helpers.mock_class_namespace(
+            event_manager_base.EventStream, close=close_method, init_=False
+        )()
+        streamer._event_type = base_events.Event
+        streamer._active = True
+
+        with mock.patch.object(asyncio, "ensure_future", side_effect=RuntimeError) as ensure_future:
+            with unittest.TestCase().assertLogs("hikari.event_manager", level=logging.WARNING) as logging_watcher:
+                del streamer
+
+        assert logging_watcher.output == [
+            "WARNING:hikari.event_manager:active 'Event' streamer fell out of scope before being closed"
+        ]
+        ensure_future.assert_called_once_with(mock_coroutine)
+        close_method.assert_called_once_with()
+
+    def test___del___for_inactive_stream(self):
+        close_method = mock.Mock()
+        streamer = hikari_test_helpers.mock_class_namespace(
+            event_manager_base.EventStream, close=close_method, init_=False
+        )()
+        streamer._event_type = base_events.Event
+        streamer._active = False
+
+        with mock.patch.object(asyncio, "ensure_future"):
+            del streamer
+            asyncio.ensure_future.assert_not_called()
+
+        close_method.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_close_for_inactive_stream(self, mock_app):
+        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
+        await stream.close()
+        mock_app.event_manager.unsubscribe.assert_not_called()
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test_close_for_active_stream(self):
+        mock_registered_listener = object()
+        mock_manager = mock.Mock()
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
+        )
+
+        await stream.open()
+        stream._registered_listener = mock_registered_listener
+        await stream.close()
+        mock_manager.unsubscribe.assert_called_once_with(base_events.Event, mock_registered_listener)
+        assert stream._active is False
+        assert stream._registered_listener is None
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test_close_for_active_stream_handles_value_error(self):
+        mock_registered_listener = object()
+        mock_manager = mock.Mock()
+        mock_manager.unsubscribe.side_effect = ValueError
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
+        )
+
+        await stream.open()
+        stream._registered_listener = mock_registered_listener
+        await stream.close()
+        mock_manager.unsubscribe.assert_called_once_with(base_events.Event, mock_registered_listener)
+        assert stream._active is False
+        assert stream._registered_listener is None
+
+    def test_filter_for_inactive_stream(self):
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock.Mock(), event_type=base_events.Event, timeout=1
+        )
+        stream._filters = iterators.All(())
+        first_pass = mock.Mock(attr=True)
+        second_pass = mock.Mock(attr=True)
+        first_fails = mock.Mock(attr=True)
+        second_fail = mock.Mock(attr=False)
+
+        def predicate(obj):
+            return obj in (first_pass, second_pass)
+
+        stream.filter(predicate, attr=True)
+
+        assert stream._filters(first_pass) is True
+        assert stream._filters(first_fails) is False
+        assert stream._filters(second_pass) is True
+        assert stream._filters(second_fail) is False
+
+    @pytest.mark.asyncio()
+    async def test_filter_for_active_stream(self):
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock.Mock(), event_type=base_events.Event, timeout=float("inf")
+        )
+        stream._active = True
+        mock_wrapping_iterator = object()
+        predicate = object()
+
+        with mock.patch.object(iterators.LazyIterator, "filter", return_value=mock_wrapping_iterator):
+            assert stream.filter(predicate, name="OK") is mock_wrapping_iterator
+
+            iterators.LazyIterator.filter.assert_called_once_with(predicate, name="OK")
+
+        # Ensure we don't get a warning or error on del
+        stream._active = False
+
+    @pytest.mark.asyncio()
+    async def test_open_for_inactive_stream(self):
+        mock_listener = object()
+        mock_manager = mock.Mock()
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock_manager,
+            event_type=base_events.Event,
+            timeout=float("inf"),
+        )
+
+        stream._active = True
+        stream._registered_listener = mock_listener
+
+        with mock.patch.object(event_manager_base, "_generate_weak_listener"):
+            with mock.patch.object(weakref, "WeakMethod"):
+                await stream.open()
+
+                weakref.WeakMethod.assert_not_called()
+            event_manager_base._generate_weak_listener.assert_not_called()
+
+        mock_manager.subscribe.assert_not_called()
+        assert stream._active is True
+        assert stream._registered_listener is mock_listener
+
+        # Ensure we don't get a warning or error on del
+        stream._active = False
+
+    @pytest.mark.asyncio()
+    @hikari_test_helpers.timeout()
+    async def test_open_for_active_stream(self):
+        mock_manager = mock.Mock()
+        stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
+            event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
+        )
+        stream._active = False
+        mock_listener = object()
+        mock_listener_ref = object()
+
+        with mock.patch.object(event_manager_base, "_generate_weak_listener", return_value=mock_listener):
+            with mock.patch.object(weakref, "WeakMethod", return_value=mock_listener_ref):
+                await stream.open()
+
+                weakref.WeakMethod.assert_called_once_with(stream._listener)
+            event_manager_base._generate_weak_listener.assert_called_once_with(mock_listener_ref)
+
+        mock_manager.subscribe.assert_called_once_with(base_events.Event, mock_listener)
+        assert stream._active is True
+        assert stream._registered_listener is mock_listener
+
+        # Ensure we don't get a warning or error on del
+        stream._active = False
 
 
 def test__default_predicate_returns_True():
@@ -42,7 +393,7 @@ class TestEventManagerBase:
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None
 
-        return EventManagerBaseImpl(mock.Mock())
+        return EventManagerBaseImpl(mock.Mock(), mock.Mock())
 
     def test___init___loads_consumers(self):
         class StubManager(event_manager_base.EventManagerBase):
@@ -55,7 +406,7 @@ class TestEventManagerBase:
             async def not_a_listener(self):
                 raise NotImplementedError
 
-        manager = StubManager(mock.Mock(intents=42))
+        manager = StubManager(mock.Mock(), mock.Mock(intents=42))
         assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
 
     @pytest.mark.asyncio()
@@ -70,9 +421,9 @@ class TestEventManagerBase:
 
         event_manager._handle_dispatch.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
-            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
-        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             mock_shard, mock_payload, name="UNEXISTING_EVENT"
         )
 
@@ -94,9 +445,9 @@ class TestEventManagerBase:
             name="dispatch EXISTING_EVENT",
         )
         event_manager.dispatch.assert_called_once_with(
-            event_manager._app.event_factory.deserialize_shard_payload_event.return_value
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
-        event_manager._app.event_factory.deserialize_shard_payload_event.assert_called_once_with(
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             shard, payload, name="EXISTING_EVENT"
         )
 
@@ -196,7 +547,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_correct(self, event_manager):
-        event_manager._app.intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
+        event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
@@ -208,7 +559,7 @@ class TestEventManagerBase:
         warn.assert_not_called()
 
     def test__check_intents_when_intents_incorrect(self, event_manager):
-        event_manager._app.intents = intents.Intents.GUILD_EMOJIS
+        event_manager._intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(
             base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
@@ -311,10 +662,17 @@ class TestEventManagerBase:
             async def test():
                 ...
 
-    def test_listen_when_more_then_one_param(self, event_manager):
+    def test_listen_when_more_then_one_param_when_provided_in_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
+            async def test(a, b, c):
+                ...
+
+    def test_listen_when_more_then_one_param_when_provided_in_decorator(self, event_manager):
+        with pytest.raises(TypeError):
+
+            @event_manager.listen(object)
             async def test(a, b, c):
                 ...
 
@@ -326,12 +684,18 @@ class TestEventManagerBase:
                 ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager):
-        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
+        stack = contextlib.ExitStack()
+
+        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
+        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
+
+        with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent)
             async def test(event):
                 ...
 
+        resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
     def test_listen_when_param_provided_in_typehint(self, event_manager):
