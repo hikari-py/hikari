@@ -32,12 +32,10 @@ class TestEmoji:
             ("<:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<bar:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=False)),
             ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
-            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji(name="\N{OK HAND SIGN}")),
+            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji("\N{OK HAND SIGN}")),
             (
                 "\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}",
-                emojis.UnicodeEmoji(
-                    name="\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"
-                ),
+                emojis.UnicodeEmoji("\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"),
             ),
         ],
     )
@@ -47,17 +45,15 @@ class TestEmoji:
 
 class TestUnicodeEmoji:
     def test_str_operator(self):
-        assert emojis.UnicodeEmoji(name="\N{OK HAND SIGN}") == "\N{OK HAND SIGN}"
+        assert emojis.UnicodeEmoji("\N{OK HAND SIGN}") == "\N{OK HAND SIGN}"
 
     @pytest.mark.parametrize(
         ("input", "output"),
         [
-            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji(name="\N{OK HAND SIGN}")),
+            ("\N{OK HAND SIGN}", emojis.UnicodeEmoji("\N{OK HAND SIGN}")),
             (
                 "\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}",
-                emojis.UnicodeEmoji(
-                    name="\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"
-                ),
+                emojis.UnicodeEmoji("\N{REGIONAL INDICATOR SYMBOL LETTER G}\N{REGIONAL INDICATOR SYMBOL LETTER B}"),
             ),
         ],
     )
@@ -68,7 +64,7 @@ class TestUnicodeEmoji:
 class TestCustomEmoji:
     def test_str_operator_when_populated_name(self):
         emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="peepoSad", is_animated=True)
-        assert str(emoji) == "peepoSad"
+        assert str(emoji) == emoji.mention
 
     @pytest.mark.parametrize(
         ("input", "output"),

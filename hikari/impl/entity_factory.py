@@ -1025,7 +1025,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ################
 
     def deserialize_unicode_emoji(self, payload: data_binding.JSONObject) -> emoji_models.UnicodeEmoji:
-        return emoji_models.UnicodeEmoji(name=payload["name"])
+        return emoji_models.UnicodeEmoji(payload["name"])
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
         return emoji_models.CustomEmoji(

@@ -105,9 +105,7 @@ class Emoji(files.WebResource, abc.ABC):
         return UnicodeEmoji.parse(string)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
-class UnicodeEmoji(Emoji):
+class UnicodeEmoji(str, Emoji):
     """Represents a unicode emoji.
 
     !!! warning
@@ -126,33 +124,27 @@ class UnicodeEmoji(Emoji):
         removed in a future release after a deprecation period.
     """
 
-    name: str = attr.field(repr=True, hash=True)
-    """The code points that form the emoji."""
+    __slots__: typing.Sequence[str] = []
 
-    def __str__(self) -> str:
-        return self.name
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, Emoji):
-            return self.name == other.name
-        if isinstance(other, str):
-            return self.name == other
-        return False
+    @property
+    def name(self) -> str:
+        """Return the code points which form the emoji."""
+        return self
 
     @property
     @typing.final
     def url_name(self) -> str:
-        return self.name
+        return self
 
     @property
     def mention(self) -> str:
-        return self.name
+        return self
 
     @property
     @typing.final
     def codepoints(self) -> typing.Sequence[int]:
         """Integer codepoints that make up this emoji, as UTF-8."""
-        return [ord(c) for c in self.name]
+        return [ord(c) for c in self]
 
     @property
     def filename(self) -> str:
@@ -198,25 +190,25 @@ class UnicodeEmoji(Emoji):
     #     This returns the name of each codepoint. If only one codepoint exists,
     #     then this will only have one item in the resulting sequence.
     #     """
-    #     return [unicodedata.name(c) for c in self.name]
+    #     return [unicodedata.name(c) for c in self]
 
     @property
     @typing.final
     def unicode_escape(self) -> str:
         """Get the unicode escape string for this emoji."""
-        return bytes(self.name, "unicode_escape").decode("utf-8")
+        return bytes(self, "unicode_escape").decode("utf-8")
 
     @classmethod
     @typing.final
     def parse_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
-        return cls(name="".join(map(chr, (codepoint, *codepoints))))
+        return cls("".join(map(chr, (codepoint, *codepoints))))
 
     @classmethod
     @typing.final
     def parse_unicode_escape(cls, escape: str) -> UnicodeEmoji:
         """Create a unicode emoji from a unicode escape string."""
-        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
+        return cls(escape.encode("utf-8"), "unicode_escape")
 
     @classmethod
     @typing.final
@@ -238,7 +230,7 @@ class UnicodeEmoji(Emoji):
         # for i, codepoint in enumerate(string, start=1):
         #     unicodedata.name(codepoint)
 
-        return cls(name=string)
+        return cls(string)
 
 
 @attr_extensions.with_copy
@@ -277,7 +269,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     """Whether the emoji is animated."""
 
     def __str__(self) -> str:
-        return self.name
+        return self.mention
 
     @property
     def filename(self) -> str:
