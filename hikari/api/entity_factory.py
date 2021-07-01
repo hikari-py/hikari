@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks as webhook_models
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
-    from hikari.interactions import components as component_models
+    from hikari.interactions import component_interactions
     from hikari.internal import data_binding
 
 
@@ -1096,7 +1096,7 @@ class EntityFactory(abc.ABC):
 
     def deserialize_component_interaction(
         self, payload: data_binding.JSONObject
-    ) -> component_models.ComponentInteraction:
+    ) -> component_interactions.ComponentInteraction:
         """Parser a raw payload from Discord into a component interaction object.
 
         Parameters
@@ -1106,7 +1106,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.interactions.components.ComponentInteraction
+        hikari.interactions.component_interactions.ComponentInteraction
             The deserialized component interaction.
         """
 

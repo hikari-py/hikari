@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.interactions import commands
-    from hikari.interactions import components
+    from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
@@ -493,8 +493,10 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[components.ComponentInteraction], /
-    ) -> typing.Optional[interaction_server.ListenerT[components.ComponentInteraction, _MessageResponseBuilderT]]:
+        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+    ) -> typing.Optional[
+        interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+    ]:
         ...
 
     def get_listener(
@@ -516,9 +518,9 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[components.ComponentInteraction],
+        interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[components.ComponentInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,

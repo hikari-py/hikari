@@ -48,7 +48,7 @@ from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_fbase_interactions
 from hikari.interactions import command_interactions
-from hikari.interactions import components as component_interactions
+from hikari.interactions import component_interactions
 
 
 def test__with_int_cast():

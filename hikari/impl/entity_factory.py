@@ -58,7 +58,7 @@ from hikari import webhooks as webhook_models
 from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
-from hikari.interactions import components as component_models
+from hikari.interactions import component_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
@@ -1883,7 +1883,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_component_interaction(
         self, payload: data_binding.JSONObject
-    ) -> component_models.ComponentInteraction:
+    ) -> component_interactions.ComponentInteraction:
         data_payload = payload["data"]
 
         guild_id = None
@@ -1915,7 +1915,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message_flags = message.flags
             message_id = message.id
 
-        return component_models.ComponentInteraction(
+        return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),

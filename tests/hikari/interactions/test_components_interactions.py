@@ -26,7 +26,7 @@ from hikari import channels
 from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import bases
-from hikari.interactions import components
+from hikari.interactions import component_interactions
 from tests.hikari import hikari_test_helpers
 
 
@@ -38,7 +38,7 @@ def mock_app():
 class TestComponentInteraction:
     @pytest.fixture()
     def mock_component_interaction(self, mock_app):
-        return components.ComponentInteraction(
+        return component_interactions.ComponentInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
             type=bases.InteractionType.APPLICATION_COMMAND,
@@ -139,7 +139,7 @@ class TestComponentInteraction:
     @pytest.mark.asyncio()
     async def test_fetch_parent_message(self):
         stub_interaction = hikari_test_helpers.mock_class_namespace(
-            components.ComponentInteraction, fetch_message=mock.AsyncMock(), init_=False
+            component_interactions.ComponentInteraction, fetch_message=mock.AsyncMock(), init_=False
         )()
         stub_interaction.message_id = 3421
 
