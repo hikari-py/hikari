@@ -387,7 +387,7 @@ class TestEntityFactoryImpl:
         assert isinstance(partial_token, application_models.PartialOAuth2Token)
 
     @pytest.fixture()
-    def access_token_payload(self, deserialize_rest_guild_payload, webhook_payload):
+    def access_token_payload(self, deserialize_rest_guild_payload, incoming_webhook_payload):
         return {
             "token_type": "Bearer",
             "guild": deserialize_rest_guild_payload,
@@ -395,11 +395,11 @@ class TestEntityFactoryImpl:
             "scope": "bot webhook.incoming",
             "expires_in": 2419200,
             "refresh_token": "mgp8qnvBwJcmadwgCYKyYD5CAzGAX4",
-            "webhook": webhook_payload,
+            "webhook": incoming_webhook_payload,
         }
 
     def test_deserialize_authorization_token(
-        self, entity_factory_impl, access_token_payload, deserialize_rest_guild_payload, webhook_payload
+        self, entity_factory_impl, access_token_payload, deserialize_rest_guild_payload, incoming_webhook_payload
     ):
         access_token = entity_factory_impl.deserialize_authorization_token(access_token_payload)
 
@@ -412,7 +412,7 @@ class TestEntityFactoryImpl:
         ]
         assert access_token.expires_in == datetime.timedelta(weeks=4)
         assert access_token.refresh_token == "mgp8qnvBwJcmadwgCYKyYD5CAzGAX4"
-        assert access_token.webhook == entity_factory_impl.deserialize_webhook(webhook_payload)
+        assert access_token.webhook == entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
 
     def test_deserialize_authorization_token_without_optional_fields(self, entity_factory_impl, access_token_payload):
         del access_token_payload["guild"]
@@ -588,28 +588,20 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture()
-    def webhook_payload(self, user_payload):
-        return {
-            "id": "1234",
-            "type": 1,
-            "guild_id": "123",
-            "channel_id": "456",
-            "user": user_payload,
-            "name": "hikari webhook",
-            "avatar": "bb71f469c158984e265093a81b3397fb",
-            "token": "ueoqrialsdfaKJLKfajslkdf",
-            "application_id": "1234567890",
-            "source_channel": {"id": "381871767846780666", "name": "announcements"},
-            "source_guild": {"id": "574921006817476608", "name": "Hikari API", "icon": "a363a8443211231232fdfb2e50e6"},
-        }
-
-    @pytest.fixture()
-    def audit_log_payload(self, audit_log_entry_payload, user_payload, webhook_payload, partial_integration_payload):
+    def audit_log_payload(
+        self,
+        audit_log_entry_payload,
+        user_payload,
+        incoming_webhook_payload,
+        application_webhook_payload,
+        follower_webhook_payload,
+        partial_integration_payload,
+    ):
         return {
             "audit_log_entries": [audit_log_entry_payload],
             "integrations": [partial_integration_payload],
             "users": [user_payload],
-            "webhooks": [webhook_payload],
+            "webhooks": [incoming_webhook_payload, application_webhook_payload, follower_webhook_payload],
         }
 
     def test_deserialize_audit_log(
@@ -618,7 +610,9 @@ class TestEntityFactoryImpl:
         mock_app,
         audit_log_payload,
         user_payload,
-        webhook_payload,
+        incoming_webhook_payload,
+        application_webhook_payload,
+        follower_webhook_payload,
         partial_integration_payload,
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
@@ -655,7 +649,11 @@ class TestEntityFactoryImpl:
             4949494949: entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
         }
         assert audit_log.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-        assert audit_log.webhooks == {1234: entity_factory_impl.deserialize_webhook(webhook_payload)}
+        assert audit_log.webhooks == {
+            223704706495545344: entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload),
+            658822586720976555: entity_factory_impl.deserialize_application_webhook(application_webhook_payload),
+            752831914402115456: entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload),
+        }
 
     def test_deserialize_audit_log_with_unset_or_unknown_fields(self, entity_factory_impl, audit_log_payload):
         # Unset fields
@@ -713,6 +711,26 @@ class TestEntityFactoryImpl:
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
 
         assert len(audit_log.entries) == 0
+
+    def test_deserialize_audit_log_skips_unknown_webhook_type(
+        self,
+        entity_factory_impl,
+        incoming_webhook_payload,
+        application_webhook_payload,
+    ):
+        audit_log = entity_factory_impl.deserialize_audit_log(
+            {
+                "webhooks": [incoming_webhook_payload, {"type": -99999}, application_webhook_payload],
+                "users": [],
+                "audit_log_entries": [],
+                "integrations": [],
+            }
+        )
+
+        assert audit_log.webhooks == {
+            223704706495545344: entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload),
+            658822586720976555: entity_factory_impl.deserialize_application_webhook(application_webhook_payload),
+        }
 
     ##################
     # CHANNEL MODELS #
@@ -4234,38 +4252,158 @@ class TestEntityFactoryImpl:
     # WEBHOOK MODELS #
     ##################
 
-    def test_deserialize_webhook(self, entity_factory_impl, webhook_payload, user_payload):
-        webhook = entity_factory_impl.deserialize_webhook(webhook_payload)
-        assert webhook.id == 1234
-        assert webhook.type == webhook_models.WebhookType.INCOMING
-        assert webhook.guild_id == 123
-        assert webhook.channel_id == 456
-        assert webhook.author == entity_factory_impl.deserialize_user(user_payload)
-        assert webhook.name == "hikari webhook"
-        assert webhook.avatar_hash == "bb71f469c158984e265093a81b3397fb"
-        assert webhook.token == "ueoqrialsdfaKJLKfajslkdf"
-        assert webhook.application_id == 1234567890
+    @pytest.fixture()
+    def incoming_webhook_payload(self, user_payload):
+        return {
+            "name": "test webhook",
+            "type": 1,
+            "channel_id": "199737254929760256",
+            "token": "3d89bb7572e0fb30d8128367b3b1b44fecd1726de135cbe28a41f8b2f777c372ba2939e72279b94526ff5d1bd4358d65cf11",
+            "avatar": "dppdpdpdpdpd",
+            "guild_id": "199737254929760256",
+            "id": "223704706495545344",
+            "application_id": "32123123123",
+            "user": user_payload,
+        }
 
-        assert webhook.source_channel == entity_factory_impl.deserialize_partial_channel(
-            {"id": "381871767846780666", "name": "announcements", "type": 5}
+    @pytest.fixture()
+    def follower_webhook_payload(self, user_payload, partial_channel_payload):
+        return {
+            "type": 2,
+            "id": "752831914402115456",
+            "name": "Guildy name",
+            "avatar": "bb71f469c158984e265093a81b3397fb",
+            "channel_id": "561885260615255432",
+            "guild_id": "56188498421443265",
+            "application_id": "312123123",
+            "source_guild": {
+                "id": "56188498421476534",
+                "name": "Guildy name",
+                "icon": "bb71f469c158984e265093a81b3397fb",
+            },
+            "source_channel": {"id": "5618852344134324", "name": "announcements"},
+            "user": user_payload,
+        }
+
+    @pytest.fixture()
+    def application_webhook_payload(self):
+        return {
+            "type": 3,
+            "id": "658822586720976555",
+            "name": "Clyde",
+            "avatar": "689161dc90ac261d00f1608694ac6bfd",
+            "channel_id": None,  # This field is always null
+            "guild_id": None,  # This field is always null
+            "application_id": "658822586720976555",
+        }
+
+    def test_deserialize_incoming_webhook(self, entity_factory_impl, mock_app, incoming_webhook_payload, user_payload):
+        webhook = entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
+
+        assert webhook.app is mock_app
+        assert webhook.name == "test webhook"
+        assert webhook.type is webhook_models.WebhookType.INCOMING
+        assert webhook.channel_id == 199737254929760256
+        assert (
+            webhook.token
+            == "3d89bb7572e0fb30d8128367b3b1b44fecd1726de135cbe28a41f8b2f777c372ba2939e72279b94526ff5d1bd4358d65cf11"
         )
+        assert webhook.avatar_hash == "dppdpdpdpdpd"
+        assert webhook.guild_id == 199737254929760256
+        assert webhook.id == 223704706495545344
+        assert webhook.application_id == 32123123123
+        assert webhook.author == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(webhook, webhook_models.IncomingWebhook)
 
-        assert webhook.source_guild.id == 574921006817476608
-        assert webhook.source_guild.name == "Hikari API"
-        assert webhook.source_guild.icon_hash == "a363a8443211231232fdfb2e50e6"
+    def test_deserialize_incoming_webhook_with_null_fields(
+        self, entity_factory_impl, incoming_webhook_payload, user_payload
+    ):
+        del incoming_webhook_payload["user"]
+        del incoming_webhook_payload["token"]
+        del incoming_webhook_payload["application_id"]
+        incoming_webhook_payload["avatar"] = None
+
+        webhook = entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
+
+        assert webhook.name == "test webhook"
+        assert webhook.type is webhook_models.WebhookType.INCOMING
+        assert webhook.channel_id == 199737254929760256
+        assert webhook.token is None
+        assert webhook.avatar_hash is None
+        assert webhook.application_id is None
+        assert webhook.author is None
+        assert isinstance(webhook, webhook_models.IncomingWebhook)
+
+    def test_deserialize_channel_follower_webhook(
+        self, entity_factory_impl, mock_app, follower_webhook_payload, user_payload
+    ):
+        webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
+
+        assert webhook.app is mock_app
+        assert webhook.type is webhook_models.WebhookType.CHANNEL_FOLLOWER
+        assert webhook.id == 752831914402115456
+        assert webhook.name == "Guildy name"
+        assert webhook.avatar_hash == "bb71f469c158984e265093a81b3397fb"
+        assert webhook.channel_id == 561885260615255432
+        assert webhook.guild_id == 56188498421443265
+        assert webhook.application_id == 312123123
+
+        assert webhook.source_guild.app is mock_app
+        assert webhook.source_guild.id == 56188498421476534
+        assert webhook.source_guild.name == "Guildy name"
+        assert webhook.source_guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
         assert isinstance(webhook.source_guild, guild_models.PartialGuild)
 
-        assert isinstance(webhook, webhook_models.Webhook)
-
-    def test_deserialize_webhook_with_null_and_unset_fields(self, entity_factory_impl):
-        webhook = entity_factory_impl.deserialize_webhook(
-            {"id": "1234", "type": 1, "channel_id": "456", "name": None, "avatar": None, "application_id": None}
+        assert webhook.source_channel == entity_factory_impl.deserialize_partial_channel(
+            {"id": "5618852344134324", "name": "announcements", "type": channel_models.ChannelType.GUILD_NEWS}
         )
-        assert webhook.guild_id is None
-        assert webhook.author is None
-        assert webhook.name is None
+        assert webhook.author == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(webhook, webhook_models.ChannelFollowerWebhook)
+
+    def test_deserialize_channel_follower_webhook_without_optional_fields(
+        self, entity_factory_impl, mock_app, follower_webhook_payload, user_payload
+    ):
+        follower_webhook_payload["avatar"] = None
+        del follower_webhook_payload["user"]
+        del follower_webhook_payload["application_id"]
+
+        webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
+
         assert webhook.avatar_hash is None
-        assert webhook.token is None
         assert webhook.application_id is None
-        assert webhook.source_channel is None
-        assert webhook.source_guild is None
+        assert webhook.author is None
+
+    def test_deserialize_application_webhook(self, entity_factory_impl, mock_app, application_webhook_payload):
+        webhook = entity_factory_impl.deserialize_application_webhook(application_webhook_payload)
+
+        assert webhook.app is mock_app
+        assert webhook.type is webhook_models.WebhookType.APPLICATION
+        assert webhook.id == 658822586720976555
+        assert webhook.name == "Clyde"
+        assert webhook.avatar_hash == "689161dc90ac261d00f1608694ac6bfd"
+        assert webhook.application_id == 658822586720976555
+        assert isinstance(webhook, webhook_models.ApplicationWebhook)
+
+    def test_deserialize_application_webhook_without_optional_fields(
+        self, entity_factory_impl, mock_app, application_webhook_payload
+    ):
+        application_webhook_payload["avatar"] = None
+
+        webhook = entity_factory_impl.deserialize_application_webhook(application_webhook_payload)
+
+        assert webhook.avatar_hash is None
+
+    def test_deserialize_webhook(
+        self, entity_factory_impl, incoming_webhook_payload, follower_webhook_payload, application_webhook_payload
+    ):
+        for expected_type, payload in [
+            (webhook_models.IncomingWebhook, incoming_webhook_payload),
+            (webhook_models.ChannelFollowerWebhook, follower_webhook_payload),
+            (webhook_models.ApplicationWebhook, application_webhook_payload),
+        ]:
+            result = entity_factory_impl.deserialize_webhook(payload)
+            assert isinstance(result, expected_type)
+
+    def test_deserialize_webhook_for_unexpected_webhook_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_webhook({"type": -7999})

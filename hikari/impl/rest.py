@@ -1585,7 +1585,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.IncomingWebhook:
         route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1597,14 +1597,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_webhook(response)
+        return self._entity_factory.deserialize_incoming_webhook(response)
 
     async def fetch_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
             no_auth = False
@@ -1619,7 +1619,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_channel_webhooks(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
-    ) -> typing.Sequence[webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.PartialWebhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
@@ -1628,7 +1628,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_guild_webhooks(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.PartialWebhook]:
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
@@ -1636,14 +1636,14 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:
             route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
             no_auth = False
@@ -1668,7 +1668,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:

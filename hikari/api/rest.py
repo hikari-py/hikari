@@ -1830,7 +1830,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.IncomingWebhook:
         """Create webhook in a channel.
 
         Parameters
@@ -1851,7 +1851,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.webhooks.IncomingWebhook
             The created webhook.
 
         Raises
@@ -1882,15 +1882,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.PartialWebhook:
         """Fetch an existing webhook.
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.PartialWebhook]
             The webhook to fetch. This may be the object or the ID
             of an existing webhook.
 
@@ -1902,7 +1902,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.webhooks.PartialWebhook
             The requested webhook.
 
         Raises
@@ -1933,7 +1933,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_channel_webhooks(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
-    ) -> typing.Sequence[webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all channel webhooks.
 
         Parameters
@@ -1945,7 +1945,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.PartialWebhook]
             The fetched webhooks.
 
         Raises
@@ -1975,7 +1975,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_webhooks(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[webhooks.Webhook]:
+    ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all guild webhooks.
 
         Parameters
@@ -1986,7 +1986,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.PartialWebhook]
             The fetched webhooks.
 
         Raises
@@ -2015,19 +2015,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> webhooks.Webhook:
+    ) -> webhooks.PartialWebhook:
         """Edit a webhook.
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.PartialWebhook]
             The webhook to edit. This may be the object or the
             ID of an existing webhook.
 
@@ -2049,7 +2049,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.webhooks.PartialWebhook
             The edited webhook.
 
         Raises
@@ -2079,7 +2079,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.Webhook],
+        webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -2087,7 +2087,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.Webhook]
+        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.PartialWebhook]
             The webhook to delete. This may be the object or the
             ID of an existing webhook.
 

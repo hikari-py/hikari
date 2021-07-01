@@ -1811,7 +1811,7 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         expected_json = {"name": "test webhook", "avatar": "some data"}
-        rest_client._entity_factory.deserialize_webhook = mock.Mock(return_value=webhook)
+        rest_client._entity_factory.deserialize_incoming_webhook = mock.Mock(return_value=webhook)
 
         returned = await rest_client.create_webhook(
             StubModel(123), "test webhook", avatar="someavatar.png", reason="why not"
@@ -1819,18 +1819,18 @@ class TestRESTClientImplAsync:
         assert returned is webhook
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="why not")
-        rest_client._entity_factory.deserialize_webhook.assert_called_once_with({"id": "456"})
+        rest_client._entity_factory.deserialize_incoming_webhook.assert_called_once_with({"id": "456"})
 
     async def test_create_webhook_without_optionals(self, rest_client):
         webhook = StubModel(456)
         expected_route = routes.POST_CHANNEL_WEBHOOKS.compile(channel=123)
         expected_json = {"name": "test webhook"}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_webhook = mock.Mock(return_value=webhook)
+        rest_client._entity_factory.deserialize_incoming_webhook = mock.Mock(return_value=webhook)
 
         assert await rest_client.create_webhook(StubModel(123), "test webhook") is webhook
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
-        rest_client._entity_factory.deserialize_webhook.assert_called_once_with({"id": "456"})
+        rest_client._entity_factory.deserialize_incoming_webhook.assert_called_once_with({"id": "456"})
 
     async def test_fetch_webhook(self, rest_client):
         webhook = StubModel(123)
