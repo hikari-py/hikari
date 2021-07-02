@@ -853,7 +853,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files_.Resource[files_.AsyncReader]] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.WebhookChannelT]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> ChannelFollowerWebhook:
         """Edit this webhook.
@@ -865,7 +865,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the new avatar image. If `builtins.None`, then
             it is removed. If not specified, nothing is changed.
-        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the object or ID of the new channel the given
             webhook should be moved to.
         reason : hikari.undefined.UndefinedOr[builtins.str]
