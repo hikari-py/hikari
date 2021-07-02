@@ -43,6 +43,8 @@ __all__: typing.List[str] = [
     "GuildStoreChannel",
     "GuildVoiceChannel",
     "GuildStageChannel",
+    "WebhookChannelT",
+    "WebhookChannelTypes",
 ]
 
 import typing
@@ -1346,3 +1348,22 @@ class GuildStageChannel(GuildChannel):
 
     If this is `0`, then assume no limit.
     """
+
+
+WebhookChannelT = typing.Union[GuildTextChannel, GuildNewsChannel]
+"""Union of the channel types which incoming and follower webhooks can be attached to.
+
+The following types are in this:
+
+* `GuildTextChannel`
+* `GuildNewsChannel`
+"""
+
+WebhookChannelTypes = (GuildTextChannel, GuildNewsChannel)
+"""Tuple of the channel types which are valid for `WebhookChannelT`.
+
+This includes:
+
+* `GuildTextChannel`
+* `GuildNewsChannel`
+"""

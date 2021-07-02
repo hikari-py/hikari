@@ -775,7 +775,6 @@ class WebhookUpdateEvent(GuildChannelEvent):
     # <<inherited docstring from ChannelEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.field()
-
     # <<inherited docstring from GuildChannelEvent>>.
 
     async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.PartialWebhook]:

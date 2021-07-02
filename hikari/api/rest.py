@@ -1840,7 +1840,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_webhook(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
         name: str,
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1850,7 +1850,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]
             The channel where the webhook will be created. This may be
             the object or the ID of an existing channel.
         name : str
@@ -1947,16 +1947,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_channel_webhooks(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all channel webhooks.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
-            The channel to fetch the webhooks for. This
-            may be a `hikari.channels.TextableChannel` or the ID of an
-            existing channel.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]
+            The channel to fetch the webhooks for. This may be an instance of any
+            of the classes which are valid for `hikari.channels.WebhookChannelT`
+            or the ID of an existing channel.
 
         Returns
         -------
@@ -2035,7 +2035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.WebhookChannelT]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
         """Edit a webhook.
@@ -2056,7 +2056,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new webhook avatar. If `builtins.None`, will
             remove the webhook avatar.
-        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]]
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the text channel to move the webhook to.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
