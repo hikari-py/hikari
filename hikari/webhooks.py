@@ -957,5 +957,5 @@ class ApplicationWebhook(PartialWebhook):
     This is from the interactions flow.
     """
 
-    application_id: snowflakes.Snowflake
+    application_id: snowflakes.Snowflake = attr.ib()
     # <<inherited docstring from PartialWebhook>>.
