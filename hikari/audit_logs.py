@@ -484,7 +484,7 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """A mapping of the objects of users found in this audit log."""
 
-    webhooks: typing.Mapping[snowflakes.Snowflake, webhooks_.Webhook] = attr.field(repr=False)
+    webhooks: typing.Mapping[snowflakes.Snowflake, webhooks_.PartialWebhook] = attr.field(repr=False)
     """A mapping of the objects of webhooks found in this audit log."""
 
     @typing.overload

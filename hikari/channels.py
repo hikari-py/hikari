@@ -54,6 +54,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
+from hikari import webhooks
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
@@ -68,7 +69,6 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import users
     from hikari import voices
-    from hikari import webhooks
     from hikari.api import special_endpoints
     from hikari.internal import time
 
@@ -187,12 +187,12 @@ class ChannelFollow:
         assert isinstance(channel, (GuildTextChannel, GuildNewsChannel))
         return channel
 
-    async def fetch_webhook(self) -> webhooks.Webhook:
+    async def fetch_webhook(self) -> webhooks.ChannelFollowerWebhook:
         """Fetch the webhook attached to this follow.
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.webhooks.ChannelFollowerWebhook
             The webhook attached to this follow.
 
         Raises
@@ -218,7 +218,9 @@ class ChannelFollow:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_webhook(self.webhook_id)
+        webhook = await self.app.rest.fetch_webhook(self.webhook_id)
+        assert isinstance(webhook, webhooks.ChannelFollowerWebhook)
+        return webhook
 
     @property
     def channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:

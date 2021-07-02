@@ -180,6 +180,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
         "_interaction_type_mapping",
+        "_webhook_type_mapping",
     )
 
     def __init__(self, app: traits.RESTAware) -> None:
@@ -249,6 +250,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], interaction_models.PartialInteraction]
         ] = {
             interaction_models.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
+        }
+        self._webhook_type_mapping = {
+            webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
+            webhook_models.WebhookType.CHANNEL_FOLLOWER: self.deserialize_channel_follower_webhook,
+            webhook_models.WebhookType.APPLICATION: self.deserialize_application_webhook,
         }
 
     ######################
@@ -369,7 +375,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             expires_in=datetime.timedelta(seconds=int(payload["expires_in"])),
             scopes=[application_models.OAuth2Scope(scope) for scope in payload["scope"].split(" ")],
             refresh_token=payload["refresh_token"],
-            webhook=self.deserialize_webhook(payload["webhook"]) if "webhook" in payload else None,
+            webhook=self.deserialize_incoming_webhook(payload["webhook"]) if "webhook" in payload else None,
             guild=self.deserialize_rest_guild(payload["guild"]) if "guild" in payload else None,
         )
 
@@ -519,9 +525,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for integration in payload["integrations"]
         }
         users = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["users"]}
-        webhooks = {
-            snowflakes.Snowflake(webhook["id"]): self.deserialize_webhook(webhook) for webhook in payload["webhooks"]
-        }
+
+        webhooks: typing.Dict[snowflakes.Snowflake, webhook_models.PartialWebhook] = {}
+        for webhook_payload in payload["webhooks"]:
+            try:
+                webhook = self.deserialize_webhook(webhook_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            webhooks[webhook.id] = webhook
+
         return audit_log_models.AuditLog(entries=entries, integrations=integrations, users=users, webhooks=webhooks)
 
     ##################
@@ -790,7 +804,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
-        channel_type = payload["type"]
+        channel_type = channel_models.ChannelType(payload["type"])
         if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
             return guild_channel_model(payload, guild_id=guild_id)
 
@@ -2441,40 +2455,73 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # WEBHOOK MODELS #
     ##################
 
-    def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.Webhook:
+    def deserialize_incoming_webhook(self, payload: data_binding.JSONObject) -> webhook_models.IncomingWebhook:
         application_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_application_id := payload.get("application_id")) is not None:
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        source_channel: typing.Optional[channel_models.PartialChannel] = None
-        if "source_channel" in payload:
-            raw_source_channel = payload["source_channel"]
-            # In this case the channel type isn't provided as we can safely
-            # assume it's a news channel.
-            raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
-            source_channel = self.deserialize_partial_channel(raw_source_channel)
-
-        source_guild: typing.Optional[guild_models.PartialGuild] = None
-        if "source_guild" in payload:
-            source_guild_payload = payload["source_guild"]
-            source_guild = guild_models.PartialGuild(
-                app=self._app,
-                id=snowflakes.Snowflake(source_guild_payload["id"]),
-                name=source_guild_payload["name"],
-                icon_hash=source_guild_payload["icon"],
-            )
-
-        return webhook_models.Webhook(
+        return webhook_models.IncomingWebhook(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=webhook_models.WebhookType(payload["type"]),
-            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             author=self.deserialize_user(payload["user"]) if "user" in payload else None,
             name=payload["name"],
             avatar_hash=payload["avatar"],
             token=payload.get("token"),
             application_id=application_id,
+        )
+
+    def deserialize_channel_follower_webhook(
+        self, payload: data_binding.JSONObject
+    ) -> webhook_models.ChannelFollowerWebhook:
+        application_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
+        raw_source_channel = payload["source_channel"]
+        # In this case the channel type isn't provided as we can safely
+        # assume it's a news channel.
+        raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
+        source_channel = self.deserialize_partial_channel(raw_source_channel)
+        source_guild_payload = payload["source_guild"]
+        source_guild = guild_models.PartialGuild(
+            app=self._app,
+            id=snowflakes.Snowflake(source_guild_payload["id"]),
+            name=source_guild_payload["name"],
+            icon_hash=source_guild_payload.get("icon"),
+        )
+
+        return webhook_models.ChannelFollowerWebhook(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            type=webhook_models.WebhookType(payload["type"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            author=self.deserialize_user(payload["user"]) if "user" in payload else None,
+            name=payload["name"],
+            avatar_hash=payload["avatar"],
+            application_id=application_id,
             source_channel=source_channel,
             source_guild=source_guild,
         )
+
+    def deserialize_application_webhook(self, payload: data_binding.JSONObject) -> webhook_models.ApplicationWebhook:
+        return webhook_models.ApplicationWebhook(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            type=webhook_models.WebhookType(payload["type"]),
+            name=payload["name"],
+            avatar_hash=payload["avatar"],
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+        )
+
+    def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.PartialWebhook:
+        webhook_type = webhook_models.WebhookType(payload["type"])
+
+        if converter := self._webhook_type_mapping.get(webhook_type):
+            return converter(payload)
+
+        _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")

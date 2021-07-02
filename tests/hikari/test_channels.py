@@ -30,6 +30,7 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users
+from hikari import webhooks
 from tests.hikari import hikari_test_helpers
 
 
@@ -54,15 +55,14 @@ class TestChannelFollow:
 
     @pytest.mark.asyncio()
     async def test_fetch_webhook(self, mock_app):
-        mock_webhook = object()
-        mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock_webhook)
+        mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook))
         follow = channels.ChannelFollow(
             webhook_id=snowflakes.Snowflake(54123123), app=mock_app, channel_id=snowflakes.Snowflake(94949494)
         )
 
         result = await follow.fetch_webhook()
 
-        assert result is mock_webhook
+        assert result is mock_app.rest.fetch_webhook.return_value
         mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
 
     def test_channel(self, mock_app):

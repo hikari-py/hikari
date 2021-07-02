@@ -1309,7 +1309,54 @@ class EntityFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
-    def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.Webhook:
+    def deserialize_incoming_webhook(self, payload: data_binding.JSONObject) -> webhook_models.IncomingWebhook:
+        """Parse a raw payload from Discord into a incoming webhook object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.webhooks.IncomingWebhook
+            The parsed incoming webhook object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_channel_follower_webhook(
+        self, payload: data_binding.JSONObject
+    ) -> webhook_models.ChannelFollowerWebhook:
+        """Parse a raw payload from Discord into a channel follower webhook object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.webhooks.ChannelFollowerWebhook
+            The parsed channel follower webhook object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_application_webhook(self, payload: data_binding.JSONObject) -> webhook_models.ApplicationWebhook:
+        """Parse a raw payload from Discord into an application webhook object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.webhooks.ApplicationWebhook
+            The parsed application webhook object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_webhook(self, payload: data_binding.JSONObject) -> webhook_models.PartialWebhook:
         """Parse a raw payload from Discord into a webhook object.
 
         Parameters
@@ -1319,6 +1366,6 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.webhooks.Webhook
+        hikari.webhooks.PartialWebhook
             The deserialized webhook object.
         """

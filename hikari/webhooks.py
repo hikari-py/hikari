@@ -24,7 +24,14 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ExecutableWebhook", "WebhookType", "Webhook"]
+__all__: typing.List[str] = [
+    "ApplicationWebhook",
+    "ChannelFollowerWebhook",
+    "ExecutableWebhook",
+    "PartialWebhook",
+    "WebhookType",
+    "IncomingWebhook",
+]
 
 import abc
 import typing
@@ -58,6 +65,9 @@ class WebhookType(int, enums.Enum):
 
     CHANNEL_FOLLOWER = 2
     """Channel Follower webhook."""
+
+    APPLICATION = 3
+    """Application webhook (from the interactions flow)."""
 
 
 class ExecutableWebhook(abc.ABC):
@@ -207,7 +217,7 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         builtins.ValueError
-            If either `Webhook.token` is `builtins.None` or more than 100 unique
+            If either `ExecutableWebhook.token` is `builtins.None` or more than 100 unique
             objects/entities are passed for `role_mentions` or `user_mentions or
             if `token` is not available.
         builtins.TypeError
@@ -482,13 +492,8 @@ class ExecutableWebhook(abc.ABC):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Webhook(snowflakes.Unique, ExecutableWebhook):
-    """Represents a webhook object on Discord.
-
-    This is an endpoint that can have messages sent to it using standard
-    HTTP requests, which enables external services that are not bots to
-    send informational messages to specific channels.
-    """
+class PartialWebhook(snowflakes.Unique):
+    """Base class for all webhook implementations."""
 
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
@@ -501,56 +506,17 @@ class Webhook(snowflakes.Unique, ExecutableWebhook):
     type: typing.Union[WebhookType, int] = attr.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
-    """The guild ID of the webhook."""
-
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The channel ID this webhook is for."""
-
-    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
-    """The user that created the webhook
-
-    !!! info
-        This will be `builtins.None` when getting a webhook with bot authorization rather
-        than the webhook's token.
-    """
-
-    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    name: str = attr.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
     avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The token for the webhook.
-
-    !!! info
-        This is only available for incoming webhooks that are created in the
-        channel settings.
-    """
-
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
-    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the channel a `CHANNEL_FOLLOWER` webhook is following.
-
-    Will be `builtins.None` for other webhook types.
-    """
-
-    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the guild a `CHANNEL_FOLLOWER` webhook is following.
-
-    Will be `builtins.None` for other webhook types.
-    """
-
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
-
-    @property
-    def webhook_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from ExecutableWebhook>>.
-        return self.id
 
     @property
     def mention(self) -> str:
@@ -575,200 +541,6 @@ class Webhook(snowflakes.Unique, ExecutableWebhook):
             The mention string to use.
         """
         return f"<@{self.id}>"
-
-    async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
-        """Delete this webhook.
-
-        Other Parameters
-        ----------------
-        use_token : hikari.undefined.UndefinedOr[builtins.bool]
-            If set to `builtins.True` then the webhook's token will be used for
-            this request; if set to `builtins.False` then bot authorization will
-            be used; if not specified then the webhook's token will be used for
-            the request if it's set else bot authorization.
-
-        Raises
-        ------
-        hikari.errors.NotFoundError
-            If this webhook is not found.
-        hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
-            are not a member of the guild this webhook belongs to.
-        builtins.ValueError
-            If `use_token` is passed as `builtins.True` when `Webhook.token` is
-            `builtins.None`.
-        """
-        if use_token:
-            if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
-            token: undefined.UndefinedOr[str] = self.token
-        else:
-            token = undefined.UNDEFINED
-
-        await self.app.rest.delete_webhook(self.id, token=token)
-
-    async def edit(
-        self,
-        *,
-        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar: undefined.UndefinedNoneOr[files_.Resource[files_.AsyncReader]] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> Webhook:
-        """Edit this webhook.
-
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the new name string.
-        avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If provided, the new avatar image. If `builtins.None`, then
-            it is removed. If not specified, nothing is changed.
-        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
-            If provided, the object or ID of the new channel the given
-            webhook should be moved to.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the audit log reason explaining why the operation
-            was performed. This field will be used when using the webhook's
-            token rather than bot authorization.
-        use_token : hikari.undefined.UndefinedOr[builtins.bool]
-            If set to `builtins.True` then the webhook's token will be used for
-            this request; if set to `builtins.False` then bot authorization will
-            be used; if not specified then the webhook's token will be used for
-            the request if it's set else bot authorization.
-
-        Returns
-        -------
-        hikari.webhooks.Webhook
-            The updated webhook object.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `use_token` is passed as `builtins.True` when `Webhook.token` is `builtins.None`.
-        hikari.errors.BadRequestError
-            If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
-        hikari.errors.NotFoundError
-            If either the webhook or the channel are not found.
-        hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
-            are not a member of the guild this webhook belongs to.
-        hikari.errors.UnauthorizedError
-            If you pass a token that's invalid for the target webhook.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
-        if use_token:
-            if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
-            token: undefined.UndefinedOr[str] = self.token
-        else:
-            token = undefined.UNDEFINED
-
-        return await self.app.rest.edit_webhook(
-            self.id,
-            token=token,
-            name=name,
-            avatar=avatar,
-            channel=channel,
-            reason=reason,
-        )
-
-    async def fetch_channel(self) -> channels_.PartialChannel:
-        """Fetch the channel this webhook is for.
-
-        Returns
-        -------
-        hikari.channels.PartialChannel
-            The object of the channel this webhook targets.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you don't have access to the channel this webhook belongs to.
-        hikari.errors.NotFoundError
-            If the channel this message was created in does not exist.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.fetch_channel(self.channel_id)
-
-    async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> Webhook:
-        """Fetch this webhook.
-
-        Other Parameters
-        ----------------
-        use_token : hikari.undefined.UndefinedOr[builtins.bool]
-            If set to `builtins.True` then the webhook's token will be used for
-            this request; if set to `builtins.False` then bot authorization will
-            be used; if not specified then the webhook's token will be used for
-            the request if it's set else bot authorization.
-
-        Returns
-        -------
-        hikari.webhooks.Webhook
-            The requested webhook object.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `use_token` is passed as `builtins.True` when `Webhook.token`
-            is `builtins.None`.
-        hikari.errors.ForbiddenError
-            If you're not in the guild that owns this webhook or
-            lack the `MANAGE_WEBHOOKS` permission.
-        hikari.errors.NotFoundError
-            If the webhook is not found.
-        hikari.errors.UnauthorizedError
-            If you pass a token that's invalid for the target webhook.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if use_token:
-            if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
-            token: undefined.UndefinedOr[str] = self.token
-        else:
-            token = undefined.UNDEFINED
-
-        return await self.app.rest.fetch_webhook(self.id, token=token)
 
     @property
     def avatar(self) -> files_.URL:
@@ -829,3 +601,361 @@ class Webhook(snowflakes.Unique, ExecutableWebhook):
             size=size,
             file_format=ext,
         )
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class IncomingWebhook(PartialWebhook, ExecutableWebhook):
+    """Represents an incoming webhook object on Discord.
+
+    This is an endpoint that can have messages sent to it using standard
+    HTTP requests, which enables external services that are not bots to
+    send informational messages to specific channels.
+    """
+
+    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The channel ID this webhook is for."""
+
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The guild ID of the webhook."""
+
+    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
+    """The user that created the webhook
+
+    !!! info
+        This will be `builtins.None` when fetched with the webhook's token
+        rather than bot authorization or when received within audit logs.
+    """
+
+    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The token for the webhook.
+
+    !!! info
+        This is only available for incoming webhooks that are created in the
+        channel settings.
+    """
+
+    @property
+    def webhook_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ExecutableWebhook>>.
+        return self.id
+
+    async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
+        """Delete this webhook.
+
+        Other Parameters
+        ----------------
+        use_token : hikari.undefined.UndefinedOr[builtins.bool]
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If this webhook is not found.
+        hikari.errors.ForbiddenError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
+            are not a member of the guild this webhook belongs to.
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `IncomingWebhook.token` is
+            `builtins.None`.
+        """
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used")
+            token = self.token
+
+        elif use_token is undefined.UNDEFINED and self.token:
+            token = self.token
+
+        await self.app.rest.delete_webhook(self.id, token=token)
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files_.Resource[files_.AsyncReader]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> IncomingWebhook:
+        """Edit this webhook.
+
+        Other Parameters
+        ----------------
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new name string.
+        avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the new avatar image. If `builtins.None`, then
+            it is removed. If not specified, nothing is changed.
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
+            If provided, the object or ID of the new channel the given
+            webhook should be moved to.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the audit log reason explaining why the operation
+            was performed. This field will be used when using the webhook's
+            token rather than bot authorization.
+        use_token : hikari.undefined.UndefinedOr[builtins.bool]
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
+
+        Returns
+        -------
+        IncomingWebhook
+            The updated webhook object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `IncomingWebhook.token` is `builtins.None`.
+        hikari.errors.BadRequestError
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        hikari.errors.NotFoundError
+            If either the webhook or the channel are not found.
+        hikari.errors.ForbiddenError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
+            are not a member of the guild this webhook belongs to.
+        hikari.errors.UnauthorizedError
+            If you pass a token that's invalid for the target webhook.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used")
+            token = self.token
+
+        elif use_token is undefined.UNDEFINED and self.token:
+            token = self.token
+
+        webhook = await self.app.rest.edit_webhook(
+            self.id,
+            token=token,
+            name=name,
+            avatar=avatar,
+            channel=channel,
+            reason=reason,
+        )
+        assert isinstance(webhook, IncomingWebhook)
+        return webhook
+
+    async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> IncomingWebhook:
+        """Fetch this webhook.
+
+        Other Parameters
+        ----------------
+        use_token : hikari.undefined.UndefinedOr[builtins.bool]
+            If set to `builtins.True` then the webhook's token will be used for
+            this request; if set to `builtins.False` then bot authorization will
+            be used; if not specified then the webhook's token will be used for
+            the request if it's set else bot authorization.
+
+        Returns
+        -------
+        IncomingWebhook
+            The requested webhook object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `use_token` is passed as `builtins.True` when `Webhook.token`
+            is `builtins.None`.
+        hikari.errors.ForbiddenError
+            If you're not in the guild that owns this webhook or
+            lack the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.UnauthorizedError
+            If you pass a token that's invalid for the target webhook.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        token: undefined.UndefinedOr[str] = undefined.UNDEFINED
+        if use_token:
+            if self.token is None:
+                raise ValueError("This webhook's token is unknown, so cannot be used")
+            token = self.token
+
+        elif use_token is undefined.UNDEFINED and self.token:
+            token = self.token
+
+        webhook = await self.app.rest.fetch_webhook(self.id, token=token)
+        assert isinstance(webhook, IncomingWebhook)
+        return webhook
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ChannelFollowerWebhook(PartialWebhook):
+    """Represents a channel follower webhook object on Discord."""
+
+    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The channel ID this webhook is for."""
+
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The guild ID of the webhook."""
+
+    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
+    """The user that created the webhook
+
+    !!! info
+        This will be `builtins.None` when received within an audit log.
+    """
+
+    source_channel: channels_.PartialChannel = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the channel this webhook is following."""
+
+    source_guild: guilds_.PartialGuild = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the guild this webhook is following."""
+
+    async def delete(self) -> None:
+        """Delete this webhook.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If this webhook is not found.
+        hikari.errors.ForbiddenError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
+            are not a member of the guild this webhook belongs to.
+        """
+        await self.app.rest.delete_webhook(self.id)
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files_.Resource[files_.AsyncReader]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> ChannelFollowerWebhook:
+        """Edit this webhook.
+
+        Other Parameters
+        ----------------
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new name string.
+        avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the new avatar image. If `builtins.None`, then
+            it is removed. If not specified, nothing is changed.
+        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.TextChannel]]
+            If provided, the object or ID of the new channel the given
+            webhook should be moved to.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the audit log reason explaining why the operation
+            was performed. This field will be used when using the webhook's
+            token rather than bot authorization.
+
+        Returns
+        -------
+        hikari.webhooks.ChannelFollowerWebhook
+            The updated webhook object.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any invalid snowflake IDs are passed; a snowflake may be invalid
+            due to it being outside of the range of a 64 bit integer.
+        hikari.errors.NotFoundError
+            If either the webhook or the channel are not found.
+        hikari.errors.ForbiddenError
+            If you either lack the `MANAGE_WEBHOOKS` permission or
+            are not a member of the guild this webhook belongs to.
+        hikari.errors.UnauthorizedError
+            If you pass a token that's invalid for the target webhook.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        webhook = await self.app.rest.edit_webhook(
+            self.id,
+            name=name,
+            avatar=avatar,
+            channel=channel,
+            reason=reason,
+        )
+        assert isinstance(webhook, ChannelFollowerWebhook)
+        return webhook
+
+    async def fetch_self(self) -> ChannelFollowerWebhook:
+        """Fetch this webhook.
+
+        Returns
+        -------
+        hikari.webhooks.ChannelFollowerWebhook
+            The requested webhook object.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you're not in the guild that owns this webhook or
+            lack the `MANAGE_WEBHOOKS` permission.
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.UnauthorizedError
+            If you pass a token that's invalid for the target webhook.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        webhook = await self.app.rest.fetch_webhook(self.id)
+        assert isinstance(webhook, ChannelFollowerWebhook)
+        return webhook
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ApplicationWebhook(PartialWebhook):
+    """Represents an application webhook object on Discord.
+
+    This is from the interactions flow.
+    """
+
+    application_id: snowflakes.Snowflake = attr.ib()
+    # <<inherited docstring from PartialWebhook>>.

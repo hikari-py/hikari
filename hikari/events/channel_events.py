@@ -779,12 +779,12 @@ class WebhookUpdateEvent(GuildChannelEvent):
 
     # <<inherited docstring from GuildChannelEvent>>.
 
-    async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.Webhook]:
+    async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.PartialWebhook]:
         """Perform an API call to fetch the webhooks for this channel.
 
         Returns
         -------
-        typing.Sequence[hikari.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.PartialWebhook]
             The webhooks in this channel.
 
         Raises
@@ -811,12 +811,12 @@ class WebhookUpdateEvent(GuildChannelEvent):
         """
         return await self.app.rest.fetch_channel_webhooks(self.channel_id)
 
-    async def fetch_guild_webhooks(self) -> typing.Sequence[webhooks.Webhook]:
+    async def fetch_guild_webhooks(self) -> typing.Sequence[webhooks.PartialWebhook]:
         """Perform an API call to fetch the webhooks for this guild.
 
         Returns
         -------
-        typing.Sequence[hikari.webhooks.Webhook]
+        typing.Sequence[hikari.webhooks.PartialWebhook]
             The webhooks in this guild.
 
         Raises
