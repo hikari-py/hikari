@@ -474,8 +474,8 @@ class _LiveAttributes:
         self.is_closing = True
         self.closed_event.set()
         self.buckets.close()
-        await self.client_session.close()
         self.global_rate_limit.close()
+        await self.client_session.close()
         await self.tcp_connector.close()
 
     def still_alive(self) -> _LiveAttributes:
