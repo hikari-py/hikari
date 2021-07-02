@@ -264,6 +264,7 @@ class Test_LiveAttributes:
             attributes = rest._LiveAttributes.build(123.321, mock_settings, mock_proxy_settings)
 
         assert isinstance(attributes, rest._LiveAttributes)
+        assert attributes.is_closing is False
         assert attributes.buckets is bucket_manager.return_value
         assert attributes.client_session is create_client_session.return_value
         assert isinstance(attributes.closed_event, asyncio.Event)
@@ -297,11 +298,25 @@ class Test_LiveAttributes:
 
         await attributes.close()
 
+        assert attributes.is_closing is True
         attributes.buckets.close.assert_called_once_with()
         attributes.client_session.close.assert_awaited_once_with()
         attributes.closed_event.set.assert_called_once_with()
         attributes.global_rate_limit.close.assert_called_once_with()
         attributes.tcp_connector.close.assert_awaited_once_with()
+
+    def test_still_alive_when_alive(self):
+        attributes = hikari_test_helpers.mock_class_namespace(rest._LiveAttributes, init_=False)()
+        attributes.is_closing = False
+
+        assert attributes.still_alive() is attributes
+
+    def test_still_alive_when_closing(self):
+        attributes = hikari_test_helpers.mock_class_namespace(rest._LiveAttributes, init_=False)()
+        attributes.is_closing = True
+
+        with pytest.raises(errors.ComponentStateConflictError):
+            attributes.still_alive()
 
 
 ###########
@@ -397,11 +412,13 @@ def rest_client_class():
 
 @pytest.fixture()
 def live_attributes():
-    return mock.Mock(
+    attributes = mock.Mock(
         buckets=mock.Mock(acquire=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock())),
         global_rate_limit=mock.Mock(acquire=mock.AsyncMock()),
         close=mock.AsyncMock(),
     )
+    attributes.still_alive.return_value = attributes
+    return attributes
 
 
 @pytest.fixture()
@@ -948,6 +965,7 @@ class TestRESTClientImplAsync:
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_retries_strategy_once(self, rest_client, exit_exception, live_attributes):
@@ -977,6 +995,7 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
         _, kwargs = mock_session.request.call_args_list[1]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
+        assert live_attributes.still_alive.call_count == 6
 
     @hikari_test_helpers.timeout()
     async def test__request_raises_after_retry(self, rest_client, exit_exception, live_attributes):
@@ -1010,6 +1029,7 @@ class TestRESTClientImplAsync:
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok.ok.ok"
         _, kwargs = mock_session.request.call_args_list[1]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "Bearer ok2.ok2.ok2"
+        assert live_attributes.still_alive.call_count == 6
 
     @hikari_test_helpers.timeout()
     async def test__request_when__token_is_None(self, rest_client, exit_exception, live_attributes):
@@ -1038,6 +1058,7 @@ class TestRESTClientImplAsync:
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert kwargs["headers"][rest._AUTHORIZATION_HEADER] == "token"
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_when_no_auth_passed(self, rest_client, exit_exception, live_attributes):
@@ -1055,6 +1076,7 @@ class TestRESTClientImplAsync:
         live_attributes.buckets.acquire.assert_called_once_with(route)
         live_attributes.buckets.acquire.return_value.assert_used_once()
         live_attributes.global_rate_limit.acquire.assert_not_called()
+        assert live_attributes.still_alive.call_count == 2
 
     @hikari_test_helpers.timeout()
     async def test__request_when_auth_passed(self, rest_client, exit_exception, live_attributes):
@@ -1072,6 +1094,7 @@ class TestRESTClientImplAsync:
         live_attributes.buckets.acquire.assert_called_once_with(route)
         live_attributes.buckets.acquire.return_value.assert_used_once()
         live_attributes.global_rate_limit.acquire.assert_awaited_once_with()
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_NO_CONTENT(self, rest_client, live_attributes):
@@ -1086,6 +1109,7 @@ class TestRESTClientImplAsync:
         live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         assert (await rest_client._request(route)) is None
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_APPLICATION_JSON(self, rest_client, live_attributes):
@@ -1105,6 +1129,7 @@ class TestRESTClientImplAsync:
         live_attributes.client_session = mock_session
         rest_client._stringify_http_message = mock.Mock()
         assert (await rest_client._request(route)) == {"something": None}
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_not_JSON(self, rest_client, live_attributes):
@@ -1122,6 +1147,8 @@ class TestRESTClientImplAsync:
         rest_client._stringify_http_message = mock.Mock()
         with pytest.raises(errors.HTTPError):
             await rest_client._request(route)
+
+        assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
     async def test__request_when_response_is_not_between_200_and_300(
@@ -1142,6 +1169,8 @@ class TestRESTClientImplAsync:
         with pytest.raises(exit_exception):
             await rest_client._request(route)
 
+        assert live_attributes.still_alive.call_count == 3
+
     @hikari_test_helpers.timeout()
     async def test__request_when_response__RetryRequest_gets_handled(
         self, rest_client, exit_exception, live_attributes
@@ -1152,6 +1181,8 @@ class TestRESTClientImplAsync:
         live_attributes.client_session = mock_session
         with pytest.raises(exit_exception):
             await rest_client._request(route)
+
+        assert live_attributes.still_alive.call_count == 6
 
     @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()
@@ -1178,6 +1209,8 @@ class TestRESTClientImplAsync:
         else:
             assert logger.log.call_count == 0
 
+        assert live_attributes.still_alive.call_count == 3
+
     async def test__handle_error_response(self, rest_client, exit_exception):
         mock_response = mock.Mock()
         with mock.patch.object(net, "generate_error_response", return_value=exit_exception) as generate_error_response:
@@ -1197,6 +1230,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         await rest_client._parse_ratelimits(route, response, live_attributes)
         response.json.assert_not_called()
+        assert live_attributes.still_alive.call_count == 0
 
     async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
@@ -1211,6 +1245,8 @@ class TestRESTClientImplAsync:
         with pytest.raises(exit_exception):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
+        assert live_attributes.still_alive.call_count == 0
+
     async def test__parse_ratelimits_when_unexpected_content_type(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
@@ -1224,6 +1260,8 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.HTTPResponseError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
+
+        assert live_attributes.still_alive.call_count == 0
 
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client, live_attributes):
         class StubResponse:
@@ -1240,6 +1278,7 @@ class TestRESTClientImplAsync:
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
         live_attributes.global_rate_limit.throttle.assert_called_once_with(2.0)
+        assert live_attributes.still_alive.call_count == 1
 
     async def test__parse_ratelimits_when_remaining_header_under_or_equal_to_0(self, rest_client, live_attributes):
         class StubResponse:
@@ -1257,6 +1296,8 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest_client._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
+        assert live_attributes.still_alive.call_count == 0
+
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
@@ -1273,6 +1314,8 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest_client._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
+        assert live_attributes.still_alive.call_count == 0
+
     async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client, live_attributes):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
@@ -1286,6 +1329,8 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
+
+        assert live_attributes.still_alive.call_count == 0
 
     #############
     # Endpoints #

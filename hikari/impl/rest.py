@@ -430,12 +430,13 @@ class _LiveAttributes:
         This must be started within an active asyncio event loop.
     """
 
-    buckets: buckets_.RESTBucketManager
-    client_session: aiohttp.ClientSession
-    closed_event: asyncio.Event
+    buckets: buckets_.RESTBucketManager = attr.field()
+    client_session: aiohttp.ClientSession = attr.field()
+    closed_event: asyncio.Event = attr.field()
     # We've been told in DAPI that this is per token.
-    global_rate_limit: rate_limits.ManualRateLimiter
-    tcp_connector: aiohttp.TCPConnector
+    global_rate_limit: rate_limits.ManualRateLimiter = attr.field()
+    tcp_connector: aiohttp.TCPConnector = attr.field()
+    is_closing: bool = attr.field(default=False, init=False)
 
     @classmethod
     def build(
@@ -470,11 +471,19 @@ class _LiveAttributes:
         )
 
     async def close(self) -> None:
+        self.is_closing = True
         self.closed_event.set()
         self.buckets.close()
         await self.client_session.close()
         self.global_rate_limit.close()
         await self.tcp_connector.close()
+
+    def still_alive(self) -> _LiveAttributes:
+        """Chained method used to Check if `close` has been called before using this object's resources."""
+        if self.is_closing:
+            raise errors.ComponentStateConflictError("The REST client was closed mid-request")
+
+        return self
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -671,6 +680,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
+        live_attributes = self._get_live_attributes()
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
 
@@ -693,11 +703,11 @@ class RESTClientImpl(rest_api.RESTClient):
         while True:
             try:
                 uuid = time.uuid()
-                async with self._get_live_attributes().buckets.acquire(compiled_route):
+                async with live_attributes.still_alive().buckets.acquire(compiled_route):
                     # Buckets not using authentication still have a global
                     # rate limit, but it is different from the token one.
                     if not no_auth:
-                        await self._get_live_attributes().global_rate_limit.acquire()
+                        await live_attributes.still_alive().global_rate_limit.acquire()
 
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         _LOGGER.log(
@@ -711,7 +721,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         start = time.monotonic()
 
                     # Make the request.
-                    response = await self._get_live_attributes().client_session.request(
+                    response = await live_attributes.still_alive().client_session.request(
                         compiled_route.method,
                         url,
                         headers=headers,
@@ -737,7 +747,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         )
 
                     # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                    await self._parse_ratelimits(compiled_route, response, self._get_live_attributes())
+                    await self._parse_ratelimits(compiled_route, response, live_attributes)
 
                 # Don't bother processing any further if we got NO CONTENT. There's not anything
                 # to check.
@@ -798,7 +808,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
-            live_attributes.buckets.update_rate_limits(
+            live_attributes.still_alive().buckets.update_rate_limits(
                 compiled_route=compiled_route,
                 bucket_header=bucket,
                 remaining_header=remaining,
@@ -857,7 +867,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            live_attributes.global_rate_limit.throttle(body_retry_after)
+            live_attributes.still_alive().global_rate_limit.throttle(body_retry_after)
             raise self._RetryRequest
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
