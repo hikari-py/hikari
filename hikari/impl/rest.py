@@ -969,7 +969,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
@@ -993,7 +993,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

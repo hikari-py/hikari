@@ -380,7 +380,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
@@ -395,7 +395,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or Id of the guild to edit a voice state in.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
             Object or Id of the channel to edit a voice state in.
 
         Other Parameters
@@ -445,7 +445,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -456,7 +456,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or Id of the guild to edit a voice state in.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
             Object or Id of the channel to edit a voice state in.
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or Id of the user to to edit the voice state of.
