@@ -38,6 +38,7 @@ import typing
 
 import attr
 
+from hikari import channels as channels_
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
@@ -46,7 +47,6 @@ from hikari.internal import enums
 from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
-    from hikari import channels as channels_
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import files as files_
@@ -756,6 +756,40 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         assert isinstance(webhook, IncomingWebhook)
         return webhook
 
+    async def fetch_channel(self) -> channels_.WebhookChannelT:
+        """Fetch the channel this webhook is for.
+
+        Returns
+        -------
+        hikari.channels.WebhookChannelT
+            The object of the channel this webhook targets.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you don't have access to the channel this webhook belongs to.
+        hikari.errors.NotFoundError
+            If the channel this message was created in does not exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels_.WebhookChannelTypes)
+        return channel
+
     async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> IncomingWebhook:
         """Fetch this webhook.
 
@@ -913,6 +947,40 @@ class ChannelFollowerWebhook(PartialWebhook):
         )
         assert isinstance(webhook, ChannelFollowerWebhook)
         return webhook
+
+    async def fetch_channel(self) -> channels_.WebhookChannelT:
+        """Fetch the channel this webhook is for.
+
+        Returns
+        -------
+        hikari.channels.WebhookChannelT
+            The object of the channel this webhook targets.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you don't have access to the channel this webhook belongs to.
+        hikari.errors.NotFoundError
+            If the channel this message was created in does not exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels_.WebhookChannelTypes)
+        return channel
 
     async def fetch_self(self) -> ChannelFollowerWebhook:
         """Fetch this webhook.

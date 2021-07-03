@@ -22,6 +22,7 @@
 import mock
 import pytest
 
+from hikari import channels
 from hikari import undefined
 from hikari import webhooks
 from tests.hikari import hikari_test_helpers
@@ -337,6 +338,14 @@ class TestIncomingWebhook:
         )
 
     @pytest.mark.asyncio()
+    async def test_fetch_channel(self, webhook):
+        webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
+
+        assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
+
+        webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
+
+    @pytest.mark.asyncio()
     async def test_fetch_self(self, webhook):
         webhook.token = None
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
@@ -420,6 +429,14 @@ class TestChannelFollowerWebhook:
         webhook.app.rest.edit_webhook.assert_awaited_once_with(
             987654321, name="hi", avatar=mock_avatar, channel=43123, reason="ok"
         )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_channel(self, webhook):
+        webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
+
+        assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
+
+        webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
 
     @pytest.mark.asyncio()
     async def test_fetch_self(self, webhook):
