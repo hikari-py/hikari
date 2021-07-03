@@ -114,7 +114,7 @@ class _GuildFields:
     id: snowflakes.Snowflake = attr.field()
     name: str = attr.field()
     icon_hash: str = attr.field()
-    features: typing.List[guild_models.GuildFeatureish] = attr.field()
+    features: typing.List[typing.Union[guild_models.GuildFeature, str]] = attr.field()
     splash_hash: typing.Optional[str] = attr.field()
     discovery_splash_hash: typing.Optional[str] = attr.field()
     owner_id: snowflakes.Snowflake = attr.field()

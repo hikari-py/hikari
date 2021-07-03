@@ -393,7 +393,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
+        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
@@ -428,7 +428,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[voices.VoiceRegionish],
+        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()

@@ -205,7 +205,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[str, voices.VoiceRegion]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -240,7 +240,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+        region : hikari.undefined.UndefinedOr[typing.Union[builtins.str, hikari.voices.VoiceRegion]]
             If provided, the voice region to set for this channel. Passing
             `builtins.None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
@@ -2607,12 +2607,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
+    async def fetch_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
         ----------
-        invite : hikari.invites.Inviteish
+        invite : typing.Union[hikari.invites.InviteCode, builtins.str]
             The invite to fetch. This may be an invite object or
             the code of an existing invite.
 
@@ -2643,12 +2643,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: invites.Inviteish) -> invites.Invite:
+    async def delete_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
         """Delete an existing invite.
 
         Parameters
         ----------
-        invite : hikari.invites.Inviteish
+        invite : typing.Union[hikari.invites.InviteCode, builtins.str]
             The invite to delete. This may be an invite object or
             the code of an existing invite.
 
@@ -4101,7 +4101,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -4131,7 +4131,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
             If provided, the voice region to for this channel. Passing
             `builtins.None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
@@ -4185,7 +4185,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
@@ -4213,7 +4213,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
             If provided, the voice region to for this channel. Passing
             `builtins.None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
@@ -5794,7 +5794,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_guild_from_template(
         self,
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
         name: str,
         *,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -5803,8 +5803,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        template: hikari.templates.Templateish
-            The objecr or code of the template to create a guild based on.
+        template : typing.Union[builtins.str, hikari.templates.Template]
+            The object or string code of the template to create a guild based on.
         name : builtins.str
             The new guilds name.
 
@@ -5848,7 +5848,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
     ) -> templates.Template:
         """Delete a guild template.
 
@@ -5856,8 +5856,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to delete a template in.
-        template : hikari.templates.Templateish
-            Object or ID of the template to delete.
+        template : typing.Union[str, hikari.templates.Template]
+            Object or string code of the template to delete.
 
         Returns
         -------
@@ -5892,7 +5892,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[templates.Template, str],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -5903,8 +5903,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit a template in.
-        template : hikari.templates.Templateish
-            Object or ID of the template to modify.
+        template : typing.Union[builtins.str, hikari.templates.Template]
+            Object or string code of the template to modify.
 
         Other Parameters
         ----------------
@@ -5943,12 +5943,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_template(self, template: templates.Templateish) -> templates.Template:
+    async def fetch_template(self, template: typing.Union[str, templates.Template]) -> templates.Template:
         """Fetch a guild template.
 
         Parameters
         ----------
-        template : hikari.templates.Templateish
+        template : typing.Union[builtins.str, hikari.templates.Template]
             The object or string code of the template to fetch.
 
         Returns
@@ -6021,7 +6021,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def sync_guild_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
     ) -> templates.Template:
         """Create a guild template.
 
@@ -6029,8 +6029,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to sync a template in.
-        template : hikari.templates.Templateish
-            Object or ID of the template to sync.
+        template : typing.Union[builtins.str, hikari.templates.Template]
+            Object or code of the template to sync.
 
         Returns
         -------

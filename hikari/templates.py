@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Template", "TemplateGuild", "TemplateRole", "Templateish"]
+__all__: typing.List[str] = ["Template", "TemplateGuild", "TemplateRole"]
 
 import typing
 
@@ -176,7 +176,3 @@ class Template:
 
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
-
-
-Templateish = typing.Union[str, Template]
-"""Type hint for a `Template` object or `builtin.str` template code."""

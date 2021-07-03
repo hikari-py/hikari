@@ -31,7 +31,6 @@ __all__: typing.List[str] = [
     "GuildWidget",
     "Role",
     "GuildFeature",
-    "GuildFeatureish",
     "GuildSystemChannelFlag",
     "GuildMessageNotificationsLevel",
     "GuildExplicitContentFilterLevel",
@@ -170,15 +169,6 @@ class GuildFeature(str, enums.Enum):
 
     MORE_STICKERS = "MONETIZATION_ENABLED"
     """Guild has an increased custom stickers slots."""
-
-
-GuildFeatureish = typing.Union[str, GuildFeature]
-"""Type hint for possible guild features.
-
-Generally these will be of type `GuildFeature`, but undocumented or new
-fields may just be `builtins.str` until they are documented and amended to the
-library.
-"""
 
 
 @typing.final
@@ -2160,7 +2150,7 @@ class PartialGuild(snowflakes.Unique):
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
 
-    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -2264,7 +2254,7 @@ class GuildPreview(PartialGuild):
 class Guild(PartialGuild, abc.ABC):
     """A representation of a guild on Discord."""
 
-    features: typing.Sequence[GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)

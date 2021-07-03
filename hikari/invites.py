@@ -28,9 +28,9 @@ __all__: typing.List[str] = [
     "TargetType",
     "VanityURL",
     "InviteGuild",
+    "InviteCode",
     "Invite",
     "InviteWithMetadata",
-    "Inviteish",
 ]
 
 import abc
@@ -107,7 +107,7 @@ class VanityURL(InviteCode):
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
-    features: typing.Sequence[guilds.GuildFeatureish] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[guilds.GuildFeature, int]] = attr.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -340,12 +340,3 @@ class InviteWithMetadata(Invite):
             return self.max_uses - self.uses
 
         return None
-
-
-# TODO: converter to remove discord.gg part to allow URLs here too.
-Inviteish = typing.Union[str, InviteCode]
-"""Type hint for an invite, vanity URL, or invite code.
-
-This must be a representation of an invite that is a `builtins.str` containing
-the invite code, an `Invite`/`InviteWithMetadata`, or a `VanityURL` instance.
-"""

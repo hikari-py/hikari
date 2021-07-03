@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["VoiceRegion", "VoiceState", "VoiceRegionish"]
+__all__: typing.List[str] = ["VoiceRegion", "VoiceState"]
 
 import typing
 
@@ -130,10 +130,3 @@ class VoiceRegion:
 
     def __str__(self) -> str:
         return self.id
-
-
-VoiceRegionish = typing.Union[str, VoiceRegion]
-"""Type hint for a voice region or name of a voice region.
-
-Must be either a `VoiceRegion` or `builtins.str`.
-"""

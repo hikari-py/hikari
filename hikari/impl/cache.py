@@ -637,7 +637,9 @@ class CacheImpl(cache.MutableCache):
 
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
-    def delete_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def delete_invite(
+        self, code: typing.Union[invites.InviteCode, str], /
+    ) -> typing.Optional[invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(config.CacheComponents.INVITES):
             return None
 
@@ -659,7 +661,7 @@ class CacheImpl(cache.MutableCache):
 
         return self._build_invite(invite_data)
 
-    def get_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def get_invite(self, code: typing.Union[invites.InviteCode, str], /) -> typing.Optional[invites.InviteWithMetadata]:
         if not self._is_cache_enabled_for(config.CacheComponents.INVITES):
             return None
 
