@@ -605,6 +605,12 @@ class TestRESTClientImpl:
         except AttributeError as exc:
             pytest.fail(exc)
 
+    @pytest.mark.parametrize(("attributes", "expected_result"), [(None, False), (object(), True)])
+    def test_is_alive_property(self, rest_client, attributes, expected_result):
+        rest_client._live_attributes = attributes
+
+        assert rest_client.is_alive is expected_result
+
     def test_http_settings_property(self, rest_client):
         mock_http_settings = object()
         rest_client._http_settings = mock_http_settings
@@ -620,6 +626,7 @@ class TestRESTClientImpl:
         rest_client._token_type = mock_type
         assert rest_client.token_type is mock_type
 
+    @pytest.mark.asyncio()
     async def test_close(self, rest_client):
         rest_client._live_attributes = mock_live_attributes = mock.AsyncMock()
 
@@ -638,6 +645,12 @@ class TestRESTClientImpl:
                 rest_client._max_rate_limit, rest_client.http_settings, rest_client.proxy_settings
             )
             assert rest_client._live_attributes is build.return_value
+
+    def test_start_when_active(self, rest_client):
+        rest_client._live_attributes = object()
+
+        with pytest.raises(errors.ComponentStateConflictError):
+            rest_client.start()
 
     def test__get_live_attributes_when_active(self, rest_client):
         mock_attributes = rest_client._live_attributes = object()
