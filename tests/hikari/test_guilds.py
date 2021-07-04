@@ -164,7 +164,8 @@ class TestGuildWidget:
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, model):
-        model.app.rest.fetch_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(channels_.GuildChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
         assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
         model.app.rest.fetch_channel.assert_awaited_once_with(420)
@@ -635,7 +636,8 @@ class TestPartialGuild:
 
     @pytest.mark.asyncio()
     async def test_delete_channel(self, model):
-        model.app.rest.delete_channel = mock.AsyncMock()
+        mock_channel = mock.Mock(channels_.GuildChannel)
+        model.app.rest.delete_channel = mock.AsyncMock(return_value=mock_channel)
 
         deleted_channel = await model.delete_channel(1288820)
 

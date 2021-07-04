@@ -331,7 +331,10 @@ class GuildWidget:
         if not self.channel_id:
             return None
 
-        return await self.app.rest.fetch_channel(self.channel_id)
+        widget_channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(widget_channel, channels_.GuildChannel)
+
+        return widget_channel
 
 
 @attr_extensions.with_copy
@@ -2041,20 +2044,23 @@ class PartialGuild(snowflakes.Unique):
         )
 
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
     ) -> channels_.GuildChannel:
         """Delete a channel in the guild.
 
+        !!! note
+            This method can also be used for deleting guild categories as well.
+
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
-            The channel to delete. This may be the object or the ID of an
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+            The channel or category to delete. This may be the object or the ID of an
             existing channel.
 
         Returns
         -------
         hikari.channels.GuildChannel
-            Object of the channel that was deleted.
+            Object of the channel or category that was deleted.
 
         Raises
         ------
@@ -2082,7 +2088,10 @@ class PartialGuild(snowflakes.Unique):
             For Public servers, the set 'Rules' or 'Guidelines' channels and the
             'Public Server Updates' channel cannot be deleted.
         """
-        return await self.app.rest.delete_channel(channel)
+        deleted_channel = await self.app.rest.delete_channel(channel)
+        assert isinstance(deleted_channel, channels_.GuildChannel)
+
+        return deleted_channel
 
     async def fetch_self(self) -> RESTGuild:
         """Fetch the guild.
