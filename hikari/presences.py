@@ -300,7 +300,7 @@ class MemberPresence:
     client_status: ClientStatus = attr.field(eq=False, hash=False, repr=False)
     """Platform-specific user-statuses."""
 
-    async def fetch_user(self) -> users.PartialUser:
+    async def fetch_user(self) -> users.User:
         """Fetch the user this presence is for.
 
         Returns

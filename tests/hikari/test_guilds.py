@@ -643,15 +643,6 @@ class TestPartialGuild:
         assert deleted_channel is model.app.rest.delete_channel.return_value
 
     @pytest.mark.asyncio()
-    async def test_delete_category(self, model):
-        model.app.rest.delete_channel = mock.AsyncMock()
-
-        deleted_category = await model.delete_category(2828001)
-
-        model.app.rest.delete_channel.assert_awaited_once_with(2828001)
-        assert deleted_category is model.app.rest.delete_channel.return_value
-
-    @pytest.mark.asyncio()
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock(return_value=model)
 
