@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "InviteApplication",
     "Application",
     "ApplicationFlags",
     "AuthorizationApplication",
@@ -455,6 +456,68 @@ class Team(snowflakes.Unique):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
+class InviteApplication(guilds.PartialApplication):
+    """Represents the information of an Invite Application."""
+
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """The client application that models may use for procedures."""
+
+    cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The CDN's hash of this application's cover image, used in the store or for embedded games."""
+
+    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
+    """The key used for verifying interaction and GameSDK payload signatures."""
+
+    @property
+    def cover_image_url(self) -> typing.Optional[files.URL]:
+        """Cover image URL used in the store or for embedded games.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no cover image exists.
+        """
+        return self.make_cover_image_url()
+
+    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the cover image URL used in the store or for embedded games, if set.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no cover image exists.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
+        """
+        if self.cover_image_hash is None:
+            return None
+
+        return routes.CDN_APPLICATION_COVER.compile_to_file(
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=ext,
+        )
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
@@ -497,7 +560,7 @@ class Application(guilds.PartialApplication):
     """
 
     cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The CDN's hash of this application's cover image, used on the store."""
+    """The CDN's hash of this application's cover image, used in the store or for embedded games."""
 
     terms_of_service_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
@@ -507,7 +570,7 @@ class Application(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Cover image URL used on the store.
+        """Cover image URL used in the store or for embedded games.
 
         Returns
         -------
@@ -517,7 +580,7 @@ class Application(guilds.PartialApplication):
         return self.make_cover_image_url()
 
     def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the cover image URL used in the store, if set.
+        """Generate the cover image URL used in the store or for embedded games, if set.
 
         Parameters
         ----------
