@@ -2557,7 +2557,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
-    ) -> guilds.GuildMemberBan:
+    ) -> guilds.GuildBan:
         route = routes.GET_GUILD_BAN.compile(guild=guild, user=user)
         response = await self._request(route)
         assert isinstance(response, dict)
@@ -2565,7 +2565,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_bans(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[guilds.GuildMemberBan]:
+    ) -> typing.Sequence[guilds.GuildBan]:
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)

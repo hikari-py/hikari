@@ -39,7 +39,7 @@ __all__: typing.List[str] = [
     "GuildVerificationLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildMemberBan",
+    "GuildBan",
     "GuildNSFWLevel",
     "Member",
     "Integration",
@@ -60,6 +60,7 @@ import typing
 
 import attr
 
+from hikari import channels as channels_
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -72,7 +73,6 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels as channels_
     from hikari import colors
     from hikari import colours
     from hikari import emojis as emojis_
@@ -80,6 +80,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
+    from hikari.internal import time
 
 
 @typing.final
@@ -288,6 +289,52 @@ class GuildWidget:
 
     is_enabled: bool = attr.field(repr=True)
     """Whether this embed is enabled."""
+
+    async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
+        """Fetch the widget channel.
+
+        This will be `builtins.None` if not set.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildChannel]
+            The requested channel.
+
+            You can check the type of the channel by
+            using `builtins.isinstance`.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.channel_id:
+            return None
+
+        widget_channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(widget_channel, channels_.GuildChannel)
+
+        return widget_channel
 
 
 @attr_extensions.with_copy
@@ -515,6 +562,40 @@ class Member(users.User):
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
+    async def fetch_dm_channel(self) -> channels_.DMChannel:
+        return await self.user.fetch_dm_channel()
+
+    async def fetch_roles(self) -> typing.Sequence[Role]:
+        """Fetch an up-to-date view of this member's roles from the API.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Role]
+            An up-to-date view of this member's roles.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the member is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        fetched_roles = await self.app.rest.fetch_roles(self.guild_id)
+        return [role for role in fetched_roles if role.id in self.role_ids]
+
     async def ban(
         self,
         *,
@@ -558,6 +639,255 @@ class Member(users.User):
         """
         await self.user.app.rest.ban_user(
             self.guild_id, self.user.id, delete_message_days=delete_message_days, reason=reason
+        )
+
+    async def unban(
+        self,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Unban this member from the guild.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `BAN_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.user.app.rest.unban_user(self.guild_id, self.user.id, reason=reason)
+
+    async def kick(
+        self,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Kick this member from this guild.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `KICK_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.user.app.rest.kick_user(self.guild_id, self.user.id, reason=reason)
+
+    async def add_role(
+        self, role: snowflakes.SnowflakeishOr[PartialRole], *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> None:
+        """Add a role to the member.
+
+        Parameters
+        ----------
+        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+            The role to add. This may be the object or the
+            ID of an existing role.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_ROLES` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild, user or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.user.app.rest.add_role_to_member(self.guild_id, self.user.id, role, reason=reason)
+
+    async def remove_role(
+        self, role: snowflakes.SnowflakeishOr[PartialRole], *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> None:
+        """Remove a role from the member.
+
+        Parameters
+        ----------
+        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+            The role to remove. This may be the object or the
+            ID of an existing role.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_ROLES` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild, user or role are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.user.app.rest.remove_role_from_member(self.guild_id, self.user.id, role, reason=reason)
+
+    async def edit(
+        self,
+        *,
+        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialRole]] = undefined.UNDEFINED,
+        mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        voice_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> Member:
+        """Edit the member.
+
+        Other Parameters
+        ----------------
+        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new nick for the member. If `builtins.None`,
+            will remove the members nick.
+
+            Requires the `MANAGE_NICKNAMES` permission.
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            If provided, the new roles for the member.
+
+            Requires the `MANAGE_ROLES` permission.
+        mute : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the new server mute state for the member.
+
+            Requires the `MUTE_MEMBERS` permission.
+        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the new server deaf state for the member.
+
+            Requires the `DEAFEN_MEMBERS` permission.
+        voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
+            If provided, `builtins.None` or the object or the ID of
+            an existing voice channel to move the member to.
+            If `builtins.None`, will disconnect the member from voice.
+
+            Requires the `MOVE_MEMBERS` permission and the `CONNECT`
+            permission in the original voice channel and the target
+            voice channel.
+
+            !!! note
+                If the member is not in a voice channel, this will
+                take no effect.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing a permission to do an action.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.user.app.rest.edit_member(
+            self.guild_id,
+            self.user.id,
+            nick=nick,
+            roles=roles,
+            mute=mute,
+            deaf=deaf,
+            voice_channel=voice_channel,
+            reason=reason,
         )
 
     def __str__(self) -> str:
@@ -883,7 +1213,7 @@ class WelcomeScreen:
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class GuildMemberBan:
+class GuildBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attr.field(repr=True)
@@ -976,6 +1306,854 @@ class PartialGuild(snowflakes.Unique):
             size=size,
             file_format=ext,
         )
+
+    async def ban(
+        self,
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Ban the given user from this guild.
+
+        Parameters
+        ----------
+        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to ban from the guild
+
+        Other Parameters
+        ----------------
+        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
+            If provided, the number of days to delete messages for.
+            This must be between 0 and 7.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `BAN_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.app.rest.ban_user(self.id, user, delete_message_days=delete_message_days, reason=reason)
+
+    async def unban(
+        self,
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Unban the given user from this guild.
+
+        Parameters
+        ----------
+        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to unban from the guild
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `BAN_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.app.rest.unban_user(self.id, user, reason=reason)
+
+    async def kick(
+        self,
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Kicks the given user from this guild.
+
+        Parameters
+        ----------
+        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to kick from the guild
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `KICK_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.app.rest.kick_user(self.id, user, reason=reason)
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        verification_level: undefined.UndefinedOr[GuildVerificationLevel] = undefined.UNDEFINED,
+        default_message_notifications: undefined.UndefinedOr[GuildMessageNotificationsLevel] = undefined.UNDEFINED,
+        explicit_content_filter_level: undefined.UndefinedOr[GuildExplicitContentFilterLevel] = undefined.UNDEFINED,
+        afk_channel: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
+        ] = undefined.UNDEFINED,
+        afk_timeout: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        system_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        rules_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        public_updates_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> RESTGuild:
+        """Edits the guild.
+
+        Parameters
+        ----------
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new name for the guild.
+        verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
+            If provided, the new verification level.
+        default_message_notifications : hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
+            If provided, the new default message notifications level.
+        explicit_content_filter_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildExplicitContentFilterLevel]
+            If provided, the new explicit content filter level.
+        afk_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
+            If provided, the new afk channel. Requires `afk_timeout` to
+            be set to work.
+        afk_timeout : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the new afk timeout.
+        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the new guild icon. Must be a 1024x1024 image or can be
+            an animated gif when the guild has the `ANIMATED_ICON` feature.
+        owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
+            If provided, the new guild owner.
+
+            !!! warning
+                You need to be the owner of the server to use this.
+        splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If provided, the new guild splash. Must be a 16:9 image and the
+            guild must have the `INVITE_SPLASH` feature.
+        banner : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If provided, the new guild banner. Must be a 16:9 image and the
+            guild must have the `BANNER` feature.
+        system_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+            If provided, the new system channel.
+        rules_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+            If provided, the new rules channel.
+        public_updates_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+            If provided, the new public updates channel.
+        preferred_locale : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new preferred locale.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The edited guild.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value. Or
+            you are missing the
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission or if you tried to
+            pass ownership without being the server owner.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        return await self.app.rest.edit_guild(
+            self.id,
+            name=name,
+            verification_level=verification_level,
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter_level=explicit_content_filter_level,
+            afk_channel=afk_channel,
+            afk_timeout=afk_timeout,
+            icon=icon,
+            owner=owner,
+            splash=splash,
+            banner=banner,
+            system_channel=system_channel,
+            rules_channel=rules_channel,
+            public_updates_channel=public_updates_channel,
+            preferred_locale=preferred_locale,
+            reason=reason,
+        )
+
+    async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
+        """Fetch the emojis of the guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
+            The requested emojis.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_guild_emojis(self.id)
+
+    async def fetch_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> emojis_.KnownCustomEmoji:
+        """Fetch an emoji from the guild.
+
+        Parameters
+        ----------
+        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+            The emoji to fetch. This can be a `hikari.emojis.CustomEmoji`
+            or the ID of an existing emoji.
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The requested emoji.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild or the emoji are not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_emoji(self.id, emoji)
+
+    async def create_category(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildCategory:
+        """Create a category in the guild.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the category.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the category.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildCategory
+            The created category.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_category(
+            self.id, name, position=position, permission_overwrites=permission_overwrites, reason=reason
+        )
+
+    async def create_text_channel(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildTextChannel:
+        """Create a text channel in the guild.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the channel (relative to the
+            category, if any).
+        topic : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the ammount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildTextChannel
+            The created channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_text_channel(
+            self.id,
+            name,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+        )
+
+    async def create_news_channel(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildNewsChannel:
+        """Create a news channel in the guild.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the channel (relative to the
+            category, if any).
+        topic : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the ammount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildNewsChannel
+            The created channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_news_channel(
+            self.id,
+            name,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+        )
+
+    async def create_voice_channel(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices_.VoiceRegionish] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildVoiceChannel:
+        """Create a voice channel in a guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to create the channel in. This may be the
+            object or the ID of an existing guild.
+        name : builtins.str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the channel (relative to the
+            category, if any).
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the maximum users in the channel at once.
+            Must be between 0 and 99 with 0 meaning no limit.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the bitrate for the channel. Must be
+            between 8000 and 96000 or 8000 and 128000 for VIP
+            servers.
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+            If provided, the new video quality mode for the channel.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            If provided, the voice region to for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildVoiceChannel
+            The created channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the gui  ld is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_voice_channel(
+            self.id,
+            name,
+            position=position,
+            user_limit=user_limit,
+            bitrate=bitrate,
+            video_quality_mode=video_quality_mode,
+            permission_overwrites=permission_overwrites,
+            region=region,
+            category=category,
+            reason=reason,
+        )
+
+    async def create_stage_channel(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices_.VoiceRegionish] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildStageChannel:
+        """Create a stage channel in the guild.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The channel's name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the position of the channel (relative to the
+            category, if any).
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the maximum users in the channel at once.
+            Must be between 0 and 99 with 0 meaning no limit.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the bitrate for the channel. Must be
+            between 8000 and 96000 or 8000 and 128000 for VIP
+            servers.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the channel.
+        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+            If provided, the voice region to for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildStageChannel
+            The created channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_stage_channel(
+            self.id,
+            name,
+            position=position,
+            user_limit=user_limit,
+            bitrate=bitrate,
+            permission_overwrites=permission_overwrites,
+            region=region,
+            category=category,
+            reason=reason,
+        )
+
+    async def delete_channel(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
+    ) -> channels_.GuildChannel:
+        """Delete a channel in the guild.
+
+        !!! note
+            This method can also be used for deleting guild categories as well.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+            The channel or category to delete. This may be the object or the ID of an
+            existing channel.
+
+        Returns
+        -------
+        hikari.channels.GuildChannel
+            Object of the channel or category that was deleted.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError, or close a DM.
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        !!! note
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
+        """
+        deleted_channel = await self.app.rest.delete_channel(channel)
+        assert isinstance(deleted_channel, channels_.GuildChannel)
+
+        return deleted_channel
+
+    async def fetch_self(self) -> RESTGuild:
+        """Fetch the guild.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The requested guild.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_guild(self.id)
+
+    async def fetch_roles(self) -> typing.Sequence[Role]:
+        """Fetch the roles of the guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.guilds.Role]
+            The requested roles.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+            hikari.errors.NotFoundError
+                If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_roles(self.id)
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -1520,6 +2698,244 @@ class Guild(PartialGuild, abc.ABC):
     @abc.abstractmethod
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a role from the cache by it's ID."""
+
+    async def fetch_owner(self) -> Member:
+        """Fetch the owner of the guild.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            The guild owner.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_member(self.id, self.owner_id)
+
+    async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
+        """Fetch the widget channel.
+
+        This will be `builtins.None` if not set.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildChannel]
+            The channel the widget is linked to or else `builtins.None`.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.widget_channel_id:
+            return None
+
+        widget_channel = await self.app.rest.fetch_channel(self.widget_channel_id)
+        assert isinstance(widget_channel, channels_.GuildChannel)
+        return widget_channel
+
+    async def fetch_afk_channel(self) -> typing.Optional[channels_.GuildVoiceChannel]:
+        """Fetch the channel that AFK voice users get sent to.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildVoiceChannel]
+            The AFK channel or `builtins.None` if not enabled.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.afk_channel_id:
+            return None
+
+        afk_channel = await self.app.rest.fetch_channel(self.afk_channel_id)
+        assert isinstance(afk_channel, channels_.GuildVoiceChannel)
+        return afk_channel
+
+    async def fetch_system_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+        """Fetch the system channel.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The system channel for this guild or `builtins.None` if not
+            enabled.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.system_channel_id:
+            return None
+
+        system_channel = await self.app.rest.fetch_channel(self.system_channel_id)
+        assert isinstance(system_channel, channels_.GuildTextChannel)
+        return system_channel
+
+    async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+        """Fetch the channel where guilds display rules and guidelines.
+
+        If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The channel where the rules of the guild are specified or else `builtins.None`.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.rules_channel_id:
+            return None
+
+        rules_channel = await self.app.rest.fetch_channel(self.rules_channel_id)
+        assert isinstance(rules_channel, channels_.GuildTextChannel)
+        return rules_channel
+
+    async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+        """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
+
+        This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
+        this guild. For all other purposes, it should be considered to be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildTextChannel]
+            The channel where discord sents relevent updates to moderators and admins.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.public_updates_channel_id:
+            return None
+
+        updates_channel = await self.app.rest.fetch_channel(self.public_updates_channel_id)
+        assert isinstance(updates_channel, channels_.GuildTextChannel)
+        return updates_channel
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

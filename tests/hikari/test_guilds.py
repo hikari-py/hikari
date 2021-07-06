@@ -24,12 +24,13 @@ import datetime
 import mock
 import pytest
 
+from hikari import channels as channels_
 from hikari import colors
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
-from hikari import users
 from hikari.impl import bot
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
@@ -147,10 +148,40 @@ class TestRole:
         assert model.colour == colors.Color(0x1A2B3C)
 
 
+class TestGuildWidget:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return guilds.GuildWidget(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
+
+    def test_app_property(self, model, mock_app):
+        assert model.app is mock_app
+
+    def test_channel_property(self, model):
+        assert model.channel_id == snowflakes.Snowflake(420)
+
+    def test_is_enabled_property(self, model):
+        assert model.is_enabled is True
+
+    @pytest.mark.asyncio()
+    async def test_fetch_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(420)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_channel_when_None(self, model):
+        model.app.rest.fetch_channel = mock.AsyncMock()
+        model.channel_id = None
+
+        assert await model.fetch_channel() is None
+
+
 class TestMember:
     @pytest.fixture()
     def mock_user(self):
-        return mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(123))
+        return mock.Mock(id=snowflakes.Snowflake(123))
 
     @pytest.fixture()
     def model(self, mock_user):
@@ -213,12 +244,70 @@ class TestMember:
         model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
 
     @pytest.mark.asyncio()
+    async def test_fetch_roles(self, model):
+        model.user.app.rest.fetch_roles = mock.AsyncMock()
+        await model.fetch_roles()
+        model.user.app.rest.fetch_roles.assert_awaited_once_with(456)
+
+    @pytest.mark.asyncio()
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
 
         await model.ban(delete_message_days=10, reason="bored")
 
         model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_days=10, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_unban(self, model):
+        model.app.rest.unban_user = mock.AsyncMock()
+
+        await model.unban(reason="Unbored")
+
+        model.app.rest.unban_user.assert_awaited_once_with(456, 123, reason="Unbored")
+
+    @pytest.mark.asyncio()
+    async def test_kick(self, model):
+        model.app.rest.kick_user = mock.AsyncMock()
+
+        await model.kick(reason="bored")
+
+        model.app.rest.kick_user.assert_awaited_once_with(456, 123, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_add_role(self, model):
+        model.app.rest.add_role_to_member = mock.AsyncMock()
+
+        await model.add_role(563412, reason="Promoted")
+
+        model.app.rest.add_role_to_member.assert_awaited_once_with(456, 123, 563412, reason="Promoted")
+
+    @pytest.mark.asyncio()
+    async def test_remove_role(self, model):
+        model.app.rest.remove_role_from_member = mock.AsyncMock()
+
+        await model.remove_role(563412, reason="Demoted")
+
+        model.app.rest.remove_role_from_member.assert_awaited_once_with(456, 123, 563412, reason="Demoted")
+
+    @pytest.mark.asyncio()
+    async def test_edit(self, model):
+        model.app.rest.edit_member = mock.AsyncMock()
+        edit = await model.edit(
+            nick="Imposter", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
+        )
+
+        model.app.rest.edit_member.assert_awaited_once_with(
+            456,
+            123,
+            nick="Imposter",
+            roles=[123, 432, 345],
+            mute=False,
+            deaf=True,
+            voice_channel=4321245,
+            reason="I'm God",
+        )
+
+        assert edit == model.app.rest.edit_member.return_value
 
     def test_default_avatar_url_property(self, model, mock_user):
         assert model.default_avatar_url is mock_user.default_avatar_url
@@ -368,6 +457,209 @@ class TestPartialGuild:
             file_format="url",
         )
 
+    @pytest.mark.asyncio()
+    async def test_kick(self, model):
+        model.app.rest.kick_user = mock.AsyncMock()
+        await model.kick(4321, reason="Go away!")
+
+        model.app.rest.kick_user.assert_awaited_once_with(90210, 4321, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+        await model.ban(4321, delete_message_days=10, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_days=10, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_unban(self, model):
+        model.app.rest.unban_user = mock.AsyncMock()
+        await model.unban(4321, reason="Comeback!!")
+
+        model.app.rest.unban_user.assert_awaited_once_with(90210, 4321, reason="Comeback!!")
+
+    @pytest.mark.asyncio()
+    async def test_edit(self, model):
+        model.app.rest.edit_guild = mock.AsyncMock()
+        edited_guild = await model.edit(
+            name="chad server",
+            verification_level=guilds.GuildVerificationLevel.LOW,
+            default_message_notifications=guilds.GuildMessageNotificationsLevel.ALL_MESSAGES,
+            explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.DISABLED,
+            owner=6996,
+            afk_timeout=400,
+            preferred_locale="us-en",
+            reason="beep boop",
+        )
+
+        model.app.rest.edit_guild.assert_awaited_once_with(
+            90210,
+            name="chad server",
+            verification_level=guilds.GuildVerificationLevel.LOW,
+            default_message_notifications=guilds.GuildMessageNotificationsLevel.ALL_MESSAGES,
+            explicit_content_filter_level=guilds.GuildExplicitContentFilterLevel.DISABLED,
+            afk_channel=undefined.UNDEFINED,
+            afk_timeout=400,
+            icon=undefined.UNDEFINED,
+            owner=6996,
+            splash=undefined.UNDEFINED,
+            banner=undefined.UNDEFINED,
+            system_channel=undefined.UNDEFINED,
+            rules_channel=undefined.UNDEFINED,
+            public_updates_channel=undefined.UNDEFINED,
+            preferred_locale="us-en",
+            reason="beep boop",
+        )
+
+        assert edited_guild is model.app.rest.edit_guild.return_value
+
+    @pytest.mark.asyncio()
+    async def test_fetch_emojis(self, model):
+        model.app.rest.fetch_guild_emojis = mock.AsyncMock()
+
+        emojis = await model.fetch_emojis()
+
+        model.app.rest.fetch_guild_emojis.assert_awaited_once_with(model.id)
+        assert emojis is model.app.rest.fetch_guild_emojis.return_value
+
+    @pytest.mark.asyncio()
+    async def test_fetch_emoji(self, model):
+        model.app.rest.fetch_emoji = mock.AsyncMock()
+
+        emoji = await model.fetch_emoji(349)
+
+        model.app.rest.fetch_emoji.assert_awaited_once_with(model.id, 349)
+        assert emoji is model.app.rest.fetch_emoji.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_category(self, model):
+        model.app.rest.create_guild_category = mock.AsyncMock()
+
+        category = await model.create_category("very cool category", position=2)
+
+        model.app.rest.create_guild_category.assert_awaited_once_with(
+            90210,
+            "very cool category",
+            position=2,
+            permission_overwrites=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert category is model.app.rest.create_guild_category.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_text_channel(self, model):
+        model.app.rest.create_guild_text_channel = mock.AsyncMock()
+
+        text_channel = await model.create_text_channel(
+            "cool text channel", position=3, nsfw=False, rate_limit_per_user=30
+        )
+
+        model.app.rest.create_guild_text_channel.assert_awaited_once_with(
+            90210,
+            "cool text channel",
+            position=3,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=30,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert text_channel is model.app.rest.create_guild_text_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_news_channel(self, model):
+        model.app.rest.create_guild_news_channel = mock.AsyncMock()
+
+        news_channel = await model.create_news_channel(
+            "cool news channel", position=1, nsfw=False, rate_limit_per_user=420
+        )
+
+        model.app.rest.create_guild_news_channel.assert_awaited_once_with(
+            90210,
+            "cool news channel",
+            position=1,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=420,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert news_channel is model.app.rest.create_guild_news_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_voice_channel(self, model):
+        model.app.rest.create_guild_voice_channel = mock.AsyncMock()
+
+        voice_channel = await model.create_voice_channel(
+            "cool voice channel", position=1, bitrate=3200, video_quality_mode=2
+        )
+
+        model.app.rest.create_guild_voice_channel.assert_awaited_once_with(
+            90210,
+            "cool voice channel",
+            position=1,
+            user_limit=undefined.UNDEFINED,
+            bitrate=3200,
+            video_quality_mode=2,
+            permission_overwrites=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert voice_channel is model.app.rest.create_guild_voice_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_stage_channel(self, model):
+        model.app.rest.create_guild_stage_channel = mock.AsyncMock()
+
+        stage_channel = await model.create_stage_channel("cool stage channel", position=1, bitrate=3200, user_limit=100)
+
+        model.app.rest.create_guild_stage_channel.assert_awaited_once_with(
+            90210,
+            "cool stage channel",
+            position=1,
+            user_limit=100,
+            bitrate=3200,
+            permission_overwrites=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert stage_channel is model.app.rest.create_guild_stage_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_delete_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildChannel)
+        model.app.rest.delete_channel = mock.AsyncMock(return_value=mock_channel)
+
+        deleted_channel = await model.delete_channel(1288820)
+
+        model.app.rest.delete_channel.assert_awaited_once_with(1288820)
+        assert deleted_channel is model.app.rest.delete_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild(self, model):
+        model.app.rest.fetch_guild = mock.AsyncMock(return_value=model)
+
+        assert await model.fetch_self() is model.app.rest.fetch_guild.return_value
+        model.app.rest.fetch_guild.assert_awaited_once_with(model.id)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_roles(self, model):
+        model.app.rest.fetch_roles = mock.AsyncMock()
+
+        roles = await model.fetch_roles()
+
+        model.app.rest.fetch_roles.assert_awaited_once_with(90210)
+        assert roles is model.app.rest.fetch_roles.return_value
+
 
 class TestGuildPreview:
     @pytest.fixture()
@@ -465,12 +757,12 @@ class TestGuild:
             preferred_locale="en-GB",
             premium_subscription_count=12,
             premium_tier=guilds.GuildPremiumTier.TIER_3,
-            public_updates_channel_id=None,
-            rules_channel_id=None,
-            system_channel_id=None,
+            public_updates_channel_id=snowflakes.Snowflake(99699),
+            rules_channel_id=snowflakes.Snowflake(123445),
+            system_channel_id=snowflakes.Snowflake(123888),
             vanity_url_code="yeet",
             verification_level=guilds.GuildVerificationLevel.VERY_HIGH,
-            widget_channel_id=None,
+            widget_channel_id=snowflakes.Snowflake(192729),
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
         )
 
@@ -581,6 +873,83 @@ class TestGuild:
     def test_make_banner_url_when_no_hash(self, model):
         model.banner_hash = None
         assert model.make_banner_url(ext="png", size=2048) is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_owner(self, model):
+        model.app.rest.fetch_member = mock.AsyncMock()
+
+        assert await model.fetch_owner() is model.app.rest.fetch_member.return_value
+        model.app.rest.fetch_member.assert_awaited_once_with(123, 1111)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_widget_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_widget_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(192729)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_widget_channel_when_None(self, model):
+        model.widget_channel_id = None
+
+        assert await model.fetch_widget_channel() is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_rules_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_rules_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(123445)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_rules_channel_when_None(self, model):
+        model.rules_channel_id = None
+
+        assert await model.fetch_rules_channel() is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_system_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_system_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(123888)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_system_channel_when_None(self, model):
+        model.system_channel_id = None
+
+        assert await model.fetch_system_channel() is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_public_updates_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildTextChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_public_updates_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(99699)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_public_updates_channel_when_None(self, model):
+        model.public_updates_channel_id = None
+
+        assert await model.fetch_public_updates_channel() is None
+
+    @pytest.mark.asyncio()
+    async def test_fetch_afk_channel(self, model):
+        mock_channel = mock.Mock(channels_.GuildVoiceChannel)
+        model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+
+        assert await model.fetch_afk_channel() is model.app.rest.fetch_channel.return_value
+        model.app.rest.fetch_channel.assert_awaited_once_with(1234)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_afk_channel_when_None(self, model):
+        model.afk_channel_id = None
+
+        assert await model.fetch_afk_channel() is None
 
     def test_get_channel(self, model):
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
@@ -722,6 +1091,24 @@ class TestGatewayGuild:
             member_count=1,
             nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
+
+    @pytest.fixture()
+    def channels(self):
+        return {
+            4321: mock.Mock(channels_.GuildTextChannel),
+            3321: mock.Mock(channels_.GuildNewsChannel),
+            2321: mock.Mock(channels_.GuildStoreChannel),
+            5321: mock.Mock(channels_.GuildVoiceChannel),
+            6321: mock.Mock(channels_.GuildStageChannel),
+        }
+
+    def test_channels(self, model):
+        assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
+        model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
+
+    def test_channels_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.channels == {}
 
     def test_emojis(self, model):
         assert model.emojis is model.app.cache.get_emojis_view_for_guild.return_value

@@ -4908,7 +4908,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
-    ) -> guilds.GuildMemberBan:
+    ) -> guilds.GuildBan:
         """Fetch the guild's ban info for a user.
 
         Parameters
@@ -4922,7 +4922,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.guilds.GuildMemberBan
+        hikari.guilds.GuildBan
             The requested ban info.
 
         Raises
@@ -4953,7 +4953,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[guilds.GuildMemberBan]:
+    ) -> typing.Sequence[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
         Parameters
@@ -4964,7 +4964,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.guilds.GuildMemberBan]
+        typing.Sequence[hikari.guilds.GuildBan]
             The requested bans.
 
         Raises

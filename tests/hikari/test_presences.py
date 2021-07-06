@@ -20,9 +20,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import mock
+import pytest
+
 from hikari import presences
+from hikari import snowflakes
+from hikari.impl import bot
+
+
+@pytest.fixture()
+def mock_app():
+    return mock.Mock(spec_set=bot.BotApp)
 
 
 def test_Activity_str_operator():
     activity = presences.Activity(name="something", type=presences.ActivityType(1))
     assert str(activity) == "something"
+
+
+class TestMemberPresence:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return presences.MemberPresence(
+            app=mock_app,
+            user_id=snowflakes.Snowflake(432),
+            guild_id=snowflakes.Snowflake(234),
+            visible_status=presences.Status.ONLINE,
+            activities=mock.Mock(presences.RichActivity),
+            client_status=mock.Mock(presences.ClientStatus),
+        )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_user(self, model):
+        model.app.rest.fetch_user = mock.AsyncMock()
+
+        assert await model.fetch_user() is model.app.rest.fetch_user.return_value
+        model.app.rest.fetch_user.assert_awaited_once_with(432)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_member(self, model):
+        model.app.rest.fetch_member = mock.AsyncMock()
+
+        assert await model.fetch_member() is model.app.rest.fetch_member.return_value
+        model.app.rest.fetch_member.assert_awaited_once_with(234, 432)
