@@ -74,7 +74,7 @@ def _fixed_size_nonce() -> str:
 
 async def _request_guild_members(
     shard: gateway_shard.GatewayShard,
-    guild: guilds.PartialGuild,
+    guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     *,
     include_presences: bool,
     nonce: str,

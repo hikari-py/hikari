@@ -537,18 +537,25 @@ class TestEventManagerImpl:
 
         stateless_event_manager._enabled_for_event = mock.Mock(side_effect=[False, True])
         entity_factory.deserialize_gateway_guild.return_value.id = 123
-        shard.request_guild_members = mock.Mock()
 
-        with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid") as uuid:
-                await stateless_event_manager.on_guild_create(shard, payload)
+        stack = contextlib.ExitStack()
+        _request_guild_members = stack.enter_context(
+            mock.patch("hikari.impl.event_manager._request_guild_members", new_callable=mock.Mock)
+        )
+        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        uuid = stack.enter_context(mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid"))
+
+        with stack:
+            await stateless_event_manager.on_guild_create(shard, payload)
 
         stateless_event_manager._enabled_for_event.assert_has_calls(
             [mock.call(guild_events.GuildAvailableEvent), mock.call(shard_events.MemberChunkEvent)]
         )
         uuid.assert_called_once_with()
-        shard.request_guild_members.assert_called_once_with(123, include_presences=True, nonce="987.uuid")
-        create_task.assert_called_once_with(shard.request_guild_members(), name="987:123 guild create members request")
+        _request_guild_members.assert_called_once_with(shard, 123, include_presences=True, nonce="987.uuid")
+        create_task.assert_called_once_with(
+            _request_guild_members.return_value, name="987:123 guild create members request"
+        )
 
         stateless_event_manager._app.event_factory.deserialize_guild_join_event.assert_not_called()
         stateless_event_manager._app.entity_factory.deserialize_gateway_guild.assert_not_called()
