@@ -44,8 +44,39 @@ class TestEmoji:
 
 
 class TestUnicodeEmoji:
-    def test_str_operator(self):
-        assert emojis.UnicodeEmoji("\N{OK HAND SIGN}") == "\N{OK HAND SIGN}"
+    @pytest.fixture()
+    def emoji(self):
+        return emojis.UnicodeEmoji("\N{OK HAND SIGN}")
+
+    def test_name_property(self, emoji):
+        assert emoji.name == emoji
+
+    def test_url_name_property(self, emoji):
+        assert emoji.url_name == emoji
+
+    def test_mention_property(self, emoji):
+        assert emoji.mention == emoji
+
+    def test_codepoints_property(self, emoji):
+        assert emoji.codepoints == [128076]
+
+    def test_filename_property(self, emoji):
+        assert emoji.filename == "1f44c.png"
+
+    def test_url_property(self, emoji):
+        assert emoji.url == "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png"
+
+    def test_unicode_escape_property(self, emoji):
+        assert emoji.unicode_escape == "\\U0001f44c"
+
+    def test_parse_codepoints(self, emoji):
+        assert emojis.UnicodeEmoji.parse_codepoints(128076) == emoji
+
+    def test_parse_unicode_escape(self, emoji):
+        assert emojis.UnicodeEmoji.parse_unicode_escape("\\U0001f44c") == emoji
+
+    def test_str_operator(self, emoji):
+        assert str(emoji) == emoji
 
     @pytest.mark.parametrize(
         ("input", "output"),
@@ -62,6 +93,31 @@ class TestUnicodeEmoji:
 
 
 class TestCustomEmoji:
+    @pytest.fixture()
+    def emoji(self):
+        return emojis.CustomEmoji(id=3213452, name="ok", is_animated=False)
+
+    def test_filename_property(self, emoji):
+        assert emoji.filename == "3213452.png"
+
+    def test_filename_property_when_animated(self, emoji):
+        emoji.is_animated = True
+        assert emoji.filename == "3213452.gif"
+
+    def test_url_name_property(self, emoji):
+        assert emoji.url_name == "ok:3213452"
+
+    def test_mention_property(self, emoji):
+        assert emoji.mention == "<:ok:3213452>"
+
+    def test_mention_property_when_animated(self, emoji):
+        emoji.is_animated = True
+
+        assert emoji.mention == "<a:ok:3213452>"
+
+    def test_url_property(self, emoji):
+        assert emoji.url == "https://cdn.discordapp.com/emojis/3213452.png"
+
     def test_str_operator_when_populated_name(self):
         emoji = emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="peepoSad", is_animated=True)
         assert str(emoji) == emoji.mention
