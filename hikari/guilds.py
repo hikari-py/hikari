@@ -1861,7 +1861,7 @@ class PartialGuild(snowflakes.Unique):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices_.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices_.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -1891,7 +1891,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
             If provided, the voice region to for this channel. Passing
             `builtins.None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
@@ -1955,7 +1955,7 @@ class PartialGuild(snowflakes.Unique):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices_.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices_.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
@@ -1980,7 +1980,7 @@ class PartialGuild(snowflakes.Unique):
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[hikari.voices.VoiceRegionish]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
             If provided, the voice region to for this channel. Passing
             `builtins.None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
