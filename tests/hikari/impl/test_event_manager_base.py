@@ -428,7 +428,7 @@ class TestEventManagerBase:
         manager = StubManager(
             mock.Mock(),
             0,
-            cache_settings=mock.Mock(components=config.CacheComponents.MEMBERS | config.CacheComponents.GUILD_CHANNELS),
+            cache_components=config.CacheComponents.MEMBERS | config.CacheComponents.GUILD_CHANNELS,
         )
         assert manager._consumers == {
             "foo": event_manager_base._Consumer(manager.on_foo, (shard_events.ShardEvent, base_events.Event), True),
@@ -464,7 +464,7 @@ class TestEventManagerBase:
             shard_events.ShardPayloadEvent,
         )
         expected_bat_events = (shard_events.MemberChunkEvent, shard_events.ShardEvent, base_events.Event)
-        manager = StubManager(mock.Mock(), 0, cache_settings=None)
+        manager = StubManager(mock.Mock(), 0, cache_components=config.CacheComponents.NONE)
         assert manager._consumers == {
             "foo": event_manager_base._Consumer(manager.on_foo, (shard_events.ShardEvent, base_events.Event), False),
             "bar": event_manager_base._Consumer(manager.on_bar, expected_bar_events, False),

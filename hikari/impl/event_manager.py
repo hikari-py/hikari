@@ -103,7 +103,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         self._cache = cache
         self._entity_factory = entity_factory
-        super().__init__(event_factory=event_factory, intents=intents, cache_settings=cache.settings if cache else None)
+        components = cache.settings.components if cache else config.CacheComponents.NONE
+        super().__init__(event_factory=event_factory, intents=intents, cache_components=components)
 
     def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
         return self._cache is not None and (self._cache.settings.components & components) == components

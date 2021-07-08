@@ -332,7 +332,7 @@ class EventManagerBase(event_manager_.EventManager):
         event_factory: event_factory_.EventFactory,
         intents: intents_.Intents,
         *,
-        cache_settings: typing.Optional[config.CacheSettings] = None,
+        cache_components: config.CacheComponents = config.CacheComponents.NONE,
     ) -> None:
         self._consumers: typing.Dict[str, _Consumer] = {}
         self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
@@ -346,11 +346,13 @@ class EventManagerBase(event_manager_.EventManager):
             if name.startswith("on_"):
                 event_name = name[3:]
                 if isinstance(member, _FilteredMethodT):
-                    caching = bool(cache_settings and (member.__cache_components__ & cache_settings.components))
+                    caching = (member.__cache_components__ & cache_components) != 0
                     self._consumers[event_name] = _Consumer(member, member.__event_types__, caching)
 
                 else:
-                    self._consumers[event_name] = _Consumer(member, undefined.UNDEFINED, bool(cache_settings))
+                    self._consumers[event_name] = _Consumer(
+                        member, undefined.UNDEFINED, cache_components != cache_components.NONE
+                    )
 
     def _clear_enabled_cache(self) -> None:
         self._enabled_consumers_cache = {}
