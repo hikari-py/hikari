@@ -527,6 +527,12 @@ class GatewayShardImpl(shard.GatewayShard):
             raise RuntimeError("user_id was not known, this is probably a bug")
         return self._user_id
 
+    def _get_ws(self) -> _GatewayTransport:
+        if not self._ws:
+            raise errors.ComponentStateConflictError("Shard is shutting down")
+
+        return self._ws
+
     async def join(self) -> None:
         """Wait for this shard to close, if running."""
         await self._closed_event.wait()
@@ -540,7 +546,7 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         await self._total_rate_limit.acquire()
 
-        await self._ws.send_json(data=data, compress=compress, dumps=dumps)  # type: ignore[union-attr]
+        await self._get_ws().send_json(data=data, compress=compress, dumps=dumps)
 
     def _check_if_alive(self) -> None:
         if not self.is_alive:
@@ -732,7 +738,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return False
 
     async def _poll_events(self) -> typing.Optional[bool]:
-        payload = await self._ws.receive_json(timeout=5)  # type: ignore[union-attr]
+        payload = await self._get_ws().receive_json(timeout=5)
 
         op = payload[_OP]  # opcode int
         d = payload[_D]  # data/payload. Usually a dict or a bool for INVALID_SESSION
@@ -880,7 +886,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         "closing flag was set during handshake, disconnecting with GOING AWAY "
                         "(_run_once => do not reconnect)"
                     )
-                    await self._ws.send_close(  # type: ignore[union-attr]
+                    await self._get_ws().send_close(
                         code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting"
                     )
                     return False
@@ -912,7 +918,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     "shard has requested graceful termination, so will not attempt to reconnect "
                     "(_run_once => do not reconnect)"
                 )
-                await self._ws.send_close(  # type: ignore[union-attr]
+                await self._get_ws().send_close(
                     code=errors.ShardCloseCode.GOING_AWAY,
                     message=b"shard disconnecting",
                 )
@@ -1003,14 +1009,14 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _wait_for_hello(self) -> asyncio.Task[bool]:
         # Expect HELLO.
-        payload = await self._ws.receive_json()  # type: ignore[union-attr]
+        payload = await self._get_ws().receive_json()
         if payload[_OP] != _HELLO:
             self._logger.debug(
                 "expected HELLO opcode, received %s which makes no sense, closing with PROTOCOL ERROR ",
                 "(_run_once => raise and do not reconnect)",
                 payload[_OP],
             )
-            await self._ws.send_close(  # type: ignore[union-attr]
+            await self._get_ws().send_close(
                 code=errors.ShardCloseCode.PROTOCOL_ERROR,
                 message=b"Expected HELLO op",
             )
@@ -1021,7 +1027,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 "closing flag was set before we could handshake, disconnecting with GOING AWAY "
                 "(_run_once => do not reconnect)"
             )
-            await self._ws.send_close(  # type: ignore[union-attr]
+            await self._get_ws().send_close(
                 code=errors.ShardCloseCode.GOING_AWAY,
                 message=b"shard disconnecting",
             )

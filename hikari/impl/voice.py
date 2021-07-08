@@ -54,7 +54,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections")
+    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections", "_is_alive", "_is_closing")
 
     _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
@@ -63,16 +63,46 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._app = app
         self._connections = {}
         self.connections = types.MappingProxyType(self._connections)
-        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._is_alive = False
+        self._is_closing = False
 
-    async def disconnect(self) -> None:
+    @property
+    def is_alive(self) -> bool:
+        return self._is_alive
+
+    def _check_if_alive(self) -> None:
+        if not self._is_alive:
+            raise errors.ComponentStateConflictError("Component cannot be used while it's not alive")
+
+        if self._is_closing:
+            raise errors.ComponentStateConflictError("Component cannot be used while it's closing")
+
+    async def _disconnect(self) -> None:
         if self._connections:
             _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
+            # We rely on the assumption that _on_connection_close will be called here rather than explicitly
+            # emptying self._connections.
             await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+    async def disconnect(self) -> None:
+        self._check_if_alive()
+        await self._disconnect()
+
     async def close(self) -> None:
-        await self.disconnect()
+        self._check_if_alive()
+        self._is_closing = True
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+        await self._disconnect()
+        self._is_alive = False
+        self._is_closing = False
+
+    def start(self) -> None:
+        """Start this voice component."""
+        if self._is_alive:
+            raise errors.ComponentStateConflictError("Cannot start a voice component which is already running")
+
+        self._is_alive = True
+        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
 
     async def connect_to(
         self,
@@ -84,13 +114,9 @@ class VoiceComponentImpl(voice.VoiceComponent):
         mute: bool = False,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
+        self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
-
-        if shard_id is None:
-            raise errors.VoiceError(
-                "Cannot connect to voice. Ensure the application is configured as a gateway zookeeper and try again."
-            )
 
         if guild_id in self._connections:
             raise errors.VoiceError(
@@ -113,10 +139,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        user = None
-        if self._app.cache:
-            user = self._app.cache.get_me()
-        if user is None:
+        user = self._app.cache.get_me()
+        if not user:
             user = await self._app.rest.fetch_my_user()
 
         await asyncio.wait_for(shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=5.0)

@@ -32,6 +32,7 @@ import random
 import typing
 
 from hikari import channels
+from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
@@ -54,6 +55,21 @@ def _fixed_size_nonce() -> str:
     head = time.monotonic_ns().to_bytes(8, "big")
     tail = random.getrandbits(92).to_bytes(12, "big")
     return base64.b64encode(head + tail).decode("ascii")
+
+
+async def _request_guild_members(
+    shard: gateway_shard.GatewayShard,
+    guild: guilds.PartialGuild,
+    *,
+    include_presences: bool,
+    nonce: str,
+) -> None:
+    try:
+        await shard.request_guild_members(guild, include_presences=include_presences, nonce=nonce)
+
+    # Ignore errors raised by a shard shutting down
+    except errors.ComponentStateConflictError:
+        pass
 
 
 class EventManagerImpl(event_manager_base.EventManagerBase):
@@ -167,8 +183,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
                 nonce = f"{shard.id}.{_fixed_size_nonce()}"
                 event.chunk_nonce = nonce
-                coroutine = shard.request_guild_members(
-                    event.guild, include_presences=bool(presences_declared), nonce=nonce
+                coroutine = _request_guild_members(
+                    shard, event.guild, include_presences=bool(presences_declared), nonce=nonce
                 )
                 asyncio.create_task(coroutine, name=f"{shard.id}:{event.guild.id} guild create members request")
 
