@@ -761,11 +761,8 @@ class GatewayBot(traits.GatewayBotAware):
             )
 
         self._rest.start()
-        requirements_task = asyncio.create_task(
-            self._rest.fetch_gateway_bot_info(), name="fetch gateway sharding settings"
-        )
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
-        requirements = await requirements_task
+        requirements = await self._rest.fetch_gateway_bot_info()
 
         if shard_count is None:
             shard_count = requirements.shard_count
