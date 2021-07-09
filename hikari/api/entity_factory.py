@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari import sessions as gateway_models
     from hikari import snowflakes
     from hikari import stickers as sticker_models
+    from hikari import stage_instances
     from hikari import templates as template_models
     from hikari import users as user_models
     from hikari import voices as voice_models
@@ -1548,4 +1549,23 @@ class EntityFactory(abc.ABC):
         -------
         hikari.webhooks.PartialWebhook
             The deserialized webhook object.
+        """
+
+    #########################
+    # Stage instance models #
+    #########################
+
+    @abc.abstractmethod
+    def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        """Parse a raw payload from Discord into a guild stage instance object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.channels.StageInstance
+            The deserialized stage instance object
         """

@@ -59,6 +59,7 @@ from hikari import guilds
 from hikari import iterators
 from hikari import permissions as permissions_
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import traits
 from hikari import undefined
 from hikari import urls
@@ -3503,3 +3504,58 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()
+    
+    async def fetch_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        route = routes.GET_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.POST_STAGE_INSTANCE.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        stage_instance = self._entity_factory.deserialize_stage_instance(response)
+        assert isinstance(stage_instance, stage_instances.StageInstance)
+        return stage_instance
+
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        stage_instance = self._entity_factory.deserialize_stage_instance(response)
+        assert isinstance(stage_instance, stage_instances.StageInstance)
+        return stage_instance
+
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
