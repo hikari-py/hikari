@@ -4377,3 +4377,54 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
         )
+
+    async def fetch_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        route = routes.GET_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.POST_STAGE_INSTANCE.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)

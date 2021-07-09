@@ -340,6 +340,11 @@ POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typi
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
+POST_STAGE_INSTANCE: typing.Final[Route] = Route(POST, "/stage-instances")
+GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}")
+PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
+DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")

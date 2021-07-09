@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
+    from hikari import stage_instances
     from hikari import stickers as sticker_models
     from hikari import templates as template_models
     from hikari import users as user_models
@@ -1993,4 +1994,23 @@ class EntityFactory(abc.ABC):
         ------
         hikari.errors.UnrecognisedEntityError
             If the channel type is unknown.
+        """
+
+    #########################
+    # Stage instance models #
+    #########################
+
+    @abc.abstractmethod
+    def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        """Parse a raw payload from Discord into a guild stage instance object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.channels.StageInstance
+            The deserialized stage instance object
         """

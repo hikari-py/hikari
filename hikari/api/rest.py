@@ -50,6 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
+    from hikari import stage_instances
     from hikari import stickers as stickers_
     from hikari import templates
     from hikari import users
@@ -8215,6 +8216,187 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    async def fetch_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        """Fetch the Stage instance associated with a guild stage channel.
+
+        Parameters
+        ----------
+        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+            The guild stage channel to fetch the Stage instance from.
+
+        Returns
+        -------
+        typing.Optional[hikari.stage_instances.StageInstance]
+            The Stage instance associated with the guild stage channel.
+
+            `builtins.None` if no Stage instance exists in the stage channel.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        """Create a Stage instance in guild stage channel.
+
+        Parameters
+        ----------
+        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+            The channel to use for the Stage instance creation.
+
+        Other Parameters
+        ----------------
+        topic: builtins.str
+            The topic for the Stage instance.
+
+        privacy_level: hikari.undefined.UndefinedOr[hikari.stage_instances.StagePrivacyLevel]
+            The privacy level of the Stage Instance.
+
+            This will be set to `hikari.stage_instances.StagePrivacyLevel.GUILD_ONLY` if not provided.
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The created Stage instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        """Edit the Stage instance in a guild stage channel.
+
+        !!! note
+            This will raise `hikari.errors.UnauthorizedError` if the bot is not a moderator
+            of the Stage instance.
+
+        Parameters
+        ----------
+        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+            The channel that the Stage instance is associated with.
+
+        Other Parameters
+        ----------------
+        topic: hikari.undefined.UndefinedOr[builtins.str]
+            The topic for the Stage instance.
+
+        privacy_level: hikari.undefined.UndefinedOr[hikari.stage_instances.StagePrivacyLevel]
+            The privacy level of the Stage Instance.
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The edited Stage instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+    ) -> stage_instances.StageInstance:
+        """Delete the Stage instance.
+
+        Parameters
+        ----------
+        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+            The guild stage channel to fetch the Stage instance from.
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The Stage instance that was deleted.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

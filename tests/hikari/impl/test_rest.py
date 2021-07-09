@@ -6405,3 +6405,77 @@ class TestRESTClientImplAsync:
         await rest_client.delete_scheduled_event(StubModel(54531123), StubModel(123321123321))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_stage_instance(self, rest_client):
+        expected_route = routes.GET_STAGE_INSTANCE.compile(channel=123)
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "123",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_stage_instance(channel=123)
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_create_stage_instance(self, rest_client):
+        expected_route = routes.POST_STAGE_INSTANCE.compile()
+        expected_json = {"channel_id":"7334", "privacy_level": 1, "topic":"ur mom"}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.create_stage_instance(channel=7334, privacy_level=1, topic="ur mom")
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_edit_stage_instance(self, rest_client):
+        expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
+        expected_json = {"privacy_level": 1, "topic":"ur mom"}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.edit_stage_instance(channel=7334, privacy_level=1, topic="ur mom")
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_delete_stage_instance(self, rest_client):
+        expected_route = routes.DELETE_STAGE_INSTANCE.compile(channel=7334)
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.delete_stage_instance(channel=7334)
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)

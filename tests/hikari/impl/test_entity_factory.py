@@ -7043,3 +7043,29 @@ class TestEntityFactoryImpl:
     def test_deserialize_webhook_for_unexpected_webhook_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_webhook({"type": -7999})
+
+    #########################
+    # Stage instance models #
+    #########################
+
+    @pytest.fixture()
+    def stage_instance_payload(self):
+        return {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+
+    def test_deserialize_stage_instance(self, entity_factory_impl, stage_instance_payload, mock_app):
+        stage_instance = entity_factory_impl.deserialize_stage_instance(stage_instance_payload)
+
+        assert stage_instance.app is mock_app
+        assert stage_instance.id == 840647391636226060
+        assert stage_instance.channel_id == 733488538393510049
+        assert stage_instance.guild_id == 197038439483310086
+        assert stage_instance.topic == "Testing Testing, 123"
+        assert stage_instance.privacy_level == 1
+        assert stage_instance.discoverable_disabled is False
