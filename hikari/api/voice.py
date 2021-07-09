@@ -45,6 +45,11 @@ class VoiceComponent(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def is_alive(self) -> bool:
+        """Whether this component is alive."""
+
+    @property
+    @abc.abstractmethod
     def connections(self) -> typing.Mapping[snowflakes.Snowflake, VoiceConnection]:
         """Return a mapping of guild-id to active voice connection."""
 

@@ -760,6 +760,7 @@ class GatewayBot(traits.GatewayBotAware):
                 name="check for package updates",
             )
 
+        self._rest.start()
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
         requirements = await self._rest.fetch_gateway_bot_info()
 
@@ -782,6 +783,8 @@ class GatewayBot(traits.GatewayBotAware):
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
         self._is_alive = True
+        # This needs to be started before shards.
+        self._voice.start()
         self._closing_event = asyncio.Event()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",

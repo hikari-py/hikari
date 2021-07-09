@@ -462,7 +462,7 @@ class TestGatewayBot:
     def test_run_when_already_running(self, bot):
         bot._is_alive = True
 
-        with pytest.raises(RuntimeError, match=r"bot is already running"):
+        with pytest.raises(errors.ComponentStateConflictError):
             bot.run()
 
     def test_run_when_shard_ids_specified_without_shard_count(self, bot):
@@ -631,7 +631,7 @@ class TestGatewayBot:
     async def test_start_when_already_running(self, bot):
         bot._is_alive = True
 
-        with pytest.raises(RuntimeError, match=r"bot is already running"):
+        with pytest.raises(errors.ComponentStateConflictError):
             await bot.start()
 
     @pytest.mark.skip("TODO")
