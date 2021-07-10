@@ -47,10 +47,10 @@ from hikari.events import message_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import shard_events
+from hikari.events import stage_instance_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
-from hikari.events import stage_instance_events
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time

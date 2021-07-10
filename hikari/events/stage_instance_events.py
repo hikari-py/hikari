@@ -29,7 +29,8 @@ import typing
 
 import attr
 
-from hikari import channels, intents
+from hikari import channels
+from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
@@ -86,7 +87,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceCreateEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is created"""
+    """Event fired when a Stage instance is created."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -157,7 +158,7 @@ class StageInstanceCreateEvent(StageInstanceEvent):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceEditEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is edited"""
+    """Event fired when a Stage instance is edited."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -227,7 +228,7 @@ class StageInstanceEditEvent(StageInstanceEvent):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceDeleteEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is deleted"""
+    """Event fired when a Stage instance is deleted."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
