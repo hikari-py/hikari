@@ -57,20 +57,23 @@ with tempfile.TemporaryDirectory() as tempdir:
         emoji_surrogates = emoji["surrogates"]
         name = emoji["primaryName"]
         emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
+        line_repr = f"{i}/{n} {name} " + " ".join(map(hex, map(ord, emoji_surrogates))) + " " + emoji.url
 
         if emoji.filename in known_files:
             valid_emojis.append((emoji_surrogates, name))
-            print("[  OK  ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+            print("[  OK  ]", line_repr)
         else:
-            invalid_emojis.append((emoji_surrogates, name))
-            print("[ FAIL ]", f"{i}/{n}", name, *map(hex, map(ord, emoji_surrogates)), emoji.url)
+            invalid_emojis.append(line_repr)
+            print("[ FAIL ]", line_repr)
 
+    print()
     print("Results")
+    print("-------")
     print("Valid emojis:", len(valid_emojis))
     print("Invalid emojis:", len(invalid_emojis))
 
-    for surrogates, name in invalid_emojis:
-        print(*map(hex, map(ord, surrogates)), name)
+    for line_repr in invalid_emojis:
+        print(" ", line_repr)
 
     print("Time taken", time.perf_counter() - start, "seconds")
 

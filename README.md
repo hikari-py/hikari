@@ -61,7 +61,7 @@ bot = hikari.BotApp(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences to be received
 (you'd need to whitelist your application first to be able to start the bot if you do this).
-[Other options also exist](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp) such as 
+[Other options also exist](https://hikari-py.github.io/hikari/hikari/impl/bot.html#hikari.impl.bot.BotApp) such as
 [customising timeouts for requests](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.HTTPSettings.timeouts)
 and [enabling a proxy](https://hikari-py.github.io/hikari/hikari/config.html#hikari.config.ProxySettings).
 
@@ -162,7 +162,7 @@ other internal settings in the interpreter.
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), you
-can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`, 
+can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`,
 `ciso8601` and `ed25519`, which will provide you with a small performance boost.
 
 ### `uvloop`
@@ -200,7 +200,7 @@ To familiarize yourself a bit with the project, we recommend reading our
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on 
+In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on
 Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
@@ -212,7 +212,7 @@ Once this is complete, you can run `nox` without any arguments to ensure everyth
 
 ### Where can I start?
 
-Check out the issues tab on GitHub. If you are nervous, look for issues marked as "good first issue" for something 
+Check out the issues tab on GitHub. If you are nervous, look for issues marked as "good first issue" for something
 easy to start with!
 
 [![good-first-issues](https://img.shields.io/github/issues/hikari-py/hikari/good%20first%20issue)](https://github.com/hikari-py/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)

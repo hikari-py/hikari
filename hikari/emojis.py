@@ -164,15 +164,15 @@ class UnicodeEmoji(Emoji):
         """Filename to use if re-uploading this emoji's PNG."""
         codepoints = self.codepoints
         # It looks like the rule is to delete character #2 if the value
-        # of this is 0xfe0f and the character is 4 characters long.
-        # Other than that, the mapping is 1-to-1. I'll set up a CI task to
-        # double check this each day so we know when Discord breaks it again.
-        # The gay-pride flag is an outlier, for god knows what reason. I don't
-        # care that much but if Discord start breaking this regularly I might
-        # need to ask for a more permanent solution.
-        # This is provisionally provided. If we find it breaks in other ways, I
-        # will just revoke this functionality in a future update.
-        if codepoints[1:2] == [0xFE0F] and len(codepoints) <= 4 and codepoints != [0x1F3F3, 0xFE0F, 0x200D, 0x1F308]:
+        # of this is 0xfe0f and the character is up to 4 characters long.
+        # Other than that, the mapping is 1-to-1. There's a couple of outliers
+        # to this 0xfe0f rule and they seem to follow a pattern where the
+        # codepoint after 0xfe0f is 0x200D but this might be a coincidence and
+        # if Discord start breaking this regularly I might need to ask for a
+        # more permanent solution. This is provisionally provided. If we find it
+        # breaks in other ways, I will just revoke this functionality in a
+        # future update.
+        if codepoints[1:2] == [0xFE0F] and len(codepoints) <= 4 and codepoints[2:3] != [0x200D]:
             codepoints = [codepoints[0], *codepoints[2:]]
 
         return "-".join(hex(c)[2:] for c in codepoints) + ".png"
