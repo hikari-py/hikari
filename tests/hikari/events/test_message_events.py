@@ -218,6 +218,19 @@ class TestGuildMessageCreateEvent:
     def test_member_property(self, event):
         assert event.member is event.message.member
 
+    def test_get_member_when_cacheless(self, event):
+        event.message.app = None
+
+        result = event.get_member()
+
+        assert result is None
+
+    def test_get_member(self, event):
+        result = event.get_member()
+
+        assert result is event.app.cache.get_member.return_value
+        event.app.cache.get_member.assert_called_once_with(event.guild_id, event.author_id)
+
 
 class TestGuildMessageUpdateEvent:
     @pytest.fixture()
@@ -238,41 +251,6 @@ class TestGuildMessageUpdateEvent:
     def test_member_property(self, event):
         assert event.member is event.message.member
 
-    def test_member_property_when_member_defined(self, event):
-        event.message.member = mock.Mock()
-        event.message.author = undefined.UNDEFINED
-
-        assert event.member is event.message.member
-
-    def test_member_property_when_member_none_but_cached(self, event):
-        event.message.member = None
-        event.message.author = mock.Mock(id=1234321)
-        event.message.guild_id = snowflakes.Snowflake(696969)
-        real_member = mock.Mock()
-        event.app.cache.get_member = mock.Mock(return_value=real_member)
-
-        assert event.member is real_member
-
-        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
-
-    def test_member_property_when_member_none_and_author_none(self, event):
-        event.message.author = None
-        event.message.member = None
-
-        assert event.member is None
-
-        event.app.cache.get_member.assert_not_called()
-
-    def test_member_property_when_member_none_and_uncached(self, event):
-        event.message.member = None
-        event.message.author = mock.Mock(id=1234321)
-        event.message.guild_id = snowflakes.Snowflake(696969)
-        event.app.cache.get_member = mock.Mock(return_value=None)
-
-        assert event.member is None
-
-        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
-
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)
 
@@ -290,6 +268,19 @@ class TestGuildMessageUpdateEvent:
         result = event.get_channel()
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(800001066)
+
+    def test_get_member_when_cacheless(self, event):
+        event.message.app = None
+
+        result = event.get_member()
+
+        assert result is None
+
+    def test_get_member(self, event):
+        result = event.get_member()
+
+        assert result is event.app.cache.get_member.return_value
+        event.app.cache.get_member.assert_called_once_with(event.guild_id, event.author_id)
 
     def test_get_guild_when_no_cache_trait(self):
         event = hikari_test_helpers.mock_class_namespace(

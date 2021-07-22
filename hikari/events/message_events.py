@@ -296,6 +296,19 @@ class GuildMessageCreateEvent(MessageCreateEvent):
 
         return self.app.cache.get_guild(self.guild_id)
 
+    def get_member(self) -> typing.Optional[guilds.Member]:
+        """Get the member that sent this message from the cache if available.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Member]
+            Cached object of the member that sent the message if found.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_member(self.guild_id, self.message.author.id)
+
+        return None
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
@@ -486,7 +499,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
-    @property  # TODO: this doesn't match up with the new standard for get_x cache getter method naming
+    @property
     def author(self) -> typing.Optional[users.User]:
         """User that sent the message.
 
@@ -503,31 +516,25 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 
     @property
     def member(self) -> typing.Optional[guilds.Member]:
-        """Member that sent the message.
+        """Member that sent the message if provided by the event.
 
-        Returns
-        -------
-        typing.Optional[hikari.guilds.Member]
-            The member that sent the message. If the member is cached
-            (the intents are enabled), then this will be the corresponding
-            member object instead (which is a specialization of the
-            user object you should otherwise expect).
-
+        !!! note
             This will be `builtins.None` in some cases, such as when Discord
             updates a message with an embed for a URL preview or if the message
             was sent by a webhook.
         """
-        member = self.message.member
-        if member is not None:
-            return member
+        return self.message.member
 
-        author = self.message.author
+    def get_member(self) -> typing.Optional[guilds.Member]:
+        """Get the member that sent this message from the cache if available.
 
-        if author is not None and isinstance(self.app, traits.CacheAware):
-            member = self.app.cache.get_member(self.guild_id, author.id)
-
-            if member is not None:
-                return member
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Member]
+            Cached object of the member that sent the message if found.
+        """
+        if self.message.author is not None and isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_member(self.guild_id, self.message.author.id)
 
         return None
 

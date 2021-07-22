@@ -296,22 +296,6 @@ class ShardAware(
         raise NotImplementedError
 
     @property
-    def me(self) -> typing.Optional[users_.OwnUser]:
-        """Return the bot user, if known.
-
-        This should be available as soon as the bot has fired the
-        `hikari.events.lifetime_events.StartingEvent`.
-
-        Until then, this may or may not be `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.users.OwnUser]
-            The bot user, if known, otherwise `builtins.None`.
-        """
-        raise NotImplementedError
-
-    @property
     def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
         """Return a mapping of shards in this application instance.
 
@@ -338,6 +322,21 @@ class ShardAware(
         -------
         builtins.int
             The number of shards in the total application.
+        """
+        raise NotImplementedError
+
+    def get_me(self) -> typing.Optional[users_.OwnUser]:
+        """Return the bot user, if known.
+
+        This should be available as soon as the bot has fired the
+        `hikari.events.lifetime_events.StartingEvent`.
+
+        Until then, this may or may not be `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.OwnUser]
+            The bot user, if known, otherwise `builtins.None`.
         """
         raise NotImplementedError
 

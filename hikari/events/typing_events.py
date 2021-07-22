@@ -99,7 +99,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
             The channel.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextChannel)
+        assert isinstance(channel, channels.TextableChannel)
         return channel
 
     def get_user(self) -> typing.Optional[users.User]:
@@ -257,7 +257,7 @@ class GuildTypingEvent(TypingEvent):
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert channel is None or isinstance(
-            channel, channesl.TextableGuildChannel
+            channel, channels.TextableGuildChannel
         ), f"expected TextableGuildChannel from cache, got {channel}"
         return channel
 

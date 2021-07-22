@@ -239,8 +239,8 @@ class TestGatewayBot:
     def test_intents(self, bot, intents):
         assert bot.intents is intents
 
-    def test_me(self, bot, cache):
-        assert bot.me is cache.get_me.return_value
+    def test_get_me(self, bot, cache):
+        assert bot.get_me() is cache.get_me.return_value
 
     def test_proxy_settings(self, bot, proxy_settings):
         assert bot.proxy_settings is proxy_settings

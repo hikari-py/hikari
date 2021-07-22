@@ -660,7 +660,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    @property  # TODO: this breaks from the new convention for cache methods
+    @property  # TODO: update this while refactoring message structure
     def guild_id(self) -> typing.Optional[snowflakes.Snowflake]:
         """ID of the guild that the message was sent in.
 
