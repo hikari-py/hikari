@@ -1,11 +1,11 @@
 # Hikari contribution guidelines
 
-First off, we would like to thank you for taking the time to help improve Hikari, it's greatly appreciated. We have 
+First off, we would like to thank you for taking the time to help improve Hikari, it's greatly appreciated. We have
 some contribution guidelines that you should follow to ensure that your contribution is at its best.
 
 # Code of conduct
 
-Hikari has a code of conduct that must be followed at all times by all the members of the project. Breaking the code 
+Hikari has a code of conduct that must be followed at all times by all the members of the project. Breaking the code
 of conduct can lead to a ban from the project and a report to GitHub.
 
 You can read the code of conduct [here](https://github.com/hikari-py/hikari/blob/master/CODE_OF_CONDUCT.md).
@@ -25,14 +25,14 @@ To push branches directly to the remote, you will have to name them like this:
   - `bugfix/issue-number-small-info-on-branch`
     - This should be used for bugfixes.
 
-`issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced 
+`issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced
 with a small description of the branch.
 
 # Nox
 
 We have nox to help out with running pipelines locally and provides some helpful functionality.
 
-Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are 
+Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
 both tools for generating virtual environments and running commands in those environments. Examples of usage include
 installing, configuring, and running flake8, running pytest, etc.
 
@@ -58,5 +58,5 @@ This includes:
 
 All jobs will need to succeed before anything gets merged.
 
-Note that this rule may be skipped for `twemoji` if the problem is caused by a change Discord have made to their 
+Note that this rule may be skipped for `twemoji` if the problem is caused by a change Discord have made to their
 mapping.
