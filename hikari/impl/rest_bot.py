@@ -545,6 +545,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 name="check for package updates",
             )
 
+        self._rest.start()
         await self._server.start(
             backlog=backlog,
             enable_signal_handlers=enable_signal_handlers,

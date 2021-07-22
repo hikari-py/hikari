@@ -398,7 +398,7 @@ class TestRESTBot:
         assert mock_rest_bot.executor is None
 
     @pytest.mark.asyncio()
-    async def test_start(self, mock_rest_bot, mock_interaction_server):
+    async def test_start(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
         mock_socket = object()
         mock_ssl_context = object()
         mock_rest_bot._is_closing = True
@@ -432,6 +432,7 @@ class TestRESTBot:
             shutdown_timeout=4312312.3132132,
             ssl_context=mock_ssl_context,
         )
+        mock_rest_client.start.assert_called_once_with()
         assert mock_rest_bot._is_closing is False
 
     @pytest.mark.asyncio()
