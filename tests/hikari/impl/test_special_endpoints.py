@@ -51,10 +51,25 @@ class TestInteractionDeferredBuilder:
 
         assert builder.type == 5
 
+    def test_set_flags(self):
+        builder = special_endpoints.InteractionDeferredBuilder(5).set_flags(32)
+
+        assert builder.flags == 32
+
     def test_build(self):
         builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
         assert builder.build(object()) == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
+
+    def test_build_with_flags(self):
+        builder = special_endpoints.InteractionDeferredBuilder(
+            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
+        ).set_flags(64)
+
+        assert builder.build(object()) == {
+            "type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
+            "data": {"flags": 64},
+        }
 
 
 class TestInteractionMessageBuilder:

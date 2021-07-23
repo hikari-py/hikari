@@ -581,6 +581,40 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
             The type of response this is.
         """
 
+    @property
+    @abc.abstractmethod
+    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+        """Message flags this response should have.
+
+        !!! note
+            As of writing the only message flag which can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL`.
+
+        Returns
+        -------
+        typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The message flags this response should have if set else
+            `hikari.undefined.UNDEFINED`.
+        """
+
+    @abc.abstractmethod
+    def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
+        """Set message flags for this response.
+
+        !!! note
+            As of writing, the only message flag which can be set is EPHEMERAL.
+
+        Parameters
+        ----------
+        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+            The message flags to set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
+
 
 class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an interaction message response builder used within REST servers.
