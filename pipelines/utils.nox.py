@@ -28,6 +28,7 @@ from pipelines import nox
 TRASH = [
     ".nox",
     "build",
+    "cython",
     "dist",
     "hikari.egg-info",
     "public",
@@ -44,6 +45,8 @@ def purge(_: nox.Session) -> None:
     """Delete any nox-generated files."""
     for trash in TRASH:
         print("Removing", trash)
+
+        # TODO: Check if file exists before attempting to remove to remove the ignores
         try:
             os.remove(trash)
         except:

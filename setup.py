@@ -19,14 +19,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import os
 import re
 import types
 
 import setuptools
 
-name = "hikari"
+# This will be opt in until out of the experimental phase
+# NO_EXTENSIONS = bool(os.environ.get("HIKARI_NO_EXTENSIONS"))
+EXTENSIONS = bool(os.environ.get("HIKARI_EXTENSIONS"))
 
 
 def long_description():
@@ -35,7 +36,7 @@ def long_description():
 
 
 def parse_meta():
-    with open(os.path.join(name, "_about.py")) as fp:
+    with open("hikari/_about.py") as fp:
         code = fp.read()
 
     token_pattern = re.compile(r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M)
@@ -55,10 +56,24 @@ def parse_requirements_file(path):
         return [d for d in dependencies if not d.startswith("#")]
 
 
+def discover_extensions(ext_dir):
+    extensions = []
+    for file in os.listdir(ext_dir):
+        if not file.endswith(".c"):
+            continue
+
+        module = file[:-2]
+        print(f"- Found {file} and linking to {module}")
+        full_path = os.path.join(ext_dir, file)
+        extensions.append(setuptools.Extension(module, [full_path]))
+
+    return extensions
+
+
 metadata = parse_meta()
 
-setuptools.setup(
-    name=name,
+kwargs = dict(
+    name="hikari",
     version=metadata.version,
     description="A sane Discord API for Python 3 built on asyncio and good intentions",
     long_description=long_description(),
@@ -75,7 +90,7 @@ setuptools.setup(
         "Issue Tracker": metadata.issue_tracker,
         "CI": metadata.ci,
     },
-    packages=setuptools.find_namespace_packages(include=[name + "*"]),
+    packages=setuptools.find_namespace_packages(include=["hikari*"]),
     python_requires=">=3.8.0,<3.11",
     install_requires=parse_requirements_file("requirements.txt"),
     extras_require={
@@ -106,3 +121,15 @@ setuptools.setup(
     entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
     provides="hikari",
 )
+
+# if not NO_EXTENSIONS:
+if EXTENSIONS:
+    print("################################")
+    print("# Performing accelerated build #")
+    print("################################")
+    setuptools.setup(ext_modules=discover_extensions("cython"), **kwargs)
+else:
+    print("################################")
+    print("# Performing pure python build #")
+    print("################################")
+    setuptools.setup(**kwargs)

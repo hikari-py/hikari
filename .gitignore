@@ -36,6 +36,9 @@ pip-wheel-metadata/
 *.o
 *.pyd
 
+# Cython builds
+cython/
+
 # Tox/Nox-generated files
 .[nt]ox/
 

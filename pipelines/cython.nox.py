@@ -19,26 +19,37 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import os as _os
+import os
+import shutil
 
-# Packaging
-MAIN_PACKAGE = "hikari"
-TEST_PACKAGE = "tests"
-EXAMPLE_SCRIPTS = "examples"
+from pipelines import config
+from pipelines import nox
 
-# Generating documentation and artifacts.
-ARTIFACT_DIRECTORY = "public"
-PAGES_DIRECTORY = "pages"
-DOCUMENTATION_DIRECTORY = "docs"
-ROOT_INDEX_SOURCE = "index.html"
-LOGO_SOURCE = "logo.png"
+FILES_TO_CYTHONIZE = [
+    "hikari/impl/buckets.py",
+    "hikari/impl/cache.py",
+    "hikari/impl/entity_factory.py",
+    "hikari/impl/event_manager.py",
+    "hikari/impl/event_manager_base.py",
+    "hikari/impl/rate_limits.py",
+]
 
-# Linting and test configs.
-FLAKE8_REPORT = "public/flake8"
-MYPY_INI = "mypy.ini"
-PYTEST_INI = "pytest.ini"
-COVERAGE_INI = "coverage.ini"
-COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 
-# Generating cython extensions
-CYTHON_OUTPUT_DIRECTORY = "cython"
+@nox.session(reuse_venv=True)
+def cythonize(session: nox.Session) -> None:
+    """Cythonize the library."""
+    session.install(
+        "-r",
+        "requirements.txt",
+        # "Cython==3.0.0a9"
+        "git+https://github.com/cython/cython@b68b21d97dadc3061cab433b491719973fa56f31#egg=Cython==3.0.0a10",
+    )
+
+    if os.path.exists(config.CYTHON_OUTPUT_DIRECTORY):
+        shutil.rmtree(config.CYTHON_OUTPUT_DIRECTORY)
+    os.mkdir(config.CYTHON_OUTPUT_DIRECTORY)
+
+    for file in FILES_TO_CYTHONIZE:
+        output_file = file[:-2].replace("/", ".") + "c"
+        output_path = os.path.join(config.CYTHON_OUTPUT_DIRECTORY, output_file)
+        session.run("cython", file, "-o", output_path)
