@@ -911,7 +911,7 @@ class RESTClientImpl(rest_api.RESTClient):
         video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -969,7 +969,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
@@ -993,7 +993,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1082,14 +1082,14 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
     def trigger_typing(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
         return special_endpoints_impl.TypingIndicator(
             request_call=self._request, channel=channel, rest_closed_event=self._get_live_attributes().closed_event
         )
 
     async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextChannel]
+        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> typing.Sequence[messages_.Message]:
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
         response = await self._request(route)
@@ -1098,7 +1098,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def pin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.PUT_CHANNEL_PINS.compile(channel=channel, message=message)
@@ -1106,7 +1106,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def unpin_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
@@ -1114,7 +1114,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def fetch_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
@@ -1157,7 +1157,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
         route = routes.GET_CHANNEL_MESSAGE.compile(channel=channel, message=message)
@@ -1267,7 +1267,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -1428,7 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def edit_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1467,7 +1467,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_message(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
@@ -1475,7 +1475,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_messages(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
             snowflakes.SnowflakeishIterable[messages_.PartialMessage],
@@ -1544,7 +1544,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def add_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1557,7 +1557,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_my_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1570,7 +1570,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_all_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> None:
@@ -1583,7 +1583,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_reaction(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
         user: snowflakes.SnowflakeishOr[users.PartialUser],
@@ -1598,7 +1598,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_all_reactions(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
@@ -1606,7 +1606,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def fetch_reactions_for_emoji(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: emojis.Emojiish,
     ) -> iterators.LazyIterator[users.User]:
@@ -1620,7 +1620,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_webhook(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
         name: str,
         *,
         avatar: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1658,7 +1658,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_channel_webhooks(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.TextChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
@@ -1681,7 +1681,7 @@ class RESTClientImpl(rest_api.RESTClient):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextChannel]] = undefined.UNDEFINED,
+        channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.WebhookChannelT]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:
@@ -1841,7 +1841,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
-    async def fetch_invite(self, invite: invites.Inviteish) -> invites.Invite:
+    async def fetch_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
@@ -1850,7 +1850,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
-    async def delete_invite(self, invite: invites.Inviteish) -> invites.Invite:
+    async def delete_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         response = await self._request(route)
         assert isinstance(response, dict)
@@ -2326,7 +2326,7 @@ class RESTClientImpl(rest_api.RESTClient):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -2357,7 +2357,7 @@ class RESTClientImpl(rest_api.RESTClient):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
@@ -2414,7 +2414,7 @@ class RESTClientImpl(rest_api.RESTClient):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[voices.VoiceRegionish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildChannel:
@@ -2822,7 +2822,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_vanity_url(response)
 
-    async def fetch_template(self, template: templates.Templateish) -> templates.Template:
+    async def fetch_template(self, template: typing.Union[templates.Template, str]) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.GET_TEMPLATE.compile(template=template)
         response = await self._request(route)
@@ -2840,7 +2840,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def sync_guild_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[templates.Template, str],
     ) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.PUT_GUILD_TEMPLATE.compile(guild=guild, template=template)
@@ -2850,7 +2850,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def create_guild_from_template(
         self,
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
         name: str,
         *,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -2887,7 +2887,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -2905,7 +2905,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: templates.Templateish,
+        template: typing.Union[str, templates.Template],
     ) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.DELETE_GUILD_TEMPLATE.compile(guild=guild, template=template)

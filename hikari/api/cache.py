@@ -299,12 +299,12 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def get_invite(self, code: typing.Union[invites.InviteCode, str], /) -> typing.Optional[invites.InviteWithMetadata]:
         """Get an invite object from the cache.
 
         Parameters
         ----------
-        code : hikari.invites.Inviteish
+        code : typing.Union[hikari.invites.InviteCode, builtins.str]
             The object or string code of the invite to get from the cache.
 
         Returns
@@ -1001,12 +1001,14 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_invite(self, code: invites.Inviteish, /) -> typing.Optional[invites.InviteWithMetadata]:
+    def delete_invite(
+        self, code: typing.Union[invites.InviteCode, str], /
+    ) -> typing.Optional[invites.InviteWithMetadata]:
         """Remove an invite object from the cache.
 
         Parameters
         ----------
-        code : hikari.invites.Inviteish
+        code : typing.Union[hikari.invites.InviteCode, builtins.str]
             Object or string code of the invite to remove from the cache.
 
         Returns

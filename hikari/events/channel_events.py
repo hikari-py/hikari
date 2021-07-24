@@ -482,13 +482,13 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_channel(self) -> channels.TextChannel:
+    async def fetch_channel(self) -> channels.TextableChannel:
         """Perform an API call to fetch the details about this channel.
 
         Returns
         -------
-        hikari.channels.TextChannel
-            A derivative of `hikari.channels.TextChannel`. The actual
+        hikari.channels.TextableChannel
+            A derivative of `hikari.channels.TextableChannel`. The actual
             type will vary depending on the type of channel this event
             concerns.
         """
@@ -527,14 +527,14 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @property
-    def channel(self) -> typing.Optional[channels.GuildTextChannel]:
+    def channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
 
         Returns
         -------
-        typing.Optional[hikari.channels.GuildTextChannel]
+        typing.Optional[hikari.channels.TextableGuildChannel]
             The cached channel this event relates to. If not known, this
             will return `builtins.None` instead.
         """
@@ -542,16 +542,16 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(channel, channels.GuildTextChannel)
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel)
         return channel
 
-    async def fetch_channel(self) -> channels.GuildTextChannel:
+    async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch the details about this channel.
 
         Returns
         -------
-        hikari.channels.GuildTextChannel
-            A derivative of `hikari.channels.GuildTextChannel`. The actual
+        hikari.channels.TextableGuildChannel
+            A derivative of `hikari.channels.TextableGuildChannel`. The actual
             type will vary depending on the type of channel this event
             concerns.
 
@@ -598,7 +598,6 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     # <<inherited docstring from ChannelEvent>>.
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
-
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     async def fetch_channel(self) -> channels.DMChannel:
@@ -776,7 +775,6 @@ class WebhookUpdateEvent(GuildChannelEvent):
     # <<inherited docstring from ChannelEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.field()
-
     # <<inherited docstring from GuildChannelEvent>>.
 
     async def fetch_channel_webhooks(self) -> typing.Sequence[webhooks.PartialWebhook]:

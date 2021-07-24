@@ -188,7 +188,7 @@ class TestGroupDMChannel:
 class TestTextChannel:
     @pytest.fixture()
     def model(self, mock_app):
-        return hikari_test_helpers.mock_class_namespace(channels.TextChannel)(
+        return hikari_test_helpers.mock_class_namespace(channels.TextableChannel)(
             app=mock_app,
             id=snowflakes.Snowflake(12345679),
             name="foo1",

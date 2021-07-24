@@ -102,12 +102,12 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_channel(self) -> channels.TextChannel:
+    async def fetch_channel(self) -> channels.TextableChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
         Returns
         -------
-        hikari.channels.TextChannel
+        hikari.channels.TextableChannel
             The channel.
         """
 
@@ -173,12 +173,12 @@ class GuildTypingEvent(TypingEvent):
     """
 
     @property
-    def channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
+    def channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the cached channel object this typing event occurred in.
 
         Returns
         -------
-        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, builtins.None]
+        typing.Optional[hikari.channels.TextableGuildChannel]
             The channel.
         """
         if not isinstance(self.app, traits.CacheAware):
@@ -186,8 +186,8 @@ class GuildTypingEvent(TypingEvent):
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
         assert channel is None or isinstance(
-            channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
-        ), f"expected GuildTextChannel or GuildNewsChannel from cache, got {channel}"
+            channel, channels.TextableGuildChannel
+        ), f"expected TextableGuildChannel from cache, got {channel}"
         return channel
 
     @property
@@ -211,18 +211,18 @@ class GuildTypingEvent(TypingEvent):
         # <<inherited docstring from TypingEvent>>.
         return self.user.id
 
-    async def fetch_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel]:
+    async def fetch_channel(self) -> typing.Union[channels.TextableGuildChannel]:
         """Perform an API call to fetch an up-to-date image of this channel.
 
         Returns
         -------
-        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel]
+        typing.Union[hikari.channels.TextableGuildChannel]
             The channel.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
         assert isinstance(
-            channel, (channels.GuildTextChannel, channels.GuildNewsChannel)
-        ), f"expected GuildTextChannel or GuildNewsChannel from API, got {channel}"
+            channel, channels.TextableGuildChannel
+        ), f"expected TextableGuildChannel from API, got {channel}"
         return channel
 
     async def fetch_guild(self) -> guilds.Guild:
