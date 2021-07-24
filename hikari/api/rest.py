@@ -1573,8 +1573,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Raises
         ------
@@ -1628,8 +1628,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to remove your reaction for.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Raises
         ------
@@ -1680,8 +1680,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to remove all the reactions for.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Raises
         ------
@@ -1740,8 +1740,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Raises
         ------
@@ -1837,8 +1837,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to get the reactions for.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Returns
         -------

@@ -31,7 +31,6 @@ class TestGuildReactionAddEvent:
     @pytest.fixture()
     def event(self):
         return reaction_events.GuildReactionAddEvent(
-
             shard=object(),
             member=mock.MagicMock(guilds.Member),
             channel_id=123,

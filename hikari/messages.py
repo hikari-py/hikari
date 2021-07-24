@@ -1114,8 +1114,8 @@ class PartialMessage(snowflakes.Unique):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
             Note that this will fail if the emoji is from a guild the bot isn't
             in.
@@ -1191,8 +1191,8 @@ class PartialMessage(snowflakes.Unique):
         ----------------
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to remove the reaction for.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
         user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
@@ -1272,8 +1272,8 @@ class PartialMessage(snowflakes.Unique):
             then all reactions are removed.
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
             ID of the custom emoji to react with.
-            This should only be provided when the custom emoji's name is passed
-            for `emoji` as a `builtins.str`.
+            This should only be provided when a custom emoji's name is passed
+            for `emoji`.
 
         Example
         --------
