@@ -71,6 +71,7 @@ if typing.TYPE_CHECKING:
 
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
+    _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
 
 
 @typing.final
@@ -691,12 +692,29 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
 
+    _flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+
     @property
     def type(self) -> base_interactions.DeferredResponseTypesT:
         return self._type
 
+    @property
+    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+        return self._flags
+
+    def set_flags(
+        self: _InteractionDeferredBuilderT, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /
+    ) -> _InteractionDeferredBuilderT:
+        self._flags = flags
+        return self
+
     def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        return {"type": self.type}
+        if self._flags is not undefined.UNDEFINED:
+            return {"type": self._type, "data": {"flags": self._flags}}
+
+        return {"type": self._type}
 
 
 @attr_extensions.with_copy
