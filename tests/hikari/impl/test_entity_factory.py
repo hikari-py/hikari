@@ -3431,7 +3431,7 @@ class TestEntityFactoryImpl:
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
-        assert partial_message._guild_id == 678
+        assert partial_message.guild_id == 678
         assert partial_message.author == entity_factory_impl.deserialize_user(user_payload)
         assert partial_message.member == entity_factory_impl.deserialize_member(
             member_payload, user=partial_message.author, guild_id=snowflakes.Snowflake(678)
@@ -3537,7 +3537,7 @@ class TestEntityFactoryImpl:
 
         assert partial_message.content is None
         assert partial_message.edited_timestamp is None
-        assert partial_message._guild_id is not None
+        assert partial_message.guild_id is not None
         assert partial_message.member is None
         assert partial_message.application.primary_sku_id is None
         assert partial_message.application.icon_hash is None
@@ -3552,7 +3552,7 @@ class TestEntityFactoryImpl:
         assert partial_message.app is mock_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
-        assert partial_message._guild_id is None
+        assert partial_message.guild_id is None
         assert partial_message.author is None
         assert partial_message.member is None
         assert partial_message.content is undefined.UNDEFINED
@@ -3605,7 +3605,7 @@ class TestEntityFactoryImpl:
         assert message.app is mock_app
         assert message.id == 123
         assert message.channel_id == 456
-        assert message._guild_id == 678
+        assert message.guild_id == 678
         assert message.author == entity_factory_impl.deserialize_user(user_payload)
         assert message.member == entity_factory_impl.deserialize_member(
             member_payload, user=message.author, guild_id=snowflakes.Snowflake(678)
@@ -3719,7 +3719,7 @@ class TestEntityFactoryImpl:
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.app is mock_app
         assert message.content is None
-        assert message._guild_id is None
+        assert message.guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
         assert message.mentions.everyone is True

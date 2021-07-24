@@ -326,58 +326,56 @@ class TestMember:
         model.nickname = None
         assert model.mention == mock_user.mention
 
-    def test_roles(self, model):
+    def test_get_roles(self, model):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
-        mock_cache_view = {321: role1, 654: role2}
-        model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+        model.user.app.cache.get_role.side_effect = [role1, role2]
         model.role_ids = [321, 654]
 
-        assert model.roles == [role1, role2]
+        assert model.get_roles() == [role1, role2]
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(654)])
 
-    def test_roles_when_role_ids_not_in_cache(self, model):
-        role1 = mock.Mock(id=123, position=2)
-        role2 = mock.Mock(id=456, position=1)
-        mock_cache_view = {123: role1, 456: role2}
-        model.user.app.cache.get_roles_view_for_guild.return_value = mock_cache_view
+    def test_get_roles_when_role_ids_not_in_cache(self, model):
+        role = mock.Mock(id=456, position=1)
+        model.user.app.cache.get_role.side_effect = [None, role]
         model.role_ids = [321, 456]
 
-        assert model.roles == [role2]
+        assert model.get_roles() == [role]
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(456)])
 
-    def test_roles_when_empty_cache(self, model):
-        model.user.app.cache.get_roles_view_for_guild.return_value = {}
+    def test_get_roles_when_empty_cache(self, model):
+        model.role_ids = [132, 432]
+        model.user.app.cache.get_role.side_effect = [None, None]
 
-        assert model.roles == []
+        assert model.get_roles() == []
 
-        model.user.app.cache.get_roles_view_for_guild.assert_called_once_with(456)
+        model.user.app.cache.get_role.assert_has_calls([mock.call(132), mock.call(432)])
 
-    def test_roles_when_no_cache_trait(self, model):
+    def test_get_roles_when_no_cache_trait(self, model):
         model.user.app = object()
 
-        assert model.roles == []
+        assert model.get_roles() == []
 
-    def test_top_role(self, model):
+    def test_get_top_role(self, model):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
 
-        with mock.patch.object(guilds.Member, "roles", new=[role1, role2]):
-            assert model.top_role is role1
+        with mock.patch.object(guilds.Member, "get_roles", return_value=[role1, role2]):
+            assert model.get_top_role() is role1
 
-    def test_top_role_when_roles_is_empty(self, model):
-        with mock.patch.object(guilds.Member, "roles", new=[]):
-            assert model.top_role is None
+    def test_get_top_role_when_roles_is_empty(self, model):
+        with mock.patch.object(guilds.Member, "get_roles", return_value=[]):
+            assert model.get_top_role() is None
 
-    def test_presence(self, model):
-        assert model.presence is model.user.app.cache.get_presence.return_value
+    def test_get_presence(self, model):
+        assert model.get_presence() is model.user.app.cache.get_presence.return_value
         model.user.app.cache.get_presence.assert_called_once_with(456, 123)
 
-    def test_presence_when_no_cache_trait(self, model):
+    def test_get_presence_when_no_cache_trait(self, model):
         model.user.app = object()
-        assert model.presence is None
+        assert model.get_presence() is None
 
 
 class TestPartialGuild:
@@ -766,37 +764,69 @@ class TestGuild:
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
         )
 
-    def test_channels(self, model):
-        assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
+    def test_get_channels(self, model):
+        assert model.get_channels() is model.app.cache.get_guild_channels_view_for_guild.return_value
         model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
 
-    def test_channels_when_no_cache_trait(self, model):
+    def test_get_channels_when_no_cache_trait(self, model):
         model.app = object()
-        assert model.channels == {}
+        assert model.get_channels() == {}
 
-    def test_members(self, model):
-        assert model.members is model.app.cache.get_members_view_for_guild.return_value
+    def test_get_members(self, model):
+        assert model.get_members() is model.app.cache.get_members_view_for_guild.return_value
         model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
 
-    def test_members_when_no_cache_trait(self, model):
+    def test_get_members_when_no_cache_trait(self, model):
         model.app = object()
-        assert model.members == {}
+        assert model.get_members() == {}
 
-    def test_presences(self, model):
-        assert model.presences is model.app.cache.get_presences_view_for_guild.return_value
+    def test_get_presences(self, model):
+        assert model.get_presences() is model.app.cache.get_presences_view_for_guild.return_value
         model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
 
-    def test_presences_when_no_cache_trait(self, model):
+    def test_get_presences_when_no_cache_trait(self, model):
         model.app = object()
-        assert model.presences == {}
+        assert model.get_presences() == {}
 
-    def test_voice_states(self, model):
-        assert model.voice_states is model.app.cache.get_voice_states_view_for_guild.return_value
+    def test_get_voice_states(self, model):
+        assert model.get_voice_states() is model.app.cache.get_voice_states_view_for_guild.return_value
         model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
 
-    def test_voice_states_when_no_cache_trait(self, model):
+    def test_get_voice_states_when_no_cache_trait(self, model):
         model.app = object()
-        assert model.voice_states == {}
+        assert model.get_voice_states() == {}
+
+    def test_get_emojis(self, model):
+        assert model.get_emojis() is model.app.cache.get_emojis_view_for_guild.return_value
+        model.app.cache.get_emojis_view_for_guild.assert_called_once_with(123)
+
+    def test_emojis_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_emojis() == {}
+
+    def test_roles(self, model):
+        assert model.get_roles() is model.app.cache.get_roles_view_for_guild.return_value
+        model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
+
+    def test_get_roles_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_roles() == {}
+
+    def test_get_emoji(self, model):
+        assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
+        model.app.cache.get_emoji.assert_called_once_with(456)
+
+    def test_get_emoji_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_emoji(456) is None
+
+    def test_get_role(self, model):
+        assert model.get_role(456) is model.app.cache.get_role.return_value
+        model.app.cache.get_role.assert_called_once_with(456)
+
+    def test_get_role_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_role(456) is None
 
     def test_splash_url(self, model):
         splash = object()
@@ -988,16 +1018,21 @@ class TestGuild:
         assert model.get_my_member() is None
 
     def test_get_my_member_when_no_me(self, model):
-        model.app.me = None
+        model.app.get_me = mock.Mock(return_value=None)
+
         assert model.get_my_member() is None
 
+        model.app.get_me.assert_called_once_with()
+
     def test_get_my_member(self, model):
-        model.app.me = mock.Mock(id=123)
+        model.app.get_me = mock.Mock()
+        model.app.get_me.return_value.id = 123
 
         with mock.patch.object(guilds.Guild, "get_member") as get_member:
             assert model.get_my_member() is get_member.return_value
 
         get_member.assert_called_once_with(123)
+        model.app.get_me.assert_called_once_with()
 
 
 class TestRestGuild:
@@ -1040,104 +1075,3 @@ class TestRestGuild:
             max_members=100,
             nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
         )
-
-    def test_get_emoji(self, model):
-        emoji = object()
-        model._emojis = {snowflakes.Snowflake(123): emoji}
-
-        assert model.get_emoji(123) is emoji
-
-    def test_get_role(self, model):
-        role = object()
-        model._roles = {snowflakes.Snowflake(123): role}
-
-        assert model.get_role(123) is role
-
-
-class TestGatewayGuild:
-    @pytest.fixture()
-    def model(self, mock_app):
-        return guilds.GatewayGuild(
-            app=mock_app,
-            id=snowflakes.Snowflake(123),
-            splash_hash="splash_hash",
-            discovery_splash_hash="discovery_splash_hash",
-            banner_hash="banner_hash",
-            icon_hash="icon_hash",
-            features=[guilds.GuildFeature.ANIMATED_ICON],
-            name="some guild",
-            application_id=snowflakes.Snowflake(9876),
-            afk_channel_id=snowflakes.Snowflake(1234),
-            afk_timeout=datetime.timedelta(seconds=60),
-            default_message_notifications=guilds.GuildMessageNotificationsLevel.ONLY_MENTIONS,
-            description=None,
-            explicit_content_filter=guilds.GuildExplicitContentFilterLevel.ALL_MEMBERS,
-            is_widget_enabled=False,
-            max_video_channel_users=10,
-            mfa_level=guilds.GuildMFALevel.NONE,
-            owner_id=snowflakes.Snowflake(1111),
-            preferred_locale="en-GB",
-            premium_subscription_count=12,
-            premium_tier=guilds.GuildPremiumTier.TIER_3,
-            public_updates_channel_id=None,
-            rules_channel_id=None,
-            system_channel_id=None,
-            vanity_url_code="yeet",
-            verification_level=guilds.GuildVerificationLevel.VERY_HIGH,
-            widget_channel_id=None,
-            system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
-            is_large=True,
-            joined_at=None,
-            member_count=1,
-            nsfw_level=guilds.GuildNSFWLevel.AGE_RESTRICTED,
-        )
-
-    @pytest.fixture()
-    def channels(self):
-        return {
-            4321: mock.Mock(channels_.GuildTextChannel),
-            3321: mock.Mock(channels_.GuildNewsChannel),
-            2321: mock.Mock(channels_.GuildStoreChannel),
-            5321: mock.Mock(channels_.GuildVoiceChannel),
-            6321: mock.Mock(channels_.GuildStageChannel),
-        }
-
-    def test_channels(self, model):
-        assert model.channels is model.app.cache.get_guild_channels_view_for_guild.return_value
-        model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
-
-    def test_channels_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.channels == {}
-
-    def test_emojis(self, model):
-        assert model.emojis is model.app.cache.get_emojis_view_for_guild.return_value
-        model.app.cache.get_emojis_view_for_guild.assert_called_once_with(123)
-
-    def test_emojis_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.emojis == {}
-
-    def test_roles(self, model):
-        assert model.roles is model.app.cache.get_roles_view_for_guild.return_value
-        model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
-
-    def test_roles_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.roles == {}
-
-    def test_get_emoji(self, model):
-        assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
-        model.app.cache.get_emoji.assert_called_once_with(456)
-
-    def test_get_emoji_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_emoji(456) is None
-
-    def test_get_role(self, model):
-        assert model.get_role(456) is model.app.cache.get_role.return_value
-        model.app.cache.get_role.assert_called_once_with(456)
-
-    def test_get_role_when_no_cache_trait(self, model):
-        model.app = object()
-        assert model.get_role(456) is None

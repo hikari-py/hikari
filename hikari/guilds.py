@@ -54,7 +54,6 @@ __all__: typing.List[str] = [
     "WelcomeChannel",
 ]
 
-import abc
 import typing
 
 import attr
@@ -462,8 +461,7 @@ class Member(users.User):
         """
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
-    @property
-    def presence(self) -> typing.Optional[presences_.MemberPresence]:
+    def get_presence(self) -> typing.Optional[presences_.MemberPresence]:
         """Get the cached presence for this member, if known.
 
         Presence info includes user status and activities.
@@ -480,8 +478,7 @@ class Member(users.User):
 
         return self.user.app.cache.get_presence(self.guild_id, self.user.id)
 
-    @property
-    def roles(self) -> typing.Sequence[Role]:
+    def get_roles(self) -> typing.Sequence[Role]:
         """Return the roles the user has.
 
         This will be empty if the roles are missing from the cache.
@@ -491,15 +488,18 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
+        roles: typing.List[Role] = []
+
         if not isinstance(self.user.app, traits.CacheAware):
-            return []
+            return roles
 
-        roles_view = self.user.app.cache.get_roles_view_for_guild(self.guild_id)
+        for role_id in self.role_ids:
+            if role := self.user.app.cache.get_role(role_id):
+                roles.append(role)
 
-        return [r for r in roles_view.values() if r.id in self.role_ids]
+        return roles
 
-    @property
-    def top_role(self) -> typing.Optional[Role]:
+    def get_top_role(self) -> typing.Optional[Role]:
         """Return the highest role the member has.
 
         Returns
@@ -508,7 +508,7 @@ class Member(users.User):
             `builtins.None` if the cache is missing the roles information or
             the highest role the user has.
         """
-        roles = sorted(self.roles, key=lambda r: r.position, reverse=True)
+        roles = sorted(self.get_roles(), key=lambda r: r.position, reverse=True)
 
         try:
             return next(iter(roles))
@@ -2251,7 +2251,7 @@ class GuildPreview(PartialGuild):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Guild(PartialGuild, abc.ABC):
+class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
     features: typing.Sequence[typing.Union[str, GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
@@ -2403,7 +2403,11 @@ class Guild(PartialGuild, abc.ABC):
         return self.make_discovery_splash_url()
 
     @property
-    def members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
+    def splash_url(self) -> typing.Optional[files.URL]:
+        """Splash URL for the guild, if set."""
+        return self.make_splash_url()
+
+    def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
@@ -2414,8 +2418,7 @@ class Guild(PartialGuild, abc.ABC):
 
         return self.app.cache.get_members_view_for_guild(self.id)
 
-    @property
-    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
+    def get_presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
         """Get the presences cached for the guild.
 
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
@@ -2427,8 +2430,7 @@ class Guild(PartialGuild, abc.ABC):
 
         return self.app.cache.get_presences_view_for_guild(self.id)
 
-    @property
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
         """Get the channels cached for the guild.
 
         Returns
@@ -2442,8 +2444,7 @@ class Guild(PartialGuild, abc.ABC):
 
         return self.app.cache.get_guild_channels_view_for_guild(self.id)
 
-    @property
-    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
+    def get_voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voices_.VoiceState]:
         """Get the voice states cached for the guild.
 
         Returns
@@ -2457,9 +2458,7 @@ class Guild(PartialGuild, abc.ABC):
 
         return self.app.cache.get_voice_states_view_for_guild(self.id)
 
-    @property
-    @abc.abstractmethod
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
+    def get_emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
         """Return the emojis in this guild.
 
         Returns
@@ -2467,10 +2466,12 @@ class Guild(PartialGuild, abc.ABC):
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
             A mapping of emoji IDs to the objects of emojis in this guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
 
-    @property
-    @abc.abstractmethod
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
+        return self.app.cache.get_emojis_view_for_guild(self.id)
+
+    def get_roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
         """Return the roles in this guild.
 
         Returns
@@ -2478,11 +2479,10 @@ class Guild(PartialGuild, abc.ABC):
         typing.Mapping[hikari.snowflakes.Snowflake, Role]
             A mapping of role IDs to the objects of roles in this guild.
         """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
 
-    @property
-    def splash_url(self) -> typing.Optional[files.URL]:
-        """Splash URL for the guild, if set."""
-        return self.make_splash_url()
+        return self.app.cache.get_roles_view_for_guild(self.id)
 
     def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image URL, if set.
@@ -2633,7 +2633,7 @@ class Guild(PartialGuild, abc.ABC):
         if not isinstance(self.app, traits.ShardAware):
             return None
 
-        me = self.app.me
+        me = self.app.get_me()
         if me is None:
             return None
 
@@ -2679,15 +2679,44 @@ class Guild(PartialGuild, abc.ABC):
 
         return self.app.cache.get_voice_state(self.id, user)
 
-    @abc.abstractmethod
     def get_emoji(
         self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get an emoji from the cache by it's ID."""
+        """Get a cached role that belongs to the guild by it's ID or object.
 
-    @abc.abstractmethod
+        Parameters
+        ----------
+        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+            The object or ID of the emoji to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.emojis.KnownCustomEmoji]
+            The object of the custom emoji if found in cache, else
+            `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_emoji(emoji)
+
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        """Get a role from the cache by it's ID."""
+        """Get a cached role that belongs to the guild by it's ID or object.
+
+        Parameters
+        ----------
+        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
+            The object or ID of the role to get for this guild from the cache.
+
+        Returns
+        -------
+        typing.Optional[Role]
+            The object of the role found in cache, else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_role(role)
 
     async def fetch_owner(self) -> Member:
         """Fetch the owner of the guild.
@@ -2932,14 +2961,12 @@ class Guild(PartialGuild, abc.ABC):
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
-    # In a REST-provided guild, we provide these attributes directly, as the API will give them in the response.
-    # This is different to Gateway guilds which will perform a cache-hit to handle this usually.
-    _emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
         eq=False, hash=False, repr=False
     )
     """A mapping of emoji IDs to the objects of the emojis this guild provides."""
 
-    _roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of role ID to role object."""
 
     approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
@@ -2959,26 +2986,6 @@ class RESTGuild(Guild):
 
     max_members: int = attr.field(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild."""
-
-    @property
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        return self._emojis
-
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
-        # <<inherited docstring from Guild>>.
-        return self._roles
-
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        return self._emojis.get(snowflakes.Snowflake(emoji))
-
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        # <<inherited docstring from Guild>>.
-        return self._roles.get(snowflakes.Snowflake(role))
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -3011,58 +3018,3 @@ class GatewayGuild(Guild):
     event. If the guild is received from any other place, this will always be
     `builtins.None`.
     """
-
-    @property
-    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji]:
-        # <<inherited docstring from Guild>>.
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_emojis_view_for_guild(self.id)
-
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
-        # <<inherited docstring from Guild>>.
-        if not isinstance(self.app, traits.CacheAware):
-            return {}
-
-        return self.app.cache.get_roles_view_for_guild(self.id)
-
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get a cached role that belongs to the guild by it's ID or object.
-
-        Parameters
-        ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
-            The object or ID of the emoji to get from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.emojis.KnownCustomEmoji]
-            The object of the custom emoji if found in cache, else
-            `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_emoji(emoji)
-
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
-        """Get a cached role that belongs to the guild by it's ID or object.
-
-        Parameters
-        ----------
-        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
-            The object or ID of the role to get for this guild from the cache.
-
-        Returns
-        -------
-        typing.Optional[Role]
-            The object of the role found in cache, else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_role(role)

@@ -23,39 +23,13 @@
 import mock
 import pytest
 
-from hikari import voices
-from hikari.events import voice_events
+from hikari.events import user_events
 
 
-class TestVoiceStateUpdateEvent:
+class TestOwnUserUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return voice_events.VoiceStateUpdateEvent(
-            shard=object(), state=mock.Mock(voices.VoiceState), old_state=mock.Mock(voices.VoiceState)
-        )
+        return user_events.OwnUserUpdateEvent(shard=None, old_user=None, user=mock.Mock())
 
     def test_app_property(self, event):
-        assert event.app is event.state.app
-
-    def test_guild_id_property(self, event):
-        event.state.guild_id = 123
-        assert event.guild_id == 123
-
-    def test_old_voice_state(self, event):
-        event.old_state.guild_id = 123
-        assert event.old_state.guild_id == 123
-
-
-class TestVoiceServerUpdateEvent:
-    @pytest.fixture()
-    def event(self):
-        return voice_events.VoiceServerUpdateEvent(
-            app=None, shard=object(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
-        )
-
-    def test_endpoint_property(self, event):
-        assert event.endpoint == "wss://voice.discord.com:123"
-
-    def test_endpoint_property_when_raw_endpoint_is_None(self, event):
-        event.raw_endpoint = None
-        assert event.endpoint is None
+        assert event.app is event.user.app

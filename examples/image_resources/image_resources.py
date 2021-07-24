@@ -64,15 +64,15 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
 
     # Show the guild icon:
     elif what.casefold() in ("guild", "server", "here", "this"):
-        if event.guild is None:
+        guild = event.get_guild()
+        if guild is None:
             await event.message.respond("Guild is missing from the cache :(")
             return
 
-        icon = event.guild.icon_url
-        if icon is None:
+        if guild.icon_url is None:
             await event.message.respond("This guild doesn't have an icon")
         else:
-            await event.message.respond("Guild icon", attachment=icon)
+            await event.message.respond("Guild icon", attachment=guild.icon_url)
 
     # Show the image for the given emoji if there is some content present:
     elif what:

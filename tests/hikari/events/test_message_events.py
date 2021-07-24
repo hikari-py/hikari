@@ -37,7 +37,6 @@ class TestMessageCreateEvent:
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageCreateEvent,
-            app=object(),
             message=mock.Mock(
                 spec_set=messages.Message,
                 author=mock.Mock(
@@ -48,6 +47,9 @@ class TestMessageCreateEvent:
         )
 
         return cls()
+
+    def test_app_property(self, event):
+        assert event.app is event.message.app
 
     def test_author_property(self, event):
         assert event.author is event.message.author
@@ -97,7 +99,6 @@ class TestMessageUpdateEvent:
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageUpdateEvent,
-            app=object(),
             message=mock.Mock(
                 spec_set=messages.Message,
                 author=mock.Mock(
@@ -108,6 +109,9 @@ class TestMessageUpdateEvent:
         )
 
         return cls()
+
+    def test_app_property(self, event):
+        assert event.app is event.message.app
 
     @pytest.mark.parametrize("author", [mock.Mock(spec_set=users.User), undefined.UNDEFINED])
     def test_author_property(self, event, author):
@@ -169,7 +173,6 @@ class TestGuildMessageCreateEvent:
     @pytest.fixture()
     def event(self):
         return message_events.GuildMessageCreateEvent(
-            app=mock.Mock(),
             message=mock.Mock(
                 spec_set=messages.Message,
                 guild_id=snowflakes.Snowflake(342123123),
@@ -181,26 +184,30 @@ class TestGuildMessageCreateEvent:
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(342123123)
 
-    def test_channel_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_get_channel_when_no_cache_trait(self):
+        event = hikari_test_helpers.mock_class_namespace(
+            message_events.GuildMessageCreateEvent, app=None, init_=False
+        )()
 
-        assert event.channel is None
+        assert event.get_channel() is None
 
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
-    def test_channel_property(self, event, guild_channel_impl):
+    def test_get_channel(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
 
-        result = event.channel
+        result = event.get_channel()
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(9121234)
 
-    def test_guild_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_get_guild_when_no_cache_trait(self):
+        event = hikari_test_helpers.mock_class_namespace(
+            message_events.GuildMessageCreateEvent, app=None, init_=False
+        )()
 
-        assert event.guild is None
+        assert event.get_guild() is None
 
-    def test_guild_property(self, event):
-        result = event.guild
+    def test_get_guild(self, event):
+        result = event.get_guild()
 
         assert result is event.app.cache.get_guild.return_value
         event.app.cache.get_guild.assert_called_once_with(342123123)
@@ -211,12 +218,24 @@ class TestGuildMessageCreateEvent:
     def test_member_property(self, event):
         assert event.member is event.message.member
 
+    def test_get_member_when_cacheless(self, event):
+        event.message.app = None
+
+        result = event.get_member()
+
+        assert result is None
+
+    def test_get_member(self, event):
+        result = event.get_member()
+
+        assert result is event.app.cache.get_member.return_value
+        event.app.cache.get_member.assert_called_once_with(event.guild_id, event.author_id)
+
 
 class TestGuildMessageUpdateEvent:
     @pytest.fixture()
     def event(self):
         return message_events.GuildMessageUpdateEvent(
-            app=mock.Mock(),
             message=mock.Mock(
                 spec_set=messages.Message,
                 guild_id=snowflakes.Snowflake(54123123123),
@@ -232,64 +251,46 @@ class TestGuildMessageUpdateEvent:
     def test_member_property(self, event):
         assert event.member is event.message.member
 
-    def test_member_property_when_member_defined(self, event):
-        event.message.member = mock.Mock()
-        event.message.author = undefined.UNDEFINED
-
-        assert event.member is event.message.member
-
-    def test_member_property_when_member_none_but_cached(self, event):
-        event.message.member = None
-        event.message.author = mock.Mock(id=1234321)
-        event.message.guild_id = snowflakes.Snowflake(696969)
-        real_member = mock.Mock()
-        event.app.cache.get_member = mock.Mock(return_value=real_member)
-
-        assert event.member is real_member
-
-        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
-
-    def test_member_property_when_member_none_and_author_none(self, event):
-        event.message.author = None
-        event.message.member = None
-
-        assert event.member is None
-
-        event.app.cache.get_member.assert_not_called()
-
-    def test_member_property_when_member_none_and_uncached(self, event):
-        event.message.member = None
-        event.message.author = mock.Mock(id=1234321)
-        event.message.guild_id = snowflakes.Snowflake(696969)
-        event.app.cache.get_member = mock.Mock(return_value=None)
-
-        assert event.member is None
-
-        event.app.cache.get_member.assert_called_once_with(696969, 1234321)
-
     def test_guild_id_property(self, event):
         assert event.guild_id == snowflakes.Snowflake(54123123123)
 
-    def test_channel_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_get_channel_when_no_cache_trait(self):
+        event = hikari_test_helpers.mock_class_namespace(
+            message_events.GuildMessageUpdateEvent, app=None, init_=False
+        )()
 
-        assert event.channel is None
+        assert event.get_channel() is None
 
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
-    def test_channel_property(self, event, guild_channel_impl):
+    def test_get_channel(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
 
-        result = event.channel
+        result = event.get_channel()
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(800001066)
 
-    def test_guild_property_when_no_cache_trait(self, event):
-        event.app = object()
+    def test_get_member_when_cacheless(self, event):
+        event.message.app = None
 
-        assert event.guild is None
+        result = event.get_member()
 
-    def test_guild_property(self, event):
-        result = event.guild
+        assert result is None
+
+    def test_get_member(self, event):
+        result = event.get_member()
+
+        assert result is event.app.cache.get_member.return_value
+        event.app.cache.get_member.assert_called_once_with(event.guild_id, event.author_id)
+
+    def test_get_guild_when_no_cache_trait(self):
+        event = hikari_test_helpers.mock_class_namespace(
+            message_events.GuildMessageUpdateEvent, app=None, init_=False
+        )()
+
+        assert event.get_guild() is None
+
+    def test_get_guild(self, event):
+        result = event.get_guild()
 
         assert result is event.app.cache.get_guild.return_value
         event.app.cache.get_guild.assert_called_once_with(54123123123)
@@ -302,7 +303,6 @@ class TestDMMessageUpdateEvent:
     @pytest.fixture()
     def event(self):
         return message_events.DMMessageUpdateEvent(
-            app=mock.Mock(),
             message=mock.Mock(
                 spec_set=messages.Message, author=mock.Mock(spec_set=users.User, id=snowflakes.Snowflake(8000010662))
             ),
@@ -337,26 +337,26 @@ class TestGuildMessageDeleteEvent:
             is_bulk=True,
         )
 
-    def test_channel_property_when_no_cache_trait(self, event):
+    def test_get_channel_when_no_cache_trait(self, event):
         event.app = object()
 
-        assert event.channel is None
+        assert event.get_channel() is None
 
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildTextChannel, channels.GuildNewsChannel])
-    def test_channel_property(self, event, guild_channel_impl):
+    def test_get_channel(self, event, guild_channel_impl):
         event.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(spec_set=guild_channel_impl))
-        result = event.channel
+        result = event.get_channel()
 
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
 
-    def test_guild_property_when_no_cache_trait(self, event):
+    def test_get_guild_when_no_cache_trait(self, event):
         event.app = object()
 
-        assert event.guild is None
+        assert event.get_guild() is None
 
-    def test_guild_property(self, event):
-        result = event.guild
+    def test_get_guild_property(self, event):
+        result = event.get_guild()
 
         assert result is event.app.cache.get_guild.return_value
         event.app.cache.get_guild.assert_called_once_with(542342354564)

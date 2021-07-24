@@ -331,8 +331,7 @@ class Mentions:
 
         return list(self.users.keys())
 
-    @property
-    def members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
+    def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
         """Discover any cached members notified by this message.
 
         If this message was sent in a DM, this will always be empty.
@@ -366,8 +365,7 @@ class Mentions:
 
         return {}
 
-    @property
-    def roles(self) -> typing.Mapping[snowflakes.Snowflake, guilds.Role]:
+    def get_roles(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Role]]:
         """Attempt to look up the roles that are notified by this message.
 
         If this message was sent in a DM, this will always be empty.
@@ -389,10 +387,13 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
+        if self.role_ids is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
         if isinstance(self._message.app, traits.CacheAware) and self._message.guild_id is not None:
             app = self._message.app
             return self._map_cache_maybe_discover(
-                self.roles,
+                self.role_ids,
                 app.cache.get_role,
             )
 
@@ -659,7 +660,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    @property
+    @property  # TODO: update this while refactoring message structure
     def guild_id(self) -> typing.Optional[snowflakes.Snowflake]:
         """ID of the guild that the message was sent in.
 
@@ -699,6 +700,7 @@ class PartialMessage(snowflakes.Unique):
         builtins.str
             The jump link to the message.
         """
+        # TODO: this doesn't seem like a safe assumption for rest only applications
         guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 

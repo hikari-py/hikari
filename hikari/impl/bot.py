@@ -331,10 +331,6 @@ class GatewayBot(traits.GatewayBotAware):
         return self._intents
 
     @property
-    def me(self) -> typing.Optional[users_.OwnUser]:
-        return self._cache.get_me()
-
-    @property
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
 
@@ -357,6 +353,9 @@ class GatewayBot(traits.GatewayBotAware):
     def _check_if_alive(self) -> None:
         if not self._is_alive:
             raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
+
+    def get_me(self) -> typing.Optional[users_.OwnUser]:
+        return self._cache.get_me()
 
     async def close(self) -> None:
         """Kill the application by shutting all components down."""

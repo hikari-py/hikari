@@ -90,18 +90,6 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
             UTC timestamp of when the user started typing.
         """
 
-    @property
-    @abc.abstractmethod
-    def user(self) -> typing.Optional[users.User]:
-        """Get the cached user that is typing, if known.
-
-        Returns
-        -------
-        typing.Optional[hikari.users.User]
-            The user, if known.
-        """
-
-    @abc.abstractmethod
     async def fetch_channel(self) -> channels.TextableChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
@@ -110,8 +98,23 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         hikari.channels.TextableChannel
             The channel.
         """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.TextableChannel)
+        return channel
 
-    @abc.abstractmethod
+    def get_user(self) -> typing.Optional[users.User]:
+        """Get the cached user that is typing, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.users.User]
+            The user, if known.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_user(self.user_id)
+
+        return None
+
     async def fetch_user(self) -> users.User:
         """Perform an API call to fetch an up-to-date image of this user.
 
@@ -119,7 +122,28 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         -------
         hikari.users.User
             The user.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
         """
+        return await self.app.rest.fetch_user(self.user_id)
 
     def trigger_typing(self) -> special_endpoints.TypingIndicator:
         """Return a typing indicator for this channel that can be awaited.
@@ -139,9 +163,6 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -160,56 +181,24 @@ class GuildTypingEvent(TypingEvent):
         The ID of the guild that relates to this event.
     """
 
-    user: guilds.Member = attr.field(repr=False)
-    """Member object of the user who triggered this typing event.
-
-    Unlike on `PrivateTypingEvent` instances, Discord will always send
-    this field in any payload.
+    member: guilds.Member = attr.field(repr=False)
+    """Object of the member who triggered this typing event.
 
     Returns
     -------
     hikari.guilds.Member
-        Member of the user who triggered this typing event.
+        Object of the member who triggered this typing event.
     """
 
     @property
-    def channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the cached channel object this typing event occurred in.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextableGuildChannel]
-            The channel.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from cache, got {channel}"
-        return channel
-
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached object of the guild this typing event occurred in.
-
-        If the guild is not found then this will return `builtins.None`.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found else `builtins.None`.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.member.app
 
     @property
     def user_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from TypingEvent>>.
-        return self.user.id
+        return self.member.id
 
     async def fetch_channel(self) -> typing.Union[channels.TextableGuildChannel]:
         """Perform an API call to fetch an up-to-date image of this channel.
@@ -219,7 +208,7 @@ class GuildTypingEvent(TypingEvent):
         typing.Union[hikari.channels.TextableGuildChannel]
             The channel.
         """
-        channel = await self.app.rest.fetch_channel(self.channel_id)
+        channel = await super().fetch_channel()
         assert isinstance(
             channel, channels.TextableGuildChannel
         ), f"expected TextableGuildChannel from API, got {channel}"
@@ -245,8 +234,8 @@ class GuildTypingEvent(TypingEvent):
         """
         return await self.app.rest.fetch_guild_preview(self.guild_id)
 
-    async def fetch_user(self) -> guilds.Member:
-        """Perform an API call to fetch an up-to-date image of this member.
+    async def fetch_member(self) -> guilds.Member:
+        """Perform an API call to fetch an up-to-date image of this event's member.
 
         Returns
         -------
@@ -254,6 +243,38 @@ class GuildTypingEvent(TypingEvent):
             The member.
         """
         return await self.app.rest.fetch_member(self.guild_id, self.user_id)
+
+    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+        """Get the cached channel object this typing event occurred in.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextableGuildChannel]
+            The channel.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert channel is None or isinstance(
+            channel, channels.TextableGuildChannel
+        ), f"expected TextableGuildChannel from cache, got {channel}"
+        return channel
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached object of the guild this typing event occurred in.
+
+        If the guild is not found then this will return `builtins.None`.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the gateway guild if found else `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
@@ -276,14 +297,6 @@ class DMTypingEvent(TypingEvent):
 
     timestamp: datetime.datetime = attr.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
-
-    @property
-    def user(self) -> typing.Optional[users.User]:
-        # <<inherited docstring from TypingEvent>>.
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_user(self.user_id)
 
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
@@ -318,36 +331,6 @@ class DMTypingEvent(TypingEvent):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        channel = await self.app.rest.fetch_channel(self.channel_id)
+        channel = await super().fetch_channel()
         assert isinstance(channel, channels.DMChannel), f"expected DMChannel from API, got {channel}"
         return channel
-
-    async def fetch_user(self) -> users.User:
-        """Perform an API call to fetch an up-to-date image of the user.
-
-        Returns
-        -------
-        hikari.users.User
-            The user.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the user is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.fetch_user(self.user_id)

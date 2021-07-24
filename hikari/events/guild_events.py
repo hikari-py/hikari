@@ -48,6 +48,7 @@ import typing
 import attr
 
 from hikari import intents
+from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
@@ -58,7 +59,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import presences as presences_
     from hikari import snowflakes
-    from hikari import traits
     from hikari import users
     from hikari import voices
     from hikari.api import shard as gateway_shard
@@ -83,22 +83,6 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
             The ID of the guild that relates to this event.
         """
 
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild that this event relates to, if known.
-
-        If not known, this will return `builtins.None` instead.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The guild this event relates to, or `builtins.None` if not known.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
-
     async def fetch_guild(self) -> guilds.RESTGuild:
         """Perform an API call to get the guild that this event relates to.
 
@@ -118,6 +102,21 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
             The preview of the guild this event occurred in.
         """
         return await self.app.rest.fetch_guild_preview(self.guild_id)
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild that this event relates to, if known.
+
+        If not known, this will return `builtins.None` instead.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The guild this event relates to, or `builtins.None` if not known.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
@@ -146,9 +145,6 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
     """
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -231,6 +227,11 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.guild.app
+
+    @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
@@ -282,9 +283,6 @@ class GuildUnavailableEvent(GuildVisibilityEvent):
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -322,6 +320,11 @@ class GuildUpdateEvent(GuildEvent):
     """
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.guild.app
+
+    @property
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
@@ -332,6 +335,11 @@ class BanEvent(GuildEvent, abc.ABC):
     """Event base for any guild ban or unban."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.user.app
 
     @property
     @abc.abstractmethod
@@ -360,9 +368,6 @@ class BanEvent(GuildEvent, abc.ABC):
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -403,9 +408,6 @@ class BanCreateEvent(BanEvent):
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -606,9 +608,6 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shards that saw the presence update.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -642,6 +641,11 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     typing.Optional[hikari.users.PartialUser]
         The partial user containing the updated fields.
     """
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.presence.app
 
     @property
     def user_id(self) -> snowflakes.Snowflake:
