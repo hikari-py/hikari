@@ -47,10 +47,11 @@ def generate_stubs(session: nox.Session) -> None:
 def _generate_stubs(session: nox.Session) -> None:
     session.run("stubgen", *STUBGEN_GENERATE, "-o", ".", "--include-private", "--no-import")
 
-    for path in STUBGEN_GENERATE:
-        # We add "i" because we turn ".py" into ".pyi"
-        stub_path = path + "i"
+    stub_paths = [path + "i" for path in STUBGEN_GENERATE]
 
+    session.run("black", *stub_paths)
+
+    for stub_path in stub_paths:
         with open(stub_path, "r") as fp:
             content = fp.read()
 
