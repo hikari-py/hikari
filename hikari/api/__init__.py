@@ -28,3 +28,13 @@ relying on a distributed event bus or cache.
 """
 
 from __future__ import annotations
+
+from hikari.api.cache import *
+from hikari.api.entity_factory import *
+from hikari.api.event_factory import *
+from hikari.api.event_manager import *
+from hikari.api.interaction_server import *
+from hikari.api.rest import *
+from hikari.api.shard import *
+from hikari.api.special_endpoints import *
+from hikari.api.voice import *

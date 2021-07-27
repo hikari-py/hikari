@@ -24,7 +24,9 @@ ignore =
 # D106, D104, D103, D101, D100: Missing docstring in public function/class/module (ignore in tests)
 per-file-ignores =
     hikari/__init__.py:                 F401,F403
+    hikari/api/__init__.py:             F401,F403
     hikari/events/__init__.py:          F401,F403
+    hikari/impl/__init__.py:            F401,F403
     hikari/interactions/__init__.py:    F401,F403
     hikari/internal/routes.py:          FS003
     hikari/internal/time.py:            FS003
