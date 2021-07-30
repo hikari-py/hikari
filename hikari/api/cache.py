@@ -53,13 +53,13 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    @abc.abstractmethod
     @typing.overload
+    @abc.abstractmethod
     def get_item_at(self, index: int, /) -> _ValueT:
         ...
 
-    @abc.abstractmethod
     @typing.overload
+    @abc.abstractmethod
     def get_item_at(self, index: slice, /) -> typing.Sequence[_ValueT]:
         ...
 
