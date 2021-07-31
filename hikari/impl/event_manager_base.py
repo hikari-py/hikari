@@ -319,7 +319,6 @@ class EventManagerBase(event_manager_.EventManager):
 
     __slots__: typing.Sequence[str] = (
         "_consumers",
-        "_dispatches_for_cache",
         "_enabled_consumers_cache",
         "_event_factory",
         "_intents",
@@ -335,7 +334,6 @@ class EventManagerBase(event_manager_.EventManager):
         cache_components: config.CacheComponents = config.CacheComponents.NONE,
     ) -> None:
         self._consumers: typing.Dict[str, _Consumer] = {}
-        self._dispatches_for_cache: typing.Dict[_Consumer, bool] = {}
         self._enabled_consumers_cache: typing.Dict[_Consumer, bool] = {}
         self._event_factory = event_factory
         self._intents = intents

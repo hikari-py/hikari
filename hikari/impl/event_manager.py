@@ -37,6 +37,7 @@ from hikari import errors
 from hikari import intents as intents_
 from hikari import presences as presences_
 from hikari import snowflakes
+from hikari.events import  interaction_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import member_events
