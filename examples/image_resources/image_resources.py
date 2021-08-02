@@ -57,7 +57,7 @@ async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
 async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> None:
     """Inspect the image and respond to the user."""
     # Show the avatar for the given user ID:
-    if (user_match := re.match(r"<@!?(\d+)>", what)):
+    if user_match := re.match(r"<@!?(\d+)>", what):
         user_id = hikari.Snowflake(user_match.group(1))
         user = bot.cache.get_user(user_id) or await bot.rest.fetch_user(user_id)
         await event.message.respond("User avatar", attachment=user.avatar_url or user.default_avatar_url)
