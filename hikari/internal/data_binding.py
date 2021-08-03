@@ -83,7 +83,7 @@ if typing.TYPE_CHECKING:
     JSONDecodeError: typing.Type[Exception] = Exception
     """Exception raised when loading an invalid JSON string"""
 
-    def dump_json(_: typing.Union[JSONArray, JSONObject], /) -> str:
+    def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
         """Convert a Python type to a JSON string."""
 
     def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
