@@ -477,8 +477,8 @@ class BadRequestError(ClientHTTPResponseError):
         value = super().__str__()
         if self.errors:
             value += "\n" + data_binding.dump_json(self.errors, indent=2)
-            self._cached_str = value
 
+        self._cached_str = value
         return value
 
 
