@@ -1052,6 +1052,6 @@ class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[
 
     __slots__: typing.Sequence[str] = ()
 
-    @classmethod
-    def _copy(cls, value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
+    @staticmethod
+    def _copy(value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
         return value
