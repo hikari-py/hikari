@@ -2443,8 +2443,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",
-            "verification": 3,
-            "notifications": 1,
+            "verification_level": 3,
+            "default_message_notifications": 1,
             "explicit_content_filter": 1,
             "afk_timeout": 60,
             "preferred_locale": "en-UK",
@@ -2487,8 +2487,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",
-            "verification": 3,
-            "notifications": 1,
+            "verification_level": 3,
+            "default_message_notifications": 1,
             "explicit_content_filter": 1,
             "afk_timeout": 60,
             "preferred_locale": "en-UK",
