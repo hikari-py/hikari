@@ -261,7 +261,7 @@ class HTTPTimeoutSettings:
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False, on_setattr=[attr.setters.convert, attr.setters.validate])
+@attr.define(kw_only=True, weakref_slot=False)
 class HTTPSettings:
     """Settings to control HTTP clients."""
 
