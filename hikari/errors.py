@@ -461,7 +461,7 @@ class BadRequestError(ClientHTTPResponseError):
     """The HTTP status code for the response."""
 
     errors: typing.Optional[typing.Dict[str, data_binding.JSONObject]] = attr.field(default=None, kw_only=True)
-    """Dict of field specific errors.
+    """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
     https://discord.com/developers/docs/reference#error-messages and is commonly
