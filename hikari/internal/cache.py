@@ -83,24 +83,40 @@ ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
 
 
-class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, ValueT]):
+@attr.define()
+class _DataTMapping(typing.Mapping[KeyT, ValueT], typing.Generic[KeyT, ValueT, DataT]):
+    inner: typing.Mapping[KeyT, DataT]
+    builder: typing.Callable[[DataT], ValueT]
+
+    def __getitem__(self, key: KeyT) -> ValueT:
+        return self.builder(self.inner[key])
+
+    def __iter__(self) -> typing.Iterator[KeyT]:
+        return iter(self.inner)
+
+    def __len__(self) -> int:
+        return len(self.inner)
+
+
+class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     """A cache mapping view implementation used for representing cached data.
 
     Parameters
     ----------
-    items : typing.Mapping[KeyT, typing.Union[ValueT, DataT, RefCell[ValueT]]]
+    items : typing.Union[typing.Mapping[KeyT, ValueT], typing.Mapping[KeyT, DataT]]
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
     builder : typing.Optional[typing.Callable[[DataT], ValueT]]
         The callable used to build entities before they're returned by the
         mapping. This is used to cover the case when items stores `DataT` objects.
-    predicate : typing.Optional[typing.Callable[[typing.Any], bool]]
-        A callable to use to determine whether entries should be returned or hidden,
-        this should take in whatever raw type was passed for the value in `items`.
-        This may be `builtins.None` if all entries should be exposed.
     """
 
-    __slots__: typing.Sequence[str] = ("_builder", "_data")
+    __slots__: typing.Sequence[str] = ("_data", "_had_builder")
+
+    _data: typing.Mapping[KeyT, ValueT]
+
+    # _had_builder is an optimization to decrease copy-s.
+    _had_builder: bool
 
     @typing.overload
     def __init__(
@@ -120,15 +136,22 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
 
     def __init__(
         self,
-        items: typing.Mapping[KeyT, typing.Union[ValueT, DataT]],
+        items: typing.Union[typing.Mapping[KeyT, ValueT], typing.Mapping[KeyT, DataT]],
         *,
         builder: typing.Optional[typing.Callable[[DataT], ValueT]] = None,
     ) -> None:
-        self._builder = builder
-        self._data = items
+        # this should probably use singledispatch at some point
+        if builder:
+            # items is a typing.Mapping[KeyT, DataT]
+            self._data = _DataTMapping[KeyT, ValueT, DataT](items, builder)  # type: ignore[arg-type]
+            self._had_builder = True
+        else:
+            # items is a typing.Mapping[KeyT, ValueT]
+            self._data = items  # type: ignore[assignment]
+            self._had_builder = False
 
-    @classmethod
-    def _copy(cls, value: ValueT) -> ValueT:
+    @staticmethod
+    def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
     def __contains__(self, key: typing.Any) -> bool:
@@ -137,13 +160,10 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
 
-        if self._builder is not None:
-            entry = self._builder(entry)  # type: ignore[arg-type]
-
+        if self._had_builder:
+            return entry
         else:
-            entry = self._copy(entry)  # type: ignore[arg-type]
-
-        return entry
+            return self._copy(entry)
 
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
@@ -160,18 +180,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT], typing.Generic[KeyT, Value
         ...
 
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
-        result = collections.get_index_or_slice(self._data, index)
-
-        if isinstance(result, typing.Sequence):
-            if self._builder is not None:
-                return [self._builder(item) for item in result]  # type: ignore[arg-type]
-            else:
-                return [self._copy(item) for item in result]  # type: ignore[arg-type]
-        else:
-            if self._builder is not None:
-                return self._builder(result)  # type: ignore[arg-type]
-            else:
-                return self._copy(result)  # type: ignore[arg-type]
+        return collections.get_index_or_slice(self, index)
 
     def iterator(self) -> iterators.LazyIterator[ValueT]:
         return iterators.FlatLazyIterator(self.values())
