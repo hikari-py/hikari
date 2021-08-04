@@ -80,7 +80,7 @@ class TestComponentInteraction:
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_component_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextChannel)
+        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
 
         assert await mock_component_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
 

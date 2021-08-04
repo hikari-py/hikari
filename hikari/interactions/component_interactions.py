@@ -213,13 +213,13 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
 
         return self.app.rest.interaction_deferred_builder(type_)
 
-    async def fetch_channel(self) -> channels.TextChannel:
+    async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the channel this interaction occurred in.
 
         Returns
         -------
-        hikari.channels.TextChannel
-            The channel. This will be a _derivative_ of `hikari.channels.TextChannel`.
+        hikari.channels.TextableChannel
+            The channel. This will be a _derivative_ of `hikari.channels.TextableChannel`.
 
         Raises
         ------
@@ -247,7 +247,7 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextChannel)
+        assert isinstance(channel, channels.TextableChannel)
         return channel
 
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
