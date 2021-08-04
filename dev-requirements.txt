@@ -21,7 +21,7 @@ async-timeout==3.0.1  # Used for timeouts in some test cases.
 # DOCUMENTATION #
 #################
 
-pdoc3==0.9.2
+pdoc3==0.10.0
 sphobjinv==2.1
 
 #################
