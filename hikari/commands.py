@@ -55,8 +55,10 @@ class OptionType(int, enums.Enum):
     """Denotes a command option where the value will be a string."""
 
     INTEGER = 4
-    """Denotes a command option where the value will be a int."""
+    """Denotes a command option where the value will be a int.
 
+    This is range limited between -2^53 and 2^53.
+    """
     BOOLEAN = 5
     """Denotes a command option where the value will be a bool."""
 
@@ -72,6 +74,12 @@ class OptionType(int, enums.Enum):
     MENTIONABLE = 9
     """Denotes a command option where the value will be a snowflake ID."""
 
+    FLOAT = 10
+    """Denotes a command option where the value will be a float.
+
+    This is range limited between -2^53 and 2^53.
+    """
+
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
@@ -81,7 +89,7 @@ class CommandChoice:
     name: str = attr.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    value: typing.Union[str, int] = attr.field(repr=True)
+    value: typing.Union[str, int, float] = attr.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
 
