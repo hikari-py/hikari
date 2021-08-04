@@ -3,6 +3,8 @@
 
 from typing import Any
 
+from hikari import api as api
+from hikari import impl as impl
 from hikari._about import __author__ as __author__
 from hikari._about import __ci__ as __ci__
 from hikari._about import __copyright__ as __copyright__
@@ -45,11 +47,11 @@ from hikari.files import Pathish as Pathish
 from hikari.files import Rawish as Rawish
 from hikari.files import Resourceish as Resourceish
 from hikari.guilds import *
-from hikari.impl.bot import BotApp as BotApp
-from hikari.impl.bot import GatewayBot as GatewayBot
-from hikari.impl.rest import ClientCredentialsStrategy as ClientCredentialsStrategy
-from hikari.impl.rest import RESTApp as RESTApp
-from hikari.impl.rest_bot import RESTBot as RESTBot
+from hikari.impl import BotApp as BotApp
+from hikari.impl import ClientCredentialsStrategy as ClientCredentialsStrategy
+from hikari.impl import GatewayBot as GatewayBot
+from hikari.impl import RESTApp as RESTApp
+from hikari.impl import RESTBot as RESTBot
 from hikari.intents import *
 from hikari.interactions import *
 from hikari.invites import *
