@@ -35,6 +35,7 @@ from hikari import errors
 
 if typing.TYPE_CHECKING:
     from hikari import config
+    from hikari.internal import data_binding
 
 
 async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
@@ -48,11 +49,12 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         json_body = await response.json()
         args.append(json_body.get("message", ""))
         args.append(errors.RESTErrorCode(json_body.get("code", 0)))
+        raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
     except aiohttp.ContentTypeError:
-        pass
+        raw_error_array = None
 
     if response.status == http.HTTPStatus.BAD_REQUEST:
-        return errors.BadRequestError(*args)
+        return errors.BadRequestError(*args, errors=raw_error_array)
     if response.status == http.HTTPStatus.UNAUTHORIZED:
         return errors.UnauthorizedError(*args)
     if response.status == http.HTTPStatus.FORBIDDEN:

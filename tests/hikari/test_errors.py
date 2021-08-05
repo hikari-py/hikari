@@ -22,10 +22,12 @@
 
 import http
 
+import mock
 import pytest
 
 from hikari import errors
 from hikari import intents
+from hikari.internal import data_binding
 
 
 class TestShardCloseCode:
@@ -86,6 +88,35 @@ class TestHTTPResponseError:
         error.status = "SOME STATUS"
         error.message = "Some message"
         assert str(error) == "Some Status: 'Some message' for https://some.url"
+
+
+class TestBadRequestError:
+    @pytest.fixture()
+    def error(self):
+        return errors.BadRequestError(
+            "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", errors={"components": {"0": "ok"}}
+        )
+
+    def test_str(self, error):
+        assert (
+            str(error)
+            == 'Bad Request 400: \'raw body\' for https://some.url\n{\n  "components": {\n    "0": "ok"\n  }\n}'
+        )
+
+    def test_str_when_cached(self, error):
+        error._cached_str = "ok"
+
+        with mock.patch.object(data_binding, "dump_json") as dump_json:
+            assert str(error) == "ok"
+
+        dump_json.assert_not_called()
+
+    def test_str_when_no_errors(self, error):
+        error.errors = None
+        with mock.patch.object(data_binding, "dump_json") as dump_json:
+            assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
+
+        dump_json.assert_not_called()
 
 
 class TestRateLimitTooLongError:
