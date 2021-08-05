@@ -31,7 +31,13 @@ class TestGuildReactionAddEvent:
     @pytest.fixture()
     def event(self):
         return reaction_events.GuildReactionAddEvent(
-            shard=object(), member=mock.MagicMock(guilds.Member), channel_id=123, message_id=456, emoji="👌"
+            shard=object(),
+            member=mock.MagicMock(guilds.Member),
+            channel_id=123,
+            message_id=456,
+            emoji_name="👌",
+            emoji_id=None,
+            is_animated=False,
         )
 
     def test_app_property(self, event):

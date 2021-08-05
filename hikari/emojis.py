@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji", "Emojiish"]
+__all__: typing.List[str] = ["Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji"]
 
 import abc
 import re
@@ -62,7 +62,7 @@ class Emoji(files.WebResource, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name(self) -> typing.Optional[str]:
+    def name(self) -> str:
         """Return the generic name/representation for this emoji."""
 
     @property
@@ -74,11 +74,6 @@ class Emoji(files.WebResource, abc.ABC):
     @abc.abstractmethod
     def url_name(self) -> str:
         """Name of the part of the emoji to use in requests."""
-
-    @property
-    def is_mentionable(self) -> bool:
-        """Whether the emoji can be mentioned or not."""
-        return True
 
     @property
     @abc.abstractmethod
@@ -98,21 +93,19 @@ class Emoji(files.WebResource, abc.ABC):
         -------
         Emoji
             The parsed emoji object. This will be a `CustomEmoji` if a custom
-            emoji ID or mention, or a `UnicodeEmoji` otherwise.
+            emoji mention, or a `UnicodeEmoji` otherwise.
 
         Raises
         ------
         builtins.ValueError
             If a mention is given that has an invalid format.
         """
-        if string.isdigit() or string.startswith("<") and string.endswith(">"):
+        if string.startswith("<") and string.endswith(">"):
             return CustomEmoji.parse(string)
         return UnicodeEmoji.parse(string)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
-class UnicodeEmoji(Emoji):
+class UnicodeEmoji(str, Emoji):
     """Represents a unicode emoji.
 
     !!! warning
@@ -131,33 +124,27 @@ class UnicodeEmoji(Emoji):
         removed in a future release after a deprecation period.
     """
 
-    name: str = attr.field(repr=True, hash=True)
-    """The code points that form the emoji."""
+    __slots__: typing.Sequence[str] = ()
 
-    def __str__(self) -> str:
-        return self.name
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, Emoji):
-            return self.name == other.name
-        if isinstance(other, str):
-            return self.name == other
-        return False
+    @property
+    def name(self) -> str:
+        """Return the code points which form the emoji."""
+        return self
 
     @property
     @typing.final
     def url_name(self) -> str:
-        return self.name
+        return self
 
     @property
     def mention(self) -> str:
-        return self.name
+        return self
 
     @property
     @typing.final
     def codepoints(self) -> typing.Sequence[int]:
         """Integer codepoints that make up this emoji, as UTF-8."""
-        return [ord(c) for c in self.name]
+        return [ord(c) for c in self]
 
     @property
     def filename(self) -> str:
@@ -203,25 +190,25 @@ class UnicodeEmoji(Emoji):
     #     This returns the name of each codepoint. If only one codepoint exists,
     #     then this will only have one item in the resulting sequence.
     #     """
-    #     return [unicodedata.name(c) for c in self.name]
+    #     return [unicodedata.name(c) for c in self]
 
     @property
     @typing.final
     def unicode_escape(self) -> str:
         """Get the unicode escape string for this emoji."""
-        return bytes(self.name, "unicode_escape").decode("utf-8")
+        return bytes(self, "unicode_escape").decode("utf-8")
 
     @classmethod
     @typing.final
     def parse_codepoints(cls, codepoint: int, *codepoints: int) -> UnicodeEmoji:
         """Create a unicode emoji from one or more UTF-32 codepoints."""
-        return cls(name="".join(map(chr, (codepoint, *codepoints))))
+        return cls("".join(map(chr, (codepoint, *codepoints))))
 
     @classmethod
     @typing.final
     def parse_unicode_escape(cls, escape: str) -> UnicodeEmoji:
         """Create a unicode emoji from a unicode escape string."""
-        return cls(name=str(escape.encode("utf-8"), "unicode_escape"))
+        return cls(escape.encode("utf-8"), "unicode_escape")
 
     @classmethod
     @typing.final
@@ -243,7 +230,7 @@ class UnicodeEmoji(Emoji):
         # for i, codepoint in enumerate(string, start=1):
         #     unicodedata.name(codepoint)
 
-        return cls(name=string)
+        return cls(string)
 
 
 @attr_extensions.with_copy
@@ -275,21 +262,14 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
-    """The name of the emoji.
+    name: str = attr.field(eq=False, hash=False, repr=True)
+    """The name of the emoji."""
 
-    This can be `builtins.None` in reaction events.
-    """
-
-    is_animated: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
-    """Whether the emoji is animated.
-
-    Will be `builtins.None` when received in Message Reaction Remove and Message
-    Reaction Remove Emoji events.
-    """
+    is_animated: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the emoji is animated."""
 
     def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed emoji ID {self.id}"
+        return self.mention
 
     @property
     def filename(self) -> str:
@@ -306,10 +286,6 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
     @property
-    def is_mentionable(self) -> bool:
-        return self.is_animated is not None
-
-    @property
     @typing.final
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
@@ -318,9 +294,23 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
     @classmethod
     def parse(cls, string: str, /) -> CustomEmoji:
-        if string.isdigit():
-            return CustomEmoji(id=snowflakes.Snowflake(string), name=None, is_animated=None)
+        """Parse a given emoji mention string into a custom emoji object.
 
+        Parameters
+        ----------
+        string : builtins.str
+            The emoji mention to parse.
+
+        Returns
+        -------
+        CustomEmoji
+            The parsed emoji object.
+
+        Raises
+        ------
+        builtins.ValueError
+            If a mention is given that has an invalid format.
+        """
         if emoji_match := _CUSTOM_EMOJI_REGEX.match(string):
             return CustomEmoji(
                 id=snowflakes.Snowflake(emoji_match.group("id")),
@@ -328,7 +318,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
                 is_animated=emoji_match.group("flags").lower() == "a",
             )
 
-        raise ValueError("Expected an emoji ID or emoji mention")
+        raise ValueError("Expected an emoji mention")
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -361,13 +351,6 @@ class KnownCustomEmoji(CustomEmoji):
         permission in the server the emoji is from.
     """
 
-    is_animated: bool = attr.field(eq=False, hash=False, repr=True)
-    """Whether the emoji is animated.
-
-    Unlike in `CustomEmoji`, this information is always known, and will thus
-    never be `builtins.None`.
-    """
-
     is_colons_required: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this emoji must be wrapped in colons."""
 
@@ -379,17 +362,3 @@ class KnownCustomEmoji(CustomEmoji):
 
     May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
     """
-
-
-Emojiish = typing.Union[str, Emoji]
-r"""Type hint representing a string emoji or an `Emoji`-derived object.
-
-Examples include:
-
-- Unicode emoji strings, such as `"\N{OK HAND SIGN}"`, `"\N{OK HAND SIGN}"`,
-    `"\U0001f44c"`.
-- Custom emoji names in the format `name:id`, such as
-    `"rosaThonk:733073048646713364"`.
-- Derivative instances of `Emoji`, i.e. `UnicodeEmoji`, `CustomEmoji` and
-    `KnownCustomEmoji`.
-"""

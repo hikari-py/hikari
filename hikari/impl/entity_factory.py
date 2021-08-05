@@ -1025,7 +1025,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ################
 
     def deserialize_unicode_emoji(self, payload: data_binding.JSONObject) -> emoji_models.UnicodeEmoji:
-        return emoji_models.UnicodeEmoji(name=payload["name"])
+        return emoji_models.UnicodeEmoji(payload["name"])
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
         return emoji_models.CustomEmoji(
@@ -1099,23 +1099,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channels: typing.List[guild_models.WelcomeChannel] = []
 
         for channel_payload in payload["welcome_channels"]:
-            emoji_id = channel_payload["emoji_id"]
-            emoji_name = channel_payload["emoji_name"]
+            raw_emoji_id = channel_payload["emoji_id"]
+            emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
 
-            emoji: typing.Optional[emoji_models.Emoji] = None
-            if emoji_name is not None:
-                if emoji_id is not None:
-                    emoji = emoji_models.CustomEmoji(
-                        id=snowflakes.Snowflake(emoji_id), name=emoji_name, is_animated=None
-                    )
-                else:
-                    emoji = emoji_models.UnicodeEmoji(emoji_name)
+            emoji_name: typing.Union[None, emoji_models.UnicodeEmoji, str]
+            if (emoji_name := channel_payload["emoji_name"]) and not emoji_id:
+                emoji_name = emoji_models.UnicodeEmoji(emoji_name)
 
             channels.append(
                 guild_models.WelcomeChannel(
                     channel_id=snowflakes.Snowflake(channel_payload["channel_id"]),
                     description=channel_payload["description"],
-                    emoji=emoji,
+                    emoji_id=emoji_id,
+                    emoji_name=emoji_name,
                 )
             )
 
@@ -1127,13 +1123,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "description": welcome_channel.description,
         }
 
-        if isinstance(welcome_channel.emoji, emoji_models.CustomEmoji):
-            payload["emoji_id"] = str(welcome_channel.emoji.id)
-            # TODO: do we need to include the name in this scenario?
-            payload["emoji_name"] = welcome_channel.emoji.name
+        if welcome_channel.emoji_id is not None:
+            payload["emoji_id"] = str(welcome_channel.emoji_id)
 
-        elif welcome_channel.emoji is not None:
-            payload["emoji_name"] = welcome_channel.emoji.name
+        elif welcome_channel.emoji_name is not None:
+            payload["emoji_name"] = str(welcome_channel.emoji_name)
 
         return payload
 

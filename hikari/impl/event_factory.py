@@ -32,6 +32,7 @@ import typing
 
 from hikari import applications as application_models
 from hikari import channels as channel_models
+from hikari import emojis as emojis_models
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users as user_models
@@ -53,7 +54,6 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
-    from hikari import emojis as emojis_models
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models
@@ -551,7 +551,12 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> reaction_events.ReactionAddEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         message_id = snowflakes.Snowflake(payload["message_id"])
-        emoji = self._app.entity_factory.deserialize_emoji(payload["emoji"])
+
+        emoji_payload = payload["emoji"]
+        raw_emoji_id = emoji_payload.get("id")
+        emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
+        is_animated = bool(emoji_payload.get("animated", False))
+        emoji_name = emojis_models.UnicodeEmoji(emoji_payload["name"]) if not emoji_id else emoji_payload["name"]
 
         if "member" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -561,7 +566,9 @@ class EventFactoryImpl(event_factory.EventFactory):
                 member=member,
                 channel_id=channel_id,
                 message_id=message_id,
-                emoji=emoji,
+                emoji_id=emoji_id,
+                emoji_name=emoji_name,
+                is_animated=is_animated,
             )
 
         user_id = snowflakes.Snowflake(payload["user_id"])
@@ -571,8 +578,18 @@ class EventFactoryImpl(event_factory.EventFactory):
             channel_id=channel_id,
             message_id=message_id,
             user_id=user_id,
-            emoji=emoji,
+            emoji_id=emoji_id,
+            emoji_name=emoji_name,
+            is_animated=is_animated,
         )
+
+    def _split_reaction_emoji(
+        self, emoji_payload: data_binding.JSONObject, /
+    ) -> typing.Tuple[typing.Optional[snowflakes.Snowflake], typing.Union[str, emojis_models.UnicodeEmoji, None]]:
+        if (emoji_id := emoji_payload.get("id")) is not None:
+            return snowflakes.Snowflake(emoji_id), emoji_payload["name"]
+
+        return None, emojis_models.UnicodeEmoji(emoji_payload["name"])
 
     def deserialize_message_reaction_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -580,7 +597,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         message_id = snowflakes.Snowflake(payload["message_id"])
         user_id = snowflakes.Snowflake(payload["user_id"])
-        emoji = self._app.entity_factory.deserialize_emoji(payload["emoji"])
+        emoji_id, emoji_name = self._split_reaction_emoji(payload["emoji"])
 
         if "guild_id" in payload:
             return reaction_events.GuildReactionDeleteEvent(
@@ -590,7 +607,8 @@ class EventFactoryImpl(event_factory.EventFactory):
                 guild_id=snowflakes.Snowflake(payload["guild_id"]),
                 channel_id=channel_id,
                 message_id=message_id,
-                emoji=emoji,
+                emoji_id=emoji_id,
+                emoji_name=emoji_name,
             )
 
         return reaction_events.DMReactionDeleteEvent(
@@ -599,7 +617,8 @@ class EventFactoryImpl(event_factory.EventFactory):
             user_id=user_id,
             channel_id=channel_id,
             message_id=message_id,
-            emoji=emoji,
+            emoji_id=emoji_id,
+            emoji_name=emoji_name,
         )
 
     def deserialize_message_reaction_remove_all_event(
@@ -629,13 +648,14 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> reaction_events.ReactionDeleteEmojiEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         message_id = snowflakes.Snowflake(payload["message_id"])
-        emoji = self._app.entity_factory.deserialize_emoji(payload["emoji"])
+        emoji_id, emoji_name = self._split_reaction_emoji(payload["emoji"])
 
         if "guild_id" in payload:
             return reaction_events.GuildReactionDeleteEmojiEvent(
                 app=self._app,
                 shard=shard,
-                emoji=emoji,
+                emoji_id=emoji_id,
+                emoji_name=emoji_name,
                 guild_id=snowflakes.Snowflake(payload["guild_id"]),
                 channel_id=channel_id,
                 message_id=message_id,
@@ -644,7 +664,8 @@ class EventFactoryImpl(event_factory.EventFactory):
         return reaction_events.DMReactionDeleteEmojiEvent(
             app=self._app,
             shard=shard,
-            emoji=emoji,
+            emoji_id=emoji_id,
+            emoji_name=emoji_name,
             channel_id=channel_id,
             message_id=message_id,
         )

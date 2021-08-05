@@ -1185,8 +1185,18 @@ class WelcomeChannel:
     description: str = attr.field(hash=False, repr=False)
     """The description shown for this channel."""
 
-    emoji: typing.Optional[emojis_.Emoji] = attr.field(default=None, kw_only=True, hash=False, repr=True)
-    """The emoji shown in the welcome screen channel if set else `builtins.None`."""
+    emoji_name: typing.Union[str, emojis_.UnicodeEmoji, None] = attr.field(
+        default=None, kw_only=True, hash=False, repr=True
+    )
+    """The emoji shown in the welcome screen channel if set to a unicode emoji.
+
+    !!! warning
+        While it may also be present for custom emojis, this is neither guaranteed
+        to be provided nor accurate.
+    """
+
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, kw_only=True, hash=False, repr=True)
+    """ID of the emoji shown in the welcome screen channel if it's set to a custom emoji."""
 
 
 @attr_extensions.with_copy

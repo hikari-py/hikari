@@ -669,13 +669,25 @@ class TestRESTClientImpl:
             (emojis.CustomEmoji(id=123, name="rooYay", is_animated=False), "rooYay:123"),
             ("👌", "👌"),
             ("\N{OK HAND SIGN}", "\N{OK HAND SIGN}"),
-            ("<:rooYay:123>", "rooYay:123"),
-            ("<a:rooYay:123>", "rooYay:123"),
-            ("rooYay:123", "rooYay:123"),
+            (emojis.UnicodeEmoji("\N{OK HAND SIGN}"), "\N{OK HAND SIGN}"),
         ],
     )
     def test__transform_emoji_to_url_format(self, rest_client, emoji, expected_return):
-        assert rest_client._transform_emoji_to_url_format(emoji) == expected_return
+        assert rest_client._transform_emoji_to_url_format(emoji, undefined.UNDEFINED) == expected_return
+
+    def test__transform_emoji_to_url_format_with_id(self, rest_client):
+        assert rest_client._transform_emoji_to_url_format("rooYay", 123) == "rooYay:123"
+
+    @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
+        "emoji",
+        [
+            emojis.CustomEmoji(id=123, name="rooYay", is_animated=False),
+            emojis.UnicodeEmoji("\N{OK HAND SIGN}"),
+        ],
+    )
+    def test__transform_emoji_to_url_format_when_id_passed_with_emoji_object(self, rest_client, emoji):
+        with pytest.raises(ValueError, match="emoji_id shouldn't be passed when an Emoji object is passed for emoji"):
+            rest_client._transform_emoji_to_url_format(emoji, 123)
 
     def test__stringify_http_message_when_body_is_None(self, rest_client):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
@@ -1818,7 +1830,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
         rest_client._transform_emoji_to_url_format = mock.Mock(return_value="rooYay:123")
 
-        await rest_client.delete_reaction(StubModel(123), StubModel(456), "<:rooYay:123>", StubModel(789))
+        await rest_client.delete_reaction(StubModel(123), StubModel(456), StubModel(789), "<:rooYay:123>")
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_delete_all_reactions(self, rest_client):

@@ -25,6 +25,7 @@ import mock
 import pytest
 
 from hikari import channels as channel_models
+from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -705,59 +706,131 @@ class TestEventFactoryImpl:
 
     def test_deserialize_message_reaction_add_event_in_guild(self, event_factory, mock_shard, mock_app):
         mock_member_payload = mock.Mock(app=mock_app)
-        mock_emoji_payload = object()
         mock_payload = {
             "member": mock_member_payload,
             "channel_id": "34123",
             "message_id": "43123123",
             "guild_id": "43949494",
-            "emoji": mock_emoji_payload,
+            "emoji": {"id": "123312", "name": "okok", "animated": True},
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
         mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_member_payload, guild_id=43949494)
         assert isinstance(event, reaction_events.GuildReactionAddEvent)
         assert event.shard is mock_shard
         assert event.channel_id == 34123
         assert event.message_id == 43123123
         assert event.member is mock_app.entity_factory.deserialize_member.return_value
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "okok"
+        assert event.emoji_id == 123312
+        assert event.is_animated is True
 
-    def test_deserialize_message_reaction_add_event_in_dm(self, event_factory, mock_shard, mock_app):
-        mock_emoji_payload = object()
+    def test_deserialize_message_reaction_add_event_in_guild_when_partial_custom(
+        self, event_factory, mock_shard, mock_app
+    ):
+        mock_member_payload = object()
         mock_payload = {
+            "member": mock_member_payload,
             "channel_id": "34123",
             "message_id": "43123123",
-            "user_id": "43949494",
-            "emoji": mock_emoji_payload,
+            "guild_id": "43949494",
+            "emoji": {"id": "123312", "name": None},
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
+        assert event.is_animated is False
+        assert event.emoji_id == 123312
+        assert event.emoji_name is None
+
+    def test_deserialize_message_reaction_add_event_in_guild_when_unicode(self, event_factory, mock_shard, mock_app):
+        mock_member_payload = object()
+        mock_payload = {
+            "member": mock_member_payload,
+            "channel_id": "34123",
+            "message_id": "43123123",
+            "guild_id": "43949494",
+            "emoji": {"name": "hi", "id": None},
+        }
+
+        event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
+
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "hi"
+        assert event.emoji_id is None
+        assert event.is_animated is False
+
+    def test_deserialize_message_reaction_add_event_in_dm(self, event_factory, mock_shard, mock_app):
+        mock_payload = {
+            "channel_id": "34123",
+            "message_id": "43123123",
+            "user_id": "43949494",
+            "emoji": {"id": "3293939", "name": "vohio", "animated": True},
+        }
+
+        event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
+
         assert isinstance(event, reaction_events.DMReactionAddEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.channel_id == 34123
         assert event.message_id == 43123123
         assert event.user_id == 43949494
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "vohio"
+        assert event.emoji_id == 3293939
+        assert event.is_animated is True
+
+    def test_deserialize_message_reaction_add_event_in_dm_when_partial_custom(
+        self, event_factory, mock_shard, mock_app
+    ):
+        mock_payload = {
+            "channel_id": "34123",
+            "message_id": "43123123",
+            "user_id": "43949494",
+            "emoji": {"id": "3293939", "name": None},
+        }
+
+        event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
+
+        assert event.emoji_name is None
+        assert event.emoji_id == 3293939
+        assert event.is_animated is False
+
+    def test_deserialize_message_reaction_add_event_in_dm_when_unicode(self, event_factory, mock_shard, mock_app):
+        mock_payload = {
+            "channel_id": "34123",
+            "message_id": "43123123",
+            "user_id": "43949494",
+            "emoji": {"name": "bye"},
+        }
+
+        event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
+
+        assert isinstance(event, reaction_events.DMReactionAddEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.channel_id == 34123
+        assert event.message_id == 43123123
+        assert event.user_id == 43949494
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "bye"
+        assert event.emoji_id is None
+        assert event.is_animated is False
 
     def test_deserialize_message_reaction_remove_event_in_guild(self, event_factory, mock_app, mock_shard):
-        mock_emoji_payload = object()
         mock_payload = {
             "user_id": "43123",
             "channel_id": "484848",
             "message_id": "43234",
             "guild_id": "383838",
-            "emoji": mock_emoji_payload,
+            "emoji": {"id": "123432", "name": "fififiif"},
         }
 
         event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
         assert isinstance(event, reaction_events.GuildReactionDeleteEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
@@ -765,22 +838,70 @@ class TestEventFactoryImpl:
         assert event.channel_id == 484848
         assert event.message_id == 43234
         assert event.guild_id == 383838
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert event.emoji_id == 123432
+        assert event.emoji_name == "fififiif"
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
 
-    def test_deserialize_message_reaction_remove_event_in_dm(self, event_factory, mock_app, mock_shard):
-        mock_emoji_payload = object()
-        mock_payload = {"user_id": "43123", "channel_id": "484848", "message_id": "43234", "emoji": mock_emoji_payload}
+    def test_deserialize_message_reaction_remove_event_in_guild_with_unicode_emoji(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {
+            "user_id": "43123",
+            "channel_id": "484848",
+            "message_id": "43234",
+            "guild_id": "383838",
+            "emoji": {"name": "o"},
+        }
 
         event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
+        assert isinstance(event, reaction_events.GuildReactionDeleteEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.user_id == 43123
+        assert event.channel_id == 484848
+        assert event.message_id == 43234
+        assert event.guild_id == 383838
+        assert event.emoji_id is None
+        assert event.emoji_name == "o"
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+
+    def test_deserialize_message_reaction_remove_event_in_dm(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "user_id": "43123",
+            "channel_id": "484848",
+            "message_id": "43234",
+            "emoji": {"id": "123123", "name": "okok"},
+        }
+
+        event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
+
         assert isinstance(event, reaction_events.DMReactionDeleteEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.user_id == 43123
         assert event.channel_id == 484848
         assert event.message_id == 43234
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "okok"
+        assert event.emoji_id == 123123
+
+    def test_deserialize_message_reaction_remove_event_in_dm_with_unicode_emoji(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"user_id": "43123", "channel_id": "484848", "message_id": "43234", "emoji": {"name": "wwww"}}
+
+        event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
+
+        assert isinstance(event, reaction_events.DMReactionDeleteEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.user_id == 43123
+        assert event.channel_id == 484848
+        assert event.message_id == 43234
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.emoji_name == "wwww"
+        assert event.emoji_id is None
 
     def test_deserialize_message_reaction_remove_all_event_in_guild(self, event_factory, mock_app, mock_shard):
         mock_payload = {"channel_id": "312312", "message_id": "34323", "guild_id": "393939"}
@@ -806,38 +927,69 @@ class TestEventFactoryImpl:
         assert event.message_id == 34323
 
     def test_deserialize_message_reaction_remove_emoji_event_in_guild(self, event_factory, mock_app, mock_shard):
-        mock_emoji_payload = object()
         mock_payload = {
             "channel_id": "123123",
             "guild_id": "423412",
             "message_id": "99999",
-            "emoji": mock_emoji_payload,
+            "emoji": {"id": "3123123", "name": "okokok"},
         }
 
         event = event_factory.deserialize_message_reaction_remove_emoji_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
         assert isinstance(event, reaction_events.GuildReactionDeleteEmojiEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.channel_id == 123123
         assert event.guild_id == 423412
         assert event.message_id == 99999
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert event.emoji_id == 3123123
+        assert event.emoji_name == "okokok"
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
 
-    def test_deserialize_message_reaction_remove_emoji_event_in_dm(self, event_factory, mock_app, mock_shard):
-        mock_emoji_payload = object()
-        mock_payload = {"channel_id": "123123", "message_id": "99999", "emoji": mock_emoji_payload}
+    def test_deserialize_message_reaction_remove_emoji_event_in_guild_with_unicode_emoji(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {
+            "channel_id": "123123",
+            "guild_id": "423412",
+            "message_id": "99999",
+            "emoji": {"name": "okokok"},
+        }
 
         event = event_factory.deserialize_message_reaction_remove_emoji_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(mock_emoji_payload)
+        assert event.emoji_name == "okokok"
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+
+    def test_deserialize_message_reaction_remove_emoji_event_in_dm(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"channel_id": "123123", "message_id": "99999", "emoji": {"id": "123321", "name": "nom"}}
+
+        event = event_factory.deserialize_message_reaction_remove_emoji_event(mock_shard, mock_payload)
+
         assert isinstance(event, reaction_events.DMReactionDeleteEmojiEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.channel_id == 123123
         assert event.message_id == 99999
-        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        assert event.emoji_id == 123321
+        assert event.emoji_name == "nom"
+        assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+
+    def test_deserialize_message_reaction_remove_emoji_event_in_dm_with_unicode_emoji(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"channel_id": "123123", "message_id": "99999", "emoji": {"name": "gg"}}
+
+        event = event_factory.deserialize_message_reaction_remove_emoji_event(mock_shard, mock_payload)
+
+        assert isinstance(event, reaction_events.DMReactionDeleteEmojiEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.channel_id == 123123
+        assert event.message_id == 99999
+        assert event.emoji_id is None
+        assert event.emoji_name == "gg"
+        assert isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
 
     ################
     # SHARD EVENTS #
