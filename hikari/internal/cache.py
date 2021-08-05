@@ -83,21 +83,6 @@ ValueT = typing.TypeVar("ValueT")
 """Type-hint for mapping values."""
 
 
-@attr.define()
-class _DataTMapping(typing.Mapping[KeyT, ValueT], typing.Generic[KeyT, ValueT, DataT]):
-    inner: typing.Mapping[KeyT, DataT]
-    builder: typing.Callable[[DataT], ValueT]
-
-    def __getitem__(self, key: KeyT) -> ValueT:
-        return self.builder(self.inner[key])
-
-    def __iter__(self) -> typing.Iterator[KeyT]:
-        return iter(self.inner)
-
-    def __len__(self) -> int:
-        return len(self.inner)
-
-
 class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     """A cache mapping view implementation used for representing cached data.
 
@@ -111,12 +96,8 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         mapping. This is used to cover the case when items stores `DataT` objects.
     """
 
-    __slots__: typing.Sequence[str] = ("_data", "_had_builder")
+    __slots__: typing.Sequence[str] = ("_data", "_builder")
 
-    _data: typing.Mapping[KeyT, ValueT]
-
-    # _had_builder is an optimization to decrease copy-s.
-    _had_builder: bool
 
     @typing.overload
     def __init__(
@@ -140,15 +121,8 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         *,
         builder: typing.Optional[typing.Callable[[DataT], ValueT]] = None,
     ) -> None:
-        # this should probably use singledispatch at some point
-        if builder:
-            # items is a typing.Mapping[KeyT, DataT]
-            self._data = _DataTMapping[KeyT, ValueT, DataT](items, builder)  # type: ignore[arg-type]
-            self._had_builder = True
-        else:
-            # items is a typing.Mapping[KeyT, ValueT]
-            self._data = items  # type: ignore[assignment]
-            self._had_builder = False
+        self._builder = builder
+        self._data = items
 
     @staticmethod
     def _copy(value: ValueT) -> ValueT:
@@ -160,10 +134,10 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
 
-        if self._had_builder:
-            return entry
+        if self._builder:
+            return self._builder(entry)  # type: ignore[arg-type]
         else:
-            return self._copy(entry)
+            return self._copy(entry)  # type: ignore[arg-type]
 
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
