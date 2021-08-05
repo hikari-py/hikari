@@ -62,6 +62,9 @@ if typing.TYPE_CHECKING:
 
     _T = typing.TypeVar("_T")
 
+_SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
+_ContainerT = typing.TypeVar("_ContainerT")
+
 
 class TypingIndicator(abc.ABC):
     """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
@@ -995,10 +998,10 @@ class CommandBuilder(abc.ABC):
         """
 
 
-class ComponentBuilder:
+class ComponentBuilder(abc.ABC):
     """Base class for all component builder classes."""
 
-    __slots__: typing.Sequence[str] = []
+    __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
     def build(self) -> data_binding.JSONObject:
@@ -1011,56 +1014,531 @@ class ComponentBuilder:
         """
 
 
-class ActionRowBuilder(ComponentBuilder):
+class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for a message button component."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def style(self) -> typing.Union[messages.ButtonStyle, int]:
+        """Button's style.
+
+        Returns
+        -------
+        typing.Union[builtins.int, hikari.messages.ButtonStyle]
+            The button's style.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+        """Emoji which should appear on this button.
+
+        Returns
+        -------
+        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+            Object or ID or raw string of the emoji which should be displayed
+            on this button if set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> undefined.UndefinedOr[str]:
+        """Text label which should appear on this button.
+
+        !!! note
+            The text label to that should appear on this button. This may be
+            up to 80 characters long.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.str]
+            Text label which should appear on this button.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_disabled(self) -> bool:
+        """Whether the button should be marked as disabled.
+
+        !!! note
+            Defaults to `builtins.False`.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the button should be marked as disabled.
+        """
+
+    @abc.abstractmethod
+    def set_emoji(
+        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType], /
+    ) -> _T:
+        """Set the emoji to display on this button.
+
+        Parameters
+        ----------
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+            Object, ID or raw string of the emoji which should be displayed on
+            this button.
+
+        Returns
+        -------
+        ButtonBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_label(self: _T, label: undefined.UndefinedOr[str], /) -> _T:
+        """Set the text label which should be displayed on this button.
+
+        Parameters
+        ----------
+        label : hikari.undefined.UndefinedOr[builtins.str]
+            The text label to show on this button.
+
+            This may be up to 80 characters long.
+
+        Returns
+        -------
+        ButtonBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_disabled(self: _T, state: bool, /) -> _T:
+        """Set whether this button should be disabled.
+
+        Parameters
+        ----------
+        state : bool
+            Whether this button should be disabled.
+
+        Returns
+        -------
+        ButtonBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_to_container(self) -> _ContainerT:
+        """Add this button to the container component it belongs to.
+
+        This is used as the finalising call during chained calls.
+
+        Returns
+        -------
+        _ContainerT
+            The container component that owns this button.
+        """
+
+
+class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
+    """Builder interface for link buttons."""
+
+    @property
+    @abc.abstractmethod
+    def url(self) -> str:
+        """Url this button should link to when pressed.
+
+        Returns
+        -------
+        builtins.str
+            Url this button should link to when pressed.
+        """
+
+
+class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
+    """Builder interface for interactive buttons."""
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying interactions with this button.
+
+        Returns
+        -------
+        builtins.str
+            Developer set custom ID used for identifying interactions with this button.
+        """
+
+
+class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuBuilderT]):
+    """Builder class for select menu options."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> str:
+        """User-facing name of the option, max 25 characters.
+
+        Returns
+        -------
+        builtins.str
+            User-facing name of the option.
+        """
+
+    @property
+    @abc.abstractmethod
+    def value(self) -> str:
+        """Developer-defined value of the option, max 100 characters.
+
+        Returns
+        -------
+        builtins.str
+            Developer-defined value of the option.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """Return the description of the option, max 50 characters.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.str]
+            Description of the option, if set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+        """Emoji which should appear on this option.
+
+        Returns
+        -------
+        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+            Object or ID or raw string of the emoji which should be displayed
+            on this option if set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_default(self) -> bool:
+        """Whether this option should be marked as selected by default.
+
+        Defaults to `builtins.False`.
+
+        Returns
+        -------
+        builtins.bool
+            Whether this option should be marked as selected by default.
+        """
+
+    @abc.abstractmethod
+    def set_description(self: _T, value: undefined.UndefinedOr[str], /) -> _T:
+        """Set the option's description.
+
+        Parameters
+        ----------
+        value : hikari.undefined.UndefinedOr[builtins.str]
+            Description to set for this option. This can be up to 50 characters
+            long.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_emoji(
+        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType], /
+    ) -> _T:
+        """Set the emoji to display on this option.
+
+        Parameters
+        ----------
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+            Object, ID or raw string of the emoji which should be displayed on
+            this option.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_default(self: _T, state: bool, /) -> _T:
+        """Set whether this option should be selected by default.
+
+        Parameters
+        ----------
+        state : builtins.bool
+            Whether this option should be selected by default.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    def add_to_menu(self) -> _SelectMenuBuilderT:
+        """Add this option to the menu component it belongs to.
+
+        This is used as the finalising call during chained calls.
+
+        Returns
+        -------
+        _SelectMenuBuilderT
+            The menu component that owns this button.
+        """
+
+
+class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for select menu options."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying interactions with this menu.
+
+        Returns
+        -------
+        builtins.str
+            Developer set custom ID used for identifying interactions with this menu.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_disabled(self) -> bool:
+        """Whether the select menu should be marked as disabled.
+
+        !!! note
+            Defaults to `builtins.False`.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the select menu should be marked as disabled.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self: _SelectMenuBuilderT) -> typing.Sequence[SelectOptionBuilder[_SelectMenuBuilderT]]:
+        """Sequence of the options set for this select menu.
+
+        Returns
+        -------
+        typing.Sequence[SelectOptionBuilder[Self]]
+            Sequence of the options set for this select menu.
+        """
+
+    @property
+    @abc.abstractmethod
+    def placeholder(self) -> undefined.UndefinedOr[str]:
+        """Return the placeholder text to display when no options are selected.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.str]
+            Placeholder text to display when no options are selected, if defined.
+        """
+
+    @property
+    @abc.abstractmethod
+    def min_values(self) -> int:
+        """Minimum number of options which must be chosen.
+
+        Defaults to 1.
+        Must be greater than or equal to `SelectMenuBuilder.min_values` and less
+        than or equal to 25.
+
+        Returns
+        -------
+        builtins.str
+            Minimum number of options which must be chosen.
+        """
+
+    @property
+    @abc.abstractmethod
+    def max_values(self) -> int:
+        """Maximum number of options which must be chosen.
+
+        Defaults to 1.
+        Must be greater than or equal to `SelectMenuBuilder.max_values` and
+        greater than or equal to 0.
+
+        Returns
+        -------
+        builtins.str
+            Maximum number of options which must be chosen.
+        """
+
+    @abc.abstractmethod
+    def add_option(self: _SelectMenuBuilderT, label: str, value: str, /) -> SelectOptionBuilder[_SelectMenuBuilderT]:
+        """Add an option to this menu.
+
+        Parameters
+        ----------
+        label : builtins.str
+            The user-facing name of this option, max 25 characters.
+        value : builtins.str
+            The developer defined value of this option, max 100 characters.
+
+        Returns
+        -------
+        SelectOptionBuilder[Self]
+            Option builder object.
+            This should be finalised by calling `SelectOptionBuilder.add_to_menu`.
+        """
+
+    @abc.abstractmethod
+    def set_is_disabled(self: _T, state: bool, /) -> _T:
+        """Set whether this option is disabled.
+
+        Defaults to `builtins.False`.
+
+        Parameters
+        ----------
+        state : builtins.bool
+            Whether this option is disabled.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_placeholder(self: _T, value: undefined.UndefinedOr[str], /) -> _T:
+        """Set place-holder text to be shown when no option is selected.
+
+        Parameters
+        ----------
+        value : hikari.undefined.UndefinedOr[builtins.str]
+            Place-holder text to be displayed when no option is selected.
+            Max 100 characters.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_min_values(self: _T, value: int, /) -> _T:
+        """Set the minimum amount of options which need to be selected for this menu.
+
+        !!! note
+            This defaults to 1 if not set and can be greater than or equal to 0
+            and less than or equal to `SelectMenuBuilder.max_values`.
+
+        Parameters
+        ----------
+        value : builtins.int
+            The minimum amount of options which need to be selected for this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_max_values(self: _T, value: int, /) -> _T:
+        """Set the maximum amount of options which need to be selected for this menu.
+
+        !!! note
+            This defaults to 1 if not set and can be less than or equal to 25
+            and greater than or equal to `SelectMenuBuilder.min_values`.
+
+        Parameters
+        ----------
+        value : builtins.int
+            The maximum amount of options which need to be selected for this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_to_container(self) -> _ContainerT:
+        """Finalise this builder by adding it to its parent container component.
+
+        Returns
+        -------
+        _ContainerT
+            The parent container component builder.
+        """
+
+
+class ActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for action row components."""
 
-    __slots__: typing.Sequence[str] = []
+    __slots__: typing.Sequence[str] = ()
 
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[ComponentBuilder]:
+        """Sequence of the component builders registered within this action row.
+
+        Returns
+        -------
+        typing.Sequence[ComponentBuilder]
+            Sequence of the component builders registered within this action row.
+        """
+
+    @typing.overload
+    @abc.abstractmethod
     def add_button(
-        self: _T,
-        style: typing.Union[int, messages.ButtonStyle],
-        *,
-        label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED,
-        custom_id: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        disabled: bool = False,
-    ) -> _T:
+        self: _T, style: messages.InteractiveButtonTypesT, custom_id: str, /
+    ) -> InteractiveButtonBuilder[_T]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_button(
+        self: _T, style: typing.Union[typing.Literal[messages.ButtonStyle.LINK], typing.Literal[5]], url: str, /
+    ) -> LinkButtonBuilder[_T]:
+        ...
+
+    @abc.abstractmethod
+    def add_button(
+        self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+    ) -> ButtonBuilder[_T]:
         """Add a button component to this action row builder.
 
         Parameters
         ----------
         style : typing.Union[builtins.int, hikari.messages.ButtonStyle]
             The button's style.
+        url_or_custom_id : builtins.str
+            For interactive button styles this is a developer-defined custom
+            identifier used to identify which button triggered component interactions.
 
-        Other Parameters
-        ----------------
-        label : builtins.str
-            The text label to that should appear on this button. This may be
-            up to 80 characters long.
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
-            Object, ID or raw string of the emoji which should be displayed on
-            this button.
-        custom_id : hikari.undefined.UndefinedOr[builtins.str]
-            A developer-defined custom identifier used to identify which button
-            triggered component interactions.
-
-            !!! warning
-                This cannot be included for URL style buttons as these do not
-                trigger interactions but ***must*** be included for other
-                button types.
-        url : hikari.undefined.UndefinedOr[builtins.str]
-            The URL a LINK-style button should redirect to.
-
-            !!! warning
-                This can only and must be included for URL style buttons.
-
-        disabled : builtins.bool
-            Whether this button should be disabled or not.
-            Defaults to `builtins.False`.
+            For Link button styles this is the URL the link button should redirect
+            to.
 
         Returns
         -------
-        ActionRowBuilder
-            Object of this action row builder.
+        ButtonBuilder[Self]
+            Button builder object.
+            `ButtonBuilder.add_to_container` should be called to finalise the
+            button.
+        """
+
+    @abc.abstractmethod
+    def add_select_menu(self: _T, custom_id: str, /) -> SelectMenuBuilder[_T]:
+        """Add a select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : builtins.str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+
+        Returns
+        -------
+        SelectMenuBuilder[Self]
+            Select menu builder object.
+            `SelectMenuBuilder.add_to_container` should be called to finalise the
+            button.
         """

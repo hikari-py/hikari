@@ -1255,6 +1255,20 @@ class EntityFactory(abc.ABC):
             The deserialized button component.
         """
 
+    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+        """Parse a raw payload from Discord into a select menu component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.ButtonComponent
+            The deserialized button component.
+        """
+
     def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
         """Parse a raw payload from Discord into a message component object.
 

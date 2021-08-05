@@ -39,6 +39,10 @@ __all__: typing.List[str] = [
     "ActionRowComponent",
     "ButtonComponent",
     "ButtonStyle",
+    "SelectMenuOption",
+    "SelectMenuComponent",
+    "InteractiveButtonTypes",
+    "InteractiveButtonTypesT",
     "ComponentType",
     "PartialComponent",
 ]
@@ -488,11 +492,22 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         As this is a container component it can never be contained within another
-        component and therefore will always be top-level.l
+        component and therefore will always be top-level.
+
+    !!! note
+        As of writing this can only contain one component type.
     """
 
     BUTTON = 2
     """A button component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    SELECT_MENU = 3
+    """A select menu component.
 
     !!! note
         This cannot be top-level and must be within a container component such
@@ -527,6 +542,40 @@ class ButtonStyle(int, enums.Enum):
         Unlike the other button styles, clicking this one will not trigger an
         interaction and custom_id shouldn't be included for this style.
     """
+
+
+InteractiveButtonTypesT = typing.Union[
+    typing.Literal[ButtonStyle.PRIMARY],
+    typing.Literal[1],
+    typing.Literal[ButtonStyle.SECONDARY],
+    typing.Literal[2],
+    typing.Literal[ButtonStyle.SUCCESS],
+    typing.Literal[3],
+    typing.Literal[ButtonStyle.DANGER],
+    typing.Literal[4],
+]
+"""Type hints of the `ButtonStyle` values which are valid for interactive buttons.
+
+The following values are valid for this:
+
+* `ButtonStyle.PRIMARY`/`1`
+* `ButtonStyle.SECONDARY`/`2`
+* `ButtonStyle.SUCCESS`/`3`
+* `ButtonStyle.DANGER`/`4`
+"""
+
+InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
+    [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
+)
+"""Set of the `ButtonType`s which are valid for interactive buttons.
+
+The following values are included in this:
+
+* `ButtonStyle.PRIMARY`
+* `ButtonStyle.SECONDARY`
+* `ButtonStyle.SUCCESS`
+* `ButtonStyle.DANGER`
+"""
 
 
 @attr.define(kw_only=True, weakref_slot=False)
@@ -572,6 +621,62 @@ class ButtonComponent(PartialComponent):
 
     is_disabled: bool = attr.field(eq=False)
     """Whether the button is disabled."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class SelectMenuOption:
+    """Represents an option for a `SelectMenuComponent`."""
+
+    label: str = attr.field()
+    """User-facing name of the option, max 25 characters."""
+
+    value: str = attr.field()
+    """Dev-defined value of the option, max 100 characters."""
+
+    description: typing.Optional[str] = attr.field()
+    """Optional description of the option, max 50 characters."""
+
+    emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
+    """Custom or unicode emoji which appears on the button."""
+
+    is_default: bool = attr.field()
+    """Whether this option will be selected by default."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class SelectMenuComponent(PartialComponent):
+    """Represents a message button component.
+
+    !!! note
+        This is an embedded component and will only ever be found within
+        top-level container components such as `ActionRowComponent`.
+    """
+
+    custom_id: str = attr.field(hash=True)
+    """Developer defined identifier for this menu (will be >= 100 characters)."""
+
+    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
+    """Sequence of up to 25 of the options set for this menu."""
+
+    placeholder: typing.Optional[str] = attr.field(eq=False)
+    """Custom placeholder text shown if nothing is selected, max 100 characters."""
+
+    min_values: int = attr.field(eq=False)
+    """The minimum amount of options which must be chosen for this menu.
+
+    This will be less than or equal to 25 and will be greater than or equal to
+    `SelectMenuComponent.max_values`.
+    """
+
+    max_values: int = attr.field(eq=False)
+    """The minimum amount of options which must be chosen for this menu.
+
+    This will be greater than or equal to 0 and will be less than or equal to
+    `SelectMenuComponent.min_values`.
+    """
+
+    is_disabled: bool = attr.field(eq=False)
+    """Whether the select menu is disabled."""
 
 
 @attr.define(weakref_slot=False)

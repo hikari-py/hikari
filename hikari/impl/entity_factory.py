@@ -241,6 +241,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self._component_type_mapping = {
             message_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
             message_models.ComponentType.BUTTON: self.deserialize_button,
+            message_models.ComponentType.SELECT_MENU: self.deserialize_select_menu,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -2009,6 +2010,33 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
             custom_id=payload.get("custom_id"),
             url=payload.get("url"),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+        options: typing.List[message_models.SelectMenuOption] = []
+        for option_payload in payload["options"]:
+            emoji = None
+            if emoji_payload := option_payload.get("emoji"):
+                emoji = self.deserialize_emoji(emoji_payload)
+
+            options.append(
+                message_models.SelectMenuOption(
+                    label=option_payload["label"],
+                    value=option_payload["value"],
+                    description=option_payload.get("description"),
+                    emoji=emoji,
+                    is_default=option_payload.get("default", False),
+                )
+            )
+
+        return message_models.SelectMenuComponent(
+            type=message_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            options=options,
+            placeholder=payload.get("placeholder"),
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
             is_disabled=payload.get("disabled", False),
         )
 

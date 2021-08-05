@@ -3418,5 +3418,5 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, no_auth=True)
 
-    def build_action_row_component(self) -> special_endpoints.ActionRowBuilder:
+    def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()

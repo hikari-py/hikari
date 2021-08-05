@@ -3531,10 +3531,73 @@ class TestEntityFactoryImpl:
         assert button.url is None
         assert button.is_disabled is False
 
-    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload):
+    @pytest.fixture()
+    def select_menu_payload(self, custom_emoji_payload):
+        return {
+            "type": 3,
+            "custom_id": "Not an ID",
+            "options": [
+                {
+                    "label": "Trans",
+                    "value": "egg yoke",
+                    "description": "queen",
+                    "emoji": custom_emoji_payload,
+                    "default": True,
+                }
+            ],
+            "placeholder": "Imagine a place",
+            "min_values": 69,
+            "max_values": 420,
+            "disabled": True,
+        }
+
+    def test_deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
+        menu = entity_factory_impl.deserialize_select_menu(select_menu_payload)
+
+        assert menu.type is message_models.ComponentType.SELECT_MENU
+        assert menu.custom_id == "Not an ID"
+
+        # SelectMenuOption
+        assert len(menu.options) == 1
+        option = menu.options[0]
+        assert option.label == "Trans"
+        assert option.value == "egg yoke"
+        assert option.description == "queen"
+        assert option.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
+        assert option.is_default is True
+        assert isinstance(option, message_models.SelectMenuOption)
+
+        assert menu.placeholder == "Imagine a place"
+        assert menu.min_values == 69
+        assert menu.max_values == 420
+        assert menu.is_disabled is True
+
+    def test_deserialize_select_menu_partial(self, entity_factory_impl):
+        menu = entity_factory_impl.deserialize_select_menu(
+            {
+                "type": 3,
+                "custom_id": "Not an ID",
+                "options": [{"label": "Trans", "value": "very trans"}],
+            }
+        )
+
+        # SelectMenuOption
+        assert len(menu.options) == 1
+        option = menu.options[0]
+        assert option.description is None
+        assert option.emoji is None
+        assert option.is_default is False
+
+        assert menu.placeholder is None
+        assert menu.min_values == 1
+        assert menu.max_values == 1
+        assert menu.is_disabled is False
+
+    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload, select_menu_payload):
         for expected_type, payload in [
             (message_models.ActionRowComponent, action_row_payload),
             (message_models.ButtonComponent, button_payload),
+            (message_models.SelectMenuComponent, select_menu_payload),
         ]:
             assert type(entity_factory_impl.deserialize_component(payload)) is expected_type
 

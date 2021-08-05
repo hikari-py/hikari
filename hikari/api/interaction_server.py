@@ -133,12 +133,14 @@ class InteractionServer(abc.ABC):
         """
 
     @typing.overload
+    @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[commands.CommandInteraction], /
     ) -> typing.Optional[ListenerT[commands.CommandInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
+    @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
@@ -163,6 +165,7 @@ class InteractionServer(abc.ABC):
         """  # noqa E501 - Line too long
 
     @typing.overload
+    @abc.abstractmethod
     def set_listener(
         self,
         interaction_type: typing.Type[commands.CommandInteraction],
@@ -174,6 +177,7 @@ class InteractionServer(abc.ABC):
         ...
 
     @typing.overload
+    @abc.abstractmethod
     def set_listener(
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],

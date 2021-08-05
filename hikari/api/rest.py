@@ -7426,7 +7426,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    def build_action_row_component(self) -> special_endpoints.ActionRowBuilder:
+    def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         """Build an action row message component for use in message create and REST calls.
 
         Returns

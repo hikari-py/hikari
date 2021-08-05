@@ -225,107 +225,6 @@ class TestCommandBuilder:
         assert result == {"name": "we are numberr", "description": "oner", "options": []}
 
 
-class Test_ButtonBuilder:
-    def test_build(self):
-        result = special_endpoints._ButtonBuilder(
-            style=messages.ButtonStyle.DANGER,
-            url=undefined.UNDEFINED,
-            emoji_id=undefined.UNDEFINED,
-            emoji_name="emoji_name",
-            label="no u",
-            custom_id="ooga booga",
-            is_disabled=True,
-        ).build()
-
-        assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.DANGER,
-            "emoji": {"name": "emoji_name"},
-            "label": "no u",
-            "custom_id": "ooga booga",
-            "disabled": True,
-        }
-
-    def test_build_without_optional_fields(self):
-        result = special_endpoints._ButtonBuilder(
-            style=messages.ButtonStyle.LINK,
-            url="OK",
-            emoji_id="123321",
-            emoji_name=undefined.UNDEFINED,
-            label=undefined.UNDEFINED,
-            custom_id=undefined.UNDEFINED,
-            is_disabled=False,
-        ).build()
-
-        assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.LINK,
-            "emoji": {"id": "123321"},
-            "disabled": False,
-            "url": "OK",
-        }
-
-    def test_validation_when_url_not_provided_for_link(self):
-        with pytest.raises(ValueError, match="url must be specified for a LINK style button"):
-            special_endpoints._ButtonBuilder(
-                emoji_id=undefined.UNDEFINED,
-                emoji_name=undefined.UNDEFINED,
-                style=messages.ButtonStyle.LINK,
-                url=undefined.UNDEFINED,
-                label=undefined.UNDEFINED,
-                custom_id=undefined.UNDEFINED,
-                is_disabled=False,
-            )
-
-    def test_validation_when_custom_id_provided_for_link(self):
-        with pytest.raises(ValueError, match="custom_id cannot be specified for a LINK style button"):
-            special_endpoints._ButtonBuilder(
-                emoji_id=undefined.UNDEFINED,
-                emoji_name=undefined.UNDEFINED,
-                style=messages.ButtonStyle.LINK,
-                url="hi",
-                label=undefined.UNDEFINED,
-                custom_id="an ID",
-                is_disabled=False,
-            )
-
-    def test_validation_when_url_provided_for_not_link(self):
-        with pytest.raises(ValueError, match="url cannot be specified for a non-LINK style button"):
-            special_endpoints._ButtonBuilder(
-                emoji_id=undefined.UNDEFINED,
-                emoji_name=undefined.UNDEFINED,
-                style=messages.ButtonStyle.DANGER,
-                url="hi",
-                label=undefined.UNDEFINED,
-                custom_id="an ID",
-                is_disabled=False,
-            )
-
-    def test_validation_when_custom_id_not_provided_for_not_link(self):
-        with pytest.raises(ValueError, match="custom_id must be specified for a non-LINK style button"):
-            special_endpoints._ButtonBuilder(
-                emoji_id=undefined.UNDEFINED,
-                emoji_name=undefined.UNDEFINED,
-                style=messages.ButtonStyle.DANGER,
-                url=undefined.UNDEFINED,
-                label=undefined.UNDEFINED,
-                custom_id=undefined.UNDEFINED,
-                is_disabled=False,
-            )
-
-    def test_validation_when_both_emoji_id_and_emoji_name(self):
-        with pytest.raises(ValueError, match="Only one of emoji_id or emoji_name may be provided"):
-            special_endpoints._ButtonBuilder(
-                emoji_id=123,
-                emoji_name="hi",
-                style=messages.ButtonStyle.DANGER,
-                url=undefined.UNDEFINED,
-                label=undefined.UNDEFINED,
-                custom_id="hi",
-                is_disabled=False,
-            )
-
-
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])
 def test__build_emoji_with_unicode_emoji(emoji):
     result = special_endpoints._build_emoji(emoji)
@@ -346,38 +245,346 @@ def test__build_emoji_when_undefined():
     assert special_endpoints._build_emoji(undefined.UNDEFINED) == (undefined.UNDEFINED, undefined.UNDEFINED)
 
 
-class TestActionRowBuilder:
-    def test_add_button(self):
-        builder = special_endpoints.ActionRowBuilder().add_button(
+class Test_ButtonBuilder:
+    @pytest.fixture()
+    def button(self):
+        return special_endpoints._ButtonBuilder(
+            container=mock.Mock(),
             style=messages.ButtonStyle.DANGER,
-            label="ok",
-            emoji=emojis.UnicodeEmoji("gat"),
-            custom_id="go home",
-            disabled=True,
+            custom_id="sfdasdasd",
+            url="hi there",
+            emoji=543123,
+            emoji_id="56554456",
+            emoji_name="hi there",
+            label="a lebel",
+            is_disabled=True,
         )
 
-        result = builder._components[0]
-        assert isinstance(result, special_endpoints._ButtonBuilder)
-        assert result._emoji_id is undefined.UNDEFINED
-        assert result._emoji_name == "gat"
-        assert result._style is messages.ButtonStyle.DANGER
-        assert result._label == "ok"
-        assert result._custom_id == "go home"
-        assert result._is_disabled is True
-        assert result._url is undefined.UNDEFINED
+    def test_style_property(self, button):
+        assert button.style is messages.ButtonStyle.DANGER
 
-    def test_add_button_for_other_fields(self):
-        builder = special_endpoints.ActionRowBuilder().add_button(style=messages.ButtonStyle.LINK, url="ggg")
+    def test_emoji_property(self, button):
+        assert button.emoji == 543123
 
-        result = builder._components[0]
-        assert isinstance(result, special_endpoints._ButtonBuilder)
-        assert result._emoji_id is undefined.UNDEFINED
-        assert result._emoji_name is undefined.UNDEFINED
-        assert result._style is messages.ButtonStyle.LINK
-        assert result._label is undefined.UNDEFINED
-        assert result._custom_id is undefined.UNDEFINED
-        assert result._is_disabled is False
-        assert result._url == "ggg"
+    @pytest.mark.parametrize("emoji", ["unicode", emojis.UnicodeEmoji("unicode")])
+    def test_set_emoji_with_unicode_emoji(self, button, emoji):
+        result = button.set_emoji(emoji)
+
+        assert result is button
+        assert button._emoji == emoji
+        assert button._emoji_id is undefined.UNDEFINED
+        assert button._emoji_name == "unicode"
+
+    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
+    def test_set_emoji_with_custom_emoji(self, button, emoji):
+        result = button.set_emoji(emoji)
+
+        assert result is button
+        assert button._emoji == emoji
+        assert button._emoji_id == "34123123"
+        assert button._emoji_name is undefined.UNDEFINED
+
+    def test_set_emoji_with_undefined(self, button):
+        result = button.set_emoji(undefined.UNDEFINED)
+
+        assert result is button
+        assert button._emoji_id is undefined.UNDEFINED
+        assert button._emoji_name is undefined.UNDEFINED
+        assert button._emoji is undefined.UNDEFINED
+
+    def test_set_label(self, button):
+        assert button.set_label("hi hi") is button
+        assert button.label == "hi hi"
+
+    def test_set_is_disabled(self, button):
+        assert button.set_is_disabled(False)
+        assert button.is_disabled is False
+
+    def test_build(self):
+        result = special_endpoints._ButtonBuilder(
+            container=object(),
+            style=messages.ButtonStyle.DANGER,
+            url=undefined.UNDEFINED,
+            emoji_id=undefined.UNDEFINED,
+            emoji_name="emoji_name",
+            label="no u",
+            custom_id="ooga booga",
+            is_disabled=True,
+        ).build()
+
+        assert result == {
+            "type": messages.ComponentType.BUTTON,
+            "style": messages.ButtonStyle.DANGER,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+            "custom_id": "ooga booga",
+            "disabled": True,
+        }
+
+    def test_build_without_optional_fields(self):
+        result = special_endpoints._ButtonBuilder(
+            container=object(),
+            style=messages.ButtonStyle.LINK,
+            url="OK",
+            emoji_id="123321",
+            emoji_name=undefined.UNDEFINED,
+            label=undefined.UNDEFINED,
+            custom_id=undefined.UNDEFINED,
+            is_disabled=False,
+        ).build()
+
+        assert result == {
+            "type": messages.ComponentType.BUTTON,
+            "style": messages.ButtonStyle.LINK,
+            "emoji": {"id": "123321"},
+            "disabled": False,
+            "url": "OK",
+        }
+
+    def test_add_to_container(self):
+        mock_container = mock.Mock()
+        button = special_endpoints._ButtonBuilder(
+            container=mock_container,
+            style=messages.ButtonStyle.DANGER,
+            url=undefined.UNDEFINED,
+            emoji_id=undefined.UNDEFINED,
+            emoji_name="emoji_name",
+            label="no u",
+            custom_id="ooga booga",
+            is_disabled=True,
+        )
+
+        assert button.add_to_container() is mock_container
+
+        mock_container.add_component.assert_called_once_with(button)
+
+
+class TestLinkButtonBuilder:
+    def test_url_property(self):
+        button = special_endpoints.LinkButtonBuilder(
+            container=object(),
+            style=messages.ButtonStyle.DANGER,
+            url="hihihihi",
+            emoji_id=undefined.UNDEFINED,
+            emoji_name="emoji_name",
+            label="no u",
+            custom_id="ooga booga",
+            is_disabled=True,
+        )
+
+        assert button.url == "hihihihi"
+
+
+class TestInteractiveButtonBuilder:
+    def test_custom_id_property(self):
+        button = special_endpoints.InteractiveButtonBuilder(
+            container=object(),
+            style=messages.ButtonStyle.DANGER,
+            url="hihihihi",
+            emoji_id=undefined.UNDEFINED,
+            emoji_name="emoji_name",
+            label="no u",
+            custom_id="ooga booga",
+            is_disabled=True,
+        )
+
+        assert button.custom_id == "ooga booga"
+
+
+class Test_SelectOptionBuilder:
+    @pytest.fixture()
+    def option(self):
+        return special_endpoints._SelectOptionBuilder(menu=mock.Mock(), label="ok", value="ok2")
+
+    def test_label_property(self, option):
+        assert option.label == "ok"
+
+    def test_value_property(self, option):
+        assert option.value == "ok2"
+
+    def test_emoji_property(self, option):
+        option._emoji = 123321
+        assert option.emoji == 123321
+
+    def test_set_description(self, option):
+        assert option.set_description("a desk") is option
+        assert option.description == "a desk"
+
+    @pytest.mark.parametrize("emoji", ["unicode", emojis.UnicodeEmoji("unicode")])
+    def test_set_emoji_with_unicode_emoji(self, option, emoji):
+        result = option.set_emoji(emoji)
+
+        assert result is option
+        assert option._emoji == emoji
+        assert option._emoji_id is undefined.UNDEFINED
+        assert option._emoji_name == "unicode"
+
+    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
+    def test_set_emoji_with_custom_emoji(self, option, emoji):
+        result = option.set_emoji(emoji)
+
+        assert result is option
+        assert option._emoji == emoji
+        assert option._emoji_id == "34123123"
+        assert option._emoji_name is undefined.UNDEFINED
+
+    def test_set_emoji_with_undefined(self, option):
+        result = option.set_emoji(undefined.UNDEFINED)
+
+        assert result is option
+        assert option._emoji_id is undefined.UNDEFINED
+        assert option._emoji_name is undefined.UNDEFINED
+        assert option._emoji is undefined.UNDEFINED
+
+    def test_set_is_default(self, option):
+        assert option.set_is_default(True) is option
+        assert option.is_default is True
+
+    def test_add_to_menu(self, option):
+        assert option.add_to_menu() is option._menu
+        option._menu.add_raw_option.assert_called_once_with(option)
+
+    def test_build_with_custom_emoji(self, option):
+        result = (
+            special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object())
+            .set_is_default(True)
+            .set_emoji(123312)
+            .set_description("very")
+            .build()
+        )
+
+        assert result == {
+            "label": "ok",
+            "value": "ok2",
+            "default": True,
+            "emoji": {"id": "123312"},
+            "description": "very",
+        }
+
+    def test_build_with_unicode_emoji(self, option):
+        result = (
+            special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object())
+            .set_is_default(True)
+            .set_emoji("hi")
+            .set_description("very")
+            .build()
+        )
+
+        assert result == {
+            "label": "ok",
+            "value": "ok2",
+            "default": True,
+            "emoji": {"name": "hi"},
+            "description": "very",
+        }
+
+    def test_build_partial(self, option):
+        result = special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object()).build()
+
+        assert result == {"label": "ok", "value": "ok2", "default": False}
+
+
+class TestSelectMenuBuilder:
+    @pytest.fixture()
+    def menu(self):
+        return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
+
+    def test_custom_id_property(self, menu):
+        assert menu.custom_id == "o2o2o2"
+
+    def test_add_add_option(self, menu):
+        option = menu.add_option("ok", "no u")
+        option.add_to_menu()
+        assert menu.options == [option]
+
+    def test_add_raw_option(self, menu):
+        mock_option = object()
+        menu.add_raw_option(mock_option)
+        assert menu.options == [mock_option]
+
+    def test_set_is_disabled(self, menu):
+        assert menu.set_is_disabled(True) is menu
+        assert menu.is_disabled is True
+
+    def test_set_placeholder(self, menu):
+        assert menu.set_placeholder("place") is menu
+        assert menu.placeholder == "place"
+
+    def test_set_min_values(self, menu):
+        assert menu.set_min_values(1) is menu
+        assert menu.min_values == 1
+
+    def test_set_max_values(self, menu):
+        assert menu.set_max_values(25) is menu
+        assert menu.max_values == 25
+
+    def test_add_to_container(self, menu):
+        assert menu.add_to_container() is menu._container
+        menu._container.add_component.assert_called_once_with(menu)
+
+    def test_build(self):
+        result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2").build()
+
+        assert result == {
+            "type": messages.ComponentType.SELECT_MENU,
+            "custom_id": "o2o2o2",
+            "options": [],
+            "disabled": False,
+            "min_values": 0,
+            "max_values": 1,
+        }
+
+    def test_build_partial(self):
+        result = (
+            special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2")
+            .set_placeholder("hi")
+            .set_min_values(22)
+            .set_max_values(53)
+            .set_is_disabled(True)
+            .add_raw_option(mock.Mock(build=mock.Mock(return_value={"hi": "OK"})))
+            .build()
+        )
+
+        assert result == {
+            "type": messages.ComponentType.SELECT_MENU,
+            "custom_id": "o2o2o2",
+            "options": [{"hi": "OK"}],
+            "placeholder": "hi",
+            "min_values": 22,
+            "max_values": 53,
+            "disabled": True,
+        }
+
+
+class TestActionRowBuilder:
+    def test_components_property(self):
+        mock_component = object()
+        row = special_endpoints.ActionRowBuilder().add_component(mock_component)
+        assert row.components == [mock_component]
+
+    def test_add_button_for_interactive(self):
+        row = special_endpoints.ActionRowBuilder()
+        button = row.add_button(messages.ButtonStyle.DANGER, "go home")
+
+        button.add_to_container()
+
+        assert row.components == [button]
+
+    def test_add_button_for_link(self):
+        row = special_endpoints.ActionRowBuilder()
+        button = row.add_button(messages.ButtonStyle.LINK, "go home")
+
+        button.add_to_container()
+
+        assert row.components == [button]
+
+    def test_add_select_menu(self):
+        row = special_endpoints.ActionRowBuilder()
+        menu = row.add_select_menu("hihihi")
+
+        menu.add_to_container()
+
+        assert row.components == [menu]
 
     def test_build(self):
         mock_component_1 = mock.Mock()

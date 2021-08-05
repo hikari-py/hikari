@@ -91,7 +91,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         to the streamer.
     """
 
-    __slots__ = (
+    __slots__: typing.Sequence[str] = (
         "__weakref__",
         "_active",
         "_event_manager",
