@@ -943,13 +943,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
 
 def _build_emoji(
-    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = undefined.UNDEFINED
+    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED
 ) -> typing.Tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
     """Build an emoji into the format accepted in buttons.
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
         The ID, object or raw string of an emoji to set on a component.
 
     Returns
@@ -957,7 +957,7 @@ def _build_emoji(
     typing.Union[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
-    """
+    """  # noqa E501 - Line too long
     # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):
@@ -975,7 +975,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _style: typing.Union[int, messages.ButtonStyle] = attr.field()
     _custom_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _url: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = attr.field(
+    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
         default=undefined.UNDEFINED
     )
     _emoji_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
@@ -988,7 +988,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         return self._style
 
     @property
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         return self._emoji
 
     @property
@@ -1000,7 +1000,9 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         return self._is_disabled
 
     def set_emoji(
-        self: _ButtonBuilderT, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType], /
+        self: _ButtonBuilderT,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType],
+        /,
     ) -> _ButtonBuilderT:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
@@ -1071,7 +1073,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
     _label: str = attr.field()
     _value: str = attr.field()
     _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType] = attr.field(
+    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
         default=undefined.UNDEFINED
     )
     _emoji_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
@@ -1091,7 +1093,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         return self._description
 
     @property
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         return self._emoji
 
     @property
@@ -1104,7 +1106,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
 
     def set_emoji(
         self: _SelectOptionBuilderT,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType],
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType],
         /,
     ) -> _SelectOptionBuilderT:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)

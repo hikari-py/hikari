@@ -1032,12 +1032,12 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         """Emoji which should appear on this button.
 
         Returns
         -------
-        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
             Object or ID or raw string of the emoji which should be displayed
             on this button if set.
         """
@@ -1073,13 +1073,13 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @abc.abstractmethod
     def set_emoji(
-        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType], /
+        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> _T:
         """Set the emoji to display on this button.
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
             Object, ID or raw string of the emoji which should be displayed on
             this button.
 
@@ -1087,7 +1087,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         -------
         ButtonBuilder
             The builder object to enable chained calls.
-        """
+        """  # noqa E501 - Line too long
 
     @abc.abstractmethod
     def set_label(self: _T, label: undefined.UndefinedOr[str], /) -> _T:
@@ -1204,12 +1204,12 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType]:
+    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         """Emoji which should appear on this option.
 
         Returns
         -------
-        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
             Object or ID or raw string of the emoji which should be displayed
             on this option if set.
         """
@@ -1245,13 +1245,13 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
     @abc.abstractmethod
     def set_emoji(
-        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emojiish, undefined.UndefinedType], /
+        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> _T:
         """Set the emoji to display on this option.
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emojiish, hikari.undefined.UndefinedType]
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
             Object, ID or raw string of the emoji which should be displayed on
             this option.
 
@@ -1259,7 +1259,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         -------
         SelectOptionBuilder
             The builder object to enable chained calls.
-        """
+        """  # noqa E501 - Line too long
 
     @abc.abstractmethod
     def set_is_default(self: _T, state: bool, /) -> _T:
