@@ -98,7 +98,6 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
     __slots__: typing.Sequence[str] = ("_data", "_builder")
 
-
     @typing.overload
     def __init__(
         self,
@@ -136,7 +135,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
         if self._builder:
             return self._builder(entry)  # type: ignore[arg-type]
-        
+
         return self._copy(entry)  # type: ignore[arg-type]
 
     def __iter__(self) -> typing.Iterator[KeyT]:
