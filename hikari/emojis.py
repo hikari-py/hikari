@@ -124,7 +124,7 @@ class UnicodeEmoji(str, Emoji):
         removed in a future release after a deprecation period.
     """
 
-    __slots__: typing.Sequence[str] = []
+    __slots__: typing.Sequence[str] = ()
 
     @property
     def name(self) -> str:
