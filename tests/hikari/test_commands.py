@@ -44,6 +44,7 @@ class TestCommand:
             description="very descript",
             options=[],
             guild_id=snowflakes.Snowflake(31231235),
+            default_permission=False,
         )
 
     @pytest.mark.asyncio()

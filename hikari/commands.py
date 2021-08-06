@@ -27,6 +27,9 @@ __all__: typing.List[str] = [
     "Command",
     "CommandChoice",
     "CommandOption",
+    "CommandPermission",
+    "CommandPermissionType",
+    "GuildCommandPermissions",
     "OptionType",
 ]
 
@@ -162,6 +165,13 @@ class Command(snowflakes.Unique):
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""
 
+    default_permission: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the command is enabled by default when added to a guild.
+
+    Defaults to `builtins.True`. This behaviour is overridden by command
+    permissions.
+    """
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
@@ -293,3 +303,46 @@ class Command(snowflakes.Unique):
         await self.app.rest.delete_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
+
+
+class CommandPermissionType(int, enums.Enum):
+    """The type of entity a command permission targets."""
+
+    ROLE = 1
+    """A command permission which toggles access for a specific role."""
+
+    USER = 2
+    """A command permission which toggles access for a specific user."""
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class CommandPermission:
+    """Representation of a permission which enables or disables a command for a user or role."""
+
+    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
+    """Id of the role or user this permission changes the permission's state for."""
+
+    type: typing.Union[CommandPermissionType, int] = attr.field(converter=CommandPermissionType)
+    """The entity this permission overrides the command's state for."""
+
+    is_enabled: bool = attr.field()
+    """Whether this permission marks the relevant command as enabled or disabled."""
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildCommandPermissions:
+    """Representation of the permissions set for a command within a guild."""
+
+    application_id: snowflakes.Snowflake = attr.field()
+    """ID of the application the relevant command belongs to."""
+
+    command_id: snowflakes.Snowflake = attr.field()
+    """ID of the command these permissions are for."""
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    """ID of the guild these permissions are in."""
+
+    permissions: typing.Sequence[CommandPermission] = attr.field()
+    """Sequence of up to (and including) 10 of the command permissions set in this guild."""

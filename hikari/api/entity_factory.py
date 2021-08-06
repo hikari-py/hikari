@@ -989,6 +989,38 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_command_permissions(
+        self, payload: data_binding.JSONObject
+    ) -> commands.GuildCommandPermissions:
+        """Parse a raw payload from Discord into guild command permissions object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.commands.GuildCommandPermissions
+            The deserialized guild command permissions object.
+        """
+
+    @abc.abstractmethod
+    def serialize_command_permission(self, permission: commands.CommandPermission) -> data_binding.JSONObject:
+        """Serialize a command permission object to a json serializable dict.
+
+        Parameters
+        ----------
+        permission: hikari.commands.CommandPermission
+            The command permission object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the command permission.
+        """
+
+    @abc.abstractmethod
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a partial interaction object.
 

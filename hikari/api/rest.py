@@ -6232,6 +6232,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.Command:
         r"""Create an application command.
 
@@ -6253,6 +6254,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a global command rather than a guild specific one.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
+        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be enabled by default (without any
+            permissions) when added to a guild.
+
+            Defaults to `builtins.True`.
 
         Returns
         -------
@@ -6435,6 +6441,194 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.ForbiddenError
             If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    async def fetch_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        """Fetch the command permissions registered in a guild.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to fetch the command permissions for.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to fetch the command permissions for.
+
+        Returns
+        -------
+        typing.Sequence[hikari.commands.GuildCommandPermissions]
+            Sequence of the guild command permissions set for the specified guild.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    async def fetch_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+    ) -> commands.GuildCommandPermissions:
+        """Fetch the permissions registered for a specific command in a guild.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to fetch the command permissions for.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to fetch the command permissions for.
+
+        Returns
+        -------
+        hikari.commands.GuildCommandPermissions
+            Object of the command permissions set for the specified command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    async def set_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        permissions: typing.Mapping[
+            snowflakes.SnowflakeishOr[commands.Command], typing.Sequence[commands.CommandPermission]
+        ],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        """Set permissions in a guild for multiple commands.
+
+        !!! note
+            This overwrites any previously set permissions for the specified
+            commands.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to set the command permissions for.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to set the command permissions for.
+        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.Command], typing.Sequence[hikari.commands.CommandPermission]]
+            Mapping of objects and/or IDs of commands to sequences of the commands
+            to set for the specified guild.
+
+        Returns
+        -------
+        typing.Sequence[hikari.commands.GuildCommandPermissions]
+            Sequence of the set guild command permissions.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    async def set_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+        permissions: typing.Sequence[commands.CommandPermission],
+    ) -> commands.GuildCommandPermissions:
+        """Set permissions for a specific command.
+
+        !!! note
+            This overwrites any previously set permissions.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to set the command permissions for.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to set the command permissions for.
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+            Object or ID of the command to set the permissions for.
+        permissions : typing.Sequence[hikari.commands.CommandPermission]
+            Object of the permissions to set.
+
+        Returns
+        -------
+        hikari.commands.GuildCommandPermissions
+            Object of the set permissions.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
         hikari.errors.NotFoundError
             If the provided application or command isn't found.
         hikari.errors.UnauthorizedError

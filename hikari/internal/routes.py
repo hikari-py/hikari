@@ -480,6 +480,19 @@ DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
     DELETE, "/applications/{application}/guilds/{guild}/commands/{command}"
 )
 
+GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
+    GET, "/applications/{application}/guilds/{guild}/commands/permissions"
+)
+GET_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
+    GET, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
+)
+PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
+    PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
+)
+PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
+    PUT, "/applications/{application}/guilds/{guild}/commands/permissions"
+)
+
 # Interactions
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")

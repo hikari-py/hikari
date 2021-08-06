@@ -3537,6 +3537,67 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_fetch_application_guild_commands_permissions(self, rest_client):
+        expected_route = routes.GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321431, guild=54123)
+        mock_command_payload = object()
+        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
+
+        result = await rest_client.fetch_application_guild_commands_permissions(321431, 54123)
+
+        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_application_command_permissions(self, rest_client):
+        expected_route = routes.GET_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=543421, guild=123321321, command=543123
+        )
+        mock_command_payload = {"id": "9393939393"}
+        rest_client._request = mock.AsyncMock(return_value=mock_command_payload)
+
+        result = await rest_client.fetch_application_command_permissions(543421, 123321321, 543123)
+
+        assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_set_application_guild_commands_permissions(self, rest_client):
+        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321123, guild=542123)
+        mock_command_payload = object()
+        mock_permission = object()
+        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
+
+        result = await rest_client.set_application_guild_commands_permissions(
+            321123, 542123, {564123123: [mock_permission]}
+        )
+
+        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
+        rest_client._entity_factory.serialize_command_permission.assert_called_once_with(mock_permission)
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json=[
+                {
+                    "id": "564123123",
+                    "permissions": [rest_client._entity_factory.serialize_command_permission.return_value],
+                }
+            ],
+        )
+
+    async def test_set_application_command_permissions(self, rest_client):
+        route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(application=2321, guild=431, command=666666)
+        mock_permission = object()
+        mock_command_payload = {"id": "29292929"}
+        rest_client._request = mock.AsyncMock(return_value=mock_command_payload)
+
+        result = await rest_client.set_application_command_permissions(2321, 431, 666666, [mock_permission])
+
+        assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(
+            route, json={"permissions": [rest_client._entity_factory.serialize_command_permission.return_value]}
+        )
+
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
 

@@ -2698,6 +2698,7 @@ class TestEntityFactoryImpl:
             "guild_id": "49949494",
             "name": "good name",
             "description": "very good description",
+            "default_permission": False,
             "options": [
                 {
                     "type": 1,
@@ -2725,6 +2726,7 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.name == "good name"
         assert command.description == "very good description"
+        assert command.default_permission is False
 
         # CommandOption
         assert len(command.options) == 1
@@ -2768,7 +2770,7 @@ class TestEntityFactoryImpl:
 
         assert command.guild_id == 123123
 
-    def test_deserialize_command_with_null_values(self, entity_factory_impl):
+    def test_deserialize_command_with_null_and_unset_values(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
             "application_id": "12354123",
@@ -2781,7 +2783,41 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
+        assert command.default_permission is True
         assert isinstance(command, commands.Command)
+
+    @pytest.fixture()
+    def guild_command_permissions_payload(self):
+        return {
+            "id": "123321",
+            "application_id": "431321123",
+            "guild_id": "323223322332",
+            "permissions": [{"id": "22222", "type": 1, "permission": True}],
+        }
+
+    def test_deserialize_guild_command_permissions(self, entity_factory_impl, guild_command_permissions_payload):
+        command = entity_factory_impl.deserialize_guild_command_permissions(guild_command_permissions_payload)
+
+        assert command.command_id == 123321
+        assert command.application_id == 431321123
+        assert command.guild_id == 323223322332
+
+        # CommandPermission
+        assert len(command.permissions) == 1
+        permission = command.permissions[0]
+        assert permission.id == 22222
+        assert permission.type is commands.CommandPermissionType.ROLE
+        assert permission.is_enabled is True
+        assert isinstance(permission, commands.CommandPermission)
+
+    def test_serialize_command_permission(self, entity_factory_impl):
+        command = commands.CommandPermission(type=commands.CommandPermissionType.ROLE, is_enabled=True, id=123321)
+
+        assert entity_factory_impl.serialize_command_permission(command) == {
+            "type": 1,
+            "id": "123321",
+            "permission": True,
+        }
 
     @pytest.fixture()
     def partial_interaction_payload(self):
