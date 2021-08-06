@@ -57,7 +57,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import channels
+    from hikari import channels as channels_
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import users as users_
@@ -308,7 +308,7 @@ class Mentions:
     role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.field()
     """IDs of roles that were notified by their mention in the message."""
 
-    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels.PartialChannel]] = attr.field()
+    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.field()
     """Channel mentions that reference channels in the target crosspost's guild.
 
     If the message is not crossposted, this will always be empty.
@@ -704,7 +704,7 @@ class PartialMessage(snowflakes.Unique):
         guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
-    async def fetch_channel(self) -> channels.PartialChannel:
+    async def fetch_channel(self) -> channels_.PartialChannel:
         """Fetch the channel this message was created in.
 
         Returns
