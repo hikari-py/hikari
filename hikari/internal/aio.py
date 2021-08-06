@@ -37,6 +37,10 @@ import asyncio
 import inspect
 import typing
 
+if typing.TYPE_CHECKING:
+    # typing_extensions is a dependency of mypy, and pyright vendors it.
+    from typing_extensions import TypeGuard
+
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
 
@@ -84,12 +88,12 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
 # ... so I guess I will have to determine this some other way.
 
 
-def is_async_iterator(obj: typing.Any) -> bool:
+def is_async_iterator(obj: typing.Any) -> TypeGuard[typing.AsyncIterator[object]]:
     """Determine if the object is an async iterator or not."""
     return asyncio.iscoroutinefunction(getattr(obj, "__anext__", None))
 
 
-def is_async_iterable(obj: typing.Any) -> bool:
+def is_async_iterable(obj: typing.Any) -> TypeGuard[typing.AsyncIterable[object]]:
     """Determine if the object is an async iterable or not."""
     attr = getattr(obj, "__aiter__", None)
     return inspect.isfunction(attr) or inspect.ismethod(attr)

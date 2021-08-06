@@ -53,9 +53,19 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @typing.overload
     @abc.abstractmethod
-    def get_item_at(self, index: int) -> _ValueT:
-        """Get an entry in the view at position `index`."""
+    def get_item_at(self, index: int, /) -> _ValueT:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_item_at(self, index: slice, /) -> typing.Sequence[_ValueT]:
+        ...
+
+    @abc.abstractmethod
+    def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[_ValueT, typing.Sequence[_ValueT]]:
+        ...
 
     @abc.abstractmethod
     def iterator(self) -> iterators.LazyIterator[_ValueT]:
