@@ -845,7 +845,14 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
         if self._embeds:
-            data["embeds"] = [entity_factory.serialize_embed(embed) for embed in self._embeds]
+            embeds: typing.List[data_binding.JSONObject] = []
+            for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
+                if attachments:
+                    raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
+
+                embeds.append(embed)
+
+            data["embeds"] = embeds
 
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)

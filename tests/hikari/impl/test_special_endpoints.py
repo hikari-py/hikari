@@ -121,6 +121,8 @@ class TestInteractionMessageBuilder:
     def test_build(self):
         mock_entity_factory = mock.Mock()
         mock_embed = object()
+        mock_serialized_embed = object()
+        mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
             .add_embed(mock_embed)
@@ -139,12 +141,24 @@ class TestInteractionMessageBuilder:
             "type": base_interactions.ResponseType.MESSAGE_CREATE,
             "data": {
                 "content": "a content",
-                "embeds": [mock_entity_factory.serialize_embed.return_value],
+                "embeds": [mock_serialized_embed],
                 "flags": 2323,
                 "tts": True,
                 "allowed_mentions": {"parse": [], "users": ["123"], "roles": ["54234"]},
             },
         }
+
+    def test_build_handles_attachments(self):
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.serialize_embed.return_value = (object(), [object()])
+        builder = special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE).add_embed(
+            object()
+        )
+
+        with pytest.raises(
+            ValueError, match="Cannot send an embed with attachments in a slash command's initial response"
+        ):
+            builder.build(mock_entity_factory)
 
 
 class TestCommandBuilder:
