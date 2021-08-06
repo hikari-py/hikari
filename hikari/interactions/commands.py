@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import messages
     from hikari import permissions as permissions_
-    from hikari import users
+    from hikari import users as users_
     from hikari.api import special_endpoints
 
 
@@ -352,7 +352,7 @@ class InteractionChannel(channels.PartialChannel):
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
+    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
     members: typing.Mapping[snowflakes.Snowflake, bases.InteractionMember] = attr.field(repr=False)
@@ -419,7 +419,7 @@ class CommandInteraction(bases.PartialInteraction):
         contains the member's permissions in the current channel.
     """
 
-    user: users.User = attr.field(eq=False, hash=False, repr=True)
+    user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -524,7 +524,7 @@ class CommandInteraction(bases.PartialInteraction):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
@@ -642,7 +642,7 @@ class CommandInteraction(bases.PartialInteraction):
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
