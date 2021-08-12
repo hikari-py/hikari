@@ -278,28 +278,37 @@ class TestGatewayBot:
         bot._check_if_alive()
 
     @pytest.mark.asyncio()
-    async def test_close_when_already_closed(self, bot, event_manager):
+    async def test_close(self, bot):
+        with mock.patch.object(bot_impl.GatewayBot, "_close") as internal_close:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
+                await bot.close()
+
+        check_if_alive.assert_called_once_with()
+        internal_close.assert_awaited_once_with()
+
+    @pytest.mark.asyncio()
+    async def test__close_when_already_closed(self, bot):
         bot._closing_event = None
         bot._closed_event = None
         bot._is_alive = True
 
-        await bot.close()
+        await bot._close()
 
         assert bot._is_alive is True
 
     @pytest.mark.asyncio()
-    async def test_close_when_already_closing(self, bot, event_manager):
+    async def test__close_when_already_closing(self, bot):
         bot._closing_event = object()
         bot._closed_event = mock.AsyncMock()
         bot._is_alive = True
 
-        await bot.close()
+        await bot._close()
 
         bot._closed_event.wait.assert_awaited_once_with()
         assert bot._is_alive is True
 
     @pytest.mark.asyncio()
-    async def test_close(self, bot, event_manager, event_factory, rest, voice, cache):
+    async def test__close(self, bot, event_manager, event_factory, rest, voice, cache):
         def null_call(arg):
             return arg
 
@@ -344,7 +353,7 @@ class TestGatewayBot:
         bot._shards = {0: shard0, 1: shard1, 2: shard2}
 
         with stack:
-            await bot.close()
+            await bot._close()
 
         # Events and args
         closing_event.set.assert_called_once_with()
@@ -473,7 +482,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -485,7 +494,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         coroutine_tracking_depth = stack.enter_context(
             mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError)
@@ -500,7 +509,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         signal_function = stack.enter_context(
             mock.patch.object(signal, "signal", side_effect=[None, AttributeError, None, AttributeError])
@@ -526,7 +535,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=raise_signal))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl, "_LOGGER", isEnabledFor=mock.Mock(return_value=logging)))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
         set_close_flag = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_set_close_flag", new=mock.Mock()))
@@ -543,7 +552,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         executor = mock.Mock()
         bot._executor = executor
@@ -558,7 +567,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         destroy_loop = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_destroy_loop"))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
@@ -581,7 +590,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         start_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         join_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        close_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "close", new=mock.Mock()))
+        close_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -768,7 +777,7 @@ class TestGatewayBot:
 
     @pytest.mark.asyncio()
     async def test_set_close_flag(self, bot):
-        with mock.patch.object(bot_impl.GatewayBot, "close") as close:
+        with mock.patch.object(bot_impl.GatewayBot, "_close") as close:
             await bot._set_close_flag("Terminated", 15)
 
         close.assert_awaited_once_with()
