@@ -64,11 +64,18 @@ class VoiceComponent(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def disconnect(self) -> None:
-        """Shut down all connections, waiting for them to terminate.
+    async def disconnect(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
+        """Disconnect from a given guild.
 
-        This will not close the voice component.
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
+            The guild to disconnect from.
         """
+
+    @abc.abstractmethod
+    async def disconnect_all(self) -> None:
+        """Disconnect all the active voice connections."""
 
     @abc.abstractmethod
     async def connect_to(

@@ -77,22 +77,35 @@ class VoiceComponentImpl(voice.VoiceComponent):
         if self._is_closing:
             raise errors.ComponentStateConflictError("Component cannot be used while it's closing")
 
-    async def _disconnect(self) -> None:
-        if self._connections:
-            _LOGGER.info("shutting down %s voice connection(s)", len(self._connections))
-            # We rely on the assumption that _on_connection_close will be called here rather than explicitly
-            # emptying self._connections.
-            await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
-
-    async def disconnect(self) -> None:
+    async def disconnect(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         self._check_if_alive()
-        await self._disconnect()
+        guild_id = snowflakes.Snowflake(guild)
+
+        if guild_id not in self._connections:
+            raise errors.VoiceError("This application doesn't have any active voice connection in this server")
+
+        conn = self._connections[guild_id]
+        # We rely on the assumption that _on_connection_close will be called here rather than explicitly
+        # to remove the connection from self._connections.
+        await conn.disconnect()
+
+    async def _disconnect_all(self) -> None:
+        # We rely on the assumption that _on_connection_close will be called here rather than explicitly
+        # emptying self._connections.
+        await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
+
+    async def disconnect_all(self) -> None:
+        await self._disconnect_all()
 
     async def close(self) -> None:
         self._check_if_alive()
         self._is_closing = True
         self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
-        await self._disconnect()
+
+        if self._connections:
+            _LOGGER.info("shutting down %s active voice connection(s)", len(self._connections))
+            await self._disconnect_all()
+
         self._is_alive = False
         self._is_closing = False
 
@@ -116,34 +129,27 @@ class VoiceComponentImpl(voice.VoiceComponent):
     ) -> _VoiceConnectionT:
         self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
-        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
 
         if guild_id in self._connections:
             raise errors.VoiceError(
-                "The bot is already in a voice channel for this guild. Close the other connection first, or "
-                "request that the application moves to the new voice channel instead."
+                "Already in a voice channel for that guild. Disconnect before attempting to connect again"
             )
 
+        shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         try:
             shard = self._app.shards[shard_id]
         except KeyError:
             raise errors.VoiceError(
-                f"Cannot connect to shard {shard_id}, it is not present in this application."
+                f"Cannot connect to shard {shard_id} as it is not present in this application"
             ) from None
-
-        if not shard.is_alive:
-            # Not sure if I can think of a situation this will happen in... really.
-            # Unless the user sleeps for a bit then tries to connect, and in the mean time the
-            # shard has disconnected.
-            raise errors.VoiceError(f"Cannot connect to shard {shard_id}, the shard is not online.")
-
-        _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
         user = self._app.cache.get_me()
         if not user:
             user = await self._app.rest.fetch_my_user()
 
-        await asyncio.wait_for(shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=5.0)
+        _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
+
+        await shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute)
 
         _LOGGER.log(
             ux.TRACE,
@@ -153,22 +159,19 @@ class VoiceComponentImpl(voice.VoiceComponent):
             shard_id,
         )
 
-        state_event, server_event = await asyncio.wait_for(
-            asyncio.gather(
-                # Voice state update:
-                self._app.event_manager.wait_for(
-                    voice_events.VoiceStateUpdateEvent,
-                    timeout=None,
-                    predicate=self._init_state_update_predicate(guild_id, user.id),
-                ),
-                # Server update:
-                self._app.event_manager.wait_for(
-                    voice_events.VoiceServerUpdateEvent,
-                    timeout=None,
-                    predicate=self._init_server_update_predicate(guild_id),
-                ),
+        state_event, server_event = await asyncio.gather(
+            # Voice state update:
+            self._app.event_manager.wait_for(
+                voice_events.VoiceStateUpdateEvent,
+                timeout=None,
+                predicate=self._init_state_update_predicate(guild_id, user.id),
             ),
-            timeout=10.0,
+            # Server update:
+            self._app.event_manager.wait_for(
+                voice_events.VoiceServerUpdateEvent,
+                timeout=None,
+                predicate=self._init_server_update_predicate(guild_id),
+            ),
         )
 
         # We will never receive the first endpoint as `None`
@@ -201,7 +204,11 @@ class VoiceComponentImpl(voice.VoiceComponent):
             _LOGGER.debug(
                 "error occurred in initialization, leaving voice channel %s in guild %s again", channel, guild
             )
-            await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
+            try:
+                await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
+            except asyncio.TimeoutError:
+                pass
+
             raise
 
         self._connections[guild_id] = voice_connection
