@@ -360,7 +360,9 @@ class GatewayBot(traits.GatewayBotAware):
     async def close(self) -> None:
         """Kill the application by shutting all components down."""
         self._check_if_alive()
+        await self._close()
 
+    async def _close(self) -> None:
         if self._closed_event:  # Closing is in progress from another call, wait for that to complete.
             await self._closed_event.wait()
             return
@@ -658,7 +660,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         finally:
             try:
-                loop.run_until_complete(self.close())
+                loop.run_until_complete(self._close())
 
                 if close_passed_executor and self._executor is not None:
                     _LOGGER.debug("shutting down executor %s", self._executor)
@@ -829,7 +831,7 @@ class GatewayBot(traits.GatewayBotAware):
                     # If any shards stopped silently, we should close.
                     if any(not s.is_alive for s in self._shards.values()):
                         _LOGGER.warning("one of the shards has been manually shut down (no error), will now shut down")
-                        await self.close()
+                        await self._close()
                         return
                     # new window starts.
 
@@ -946,7 +948,7 @@ class GatewayBot(traits.GatewayBotAware):
         # solution.
         _LOGGER.debug("received interrupt %s (%s), will start shutting down shortly", signame, signum)
 
-        await self.close()
+        await self._close()
 
     async def _start_one_shard(
         self,
