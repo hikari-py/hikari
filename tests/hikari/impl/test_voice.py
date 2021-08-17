@@ -69,9 +69,11 @@ class TestVoiceComponentImpl:
             snowflakes.Snowflake(123): mock_connection,
             snowflakes.Snowflake(5324): mock_connection_2,
         }
+        voice_client._check_if_alive = mock.Mock()
 
         await voice_client.disconnect(123)
 
+        voice_client._check_if_alive.assert_called_once_with()
         mock_connection.disconnect.assert_awaited_once_with()
         mock_connection_2.disconnect.assert_not_called()
 
@@ -101,18 +103,22 @@ class TestVoiceComponentImpl:
     @pytest.mark.asyncio()
     async def test_disconnect_all(self, voice_client):
         voice_client._disconnect_all = mock.AsyncMock()
+        voice_client._check_if_alive = mock.Mock()
 
         await voice_client.disconnect_all()
 
+        voice_client._check_if_alive.assert_called_once_with()
         voice_client._disconnect_all.assert_awaited_once_with()
 
     @pytest.mark.asyncio()
     async def test_close(self, voice_client, mock_app):
         voice_client._disconnect_all = mock.AsyncMock()
         voice_client._connections = {123: None}
+        voice_client._check_if_alive = mock.Mock()
 
         await voice_client.close()
 
+        voice_client._check_if_alive.assert_called_once_with()
         mock_app.event_manager.unsubscribe.assert_called_once_with(
             voice_events.VoiceEvent, voice_client._on_voice_event
         )
@@ -146,9 +152,11 @@ class TestVoiceComponentImpl:
         mock_app.shard_count = 42
         mock_app.shards = {0: mock_shard}
         mock_connection_type = mock.AsyncMock()
+        voice_client._check_if_alive = mock.Mock()
 
         result = await voice_client.connect_to(123, 4532, mock_connection_type, deaf=False, mute=True)
 
+        voice_client._check_if_alive.assert_called_once_with()
         mock_app.event_manager.wait_for.assert_has_awaits(
             [
                 mock.call(
