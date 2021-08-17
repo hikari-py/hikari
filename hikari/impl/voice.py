@@ -95,6 +95,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
     async def disconnect_all(self) -> None:
+        self._check_if_alive()
         await self._disconnect_all()
 
     async def close(self) -> None:
