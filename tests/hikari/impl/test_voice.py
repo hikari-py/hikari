@@ -24,6 +24,7 @@ import mock
 import pytest
 
 from hikari import errors
+from hikari import snowflakes
 from hikari.events import voice_events
 from hikari.impl import voice
 from tests.hikari import hikari_test_helpers
@@ -64,22 +65,58 @@ class TestVoiceComponentImpl:
     async def test_disconnect(self, voice_client):
         mock_connection = mock.AsyncMock()
         mock_connection_2 = mock.AsyncMock()
+        voice_client._connections = {
+            snowflakes.Snowflake(123): mock_connection,
+            snowflakes.Snowflake(5324): mock_connection_2,
+        }
+
+        await voice_client.disconnect(123)
+
+        mock_connection.disconnect.assert_awaited_once_with()
+        mock_connection_2.disconnect.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_disconnect_when_guild_id_not_in_connections(self, voice_client):
+        mock_connection = mock.AsyncMock()
+        mock_connection_2 = mock.AsyncMock()
         voice_client._connections = {123: mock_connection, 5324: mock_connection_2}
 
-        await voice_client.disconnect()
+        with pytest.raises(errors.VoiceError):
+            await voice_client.disconnect(1234567890)
+
+        mock_connection.disconnect.assert_not_called()
+        mock_connection_2.disconnect.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test__disconnect_all(self, voice_client):
+        mock_connection = mock.AsyncMock()
+        mock_connection_2 = mock.AsyncMock()
+        voice_client._connections = {123: mock_connection, 5324: mock_connection_2}
+
+        await voice_client._disconnect_all()
 
         mock_connection.disconnect.assert_awaited_once_with()
         mock_connection_2.disconnect.assert_awaited_once_with()
 
     @pytest.mark.asyncio()
+    async def test_disconnect_all(self, voice_client):
+        voice_client._disconnect_all = mock.AsyncMock()
+
+        await voice_client.disconnect_all()
+
+        voice_client._disconnect_all.assert_awaited_once_with()
+
+    @pytest.mark.asyncio()
     async def test_close(self, voice_client, mock_app):
-        voice_client._disconnect = mock.AsyncMock()
+        voice_client._disconnect_all = mock.AsyncMock()
+        voice_client._connections = {123: None}
+
         await voice_client.close()
 
         mock_app.event_manager.unsubscribe.assert_called_once_with(
             voice_events.VoiceEvent, voice_client._on_voice_event
         )
-        voice_client._disconnect.assert_awaited_once_with()
+        voice_client._disconnect_all.assert_awaited_once_with()
         assert voice_client._is_alive is False
         assert voice_client._is_closing is False
 
@@ -178,13 +215,11 @@ class TestVoiceComponentImpl:
 
     @pytest.mark.asyncio()
     async def test_connect_to_when_connection_already_present(self, voice_client, mock_app):
-        mock_app.shard_count = 42
-        voice_client._connections = {123: object()}
+        voice_client._connections = {snowflakes.Snowflake(123): object()}
 
         with pytest.raises(
             errors.VoiceError,
-            match="The bot is already in a voice channel for this guild. Close the other connection first, or "
-            "request that the application moves to the new voice channel instead.",
+            match="Already in a voice channel for that guild. Disconnect before attempting to connect again",
         ):
             await voice_client.connect_to(123, 4532, object())
 
@@ -194,17 +229,8 @@ class TestVoiceComponentImpl:
         mock_app.shards = {}
 
         with pytest.raises(
-            errors.VoiceError, match="Cannot connect to shard 0, it is not present in this application."
+            errors.VoiceError, match="Cannot connect to shard 0 as it is not present in this application"
         ):
-            await voice_client.connect_to(123, 4532, object())
-
-    @pytest.mark.asyncio()
-    async def test_connect_to_for_dead_shard(self, voice_client, mock_app):
-        mock_shard = mock.Mock(is_alive=False)
-        mock_app.shard_count = 42
-        mock_app.shards = {0: mock_shard}
-
-        with pytest.raises(errors.VoiceError, match="Cannot connect to shard 0, the shard is not online."):
             await voice_client.connect_to(123, 4532, object())
 
     @pytest.mark.asyncio()
