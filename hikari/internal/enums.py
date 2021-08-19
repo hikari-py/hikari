@@ -63,9 +63,11 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
             super().__setitem__(name, value)
             return
 
-        if hasattr(value, "__get__") or hasattr(value, "__set__") or hasattr(value, "__del__"):
-            super().__setitem__(name, value)
-            return
+        methods: typing.List[str] = ["__get__", "__setitem__", "__del__"]
+        for method in methods:
+            if hasattr(value, method):
+                super().__setitem__(name, value)
+                return
 
         if not isinstance(value, self.base):
             raise TypeError(f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}")
