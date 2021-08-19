@@ -63,7 +63,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
             super().__setitem__(name, value)
             return
 
-        methods: typing.List[str] = ["__get__", "__setitem__", "__del__"]
+        methods: typing.List[str] = ["__get__", "__set__", "__del__"]
         for method in methods:
             if hasattr(value, method):
                 super().__setitem__(name, value)
