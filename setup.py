@@ -19,14 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import os
 import re
 import types
 
 import setuptools
-
-name = "hikari"
 
 
 def long_description():
@@ -35,7 +32,7 @@ def long_description():
 
 
 def parse_meta():
-    with open(os.path.join(name, "_about.py")) as fp:
+    with open(os.path.join("hikari", "_about.py")) as fp:
         code = fp.read()
 
     token_pattern = re.compile(r"^__(?P<key>\w+)?__\s*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M)
@@ -58,7 +55,7 @@ def parse_requirements_file(path):
 metadata = parse_meta()
 
 setuptools.setup(
-    name=name,
+    name="hikari",
     version=metadata.version,
     description="A sane Discord API for Python 3 built on asyncio and good intentions",
     long_description=long_description(),
@@ -68,6 +65,16 @@ setuptools.setup(
     maintainer_email=metadata.email,
     license=metadata.license,
     url=metadata.url,
+    python_requires=">=3.8.0,<3.11",
+    packages=setuptools.find_namespace_packages(include=["hikari*"]),
+    entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
+    install_requires=parse_requirements_file("requirements.txt"),
+    extras_require={
+        "speedups": parse_requirements_file("speedup-requirements.txt"),
+    },
+    test_suite="tests",
+    include_package_data=True,
+    zip_safe=False,
     project_urls={
         "Documentation": metadata.docs,
         "Source (GitHub)": metadata.url,
@@ -75,15 +82,6 @@ setuptools.setup(
         "Issue Tracker": metadata.issue_tracker,
         "CI": metadata.ci,
     },
-    packages=setuptools.find_namespace_packages(include=[name + "*"]),
-    python_requires=">=3.8.0,<3.11",
-    install_requires=parse_requirements_file("requirements.txt"),
-    extras_require={
-        "speedups": parse_requirements_file("speedup-requirements.txt"),
-    },
-    include_package_data=True,
-    test_suite="tests",
-    zip_safe=False,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
@@ -103,6 +101,4 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Typing :: Typed",
     ],
-    entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
-    provides="hikari",
 )
