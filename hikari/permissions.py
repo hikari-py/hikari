@@ -270,6 +270,9 @@ class Permissions(enums.Flag):
     USE_PRIVATE_THREADS = 1 << 36
     """Allows for creating and participating in private threads."""
 
+    def has(self, permission: Permissions) -> bool:
+        return bool(self & permission)
+
     @classmethod
     def all_permissions(cls) -> Permissions:
         """Get an instance of `Permissions` with all the known permissions.
