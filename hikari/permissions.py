@@ -271,6 +271,18 @@ class Permissions(enums.Flag):
     """Allows for creating and participating in private threads."""
 
     def has(self, permission: Permissions) -> bool:
+        """Check if this permissions has another permission.
+
+        Parameters
+        ----------
+        permission : Permissions
+            The permission to check.
+
+        Returns
+        -------
+        bool
+            Whether this permissions instance has the permission.
+        """
         return bool(self & permission)
 
     @classmethod
