@@ -29,7 +29,6 @@ import typing
 
 import attr
 
-from hikari import channels
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -37,7 +36,6 @@ from hikari.internal import attr_extensions
 from hikari.stage_instances import StageInstance
 
 if typing.TYPE_CHECKING:
-    from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
     from hikari.api import shard as gateway_shard
@@ -51,29 +49,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
-
-    @property
-    @abc.abstractmethod
-    def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel that relates to this event.
-        """
-
-    @property
-    @abc.abstractmethod
-    def stage_id(self) -> snowflakes.Snowflake:
+    def id(self) -> snowflakes.Snowflake:
         """ID of the stage instance that this event relates to.
 
         Returns
@@ -99,59 +75,8 @@ class StageInstanceCreateEvent(StageInstanceEvent):
     """The Stage instance that was created."""
 
     @property
-    def stage_id(self) -> snowflakes.Snowflake:
+    def id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
-
-    @property
-    def guild_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.guild_id
-
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild where the Stage instance was created.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The guild that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_guild(self.guild_id)
-
-    @property
-    def channel_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-
-        return self.stage_instance.channel_id
-
-    @property
-    def channel(self) -> typing.Optional[channels.GuildStageChannel]:
-        """Get the cached channel where the Stage instance was created.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.GuildStageChannel]
-            The channel that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.guild_id)
-        assert isinstance(channel, channels.GuildStageChannel)
-        return channel
 
 
 @attr_extensions.with_copy
@@ -170,58 +95,8 @@ class StageInstanceEditEvent(StageInstanceEvent):
     """The Stage instance that was edited."""
 
     @property
-    def stage_id(self) -> snowflakes.Snowflake:
+    def id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
-
-    @property
-    def guild_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.guild_id
-
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild where the Stage instance was edited.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The guild that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_guild(self.guild_id)
-
-    @property
-    def channel_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.channel_id
-
-    @property
-    def channel(self) -> typing.Optional[channels.GuildStageChannel]:
-        """Get the cached channel where the Stage instance was edited.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.GuildStageChannel]
-            The channel that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.guild_id)
-        assert isinstance(channel, channels.GuildStageChannel)
-        return channel
 
 
 @attr_extensions.with_copy
@@ -240,55 +115,5 @@ class StageInstanceDeleteEvent(StageInstanceEvent):
     """The Stage instance that was deleted."""
 
     @property
-    def stage_id(self) -> snowflakes.Snowflake:
+    def id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
-
-    @property
-    def guild_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.guild_id
-
-    @property
-    def guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild where the Stage instance was deleted.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The guild that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_guild(self.guild_id)
-
-    @property
-    def channel_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.channel_id
-
-    @property
-    def channel(self) -> typing.Optional[channels.GuildStageChannel]:
-        """Get the cached channel where the Stage instance was deleted.
-
-        !!! note
-            This will require the `GUILDS` intent to be specified on start-up
-            in order to be known.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.GuildStageChannel]
-            The channel that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        channel = self.app.cache.get_guild_channel(self.guild_id)
-        assert isinstance(channel, channels.GuildStageChannel)
-        return channel
