@@ -2991,8 +2991,11 @@ class RESTGuild(Guild):
     This will be `builtins.None` when creating a guild.
     """
 
-    max_presences: int = attr.field(eq=False, hash=False, repr=False)
-    """The maximum number of presences for the guild."""
+    max_presences: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    """The maximum number of presences for the guild.
+
+    If `builtins.None`, then there is no limit.
+    """
 
     max_members: int = attr.field(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild."""
