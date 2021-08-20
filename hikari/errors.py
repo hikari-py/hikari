@@ -270,7 +270,25 @@ class RESTErrorCode(int, enums.Enum):
     """Unknown ban provided."""
 
     UNKNOWN_GUILD_TEMPLATE = 10_057
-    """Unknown guild template."""
+    """Unknown guild template provided."""
+
+    UNKNOWN_STICKER = 10_060
+    """Unknown sticker provided."""
+
+    UNKNOWN_INTERACTION = 10_062
+    """Unknown interaction provided."""
+
+    UNKNOWN_APPLICATION_COMMAND = 10_063
+    """Unknown application command provided."""
+
+    UNKNOWN_APPLICATION_COMMAND_PERMISSIONS = 10_066
+    """Unknown application command permissions provided."""
+
+    UNKNOWN_STAGE_INSTANCE = 10_067
+    """Unknown stage instance provided."""
+
+    UNKNOWN_GUILD_WELCOME_SCREEN = 10_069
+    """Unknown guild welcome screen provided."""
 
     EXPLICIT_CONTENT_BLOCKED = 20_009
     """Explicit content cannot be sent to the desired recipient(s)."""
@@ -281,8 +299,14 @@ class RESTErrorCode(int, enums.Enum):
     WRITE_LIMIT_HIT = 20_028
     """The global write limit on a channel has been hit."""
 
-    DISALLOWED_WORDS_IN_PUBLIC_STAGES = 20_031
-    """The stage channel contains disallowed words for public stages."""
+    DISALLOWED_WORDS_FOR_PUBLIC_STAGES = 20_031
+    """The guild contains disallowed words for public stages.
+
+    This may include guild name, guild description or channel names.
+    """
+
+    GUILD_PREMIUM_LEVEL_TOO_LOW = 20_035
+    """The guilds premium level is too low."""
 
     MAXIMUM_GUILDS = 30_001
     """Maximum number of guilds reached (100)."""
@@ -314,14 +338,23 @@ class RESTErrorCode(int, enums.Enum):
     MAXIMUM_ANIMATED_EMOJIS = 30_018
     """Maximum number of animated emojis reached."""
 
-    MAXIMUM_NUMBER_OF_SERVER_MEMBERS_REACHED = 30_019
-    """Maximum number of server members reached."""
+    MAXIMUM_NUMBER_OF_GUILD_MEMBERS_REACHED = 30_019
+    """Maximum number of guild members reached."""
 
     GUILD_ALREADY_HAS_TEMPLATE = 30_031
     """Guild already has a template."""
 
+    MAXIMUM_NUMBER_OF_THREAD_PARTICIPANTS_REACHED = 30_033
+    """Maximum number of thread participants reached."""
+
     MAXIMUM_BANS_FOR_NON_GUILD_MEMBERS = 30_035
     """Maximum number of bans for non-guild members reached."""
+
+    MAXIMUM_NUMBER_OF_STICKERS_REACHED = 30_037
+    """Maximum number of stickers reached."""
+
+    MAXIMUM_PRUNE_REQUESTS_REACHED = 30_040
+    """Maximum number of prune requests has been reached. Try again later."""
 
     REQUEST_TOO_LARGE = 40_005
     """Request too large. Try sending something smaller in size."""
@@ -401,6 +434,9 @@ class RESTErrorCode(int, enums.Enum):
     SYSTEM_OVERLOADED = 130_000
     """API resource is currently overloaded. Try again a little later."""
 
+    STAGE_ALREADY_OPEN = 150_006
+    """The stage channel is already open."""
+
 
 @attr.define(auto_exc=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
@@ -409,7 +445,7 @@ class HTTPResponseError(HTTPError):
     url: str = attr.field()
     """The URL that produced this error message."""
 
-    status: typing.Union[int, http.HTTPStatus] = attr.field()
+    status: http.HTTPStatus = attr.field()
     """The HTTP status code for the response."""
 
     headers: data_binding.Headers = attr.field()
@@ -425,11 +461,13 @@ class HTTPResponseError(HTTPError):
     """The error code."""
 
     def __str__(self) -> str:
-        if isinstance(self.status, http.HTTPStatus):
-            name = self.status.name.replace("_", " ").title()
-            name_value = f"{name} {self.status.value}"
+        name = self.status.name.replace("_", " ").title()
+        name_value = f"{name} {self.status.value}"
+
+        if isinstance(self.code, RESTErrorCode) and self.code != RESTErrorCode.GENERAL_ERROR:
+            code_str = f" ({self.code.name})"
         else:
-            name_value = str(self.status).title()
+            code_str = ""
 
         if self.message:
             body = self.message
@@ -441,7 +479,7 @@ class HTTPResponseError(HTTPError):
 
         chomped = len(body) > 200
 
-        return f"{name_value}: '{body[:200]}{'...' if chomped else ''}' for {self.url}"
+        return f"{name_value}:{code_str} '{body[:200]}{'...' if chomped else ''}' for {self.url}"
 
 
 @attr.define(auto_exc=True, repr=False, weakref_slot=False)

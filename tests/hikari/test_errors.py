@@ -75,19 +75,29 @@ class TestGatewayServerClosedConnectionError:
 class TestHTTPResponseError:
     @pytest.fixture()
     def error(self):
-        return errors.HTTPResponseError("https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body")
+        return errors.HTTPResponseError(
+            "https://some.url",
+            http.HTTPStatus.BAD_REQUEST,
+            {},
+            "raw body",
+            "message",
+            errors.RESTErrorCode.UNKNOWN_GUILD,
+        )
 
     def test_str(self, error):
-        assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
+        assert str(error) == "Bad Request 400: (UNKNOWN_GUILD) 'message' for https://some.url"
 
-    def test_str_when_status_is_not_HTTPStatus(self, error):
-        error.status = "SOME STATUS"
-        assert str(error) == "Some Status: 'raw body' for https://some.url"
+    def test_str_when_message_is_None(self, error):
+        error.message = None
+        assert str(error) == "Bad Request 400: (UNKNOWN_GUILD) 'raw body' for https://some.url"
 
-    def test_str_when_message_is_not_None(self, error):
-        error.status = "SOME STATUS"
-        error.message = "Some message"
-        assert str(error) == "Some Status: 'Some message' for https://some.url"
+    def test_str_when_code_is_GENERAL_ERROR(self, error):
+        error.code = errors.RESTErrorCode.GENERAL_ERROR
+        assert str(error) == "Bad Request 400: 'message' for https://some.url"
+
+    def test_str_when_code_is_int(self, error):
+        error.code = 100
+        assert str(error) == "Bad Request 400: 'message' for https://some.url"
 
 
 class TestBadRequestError:
