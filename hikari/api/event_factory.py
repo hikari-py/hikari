@@ -1093,7 +1093,7 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_stage_instance_update_event(
+    def deserialize_stage_instance_edit_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_instance_events.StageInstanceEditEvent:
         """Parse a raw payload from Discord into a Stage instance update event object.

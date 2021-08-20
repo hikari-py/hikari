@@ -788,7 +788,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
-    def deserialize_stage_instance_update_event(
+    def deserialize_stage_instance_edit_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_instance_events.StageInstanceEditEvent:
         return stage_instance_events.StageInstanceEditEvent(
