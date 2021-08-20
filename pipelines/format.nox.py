@@ -96,6 +96,7 @@ def reformat_code(session: nox.Session) -> None:
 
     session.run("isort", *REFORMATING_PATHS)
     session.run("black", *REFORMATING_PATHS)
+    session.run("codespell", "-w", config.MAIN_PACKAGE, config.TEST_PACKAGE, config.EXAMPLE_SCRIPTS)
 
 
 def remove_trailing_whitespaces() -> None:

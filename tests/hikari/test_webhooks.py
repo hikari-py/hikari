@@ -180,7 +180,7 @@ class TestPartialWebhook:
             id=987654321,
             type=webhooks.WebhookType.CHANNEL_FOLLOWER,
             name="not a webhook",
-            avatar_hash="hoook",
+            avatar_hash="hook",
             application_id=None,
         )
 
@@ -208,7 +208,7 @@ class TestPartialWebhook:
     def test_make_avatar_url(self, webhook):
         result = webhook.make_avatar_url(ext="jpeg", size=2048)
 
-        assert result.url == "https://cdn.discordapp.com/avatars/987654321/hoook.jpeg?size=2048"
+        assert result.url == "https://cdn.discordapp.com/avatars/987654321/hook.jpeg?size=2048"
 
     def test_make_avatar_url_when_no_avatar(self, webhook):
         webhook.avatar_hash = None

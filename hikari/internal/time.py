@@ -89,7 +89,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
 
 try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
-    # going to be noticable on big bots where you are parsing hundreds of
+    # going to be noticeable on big bots where you are parsing hundreds of
     # thousands of "joined_at" fields on users on startup.
     #
     # ciso8601 doesn't have typing available, so ignore it.

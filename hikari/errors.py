@@ -202,7 +202,7 @@ class GatewayServerClosedConnectionError(GatewayError):
 
     If `builtins.True`, it will try to reconnect after this is raised rather
     than it being propagated to the caller. If `builtins.False`, this will
-    be raised, thus stopping the applicaiton unless handled explicitly by the
+    be raised, thus stopping the application unless handled explicitly by the
     user.
 
     Returns

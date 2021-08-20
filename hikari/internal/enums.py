@@ -104,7 +104,7 @@ class _EnumMeta(type):
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
-            # If we cant find the value, just return what got casted in
+            # If we can't find the value, just return what got casted in
             return value
 
     def __getitem__(cls, name: str) -> typing.Any:
@@ -342,8 +342,8 @@ class _FlagMeta(type):
                 # Try to get a cached value.
                 return temp_members[value]
             except KeyError:
-                # If we cant find the value, just return what got casted in by generating a pseudomember
-                # and caching it. We cant use weakref because int is not weak referenceable, annoyingly.
+                # If we can't find the value, just return what got casted in by generating a pseudomember
+                # and caching it. We can't use weakref because int is not weak referenceable, annoyingly.
                 pseudomember = cls.__new__(cls, value)
                 pseudomember._name_ = None
                 pseudomember._value_ = value
@@ -393,7 +393,7 @@ class _FlagMeta(type):
             "_name_to_member_map_": (name_to_member := {}),
             "_value_to_member_map_": (value_to_member := {}),
             "_powers_of_2_to_member_map_": (powers_of_2_map := {}),
-            # We cant weakref, as we inherit from int. Turns out that is significantly
+            # We can't weakref, as we inherit from int. Turns out that is significantly
             # slower anyway, so it isn't important for now. We just manually limit
             # the cache size.
             # This also randomly ends up with a 0 value in it at the start

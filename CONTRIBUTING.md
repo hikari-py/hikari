@@ -50,7 +50,7 @@ This includes:
   - `test`
     - Run tests and installation of the package on different OS's and python versions.
   - `linting`
-    - Linting (`flake8`), type checking (`mypy`), and safety (`safety`).
+    - Linting (`flake8`), type checking (`mypy`), safety (`safety`) and spelling (`codespell`).
   - `twemoji`
     - Force test all discord emojis.
   - `pages`

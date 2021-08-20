@@ -1723,7 +1723,7 @@ class PartialGuild(snowflakes.Unique):
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, the ammount of seconds a user has to wait
+            If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -1807,7 +1807,7 @@ class PartialGuild(snowflakes.Unique):
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, the ammount of seconds a user has to wait
+            If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -2932,7 +2932,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where discord sents relevent updates to moderators and admins.
+            The channel where discord sents relevant updates to moderators and admins.
 
         Raises
         ------

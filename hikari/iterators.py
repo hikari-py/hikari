@@ -273,7 +273,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         that this iterator would return when it is requested.
 
         All conditions must evaluate to `builtins.True` for the item to be
-        returned. If this is not met, then the item is discared and ignored,
+        returned. If this is not met, then the item is discarded and ignored,
         the next matching item will be returned instead, if there is one.
 
         Parameters

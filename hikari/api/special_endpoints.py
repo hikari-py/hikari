@@ -402,7 +402,7 @@ class GuildBuilder(abc.ABC):
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[builtins.int]
-            If provided, the ammount of seconds a user has to wait
+            If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -649,7 +649,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         Returns
         -------
         typing.Sequence[hikari.embeds.Embed]
-            A sequence of up to 10 ot the embeds included in this response.
+            A sequence of up to 10 of the embeds included in this response.
         """
 
     # Settable fields

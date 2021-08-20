@@ -401,7 +401,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         suppress : hikari.undefined.UndefinedOr[builtins.bool]
-            If specificed, whether the user should be allowed to become a speaker
+            If specified, whether the user should be allowed to become a speaker
             in the target stage channel with `builtin.True` suppressing them from
             becoming one.
         request_to_speak : typing.Union[hikari.undefined.UndefinedType, builtins.bool, datetime.datetime]
@@ -1197,7 +1197,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             being empty with no attachments or embeds; messages with more than
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
-            invalid image URLs in embeds; if `reply` is ot found or not in the
+            invalid image URLs in embeds; if `reply` is not found or not in the
             same channel as `channel`.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1896,7 +1896,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel where the webhook will be created. This may be
             the object or the ID of an existing channel.
         name : str
-            The name for the webhook. This cannnot be `clyde`.
+            The name for the webhook. This cannot be `clyde`.
 
         Other Parameters
         ----------------
@@ -1914,7 +1914,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.BadRequestError
-            If `name` doesnt follow the restrictions enforced by discord.
+            If `name` doesn't follow the restrictions enforced by discord.
         hikari.errors.ForbiddenError
             If you are missing the `MANAGE_WEBHOOKS` permission.
         hikari.errors.UnauthorizedError
@@ -3258,7 +3258,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are not part of the guild you want to add the user to,
             if you are missing permissions to do one of the things you specified,
             if you are using an access token for another user, if the token is
-            bound to annother bot or if the access token doesnt have the
+            bound to another bot or if the access token doesn't have the
             `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -4010,7 +4010,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, the ammount of seconds a user has to wait
+            If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -4088,7 +4088,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         nsfw : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, the ammount of seconds a user has to wait
+            If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]

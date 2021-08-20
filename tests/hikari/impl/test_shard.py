@@ -1085,7 +1085,7 @@ class TestGatewayShardImpl:
 
     def test__serialize_activity_when_activity_is_not_None(self, client):
         activity = mock.Mock(type="0", url="https://some.url")
-        activity.name = "some name"  # This has to be set seperate because if not, its set as the mock's name
+        activity.name = "some name"  # This has to be set separate because if not, its set as the mock's name
         assert client._serialize_activity(activity) == {"name": "some name", "type": 0, "url": "https://some.url"}
 
     @pytest.mark.parametrize("idle_since", [datetime.datetime.now(), None])

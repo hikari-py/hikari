@@ -57,8 +57,8 @@ class TestUndefined:
         assert copy.deepcopy(undefined.UNDEFINED) is undefined.UNDEFINED
 
     def test_can_pickle(self):
-        ser = pickle.dumps(undefined.UNDEFINED)
-        deser = pickle.loads(ser)  # noqa: S301 pickle loads is unsafe with untrusted data
+        data = pickle.dumps(undefined.UNDEFINED)
+        deser = pickle.loads(data)  # noqa: S301 pickle loads is unsafe with untrusted data
         assert deser is undefined.UNDEFINED
 
     def test__getstate__(self):

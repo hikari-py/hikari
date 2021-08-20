@@ -107,7 +107,7 @@ jobs:
 
       - name: Linting
         run: |
-          nox -s safety mypy flake8
+          nox -s safety mypy flake8 codespell
 
   twemoji:
     runs-on: ubuntu-20.04

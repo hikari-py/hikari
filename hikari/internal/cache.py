@@ -194,7 +194,7 @@ class GuildRecord:
     """
 
     is_available: typing.Optional[bool] = attr.field(default=None)
-    """Whether the chached guild is available or not.
+    """Whether the cached guild is available or not.
 
     This will be `builtins.None` when no `GuildRecord.guild` is also
     `builtins.None` else `builtins.bool`.
@@ -598,7 +598,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
     @classmethod
     def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
-        # role_ids and activities are special cases as may be mutable sequences, therefor we ant to ensure they're
+        # role_ids and activities are special cases as may be mutable sequences, therefore we want to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
         return cls(
             user_id=presence.user_id,

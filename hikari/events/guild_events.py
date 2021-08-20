@@ -218,7 +218,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     This will be `builtins.None` if no chunks were requested.
 
     !!! note
-        This is a syntetic field.
+        This is a synthetic field.
 
     Returns
     -------
