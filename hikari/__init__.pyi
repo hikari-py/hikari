@@ -32,6 +32,7 @@ from hikari.audit_logs import *
 from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
+from hikari.commands import *
 from hikari.config import *
 from hikari.embeds import *
 from hikari.emojis import *

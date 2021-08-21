@@ -72,7 +72,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels as channels_
     from hikari import traits
     from hikari import users as users_
-    from hikari.interactions import bases as interaction_bases
+    from hikari.interactions import base_interactions
 
 ChannelT = typing.TypeVar("ChannelT", bound="channels_.GuildChannel")
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
@@ -703,7 +703,7 @@ class MessageInteractionData(BaseData[messages.MessageInteraction]):
     """A model for storing message interaction data."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    type: typing.Union[interaction_bases.InteractionType, int] = attr.field(eq=False, repr=True)
+    type: typing.Union[base_interactions.InteractionType, int] = attr.field(eq=False, repr=True)
     name: str = attr.field(eq=False, repr=True)
     user: RefCell[users_.User] = attr.field(eq=False, repr=True)
 

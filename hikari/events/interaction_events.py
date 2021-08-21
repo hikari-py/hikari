@@ -40,10 +40,10 @@ from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import commands
     from hikari import traits
     from hikari.api import shard as gateway_shard
-    from hikari.interactions import bases as interaction_bases
-    from hikari.interactions import commands
+    from hikari.interactions import base_interactions
 
 
 class CommandEvent(shard_events.ShardEvent, abc.ABC):
@@ -61,7 +61,7 @@ class CommandEvent(shard_events.ShardEvent, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.commands.Command
+        hikari.commands.Command
             The command this event is for.
         """
 
@@ -125,12 +125,12 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     """Shard that received this event."""
 
-    interaction: interaction_bases.PartialInteraction = attr.field(repr=True)
+    interaction: base_interactions.PartialInteraction = attr.field(repr=True)
     """Interaction that this event is related to.
 
     Returns
     -------
-    hikari.interactions.bases.PartialInteraction
+    hikari.interactions.base_interactions.PartialInteraction
         Object of the interaction that this event is related to.
     """
 

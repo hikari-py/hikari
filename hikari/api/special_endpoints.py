@@ -42,6 +42,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels
     from hikari import colors
+    from hikari import commands
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
@@ -51,8 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
-    from hikari.interactions import bases as base_interactions
-    from hikari.interactions import commands
+    from hikari.interactions import base_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
 
@@ -545,7 +545,7 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        typing.Union[builtins.int, hikari.interactions.bases.ResponseType]
+        typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
             The type of response this is.
         """
 
@@ -577,7 +577,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.bases.DeferredResponseTypesT
+        hikari.interactions.base_interactions.DeferredResponseTypesT
             The type of response this is.
         """
 
@@ -635,7 +635,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Returns
         -------
-        hikari.interactions.bases.MessageResponseTypesT
+        hikari.interactions.base_interactions.MessageResponseTypesT
             The type of response this is.
         """
 
@@ -899,7 +899,7 @@ class CommandBuilder(abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.interactions.commands.CommandOption]
+        typing.Sequence[hikari.commands.CommandOption]
             A sequence of up to 25 of the options set for this command.
         """
 
@@ -938,7 +938,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        option : hikari.interactions.commands.CommandOption
+        option : hikari.commands.CommandOption
             The option to add to this command.
 
         Returns

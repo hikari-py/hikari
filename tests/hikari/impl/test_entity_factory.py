@@ -28,6 +28,7 @@ from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
+from hikari import commands
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -45,8 +46,8 @@ from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
 from hikari.impl import entity_factory
-from hikari.interactions import bases as interaction_models
-from hikari.interactions import commands as command_models
+from hikari.interactions import base_interactions
+from hikari.interactions import command_interactions
 
 
 def test__with_int_cast():
@@ -2728,7 +2729,7 @@ class TestEntityFactoryImpl:
         # CommandOption
         assert len(command.options) == 1
         option = command.options[0]
-        assert option.type is command_models.OptionType.SUB_COMMAND
+        assert option.type is commands.OptionType.SUB_COMMAND
         assert option.name == "a dumb name"
         assert option.description == "42"
         assert option.is_required is True
@@ -2737,7 +2738,7 @@ class TestEntityFactoryImpl:
         assert len(option.options) == 1
 
         suboption = option.options[0]
-        assert suboption.type is command_models.OptionType.USER
+        assert suboption.type is commands.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False
@@ -2748,11 +2749,11 @@ class TestEntityFactoryImpl:
         choice = suboption.choices[0]
         assert choice.name == "a choice"
         assert choice.value == "4 u"
-        assert isinstance(choice, command_models.CommandChoice)
+        assert isinstance(choice, commands.CommandChoice)
 
-        assert isinstance(suboption, command_models.CommandOption)
-        assert isinstance(option, command_models.CommandOption)
-        assert isinstance(command, command_models.Command)
+        assert isinstance(suboption, commands.CommandOption)
+        assert isinstance(option, commands.CommandOption)
+        assert isinstance(command, commands.Command)
 
     def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
@@ -2780,7 +2781,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
-        assert isinstance(command, command_models.Command)
+        assert isinstance(command, commands.Command)
 
     @pytest.fixture()
     def partial_interaction_payload(self):
@@ -2801,7 +2802,7 @@ class TestEntityFactoryImpl:
         assert interaction.type == 1
         assert interaction.version == 1
         assert interaction.application_id == 1
-        assert type(interaction) is interaction_models.PartialInteraction
+        assert type(interaction) is base_interactions.PartialInteraction
 
     @pytest.fixture()
     def command_interaction_payload(self, member_payload, user_payload, guild_role_payload):
@@ -2860,7 +2861,7 @@ class TestEntityFactoryImpl:
         assert interaction.app is mock_app
         assert interaction.application_id == 76234234
         assert interaction.id == 3490190239012093
-        assert interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
         assert interaction.channel_id == 49949494
@@ -2882,7 +2883,7 @@ class TestEntityFactoryImpl:
         assert interaction.member.is_mute is True
         assert interaction.member.is_pending is False
         assert interaction.member.permissions == 47
-        assert isinstance(interaction.member, interaction_models.InteractionMember)
+        assert isinstance(interaction.member, base_interactions.InteractionMember)
 
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
@@ -2893,15 +2894,15 @@ class TestEntityFactoryImpl:
         option = interaction.options[0]
         assert option.name == "an option"
         assert option.value is None
-        assert option.type is command_models.OptionType.SUB_COMMAND
+        assert option.type is commands.OptionType.SUB_COMMAND
         assert len(option.options) == 1
         sub_option = option.options[0]
         assert sub_option.name == "go ice"
         assert sub_option.value == "42"
-        assert sub_option.type is command_models.OptionType.INTEGER
+        assert sub_option.type is commands.OptionType.INTEGER
         assert sub_option.options is None
-        assert isinstance(sub_option, command_models.CommandInteractionOption)
-        assert isinstance(option, command_models.CommandInteractionOption)
+        assert isinstance(sub_option, command_interactions.CommandInteractionOption)
+        assert isinstance(option, command_interactions.CommandInteractionOption)
 
         # ResolvedOptionData
         assert len(interaction.resolved.channels) == 1
@@ -2910,7 +2911,7 @@ class TestEntityFactoryImpl:
         assert channel.id == 695382395666300958
         assert channel.name == "discord-announcements"
         assert channel.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(channel, command_models.InteractionChannel)
+        assert isinstance(channel, command_interactions.InteractionChannel)
         # InteractionMember
         assert len(interaction.resolved.members) == 1
         member = interaction.resolved.members[115590097100865541]
@@ -2931,15 +2932,15 @@ class TestEntityFactoryImpl:
         ]
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(member, interaction_models.InteractionMember)
+        assert isinstance(member, base_interactions.InteractionMember)
 
         assert interaction.resolved.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
         }
         assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-        assert isinstance(interaction.resolved, command_models.ResolvedOptionData)
+        assert isinstance(interaction.resolved, command_interactions.ResolvedOptionData)
 
-        assert isinstance(interaction, command_models.CommandInteraction)
+        assert isinstance(interaction, command_interactions.CommandInteraction)
 
     def test_deserialize_command_interaction_with_null_attributes(
         self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
@@ -2977,7 +2978,7 @@ class TestEntityFactoryImpl:
         assert interaction.resolved.users == {}
 
     def test_deserialize_interaction_returns_expected_type(self, entity_factory_impl, command_interaction_payload):
-        for payload, expected_type in [(command_interaction_payload, command_models.CommandInteraction)]:
+        for payload, expected_type in [(command_interaction_payload, command_interactions.CommandInteraction)]:
             assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
 
     def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
@@ -2985,12 +2986,12 @@ class TestEntityFactoryImpl:
             entity_factory_impl.deserialize_interaction({"type": -999})
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
-        option = command_models.CommandOption(
-            type=command_models.OptionType.INTEGER,
+        option = commands.CommandOption(
+            type=commands.OptionType.INTEGER,
             name="a name",
             description="go away",
             is_required=True,
-            choices=[command_models.CommandChoice(name="a", value="choice")],
+            choices=[commands.CommandChoice(name="a", value="choice")],
             options=None,
         )
 
@@ -3005,19 +3006,19 @@ class TestEntityFactoryImpl:
         }
 
     def test_serialize_command_option_with_options(self, entity_factory_impl):
-        option = command_models.CommandOption(
-            type=command_models.OptionType.SUB_COMMAND,
+        option = commands.CommandOption(
+            type=commands.OptionType.SUB_COMMAND,
             name="a name",
             description="go away",
             is_required=True,
             choices=None,
             options=[
-                command_models.CommandOption(
-                    type=command_models.OptionType.STRING,
+                commands.CommandOption(
+                    type=commands.OptionType.STRING,
                     name="go home",
                     description="you're drunk",
                     is_required=False,
-                    choices=[command_models.CommandChoice(name="boo", value="hoo")],
+                    choices=[commands.CommandChoice(name="boo", value="hoo")],
                     options=None,
                 )
             ],
@@ -3533,7 +3534,7 @@ class TestEntityFactoryImpl:
         # MessageInteraction
         assert partial_message.interaction.id == 123123123
         assert partial_message.interaction.name == "OKOKOK"
-        assert partial_message.interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert partial_message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(partial_message.interaction, message_models.MessageInteraction)
 
@@ -3704,7 +3705,7 @@ class TestEntityFactoryImpl:
         # MessageInteraction
         assert message.interaction.id == 123123123
         assert message.interaction.name == "OKOKOK"
-        assert message.interaction.type is interaction_models.InteractionType.APPLICATION_COMMAND
+        assert message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(message.interaction, message_models.MessageInteraction)
 
