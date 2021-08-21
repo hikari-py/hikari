@@ -38,7 +38,7 @@ from hikari.events import message_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import shard_events
-from hikari.events import stage_instance_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -1113,7 +1113,7 @@ class TestEventFactoryImpl:
             "discoverable_disabled": False,
         }
         event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
-        assert isinstance(event, stage_instance_events.StageInstanceCreateEvent)
+        assert isinstance(event, stage_events.StageInstanceCreateEvent)
 
         assert event.app is mock_app
         assert event.shard is mock_shard
@@ -1130,7 +1130,7 @@ class TestEventFactoryImpl:
             "discoverable_disabled": True,
         }
         event = event_factory.deserialize_stage_instance_edit_event(mock_shard, mock_payload)
-        assert isinstance(event, stage_instance_events.StageInstanceEditEvent)
+        assert isinstance(event, stage_events.StageInstanceEditEvent)
 
         assert event.app is mock_app
         assert event.shard is mock_shard
@@ -1147,7 +1147,7 @@ class TestEventFactoryImpl:
             "discoverable_disabled": True,
         }
         event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
-        assert isinstance(event, stage_instance_events.StageInstanceDeleteEvent)
+        assert isinstance(event, stage_events.StageInstanceDeleteEvent)
 
         assert event.app is mock_app
         assert event.shard is mock_shard

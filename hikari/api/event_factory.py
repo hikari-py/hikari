@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import reaction_events
     from hikari.events import role_events
     from hikari.events import shard_events
-    from hikari.events import stage_instance_events
+    from hikari.events import stage_events
     from hikari.events import typing_events
     from hikari.events import user_events
     from hikari.events import voice_events
@@ -1076,7 +1076,7 @@ class EventFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_stage_instance_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> stage_instance_events.StageInstanceCreateEvent:
+    ) -> stage_events.StageInstanceCreateEvent:
         """Parse a raw payload from Discord into a Stage instance create event object.
 
         Parameters
@@ -1095,7 +1095,7 @@ class EventFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_stage_instance_edit_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> stage_instance_events.StageInstanceEditEvent:
+    ) -> stage_events.StageInstanceEditEvent:
         """Parse a raw payload from Discord into a Stage instance update event object.
 
         Parameters
@@ -1114,7 +1114,7 @@ class EventFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_stage_instance_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> stage_instance_events.StageInstanceDeleteEvent:
+    ) -> stage_events.StageInstanceDeleteEvent:
         """Parse a raw payload from Discord into a Stage instance delete event object.
 
         Parameters
