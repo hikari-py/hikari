@@ -31,6 +31,7 @@ from hikari import guilds
 from hikari import invites
 from hikari import messages
 from hikari import snowflakes
+from hikari import stickers
 from hikari import undefined
 from hikari import users
 from hikari import voices
@@ -2422,7 +2423,7 @@ class TestCacheImpl:
         mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
-        mock_sticker = mock.MagicMock(messages.Sticker)
+        mock_sticker = mock.MagicMock(stickers.PartialSticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_application = mock.MagicMock(messages.MessageApplication)

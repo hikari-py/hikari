@@ -70,6 +70,7 @@ from hikari.internal import collections
 if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import channels as channels_
+    from hikari import stickers as stickers_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -766,7 +767,7 @@ class MessageData(BaseData[messages.Message]):
     application: typing.Optional[messages.MessageApplication] = attr.field()
     message_reference: typing.Optional[messages.MessageReference] = attr.field()
     flags: typing.Optional[messages.MessageFlag] = attr.field()
-    stickers: typing.Tuple[messages.Sticker, ...] = attr.field()
+    stickers: typing.Tuple[stickers_.PartialSticker, ...] = attr.field()
     nonce: typing.Optional[str] = attr.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
     interaction: typing.Optional[MessageInteractionData] = attr.field()

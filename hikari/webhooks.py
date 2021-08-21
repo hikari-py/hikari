@@ -573,8 +573,7 @@ class PartialWebhook(snowflakes.Unique):
         ----------
         ext : builtins.str
             The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg`, `webp`. This will be ignored for
-            default avatars which can only be `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
