@@ -543,19 +543,20 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
-    def avatar(self) -> files_.URL:
-        """URL for this webhook's custom avatar or default avatar.
+    def avatar_url(self) -> typing.Optional[files_.URL]:
+        """URL for this webhook's avatar, if set.
 
-        If the webhook has a custom avatar, a URL to this is returned. Otherwise
-        a URL to the default avatar is provided instead.
+        May be `builtins.None` if no avatar is set. In this case, you should use
+        `default_avatar_url` instead.
         """
-        return self.make_avatar_url() or self.default_avatar
+        return self.make_avatar_url()
 
     @property
-    def default_avatar(self) -> files_.URL:
-        """URL for this webhook's default avatar.
+    def default_avatar_url(self) -> files_.URL:
+        """Avatar URL for the user, if they have one set.
 
-        This is used if no avatar is set.
+        May be `builtins.None` if no custom avatar is set. In this case, you
+        should use `default_avatar_url` instead.
         """
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
