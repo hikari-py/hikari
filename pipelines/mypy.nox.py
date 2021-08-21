@@ -23,7 +23,13 @@
 from pipelines import config
 from pipelines import nox
 
-STUBGEN_GENERATE = ["hikari/__init__.py", "hikari/events/__init__.py", "hikari/interactions/__init__.py"]
+STUBGEN_GENERATE = [
+    "hikari/__init__.py",
+    "hikari/api/__init__.py",
+    "hikari/events/__init__.py",
+    "hikari/impl/__init__.py",
+    "hikari/interactions/__init__.py",
+]
 
 
 @nox.session(reuse_venv=True)
