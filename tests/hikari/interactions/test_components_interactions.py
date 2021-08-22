@@ -25,7 +25,7 @@ import pytest
 from hikari import channels
 from hikari import snowflakes
 from hikari import traits
-from hikari.interactions import bases
+from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
 from tests.hikari import hikari_test_helpers
 
@@ -41,7 +41,7 @@ class TestComponentInteraction:
         return component_interactions.ComponentInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
-            type=bases.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),

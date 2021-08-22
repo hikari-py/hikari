@@ -25,7 +25,6 @@ import pytest
 from hikari import channels
 from hikari import snowflakes
 from hikari import traits
-from hikari import undefined
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 
@@ -73,12 +72,14 @@ class TestCommandInteraction:
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_command_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildChannel)
+        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
         assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
 
         mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
 
     def test_get_channel(self, mock_command_interaction, mock_app):
+        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.TextableGuildChannel)
+
         assert mock_command_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 

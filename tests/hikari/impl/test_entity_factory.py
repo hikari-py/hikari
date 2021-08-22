@@ -46,7 +46,8 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari import voices as voice_models
 from hikari import webhooks as webhook_models
-from hikari.impl import entity_fbase_interactions
+from hikari.impl import entity_factory
+from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
 
@@ -2878,7 +2879,7 @@ class TestEntityFactoryImpl:
         ]
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(member, interaction_models.InteractionMember)
+        assert isinstance(member, base_interactions.InteractionMember)
 
     def test__deserialize_interaction_member_with_passed_user(
         self, entity_factory_impl, interaction_member_payload, user_payload
@@ -3124,7 +3125,7 @@ class TestEntityFactoryImpl:
         assert interaction.app is mock_app
         assert interaction.id == 846462639134605312
         assert interaction.application_id == 290926444748734465
-        assert interaction.type is interaction_models.InteractionType.MESSAGE_COMPONENT
+        assert interaction.type is base_interactions.InteractionType.MESSAGE_COMPONENT
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
         assert interaction.channel_id == 345626669114982999

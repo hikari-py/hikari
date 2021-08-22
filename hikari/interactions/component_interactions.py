@@ -23,11 +23,7 @@
 """Models and enums used for Discord's Components interaction flow."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = [
-    "ComponentInteraction",
-    "COMPONENT_RESPONSE_TYPES",
-    "ComponentResponseTypesT",
-]
+__all__: typing.Sequence[str] = ["ComponentInteraction", "COMPONENT_RESPONSE_TYPES", "ComponentResponseTypesT"]
 
 import typing
 
@@ -35,7 +31,7 @@ import attr
 
 from hikari import channels
 from hikari import traits
-from hikari.interactions import bases
+from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -46,21 +42,21 @@ if typing.TYPE_CHECKING:
 
 
 _DEFERRED_TYPES: typing.AbstractSet[_DeferredTypesT] = frozenset(
-    [bases.ResponseType.DEFERRED_MESSAGE_CREATE, bases.ResponseType.DEFERRED_MESSAGE_UPDATE]
+    [base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE]
 )
 _DeferredTypesT = typing.Union[
-    typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_CREATE],
+    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
     typing.Literal[5],
-    typing.Literal[bases.ResponseType.DEFERRED_MESSAGE_UPDATE],
+    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE],
     typing.Literal[6],
 ]
 _IMMEDIATE_TYPES: typing.AbstractSet[_ImmediateTypesT] = frozenset(
-    [bases.ResponseType.MESSAGE_CREATE, bases.ResponseType.MESSAGE_UPDATE]
+    [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE]
 )
 _ImmediateTypesT = typing.Union[
-    typing.Literal[bases.ResponseType.MESSAGE_CREATE],
+    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
     typing.Literal[4],
-    typing.Literal[bases.ResponseType.MESSAGE_UPDATE],
+    typing.Literal[base_interactions.ResponseType.MESSAGE_UPDATE],
     typing.Literal[7],
 ]
 
@@ -73,10 +69,10 @@ COMPONENT_RESPONSE_TYPES: typing.Final[typing.AbstractSet[ComponentResponseTypes
 
 This includes:
 
-* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_UPDATE`
-* `hikari.interactions.bases.ResponseType.MESSAGE_UPDATE`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
 """
 
 ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
@@ -84,15 +80,15 @@ ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
 
 The following types are valid for this:
 
-* `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`/`4`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
-* `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
-* `hikari.interactions.bases.ResponseType.MESSAGE_UPDATE`/`7`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`/`7`
 """
 
 
 @attr.define(hash=True, weakref_slot=False)
-class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
+class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentResponseTypesT]):
     """Represents a component interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False)
@@ -127,7 +123,7 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
     message_flags: messages.MessageFlag = attr.field(eq=False, repr=False)
     """Flags of the message the components for this interaction are attached to."""
 
-    member: typing.Optional[bases.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
     This will be `builtins.None` for interactions triggered in DMs.
@@ -150,13 +146,13 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.bases.ResponseType]
+        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
             The type of immediate response this should be.
 
             This may be one of the following:
 
-            * `hikari.interactions.bases.ResponseType.MESSAGE_CREATE`
-            * `hikari.interactions.bases.ResponseType.MESSAGE_UPDATE`
+            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
+            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
 
         Examples
         --------
@@ -195,13 +191,13 @@ class ComponentInteraction(bases.MessageResponseMixin[ComponentResponseTypesT]):
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.bases.ResponseType]
+        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
             The type of deferred response this should be.
 
             This may be one of the following:
 
-            * `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_CREATE`
-            * `hikari.interactions.bases.ResponseType.DEFERRED_MESSAGE_UPDATE`
+            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
+            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
 
         Returns
         -------

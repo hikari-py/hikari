@@ -52,11 +52,11 @@ class TestPartialInteraction:
 class TestMessageResponseMixin:
     @pytest.fixture()
     def mock_message_response_mixin(self, mock_app):
-        return bases.MessageResponseMixin(
+        return base_interactions.MessageResponseMixin(
             app=mock_app,
             id=34123,
             application_id=651231,
-            type=bases.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
         )
@@ -75,7 +75,7 @@ class TestMessageResponseMixin:
         mock_component = object()
         mock_components = object(), object()
         await mock_message_response_mixin.create_initial_response(
-            bases.ResponseType.MESSAGE_CREATE,
+            base_interactions.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             embed=mock_embed_1,
@@ -91,7 +91,7 @@ class TestMessageResponseMixin:
         mock_app.rest.create_interaction_response.assert_awaited_once_with(
             34123,
             "399393939doodsodso",
-            bases.ResponseType.MESSAGE_CREATE,
+            base_interactions.ResponseType.MESSAGE_CREATE,
             "content",
             tts=True,
             flags=64,
@@ -106,12 +106,14 @@ class TestMessageResponseMixin:
 
     @pytest.mark.asyncio()
     async def test_create_initial_response_without_optional_args(self, mock_message_response_mixin, mock_app):
-        await mock_message_response_mixin.create_initial_response(bases.ResponseType.DEFERRED_MESSAGE_CREATE)
+        await mock_message_response_mixin.create_initial_response(
+            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
+        )
 
         mock_app.rest.create_interaction_response.assert_awaited_once_with(
             34123,
             "399393939doodsodso",
-            bases.ResponseType.DEFERRED_MESSAGE_CREATE,
+            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
             undefined.UNDEFINED,
             flags=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,

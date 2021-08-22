@@ -56,7 +56,6 @@ if typing.TYPE_CHECKING:
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
     from hikari.interactions import base_interactions
-    from hikari.interactions import commands
     from hikari.internal import data_binding
     from hikari.internal import time
 

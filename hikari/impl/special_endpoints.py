@@ -54,7 +54,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import commands
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions

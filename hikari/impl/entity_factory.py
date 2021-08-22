@@ -259,7 +259,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], base_interactions.PartialInteraction]
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
-            interaction_models.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
+            base_interactions.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -1891,7 +1891,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_guild_id := payload.get("guild_id"):
             guild_id = snowflakes.Snowflake(raw_guild_id)
 
-        member: typing.Optional[interaction_models.InteractionMember]
+        member: typing.Optional[base_interactions.InteractionMember]
         if member_payload := payload.get("member"):
             assert guild_id is not None
             member = self._deserialize_interaction_member(member_payload, guild_id=guild_id)
@@ -1920,7 +1920,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),
-            type=interaction_models.InteractionType(payload["type"]),
+            type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
