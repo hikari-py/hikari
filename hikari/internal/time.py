@@ -87,13 +87,12 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
     return datetime.datetime.fromisoformat(datetime_str)
 
 
+fast_iso8601_datetime_string_to_datetime: typing.Optional[typing.Callable[[str], datetime.datetime]]
 try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
     # going to be noticable on big bots where you are parsing hundreds of
     # thousands of "joined_at" fields on users on startup.
-    #
-    # ciso8601 doesn't have typing available, so ignore it.
-    import ciso8601  # type: ignore[import]
+    import ciso8601
 
     # Discord appears to actually use RFC-3339, which isn't a true ISO-8601 implementation,
     # but somewhat of a subset with some edge cases.
