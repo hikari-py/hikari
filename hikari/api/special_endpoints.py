@@ -1171,7 +1171,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def label(self) -> str:
-        """User-facing name of the option, max 25 characters.
+        """User-facing name of the option, max 100 characters.
 
         Returns
         -------
@@ -1193,7 +1193,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """Return the description of the option, max 50 characters.
+        """Return the description of the option, max 100 characters.
 
         Returns
         -------
@@ -1233,7 +1233,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         Parameters
         ----------
         value : hikari.undefined.UndefinedOr[builtins.str]
-            Description to set for this option. This can be up to 50 characters
+            Description to set for this option. This can be up to 100 characters
             long.
 
         Returns
@@ -1376,7 +1376,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         Parameters
         ----------
         label : builtins.str
-            The user-facing name of this option, max 25 characters.
+            The user-facing name of this option, max 100 characters.
         value : builtins.str
             The developer defined value of this option, max 100 characters.
 

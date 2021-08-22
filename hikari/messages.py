@@ -628,13 +628,13 @@ class SelectMenuOption:
     """Represents an option for a `SelectMenuComponent`."""
 
     label: str = attr.field()
-    """User-facing name of the option, max 25 characters."""
+    """User-facing name of the option, max 100 characters."""
 
     value: str = attr.field()
     """Dev-defined value of the option, max 100 characters."""
 
     description: typing.Optional[str] = attr.field()
-    """Optional description of the option, max 50 characters."""
+    """Optional description of the option, max 100 characters."""
 
     emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
     """Custom or unicode emoji which appears on the button."""

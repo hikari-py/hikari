@@ -1902,20 +1902,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        message_payload = payload["message"]
-        message_flags = int(message_payload["flags"])
-
-        # Under current behaviour only id and flags are received for ephemeral messages.
-        if message_flags & message_models.MessageFlag.EPHEMERAL:
-            message = None
-            message_flags = message_models.MessageFlag(message_flags)
-            message_id = snowflakes.Snowflake(message_payload["id"])
-
-        else:
-            message = self.deserialize_message(payload["message"])
-            message_flags = message.flags
-            message_id = message.id
-
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -1929,9 +1915,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             custom_id=data_payload["custom_id"],
             component_type=message_models.ComponentType(data_payload["component_type"]),
-            message=message,
-            message_flags=message_flags,
-            message_id=message_id,
+            message=self.deserialize_message(payload["message"]),
         )
 
     ##################

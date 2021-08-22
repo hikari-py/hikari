@@ -3133,8 +3133,6 @@ class TestEntityFactoryImpl:
         assert interaction.custom_id == "click_one"
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
-        assert interaction.message_flags == interaction.message.flags
-        assert interaction.message_id == interaction.message.id
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=290926798626357999
         )
@@ -3149,7 +3147,7 @@ class TestEntityFactoryImpl:
                 "version": 1,
                 "type": 3,
                 "token": "unique_interaction_token",
-                "message": {"id": "3412312312", "flags": "96"},
+                "message": message_payload,
                 "user": user_payload,
                 "id": "846462639134605312",
                 "data": {"custom_id": "click_one", "component_type": 2},
@@ -3161,9 +3159,6 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.message is None
-        assert interaction.message_flags == 96
-        assert interaction.message_id == 3412312312
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     #################

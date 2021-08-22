@@ -110,18 +110,8 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
-    message: typing.Optional[messages.Message] = attr.field(eq=False, repr=False)
-    """Object of the message the components for this interaction are attached to.
-
-    !!! note
-        This will be `builtins.None` for ephemeral message component interactions.
-    """
-
-    message_id: snowflakes.Snowflake = attr.field(eq=False, repr=False)
-    """ID of the message the components for this interaction are attached to."""
-
-    message_flags: messages.MessageFlag = attr.field(eq=False, repr=False)
-    """Flags of the message the components for this interaction are attached to."""
+    message: messages.Message = attr.field(eq=False, repr=False)
+    """Object of the message the components for this interaction are attached to."""
 
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
@@ -345,7 +335,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.fetch_message(self.message_id)
+        return await self.fetch_message(self.message.id)
 
     def get_parent_message(self) -> typing.Optional[messages.PartialMessage]:
         """Get the message which this interaction was triggered on from the cache.
@@ -356,6 +346,6 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
             The object of the message found in the cache or `builtins.None`.
         """
         if isinstance(self.app, traits.CacheAware):
-            return self.app.cache.get_message(self.message_id)
+            return self.app.cache.get_message(self.message.id)
 
         return None

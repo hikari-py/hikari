@@ -52,8 +52,6 @@ class TestComponentInteraction:
             component_type=2,
             custom_id="OKOKOK",
             message=object(),
-            message_id=123321,
-            message_flags=3234123,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
@@ -141,14 +139,14 @@ class TestComponentInteraction:
         stub_interaction = hikari_test_helpers.mock_class_namespace(
             component_interactions.ComponentInteraction, fetch_message=mock.AsyncMock(), init_=False
         )()
-        stub_interaction.message_id = 3421
+        stub_interaction.message = mock.Mock(id=3421)
 
         assert await stub_interaction.fetch_parent_message() is stub_interaction.fetch_message.return_value
 
         stub_interaction.fetch_message.assert_awaited_once_with(3421)
 
     def test_get_parent_message(self, mock_component_interaction, mock_app):
-        mock_component_interaction.message_id = 321655
+        mock_component_interaction.message = mock.Mock(id=321655)
 
         assert mock_component_interaction.get_parent_message() is mock_app.cache.get_message.return_value
 

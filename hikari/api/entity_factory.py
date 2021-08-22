@@ -1265,7 +1265,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.messages.ButtonComponent
+        hikari.messages.SelectMenuComponent
             The deserialized button component.
         """
 
