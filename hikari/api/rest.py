@@ -6516,6 +6516,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+            Objecr or ID of the command to fetch the command permissions for.
 
         Returns
         -------
@@ -6569,6 +6571,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Mapping of objects and/or IDs of commands to sequences of the commands
             to set for the specified guild.
 
+            !!! warning
+                Only a maximum of permissions can be set per command.
+
         Returns
         -------
         typing.Sequence[hikari.commands.GuildCommandPermissions]
@@ -6618,7 +6623,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
             Object or ID of the command to set the permissions for.
         permissions : typing.Sequence[hikari.commands.CommandPermission]
-            Object of the permissions to set.
+            Sequence of up to 10 of the permission objects to set.
 
         Returns
         -------

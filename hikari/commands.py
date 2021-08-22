@@ -43,6 +43,9 @@ from hikari import undefined
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
+if typing.TYPE_CHECKING:
+    from hikari import guilds
+
 
 @typing.final
 class OptionType(int, enums.Enum):
@@ -183,7 +186,7 @@ class Command(snowflakes.Unique):
 
         Returns
         -------
-        hikari.commands.Command
+        Command
             Object of the fetched command.
 
         Raises
@@ -233,13 +236,13 @@ class Command(snowflakes.Unique):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.commands.Command
+        Command
             The edited command object.
 
         Raises
@@ -302,6 +305,93 @@ class Command(snowflakes.Unique):
         """
         await self.app.rest.delete_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
+        )
+
+    async def fetch_guild_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> GuildCommandPermissions:
+        """Fetch the permissions registered for this command in a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to fetch the command permissions for.
+
+        Returns
+        -------
+        GuildCommandPermissions
+            Object of the command permissions set for the specified command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_application_command_permissions(
+            application=self.application_id, command=self.id, guild=guild
+        )
+
+    async def set_guild_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], permissions: typing.Sequence[CommandPermission]
+    ) -> GuildCommandPermissions:
+        """Set permissions for this command in a specific guild.
+
+        !!! note
+            This overwrites any previously set permissions.
+
+        Parameters
+        ----------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to set the command permissions in.
+        permissions : typing.Sequence[CommandPermission]
+            Sequence of up to 10 of the permission objects to set.
+
+        Returns
+        -------
+        GuildCommandPermissions
+            Object of the set permissions.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.set_application_command_permissions(
+            application=self.application_id, command=self.id, guild=guild, permissions=permissions
         )
 
 

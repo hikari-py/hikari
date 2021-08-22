@@ -116,3 +116,23 @@ class TestCommand:
         await mock_command.delete()
 
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild_permissions(self, mock_command, mock_app):
+        result = await mock_command.fetch_guild_permissions(123321)
+
+        assert result is mock_app.rest.fetch_application_command_permissions.return_value
+        mock_app.rest.fetch_application_command_permissions.assert_awaited_once_with(
+            application=mock_command.application_id, guild=123321, command=mock_command.id
+        )
+
+    @pytest.mark.asyncio()
+    async def test_set_guild_permissions(self, mock_command, mock_app):
+        mock_permissions = object()
+
+        result = await mock_command.set_guild_permissions(312123, mock_permissions)
+
+        assert result is mock_app.rest.set_application_command_permissions.return_value
+        mock_app.rest.set_application_command_permissions.assert_awaited_once_with(
+            application=mock_command.application_id, guild=312123, command=mock_command.id, permissions=mock_permissions
+        )
