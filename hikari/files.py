@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__ = [
+__all__: typing.List[str] = [
     "ensure_path",
     "ensure_resource",
     "unwrap_bytes",

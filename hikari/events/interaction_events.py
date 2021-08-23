@@ -23,7 +23,7 @@
 """Events fired for interaction related changes."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = [
+__all__: typing.List[str] = [
     "CommandEvent",
     "CommandCreateEvent",
     "CommandUpdateEvent",
