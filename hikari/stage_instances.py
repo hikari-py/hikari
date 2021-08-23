@@ -32,12 +32,13 @@ import typing
 
 import attr
 
-from hikari import snowflakes
 from hikari import channels
+from hikari import snowflakes
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
     from hikari import traits
 
 
@@ -53,7 +54,7 @@ class StagePrivacyLevel(int, enums.Enum):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class StageInstance:
+class StageInstance(snowflakes.Unique):
     """Represents a Stage instance."""
 
     id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -135,7 +136,7 @@ class StageInstance:
 
         return channel
 
-    def get_guild(self):
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this Stage Instance relates to, if known.
 
         If not known, this will return `builtins.None` instead.
@@ -149,7 +150,7 @@ class StageInstance:
             return None
         return self.app.cache.get_guild(self.guild_id)
 
-    async def fetch_guild(self):
+    async def fetch_guild(self) -> guilds.RESTGuild:
         """Fetch the guild linked to this Stage Instance.
 
         Returns

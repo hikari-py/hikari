@@ -49,7 +49,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def id(self) -> snowflakes.Snowflake:
+    def stage_instance_id(self) -> snowflakes.Snowflake:
         """ID of the stage instance that this event relates to.
 
         Returns
@@ -61,13 +61,14 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def stage_instance(self) -> StageInstance:
-        """The Stage Instance that this event relates to.
+        """Stage Instance that this event relates to.
 
         Returns
         -------
         hikari.stage_instance.StageInstance
             The Stage Instance that this event relates to.
         """
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
@@ -85,7 +86,7 @@ class StageInstanceCreateEvent(StageInstanceEvent):
     """The Stage instance that was created."""
 
     @property
-    def id(self) -> snowflakes.Snowflake:
+    def stage_instance_id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
 
 
@@ -105,7 +106,7 @@ class StageInstanceEditEvent(StageInstanceEvent):
     """The Stage instance that was edited."""
 
     @property
-    def id(self) -> snowflakes.Snowflake:
+    def stage_instance_id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
 
 
@@ -125,5 +126,5 @@ class StageInstanceDeleteEvent(StageInstanceEvent):
     """The Stage instance that was deleted."""
 
     @property
-    def id(self) -> snowflakes.Snowflake:
+    def stage_instance_id(self) -> snowflakes.Snowflake:
         return self.stage_instance.id
