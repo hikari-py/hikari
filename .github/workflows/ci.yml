@@ -155,18 +155,28 @@ jobs:
           retention-days: 2
           if-no-files-found: error
 
-  # This job is only used to mark the CI as being done
-  #
   # Allows us to add this as a required check in Github branch rules, as all the
   # other jobs are subject to change
   ci-done:
     needs: [upload-coverage, linting, twemoji, pages]
+    if: always()
 
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Completed
-        run: echo "CI Completed"
+      - name: Mark status based on past job status
+        env:
+          # All new need jobs need to be added here with the prefix "RESULT_"
+          RESULT_UPLOAD_COVERAGE: ${{ needs.upload-coverage.result }}
+          RESULT_LINTING: ${{ needs.linting.result }}
+          RESULT_TWEMOJI: ${{ needs.twemoji.result }}
+          RESULT_PAGES: ${{ needs.pages.result }}
+        run: |
+          if [ "$(env | grep 'RESULT_')" = "$(env | grep "RESULT_" | grep '=success')" ]; then
+            exit 0
+          else
+            exit 1
+          fi
 
   deploy:
     if: github.event_name == 'release'
