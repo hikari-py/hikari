@@ -297,7 +297,7 @@ class TestRESTBot:
             ssl_context=mock_context,
         )
         mock_rest_bot.join.assert_awaited_once()
-        assert asyncio.get_event_loop().is_closed() is False
+        assert asyncio.get_event_loop_policy().get_event_loop().is_closed() is False
 
     def test_run_when_asyncio_debug(self, mock_rest_bot):
         mock_rest_bot.start = mock.Mock()
