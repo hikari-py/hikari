@@ -36,7 +36,7 @@ import time
 import typing
 import warnings
 
-import colorlog  # type: ignore[import]
+import colorlog
 
 from hikari import _about as about
 from hikari.internal import net
@@ -191,9 +191,9 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
     }
 
     if supports_color(allow_color, force_color):
-        args.update(colorlog.escape_codes)
+        args.update(colorlog.escape_codes.escape_codes)
     else:
-        for code in colorlog.escape_codes:
+        for code in colorlog.escape_codes.escape_codes:
             args[code] = ""
 
     sys.stdout.write(string.Template(raw_banner).safe_substitute(args))
