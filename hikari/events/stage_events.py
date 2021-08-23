@@ -58,6 +58,16 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
             The ID of the stage instance that this event relates to.
         """
 
+    @property
+    @abc.abstractmethod
+    def stage_instance(self) -> StageInstance:
+        """The Stage Instance that this event relates to.
+
+        Returns
+        -------
+        hikari.stage_instance.StageInstance
+            The Stage Instance that this event relates to.
+        """
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
