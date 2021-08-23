@@ -153,7 +153,9 @@ class TestPrintBanner:
 
     def test_when_supports_color(self, mock_args):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(colorlog, "escape_codes", new={"red": 0, "green": 1, "blue": 2}))
+        stack.enter_context(
+            mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
+        )
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
@@ -191,7 +193,9 @@ class TestPrintBanner:
 
     def test_when_doesnt_supports_color(self, mock_args):
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(colorlog, "escape_codes", new={"red": 0, "green": 1, "blue": 2}))
+        stack.enter_context(
+            mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
+        )
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
