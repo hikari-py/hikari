@@ -416,7 +416,7 @@ class CommandPermission:
     type: typing.Union[CommandPermissionType, int] = attr.field(converter=CommandPermissionType)
     """The entity this permission overrides the command's state for."""
 
-    is_enabled: bool = attr.field()
+    has_access: bool = attr.field()
     """Whether this permission marks the relevant command as enabled or disabled."""
 
 

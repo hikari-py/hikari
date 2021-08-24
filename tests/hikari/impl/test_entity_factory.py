@@ -2807,11 +2807,11 @@ class TestEntityFactoryImpl:
         permission = command.permissions[0]
         assert permission.id == 22222
         assert permission.type is commands.CommandPermissionType.ROLE
-        assert permission.is_enabled is True
+        assert permission.has_access is True
         assert isinstance(permission, commands.CommandPermission)
 
     def test_serialize_command_permission(self, entity_factory_impl):
-        command = commands.CommandPermission(type=commands.CommandPermissionType.ROLE, is_enabled=True, id=123321)
+        command = commands.CommandPermission(type=commands.CommandPermissionType.ROLE, has_access=True, id=123321)
 
         assert entity_factory_impl.serialize_command_permission(command) == {
             "type": 1,

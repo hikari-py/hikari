@@ -1692,7 +1692,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandPermission(
                 id=snowflakes.Snowflake(perm["id"]),
                 type=commands.CommandPermissionType(perm["type"]),
-                is_enabled=perm["permission"],
+                has_access=perm["permission"],
             )
             for perm in payload["permissions"]
         ]
@@ -1704,7 +1704,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def serialize_command_permission(self, permission: commands.CommandPermission) -> data_binding.JSONObject:
-        return {"id": str(permission.id), "type": permission.type, "permission": permission.is_enabled}
+        return {"id": str(permission.id), "type": permission.type, "permission": permission.has_access}
 
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         return base_interactions.PartialInteraction(
