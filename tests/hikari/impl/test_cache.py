@@ -129,18 +129,6 @@ class TestCacheImpl:
 
         assert cache_impl._dm_channel_entries == {43123123: 12222}
 
-    def test_set_dm_channel_id_when_user_not_known(self, cache_impl):
-        cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
-
-        assert cache_impl._dm_channel_entries == {}
-
-    def test_set_dm_channel_id_when_not_enabled(self, cache_impl):
-        cache_impl._user_entries = collections.FreezableDict({43123123: object()})
-        cache_impl._settings.components = 0
-        cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
-
-        assert cache_impl._dm_channel_entries == {}
-
     def test__build_emoji(self, cache_impl):
         mock_user = mock.MagicMock(users.User)
         emoji_data = cache_utilities.KnownCustomEmojiData(
@@ -2666,6 +2654,11 @@ class TestCacheImpl:
     @pytest.mark.parametrize(
         ("name", "component", "expected"),
         [
+            ("clear_dm_channel_ids", config.CacheComponents.DM_CHANNEL_IDS, cache_utilities.EmptyCacheView()),
+            ("delete_dm_channel_id", config.CacheComponents.DM_CHANNEL_IDS, None),
+            ("get_dm_channel_id", config.CacheComponents.DM_CHANNEL_IDS, None),
+            ("get_dm_channel_ids_view", config.CacheComponents.DM_CHANNEL_IDS, cache_utilities.EmptyCacheView()),
+            ("set_dm_channel_id", config.CacheComponents.DM_CHANNEL_IDS, None),
             ("clear_emojis", config.CacheComponents.EMOJIS, cache_utilities.EmptyCacheView()),
             ("clear_emojis_for_guild", config.CacheComponents.EMOJIS, cache_utilities.EmptyCacheView()),
             ("clear_guild_channels", config.CacheComponents.GUILD_CHANNELS, cache_utilities.EmptyCacheView()),

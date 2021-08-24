@@ -450,9 +450,17 @@ class CacheSettings:
     """
 
     max_messages: int = attr.field(default=300)
-    """The max number of messages to store in the cache at once.
+    """The maximum number of messages to store in the cache at once.
 
     This will have no effect if the messages cache is not enabled.
 
     Defaults to `300`.
+    """
+
+    max_dm_channel_ids: int = attr.field(default=50)
+    """The maximum number of channel IDs to store in the cache at once.
+
+    This will have no effect if the channel IDs cache is not enabled.
+
+    Defaults to `50`.
     """

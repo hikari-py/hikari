@@ -82,10 +82,10 @@ class CacheImpl(cache.MutableCache):
         "_settings",
     )
 
-    _dm_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, snowflakes.Snowflake]
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
     _me: typing.Optional[users.OwnUser]
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
+    _dm_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, snowflakes.Snowflake]
     _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
     _guild_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
     _invite_entries: collections.ExtendedMutableMapping[str, cache_utility.InviteData]
@@ -104,7 +104,6 @@ class CacheImpl(cache.MutableCache):
 
     def __init__(self, app: traits.RESTAware, settings: config.CacheSettings) -> None:
         self._app = app
-        self._me = None
         self._settings = settings
         self._create_cache()
 
@@ -113,7 +112,8 @@ class CacheImpl(cache.MutableCache):
         return self._settings
 
     def _create_cache(self) -> None:
-        self._dm_channel_entries = collections.FreezableDict()
+        self._me = None
+        self._dm_channel_entries = collections.LimitedCapacityCacheMap(limit=self._settings.max_dm_channel_ids)
         self._emoji_entries = collections.FreezableDict()
         self._guild_channel_entries = collections.FreezableDict()
         self._guild_entries = collections.FreezableDict()
@@ -142,21 +142,33 @@ class CacheImpl(cache.MutableCache):
         self._create_cache()
 
     def clear_dm_channel_ids(self) -> cache.CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        if not self._is_cache_enabled_for(config.CacheComponents.DM_CHANNEL_IDS):
+            return cache_utility.EmptyCacheView()
+
         result = self._dm_channel_entries
-        self._dm_channel_entries = collections.FreezableDict()
+        self._dm_channel_entries = collections.LimitedCapacityCacheMap(limit=self._settings.max_dm_channel_ids)
         return cache_utility.CacheMappingView(result)
 
     def delete_dm_channel_id(
         self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
     ) -> typing.Optional[snowflakes.Snowflake]:
+        if not self._is_cache_enabled_for(config.CacheComponents.DM_CHANNEL_IDS):
+            return None
+
         return self._dm_channel_entries.pop(snowflakes.Snowflake(user), None)
 
     def get_dm_channel_id(
         self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
     ) -> typing.Optional[snowflakes.Snowflake]:
+        if not self._is_cache_enabled_for(config.CacheComponents.DM_CHANNEL_IDS):
+            return None
+
         return self._dm_channel_entries.get(snowflakes.Snowflake(user))
 
     def get_dm_channel_ids_view(self) -> cache.CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
+        if not self._is_cache_enabled_for(config.CacheComponents.DM_CHANNEL_IDS):
+            return cache_utility.EmptyCacheView()
+
         return cache_utility.CacheMappingView(self._dm_channel_entries.freeze())
 
     def set_dm_channel_id(
@@ -165,9 +177,10 @@ class CacheImpl(cache.MutableCache):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> None:
-        user = snowflakes.Snowflake(user)
-        if self._is_cache_enabled_for(config.CacheComponents.EMOJIS) and user in self._user_entries:
-            self._dm_channel_entries[user] = snowflakes.Snowflake(channel)
+        if not self._is_cache_enabled_for(config.CacheComponents.DM_CHANNEL_IDS):
+            return None
+
+        self._dm_channel_entries[snowflakes.Snowflake(user)] = snowflakes.Snowflake(channel)
 
     def _build_emoji(
         self,
