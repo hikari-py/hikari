@@ -233,7 +233,7 @@ class Color(int):
     def from_rgb(cls, red: int, green: int, blue: int, /) -> Color:
         """Convert the given RGB to a `Color` object.
 
-        Each channel must be withing the range [0, 255] (0x0, 0xFF).
+        Each channel must be within the range [0, 255] (0x0, 0xFF).
 
         Parameters
         ----------
@@ -436,7 +436,7 @@ class Color(int):
         bytes_ : typing.Iterable[builtins.int]
             A iterable of int byte values.
         byteorder : builtins.str
-            The endianess of the value represented by the bytes.
+            The endianness of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
         signed : builtins.bool
             Whether the value is signed or unsigned.
@@ -540,7 +540,7 @@ class Color(int):
         length : builtins.int
             The number of bytes to produce. Should be around `3`, but not less.
         byteorder : builtins.str
-            The endianess of the value represented by the bytes.
+            The endianness of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
         signed : builtins.bool
             Whether the value is signed or unsigned.

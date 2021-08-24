@@ -1197,7 +1197,7 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
-            # Syntatic sugar, common mistake to accidentally send an embed
+            # Syntactic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
@@ -1205,7 +1205,7 @@ class RESTClientImpl(rest_api.RESTClient):
         elif undefined.all_undefined(attachment, attachments) and isinstance(
             content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
-            # Syntatic sugar, common mistake to accidentally send an attachment
+            # Syntactic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
             # will still then work with normal implicit embed attachments as
             # we work this out later.
@@ -1354,14 +1354,14 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
-            # Syntatic sugar, common mistake to accidentally send an embed
+            # Syntactic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED
         elif undefined.all_undefined(attachment, attachments) and isinstance(
             content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
         ):
-            # Syntatic sugar, common mistake to accidentally send an attachment
+            # Syntactic sugar, common mistake to accidentally send an attachment
             # as the content, so lets detect this and fix it for the user. This
             # will still then work with normal implicit embed attachments as
             # we work this out later.
@@ -3085,7 +3085,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "use 'embed' (singular) instead?"
             )
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
-            # Syntatic sugar, common mistake to accidentally send an embed
+            # Syntactic sugar, common mistake to accidentally send an embed
             # as the content, so lets detect this and fix it for the user.
             embed = content
             content = undefined.UNDEFINED

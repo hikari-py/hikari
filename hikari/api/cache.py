@@ -97,7 +97,7 @@ class Cache(abc.ABC):
         Parameters
         ----------
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            Objet or ID of the user to get the DM channel ID for.
+            Object or ID of the user to get the DM channel ID for.
 
         Returns
         -------

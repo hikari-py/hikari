@@ -1,6 +1,6 @@
 [![Hikari PyPI version badge](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
 [![Github Actions Status badge](https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/hikari-py/hikari/actions)
-[![Supported Python verisons badge](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
+[![Supported Python versions badge](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
 [![Maintainability badge](https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/maintainability)](https://codeclimate.com/github/hikari-py/hikari/maintainability)
 [![Test Coverage badge](https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage)](https://codeclimate.com/github/hikari-py/hikari/test_coverage)
 [![Open Pull Requests badge](https://img.shields.io/github/issues-pr/hikari-py/hikari)](https://github.com/hikari-py/hikari/pulls)

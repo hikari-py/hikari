@@ -339,7 +339,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     Other Parameters
     ----------------
-    compression : typing.Optional[buitlins.str]
+    compression : typing.Optional[builtins.str]
         Compression format to use for the shard. Only supported values are
         `"transport_zlib_stream"` or `builtins.None` to disable it.
     initial_activity : typing.Optional[hikari.presences.Activity]
@@ -992,7 +992,7 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put("since", idle_since, conversion=self._serialize_datetime)
         payload.put("afk", afk)
         payload.put("game", activity, conversion=self._serialize_activity)
-        # Sending "offline" to the gateway wont do anything, we will have to
+        # Sending "offline" to the gateway won't do anything, we will have to
         # send "invisible" instead for this to work.
         if status is presences.Status.OFFLINE:
             payload.put("status", "invisible")
