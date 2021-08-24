@@ -61,9 +61,8 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
-_DEFAULT_MAX_PRESENCES: typing.Final[int] = 25000
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 _ValueT = typing.TypeVar("_ValueT")
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 
 def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
@@ -1372,10 +1371,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         max_members = int(payload["max_members"])
 
         raw_max_presences = payload["max_presences"]
-        if raw_max_presences is None:
-            max_presences = _DEFAULT_MAX_PRESENCES
-        else:
-            max_presences = int(raw_max_presences)
+        max_presences = int(raw_max_presences) if raw_max_presences is not None else None
 
         roles = {
             snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild_fields.id)

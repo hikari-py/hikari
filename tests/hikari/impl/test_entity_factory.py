@@ -2411,7 +2411,7 @@ class TestEntityFactoryImpl:
         assert guild.widget_channel_id is None
         assert guild.system_channel_id is None
         assert guild.rules_channel_id is None
-        assert guild.max_presences is entity_factory._DEFAULT_MAX_PRESENCES
+        assert guild.max_presences is None
         assert guild.vanity_url_code is None
         assert guild.description is None
         assert guild.banner_hash is None
