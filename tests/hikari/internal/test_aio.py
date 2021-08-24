@@ -398,7 +398,7 @@ def test_get_or_make_loop_handles_runtime_error():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop() is mock_loop
+    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
 
 
 def test_get_or_make_loop_handles_closed_loop():
@@ -410,4 +410,4 @@ def test_get_or_make_loop_handles_closed_loop():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop() is mock_loop
+    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
