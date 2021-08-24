@@ -182,7 +182,7 @@ class InviteGuild(guilds.PartialGuild):
         )
 
     @property
-    def banner(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> typing.Optional[files.URL]:
         """Banner URL for the guild, if set."""
         return self.make_banner_url()
 
