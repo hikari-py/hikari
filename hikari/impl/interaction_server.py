@@ -23,7 +23,7 @@
 """Standard implementation of a REST based interactions server."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ["InteractionServer"]
+__all__: typing.List[str] = ["InteractionServer"]
 
 import asyncio
 import logging

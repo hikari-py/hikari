@@ -23,7 +23,7 @@
 """Standard implementations of a Interaction based REST-only bot."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ["RESTBot"]
+__all__: typing.List[str] = ["RESTBot"]
 
 import asyncio
 import logging

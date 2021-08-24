@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ["VerifyBuilderT", "VerifierT", "build_ed25519_verifier"]
+__all__: typing.List[str] = ["VerifyBuilderT", "VerifierT", "build_ed25519_verifier"]
 
 import typing
 
