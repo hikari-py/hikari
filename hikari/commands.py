@@ -96,7 +96,7 @@ class CommandChoice:
     name: str = attr.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    value: typing.Union[str, int] = attr.field(repr=True)
+    value: typing.Union[str, int, float] = attr.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
 

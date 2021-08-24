@@ -6460,6 +6460,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     async def fetch_application_guild_commands_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6502,6 +6503,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     async def fetch_application_command_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6547,6 +6549,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     async def set_application_guild_commands_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6572,7 +6575,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             to set for the specified guild.
 
             !!! warning
-                Only a maximum of permissions can be set per command.
+                Only a maximum of up to 10 permissions can be set per command.
 
         Returns
         -------
@@ -6602,6 +6605,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
+    @abc.abstractmethod
     async def set_application_command_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
