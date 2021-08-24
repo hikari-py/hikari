@@ -86,6 +86,7 @@ class TokenStrategy(abc.ABC):
             prefix.
         """
 
+    @abc.abstractmethod
     def invalidate(self, token: typing.Optional[str]) -> None:
         """Invalidate the cached token in this handler.
 
@@ -7426,6 +7427,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         """Build an action row message component for use in message create and REST calls.
 

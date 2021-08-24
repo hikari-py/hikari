@@ -25,6 +25,7 @@ from __future__ import annotations
 
 __all__: typing.List[str] = [
     "ActionRowBuilder",
+    "ButtonBuilder",
     "CommandBuilder",
     "ComponentBuilder",
     "TypingIndicator",
@@ -32,6 +33,10 @@ __all__: typing.List[str] = [
     "InteractionDeferredBuilder",
     "InteractionResponseBuilder",
     "InteractionMessageBuilder",
+    "InteractiveButtonBuilder",
+    "LinkButtonBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
 ]
 
 import abc
@@ -1275,6 +1280,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
             The builder object to enable chained calls.
         """
 
+    @abc.abstractmethod
     def add_to_menu(self) -> _SelectMenuBuilderT:
         """Add this option to the menu component it belongs to.
 

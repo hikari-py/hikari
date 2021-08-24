@@ -518,6 +518,7 @@ class EntityFactory(abc.ABC):
             `"guild_id"` is not present in the passed payload.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_stage_channel(
         self,
         payload: data_binding.JSONObject,
@@ -1094,6 +1095,7 @@ class EntityFactory(abc.ABC):
             The serialized representation of the command option.
         """
 
+    @abc.abstractmethod
     def deserialize_component_interaction(
         self, payload: data_binding.JSONObject
     ) -> component_interactions.ComponentInteraction:
@@ -1227,6 +1229,7 @@ class EntityFactory(abc.ABC):
     # MESSAGE MODELS #
     ##################
 
+    @abc.abstractmethod
     def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
         """Parse a raw payload from Discord into an action row component object.
 
@@ -1241,6 +1244,7 @@ class EntityFactory(abc.ABC):
             The deserialized action row component.
         """
 
+    @abc.abstractmethod
     def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
         """Parse a raw payload from Discord into a button component object.
 
@@ -1255,6 +1259,7 @@ class EntityFactory(abc.ABC):
             The deserialized button component.
         """
 
+    @abc.abstractmethod
     def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
         """Parse a raw payload from Discord into a select menu component object.
 
@@ -1269,6 +1274,7 @@ class EntityFactory(abc.ABC):
             The deserialized button component.
         """
 
+    @abc.abstractmethod
     def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
         """Parse a raw payload from Discord into a message component object.
 
