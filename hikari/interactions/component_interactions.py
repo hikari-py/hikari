@@ -105,6 +105,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     custom_id: str = attr.field(eq=False)
     """Developer defined ID of the component which triggered this interaction."""
 
+    values: typing.Sequence[str] = attr.field(eq=False)
+    """Sequence of the values which were selected for a select menu component."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 

@@ -1912,6 +1912,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member=member,
             user=user,
             token=payload["token"],
+            values=data_payload.get("values") or (),
             version=payload["version"],
             custom_id=data_payload["custom_id"],
             component_type=message_models.ComponentType(data_payload["component_type"]),

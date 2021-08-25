@@ -3112,7 +3112,7 @@ class TestEntityFactoryImpl:
             "member": interaction_member_payload,
             "id": "846462639134605312",
             "guild_id": "290926798626357999",
-            "data": {"custom_id": "click_one", "component_type": 2},
+            "data": {"custom_id": "click_one", "component_type": 2, "values": ["1", "2", "67"]},
             "channel_id": "345626669114982999",
             "application_id": "290926444748734465",
         }
@@ -3137,6 +3137,7 @@ class TestEntityFactoryImpl:
             interaction_member_payload, guild_id=290926798626357999
         )
         assert interaction.user is interaction.member.user
+        assert interaction.values == ["1", "2", "67"]
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -3159,6 +3160,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
+        assert interaction.values == ()
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     #################

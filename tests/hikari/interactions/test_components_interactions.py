@@ -50,6 +50,7 @@ class TestComponentInteraction:
             version=1,
             application_id=snowflakes.Snowflake(43123),
             component_type=2,
+            values=(),
             custom_id="OKOKOK",
             message=object(),
         )
