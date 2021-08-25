@@ -4610,6 +4610,8 @@ class TestEntityFactoryImpl:
             "id": "115590097100865541",
             "username": "nyaa",
             "avatar": "b3b24c6d7cbcdec129d5d537067061a8",
+            "banner": "a_221313e1e2edsncsncsmcndsc",
+            "accent_color": 231321,
             "discriminator": "6127",
             "bot": True,
             "system": True,
@@ -4622,6 +4624,8 @@ class TestEntityFactoryImpl:
         assert user.id == 115590097100865541
         assert user.username == "nyaa"
         assert user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
+        assert user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
+        assert user.accent_color == 231321
         assert user.discriminator == "6127"
         assert user.is_bot is True
         assert user.is_system is True
@@ -4637,6 +4641,8 @@ class TestEntityFactoryImpl:
                 "discriminator": "6127",
             }
         )
+        assert user.banner_hash is None
+        assert user.accent_color is None
         assert user.is_bot is False
         assert user.is_system is False
         assert user.flags == user_models.UserFlag.NONE
@@ -4647,6 +4653,8 @@ class TestEntityFactoryImpl:
             "id": "379953393319542784",
             "username": "qt pi",
             "avatar": "820d0e50543216e812ad94e6ab7",
+            "banner": "a_221313e1e2edsncsncsmcndsc",
+            "accent_color": 231321,
             "discriminator": "2880",
             "bot": True,
             "system": True,
@@ -4665,6 +4673,8 @@ class TestEntityFactoryImpl:
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
         assert my_user.avatar_hash == "820d0e50543216e812ad94e6ab7"
+        assert my_user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
+        assert my_user.accent_color == 231321
         assert my_user.discriminator == "2880"
         assert my_user.is_bot is True
         assert my_user.is_system is True
@@ -4691,6 +4701,8 @@ class TestEntityFactoryImpl:
             }
         )
         assert my_user.app is mock_app
+        assert my_user.banner_hash is None
+        assert my_user.accent_color is None
         assert my_user.is_bot is False
         assert my_user.is_system is False
         assert my_user.is_verified is None

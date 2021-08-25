@@ -63,6 +63,9 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
+if typing.TYPE_CHECKING:
+    from hikari import colors
+
 _ValueT = typing.TypeVar("_ValueT")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
@@ -173,6 +176,8 @@ class _UserFields:
     discriminator: str = attr.field()
     username: str = attr.field()
     avatar_hash: str = attr.field()
+    banner_hash: str = attr.field()
+    accent_color: colors.Color = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
 
@@ -2587,6 +2592,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=payload["discriminator"],
             username=payload["username"],
             avatar_hash=payload["avatar"],
+            banner_hash=payload.get("banner", None),
+            accent_color=payload.get("accent_color", None),
             is_bot=payload.get("bot", False),
             is_system=payload.get("system", False),
         )
@@ -2602,6 +2609,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             avatar_hash=user_fields.avatar_hash,
+            banner_hash=user_fields.banner_hash,
+            accent_color=user_fields.accent_color,
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             flags=flags,
@@ -2615,6 +2624,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             avatar_hash=user_fields.avatar_hash,
+            banner_hash=user_fields.banner_hash,
+            accent_color=user_fields.accent_color,
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],

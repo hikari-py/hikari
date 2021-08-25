@@ -50,6 +50,8 @@ def make_user(user_id, username):
         discriminator="0001",
         username=username,
         avatar_hash=None,
+        banner_hash=None,
+        accent_color=None,
         is_bot=False,
         is_system=False,
         flags=users.UserFlag.NONE,

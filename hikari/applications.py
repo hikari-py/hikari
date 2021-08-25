@@ -60,6 +60,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import colors
     from hikari import files
     from hikari import permissions as permissions_
     from hikari import traits
@@ -334,6 +335,18 @@ class TeamMember(users.User):
     @property
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+
+    @property
+    def banner_hash(self) -> typing.Optional[str]:
+        return self.user.banner_hash
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        return self.user.banner_url
+
+    @property
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        return self.user.accent_color
 
     @property
     def discriminator(self) -> str:

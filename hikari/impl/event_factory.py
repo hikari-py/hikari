@@ -359,6 +359,8 @@ class EventFactoryImpl(event_factory.EventFactory):
                 discriminator=discriminator,
                 username=user_payload.get("username", undefined.UNDEFINED),
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
+                banner_hash=user_payload.get("banner", undefined.UNDEFINED),
+                accent_color=user_payload.get("accent_color", undefined.UNDEFINED),
                 is_bot=user_payload.get("bot", undefined.UNDEFINED),
                 is_system=user_payload.get("system", undefined.UNDEFINED),
                 flags=flags,
