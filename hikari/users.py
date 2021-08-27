@@ -146,7 +146,10 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
-        """Banner color for the user, if set."""
+        """The custom banner color for the user, if set.
+
+        The official client will decide the default color if not set.
+        """  # noqa: D401 - Imperative mood
 
     @property
     @abc.abstractmethod
@@ -480,7 +483,10 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> typing.Optional[colors.Color]:
-        """Banner color for the user, if set."""
+        """The custom banner color for the user, if set.
+
+        The official client will decide the default color if not set.
+        """  # noqa: D401 - Imperative mood
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -662,7 +668,10 @@ class PartialUserImpl(PartialUser):
     """Banner hash of the user, if a custom banner is set."""
 
     accent_color: undefined.UndefinedNoneOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
-    """Banner color for the user, if set."""
+    """The custom banner color for the user, if set.
+
+    The official client will decide the default color if not set.
+    """
 
     is_bot: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
@@ -719,7 +728,10 @@ class UserImpl(PartialUserImpl, User):
     """Banner hash of the user, if they have one, otherwise `builtins.None`"""
 
     accent_color: typing.Optional[colors.Color]
-    """Banner color for the user, if set."""
+    """The custom banner color for the user, if set.
+
+    The official client will decide the default color if not set.
+    """  # noqa: D401 - Imperative mood
 
     is_bot: bool
     """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""

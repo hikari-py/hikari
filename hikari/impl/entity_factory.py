@@ -63,9 +63,6 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
-if typing.TYPE_CHECKING:
-    from hikari import colors
-
 _ValueT = typing.TypeVar("_ValueT")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
@@ -177,7 +174,7 @@ class _UserFields:
     username: str = attr.field()
     avatar_hash: str = attr.field()
     banner_hash: str = attr.field()
-    accent_color: colors.Color = attr.field()
+    accent_color: typing.Optional[color_models.Color] = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
 
@@ -2587,13 +2584,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @staticmethod
     def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
+        if ac := payload.get("accent_color", None):
+            accent_color: typing.Optional[color_models.Color] = color_models.Color(ac)
+        else:
+            accent_color = None
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
-            accent_color=payload.get("accent_color", None),
+            accent_color=accent_color,
             is_bot=payload.get("bot", False),
             is_system=payload.get("system", False),
         )
