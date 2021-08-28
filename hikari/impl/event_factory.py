@@ -344,33 +344,6 @@ class EventFactoryImpl(event_factory.EventFactory):
     # INTERACTION EVENTS #
     ######################
 
-    def deserialize_command_create_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-    ) -> interaction_events.CommandCreateEvent:
-        return interaction_events.CommandCreateEvent(
-            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
-        )
-
-    def deserialize_command_update_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-    ) -> interaction_events.CommandUpdateEvent:
-        return interaction_events.CommandUpdateEvent(
-            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
-        )
-
-    def deserialize_command_delete_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
-    ) -> interaction_events.CommandDeleteEvent:
-        return interaction_events.CommandDeleteEvent(
-            shard=shard, command=self._app.entity_factory.deserialize_command(payload)
-        )
-
     def deserialize_interaction_create_event(
         self,
         shard: gateway_shard.GatewayShard,

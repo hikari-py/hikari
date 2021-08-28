@@ -489,24 +489,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#webhooks-update for more info."""
         await self.dispatch(self._event_factory.deserialize_webhook_update_event(shard, payload))
 
-    async def on_application_command_create(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#application-command-create for more info."""
-        await self.dispatch(self._event_factory.deserialize_command_create_event(shard, payload))
-
-    async def on_application_command_update(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#application-command-update for more info."""
-        await self.dispatch(self._event_factory.deserialize_command_update_event(shard, payload))
-
-    async def on_application_command_delete(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#application-command-delete for more info."""
-        await self.dispatch(self._event_factory.deserialize_command_delete_event(shard, payload))
-
     async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
         await self.dispatch(self._event_factory.deserialize_interaction_create_event(shard, payload))

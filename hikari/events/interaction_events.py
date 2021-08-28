@@ -24,14 +24,9 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "CommandEvent",
-    "CommandCreateEvent",
-    "CommandUpdateEvent",
-    "CommandDeleteEvent",
     "InteractionCreateEvent",
 ]
 
-import abc
 import typing
 
 import attr
@@ -40,81 +35,9 @@ from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import commands
     from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.interactions import base_interactions
-
-
-class CommandEvent(shard_events.ShardEvent, abc.ABC):
-    """Base class of events fired for changes to application commands."""
-
-    @property
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.command.app
-
-    @property
-    @abc.abstractmethod
-    def command(self) -> commands.Command:
-        """Object of the command this event is for.
-
-        Returns
-        -------
-        hikari.commands.Command
-            The command this event is for.
-        """
-
-
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
-class CommandCreateEvent(CommandEvent):
-    """Event fired when a command is created relevant to the current bot.
-
-    !!! note
-        This includes applications created by other bots which share a guild
-        with the current bot.
-    """
-
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<docstring inherited from ShardEvent>>.
-
-    command: commands.Command = attr.field(repr=True)
-    # <<inherited docstring from CommandEvent>>.
-
-
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
-class CommandUpdateEvent(CommandEvent):
-    """Event fired when a command is updated relevant to the current bot.
-
-    !!! note
-        This includes applications created by other bots which share a guild
-        with the current bot.
-    """
-
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<docstring inherited from ShardEvent>>.
-
-    command: commands.Command = attr.field(repr=True)
-    # <<inherited docstring from CommandEvent>>.
-
-
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
-class CommandDeleteEvent(CommandEvent):
-    """Event fired when a command is deleted relevant to the current bot.
-
-    !!! note
-        This includes applications created by other bots which share a guild
-        with the current bot.
-    """
-
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<docstring inherited from ShardEvent>>.
-
-    command: commands.Command = attr.field(repr=True)
-    # <<inherited docstring from CommandEvent>>.
 
 
 @attr_extensions.with_copy
