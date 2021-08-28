@@ -417,7 +417,7 @@ class CommandPermission:
     """The entity this permission overrides the command's state for."""
 
     has_access: bool = attr.field()
-    """Whether this permission marks the relevant command as enabled or disabled."""
+    """Whether this permission marks the target entity as having access to the command."""
 
 
 @attr_extensions.with_copy
