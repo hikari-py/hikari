@@ -23,14 +23,6 @@
 import mock
 
 from hikari.events import interaction_events
-from tests.hikari import hikari_test_helpers
-
-
-class TestCommandEvent:
-    def test_app_property(self):
-        mock_event = hikari_test_helpers.mock_class_namespace(interaction_events.CommandEvent, command=mock.Mock())()
-
-        assert mock_event.app is mock_event.command.app
 
 
 class TestInteractionCreateEvent:
