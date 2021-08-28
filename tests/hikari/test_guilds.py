@@ -530,6 +530,73 @@ class TestPartialGuild:
         assert emoji is model.app.rest.fetch_emoji.return_value
 
     @pytest.mark.asyncio()
+    async def test_fetch_stickers(self, model):
+        model.app.rest.fetch_guild_stickers = mock.AsyncMock()
+
+        stickers = await model.fetch_stickers()
+
+        model.app.rest.fetch_guild_stickers.assert_awaited_once_with(model.id)
+        assert stickers is model.app.rest.fetch_guild_stickers.return_value
+
+    @pytest.mark.asyncio()
+    async def test_fetch_sticker(self, model):
+        model.app.rest.fetch_guild_sticker = mock.AsyncMock()
+
+        sticker = await model.fetch_sticker(6969)
+
+        model.app.rest.fetch_guild_sticker.assert_awaited_once_with(model.id, 6969)
+        assert sticker is model.app.rest.fetch_guild_sticker.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_sticker(self, model):
+        model.app.rest.create_sticker = mock.AsyncMock()
+        file = object()
+
+        sticker = await model.create_sticker("NewSticker", "funny", file)
+
+        model.app.rest.create_sticker.assert_awaited_once_with(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert sticker is model.app.rest.create_sticker.return_value
+
+    @pytest.mark.asyncio()
+    async def test_edit_sticker(self, model):
+        model.app.rest.edit_sticker = mock.AsyncMock()
+
+        sticker = await model.edit_sticker(4567, name="Brilliant", tag="parmesan", description="amazing")
+
+        model.app.rest.edit_sticker.assert_awaited_once_with(
+            90210,
+            4567,
+            name="Brilliant",
+            tag="parmesan",
+            description="amazing",
+            reason=undefined.UNDEFINED,
+        )
+
+        assert sticker is model.app.rest.edit_sticker.return_value
+
+    @pytest.mark.asyncio()
+    async def test_delete_sticker(self, model):
+        model.app.rest.delete_sticker = mock.AsyncMock()
+
+        sticker = await model.delete_sticker(951)
+
+        model.app.rest.delete_sticker.assert_awaited_once_with(
+            90210,
+            951,
+            reason=undefined.UNDEFINED,
+        )
+
+        assert sticker is model.app.rest.delete_sticker.return_value
+
+    @pytest.mark.asyncio()
     async def test_create_category(self, model):
         model.app.rest.create_guild_category = mock.AsyncMock()
 

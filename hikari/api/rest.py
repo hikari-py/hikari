@@ -3706,7 +3706,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
-            The sticker to fetch.
+            The sticker to fetch. This can be a sticker object or the
+            ID of an existing sticker.
 
         Returns
         -------
@@ -3743,7 +3744,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
-            The guild to request stickers for.
+            The guild to request stickers for. This can be a guild object or the
+            ID of an existing guild.
 
         Returns
         -------
@@ -3784,9 +3786,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
-            The guild the sticker is in.
+            The guild the sticker is in. This can be a guild object or the
+            ID of an existing guild.
         sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
-            The sticker to fetch.
+            The sticker to fetch. This can be a sticker object or the
+            ID of an existing sticker.
 
         Returns
         -------
@@ -3901,7 +3905,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit the emoji on. This can be a guild object or the
+            The guild to edit the sticker on. This can be a guild object or the
             ID of an existing guild.
         sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to edit. This can be a sticker object or the ID of an
@@ -3964,7 +3968,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to delete the sticker on. This can be a guild object or
             the ID of an existing guild.
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
 
