@@ -504,14 +504,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_stage_instance_create(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        self.dispatch(self._event_factory.deserialize_stage_instance_create_event(shard, payload))
+        await self.dispatch(self._event_factory.deserialize_stage_instance_create_event(shard, payload))
 
     async def on_stage_instance_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        self.dispatch(self._event_factory.deserialize_stage_instance_edit_event(shard, payload))
+        await self.dispatch(self._event_factory.deserialize_stage_instance_edit_event(shard, payload))
 
     async def on_stage_instance_delete(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        self.dispatch(self._event_factory.deserialize_stage_instance_delete_event(shard, payload))
+        await self.dispatch(self._event_factory.deserialize_stage_instance_delete_event(shard, payload))
