@@ -396,7 +396,7 @@ class Member(users.User):
         return self.user.default_avatar_url
 
     @property
-    def banner_hash(self) -> typing.Optional[str]:
+    def banner_hash(self) -> undefined.UndefinedOr[str]:
         return self.user.banner_hash
 
     @property
@@ -404,7 +404,7 @@ class Member(users.User):
         return self.user.banner_url
 
     @property
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
         return self.user.accent_color
 
     @property

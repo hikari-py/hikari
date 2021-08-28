@@ -4641,8 +4641,8 @@ class TestEntityFactoryImpl:
                 "discriminator": "6127",
             }
         )
-        assert user.banner_hash is None
-        assert user.accent_color is None
+        assert user.banner_hash is undefined.UNDEFINED
+        assert user.accent_color is undefined.UNDEFINED
         assert user.is_bot is False
         assert user.is_system is False
         assert user.flags == user_models.UserFlag.NONE
@@ -4701,8 +4701,8 @@ class TestEntityFactoryImpl:
             }
         )
         assert my_user.app is mock_app
-        assert my_user.banner_hash is None
-        assert my_user.accent_color is None
+        assert my_user.banner_hash is undefined.UNDEFINED
+        assert my_user.accent_color is undefined.UNDEFINED
         assert my_user.is_bot is False
         assert my_user.is_system is False
         assert my_user.is_verified is None

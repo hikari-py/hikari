@@ -354,8 +354,9 @@ class EventFactoryImpl(event_factory.EventFactory):
             if "public_flags" in user_payload:
                 flags = user_models.UserFlag(user_payload["public_flags"])
 
+            accent_color: undefined.UndefinedOr[colors.Color]
             if ac := user_payload.get("accent_color", None):
-                accent_color: undefined.UndefinedOr[colors.Color] = colors.Color(ac)
+                accent_color = colors.Color(ac)
             else:
                 accent_color = undefined.UNDEFINED
 
