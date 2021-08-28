@@ -1681,8 +1681,30 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"],
             options=options,
+            default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
         )
+
+    def deserialize_guild_command_permissions(
+        self, payload: data_binding.JSONObject
+    ) -> commands.GuildCommandPermissions:
+        permissions = [
+            commands.CommandPermission(
+                id=snowflakes.Snowflake(perm["id"]),
+                type=commands.CommandPermissionType(perm["type"]),
+                has_access=perm["permission"],
+            )
+            for perm in payload["permissions"]
+        ]
+        return commands.GuildCommandPermissions(
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            command_id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            permissions=permissions,
+        )
+
+    def serialize_command_permission(self, permission: commands.CommandPermission) -> data_binding.JSONObject:
+        return {"id": str(permission.id), "type": permission.type, "permission": permission.has_access}
 
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         return base_interactions.PartialInteraction(

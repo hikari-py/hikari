@@ -27,6 +27,9 @@ __all__: typing.List[str] = [
     "Command",
     "CommandChoice",
     "CommandOption",
+    "CommandPermission",
+    "CommandPermissionType",
+    "GuildCommandPermissions",
     "OptionType",
 ]
 
@@ -39,6 +42,9 @@ from hikari import traits
 from hikari import undefined
 from hikari.internal import attr_extensions
 from hikari.internal import enums
+
+if typing.TYPE_CHECKING:
+    from hikari import guilds
 
 
 @typing.final
@@ -59,6 +65,7 @@ class OptionType(int, enums.Enum):
 
     This is range limited between -2^53 and 2^53.
     """
+
     BOOLEAN = 5
     """Denotes a command option where the value will be a bool."""
 
@@ -161,6 +168,13 @@ class Command(snowflakes.Unique):
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""
 
+    default_permission: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the command is enabled by default when added to a guild.
+
+    Defaults to `builtins.True`. This behaviour is overridden by command
+    permissions.
+    """
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
@@ -172,7 +186,7 @@ class Command(snowflakes.Unique):
 
         Returns
         -------
-        hikari.commands.Command
+        Command
             Object of the fetched command.
 
         Raises
@@ -222,13 +236,13 @@ class Command(snowflakes.Unique):
         description : hikari.undefined.UndefinedOr[builtins.str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
+        options : hikari.undefined.UndefinedOr[typing.Sequence[CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
 
         Returns
         -------
-        hikari.commands.Command
+        Command
             The edited command object.
 
         Raises
@@ -292,3 +306,133 @@ class Command(snowflakes.Unique):
         await self.app.rest.delete_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
+
+    async def fetch_guild_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> GuildCommandPermissions:
+        """Fetch the permissions registered for this command in a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to fetch the command permissions for.
+
+        Returns
+        -------
+        GuildCommandPermissions
+            Object of the command permissions set for the specified command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_application_command_permissions(
+            application=self.application_id, command=self.id, guild=guild
+        )
+
+    async def set_guild_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], permissions: typing.Sequence[CommandPermission]
+    ) -> GuildCommandPermissions:
+        """Set permissions for this command in a specific guild.
+
+        !!! note
+            This overwrites any previously set permissions.
+
+        Parameters
+        ----------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild to set the command permissions in.
+        permissions : typing.Sequence[CommandPermission]
+            Sequence of up to 10 of the permission objects to set.
+
+        Returns
+        -------
+        GuildCommandPermissions
+            Object of the set permissions.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands or guild.
+        hikari.errors.NotFoundError
+            If the provided application or command isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.set_application_command_permissions(
+            application=self.application_id, command=self.id, guild=guild, permissions=permissions
+        )
+
+
+class CommandPermissionType(int, enums.Enum):
+    """The type of entity a command permission targets."""
+
+    ROLE = 1
+    """A command permission which toggles access for a specific role."""
+
+    USER = 2
+    """A command permission which toggles access for a specific user."""
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class CommandPermission:
+    """Representation of a permission which enables or disables a command for a user or role."""
+
+    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
+    """Id of the role or user this permission changes the permission's state for."""
+
+    type: typing.Union[CommandPermissionType, int] = attr.field(converter=CommandPermissionType)
+    """The entity this permission overrides the command's state for."""
+
+    has_access: bool = attr.field()
+    """Whether this permission marks the target entity as having access to the command."""
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildCommandPermissions:
+    """Representation of the permissions set for a command within a guild."""
+
+    application_id: snowflakes.Snowflake = attr.field()
+    """ID of the application the relevant command belongs to."""
+
+    command_id: snowflakes.Snowflake = attr.field()
+    """ID of the command these permissions are for."""
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    """ID of the guild these permissions are in."""
+
+    permissions: typing.Sequence[CommandPermission] = attr.field()
+    """Sequence of up to (and including) 10 of the command permissions set in this guild."""

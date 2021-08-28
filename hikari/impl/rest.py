@@ -2959,6 +2959,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.Command:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -2970,6 +2971,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        body.put("default_permission", default_permission)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3038,6 +3040,67 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         await self._request(route)
+
+    async def fetch_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        route = routes.GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=application, guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_command_permissions(payload) for payload in response]
+
+    async def fetch_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+    ) -> commands.GuildCommandPermissions:
+        route = routes.GET_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=application, guild=guild, command=command
+        )
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_command_permissions(response)
+
+    async def set_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        permissions: typing.Mapping[
+            snowflakes.SnowflakeishOr[commands.Command], typing.Sequence[commands.CommandPermission]
+        ],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=application, guild=guild)
+        body = [
+            {
+                "id": str(snowflakes.Snowflake(command)),
+                "permissions": [self._entity_factory.serialize_command_permission(permission) for permission in perms],
+            }
+            for command, perms in permissions.items()
+        ]
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_command_permissions(payload) for payload in response]
+
+    async def set_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+        permissions: typing.Sequence[commands.CommandPermission],
+    ) -> commands.GuildCommandPermissions:
+        route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=application, guild=guild, command=command
+        )
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("permissions", permissions, conversion=self._entity_factory.serialize_command_permission)
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_command_permissions(response)
 
     def interaction_deferred_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /
