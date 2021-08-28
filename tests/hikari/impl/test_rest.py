@@ -2417,8 +2417,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_GUILD_EMOJI.compile(guild=123, emoji=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_emoji(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_emoji(StubModel(123), StubModel(456), reason="testing")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_fetch_guild(self, rest_client):
         guild = StubModel(1234)

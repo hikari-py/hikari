@@ -40,6 +40,7 @@ from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stickers as sticker_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -3450,15 +3451,11 @@ class TestEntityFactoryImpl:
             },
             "referenced_message": {"message_reference_payload": "testing"},
             "flags": 2,
-            "stickers": [
+            "sticker_items": [
                 {
                     "id": "749046696482439188",
                     "name": "Thinking",
-                    "description": "very descript",
-                    "pack_id": "749043879713701898",
-                    "asset": "2be10a547ceb0116998f5bb878d5bc1c",
                     "format_type": 3,
-                    "tags": "curious, huh, what, confused, wut, 🤔, 😕, 🧐",
                 }
             ],
             "nonce": "171000788183678976",
@@ -3557,12 +3554,8 @@ class TestEntityFactoryImpl:
         sticker = partial_message.stickers[0]
         assert sticker.id == 749046696482439188
         assert sticker.name == "Thinking"
-        assert sticker.description == "very descript"
-        assert sticker.pack_id == 749043879713701898
-        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
-        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
-        assert isinstance(sticker, message_models.Sticker)
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
 
         assert partial_message.nonce == "171000788183678976"
         assert partial_message.application_id == 123123123123
@@ -3728,12 +3721,8 @@ class TestEntityFactoryImpl:
         sticker = message.stickers[0]
         assert sticker.id == 749046696482439188
         assert sticker.name == "Thinking"
-        assert sticker.description == "very descript"
-        assert sticker.pack_id == 749043879713701898
-        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
-        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
-        assert isinstance(sticker, message_models.Sticker)
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
 
         assert message.nonce == "171000788183678976"
         assert message.application_id == 123123123123

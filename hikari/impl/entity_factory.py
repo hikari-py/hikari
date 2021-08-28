@@ -48,6 +48,7 @@ from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stickers as sticker_models
 from hikari import templates as template_models
 from hikari import traits
 from hikari import undefined
@@ -1873,6 +1874,55 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return payload
 
     ##################
+    # STICKER MODELS #
+    ##################
+
+    def deserialize_sticker_pack(self, payload: data_binding.JSONObject) -> sticker_models.StickerPack:
+        pack_stickers: typing.List[sticker_models.StandardSticker] = []
+        for sticker_payload in payload["stickers"]:
+            pack_stickers.append(self.deserialize_standard_sticker(sticker_payload))
+
+        return sticker_models.StickerPack(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            description=payload["description"],
+            cover_sticker_id=snowflakes.Snowflake(payload["cover_sticker_id"]),
+            stickers=pack_stickers,
+            sku_id=snowflakes.Snowflake(payload["sku_id"]),
+            banner_hash=payload["banner_asset_id"],
+        )
+
+    def deserialize_partial_sticker(self, payload: data_binding.JSONObject) -> sticker_models.PartialSticker:
+        return sticker_models.PartialSticker(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            format_type=sticker_models.StickerFormatType(payload["format_type"]),
+        )
+
+    def deserialize_standard_sticker(self, payload: data_binding.JSONObject) -> sticker_models.StandardSticker:
+        return sticker_models.StandardSticker(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            description=payload["description"],
+            format_type=sticker_models.StickerFormatType(payload["format_type"]),
+            pack_id=snowflakes.Snowflake(payload["pack_id"]),
+            sort_value=payload["sort_value"],
+            tags=[tag.strip() for tag in payload["tags"].split(",")],
+        )
+
+    def deserialize_guild_sticker(self, payload: data_binding.JSONObject) -> sticker_models.GuildSticker:
+        return sticker_models.GuildSticker(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            description=payload["description"],
+            format_type=sticker_models.StickerFormatType(payload["format_type"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            is_available=payload["available"],
+            tag=payload["tags"],
+            user=self.deserialize_user(payload["user"]) if "user" in payload else None,
+        )
+
+    ##################
     # MESSAGE MODELS #
     ##################
 
@@ -1927,17 +1977,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=message_reference_message_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=message_reference_guild_id,
-        )
-
-    def _deserialize_sticker(self, payload: data_binding.JSONObject) -> message_models.Sticker:
-        return message_models.Sticker(
-            id=snowflakes.Snowflake(payload["id"]),
-            pack_id=snowflakes.Snowflake(payload["pack_id"]),
-            name=payload["name"],
-            description=payload["description"],
-            tags=[tag.strip() for tag in payload["tags"].split(",")] if "tags" in payload else [],
-            asset_hash=payload["asset"],
-            format_type=message_models.StickerFormatType(payload["format_type"]),
         )
 
     def _deserialize_message_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
@@ -2005,9 +2044,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 referenced_message = None
 
-        stickers: undefined.UndefinedOr[typing.Sequence[message_models.Sticker]] = undefined.UNDEFINED
-        if "stickers" in payload:
-            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
+        stickers: undefined.UndefinedOr[typing.Sequence[sticker_models.PartialSticker]] = undefined.UNDEFINED
+        if "sticker_items" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
+        # This is only here for backwards compatibility as old messages still return this field
+        elif "stickers" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
 
         content = payload.get("content", undefined.UNDEFINED)
         if content is not undefined.UNDEFINED:
@@ -2121,8 +2163,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "application" in payload:
             application = self._deserialize_message_application(payload["application"])
 
-        if "stickers" in payload:
-            stickers = [self._deserialize_sticker(sticker) for sticker in payload["stickers"]]
+        if "sticker_items" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
 
         else:
             stickers = []

@@ -347,7 +347,7 @@ class KnownCustomEmoji(CustomEmoji):
     """The user that created the emoji.
 
     !!! note
-        This will be `builtins.None` if you are missing the `MANAGE_EMOJIS`
+        This will be `builtins.None` if you are missing the `MANAGE_EMOJIS_AND_STICKERS`
         permission in the server the emoji is from.
     """
 

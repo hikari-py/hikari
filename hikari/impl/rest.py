@@ -89,6 +89,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
+    from hikari import stickers
     from hikari import templates
     from hikari import voices
     from hikari import webhooks
@@ -2137,9 +2138,102 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
-        await self._request(route)
+        await self._request(route, reason=reason)
+
+    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
+        route = routes.GET_STICKER_PACKS.compile()
+        response = await self._request(route, no_auth=True)
+        assert isinstance(response, dict)
+        return [self._entity_factory.deserialize_sticker_pack(pack) for pack in response["sticker_packs"]]
+
+    async def fetch_sticker(
+        self,
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+    ) -> typing.Union[stickers.StandardSticker, stickers.GuildSticker]:
+        route = routes.GET_STICKER.compile(sticker=sticker)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return (
+            self._entity_factory.deserialize_guild_sticker(response)
+            if "guild_id" in response
+            else self._entity_factory.deserialize_standard_sticker(response)
+        )
+
+    async def fetch_guild_stickers(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Sequence[stickers.GuildSticker]:
+        route = routes.GET_GUILD_STICKERS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_sticker(sticker) for sticker in response]
+
+    async def fetch_guild_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+    ) -> stickers.GuildSticker:
+        route = routes.GET_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def create_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        tag: str,
+        image: files.Resourceish,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> stickers.GuildSticker:
+        route = routes.POST_GUILD_STICKERS.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("tags", tag)
+        body.put("description", description)
+
+        image_resource = files.ensure_resource(image)
+        async with image_resource.stream(executor=self._executor) as stream:
+            body.put("image", await stream.data_uri())
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def edit_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tag: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> stickers.GuildSticker:
+        route = routes.PATCH_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("tags", tag)
+        body.put("description", description)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def delete_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.DELETE_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        await self._request(route, reason=reason)
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints_impl.GuildBuilder(
