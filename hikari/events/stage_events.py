@@ -76,9 +76,6 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 class StageInstanceCreateEvent(StageInstanceEvent):
     """Event fired when a Stage instance is created."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -86,7 +83,13 @@ class StageInstanceCreateEvent(StageInstanceEvent):
     """The Stage instance that was created."""
 
     @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.stage_instance.app
+
+    @property
     def stage_instance_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from StageInstanceEvent>>.
         return self.stage_instance.id
 
 
@@ -96,14 +99,16 @@ class StageInstanceCreateEvent(StageInstanceEvent):
 class StageInstanceEditEvent(StageInstanceEvent):
     """Event fired when a Stage instance is edited."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
     """The Stage instance that was edited."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.stage_instance.app
 
     @property
     def stage_instance_id(self) -> snowflakes.Snowflake:
@@ -116,14 +121,16 @@ class StageInstanceEditEvent(StageInstanceEvent):
 class StageInstanceDeleteEvent(StageInstanceEvent):
     """Event fired when a Stage instance is deleted."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
     """The Stage instance that was deleted."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.stage_instance.app
 
     @property
     def stage_instance_id(self) -> snowflakes.Snowflake:

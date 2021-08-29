@@ -785,19 +785,19 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceCreateEvent:
         return stage_events.StageInstanceCreateEvent(
-            app=self._app, shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
     def deserialize_stage_instance_edit_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceEditEvent:
         return stage_events.StageInstanceEditEvent(
-            app=self._app, shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
     def deserialize_stage_instance_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceDeleteEvent:
         return stage_events.StageInstanceDeleteEvent(
-            app=self._app, shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )

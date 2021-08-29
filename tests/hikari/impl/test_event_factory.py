@@ -1115,8 +1115,8 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
         assert isinstance(event, stage_events.StageInstanceCreateEvent)
 
-        assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
         assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
@@ -1132,8 +1132,8 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_stage_instance_edit_event(mock_shard, mock_payload)
         assert isinstance(event, stage_events.StageInstanceEditEvent)
 
-        assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
         assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
@@ -1149,7 +1149,7 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
         assert isinstance(event, stage_events.StageInstanceDeleteEvent)
 
-        assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
         assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
