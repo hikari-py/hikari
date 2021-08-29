@@ -23,10 +23,10 @@
 import mock
 import pytest
 
+from hikari import channels
 from hikari import snowflakes
 from hikari import stage_instances
 from hikari.impl import bot
-from hikari import channels
 
 
 @pytest.fixture()
@@ -44,7 +44,7 @@ class TestStageInstance:
             guild_id=snowflakes.Snowflake(420),
             topic="beanos",
             privacy_level=stage_instances.StagePrivacyLevel.PUBLIC,
-            discoverable_disabled=True
+            discoverable_disabled=True,
         )
 
     def test_id_property(self, stage_instance):

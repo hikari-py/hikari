@@ -67,8 +67,8 @@ from hikari.snowflakes import Snowflakeish as Snowflakeish
 from hikari.snowflakes import SnowflakeishOr as SnowflakeishOr
 from hikari.snowflakes import SnowflakeishSequence as SnowflakeishSequence
 from hikari.snowflakes import Unique as Unique
-from hikari.stickers import *
 from hikari.stage_instances import *
+from hikari.stickers import *
 from hikari.templates import *
 from hikari.traits import *
 from hikari.undefined import UNDEFINED as UNDEFINED

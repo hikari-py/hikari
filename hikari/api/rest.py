@@ -49,8 +49,8 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
-    from hikari import stickers
     from hikari import stage_instances
+    from hikari import stickers
     from hikari import templates
     from hikari import users
     from hikari import voices

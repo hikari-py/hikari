@@ -47,8 +47,8 @@ if typing.TYPE_CHECKING:
     from hikari import presences as presence_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
-    from hikari import stickers as sticker_models
     from hikari import stage_instances
+    from hikari import stickers as sticker_models
     from hikari import templates as template_models
     from hikari import users as user_models
     from hikari import voices as voice_models
