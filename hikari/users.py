@@ -152,6 +152,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """  # noqa: D401 - Imperative mood
 
     @property
+    def accent_colour(self) -> undefined.UndefinedOr[colors.Color]:
+        """Alias for `accent_color` field."""
+        return self.accent_color
+
+    @property
     @abc.abstractmethod
     def discriminator(self) -> undefined.UndefinedOr[str]:
         """Discriminator for the user."""
