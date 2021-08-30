@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "lunr": "^2.3.7"
+  }
+}

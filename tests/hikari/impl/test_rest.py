@@ -436,6 +436,7 @@ def rest_client(rest_client_class, live_attributes, mock_cache):
         proxy_settings=mock.Mock(spec=config.ProxySettings),
         token="some_token",
         token_type="tYpe",
+        max_retries=0,
         rest_url="https://some.where/api/v3",
         executor=mock.Mock(),
         entity_factory=mock.Mock(),

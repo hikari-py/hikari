@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Helpful methods to Application object.
  - Missing Audit Log change keys.
  - Sticker Audit Log event types.
+ - Added retries if request fails with 5xx error
 
 ### Changed
  - Fix errors in rest sticker method docstrings.

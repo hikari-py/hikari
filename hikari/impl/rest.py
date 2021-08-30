@@ -531,6 +531,7 @@ class RESTClientImpl(rest_api.RESTClient):
         "_http_settings",
         "_live_attributes",
         "_max_rate_limit",
+        "_max_retries",
         "_proxy_settings",
         "_rest_url",
         "_token",
@@ -549,6 +550,7 @@ class RESTClientImpl(rest_api.RESTClient):
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
         max_rate_limit: float,
+        max_retries: int = 5,
         proxy_settings: config.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None],
@@ -560,6 +562,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self._http_settings = http_settings
         self._live_attributes: typing.Optional[_LiveAttributes] = None
         self._max_rate_limit = max_rate_limit
+        self._max_retries = max_retries
         self._proxy_settings = proxy_settings
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
@@ -696,6 +699,10 @@ class RESTClientImpl(rest_api.RESTClient):
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
         url = compiled_route.create_url(self._rest_url)
+
+        backoff = None
+        retries_done = 0
+
         while True:
             try:
                 uuid = time.uuid()
@@ -729,7 +736,6 @@ class RESTClientImpl(rest_api.RESTClient):
                         proxy=self._proxy_settings.url,
                         proxy_headers=self._proxy_settings.all_headers,
                     )
-
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         time_taken = (time.monotonic() - start) * 1_000
                         _LOGGER.log(
@@ -758,6 +764,23 @@ class RESTClientImpl(rest_api.RESTClient):
 
                     real_url = str(response.real_url)
                     raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
+
+                # Handling 5xx errors
+                if 500 <= response.status < 600 and retries_done <= self._max_retries and self._max_retries != 0:
+                    if backoff is None:
+                        backoff = rate_limits.ExponentialBackOff()
+
+                    sleep_time = next(backoff)
+                    _LOGGER.warning(
+                        "Received status %s on request, backing off for %ss and retrying. Retries remaining: %s",
+                        response.status,
+                        round(sleep_time, 1),
+                        self._max_retries - retries_done,
+                    )
+                    retries_done += 1
+
+                    await asyncio.sleep(sleep_time)
+                    raise self._RetryRequest
 
                 can_re_auth = response.status == 401 and not (auth or no_auth or retried)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
