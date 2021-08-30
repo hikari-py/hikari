@@ -978,12 +978,6 @@ class GuildChannel(PartialChannel):
     async def fetch_guild(self) -> guilds.PartialGuild:
         """Fetch the guild linked to this channel.
 
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to fetch. This can be the object
-            or the ID of an existing guild.
-
         Returns
         -------
         hikari.guilds.RESTGuild
