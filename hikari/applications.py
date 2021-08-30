@@ -616,12 +616,6 @@ class Application(guilds.PartialApplication):
     async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
         """Fetch the guild this application is linked to if sold on Discord.
 
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to fetch. This can be the object
-            or the ID of an existing guild.
-
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
@@ -655,12 +649,6 @@ class Application(guilds.PartialApplication):
 
     async def fetch_guild_preview(self) -> typing.Optional[guilds.GuildPreview]:
         """Fetch the preview of the guild this application is linked to if sold on Discord.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to fetch the preview of. This can be a
-            guild object or the ID of an existing guild.
 
         Returns
         -------
