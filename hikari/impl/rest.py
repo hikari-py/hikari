@@ -700,7 +700,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         url = compiled_route.create_url(self._rest_url)
 
-        backoff = None
+        # This is initiated the first time we hit a 5xx error to save memory when nothing goes wrong
+        backoff: typing.Optional[rate_limits.ExponentialBackoff] = None
         retries_done = 0
 
         while True:
