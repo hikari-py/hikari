@@ -773,9 +773,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
                     sleep_time = next(backoff)
                     _LOGGER.warning(
-                        "Received status %s on request, backing off for %ss and retrying. Retries remaining: %s",
+                        "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
                         response.status,
-                        round(sleep_time, 1),
+                        sleep_time,
                         self._max_retries - retries_done,
                     )
                     retries_done += 1
