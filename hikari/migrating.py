@@ -12,5 +12,5 @@ will be covered in the bottom part of this guide.
 `discord.User` translates over to `hikari.users.User`
 
 The usage of which is fairly similar between packages with a notable exception
-being hikari uses `username` where discord.py simply uses `name`
+being hikari uses `username` where discord.py simply uses `hikari.users.User.name`
 """
