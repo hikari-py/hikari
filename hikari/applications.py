@@ -338,7 +338,7 @@ class TeamMember(users.User):
         return self.user.default_avatar_url
 
     @property
-    def banner_hash(self) -> undefined.UndefinedOr[str]:
+    def banner_hash(self) -> typing.Optional[str]:
         return self.user.banner_hash
 
     @property

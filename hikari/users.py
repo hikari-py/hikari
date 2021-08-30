@@ -140,7 +140,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def banner_hash(self) -> undefined.UndefinedOr[str]:
+    def banner_hash(self) -> undefined.UndefinedNoneOr[str]:
         """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
 
     @property
@@ -238,7 +238,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         builtins.ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        if self.banner_hash is undefined.UNDEFINED:
+        if self.banner_hash is None or self.banner_hash is undefined.UNDEFINED:
             return None
 
         if ext is None:
@@ -519,6 +519,11 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
     @property
+    @abc.abstractmethod
+    def banner_hash(self) -> typing.Optional[str]:
+        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+
+    @property
     def avatar_url(self) -> typing.Optional[files.URL]:
         """Avatar URL for the user, if they have one set.
 
@@ -656,7 +661,7 @@ class PartialUserImpl(PartialUser):
     avatar_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    banner_hash: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=False)
+    banner_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if a custom banner is set."""
 
     accent_color: undefined.UndefinedOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
@@ -716,7 +721,7 @@ class UserImpl(PartialUserImpl, User):
     avatar_hash: typing.Optional[str]
     """The user's avatar hash, if they have one, otherwise `builtins.None`."""
 
-    banner_hash: undefined.UndefinedOr[str]
+    banner_hash: typing.Optional[str]
     """Banner hash of the user, if they have one, otherwise `builtins.None`"""
 
     accent_color: undefined.UndefinedOr[colors.Color]

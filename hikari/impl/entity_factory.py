@@ -173,7 +173,7 @@ class _UserFields:
     discriminator: str = attr.field()
     username: str = attr.field()
     avatar_hash: str = attr.field()
-    banner_hash: undefined.UndefinedOr[str] = attr.field()
+    banner_hash: typing.Optional[str] = attr.field()
     accent_color: undefined.UndefinedOr[color_models.Color] = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
@@ -2595,7 +2595,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=payload["discriminator"],
             username=payload["username"],
             avatar_hash=payload["avatar"],
-            banner_hash=payload.get("banner", undefined.UNDEFINED),
+            banner_hash=payload.get("banner", None),
             accent_color=accent_color,
             is_bot=payload.get("bot", False),
             is_system=payload.get("system", False),
