@@ -503,6 +503,12 @@ class RESTClientImpl(rest_api.RESTClient):
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
+    max_rate_limit : builtins.float
+        Maximum number of times a request will be retried if
+        it fails with a `5xx` status. Defaults to 3.
+
+        If you provide above 5, it will default to 5.
+
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -550,7 +556,7 @@ class RESTClientImpl(rest_api.RESTClient):
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
         max_rate_limit: float,
-        max_retries: int = 5,
+        max_retries: int = 3,
         proxy_settings: config.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None],
@@ -562,7 +568,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self._http_settings = http_settings
         self._live_attributes: typing.Optional[_LiveAttributes] = None
         self._max_rate_limit = max_rate_limit
-        self._max_retries = max_retries
+        self._max_retries = min(max_retries, 5)
         self._proxy_settings = proxy_settings
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
@@ -701,7 +707,7 @@ class RESTClientImpl(rest_api.RESTClient):
         url = compiled_route.create_url(self._rest_url)
 
         # This is initiated the first time we hit a 5xx error to save memory when nothing goes wrong
-        backoff: typing.Optional[rate_limits.ExponentialBackoff] = None
+        backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retries_done = 0
 
         while True:
@@ -769,7 +775,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Handling 5xx errors
                 if 500 <= response.status < 600 and retries_done < self._max_retries:
                     if backoff is None:
-                        backoff = rate_limits.ExponentialBackOff()
+                        backoff = rate_limits.ExponentialBackOff(maximum=16)
 
                     sleep_time = next(backoff)
                     _LOGGER.warning(
