@@ -2182,7 +2182,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def execute_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -2206,7 +2207,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.ExecutableWebhook]
+        webhook : typing.Union[hikari.snowflakes.Snoflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
         token: builtins.str
@@ -2352,7 +2353,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
@@ -2360,7 +2362,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.ExecutableWebhook]
+        webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
         token: builtins.str
@@ -2398,7 +2400,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
@@ -2420,7 +2423,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.ExecutableWebhook]
+        webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
         token: builtins.str
@@ -2559,7 +2562,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def delete_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
@@ -2567,7 +2571,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : hikari.snowflakes.SnowflakeishOr[hikari.webhooks.ExecutableWebhook]
+        webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
         token: builtins.str
@@ -3706,7 +3710,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
-            The sticker to fetch.
+            The sticker to fetch. This can be a sticker object or the
+            ID of an existing sticker.
 
         Returns
         -------
@@ -3743,7 +3748,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
-            The guild to request stickers for.
+            The guild to request stickers for. This can be a guild object or the
+            ID of an existing guild.
 
         Returns
         -------
@@ -3784,9 +3790,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
-            The guild the sticker is in.
+            The guild the sticker is in. This can be a guild object or the
+            ID of an existing guild.
         sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
-            The sticker to fetch.
+            The sticker to fetch. This can be a sticker object or the
+            ID of an existing sticker.
 
         Returns
         -------
@@ -3901,7 +3909,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit the emoji on. This can be a guild object or the
+            The guild to edit the sticker on. This can be a guild object or the
             ID of an existing guild.
         sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to edit. This can be a sticker object or the ID of an
@@ -3964,7 +3972,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to delete the sticker on. This can be a guild object or
             the ID of an existing guild.
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
 

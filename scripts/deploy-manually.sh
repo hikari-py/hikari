@@ -41,4 +41,4 @@ echo "Detected GITHUB_SHA to be ${GITHUB_SHA}"
 
 set -x
 rm public -Rf || true
-. scripts/deploy.sh
+bash scripts/deploy.sh

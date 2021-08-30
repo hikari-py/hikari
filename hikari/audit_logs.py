@@ -180,6 +180,9 @@ class AuditLogEventType(int, enums.Enum):
     INTEGRATION_CREATE = 80
     INTEGRATION_UPDATE = 81
     INTEGRATION_DELETE = 82
+    STICKER_CREATE = 90
+    STICKER_UPDATE = 91
+    STICKER_DELETE = 92
 
 
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
