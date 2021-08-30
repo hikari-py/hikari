@@ -82,7 +82,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
                 raise TypeError(f"Cannot have unhashable values in this enum type ({name}: {value!r})") from None
 
         if name in self.names_to_values:
-            raise TypeError("Cannot define same name twice")
+            raise TypeError(f"Cannot define {name!r} name multiple times")
         if value in self.values_to_names:
             # We must have defined some alias, so just register the name
             self.names_to_values[name] = value
