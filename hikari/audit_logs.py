@@ -71,13 +71,19 @@ class AuditLogChangeKey(str, enums.Enum):
     """
 
     NAME = "name"
+    DESCRIPTION = "description"
     ICON_HASH = "icon_hash"
     SPLASH_HASH = "splash_hash"
+    DISCOVERY_SPLASH_HASH = "discovery_splash_hash"
+    BANNER_HASH = "banner_hash"
     OWNER_ID = "owner_id"
     REGION = "region"  # TODO: remove when this disappears for the most part
+    PREFERRED_LOCALE = "preferred_locale"
     RTC_REGION = "rtc_region"
     AFK_CHANNEL_ID = "afk_channel_id"
     AFK_TIMEOUT = "afk_timeout"
+    RULES_CHANNEL_ID = "rules_channel_id"
+    PUBLIC_UPDATES_CHANNEL_ID = "public_updates_channel_id"
     MFA_LEVEL = "mfa_level"
     VERIFICATION_LEVEL = "verification_level"
     EXPLICIT_CONTENT_FILTER = "explicit_content_filter"
@@ -117,6 +123,11 @@ class AuditLogChangeKey(str, enums.Enum):
     EXPIRE_GRACE_PERIOD = "expire_grace_period"
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
     SYSTEM_CHANNEL_ID = "system_channel_id"
+    TAGS = "tags"
+    FORMAT_TYPE = "format_type"
+    ASSETS = "asset"
+    AVAILABLE = "available"
+    GUILD_ID = "guild_id"
 
     # Who needs consistency?
     ADD_ROLE_TO_MEMBER = "$add"
