@@ -19,22 +19,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# We first format the payload and then replace ' with " to make it valid JSON
-PAYLOAD=$(echo "{
-        'username': 'Github Actions',
-        'embeds': [
-            {
-                'title': '${GITHUB_TAG} has been deployed to PyPI',
-                'color': 6697881,
-                'description': 'Install it now by executing: \`\`\`pip install hikari==${GITHUB_TAG}\`\`\`',
-                'footer': {
-                    'text': 'SHA: ${GITHUB_SHA}'
-                }
+curl \
+  -X POST \
+  -H "Content-Type: application/json" \
+  "${DEPLOY_WEBHOOK_URL}" \
+  -d '{
+        "username": "Github Actions",
+        "embeds": [
+          {
+            "title": "'"${VERSION} has been deployed to PyPI"'",
+            "color": 6697881,
+            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://hikari-py.github.io/docs/${VERSION}"'",
+            "footer": {
+              "text": "'"SHA: ${REF}"'"
             }
+          }
         ]
-    }" | tr "'" '"')
-
-curl --request POST \
-  --url ${DEPLOY_WEBHOOK_URL} \
-  --header 'Content-Type: application/json' \
-  --data "${PAYLOAD}"
+    }'

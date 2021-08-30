@@ -37,8 +37,8 @@ if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable i
 if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
 if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
 
-VERSION=${GITHUB_TAG}
-REF=${GITHUB_SHA}
+export VERSION=${GITHUB_TAG}
+export REF=${GITHUB_SHA}
 
 echo "===== INSTALLING DEPENDENCIES ====="
 # Note: We install each of these separately due to issues with the new PIP resolver
@@ -74,7 +74,7 @@ echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== DEPLOYING PAGES ====="
-source scripts/deploy-pages.sh
+bash scripts/deploy-pages.sh
 
 echo "===== UPDATING VERSION IN REPOSITORY ====="
 NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
@@ -82,8 +82,8 @@ NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
 echo "-- Setting up git --"
 git fetch origin
 git checkout -f master
-git config user.name "davfsa"
-git config user.email "29100934+davfsa@users.noreply.github.com"
+git config user.name "github-actions"
+git config user.email "github-actions@github.com"
 
 echo "-- Bumping master version to ${NEW_VERSION} --"
 sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
@@ -93,4 +93,4 @@ git commit -am "Bump version to ${NEW_VERSION}"
 git push
 
 echo "===== SENDING WEBHOOK ====="
-source scripts/deploy-webhook.sh
+bash scripts/deploy-webhook.sh
