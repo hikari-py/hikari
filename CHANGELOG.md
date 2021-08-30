@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Sticker methods to PartialGuild.
+ - Helpful methods to Application object.
 
 ### Changed
  - Fix errors in rest sticker method docstrings.
