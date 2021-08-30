@@ -503,12 +503,11 @@ class RESTClientImpl(rest_api.RESTClient):
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
-    max_rate_limit : builtins.float
+    max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3.
+        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
 
         If you provide above 5, it will default to 5.
-
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
