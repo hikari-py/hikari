@@ -3529,9 +3529,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        stage_instance = self._entity_factory.deserialize_stage_instance(response)
-        assert isinstance(stage_instance, stage_instances.StageInstance)
-        return stage_instance
+        return self._entity_factory.deserialize_stage_instance(response)
 
     async def edit_stage_instance(
         self,
@@ -3547,9 +3545,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        stage_instance = self._entity_factory.deserialize_stage_instance(response)
-        assert isinstance(stage_instance, stage_instances.StageInstance)
-        return stage_instance
+        return self._entity_factory.deserialize_stage_instance(response)
 
     async def delete_stage_instance(
         self,
