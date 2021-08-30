@@ -2585,7 +2585,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     @staticmethod
     def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
         accent_color: undefined.UndefinedOr[color_models.Color]
-
         if ac := payload.get("accent_color", None):
             accent_color = color_models.Color(ac)
         else:
